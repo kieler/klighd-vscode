@@ -1,7 +1,3 @@
-.idea
-.browser_modules
-.DS_Store
-bin
 build
 dist
 lib
