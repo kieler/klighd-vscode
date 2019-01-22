@@ -9,10 +9,11 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sed -i '1s/^/-application\nde.cau.cs.kieler.language.server.LanguageServer\n-noSplash\n/' ./language-server/kieler.ini
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac OSX
-    sed -i.bu $'1s/^/-application
+    sed -i.bu '1i\
+    -application
     de.cau.cs.kieler.language.server.LanguageServer
     -noSplash
-    \\\n/' ./language-server/Contents/Eclipse/kieler.ini &&
+    ' ./language-server/Contents/Eclipse/kieler.ini &&
     rm ./language-server/Contents/Eclipse/kieler.ini.bu
 elif [[ "$OSTYPE" == "cygwin" ]]; then
     sed -i '1s/^/-application\r\nde.cau.cs.kieler.language.server.LanguageServer\r\n-noSplash\r\n/' "language-server\kieler.ini"
