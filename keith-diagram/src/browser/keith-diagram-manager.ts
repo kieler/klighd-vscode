@@ -18,7 +18,7 @@ import { KeithLanguageClientContribution } from 'keith-language/lib/browser/keit
 import { TheiaFileSaver, DiagramManagerImpl, DiagramWidgetRegistry, TheiaDiagramServer, TheiaSprottyConnector } from 'theia-sprotty/lib'
 import { ThemeManager } from './theme-manager';
 import URI from '@theia/core/lib/common/uri';
-import { ApplicationShell } from '@theia/core/lib/browser';
+import { ApplicationShell, OpenerOptions } from '@theia/core/lib/browser';
 import { ModelSource, DiagramServer, IActionDispatcher, TYPES, RequestModelAction } from 'sprotty/lib';
 import { KeithDiagramWidgetRegistry } from './keith-diagram-widget-registry';
 import { KeithDiagramWidget, KeithDiagramWidgetFactory } from './keith-diagram-widget';
@@ -55,6 +55,18 @@ export class KeithDiagramManager extends DiagramManagerImpl {
                 this.open(editorWidget.getResourceUri() as URI)
             }
         }
+    }
+
+    open(uri: URI, input?: OpenerOptions): Promise<KeithDiagramWidget> {
+        const promiseDiagramWidget = this.getOrCreateDiagramWidget(uri)
+        promiseDiagramWidget.then(diagramWidget => {
+            window.requestAnimationFrame(() => {
+                // Do not activate the widget and only reveal it, because we don't want the diagram widget to gain focus.
+                this.shell.revealWidget(diagramWidget.id)
+                this.onDiagramOpenedEmitter.fire(uri)
+            })
+        })
+        return promiseDiagramWidget
     }
 
     async getOrCreateDiagramWidget(uri: URI): Promise<KeithDiagramWidget> {
