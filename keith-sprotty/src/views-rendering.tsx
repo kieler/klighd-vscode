@@ -7,7 +7,7 @@ import { KGraphRenderingContext, fillBackground, fillForeground, findById, shado
     lineCapText, lineJoinText, lineStyleText, evaluateKPosition, camelToKebab,
    /* horizontalAlignmentText,*/ verticalAlignmentText, calculateX, calculateY } from "./views-common"
 import { isNullOrUndefined } from "util"
-import { toDegrees } from "sprotty/lib"
+import { toDegrees, Point } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
 import { getStyles, background, foreground, DEFAULT_FOREGROUND, DEFAULT_LINE_WIDTH,
     DEFAULT_SHADOW, shadowDefinition, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
@@ -237,26 +237,52 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
 }
 
 // TODO: if the parent element is not an edge, use the rendering.points instead of edge.routingPoints
-export function renderKSpline(rendering: KSpline, edge: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
+export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
     // TODO: implement junction point rendering
-    if (!('routingPoints' in edge)) { // parent has to be a KEdge, other elements will not have a Polyline as their rendering
-        console.error('Polyline renderings are only possible for KEdges')
-        return <g/>
+
+    let bounds: any = undefined
+    if (!isNullOrUndefined(rendering.calculatedBounds)) {
+        bounds = rendering.calculatedBounds
     }
-    const styles = getStyles(rendering.styles, (edge as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((edge as KGraphElement).id + rendering.id)
+    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
+        bounds = findById(context.boundsMap, rendering.id)
+    }
+    if (isNullOrUndefined(bounds)) {
+        console.error('Could not find bounds for this KSpline')
+    }
+
+    let points: Point[] = []
+    // If the parent has routing points, the parent is an edge and those points have to be used.
+    // Otherwise the parent has to have points itself.
+    if ('routingPoints' in parent) {
+        points = parent.routingPoints
+    } else if ('points' in rendering) {
+        const kPositions = rendering.points
+        kPositions.forEach(kPosition => {
+            const pos = evaluateKPosition(kPosition, bounds, true)
+            points.push({
+                x: pos.x + bounds.x,
+                y: pos.y + bounds.y
+            })
+        });
+    } else {
+        console.error('The KSpline does not have any points for its routing.')
+    }
+
+    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (edge as KGraphElement).id + rendering.id)
+    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
 
-    const firstPoint = edge.routingPoints[0]
+    const firstPoint = points[0]
     let minX, maxX, minY, maxY: number
     if (!firstPoint) {
         return <g>
-            {renderChildRenderings(rendering, edge, context)}
+            {renderChildRenderings(rendering, parent, context)}
         </g>
     }
 
@@ -264,8 +290,8 @@ export function renderKSpline(rendering: KSpline, edge: KGraphElement | KEdge, c
     maxX = firstPoint.x
     minY = firstPoint.y
     maxY = firstPoint.y
-    for (let i = 1; i < edge.routingPoints.length - 1; i++) {
-        const p = edge.routingPoints[i]
+    for (let i = 1; i < points.length - 1; i++) {
+        const p = points[i]
         if (p.x < minX) {
             minX = p.x
         }
@@ -281,37 +307,37 @@ export function renderKSpline(rendering: KSpline, edge: KGraphElement | KEdge, c
     }
     // hack to avoid paths with no width / height. These paths will not get drawn by chrome due to a bug in their svg renderer TODO: find a fix if there is any better way
     const EPSILON = 0.001
-    if (edge.routingPoints.length > 1) {
-        let lastPoint = edge.routingPoints[edge.routingPoints.length - 1]
+    if (points.length > 1) {
+        let lastPoint = points[points.length - 1]
         let lastX = lastPoint.x
         let lastY = lastPoint.y
         // if this path has no width and the last point does not add anything to that, we need to shift one value by a tiny, invisible value so the width will now be bigger than 0.
         if (maxX - minX === 0 && lastX === maxX) {
             lastX += EPSILON
-            edge.routingPoints[edge.routingPoints.length - 1] = {x: lastX, y: lastY}
+            points[points.length - 1] = {x: lastX, y: lastY}
         }
         // same for Y
         if (maxY - minY === 0 && lastY === maxY) {
             lastY += EPSILON
-            edge.routingPoints[edge.routingPoints.length - 1] = {x: lastX, y: lastY}
+            points[points.length - 1] = {x: lastX, y: lastY}
         }
     }
 
     // now define the spline's path.
     let path = `M ${firstPoint.x},${firstPoint.y}`
-    for (let i = 1; i < edge.routingPoints.length; i = i + 3) {
-        let remainingPoints = edge.routingPoints.length - i
+    for (let i = 1; i < points.length; i = i + 3) {
+        let remainingPoints = points.length - i
         if (remainingPoints === 1) {
             // if one routing point is left, draw a straight line to there.
-            path += ` L ${edge.routingPoints[i].x},${edge.routingPoints[i].y}`
+            path += ` L ${points[i].x},${points[i].y}`
         } else if (remainingPoints === 2) {
             // if two routing points are left, draw a quadratic bezier curve with those two points.
-            path += ` Q ${edge.routingPoints[i].x},${edge.routingPoints[i].y} ${edge.routingPoints[i + 1].x},${edge.routingPoints[i + 1].y}`
+            path += ` Q ${points[i].x},${points[i].y} ${points[i + 1].x},${points[i + 1].y}`
         } else  {
             // if three or more routing points are left, draw a cubic bezier curve with those points.
-            path += ` C ${edge.routingPoints[i].x},${edge.routingPoints[i].y} `
-            + `${edge.routingPoints[i + 1].x},${edge.routingPoints[i + 1].y} `
-            + `${edge.routingPoints[i + 2].x},${edge.routingPoints[i + 2].y}`
+            path += ` C ${points[i].x},${points[i].y} `
+            + `${points[i + 1].x},${points[i + 1].y} `
+            + `${points[i + 2].x},${points[i + 2].y}`
         }
     }
 
@@ -328,7 +354,7 @@ export function renderKSpline(rendering: KSpline, edge: KGraphElement | KEdge, c
                 'stroke-miterlimit': miterLimit
             } as React.CSSProperties}
         />
-        {renderChildRenderings(rendering, edge, context)}
+        {renderChildRenderings(rendering, parent, context)}
     </g>
 
     if (foregroundDefinition) {
@@ -338,27 +364,52 @@ export function renderKSpline(rendering: KSpline, edge: KGraphElement | KEdge, c
     return element
 }
 
-// TODO: if the parent element is not an edge, use the rendering.points instead of edge.routingPoints
-export function renderKPolyline(rendering: KPolyline, edge: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
+export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
     // TODO: implement junction point rendering
-    if (!('routingPoints' in edge)) { // parent has to be a KEdge, other elements will not have a Polyline as their rendering
-        console.error('Polyline renderings are only possible for KEdges')
-        return <g/>
+
+    let bounds: any = undefined
+    if (!isNullOrUndefined(rendering.calculatedBounds)) {
+        bounds = rendering.calculatedBounds
     }
-    const styles = getStyles(rendering.styles, (edge as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((edge as KGraphElement).id + rendering.id)
+    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
+        bounds = findById(context.boundsMap, rendering.id)
+    }
+    if (isNullOrUndefined(bounds)) {
+        console.error('Could not find bounds for this KPolyline')
+    }
+
+    let points: Point[] = []
+    // If the parent has routing points, the parent is an edge and those points have to be used.
+    // Otherwise the parent has to have points itself.
+    if ('routingPoints' in parent) {
+        points = parent.routingPoints
+    } else if ('points' in rendering) {
+        const kPositions = rendering.points
+        kPositions.forEach(kPosition => {
+            const pos = evaluateKPosition(kPosition, bounds, true)
+            points.push({
+                x: pos.x + bounds.x,
+                y: pos.y + bounds.y
+            })
+        });
+    } else {
+        console.error('The KPolyline does not have any points for its routing.')
+    }
+
+    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (edge as KGraphElement).id + rendering.id)
+    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
 
-    const firstPoint = edge.routingPoints[0]
+    const firstPoint = points[0]
     let minX, maxX, minY, maxY: number
     if (!firstPoint) {
         return <g>
-            {renderChildRenderings(rendering, edge, context)}
+            {renderChildRenderings(rendering, parent, context)}
         </g>
     }
 
@@ -367,8 +418,8 @@ export function renderKPolyline(rendering: KPolyline, edge: KGraphElement | KEdg
     minY = firstPoint.y
     maxY = firstPoint.y
     let path = `M ${firstPoint.x},${firstPoint.y}`
-    for (let i = 1; i < edge.routingPoints.length - 1; i++) {
-        const p = edge.routingPoints[i]
+    for (let i = 1; i < points.length - 1; i++) {
+        const p = points[i]
         path += ` L ${p.x},${p.y}`
 
         if (p.x < minX) {
@@ -386,8 +437,8 @@ export function renderKPolyline(rendering: KPolyline, edge: KGraphElement | KEdg
     }
     // hack to avoid paths with no width / height. These paths will not get drawn by chrome due to a bug in their svg renderer
     const EPSILON = 0.001
-    if (edge.routingPoints.length > 1) {
-        let lastPoint = edge.routingPoints[edge.routingPoints.length - 1]
+    if (points.length > 1) {
+        let lastPoint = points[points.length - 1]
         let lastX = lastPoint.x
         let lastY = lastPoint.y
         // if this path has no width and the last point does not add anything to that, we need to shift one value by a tiny, invisible value so the width will now be bigger than 0.
@@ -413,7 +464,7 @@ export function renderKPolyline(rendering: KPolyline, edge: KGraphElement | KEdg
                 'stroke-miterlimit': miterLimit
             } as React.CSSProperties}
         />
-        {renderChildRenderings(rendering, edge, context)}
+        {renderChildRenderings(rendering, parent, context)}
     </g>
 
     if (foregroundDefinition) {
@@ -423,28 +474,52 @@ export function renderKPolyline(rendering: KPolyline, edge: KGraphElement | KEdg
     return element
 }
 
-// TODO: if the parent element is not an edge, use the rendering.points instead of edge.routingPoints
-export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, edge: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
+export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
     // TODO: implement junction point rendering
-    if (!('routingPoints' in edge)) { // parent has to be a KEdge, other elements will not have a Polyline as their rendering
-        console.error('Polyline renderings are only possible for KEdges')
-        return <g/>
+    let bounds: any = undefined
+    if (!isNullOrUndefined(rendering.calculatedBounds)) {
+        bounds = rendering.calculatedBounds
     }
-    const styles = getStyles(rendering.styles, (edge as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((edge as KGraphElement).id + rendering.id)
+    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
+        bounds = findById(context.boundsMap, rendering.id)
+    }
+    if (isNullOrUndefined(bounds)) {
+        console.error('Could not find bounds for this KPolyline')
+    }
+
+    let points: Point[] = []
+    // If the parent has routing points, the parent is an edge and those points have to be used.
+    // Otherwise the parent has to have points itself.
+    if ('routingPoints' in parent) {
+        points = parent.routingPoints
+    } else if ('points' in rendering) {
+        const kPositions = rendering.points
+        kPositions.forEach(kPosition => {
+            const pos = evaluateKPosition(kPosition, bounds, true)
+            points.push({
+                x: pos.x + bounds.x,
+                y: pos.y + bounds.y
+            })
+        });
+    } else {
+        console.error('The KPolyline does not have any points for its routing.')
+    }
+
+    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (edge as KGraphElement).id + rendering.id)
+    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
     const bendRadius = rendering.bendRadius
 
-    const firstPoint = edge.routingPoints[0]
+    const firstPoint = points[0]
     let minX, maxX, minY, maxY: number
     if (!firstPoint) {
         return <g>
-            {renderChildRenderings(rendering, edge, context)}
+            {renderChildRenderings(rendering, parent, context)}
         </g>
     }
 
@@ -453,10 +528,10 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, ed
     minY = firstPoint.y
     maxY = firstPoint.y
     let path = `M ${firstPoint.x},${firstPoint.y}`
-    for (let i = 1; i < edge.routingPoints.length - 1; i++) {
-        const p0 = edge.routingPoints[i - 1]
-        const p = edge.routingPoints[i]
-        const p1 = edge.routingPoints[i + 1]
+    for (let i = 1; i < points.length - 1; i++) {
+        const p0 = points[i - 1]
+        const p = points[i]
+        const p1 = points[i + 1]
         // last point
         const x0 = p0.x
         const y0 = p0.y
@@ -504,8 +579,8 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, ed
     }
     // hack to avoid paths with no width / height. These paths will not get drawn by chrome due to a bug in their svg renderer
     const EPSILON = 0.001
-    if (edge.routingPoints.length > 1) {
-        let lastPoint = edge.routingPoints[edge.routingPoints.length - 1]
+    if (points.length > 1) {
+        let lastPoint = points[points.length - 1]
         let lastX = lastPoint.x
         let lastY = lastPoint.y
         // if this path has no width and the last point does not add anything to that, we need to shift one value by a tiny, invisible value so the width will now be bigger than 0.
@@ -531,7 +606,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, ed
                 'stroke-miterlimit': miterLimit
             } as React.CSSProperties}
         />
-        {renderChildRenderings(rendering, edge, context)}
+        {renderChildRenderings(rendering, parent, context)}
     </g>
 
     if (foregroundDefinition) {
