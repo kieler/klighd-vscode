@@ -13,6 +13,7 @@ import { getStyles, background, foreground, DEFAULT_FOREGROUND, DEFAULT_LINE_WID
     DEFAULT_SHADOW, shadowDefinition, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
     DEFAULT_FONT_BOLD, /*DEFAULT_HORIZONTAL_ALIGNMENT,*/ DEFAULT_VERTICAL_ALIGNMENT,
     DEFAULT_SHADOW_DEF, DEFAULT_FILL } from "./views-styles"
+import { SVGAttributes } from 'react';
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -48,9 +49,17 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     // remember, that this parent's children are now already rendered
     parent.areChildrenRendered = true
 
-    return <g transform = {`translate(${rendering.calculatedBounds.x}, ${rendering.calculatedBounds.y})`/*fixes chrome syntax HL: `*/}>
-        {context.renderChildren(parent)/* TODO: no null rendering should appear here, but sometimes still does because of unimplemented methods*/}
+    // Only translate, if the translation is not 0.
+    let gAttrs: SVGAttributes<SVGGElement>  = {}
+    if (rendering.calculatedBounds.x !== 0 || rendering.calculatedBounds.y !== 0) {
+        gAttrs.transform = `translate(${rendering.calculatedBounds.x}, ${rendering.calculatedBounds.y})`/*fixes chrome syntax HL: `*/
+    }
+
+    let element = <g {...gAttrs}>
+        {context.renderChildren(parent)}
     </g>
+
+    return element
 }
 
 export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, context: KGraphRenderingContext): VNode {
@@ -95,7 +104,13 @@ export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, conte
         return <g/>
     }
 
-    let element = <g transform = {`translate(${bounds.x}, ${bounds.y})`/*fixes chrome syntax HL: `*/}>
+    // Only translate, if the translation is not 0.
+    let gAttrs: SVGAttributes<SVGGElement>  = {}
+    if (bounds.x !== 0 || bounds.y !== 0) {
+        gAttrs.transform = `translate(${bounds.x}, ${bounds.y})`/*fixes chrome syntax HL: `*/
+    }
+
+    let element = <g {...gAttrs}>
         <ellipse
             cx = {bounds.width / 2}
             cy = {bounds.height / 2}
@@ -183,8 +198,13 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
         height = parent.size.height
     }
 
-    // translate for each rectangle, so the children have that as their new origin point
-    let element = <g transform = {`translate(${x}, ${y})`/*fixes chrome syntax HL: `*/}>
+    // Only translate, if the translation is not 0.
+    let gAttrs: SVGAttributes<SVGGElement>  = {}
+    if (x !== 0 || y !== 0) {
+        gAttrs.transform = `translate(${x}, ${y})`/*fixes chrome syntax HL: `*/
+    }
+
+    let element = <g {...gAttrs}>
         <rect
             opacity = {opacity}
             x = {0}
@@ -587,10 +607,15 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
     }
     path += ' Z'
 
-    // TODO: when replacing snabbdom with react or something similar: have all styles as attributes and in camelCase
-    let element = <g {...decoration ? {transform: `translate(${decoration.origin.x},${decoration.origin.y}) `
-                                                + `rotate(${toDegrees(decoration.rotation)}) `
-                                                + `translate(${-decoration.origin.x},${-decoration.origin.y})`} : {}}>
+    // Only rotate, if the rotation is not 0.
+    let gAttrs: SVGAttributes<SVGGElement>  = {}
+    if (decoration &&  toDegrees(decoration.rotation) !== 0) {
+        gAttrs.transform = `translate(${decoration.origin.x},${decoration.origin.y}) `
+                         + `rotate(${toDegrees(decoration.rotation)}) `
+                         + `translate(${-decoration.origin.x},${-decoration.origin.y})`
+    }
+
+    let element = <g {...gAttrs}>
         <path
             d = {path}
             {...(stroke ? {stroke: stroke} : {})}
