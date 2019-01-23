@@ -244,8 +244,7 @@ export function gradientDef(style: KColoring, id: string): VNode {
         } as React.CSSProperties}
     />
 
-    let stopColorStop = <g/>
-    // TODO: does everything need to be defined to generate a gradient?
+    let stopColorStop = undefined
     if (!isNullOrUndefined(style.targetColor) && !isNullOrUndefined(style.targetAlpha) && !isNullOrUndefined(style.gradientAngle)) {
         stopColorStop = <stop
             offset = {1}
@@ -256,15 +255,20 @@ export function gradientDef(style: KColoring, id: string): VNode {
         />
     }
 
+    let linearGradient = <linearGradient
+        id = {id}
+        gradientUnits = {GRADIENT_UNIT_OBJECT_BOUNDING_BOX}
+        gradientTransform = {GRADIENT_TRANSFORM_ROTATE_START + style.gradientAngle + GRADIENT_TRANSFORM_ROTATE_END}
+        >
+        {startColorStop}
+    </linearGradient>
+
+    if (!isNullOrUndefined(stopColorStop)) {
+        (linearGradient.children as (string | VNode)[]).push(stopColorStop)
+    }
+
     return <defs>
-        <linearGradient
-            id = {id}
-            gradientUnits = {GRADIENT_UNIT_OBJECT_BOUNDING_BOX}
-            gradientTransform = {GRADIENT_TRANSFORM_ROTATE_START + style.gradientAngle + GRADIENT_TRANSFORM_ROTATE_END}
-            >
-            {startColorStop}
-            {stopColorStop}
-        </linearGradient>
+        {linearGradient}
     </defs>
 }
 
