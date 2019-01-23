@@ -1,6 +1,5 @@
 import {
-    boundsFeature, fadeFeature, /*hoverFeedbackFeature, popupFeature,*/ selectFeature, layoutContainerFeature,
-    /*layoutableChildFeature, expandFeature, Expandable, */openFeature, RectangularNode, RectangularPort, SLabel, RGBColor, SEdge, SParentElement, Bounds, Point
+    selectFeature, RectangularNode, RectangularPort, SLabel, RGBColor, SEdge, SParentElement, Bounds, Point, boundsFeature
 } from "sprotty/lib"
 
 export interface KGraphElement extends SParentElement {
@@ -15,19 +14,17 @@ export class KNode extends RectangularNode implements KGraphElement {
     data: KGraphData[]
     persistentEntries: PersistentEntry[]
     areChildrenRendered = false
-    hasFeature(feature: symbol): boolean { // TODO: how do I use all these features?
-        return feature === selectFeature || feature === boundsFeature
-                    || feature === layoutContainerFeature || feature === fadeFeature
-                    || (feature === openFeature && this.trace !== undefined)
+    hasFeature(feature: symbol): boolean {
+        return feature === selectFeature
     }
 }
 
 export class KPort extends RectangularPort implements KGraphElement {
-   trace: string | undefined
-   data: KGraphData[]
-   areChildrenRendered = false
-   hasFeature(feature: symbol): boolean {
-       return feature === selectFeature || feature === boundsFeature
+    trace: string | undefined
+    data: KGraphData[]
+    areChildrenRendered = false
+    hasFeature(feature: symbol): boolean {
+        return feature === selectFeature
    }
 }
 
@@ -36,7 +33,9 @@ export class KLabel extends SLabel implements KGraphElement {
     data: KGraphData[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return super.hasFeature(feature) || feature === selectFeature
+        // The boundsFeature here is additionally needed because bounds of labels need to be
+        // estimated during the estimateTextBounds action.
+        return feature === selectFeature || feature === boundsFeature
     }
 }
 
@@ -45,14 +44,13 @@ export class KEdge extends SEdge implements KGraphElement {
     data: KGraphData[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return super.hasFeature(feature) || feature === selectFeature
+        return feature === selectFeature
     }
 }
 
-// TODO: this could be automatically generated from the KGraph.xtext file
 export interface KGraphData {
-     persistentEntries: PersistentEntry[]
-     type: string
+    persistentEntries: PersistentEntry[]
+    type: string
 }
 
 export interface KStyleHolder {
@@ -63,12 +61,6 @@ export interface KStyleHolder {
 export interface KIdentifier extends KGraphData {
     id: string
 }
-
-/*export class KIdentifierImpl implements KIdentifier {
-    type: string
-    id : string
-    persistentEntries: PersistentEntry[]
-}*/
 
 export interface KRendering extends KGraphData, KStyleHolder {
     placementData: KPlacementData
