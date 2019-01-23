@@ -56,9 +56,18 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     protected render(): JSX.Element {
         if (isNullOrUndefined(this.synthesisOptions)) {
             this.hasContent = false
-            // TODO: add a button to update the view!
             return <div>
-                {'Diagram options are not loaded yet. Please open a diagram first and then open or update this view.'}
+                <div className = "diagram-option">
+                    {'No open diagram found.'}
+                </div>
+                <div
+                    className = 'update-button'
+                    title = 'Update'
+                    onClick = {event => {
+                        this.getOptions()
+                    }}>
+                    {'Update View'}
+                </div>
             </div>
         } else {
             this.hasContent = true
@@ -246,6 +255,17 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
     public sendNewOptions(): void {
         this.onSendNewOptionsEmitter.fire(this)
+    }
+
+    protected readonly onGetOptionsEmitter = new Emitter<DiagramOptionsViewWidget | undefined>()
+
+    /**
+     * Emit when options are requested manually.
+     */
+    readonly onGetOptions: Event<DiagramOptionsViewWidget | undefined> = this.onGetOptionsEmitter.event
+
+    public getOptions(): void {
+        this.onGetOptionsEmitter.fire(this)
     }
 
     /**

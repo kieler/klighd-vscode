@@ -76,6 +76,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.diagramOptionsViewWidget = widget as DiagramOptionsViewWidget
             this.diagramOptionsViewWidget.onSendNewOptions(this.sendNewOptions.bind(this))
             this.diagramOptionsViewWidget.onActivateRequest(this.updateContent.bind(this))
+            this.diagramOptionsViewWidget.onGetOptions(this.updateContent.bind(this))
             if (this.editorWidget) {
                 this.diagramOptionsViewWidget.sourceModelPath = this.editorWidget.editor.uri.toString()
             }
