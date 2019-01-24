@@ -172,7 +172,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             execute: async () => {
                 this.openView({
                     toggle: true,
-                    activate: true
+                    reveal: true
                 })
             }
         })
@@ -280,7 +280,10 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.resultMap.set(uri as string, snapshotsDescriptions)
         this.indexMap.set(uri as string, -1)
         this.lengthMap.set(uri as string, snapshotsDescriptions.files.length)
-        this.front.shell.activateWidget(compilerWidgetId)
+        const widget = this.front.shell.revealWidget(compilerWidgetId)
+        if (widget) {
+            widget.update()
+        }
     }
 }
 
