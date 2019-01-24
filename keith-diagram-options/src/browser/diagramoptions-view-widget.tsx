@@ -159,7 +159,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     private onRange(event: React.ChangeEvent<HTMLInputElement>, option: SynthesisOption) {
         option.currentValue = event.currentTarget.value
         this.update()
-        this.sendNewOptions()
+        this.sendNewOption(option)
     }
 
     private renderCategory(option: SynthesisOption, synthesisOptions: SynthesisOption[]): JSX.Element {
@@ -233,12 +233,12 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
     private onCheck(event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption) {
         option.currentValue = event.currentTarget.checked
-        this.sendNewOptions()
+        this.sendNewOption(option)
     }
 
     private onChoice(option: SynthesisOption, value: any) {
         option.currentValue = value
-        this.sendNewOptions()
+        this.sendNewOption(option)
     }
 
     onActivateRequest(msg: Message): void {
@@ -246,15 +246,15 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         this.onUpdateRequest(msg)
     }
 
-    protected readonly onSendNewOptionsEmitter = new Emitter<DiagramOptionsViewWidget | undefined>()
+    protected readonly onSendNewOptionEmitter = new Emitter<SynthesisOption>()
 
     /**
-     * Emit when options have been changed.
+     * Emit when an option has been changed.
      */
-    readonly onSendNewOptions: Event<DiagramOptionsViewWidget | undefined> = this.onSendNewOptionsEmitter.event
+    readonly onSendNewOption: Event<SynthesisOption> = this.onSendNewOptionEmitter.event
 
-    public sendNewOptions(): void {
-        this.onSendNewOptionsEmitter.fire(this)
+    public sendNewOption(option: SynthesisOption): void {
+        this.onSendNewOptionEmitter.fire(option)
     }
 
     protected readonly onGetOptionsEmitter = new Emitter<DiagramOptionsViewWidget | undefined>()

@@ -74,7 +74,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     private initializeDiagramOptionsViewWidget(widget: Widget | undefined) {
         if (widget) {
             this.diagramOptionsViewWidget = widget as DiagramOptionsViewWidget
-            this.diagramOptionsViewWidget.onSendNewOptions(this.sendNewOptions.bind(this))
+            this.diagramOptionsViewWidget.onSendNewOption(this.sendNewOption.bind(this))
             this.diagramOptionsViewWidget.onActivateRequest(this.updateContent.bind(this))
             this.diagramOptionsViewWidget.onGetOptions(this.updateContent.bind(this))
             if (this.editorWidget) {
@@ -83,12 +83,14 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         }
      }
 
-    async sendNewOptions() {
-        const synthesisOptions = this.diagramOptionsViewWidget.getDiagramOptions()
+    async sendNewOption(option: SynthesisOption) {
         const lClient = await this.client.languageClient
         const param = {
             uri: this.editorWidget.editor.uri.toString(),
-            synthesisOptions: synthesisOptions
+            synthesisOptions: [{
+                currentValue: option.currentValue,
+                sourceHash: option.sourceHash
+            }]
         }
         await lClient.sendRequest(SET_OPTIONS, param)
     }
