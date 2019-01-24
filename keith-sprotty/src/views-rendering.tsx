@@ -318,18 +318,18 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
     }
 
     // now define the spline's path.
-    let path = `M ${firstPoint.x},${firstPoint.y}`
+    let path = `M${firstPoint.x},${firstPoint.y}`
     for (let i = 1; i < points.length; i = i + 3) {
         let remainingPoints = points.length - i
         if (remainingPoints === 1) {
             // if one routing point is left, draw a straight line to there.
-            path += ` L ${points[i].x},${points[i].y}`
+            path += `L${points[i].x},${points[i].y}`
         } else if (remainingPoints === 2) {
             // if two routing points are left, draw a quadratic bezier curve with those two points.
-            path += ` Q ${points[i].x},${points[i].y} ${points[i + 1].x},${points[i + 1].y}`
+            path += `Q${points[i].x},${points[i].y} ${points[i + 1].x},${points[i + 1].y}`
         } else  {
             // if three or more routing points are left, draw a cubic bezier curve with those points.
-            path += ` C ${points[i].x},${points[i].y} `
+            path += `C${points[i].x},${points[i].y} `
             + `${points[i + 1].x},${points[i + 1].y} `
             + `${points[i + 2].x},${points[i + 2].y}`
         }
@@ -411,10 +411,10 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
     maxX = firstPoint.x
     minY = firstPoint.y
     maxY = firstPoint.y
-    let path = `M ${firstPoint.x},${firstPoint.y}`
+    let path = `M${firstPoint.x},${firstPoint.y}`
     for (let i = 1; i < points.length - 1; i++) {
         const p = points[i]
-        path += ` L ${p.x},${p.y}`
+        path += `L${p.x},${p.y}`
 
         if (p.x < minX) {
             minX = p.x
@@ -443,7 +443,7 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
         if (maxY - minY === 0 && lastY === maxY) {
             lastY += EPSILON
         }
-        path += ` L ${lastX},${lastY}`
+        path += `L${lastX},${lastY}`
     }
     let element = <g>
         <path
@@ -521,7 +521,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
     maxX = firstPoint.x
     minY = firstPoint.y
     maxY = firstPoint.y
-    let path = `M ${firstPoint.x},${firstPoint.y}`
+    let path = `M${firstPoint.x},${firstPoint.y}`
     for (let i = 1; i < points.length - 1; i++) {
         const p0 = points[i - 1]
         const p = points[i]
@@ -556,7 +556,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
             ye = yp + (usedBendRadius * (y1 - yp)) / dist1
         }
         // draw a line to the start of the bend point (from the last end of its bend) and then draw the bend with the control points of the point itself and the bend end point.
-        path += ` L ${xs},${ys} Q ${xp},${yp} ${xe},${ye}`
+        path += `L${xs},${ys}Q${xp},${yp} ${xe},${ye}`
 
         if (xp < minX) {
             minX = xp
@@ -585,7 +585,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
         if (maxY - minY === 0 && lastY === maxY) {
             lastY += EPSILON
         }
-        path += ` L ${lastX},${lastY}`
+        path += `L${lastX},${lastY}`
     }
     let element = <g>
         <path
@@ -666,12 +666,12 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
         </g>
     }
 
-    let path = `M ${firstPoint.x + bounds.x},${firstPoint.y + bounds.y}`
+    let path = `M${firstPoint.x + bounds.x},${firstPoint.y + bounds.y}`
     for (let i = 1; i < rendering.points.length; i++) {
         const p = evaluateKPosition(rendering.points[i], bounds, true)
-        path += ` L ${p.x + bounds.x},${p.y + bounds.y}`
+        path += `L${p.x + bounds.x},${p.y + bounds.y}`
     }
-    path += ' Z'
+    path += 'Z'
 
     // Only rotate, if the rotation is not 0.
     let gAttrs: SVGAttributes<SVGGElement>  = {}
