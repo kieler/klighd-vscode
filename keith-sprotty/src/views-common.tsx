@@ -1,5 +1,5 @@
 import { KLineCap, LineCap, KLineJoin, LineJoin, KLineStyle, LineStyle, HorizontalAlignment,
-    VerticalAlignment, KHorizontalAlignment, KVerticalAlignment, KPosition, KRenderingLibrary } from "./kgraph-models"
+    VerticalAlignment, KHorizontalAlignment, KVerticalAlignment, KPosition, KRenderingLibrary, KColoring } from "./kgraph-models"
 import { Bounds, Point, toDegrees, ModelRenderer } from "sprotty/lib"
 import { isNullOrUndefined } from "util"
 
@@ -16,6 +16,10 @@ const FOREGROUND = 'foreground'
 const SHADOW = 'shadow'
 const URL_START = 'url(#'
 const URL_END = ')'
+const RGB_START = 'rgb('
+const RGB_END = ')'
+const RGBA_START = 'rgba('
+const RGBA_END = ')'
 
 export class KGraphRenderingContext extends ModelRenderer {
     boundsMap: any
@@ -218,12 +222,31 @@ export function findById(map: any, idString: string): any {
     // return obj
 }
 
+export function isSingleColor(coloring: KColoring) {
+    return isNullOrUndefined(coloring.targetColor) || isNullOrUndefined(coloring.targetAlpha)
+}
+
 export function fillBackground(id: string): string {
     return URL_START + backgroundId(id) + URL_END
 }
 
 export function fillForeground(id: string): string {
     return URL_START + foregroundId(id) + URL_END
+}
+
+export function fillSingleColor(coloring: KColoring) {
+    if (isNullOrUndefined(coloring.alpha) || coloring.alpha === 255) {
+        return RGB_START + coloring.color.red   + ','
+                         + coloring.color.green + ','
+                         + coloring.color.blue
+             + RGB_END
+    } else {
+        return RGBA_START + coloring.color.red + ','
+                          + coloring.color.green + ','
+                          + coloring.color.blue + ','
+                          + coloring.alpha / 255
+             + RGBA_END
+    }
 }
 
 export function shadowFilter(id: string): string {

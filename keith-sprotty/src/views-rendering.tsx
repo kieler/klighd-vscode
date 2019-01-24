@@ -2,17 +2,17 @@
 import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KEllipse, KNode, KPort, KRoundedRectangle, KRectangle,
     KSpline, KEdge, KPolyline, KPolygon, KText, KLabel, KContainerRendering, KGraphData,
-    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline } from "./kgraph-models"
-import { KGraphRenderingContext, fillBackground, fillForeground, findById, shadowFilter,
+    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
+import { KGraphRenderingContext, findById, shadowFilter,
     lineCapText, lineJoinText, lineStyleText, evaluateKPosition, camelToKebab,
-   /* horizontalAlignmentText,*/ verticalAlignmentText, calculateX, calculateY } from "./views-common"
+    verticalAlignmentText, calculateX, calculateY } from "./views-common"
 import { isNullOrUndefined } from "util"
 import { toDegrees, Point } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
-import { getStyles, background, foreground, DEFAULT_FOREGROUND, DEFAULT_LINE_WIDTH,
+import { getStyles, DEFAULT_LINE_WIDTH,
     DEFAULT_SHADOW, shadowDefinition, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
-    DEFAULT_FONT_BOLD, /*DEFAULT_HORIZONTAL_ALIGNMENT,*/ DEFAULT_VERTICAL_ALIGNMENT,
-    DEFAULT_SHADOW_DEF, DEFAULT_FILL } from "./views-styles"
+    DEFAULT_FONT_BOLD, DEFAULT_VERTICAL_ALIGNMENT,
+    DEFAULT_SHADOW_DEF,  getSvgColorStyles, getSvgColorStyle } from "./views-styles"
 import { SVGAttributes } from 'react';
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
@@ -64,11 +64,8 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
 
 export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, context: KGraphRenderingContext): VNode {
     const styles = getStyles(rendering.styles, parent.id + rendering.id)
+    const colorStyles = getSvgColorStyles(styles, parent, rendering)
 
-    const fill = styles.kBackground === null ? DEFAULT_FILL : fillBackground((parent as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
-    const backgroundDefinition = styles.kBackground === null ? undefined : background(styles.kBackground, (parent as KGraphElement).id + rendering.id)
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     let bounds = undefined
     if (!isNullOrUndefined(rendering.calculatedBounds)) {
@@ -119,17 +116,17 @@ export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, conte
             style = {{
                 'stroke-width': lineWidth
             } as React.CSSProperties}
-            stroke = {stroke}
-            fill = {fill}
+            stroke = {colorStyles.foreground.color}
+            fill = {colorStyles.background.color}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (backgroundDefinition) {
-        (element.children as (string | VNode)[]).push(backgroundDefinition)
+    if (colorStyles.background.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
     }
-    if (foregroundDefinition) {
-        (element.children as (string | VNode)[]).push(foregroundDefinition)
+    if (colorStyles.foreground.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
     }
     // if (shadowDef) {
     //     (element.children as (string | VNode)[]).push(shadowDef)
@@ -147,11 +144,8 @@ export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | 
 
 export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
     const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const colorStyles = getSvgColorStyles(styles, parent, rendering)
 
-    const fill = styles.kBackground === null ? DEFAULT_FILL : fillBackground((parent as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
-    const backgroundDefinition = styles.kBackground === null ? undefined : background(styles.kBackground, (parent as KGraphElement).id + rendering.id)
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const opacity = styles.kInvisibility === null || styles.kInvisibility.invisible === false ? undefined : 0
     const shadow = styles.kShadow === undefined ? DEFAULT_SHADOW : shadowFilter((parent as KGraphElement).id + rendering.id)
@@ -216,18 +210,18 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
             style = {{
                 'stroke-width': lineWidth
             } as React.CSSProperties}
-            stroke = {stroke}
-            fill = {fill}
+            stroke = {colorStyles.foreground.color}
+            fill = {colorStyles.background.color}
             filter = {shadow}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (backgroundDefinition) {
-        (element.children as (string | VNode)[]).push(backgroundDefinition)
+    if (colorStyles.background.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
     }
-    if (foregroundDefinition) {
-        (element.children as (string | VNode)[]).push(foregroundDefinition)
+    if (colorStyles.foreground.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
     }
     if (shadowDef) {
         (element.children as (string | VNode)[]).push(shadowDef)
@@ -270,13 +264,13 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
     }
 
     const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
+    const foregroundStyles = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
+
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
 
     const firstPoint = points[0]
     let minX, maxX, minY, maxY: number
@@ -344,7 +338,7 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
     let element = <g>
         <path
             d = {path}
-            stroke = {stroke}
+            stroke = {foregroundStyles.color}
             fill = 'none'
             style = {{
                 'stroke-linecap': lineCap,
@@ -357,8 +351,8 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (foregroundDefinition) {
-        (element.children as (string | VNode)[]).push(foregroundDefinition)
+    if (foregroundStyles.definition) {
+        (element.children as (string | VNode)[]).push(foregroundStyles.definition)
     }
 
     return element
@@ -397,13 +391,13 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
     }
 
     const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
+    const foregroundStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
+
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
 
     const firstPoint = points[0]
     let minX, maxX, minY, maxY: number
@@ -454,7 +448,7 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
     let element = <g>
         <path
             d = {path}
-            stroke = {stroke}
+            stroke = {foregroundStyle.color}
             fill = 'none'
             style = {{
                 'stroke-linecap': lineCap,
@@ -467,8 +461,8 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (foregroundDefinition) {
-        (element.children as (string | VNode)[]).push(foregroundDefinition)
+    if (foregroundStyle.definition) {
+        (element.children as (string | VNode)[]).push(foregroundStyle.definition)
     }
 
     return element
@@ -506,13 +500,13 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
     }
 
     const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-    const stroke = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
+    const foregroundStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
+
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
     const bendRadius = rendering.bendRadius
 
     const firstPoint = points[0]
@@ -596,7 +590,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
     let element = <g>
         <path
             d = {path}
-            stroke = {stroke}
+            stroke = {foregroundStyle.color}
             fill = 'none'
             style = {{
                 'stroke-linecap': lineCap,
@@ -609,8 +603,8 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (foregroundDefinition) {
-        (element.children as (string | VNode)[]).push(foregroundDefinition)
+    if (foregroundStyle.definition) {
+        (element.children as (string | VNode)[]).push(foregroundStyle.definition)
     }
 
     return element
@@ -618,20 +612,17 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
 
 export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, context: KGraphRenderingContext): VNode {
     const styles = getStyles(rendering.styles, parent.id + rendering.id)
-    let stroke: string | null = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground(parent.id + rendering.id)
-    const fill = styles.kBackground === null ? DEFAULT_FILL : fillBackground((parent as KGraphElement).id + rendering.id)
+    const colorStyles = getSvgColorStyles(styles, parent, rendering)
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
-    const backgroundDefinition = styles.kBackground === null ? undefined : background(styles.kBackground, (parent as KGraphElement).id + rendering.id)
 
     // hack to fix the border being drawn although it should not
     // FIXME: find out, how to not have to use this hack.
     if (lineWidth === 0) {
-        stroke = null
+        colorStyles.foreground.color = null as any
     }
 
     let bounds = undefined
@@ -693,8 +684,8 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
     let element = <g {...gAttrs}>
         <path
             d = {path}
-            {...(stroke ? {stroke: stroke} : {})}
-            fill = {fill}
+            {...(colorStyles.foreground.color ? {stroke: colorStyles.foreground.color} : {})}
+            fill = {colorStyles.background.color}
             style = {{
                 'stroke-linecap': lineCap,
                 'stroke-linejoin': lineJoin,
@@ -706,11 +697,11 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (backgroundDefinition) {
-        (element.children as (string | VNode)[]).push(backgroundDefinition)
+    if (colorStyles.background.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
     }
-    if (foregroundDefinition) {
-        (element.children as (string | VNode)[]).push(foregroundDefinition)
+    if (colorStyles.foreground.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
     }
 
     return element
@@ -728,16 +719,16 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     }
     if (isNullOrUndefined(text)) return <g/>
 
+    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
+
     const italic = styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? null : 'italic'
     const bold = styles.kFontBold.bold === DEFAULT_FONT_BOLD ? null : 'bold'
     const fontName = camelToKebab(styles.kFontName.name)
 
-    const fill = styles.kForeground === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
     const verticalAlignment = verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === null ? DEFAULT_VERTICAL_ALIGNMENT : styles.kVerticalAlignment.verticalAlignment)
 
     let lines = text.split("\n")
 
-    const foregroundDefinition = styles.kForeground === null ? undefined : foreground(styles.kForeground, (parent as KGraphElement).id + rendering.id)
     let x: number | undefined = undefined
     let y: number | undefined = undefined
     let textWidth = undefined
@@ -776,7 +767,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     let textNode = <text
         style = {style}
         {...(y ? {y: y} : {})}
-        fill = {fill}
+        fill = {colorStyle.color}
         {...{'xml:space' : "preserve"}/* This attribute makes the text size estimation include any trailing white spaces. */}
     />
 
@@ -800,9 +791,9 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         dy = '1.1em' // Have a distance of 1.1em for every new line after the first one.
     });
 
-    if (foregroundDefinition) {
+    if (colorStyle.definition) {
         return <g>
-            {foregroundDefinition}
+            {colorStyle.definition}
             {textNode}
         </g>
     } else {

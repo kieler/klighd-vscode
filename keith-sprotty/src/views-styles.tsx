@@ -3,11 +3,11 @@ import { svg } from 'snabbdom-jsx'
 import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KFontSize, KInvisibility,
     KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KTextStrikeout,
     KTextUnderline, KVerticalAlignment, HorizontalAlignment, LineCap, LineJoin, LineStyle,
-    VerticalAlignment, KStyleRef, KColoring } from "./kgraph-models"
+    VerticalAlignment, KStyleRef, KColoring, KGraphElement, KRendering } from "./kgraph-models"
 import { VNode } from "snabbdom/vnode"
 import { toSVG } from "sprotty/lib"
 import { isNullOrUndefined } from "util"
-import { foregroundId, backgroundId, shadowId } from "./views-common"
+import { foregroundId, backgroundId, shadowId, isSingleColor, fillSingleColor, fillForeground, fillBackground } from "./views-common"
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -270,6 +270,44 @@ export function gradientDef(style: KColoring, id: string): VNode {
     return <defs>
         {linearGradient}
     </defs>
+}
+
+export function getSvgColorStyles(styles: Styles, parent: KGraphElement, rendering: KRendering): ColorStyles {
+    return {
+        foreground: getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true),
+        background: getSvgColorStyle(styles.kBackground as KBackground, parent, rendering, false)
+    }
+}
+
+
+export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, rendering: KRendering, isForeground: boolean): ColorStyle {
+    let color, definition
+    if (!isNullOrUndefined(coloring) && isSingleColor(coloring)) {
+        definition = undefined
+        color = fillSingleColor(coloring)
+    } else {
+        if (isForeground) {
+            definition = coloring === null ? undefined : foreground(coloring, (parent as KGraphElement).id + rendering.id)
+            color = coloring === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
+        } else {
+            definition = coloring === null ? undefined : background(coloring, (parent as KGraphElement).id + rendering.id)
+            color = coloring === null ? DEFAULT_FILL : fillBackground((parent as KGraphElement).id + rendering.id)
+        }
+    }
+    return {
+        color: color,
+        definition: definition
+    }
+}
+
+export interface ColorStyle {
+    color: string,
+    definition: VNode | undefined
+}
+
+export interface ColorStyles {
+    foreground: ColorStyle,
+    background: ColorStyle
 }
 
 // foreground and background both define a color the same way
