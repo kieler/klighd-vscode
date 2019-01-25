@@ -14,6 +14,7 @@ import { getStyles, DEFAULT_LINE_WIDTH,
     DEFAULT_FONT_BOLD, DEFAULT_VERTICAL_ALIGNMENT,
     DEFAULT_SHADOW_DEF,  getSvgColorStyles, getSvgColorStyle } from "./views-styles"
 import { SVGAttributes } from 'react';
+import { SvgPropertiesHyphen } from 'csstype';
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -757,40 +758,61 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         x = 0
     }
 
+    // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
+    // contained in the general style, otherwise it has to be repeated in every contained <tspan> element.
     let style = {
         ...{'font-family': fontName},
         ...{'font-size': styles.kFontSize.size + 'pt'},
         ...{'font-style': italic},
-        ...{'font-weight': bold}
-    } as React.CSSProperties
+        ...{'font-weight': bold},
+        ...(lines.length === 1 ? {'alignment-baseline': verticalAlignment} : {})
+    } as React.CSSProperties | SvgPropertiesHyphen
 
+    // The children to be contained in the returned text node.
+    let children: any[]
+
+    // The attributes to be contained in the returned text node.
+    let attrs = {
+        style: style,
+        ...(y ? {y: y} : {}),
+        fill: colorStyle.color,
+        ...{'xml:space' : "preserve"} // This attribute makes the text size estimation include any trailing white spaces.
+    } as any
+
+    if (lines.length === 1) {
+        // If the text has only one line, just put the text in the text node directly.
+        attrs.x = x;
+        children = [lines[0]]
+    } else {
+        // Otherwise, put each line of text in a separate <tspan> element.
+        let dy: string | undefined = undefined
+        children = []
+        lines.forEach((line, index) => {
+            // If the line is just a blank line, add a dummy space character so the size estimation will
+            // include this character without rendering anything further visible to the screen.
+            // Also, the <tspan> attribute dy needs at least one character per text so the offset is correctly applied.
+            if (line === "") {
+                line = " "
+            }
+            children.push(
+                <tspan
+                    style = {{
+                        'alignment-baseline': verticalAlignment, // Somehow, svg ignores this style on its parent. So put it here for every individual tspan.
+                    } as React.CSSProperties}
+                    x = {x}
+                    {...(dy ? {dy: dy} : {})}
+                >{line}</tspan>
+            )
+            dy = '1.1em' // Have a distance of 1.1em for every new line after the first one.
+        });
+    }
+
+    // build the text node from the above defined attributes and children
     let textNode = <text
-        style = {style}
-        {...(y ? {y: y} : {})}
-        fill = {colorStyle.color}
-        {...{'xml:space' : "preserve"}/* This attribute makes the text size estimation include any trailing white spaces. */}
-    />
+        {...attrs}
+    >{...children}</text>
 
-    let dy: string | undefined = undefined
-    lines.forEach((line, index) => {
-        // If the line is just a blank line, add a dummy space character so the size estimation will
-        // include this character without rendering anything further visible to the screen.
-        // Also, the <tspan> attribute dy needs at least one character per text so the offset is correctly applied.
-        if (line === "") {
-            line = " "
-        }
-        (textNode.children as (string | VNode)[]).push(
-            <tspan
-                style = {{
-                    'alignment-baseline': verticalAlignment, // Somehow, svg ignores this style on its parent. So repeat it here for every individual tspan.
-                } as React.CSSProperties}
-                x = {x}
-                {...(dy ? {dy: dy} : {})}
-            >{line}</tspan>
-        )
-        dy = '1.1em' // Have a distance of 1.1em for every new line after the first one.
-    });
-
+    // If the text color depends on some complex color definition, add it here.
     if (colorStyle.definition) {
         return <g>
             {colorStyle.definition}
