@@ -18,7 +18,7 @@ import * as net from 'net'
 import * as path from 'path'
 import { isWindows, isOSX } from "@theia/core";
 
-const osExtension = isWindows ? '/kieler.exe' : (isOSX ? '.app/Contents/MacOs/kieler' : '/kieler')
+const osExtension = isWindows ? '.exe' : (isOSX ? '.app/Contents/MacOs/kieler' : '/kieler')
 
 // path to language server for product version of KEITH for the different operating systems
 export const productLsPath:  string = './../../../../kieler' + osExtension;
