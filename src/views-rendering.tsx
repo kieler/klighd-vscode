@@ -12,7 +12,7 @@ import { VNode } from "snabbdom/vnode"
 import { getStyles, DEFAULT_LINE_WIDTH,
     DEFAULT_SHADOW, shadowDefinition, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
     DEFAULT_FONT_BOLD, DEFAULT_VERTICAL_ALIGNMENT,
-    DEFAULT_SHADOW_DEF,  getSvgColorStyles, getSvgColorStyle } from "./views-styles"
+    DEFAULT_SHADOW_DEF,  getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles } from "./views-styles"
 import { SVGAttributes } from 'react';
 import { SvgPropertiesHyphen } from 'csstype';
 // import * as snabbdom from 'snabbdom-jsx'
@@ -144,20 +144,10 @@ export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | 
 }
 
 export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
-    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-    const colorStyles = getSvgColorStyles(styles, parent, rendering)
-
-    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const opacity = styles.kInvisibility === null || styles.kInvisibility.invisible === false ? undefined : 0
-    const shadow = styles.kShadow === undefined ? DEFAULT_SHADOW : shadowFilter((parent as KGraphElement).id + rendering.id)
-    const shadowDef = styles.kShadow === undefined ? DEFAULT_SHADOW_DEF : shadowDefinition(styles.kShadow, (parent as KGraphElement).id + rendering.id)
     let width = undefined
     let height = undefined
     let x = undefined
     let y = undefined
-    const rx = rendering.cornerWidth
-    const ry = rendering.cornerHeight
-
     // findBounds(width, height, x, y, rendering.calculatedBounds, context.boundsMap) // TODO: maybe do it like this
     if (!isNullOrUndefined(rendering.calculatedBounds)) {
         // sizes are in the calculatedBounds of the rendering
@@ -199,9 +189,27 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
         gAttrs.transform = `translate(${x}, ${y})`/*fixes chrome syntax HL: `*/
     }
 
+    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const invisibilityStyles = getSvgInvisibilityStyles(styles)
+
+    if (invisibilityStyles.opacity === 0) {
+        return <g {...gAttrs}>
+            {renderChildRenderings(rendering, parent, context)}
+        </g>
+    }
+
+    const colorStyles = getSvgColorStyles(styles, parent, rendering)
+
+    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+    // const opacity = styles.kInvisibility === null || styles.kInvisibility.invisible === false ? undefined : 0
+    const shadow = styles.kShadow === undefined ? DEFAULT_SHADOW : shadowFilter((parent as KGraphElement).id + rendering.id)
+    const shadowDef = styles.kShadow === undefined ? DEFAULT_SHADOW_DEF : shadowDefinition(styles.kShadow, (parent as KGraphElement).id + rendering.id)
+    const rx = rendering.cornerWidth
+    const ry = rendering.cornerHeight
+
     let element = <g {...gAttrs}>
         <rect
-            opacity = {opacity}
+            opacity = {invisibilityStyles.opacity}
             x = {0}
             y = {0}
             width  = {width}

@@ -300,6 +300,12 @@ export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, ren
     }
 }
 
+export function getSvgInvisibilityStyles(styles: Styles): InvisibilityStyles {
+    return {
+        opacity: styles.kInvisibility === null || styles.kInvisibility.invisible === false ? undefined : 0
+    }
+}
+
 export interface ColorStyle {
     color: string,
     definition: VNode | undefined
@@ -308,6 +314,10 @@ export interface ColorStyle {
 export interface ColorStyles {
     foreground: ColorStyle,
     background: ColorStyle
+}
+
+export interface InvisibilityStyles {
+    opacity: number | undefined
 }
 
 // foreground and background both define a color the same way
