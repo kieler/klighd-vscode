@@ -2,12 +2,12 @@
 import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KEllipse, KNode, KPort, KRoundedRectangle, KRectangle,
     KSpline, KEdge, KPolyline, KPolygon, KText, KLabel, KContainerRendering, KGraphData,
-    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
+    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground, KRendering, Decoration } from "./kgraph-models"
 import { KGraphRenderingContext, findById, shadowFilter,
     lineCapText, lineJoinText, lineStyleText, evaluateKPosition, camelToKebab,
     verticalAlignmentText, calculateX, calculateY } from "./views-common"
 import { isNullOrUndefined } from "util"
-import { toDegrees, Point } from "sprotty/lib"
+import { toDegrees, Point, Bounds } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
 import { getStyles, DEFAULT_LINE_WIDTH,
     DEFAULT_SHADOW, shadowDefinition, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
@@ -136,6 +136,75 @@ export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, conte
     return element
 }
 
+export function findBoundsAndTransformationData(rendering: KRendering, parent: KGraphElement, context: KGraphRenderingContext) {
+    let bounds
+    let decoration
+
+    if (!isNullOrUndefined(rendering.calculatedBounds)) {
+        // bounds are in the calculatedBounds of the rendering
+        bounds = rendering.calculatedBounds
+    }
+    // if no bounds have been found yet, they should be in the boundsMap
+    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
+        bounds = findById(context.boundsMap, rendering.id)
+    }
+    if (!isNullOrUndefined(rendering.calculatedDecoration)) {
+        decoration = rendering.calculatedDecoration
+        bounds = {
+            x: decoration.bounds.x + decoration.origin.x,
+            y: decoration.bounds.y + decoration.origin.y,
+            width: decoration.bounds.width,
+            height: decoration.bounds.height
+        }
+    }
+    if (isNullOrUndefined(decoration) && !isNullOrUndefined(context.decorationMap)) {
+        decoration = findById(context.decorationMap, rendering.id)
+        if (!isNullOrUndefined(decoration)) {
+            bounds = {
+                x: decoration.bounds.x + decoration.origin.x,
+                y: decoration.bounds.y + decoration.origin.y,
+                width: decoration.bounds.width,
+                height: decoration.bounds.height
+            }
+        }
+    }
+    if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds) && !('size' in parent)) {
+        console.error('could not find bounds or decoration data to render this element: ' + rendering + ' for this parent: ' + parent)
+        return
+    } else if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds)) {
+        console.error('could not find bounds or decoration data to render this element. Using parent bounds as a fallback.')
+        bounds = (parent as any).size
+    }
+    const transformation = getTransformation(bounds, decoration)
+
+    return {
+        bounds: bounds,
+        transformation: transformation,
+        isDecoration: decoration !== undefined
+    }
+}
+
+export interface BoundsAndTransformation {
+    bounds: Bounds | undefined,
+    transformation: string | undefined,
+    isDecoration: boolean
+}
+
+export function getTransformation(bounds: Bounds, decoration: Decoration) {
+    let transform
+    if (decoration !== undefined &&  toDegrees(decoration.rotation) !== 0) {
+        // Rotate if a decoration exists and the rotation is not 0.
+        transform = `translate(${decoration.origin.x},${decoration.origin.y}) `
+                         + `rotate(${toDegrees(decoration.rotation)}) `
+                         + `translate(${-decoration.origin.x},${-decoration.origin.y})`
+    } else if (decoration === undefined && bounds !== undefined
+        && (bounds.x !== 0 || bounds.y !== 0)) {
+        // Translate if there is no decoration, but bounds and the translation is not 0.
+        transform = `translate(${bounds.x}, ${bounds.y})`
+    }
+    return transform
+}
+
 export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
     const roundedRendering = rendering as KRoundedRectangle
     // like this the rx and ry will be undefined during the rendering of a roundedRectangle and therefore those fields will be left out.
@@ -144,49 +213,13 @@ export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | 
 }
 
 export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
-    let width = undefined
-    let height = undefined
-    let x = undefined
-    let y = undefined
-    // findBounds(width, height, x, y, rendering.calculatedBounds, context.boundsMap) // TODO: maybe do it like this
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
-        // sizes are in the calculatedBounds of the rendering
-        width = rendering.calculatedBounds.width
-        height = rendering.calculatedBounds.height
-        x = rendering.calculatedBounds.x
-        y = rendering.calculatedBounds.y
-    }
-    // if no sizes have been found yet, they should be in the boundsMap
-    if (isNullOrUndefined(x) && !isNullOrUndefined(context.boundsMap)) {
-        // sizes should be found in the boundsMap in the context
-        const bounds = findById(context.boundsMap, rendering.id)
-        if (isNullOrUndefined(bounds)) {
-            console.error('the boundsMap does not contain the id for this rendering.')
-            console.error('boundsMap:')
-            console.error(context.boundsMap)
-            console.error('id:')
-            console.error(rendering.id)
-        } else {
-            width = bounds.width
-            height = bounds.height
-            x = bounds.x
-            y = bounds.y
-        }
-    }
-    if (isNullOrUndefined(x)) { // if no value is found for x (and therefore also y) try to use the size of the parent itself, otherwise rendering will fail.
-        console.error('calculatedBounds of this rendering are undefined or null and no bounds map in the rendering library can be found!')
-        if (!('size' in parent)) { // if parent is not a KNode or KPort
-            console.error('Rectangle renderings are only possible for KNodes or KPorts')
-            return <g/>
-        }
-        width = parent.size.width
-        height = parent.size.height
+    const boundsAndTransformation = findBoundsAndTransformationData(rendering, parent, context)
+    if (boundsAndTransformation === undefined) {
+        return <g/>
     }
 
-    // Only translate, if the translation is not 0.
-    let gAttrs: SVGAttributes<SVGGElement>  = {}
-    if (x !== 0 || y !== 0) {
-        gAttrs.transform = `translate(${x}, ${y})`/*fixes chrome syntax HL: `*/
+    const gAttrs: SVGAttributes<SVGGElement>  = {
+        transform: boundsAndTransformation.transformation
     }
 
     const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
@@ -201,7 +234,6 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
     const colorStyles = getSvgColorStyles(styles, parent, rendering)
 
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    // const opacity = styles.kInvisibility === null || styles.kInvisibility.invisible === false ? undefined : 0
     const shadow = styles.kShadow === undefined ? DEFAULT_SHADOW : shadowFilter((parent as KGraphElement).id + rendering.id)
     const shadowDef = styles.kShadow === undefined ? DEFAULT_SHADOW_DEF : shadowDefinition(styles.kShadow, (parent as KGraphElement).id + rendering.id)
     const rx = rendering.cornerWidth
@@ -210,10 +242,10 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
     let element = <g {...gAttrs}>
         <rect
             opacity = {invisibilityStyles.opacity}
-            x = {0}
-            y = {0}
-            width  = {width}
-            height = {height}
+            {...(boundsAndTransformation.isDecoration ? {x : boundsAndTransformation.bounds.x} : {})}
+            {...(boundsAndTransformation.isDecoration ? {y : boundsAndTransformation.bounds.y} : {})}
+            width  = {boundsAndTransformation.bounds.width}
+            height = {boundsAndTransformation.bounds.height}
             {...(rx ? {rx: rx} : {})}
             {...(ry ? {ry: ry} : {})}
             style = {{
