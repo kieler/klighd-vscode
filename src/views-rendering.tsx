@@ -115,7 +115,7 @@ export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, conte
             rx = {bounds.width / 2}
             ry = {bounds.height / 2}
             style = {{
-                'stroke-width': lineWidth
+                'stroke-width': lineWidth + 'px'
             } as React.CSSProperties}
             stroke = {colorStyles.foreground.color}
             fill = {colorStyles.background.color}
@@ -249,7 +249,7 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
             {...(rx ? {rx: rx} : {})}
             {...(ry ? {ry: ry} : {})}
             style = {{
-                'stroke-width': lineWidth
+                'stroke-width': lineWidth + 'px'
             } as React.CSSProperties}
             stroke = {colorStyles.foreground.color}
             fill = {colorStyles.background.color}
@@ -494,7 +494,7 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
             style = {{
                 'stroke-linecap': lineCap,
                 'stroke-linejoin': lineJoin,
-                'stroke-width': lineWidth,
+                'stroke-width': lineWidth + 'px',
                 'stroke-dasharray': lineStyle,
                 'stroke-miterlimit': miterLimit
             } as React.CSSProperties}
@@ -636,7 +636,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
             style = {{
                 'stroke-linecap': lineCap,
                 'stroke-linejoin': lineJoin,
-                'stroke-width': lineWidth,
+                'stroke-width': lineWidth + 'px',
                 'stroke-dasharray': lineStyle,
                 'stroke-miterlimit': miterLimit
             } as React.CSSProperties}
@@ -659,12 +659,6 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
     const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
     const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
     const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-
-    // hack to fix the border being drawn although it should not
-    // FIXME: find out, how to not have to use this hack.
-    if (lineWidth === 0) {
-        colorStyles.foreground.color = null as any
-    }
 
     let bounds = undefined
     if (!isNullOrUndefined(rendering.calculatedBounds)) {
@@ -730,7 +724,7 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
             style = {{
                 'stroke-linecap': lineCap,
                 'stroke-linejoin': lineJoin,
-                'stroke-width': lineWidth,
+                'stroke-width': lineWidth + 'px',
                 'stroke-dasharray': lineStyle,
                 'stroke-miterlimit': miterLimit
             } as React.CSSProperties}
