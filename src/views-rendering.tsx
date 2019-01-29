@@ -67,74 +67,58 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
 }
 
 export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, context: KGraphRenderingContext): VNode {
-    const styles = getKStyles(rendering.styles, parent.id + rendering.id)
-    const colorStyles = getSvgColorStyles(styles, parent, rendering)
+    // Extract the styles of the rendering into a more presentable object.
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
 
-    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    let bounds = undefined
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
-        bounds = rendering.calculatedBounds
-    }
-    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
-        bounds = findById(context.boundsMap, rendering.id)
-    }
-
-    let decoration = undefined
-    if (!isNullOrUndefined(rendering.calculatedDecoration)) {
-        decoration = rendering.calculatedDecoration
-        bounds = {
-            x: decoration.bounds.x + decoration.origin.x,
-            y: decoration.bounds.y + decoration.origin.y,
-            width: decoration.bounds.width,
-            height: decoration.bounds.height
-        }
-    }
-    if (isNullOrUndefined(decoration) && !isNullOrUndefined(context.decorationMap)) {
-        decoration = findById(context.decorationMap, rendering.id)
-        if (!isNullOrUndefined(decoration)) {
-            bounds = {
-                x: decoration.bounds.x + decoration.origin.x,
-                y: decoration.bounds.y + decoration.origin.y,
-                width: decoration.bounds.width,
-                height: decoration.bounds.height
-            }
-        }
-    }
-    if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds)) {
-        console.error('could not find bounds or decoration data to render this KEllipse')
+    // Determine the bounds of the rendering first and where it has to be placed.
+    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
+    if (boundsAndTransformation === undefined) {
+        // If no bounds are found, the rendering can not be drawn.
         return <g/>
     }
 
-    // Only translate, if the translation is not 0.
-    let gAttrs: SVGAttributes<SVGGElement>  = {}
-    if (bounds.x !== 0 || bounds.y !== 0) {
-        gAttrs.transform = `translate(${bounds.x}, ${bounds.y})`/*fixes chrome syntax HL: `*/
+    const gAttrs: SVGAttributes<SVGGElement>  = {
+        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
     }
+
+    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // only render its children transformed by the transformation already calculated.
+    const invisibilityStyles = getSvgInvisibilityStyles(styles)
+
+    if (invisibilityStyles.opacity === 0) {
+        return <g {...gAttrs}>
+            {renderChildRenderings(rendering, parent, context)}
+        </g>
+    }
+
+    // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
+    const colorStyles = getSvgColorStyles(styles, parent, rendering)
+    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
     let element = <g {...gAttrs}>
         <ellipse
-            cx = {bounds.width / 2}
-            cy = {bounds.height / 2}
-            rx = {bounds.width / 2}
-            ry = {bounds.height / 2}
+            opacity = {invisibilityStyles.opacity}
+            cx = {boundsAndTransformation.bounds.width / 2}
+            cy = {boundsAndTransformation.bounds.height / 2}
+            rx = {boundsAndTransformation.bounds.width / 2}
+            ry = {boundsAndTransformation.bounds.height / 2}
             style = {{
-                'stroke-width': lineWidth + 'px'
+                'stroke-linecap': lineStyles.lineCap,
+                'stroke-linejoin': lineStyles.lineJoin,
+                'stroke-width': lineStyles.lineWidth,
+                'stroke-dasharray': lineStyles.lineStyle,
+                'stroke-miterlimit': lineStyles.miterLimit
             } as React.CSSProperties}
             stroke = {colorStyles.foreground.color}
             fill = {colorStyles.background.color}
+            filter = {shadowStyles.filter}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (colorStyles.background.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
-    }
-    if (colorStyles.foreground.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
-    }
-    // if (shadowDef) {
-    //     (element.children as (string | VNode)[]).push(shadowDef)
-    // } // TODO: implement shadow
+    // Check if additional definitions for the colors or shadow need to be added to the svg element.
+    addDefinitions(element, colorStyles, shadowStyles)
 
     return element
 }
