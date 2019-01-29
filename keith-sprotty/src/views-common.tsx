@@ -363,7 +363,7 @@ export function getTransformation(bounds: Bounds, decoration: Decoration) {
         transformY += bounds.y
     }
     if (transformX !== 0 || transformY !== 0) {
-        transform += `translate(${transformX}, ${transformY})`
+        transform += `translate(${transformX},${transformY})`
     }
     return (transform === '' ? undefined : transform)
 }
