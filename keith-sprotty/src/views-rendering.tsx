@@ -38,10 +38,6 @@ const K_TEXT = 'KTextImpl'
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
 export function renderChildArea(rendering: KChildArea, parent: KGraphElement, context: KGraphRenderingContext) {
-    if (isNullOrUndefined(rendering.calculatedBounds)) {
-        console.error('computedBounds in child Area rendering is not defined!')
-        return <g/>
-    }
     if (parent.areChildrenRendered) {
         console.error('This element contains multiple child areas, skipping this one.')
         return <g/>
@@ -49,11 +45,19 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     // remember, that this parent's children are now already rendered
     parent.areChildrenRendered = true
 
-    // Only translate, if the translation is not 0.
-    let gAttrs: SVGAttributes<SVGGElement>  = {}
-    if (rendering.calculatedBounds.x !== 0 || rendering.calculatedBounds.y !== 0) {
-        gAttrs.transform = `translate(${rendering.calculatedBounds.x}, ${rendering.calculatedBounds.y})`/*fixes chrome syntax HL: `*/
+    // Determine the bounds of the rendering first and where it has to be placed.
+    const boundsAndTransformation = findBoundsAndTransformationData(rendering, parent, context)
+    if (boundsAndTransformation === undefined) {
+        // If no bounds are found, the rendering can not be drawn.
+        return <g/>
     }
+
+    const gAttrs: SVGAttributes<SVGGElement>  = {
+        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
+    }
+
+    // Extract the styles of the rendering into a more presentable object.
+    // const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
 
     let element = <g {...gAttrs}>
         {context.renderChildren(parent)}
