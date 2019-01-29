@@ -240,30 +240,39 @@ export class KStyles {
 // ----------------------------- Functions for rendering different KStyles as VNodes in svg --------------------------------------------
 
 export function gradientDef(style: KColoring, id: string): VNode {
+    const startOpacity: number | undefined = (style.alpha / 255)
+    const startOpacityString = startOpacity === 1 ? undefined : startOpacity.toString()
     let startColorStop = <stop
         offset = {0}
         style = {{
             'stop-color': toSVG(style.color),
-            'stop-opacity': (style.alpha / 255).toString()
+            'stop-opacity': startOpacityString
         } as React.CSSProperties}
     />
 
     let stopColorStop = undefined
+    const stopOpacity: number | undefined = (style.targetAlpha / 255)
+    const stopOpacityString = stopOpacity === 1 ? undefined : stopOpacity.toString()
+
     if (!isNullOrUndefined(style.targetColor) && !isNullOrUndefined(style.targetAlpha) && !isNullOrUndefined(style.gradientAngle)) {
         stopColorStop = <stop
             offset = {1}
             style = {{
                 'stop-color': toSVG(style.targetColor),
-                'stop-opacity': (style.targetAlpha / 255).toString()
+                'stop-opacity': stopOpacityString
             } as React.CSSProperties}
         />
     }
+    let angle = style.gradientAngle
 
-    let linearGradient = <linearGradient
-        id = {id}
-        gradientUnits = {GRADIENT_UNIT_OBJECT_BOUNDING_BOX}
-        gradientTransform = {GRADIENT_TRANSFORM_ROTATE_START + style.gradientAngle + GRADIENT_TRANSFORM_ROTATE_END}
-        >
+    const gradientAttributes = {
+        id: id,
+        // If the gradient is not rotated, the attributes for rotation should not be added.
+        ...(angle === 0 ? {} : {gradientUnits : GRADIENT_UNIT_OBJECT_BOUNDING_BOX}),
+        ...(angle === 0 ? {} : {gradientTransform : GRADIENT_TRANSFORM_ROTATE_START + style.gradientAngle + GRADIENT_TRANSFORM_ROTATE_END})
+    }
+
+    let linearGradient = <linearGradient {...gradientAttributes}>
         {startColorStop}
     </linearGradient>
 
