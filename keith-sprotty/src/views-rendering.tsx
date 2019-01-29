@@ -45,8 +45,11 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     // remember, that this parent's children are now already rendered
     parent.areChildrenRendered = true
 
+    // Extract the styles of the rendering into a more presentable object.
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+
     // Determine the bounds of the rendering first and where it has to be placed.
-    const boundsAndTransformation = findBoundsAndTransformationData(rendering, parent, context)
+    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
         return <g/>
@@ -55,9 +58,6 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     const gAttrs: SVGAttributes<SVGGElement>  = {
         ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
     }
-
-    // Extract the styles of the rendering into a more presentable object.
-    // const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
 
     let element = <g {...gAttrs}>
         {context.renderChildren(parent)}
@@ -147,9 +147,11 @@ export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | 
 }
 
 export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
-    // TODO: check the KRotation style first and apply it.
+    // Extract the styles of the rendering into a more presentable object.
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+
     // Determine the bounds of the rendering first and where it has to be placed.
-    const boundsAndTransformation = findBoundsAndTransformationData(rendering, parent, context)
+    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
         return <g/>
@@ -158,9 +160,6 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
     const gAttrs: SVGAttributes<SVGGElement>  = {
         ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
     }
-
-    // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
 
     // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
     // only render its children transformed by the transformation already calculated.
