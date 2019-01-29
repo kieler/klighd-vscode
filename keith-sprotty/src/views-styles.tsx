@@ -163,6 +163,9 @@ export const DEFAULT_SHADOW = undefined
 export const DEFAULT_SHADOW_DEF = undefined
 export const DEFAULT_CORNER_WIDTH = 0
 export const DEFAULT_CORNER_HEIGHT = 0
+export const DEFAULT_LINE_CAP_SVG = 'butt'
+export const DEFAULT_LINE_JOIN_SVG = 'miter'
+export const DEFAULT_MITER_LIMIT_SVG = 4
 
 /**
  * Data class to hold each possible KStyle of any rendering. Defaults each style to null or its default value from PNodeController.java
@@ -316,12 +319,19 @@ export function getSvgInvisibilityStyles(styles: KStyles): InvisibilityStyles {
 
 export function getSvgLineStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): LineStyles {
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+    const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
+    const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
+    const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
     return {
-        lineWidth: lineWidth + 'px',
-        lineCap: styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap),
-        lineJoin: styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin),
+        lineWidth: lineWidth === DEFAULT_LINE_WIDTH ? undefined : lineWidth + 'px',
+        lineCap: lineCap === DEFAULT_LINE_CAP_SVG ? undefined : lineCap,
+        lineJoin: lineJoin === DEFAULT_LINE_JOIN_SVG ? undefined : lineJoin,
         lineStyle: styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
-        miterLimit: styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
+        // Note: Here the miter limit value is also omitted if the value equals KGraph's default value of 10, because otherwise the resulting SVG would
+        // always contain the miterLimit style to be set to 10, even though it is not intended by the creator of the KGraph model and it would not
+        // even make any difference in the rendering. Here I cannot distinguish if the model creator really wanted to have the specific miter limit of 10
+        // or if he just does not care. As the first case seems rare, I prefer a cleaner resulting svg here.
+        miterLimit: lineJoin !== 'miter' || miterLimit === DEFAULT_MITER_LIMIT_SVG || miterLimit === DEFAULT_MITER_LIMIT ? undefined : miterLimit
     }
 }
 
@@ -355,7 +365,7 @@ export interface LineStyles {
     lineCap: 'butt' | 'round' | 'square' | undefined,
     lineJoin: 'bevel' | 'miter' | 'round' | undefined,
     lineStyle: string | undefined,
-    miterLimit: number
+    miterLimit: number | undefined
 }
 
 export interface TextStyles {
