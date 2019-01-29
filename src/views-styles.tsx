@@ -104,7 +104,6 @@ export function getKStyles(styleList: KStyle[], id: string): KStyles { // TODO: 
                     break
                 }
                 case K_ROTATION: {
-                    console.error('The style ' + style.type + ' is not implemented yet.')
                     styles.kRotation = style as KRotation
                     break
                 }

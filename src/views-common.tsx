@@ -1,6 +1,6 @@
 import { KLineCap, LineCap, KLineJoin, LineJoin, KLineStyle, LineStyle, HorizontalAlignment,
     VerticalAlignment, KHorizontalAlignment, KVerticalAlignment, KPosition, KRenderingLibrary,
-    KColoring, KRendering, KGraphElement, Decoration } from "./kgraph-models"
+    KColoring, KRendering, KGraphElement, Decoration, KRotation } from "./kgraph-models"
 import { Bounds, Point, toDegrees, ModelRenderer } from "sprotty/lib"
 import { isNullOrUndefined } from "util"
 import { VNode } from "snabbdom/vnode";
@@ -284,7 +284,8 @@ export function camelToKebab(string: string): string {
     return string.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-export function findBoundsAndTransformationData(rendering: KRendering, parent: KGraphElement, context: KGraphRenderingContext): BoundsAndTransformation | undefined {
+export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | null, parent: KGraphElement,
+    context: KGraphRenderingContext): BoundsAndTransformation | undefined {
     let bounds
     let decoration
 
@@ -328,7 +329,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, parent: K
         bounds = (parent as any).size
     }
     // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
-    const transformation = getTransformation(bounds, decoration)
+    const transformation = getTransformation(bounds, decoration, kRotation)
 
     return {
         bounds: bounds,
@@ -341,31 +342,57 @@ export interface BoundsAndTransformation {
     transformation: string | undefined
 }
 
-export function getTransformation(bounds: Bounds, decoration: Decoration) {
+export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | null) {
     let transform = ''
-    let transformX = 0
-    let transformY = 0
-    // Do the translation and rotation for the element only if the decoration itself exists and is not 0.
+    let isTransform = false
+    // Do the rotation for the element only if the decoration itself exists and is not 0.
     if (decoration !== undefined && toDegrees(decoration.rotation) !== 0) {
-        // translation by 0,0 is not necessary.
-        if (decoration.origin.x !== 0 || decoration.origin.y !== 0) {
-            transform += `translate(${decoration.origin.x},${decoration.origin.y})`
-        }
         // The rotation itself
-        transform += `rotate(${toDegrees(decoration.rotation)})`
-        // Remember the translation back
-        transformX -= decoration.origin.x
-        transformY -= decoration.origin.y
+        transform += `rotate(${toDegrees(decoration.rotation)}`
+        isTransform = true
+        // If the rotation is around a point other than (0,0), add the additional parameters to the rotation.
+        if (decoration.origin.x !== 0 || decoration.origin.y !== 0) {
+            transform += `,${decoration.origin.x},${decoration.origin.y}`
+        }
+        transform += ')'
     }
-    if (bounds !== undefined) {
-        // Translate if there are bounds. Add it to the possibly previously remembered transformation from the rotation.
-        transformX += bounds.x
-        transformY += bounds.y
+
+    // Translate if there are bounds.
+    if (bounds !== undefined && (bounds.x !== 0 || bounds.y !== 0)) {
+        isTransform = true
+        transform += `translate(${bounds.x},${bounds.y})`
     }
-    if (transformX !== 0 || transformY !== 0) {
-        transform += `translate(${transformX},${transformY})`
+
+    // Rotate the element also if a KRotation style has to be applied
+    if (rotation !== null && rotation.rotation !== 0) {
+        // The rotation itself
+        transform += `rotate(${rotation.rotation}`
+        isTransform = true
+        if (rotation.rotationAnchor === undefined) {
+            // If the rotation anchor is undefined, rotate around the center by default.
+            const CENTER = {
+                x: {
+                    type: K_LEFT_POSITION,
+                    absolute:  0,
+                    relative: 0.5
+                },
+                y: {
+                    type: K_TOP_POSITION,
+                    absolute: 0,
+                    relative: 0.5
+                }
+            }
+            rotation.rotationAnchor = CENTER
+        }
+        const rotationAnchor = evaluateKPosition(rotation.rotationAnchor, bounds, true)
+
+        // If the rotation is around a point other than (0,0), add the additional parameters to the rotation.
+        if (rotationAnchor.x !== 0 || rotationAnchor.y !== 0) {
+            transform += `,${rotationAnchor.x},${rotationAnchor.y}`
+        }
+        transform += ')'
     }
-    return (transform === '' ? undefined : transform)
+    return (isTransform ? transform : undefined)
 }
 
 export function addDefinitions(element: VNode, colorStyles: ColorStyles, shadowStyles: ShadowStyles) {
