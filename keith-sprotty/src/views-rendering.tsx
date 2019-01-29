@@ -2,17 +2,16 @@
 import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KEllipse, KNode, KPort, KRoundedRectangle, KRectangle,
     KSpline, KEdge, KPolyline, KPolygon, KText, KLabel, KContainerRendering, KGraphData,
-    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground, KRendering, Decoration } from "./kgraph-models"
-import { KGraphRenderingContext, findById, shadowFilter,
+    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
+import { KGraphRenderingContext, findById,
     lineCapText, lineJoinText, lineStyleText, evaluateKPosition, camelToKebab,
-    verticalAlignmentText, calculateX, calculateY } from "./views-common"
+    verticalAlignmentText, calculateX, calculateY, findBoundsAndTransformationData, addDefinitions } from "./views-common"
 import { isNullOrUndefined } from "util"
-import { toDegrees, Point, Bounds } from "sprotty/lib"
+import { toDegrees, Point } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
-import { getStyles, DEFAULT_LINE_WIDTH,
-    DEFAULT_SHADOW, shadowDefinition, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
+import { getKStyles, DEFAULT_LINE_WIDTH, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
     DEFAULT_FONT_BOLD, DEFAULT_VERTICAL_ALIGNMENT,
-    DEFAULT_SHADOW_DEF,  getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles } from "./views-styles"
+    getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles } from "./views-styles"
 import { SVGAttributes } from 'react';
 import { SvgPropertiesHyphen } from 'csstype';
 // import * as snabbdom from 'snabbdom-jsx'
@@ -64,7 +63,7 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
 }
 
 export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, context: KGraphRenderingContext): VNode {
-    const styles = getStyles(rendering.styles, parent.id + rendering.id)
+    const styles = getKStyles(rendering.styles, parent.id + rendering.id)
     const colorStyles = getSvgColorStyles(styles, parent, rendering)
 
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
@@ -136,75 +135,6 @@ export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, conte
     return element
 }
 
-export function findBoundsAndTransformationData(rendering: KRendering, parent: KGraphElement, context: KGraphRenderingContext) {
-    let bounds
-    let decoration
-
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
-        // bounds are in the calculatedBounds of the rendering
-        bounds = rendering.calculatedBounds
-    }
-    // if no bounds have been found yet, they should be in the boundsMap
-    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
-        bounds = findById(context.boundsMap, rendering.id)
-    }
-    if (!isNullOrUndefined(rendering.calculatedDecoration)) {
-        decoration = rendering.calculatedDecoration
-        bounds = {
-            x: decoration.bounds.x + decoration.origin.x,
-            y: decoration.bounds.y + decoration.origin.y,
-            width: decoration.bounds.width,
-            height: decoration.bounds.height
-        }
-    }
-    if (isNullOrUndefined(decoration) && !isNullOrUndefined(context.decorationMap)) {
-        decoration = findById(context.decorationMap, rendering.id)
-        if (!isNullOrUndefined(decoration)) {
-            bounds = {
-                x: decoration.bounds.x + decoration.origin.x,
-                y: decoration.bounds.y + decoration.origin.y,
-                width: decoration.bounds.width,
-                height: decoration.bounds.height
-            }
-        }
-    }
-    if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds) && !('size' in parent)) {
-        console.error('could not find bounds or decoration data to render this element: ' + rendering + ' for this parent: ' + parent)
-        return
-    } else if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds)) {
-        console.error('could not find bounds or decoration data to render this element. Using parent bounds as a fallback.')
-        bounds = (parent as any).size
-    }
-    const transformation = getTransformation(bounds, decoration)
-
-    return {
-        bounds: bounds,
-        transformation: transformation,
-        isDecoration: decoration !== undefined
-    }
-}
-
-export interface BoundsAndTransformation {
-    bounds: Bounds | undefined,
-    transformation: string | undefined,
-    isDecoration: boolean
-}
-
-export function getTransformation(bounds: Bounds, decoration: Decoration) {
-    let transform
-    if (decoration !== undefined &&  toDegrees(decoration.rotation) !== 0) {
-        // Rotate if a decoration exists and the rotation is not 0.
-        transform = `translate(${decoration.origin.x},${decoration.origin.y}) `
-                         + `rotate(${toDegrees(decoration.rotation)}) `
-                         + `translate(${-decoration.origin.x},${-decoration.origin.y})`
-    } else if (decoration === undefined && bounds !== undefined
-        && (bounds.x !== 0 || bounds.y !== 0)) {
-        // Translate if there is no decoration, but bounds and the translation is not 0.
-        transform = `translate(${bounds.x}, ${bounds.y})`
-    }
-    return transform
-}
-
 export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
     const roundedRendering = rendering as KRoundedRectangle
     // like this the rx and ry will be undefined during the rendering of a roundedRectangle and therefore those fields will be left out.
@@ -213,16 +143,23 @@ export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | 
 }
 
 export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
+    // TODO: check the KRotation style first and apply it.
+    // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, parent, context)
     if (boundsAndTransformation === undefined) {
+        // If no bounds are found, the rendering can not be drawn.
         return <g/>
     }
 
     const gAttrs: SVGAttributes<SVGGElement>  = {
-        transform: boundsAndTransformation.transformation
+        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
     }
 
-    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    // Extract the styles of the rendering into a more presentable object.
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+
+    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // only render its children transformed by the transformation already calculated.
     const invisibilityStyles = getSvgInvisibilityStyles(styles)
 
     if (invisibilityStyles.opacity === 0) {
@@ -231,47 +168,43 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
         </g>
     }
 
+    // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, parent, rendering)
+    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
-    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const shadow = styles.kShadow === undefined ? DEFAULT_SHADOW : shadowFilter((parent as KGraphElement).id + rendering.id)
-    const shadowDef = styles.kShadow === undefined ? DEFAULT_SHADOW_DEF : shadowDefinition(styles.kShadow, (parent as KGraphElement).id + rendering.id)
+    // Rendering-specific attributes
     const rx = rendering.cornerWidth
     const ry = rendering.cornerHeight
 
+    // Create the svg element for this rendering.
     let element = <g {...gAttrs}>
         <rect
             opacity = {invisibilityStyles.opacity}
-            {...(boundsAndTransformation.isDecoration ? {x : boundsAndTransformation.bounds.x} : {})}
-            {...(boundsAndTransformation.isDecoration ? {y : boundsAndTransformation.bounds.y} : {})}
             width  = {boundsAndTransformation.bounds.width}
             height = {boundsAndTransformation.bounds.height}
             {...(rx ? {rx: rx} : {})}
             {...(ry ? {ry: ry} : {})}
             style = {{
-                'stroke-width': lineWidth + 'px'
+                'stroke-linecap': lineStyles.lineCap,
+                'stroke-linejoin': lineStyles.lineJoin,
+                'stroke-width': lineStyles.lineWidth,
+                'stroke-dasharray': lineStyles.lineStyle,
+                'stroke-miterlimit': lineStyles.miterLimit
             } as React.CSSProperties}
             stroke = {colorStyles.foreground.color}
             fill = {colorStyles.background.color}
-            filter = {shadow}
+            filter = {shadowStyles.filter}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (colorStyles.background.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
-    }
-    if (colorStyles.foreground.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
-    }
-    if (shadowDef) {
-        (element.children as (string | VNode)[]).push(shadowDef)
-    }
+    // Check if additional definitions for the colors or shadow need to be added to the svg element.
+    addDefinitions(element, colorStyles, shadowStyles)
 
     return element
 }
 
-// TODO: if the parent element is not an edge, use the rendering.points instead of edge.routingPoints
 export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
     // TODO: implement junction point rendering
 
@@ -304,7 +237,7 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
         console.error('The KSpline does not have any points for its routing.')
     }
 
-    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
     const foregroundStyles = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
 
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
@@ -431,7 +364,7 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
         console.error('The KPolyline does not have any points for its routing.')
     }
 
-    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
     const foregroundStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
 
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
@@ -540,7 +473,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
         console.error('The KPolyline does not have any points for its routing.')
     }
 
-    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
     const foregroundStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
 
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
@@ -652,7 +585,7 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
 }
 
 export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, context: KGraphRenderingContext): VNode {
-    const styles = getStyles(rendering.styles, parent.id + rendering.id)
+    const styles = getKStyles(rendering.styles, parent.id + rendering.id)
     const colorStyles = getSvgColorStyles(styles, parent, rendering)
     const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
     const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
@@ -743,7 +676,7 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
 }
 
 export function renderKText(rendering: KText, parent: KGraphElement | KLabel, context: KGraphRenderingContext): VNode {
-    const styles = getStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
 
     let text = null
     // KText elements as renderings of labels have their text in the KLabel, not the KText

@@ -3,11 +3,12 @@ import { svg } from 'snabbdom-jsx'
 import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KFontSize, KInvisibility,
     KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KTextStrikeout,
     KTextUnderline, KVerticalAlignment, HorizontalAlignment, LineCap, LineJoin, LineStyle,
-    VerticalAlignment, KStyleRef, KColoring, KGraphElement, KRendering } from "./kgraph-models"
+    VerticalAlignment, KStyleRef, KColoring, KGraphElement, KRendering, KText } from "./kgraph-models"
 import { VNode } from "snabbdom/vnode"
 import { toSVG } from "sprotty/lib"
 import { isNullOrUndefined } from "util"
-import { foregroundId, backgroundId, shadowId, isSingleColor, fillSingleColor, fillForeground, fillBackground } from "./views-common"
+import { foregroundId, backgroundId, shadowId, isSingleColor, fillSingleColor, fillForeground, fillBackground,
+    shadowFilter, lineCapText, lineJoinText, lineStyleText } from "./views-common"
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -42,8 +43,8 @@ const GRADIENT_TRANSFORM_ROTATE_END = ')'
  * @param styleList The list of all styles that should have their rendering calculated
  * @param parent the containing node of these styles
  */
-export function getStyles(styleList: KStyle[], id: string): Styles { // TODO: not all of these are implemented yet
-    let styles = new Styles
+export function getKStyles(styleList: KStyle[], id: string): KStyles { // TODO: not all of these are implemented yet
+    let styles = new KStyles
     if (isNullOrUndefined(styleList)) {
         return styles
     }
@@ -159,14 +160,14 @@ export const DEFAULT_FILL = 'none'
 export const DEFAULT_FOREGROUND = 'black'
 export const DEFAULT_VERTICAL_ALIGNMENT = VerticalAlignment.CENTER
 export const DEFAULT_SHADOW = undefined
-export const DEFAULT_SHADOW_DEF = null
+export const DEFAULT_SHADOW_DEF = undefined
 export const DEFAULT_CORNER_WIDTH = 0
 export const DEFAULT_CORNER_HEIGHT = 0
 
 /**
- * Data class to hold each possible style of any rendering. Defaults each style to null or its default value from PNodeController.java
+ * Data class to hold each possible KStyle of any rendering. Defaults each style to null or its default value from PNodeController.java
  */
-export class Styles { // TODO: some of these need to change to like KLineStyle instead of LineStyle
+export class KStyles {
     kBackground: KBackground | null
     kForeground: KForeground | null
     kFontBold: KFontBold
@@ -272,7 +273,14 @@ export function gradientDef(style: KColoring, id: string): VNode {
     </defs>
 }
 
-export function getSvgColorStyles(styles: Styles, parent: KGraphElement, rendering: KRendering): ColorStyles {
+export function getSvgShadowStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): ShadowStyles {
+    return {
+        filter: styles.kShadow === undefined ? DEFAULT_SHADOW : shadowFilter((parent as KGraphElement).id + rendering.id),
+        definition: styles.kShadow === undefined ? DEFAULT_SHADOW_DEF : shadowDefinition(styles.kShadow, (parent as KGraphElement).id + rendering.id)
+    }
+}
+
+export function getSvgColorStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): ColorStyles {
     return {
         foreground: getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true),
         background: getSvgColorStyle(styles.kBackground as KBackground, parent, rendering, false)
@@ -300,10 +308,32 @@ export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, ren
     }
 }
 
-export function getSvgInvisibilityStyles(styles: Styles): InvisibilityStyles {
+export function getSvgInvisibilityStyles(styles: KStyles): InvisibilityStyles {
     return {
         opacity: styles.kInvisibility === null || styles.kInvisibility.invisible === false ? undefined : 0
     }
+}
+
+export function getSvgLineStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): LineStyles {
+    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+    return {
+        lineWidth: lineWidth + 'px',
+        lineCap: styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap),
+        lineJoin: styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin),
+        lineStyle: styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
+        miterLimit: styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
+    }
+}
+
+export function getSvgTextStyles(styles: KStyles, parent: KGraphElement, rendering: KText): TextStyles {
+    return {
+        todo: 'TODO: this'
+    }
+}
+
+export interface ShadowStyles {
+    filter: string | undefined,
+    definition: VNode | undefined
 }
 
 export interface ColorStyle {
@@ -318,6 +348,18 @@ export interface ColorStyles {
 
 export interface InvisibilityStyles {
     opacity: number | undefined
+}
+
+export interface LineStyles {
+    lineWidth: string | undefined,
+    lineCap: 'butt' | 'round' | 'square' | undefined,
+    lineJoin: 'bevel' | 'miter' | 'round' | undefined,
+    lineStyle: string | undefined,
+    miterLimit: number
+}
+
+export interface TextStyles {
+    todo: string // TODO: this
 }
 
 // foreground and background both define a color the same way

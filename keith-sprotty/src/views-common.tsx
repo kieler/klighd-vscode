@@ -1,7 +1,10 @@
 import { KLineCap, LineCap, KLineJoin, LineJoin, KLineStyle, LineStyle, HorizontalAlignment,
-    VerticalAlignment, KHorizontalAlignment, KVerticalAlignment, KPosition, KRenderingLibrary, KColoring } from "./kgraph-models"
+    VerticalAlignment, KHorizontalAlignment, KVerticalAlignment, KPosition, KRenderingLibrary,
+    KColoring, KRendering, KGraphElement, Decoration } from "./kgraph-models"
 import { Bounds, Point, toDegrees, ModelRenderer } from "sprotty/lib"
 import { isNullOrUndefined } from "util"
+import { VNode } from "snabbdom/vnode";
+import { ColorStyles, ShadowStyles } from "./views-styles";
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -65,6 +68,10 @@ export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string 
     const three: string = (3 * lineWidth).toString()
     switch (lineStyle.lineStyle) {
         case LineStyle.CUSTOM: {
+            if (lineStyle.dashPattern === undefined) {
+                // Draw a solid line if the custom dashPattern is not defined.
+                return '0'
+            }
             return lineStyle.dashPattern.join(' ')
         }
         case LineStyle.DASH: {
@@ -275,4 +282,100 @@ export function angle(x0: Point, x1: Point): number {
  */
 export function camelToKebab(string: string): string {
     return string.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+export function findBoundsAndTransformationData(rendering: KRendering, parent: KGraphElement, context: KGraphRenderingContext): BoundsAndTransformation | undefined {
+    let bounds
+    let decoration
+
+    if (!isNullOrUndefined(rendering.calculatedBounds)) {
+        // Bounds are in the calculatedBounds of the rendering.
+        bounds = rendering.calculatedBounds
+    }
+    // If no bounds have been found yet, they should be in the boundsMap.
+    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
+        bounds = findById(context.boundsMap, rendering.id)
+    }
+    // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
+    if (!isNullOrUndefined(rendering.calculatedDecoration)) {
+        decoration = rendering.calculatedDecoration
+        bounds = {
+            x: decoration.bounds.x + decoration.origin.x,
+            y: decoration.bounds.y + decoration.origin.y,
+            width: decoration.bounds.width,
+            height: decoration.bounds.height
+        }
+    }
+    // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
+    if (isNullOrUndefined(decoration) && !isNullOrUndefined(context.decorationMap)) {
+        decoration = findById(context.decorationMap, rendering.id)
+        if (!isNullOrUndefined(decoration)) {
+            bounds = {
+                x: decoration.bounds.x + decoration.origin.x,
+                y: decoration.bounds.y + decoration.origin.y,
+                width: decoration.bounds.width,
+                height: decoration.bounds.height
+            }
+        }
+    }
+    // Error check: If there are no bounds or decoration, at least try to fall back to a possible size attribute in the parent element.
+    // If the parent element has no bounds either, the object can not be rendered.
+    if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds) && !('size' in parent)) {
+        console.error('could not find bounds or decoration data to render this element: ' + rendering + ' for this parent: ' + parent)
+        return
+    } else if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds)) {
+        console.error('could not find bounds or decoration data to render this element. Using parent bounds as a fallback.')
+        bounds = (parent as any).size
+    }
+    // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
+    const transformation = getTransformation(bounds, decoration)
+
+    return {
+        bounds: bounds,
+        transformation: transformation
+    }
+}
+
+export interface BoundsAndTransformation {
+    bounds: Bounds,
+    transformation: string | undefined
+}
+
+export function getTransformation(bounds: Bounds, decoration: Decoration) {
+    let transform = ''
+    let transformX = 0
+    let transformY = 0
+    // Do the translation and rotation for the element only if the decoration itself exists and is not 0.
+    if (decoration !== undefined && toDegrees(decoration.rotation) !== 0) {
+        // translation by 0,0 is not necessary.
+        if (decoration.origin.x !== 0 || decoration.origin.y !== 0) {
+            transform += `translate(${decoration.origin.x},${decoration.origin.y})`
+        }
+        // The rotation itself
+        transform += `rotate(${toDegrees(decoration.rotation)})`
+        // Remember the translation back
+        transformX -= decoration.origin.x
+        transformY -= decoration.origin.y
+    }
+    if (bounds !== undefined) {
+        // Translate if there are bounds. Add it to the possibly previously remembered transformation from the rotation.
+        transformX += bounds.x
+        transformY += bounds.y
+    }
+    if (transformX !== 0 || transformY !== 0) {
+        transform += `translate(${transformX}, ${transformY})`
+    }
+    return (transform === '' ? undefined : transform)
+}
+
+export function addDefinitions(element: VNode, colorStyles: ColorStyles, shadowStyles: ShadowStyles) {
+    if (colorStyles.background.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
+    }
+    if (colorStyles.foreground.definition) {
+        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
+    }
+    if (shadowStyles.definition) {
+        (element.children as (string | VNode)[]).push(shadowStyles.definition)
+    }
 }
