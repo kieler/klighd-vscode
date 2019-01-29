@@ -59,18 +59,18 @@ export function lineJoinText(lineJoin: KLineJoin): 'bevel' | 'miter' | 'round' {
 }
 
 /**
- * calculates the formatting string to define the given lineStyle
+ * Calculates the formatting string to define the given lineStyle. If the resulting lineStyle would be a solid line, return undefined instead.
  * @param lineStyle The line style to format
  * @param lineWidth The width of the drawn line
  */
-export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string { // TODO: implement dashOffset
+export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string | undefined { // TODO: implement dashOffset
     const one: string = (1 * lineWidth).toString()
     const three: string = (3 * lineWidth).toString()
     switch (lineStyle.lineStyle) {
         case LineStyle.CUSTOM: {
             if (lineStyle.dashPattern === undefined) {
                 // Draw a solid line if the custom dashPattern is not defined.
-                return '0'
+                return undefined
             }
             return lineStyle.dashPattern.join(' ')
         }
@@ -87,7 +87,7 @@ export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string 
             return one
         }
         case LineStyle.SOLID: {
-            return '0'
+            return undefined
         }
     }
 }
