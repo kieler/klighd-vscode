@@ -403,11 +403,8 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, rotati
 
 export function getPoints(parent: KGraphElement | KEdge, rendering: KPolyline, boundsAndTransformation: BoundsAndTransformation): Point[] {
     let points: Point[] = []
-    // If the parent has routing points, the parent is an edge and those points have to be used.
-    // Otherwise the parent has to have points itself.
-    if ('routingPoints' in parent) {
-        points = parent.routingPoints
-    } else if ('points' in rendering) {
+    // If the rendering has points defined, use them for the rendering.
+    if ('points' in rendering) {
         const kPositions = rendering.points
         kPositions.forEach(kPosition => {
             const pos = evaluateKPosition(kPosition, boundsAndTransformation.bounds, true)
@@ -416,6 +413,9 @@ export function getPoints(parent: KGraphElement | KEdge, rendering: KPolyline, b
                 y: pos.y + boundsAndTransformation.bounds.y
             })
         });
+    } else if ('routingPoints' in parent) {
+        // If no points for the rendering are specified, the parent has to be and edge and have routing points.
+        points = parent.routingPoints
     } else {
         console.error('The rendering does not have any points for its routing.')
     }
