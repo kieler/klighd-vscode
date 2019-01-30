@@ -285,7 +285,7 @@ export function camelToKebab(string: string): string {
 }
 
 export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | null, parent: KGraphElement,
-    context: KGraphRenderingContext): BoundsAndTransformation | undefined {
+    context: KGraphRenderingContext, isEdge?: boolean): BoundsAndTransformation | undefined {
     let bounds
     let decoration
 
@@ -329,7 +329,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
         bounds = (parent as any).size
     }
     // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
-    const transformation = getTransformation(bounds, decoration, kRotation)
+    const transformation = getTransformation(bounds, decoration, kRotation, isEdge)
 
     return {
         bounds: bounds,
@@ -342,7 +342,10 @@ export interface BoundsAndTransformation {
     transformation: string | undefined
 }
 
-export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | null) {
+export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | null, isEdge?: boolean) {
+    if (isEdge === undefined) {
+        isEdge = false
+    }
     let transform = ''
     let isTransform = false
     // Do the rotation for the element only if the decoration itself exists and is not 0.
@@ -357,8 +360,8 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, rotati
         transform += ')'
     }
 
-    // Translate if there are bounds.
-    if (bounds !== undefined && (bounds.x !== 0 || bounds.y !== 0)) {
+    // Translate if there are bounds and if the transformation is not for an edge. This replicates the behavior of KIELER as edges don't really define bounds.
+    if (!isEdge && bounds !== undefined && (bounds.x !== 0 || bounds.y !== 0)) {
         isTransform = true
         transform += `translate(${bounds.x},${bounds.y})`
     }
@@ -368,27 +371,30 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, rotati
         // The rotation itself
         transform += `rotate(${rotation.rotation}`
         isTransform = true
-        if (rotation.rotationAnchor === undefined) {
-            // If the rotation anchor is undefined, rotate around the center by default.
-            const CENTER = {
-                x: {
-                    type: K_LEFT_POSITION,
-                    absolute:  0,
-                    relative: 0.5
-                },
-                y: {
-                    type: K_TOP_POSITION,
-                    absolute: 0,
-                    relative: 0.5
+        // Rotate around a defined point other than (0,0) of the object only for non-edges. This replicates the behavior of KIELER as edges don't really define bounds.
+        if (!isEdge) {
+            if (rotation.rotationAnchor === undefined) {
+                // If the rotation anchor is undefined, rotate around the center by default.
+                const CENTER = {
+                    x: {
+                        type: K_LEFT_POSITION,
+                        absolute:  0,
+                        relative: 0.5
+                    },
+                    y: {
+                        type: K_TOP_POSITION,
+                        absolute: 0,
+                        relative: 0.5
+                    }
                 }
+                rotation.rotationAnchor = CENTER
             }
-            rotation.rotationAnchor = CENTER
-        }
-        const rotationAnchor = evaluateKPosition(rotation.rotationAnchor, bounds, true)
+            const rotationAnchor = evaluateKPosition(rotation.rotationAnchor, bounds, true)
 
-        // If the rotation is around a point other than (0,0), add the additional parameters to the rotation.
-        if (rotationAnchor.x !== 0 || rotationAnchor.y !== 0) {
-            transform += `,${rotationAnchor.x},${rotationAnchor.y}`
+            // If the rotation is around a point other than (0,0), add the additional parameters to the rotation.
+            if (rotationAnchor.x !== 0 || rotationAnchor.y !== 0) {
+                transform += `,${rotationAnchor.x},${rotationAnchor.y}`
+            }
         }
         transform += ')'
     }
