@@ -279,109 +279,70 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
 export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
     // TODO: implement junction point rendering
 
-    let bounds: any = undefined
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
-        bounds = rendering.calculatedBounds
-    }
-    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
-        bounds = findById(context.boundsMap, rendering.id)
-    }
-    if (isNullOrUndefined(bounds)) {
-        console.error('Could not find bounds for this KPolyline')
-    }
-
-    let points: Point[] = []
-    // If the parent has routing points, the parent is an edge and those points have to be used.
-    // Otherwise the parent has to have points itself.
-    if ('routingPoints' in parent) {
-        points = parent.routingPoints
-    } else if ('points' in rendering) {
-        const kPositions = rendering.points
-        kPositions.forEach(kPosition => {
-            const pos = evaluateKPosition(kPosition, bounds, true)
-            points.push({
-                x: pos.x + bounds.x,
-                y: pos.y + bounds.y
-            })
-        });
-    } else {
-        console.error('The KPolyline does not have any points for its routing.')
-    }
-
+    // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-    const foregroundStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
 
-    const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
-    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
-    const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
-    const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
+    // Determine the bounds of the rendering first and where it has to be placed.
+    // TODO: KPolylines are a special case of container renderings: their bounds should not be given down to their child renderings.
+    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context, true)
+    if (boundsAndTransformation === undefined) {
+        // If no bounds are found, the rendering can not be drawn.
+        return <g/>
+    }
 
-    const firstPoint = points[0]
-    let minX, maxX, minY, maxY: number
-    if (!firstPoint) {
+    const gAttrs: SVGAttributes<SVGGElement>  = {
+        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
+    }
+
+    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // only render its children transformed by the transformation already calculated.
+    const invisibilityStyles = getSvgInvisibilityStyles(styles)
+
+    if (invisibilityStyles.opacity === 0) {
+        return <g {...gAttrs}>
+            {renderChildRenderings(rendering, parent, context)}
+        </g>
+    }
+
+    // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
+    const colorStyles = getSvgColorStyles(styles, parent, rendering)
+    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const lineStyles = getSvgLineStyles(styles, parent, rendering)
+
+    const points = getPoints(parent, rendering, boundsAndTransformation)
+    if (points.length === 0) {
         return <g>
             {renderChildRenderings(rendering, parent, context)}
         </g>
     }
 
-    minX = firstPoint.x
-    maxX = firstPoint.x
-    minY = firstPoint.y
-    maxY = firstPoint.y
-    let path = `M${firstPoint.x},${firstPoint.y}`
-    for (let i = 1; i < points.length - 1; i++) {
-        const p = points[i]
-        path += `L${p.x},${p.y}`
+    // now define the spline's path.
+    let path = `M${points[0].x},${points[0].y}`
+    for (let i = 1; i < points.length; i++) {
+        path += `L${points[i].x},${points[i].y}`
+    }
 
-        if (p.x < minX) {
-            minX = p.x
-        }
-        if (p.x > maxX) {
-            maxX = p.x
-        }
-        if (p.y < minY) {
-            minX = p.y
-        }
-        if (p.y > maxY) {
-            maxY = p.y
-        }
-    }
-    // hack to avoid paths with no width / height. These paths will not get drawn by chrome due to a bug in their svg renderer
-    const EPSILON = 0.001
-    if (points.length > 1) {
-        let lastPoint = points[points.length - 1]
-        let lastX = lastPoint.x
-        let lastY = lastPoint.y
-        // if this path has no width and the last point does not add anything to that, we need to shift one value by a tiny, invisible value so the width will now be bigger than 0.
-        if (maxX - minX === 0 && lastX === maxX) {
-            lastX += EPSILON
-        }
-        // same for Y
-        if (maxY - minY === 0 && lastY === maxY) {
-            lastY += EPSILON
-        }
-        path += `L${lastX},${lastY}`
-    }
-    let element = <g>
+    // Create the svg element for this rendering.
+    let element = <g {...gAttrs}>
         <path
+            opacity = {invisibilityStyles.opacity}
             d = {path}
-            stroke = {foregroundStyle.color}
-            fill = 'none'
             style = {{
-                'stroke-linecap': lineCap,
-                'stroke-linejoin': lineJoin,
-                'stroke-width': lineWidth + 'px',
-                'stroke-dasharray': lineStyle,
-                'stroke-miterlimit': miterLimit
+                'stroke-linecap': lineStyles.lineCap,
+                'stroke-linejoin': lineStyles.lineJoin,
+                'stroke-width': lineStyles.lineWidth,
+                'stroke-dasharray': lineStyles.lineStyle,
+                'stroke-miterlimit': lineStyles.miterLimit
             } as React.CSSProperties}
+            stroke = {colorStyles.foreground.color}
+            fill = {colorStyles.background.color}
+            filter = {shadowStyles.filter}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (foregroundStyle.definition) {
-        (element.children as (string | VNode)[]).push(foregroundStyle.definition)
-    }
+    // Check if additional definitions for the colors or shadow need to be added to the svg element.
+    addDefinitions(element, colorStyles, shadowStyles)
 
     return element
 }
