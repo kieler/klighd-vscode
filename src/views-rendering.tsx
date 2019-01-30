@@ -96,6 +96,7 @@ export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, conte
     const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
     const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
+    // Create the svg element for this rendering.
     let element = <g {...gAttrs}>
         <ellipse
             opacity = {invisibilityStyles.opacity}
@@ -195,16 +196,35 @@ export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KG
 export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
     // TODO: implement junction point rendering
 
-    let bounds: any = undefined
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
-        bounds = rendering.calculatedBounds
+    // Extract the styles of the rendering into a more presentable object.
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+
+    // Determine the bounds of the rendering first and where it has to be placed.
+    // TODO: KPolylines are a special case of container renderings: their bounds should not be given down to their child renderings.
+    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context, true)
+    if (boundsAndTransformation === undefined) {
+        // If no bounds are found, the rendering can not be drawn.
+        return <g/>
     }
-    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
-        bounds = findById(context.boundsMap, rendering.id)
+
+    const gAttrs: SVGAttributes<SVGGElement>  = {
+        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
     }
-    if (isNullOrUndefined(bounds)) {
-        console.error('Could not find bounds for this KSpline')
+
+    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // only render its children transformed by the transformation already calculated.
+    const invisibilityStyles = getSvgInvisibilityStyles(styles)
+
+    if (invisibilityStyles.opacity === 0) {
+        return <g {...gAttrs}>
+            {renderChildRenderings(rendering, parent, context)}
+        </g>
     }
+
+    // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
+    const colorStyles = getSvgColorStyles(styles, parent, rendering)
+    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
     let points: Point[] = []
     // If the parent has routing points, the parent is an edge and those points have to be used.
@@ -214,24 +234,15 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
     } else if ('points' in rendering) {
         const kPositions = rendering.points
         kPositions.forEach(kPosition => {
-            const pos = evaluateKPosition(kPosition, bounds, true)
+            const pos = evaluateKPosition(kPosition, boundsAndTransformation.bounds, true)
             points.push({
-                x: pos.x + bounds.x,
-                y: pos.y + bounds.y
+                x: pos.x + boundsAndTransformation.bounds.x,
+                y: pos.y + boundsAndTransformation.bounds.y
             })
         });
     } else {
         console.error('The KSpline does not have any points for its routing.')
     }
-
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-    const foregroundStyles = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
-
-    const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
-    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
-    const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
-    const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
 
     const firstPoint = points[0]
     let minX, maxX, minY, maxY: number
@@ -296,25 +307,27 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
         }
     }
 
-    let element = <g>
+    // Create the svg element for this rendering.
+    let element = <g {...gAttrs}>
         <path
+            opacity = {invisibilityStyles.opacity}
             d = {path}
-            stroke = {foregroundStyles.color}
-            fill = 'none'
             style = {{
-                'stroke-linecap': lineCap,
-                'stroke-linejoin': lineJoin,
-                'stroke-width': lineWidth,
-                'stroke-dasharray': lineStyle,
-                'stroke-miterlimit': miterLimit
+                'stroke-linecap': lineStyles.lineCap,
+                'stroke-linejoin': lineStyles.lineJoin,
+                'stroke-width': lineStyles.lineWidth,
+                'stroke-dasharray': lineStyles.lineStyle,
+                'stroke-miterlimit': lineStyles.miterLimit
             } as React.CSSProperties}
+            stroke = {colorStyles.foreground.color}
+            fill = {colorStyles.background.color}
+            filter = {shadowStyles.filter}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
 
-    if (foregroundStyles.definition) {
-        (element.children as (string | VNode)[]).push(foregroundStyles.definition)
-    }
+    // Check if additional definitions for the colors or shadow need to be added to the svg element.
+    addDefinitions(element, colorStyles, shadowStyles)
 
     return element
 }
