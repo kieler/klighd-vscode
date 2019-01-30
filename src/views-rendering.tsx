@@ -5,7 +5,7 @@ import { KChildArea, KGraphElement, KEllipse, KNode, KPort, KRoundedRectangle, K
     KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
 import { KGraphRenderingContext, findById,
     lineCapText, lineJoinText, lineStyleText, evaluateKPosition, camelToKebab,
-    verticalAlignmentText, calculateX, calculateY, findBoundsAndTransformationData, addDefinitions } from "./views-common"
+    verticalAlignmentText, calculateX, calculateY, findBoundsAndTransformationData, addDefinitions, getPoints } from "./views-common"
 import { isNullOrUndefined } from "util"
 import { toDegrees, Point } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
@@ -226,71 +226,15 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
     const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
     const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
-    let points: Point[] = []
-    // If the parent has routing points, the parent is an edge and those points have to be used.
-    // Otherwise the parent has to have points itself.
-    if ('routingPoints' in parent) {
-        points = parent.routingPoints
-    } else if ('points' in rendering) {
-        const kPositions = rendering.points
-        kPositions.forEach(kPosition => {
-            const pos = evaluateKPosition(kPosition, boundsAndTransformation.bounds, true)
-            points.push({
-                x: pos.x + boundsAndTransformation.bounds.x,
-                y: pos.y + boundsAndTransformation.bounds.y
-            })
-        });
-    } else {
-        console.error('The KSpline does not have any points for its routing.')
-    }
-
-    const firstPoint = points[0]
-    let minX, maxX, minY, maxY: number
-    if (!firstPoint) {
+    const points = getPoints(parent, rendering, boundsAndTransformation)
+    if (points.length === 0) {
         return <g>
             {renderChildRenderings(rendering, parent, context)}
         </g>
     }
 
-    minX = firstPoint.x
-    maxX = firstPoint.x
-    minY = firstPoint.y
-    maxY = firstPoint.y
-    for (let i = 1; i < points.length - 1; i++) {
-        const p = points[i]
-        if (p.x < minX) {
-            minX = p.x
-        }
-        if (p.x > maxX) {
-            maxX = p.x
-        }
-        if (p.y < minY) {
-            minX = p.y
-        }
-        if (p.y > maxY) {
-            maxY = p.y
-        }
-    }
-    // hack to avoid paths with no width / height. These paths will not get drawn by chrome due to a bug in their svg renderer TODO: find a fix if there is any better way
-    const EPSILON = 0.001
-    if (points.length > 1) {
-        let lastPoint = points[points.length - 1]
-        let lastX = lastPoint.x
-        let lastY = lastPoint.y
-        // if this path has no width and the last point does not add anything to that, we need to shift one value by a tiny, invisible value so the width will now be bigger than 0.
-        if (maxX - minX === 0 && lastX === maxX) {
-            lastX += EPSILON
-            points[points.length - 1] = {x: lastX, y: lastY}
-        }
-        // same for Y
-        if (maxY - minY === 0 && lastY === maxY) {
-            lastY += EPSILON
-            points[points.length - 1] = {x: lastX, y: lastY}
-        }
-    }
-
     // now define the spline's path.
-    let path = `M${firstPoint.x},${firstPoint.y}`
+    let path = `M${points[0].x},${points[0].y}`
     for (let i = 1; i < points.length; i = i + 3) {
         let remainingPoints = points.length - i
         if (remainingPoints === 1) {
