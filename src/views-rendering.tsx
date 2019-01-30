@@ -3,14 +3,11 @@ import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KEllipse, KNode, KPort, KRoundedRectangle, KRectangle,
     KSpline, KEdge, KPolyline, KPolygon, KText, KLabel, KContainerRendering, KGraphData,
     KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
-import { KGraphRenderingContext, findById,
-    lineCapText, lineJoinText, lineStyleText, evaluateKPosition, camelToKebab,
+import { KGraphRenderingContext, findById, camelToKebab,
     verticalAlignmentText, calculateX, calculateY, findBoundsAndTransformationData, addDefinitions, getPoints } from "./views-common"
 import { isNullOrUndefined } from "util"
-import { toDegrees } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
-import { getKStyles, DEFAULT_LINE_WIDTH, DEFAULT_MITER_LIMIT, DEFAULT_FONT_ITALIC,
-    DEFAULT_FONT_BOLD, DEFAULT_VERTICAL_ALIGNMENT,
+import { getKStyles, DEFAULT_FONT_ITALIC, DEFAULT_FONT_BOLD, DEFAULT_VERTICAL_ALIGNMENT,
     getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles } from "./views-styles"
 import { SVGAttributes } from 'react';
 import { SvgPropertiesHyphen } from 'csstype';
@@ -276,7 +273,7 @@ export function renderKSpline(rendering: KSpline, parent: KGraphElement | KEdge,
     return element
 }
 
-export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
+export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KEdge, context: KGraphRenderingContext, closedEnd?: boolean): VNode {
     // TODO: implement junction point rendering
 
     // Extract the styles of the rendering into a more presentable object.
@@ -320,6 +317,9 @@ export function renderKPolyline(rendering: KPolyline, parent: KGraphElement | KE
     let path = `M${points[0].x},${points[0].y}`
     for (let i = 1; i < points.length; i++) {
         path += `L${points[i].x},${points[i].y}`
+    }
+    if (closedEnd) {
+        path += 'Z'
     }
 
     // Create the svg element for this rendering.
@@ -459,94 +459,8 @@ export function renderKRoundedBendsPolyline(rendering: KRoundedBendsPolyline, pa
 }
 
 export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, context: KGraphRenderingContext): VNode {
-    const styles = getKStyles(rendering.styles, parent.id + rendering.id)
-    const colorStyles = getSvgColorStyles(styles, parent, rendering)
-    const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
-    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
-    const lineStyle = styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth)
-    const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
-
-    let bounds = undefined
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
-        bounds = rendering.calculatedBounds
-    }
-    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
-        bounds = findById(context.boundsMap, rendering.id)
-    }
-
-    let decoration = undefined
-    if (!isNullOrUndefined(rendering.calculatedDecoration)) {
-        decoration = rendering.calculatedDecoration
-        bounds = {
-            x: decoration.bounds.x + decoration.origin.x,
-            y: decoration.bounds.y + decoration.origin.y,
-            width: decoration.bounds.width,
-            height: decoration.bounds.height
-        }
-    }
-    if (isNullOrUndefined(decoration) && !isNullOrUndefined(context.decorationMap)) {
-        decoration = findById(context.decorationMap, rendering.id)
-        if (!isNullOrUndefined(decoration)) {
-            bounds = {
-                x: decoration.bounds.x + decoration.origin.x,
-                y: decoration.bounds.y + decoration.origin.y,
-                width: decoration.bounds.width,
-                height: decoration.bounds.height
-            }
-        }
-    }
-    if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds)) {
-        console.error('could not find bounds or decoration data to render this KPolygon')
-        return <g/>
-    }
-
-    const firstPoint = evaluateKPosition(rendering.points[0], bounds, true)
-    if (!firstPoint) {
-        return <g>
-            {renderChildRenderings(rendering, parent, context)}
-        </g>
-    }
-
-    let path = `M${firstPoint.x + bounds.x},${firstPoint.y + bounds.y}`
-    for (let i = 1; i < rendering.points.length; i++) {
-        const p = evaluateKPosition(rendering.points[i], bounds, true)
-        path += `L${p.x + bounds.x},${p.y + bounds.y}`
-    }
-    path += 'Z'
-
-    // Only rotate, if the rotation is not 0.
-    let gAttrs: SVGAttributes<SVGGElement>  = {}
-    if (decoration &&  toDegrees(decoration.rotation) !== 0) {
-        gAttrs.transform = `translate(${decoration.origin.x},${decoration.origin.y}) `
-                         + `rotate(${toDegrees(decoration.rotation)}) `
-                         + `translate(${-decoration.origin.x},${-decoration.origin.y})`
-    }
-
-    let element = <g {...gAttrs}>
-        <path
-            d = {path}
-            {...(colorStyles.foreground.color ? {stroke: colorStyles.foreground.color} : {})}
-            fill = {colorStyles.background.color}
-            style = {{
-                'stroke-linecap': lineCap,
-                'stroke-linejoin': lineJoin,
-                'stroke-width': lineWidth + 'px',
-                'stroke-dasharray': lineStyle,
-                'stroke-miterlimit': miterLimit
-            } as React.CSSProperties}
-        />
-        {renderChildRenderings(rendering, parent, context)}
-    </g>
-
-    if (colorStyles.background.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
-    }
-    if (colorStyles.foreground.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
-    }
-
-    return element
+    // A polygon is just a polyline with a closed end.
+    return renderKPolyline(rendering, parent, context, true)
 }
 
 export function renderKText(rendering: KText, parent: KGraphElement | KLabel, context: KGraphRenderingContext): VNode {
