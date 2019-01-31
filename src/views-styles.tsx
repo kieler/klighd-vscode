@@ -6,9 +6,8 @@ import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KF
     VerticalAlignment, KStyleRef, KColoring, KGraphElement, KRendering, KText } from "./kgraph-models"
 import { VNode } from "snabbdom/vnode"
 import { toSVG } from "sprotty/lib"
-import { isNullOrUndefined } from "util"
 import { foregroundId, backgroundId, shadowId, isSingleColor, fillSingleColor, fillForeground, fillBackground,
-    shadowFilter, lineCapText, lineJoinText, lineStyleText } from "./views-common"
+    shadowFilter, lineCapText, lineJoinText, lineStyleText, camelToKebab, verticalAlignmentText, textDecorationStyleText } from "./views-common"
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -45,7 +44,7 @@ const GRADIENT_TRANSFORM_ROTATE_END = ')'
  */
 export function getKStyles(styleList: KStyle[], id: string): KStyles { // TODO: not all of these are implemented yet
     let styles = new KStyles
-    if (isNullOrUndefined(styleList)) {
+    if (styleList === undefined) {
         return styles
     }
     for (let style of styleList) {
@@ -123,7 +122,6 @@ export function getKStyles(styleList: KStyle[], id: string): KStyles { // TODO: 
                     break
                 }
                 case K_TEXT_UNDERLINE: {
-                    console.error('The style ' + style.type + ' is not implemented yet.')
                     styles.kTextUnderline = style as KTextUnderline
                     break
                 }
@@ -167,30 +165,30 @@ export const DEFAULT_LINE_JOIN_SVG = 'miter'
 export const DEFAULT_MITER_LIMIT_SVG = 4
 
 /**
- * Data class to hold each possible KStyle of any rendering. Defaults each style to null or its default value from PNodeController.java
+ * Data class to hold each possible KStyle of any rendering. Defaults each style to undefined or its default value from PNodeController.java
  */
 export class KStyles {
-    kBackground: KBackground | null
-    kForeground: KForeground | null
+    kBackground: KBackground | undefined
+    kForeground: KForeground | undefined
     kFontBold: KFontBold
     kFontItalic: KFontItalic
     kFontName: KFontName
     kFontSize: KFontSize
     kHorizontalAlignment: KHorizontalAlignment
-    kInvisibility: KInvisibility | null
+    kInvisibility: KInvisibility | undefined
     kLineCap: KLineCap
     kLineJoin: KLineJoin
     kLineStyle: KLineStyle
     kLineWidth: KLineWidth
-    kRotation: KRotation | null
+    kRotation: KRotation | undefined
     kShadow: KShadow | undefined
-    kStyleRef: KStyleRef | null
-    kTextStrikeout: KTextStrikeout | null
-    kTextUnderline: KTextUnderline | null
+    kStyleRef: KStyleRef | undefined
+    kTextStrikeout: KTextStrikeout | undefined
+    kTextUnderline: KTextUnderline | undefined
     kVerticalAlignment: KVerticalAlignment
     constructor() {
-        this.kBackground = null
-        this.kForeground = null
+        this.kBackground = undefined
+        this.kForeground = undefined
         this.kFontBold = {
             bold: DEFAULT_FONT_BOLD
         } as KFontBold
@@ -225,11 +223,11 @@ export class KStyles {
         this.kLineWidth = {
             lineWidth: DEFAULT_LINE_WIDTH
         } as KLineWidth
-        this.kRotation = null
+        this.kRotation = undefined
         this.kShadow = DEFAULT_SHADOW
-        this.kStyleRef = null
-        this.kTextStrikeout = null
-        this.kTextUnderline = null
+        this.kStyleRef = undefined
+        this.kTextStrikeout = undefined
+        this.kTextUnderline = undefined
         this.kVerticalAlignment = {
             verticalAlignment: DEFAULT_VERTICAL_ALIGNMENT
         }as KVerticalAlignment
@@ -253,7 +251,7 @@ export function gradientDef(style: KColoring, id: string): VNode {
     const stopOpacity: number | undefined = (style.targetAlpha / 255)
     const stopOpacityString = stopOpacity === 1 ? undefined : stopOpacity.toString()
 
-    if (!isNullOrUndefined(style.targetColor) && !isNullOrUndefined(style.targetAlpha) && !isNullOrUndefined(style.gradientAngle)) {
+    if (style.targetColor !== undefined && style.targetAlpha !== undefined && style.gradientAngle !== undefined) {
         stopColorStop = <stop
             offset = {1}
             style = {{
@@ -275,7 +273,7 @@ export function gradientDef(style: KColoring, id: string): VNode {
         {startColorStop}
     </linearGradient>
 
-    if (!isNullOrUndefined(stopColorStop)) {
+    if (stopColorStop !== undefined) {
         (linearGradient.children as (string | VNode)[]).push(stopColorStop)
     }
 
@@ -301,16 +299,16 @@ export function getSvgColorStyles(styles: KStyles, parent: KGraphElement, render
 
 export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, rendering: KRendering, isForeground: boolean): ColorStyle {
     let color, definition
-    if (!isNullOrUndefined(coloring) && isSingleColor(coloring)) {
+    if (coloring !== undefined && isSingleColor(coloring)) {
         definition = undefined
         color = fillSingleColor(coloring)
     } else {
         if (isForeground) {
-            definition = coloring === null ? undefined : foreground(coloring, (parent as KGraphElement).id + rendering.id)
-            color = coloring === null ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
+            definition = coloring === undefined ? undefined : foreground(coloring, (parent as KGraphElement).id + rendering.id)
+            color = coloring === undefined ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
         } else {
-            definition = coloring === null ? undefined : background(coloring, (parent as KGraphElement).id + rendering.id)
-            color = coloring === null ? DEFAULT_FILL : fillBackground((parent as KGraphElement).id + rendering.id)
+            definition = coloring === undefined ? undefined : background(coloring, (parent as KGraphElement).id + rendering.id)
+            color = coloring === undefined ? DEFAULT_FILL : fillBackground((parent as KGraphElement).id + rendering.id)
         }
     }
     return {
@@ -321,20 +319,20 @@ export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, ren
 
 export function getSvgInvisibilityStyles(styles: KStyles): InvisibilityStyles {
     return {
-        opacity: styles.kInvisibility === null || styles.kInvisibility.invisible === false ? undefined : 0
+        opacity: styles.kInvisibility === undefined || styles.kInvisibility.invisible === false ? undefined : 0
     }
 }
 
 export function getSvgLineStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): LineStyles {
-    const lineWidth = styles.kLineWidth === null ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const lineCap = styles.kLineCap === null ? undefined : lineCapText(styles.kLineCap)
-    const lineJoin = styles.kLineJoin === null ? undefined : lineJoinText(styles.kLineJoin)
-    const miterLimit = styles.kLineJoin.miterLimit === null ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
+    const lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+    const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)
+    const lineJoin = styles.kLineJoin === undefined ? undefined : lineJoinText(styles.kLineJoin)
+    const miterLimit = styles.kLineJoin.miterLimit === undefined ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
     return {
         lineWidth: lineWidth === DEFAULT_LINE_WIDTH ? undefined : lineWidth + 'px',
         lineCap: lineCap === DEFAULT_LINE_CAP_SVG ? undefined : lineCap,
         lineJoin: lineJoin === DEFAULT_LINE_JOIN_SVG ? undefined : lineJoin,
-        lineStyle: styles.kLineStyle === null ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
+        lineStyle: styles.kLineStyle === undefined ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
         // Note: Here the miter limit value is also omitted if the value equals KGraph's default value of 10, because otherwise the resulting SVG would
         // always contain the miterLimit style to be set to 10, even though it is not intended by the creator of the KGraph model and it would not
         // even make any difference in the rendering. Here I cannot distinguish if the model creator really wanted to have the specific miter limit of 10
@@ -345,7 +343,15 @@ export function getSvgLineStyles(styles: KStyles, parent: KGraphElement, renderi
 
 export function getSvgTextStyles(styles: KStyles, parent: KGraphElement, rendering: KText): TextStyles {
     return {
-        todo: 'TODO: this'
+        italic: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
+        bold: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
+        fontName: styles.kFontName === undefined ? undefined : camelToKebab(styles.kFontName.name),
+        verticalAlignment: verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === undefined ?
+            DEFAULT_VERTICAL_ALIGNMENT : styles.kVerticalAlignment.verticalAlignment),
+        textDecorationLine: styles.kTextUnderline === undefined ? undefined : 'underline',
+        textDecorationStyle: styles.kTextUnderline === undefined ? undefined : textDecorationStyleText(styles.kTextUnderline as KTextUnderline)
+        // textDecorationColor: styles.kTextUnderline === undefined ? undefined : textDecorationColor(styles.kTextUnderline as KTextUnderline),
+        // TODO: textDecorationColorDefinition:
     }
 }
 
@@ -377,7 +383,14 @@ export interface LineStyles {
 }
 
 export interface TextStyles {
-    todo: string // TODO: this
+    italic: string | undefined,
+    bold: string | undefined,
+    fontName: string | undefined,
+    verticalAlignment: string | undefined,
+    textDecorationLine: string | undefined,
+    textDecorationStyle: string | undefined,
+    // textDecorationColor: string | undefined
+    // textDecorationColorDefinition:
 }
 
 // foreground and background both define a color the same way

@@ -1,10 +1,9 @@
 import { KLineCap, LineCap, KLineJoin, LineJoin, KLineStyle, LineStyle, HorizontalAlignment,
     VerticalAlignment, KHorizontalAlignment, KVerticalAlignment, KPosition, KRenderingLibrary,
-    KColoring, KRendering, KGraphElement, Decoration, KRotation, KEdge, KPolyline } from "./kgraph-models"
+    KColoring, KRendering, KGraphElement, Decoration, KRotation, KEdge, KPolyline, KText, KTextUnderline, Underline } from "./kgraph-models"
 import { Bounds, Point, toDegrees, ModelRenderer } from "sprotty/lib"
-import { isNullOrUndefined } from "util"
 import { VNode } from "snabbdom/vnode";
-import { ColorStyles, ShadowStyles } from "./views-styles";
+import { ColorStyles, ShadowStyles, KStyles } from "./views-styles";
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -92,7 +91,7 @@ export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string 
     }
 }
 
-export function horizontalAlignmentText(horizontalAlignment: HorizontalAlignment): string {
+export function horizontalAlignmentText(horizontalAlignment: HorizontalAlignment): 'middle' | 'start' | 'end' {
     switch (horizontalAlignment) {
         case HorizontalAlignment.CENTER: {
             return 'middle'
@@ -106,7 +105,7 @@ export function horizontalAlignmentText(horizontalAlignment: HorizontalAlignment
     }
 }
 
-export function verticalAlignmentText(verticalAlignment: VerticalAlignment): string {
+export function verticalAlignmentText(verticalAlignment: VerticalAlignment): 'middle' | 'baseline' | 'hanging' {
     switch (verticalAlignment) {
         case VerticalAlignment.CENTER: {
             return 'middle'
@@ -119,6 +118,34 @@ export function verticalAlignmentText(verticalAlignment: VerticalAlignment): str
         }
     }
 }
+
+export function textDecorationStyleText(underline: KTextUnderline): 'solid' | 'double' | 'wavy' | undefined {
+    switch (underline.underline) {
+        case Underline.NONE: {
+            return undefined
+        }
+        case Underline.SINGLE: {
+            return 'solid'
+        }
+        case Underline.DOUBLE: {
+            return 'double'
+        }
+        case Underline.ERROR: {
+            return 'wavy'
+        }
+        case Underline.SQUIGGLE: {
+            return 'wavy'
+        }
+        case Underline.LINK: {
+            return 'solid'
+        }
+    }
+}
+
+export function textDecorationColor(underline: KTextUnderline): string | undefined {
+    return undefined // TODO:
+}
+
 // This will now always return the left coordinate of the text's bounding box.
 export function calculateX(x: number, width: number, horizontalAlignment: KHorizontalAlignment, textWidth: number | undefined): number {
     if (textWidth === undefined) {
@@ -172,7 +199,7 @@ export function calculateY(y: number, height: number, verticalAlignment: KVertic
  * Evaluates a position inside given parent bounds. Inspired by the java method PlacementUtil.evaluateKPosition
  * @param position the position
  * @param parentBounds the parent bounds
- * @param topLeft in case position equals null assume a topLeft KPosition, and a bottomRight KPosition otherwise
+ * @param topLeft in case position is undefined assume a topLeft KPosition, and a bottomRight KPosition otherwise
  * @returns the evaluated position
  */
 export function evaluateKPosition(position: KPosition, parentBounds: Bounds, topLeft: boolean): Point {
@@ -183,14 +210,14 @@ export function evaluateKPosition(position: KPosition, parentBounds: Bounds, top
     let xPos = position.x
     let yPos = position.y
 
-    if (isNullOrUndefined(xPos)) {
+    if (xPos === undefined) {
         xPos = {
             absolute: 0,
             relative: 0,
             type: topLeft ? K_LEFT_POSITION : K_RIGHT_POSITION
         }
     }
-    if (isNullOrUndefined(yPos)) {
+    if (yPos === undefined) {
         yPos = {
             absolute: 0,
             relative: 0,
@@ -213,7 +240,7 @@ export function evaluateKPosition(position: KPosition, parentBounds: Bounds, top
 }
 
 export function findById(map: any, idString: string): any {
-    if (isNullOrUndefined(map)) {
+    if (map === undefined) {
         return
     }
     return map[idString]
@@ -222,7 +249,7 @@ export function findById(map: any, idString: string): any {
     // let obj = boundsMap
     // for (let id of ids) {
     //     obj = obj[id]
-    //     if (isNullOrUndefined(obj)) {
+    //     if (obj === undefined) {
     //         return
     //     }
     // }
@@ -230,7 +257,7 @@ export function findById(map: any, idString: string): any {
 }
 
 export function isSingleColor(coloring: KColoring) {
-    return isNullOrUndefined(coloring.targetColor) || isNullOrUndefined(coloring.targetAlpha)
+    return coloring.targetColor === undefined || coloring.targetAlpha === undefined
 }
 
 export function fillBackground(id: string): string {
@@ -242,7 +269,7 @@ export function fillForeground(id: string): string {
 }
 
 export function fillSingleColor(coloring: KColoring) {
-    if (isNullOrUndefined(coloring.alpha) || coloring.alpha === 255) {
+    if (coloring.alpha === undefined || coloring.alpha === 255) {
         return RGB_START + coloring.color.red   + ','
                          + coloring.color.green + ','
                          + coloring.color.blue
@@ -284,21 +311,21 @@ export function camelToKebab(string: string): string {
     return string.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | null, parent: KGraphElement,
+export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | undefined, parent: KGraphElement,
     context: KGraphRenderingContext, isEdge?: boolean): BoundsAndTransformation | undefined {
     let bounds
     let decoration
 
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
+    if (rendering.calculatedBounds !== undefined) {
         // Bounds are in the calculatedBounds of the rendering.
         bounds = rendering.calculatedBounds
     }
     // If no bounds have been found yet, they should be in the boundsMap.
-    if (isNullOrUndefined(bounds) && !isNullOrUndefined(context.boundsMap)) {
+    if (bounds === undefined && context.boundsMap !== undefined) {
         bounds = findById(context.boundsMap, rendering.id)
     }
     // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
-    if (!isNullOrUndefined(rendering.calculatedDecoration)) {
+    if (rendering.calculatedDecoration !== undefined) {
         decoration = rendering.calculatedDecoration
         bounds = {
             x: decoration.bounds.x + decoration.origin.x,
@@ -308,9 +335,9 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
         }
     }
     // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
-    if (isNullOrUndefined(decoration) && !isNullOrUndefined(context.decorationMap)) {
+    if (decoration === undefined && context.decorationMap !== undefined) {
         decoration = findById(context.decorationMap, rendering.id)
-        if (!isNullOrUndefined(decoration)) {
+        if (decoration !== undefined) {
             bounds = {
                 x: decoration.bounds.x + decoration.origin.x,
                 y: decoration.bounds.y + decoration.origin.y,
@@ -321,10 +348,10 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
     }
     // Error check: If there are no bounds or decoration, at least try to fall back to a possible size attribute in the parent element.
     // If the parent element has no bounds either, the object can not be rendered.
-    if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds) && !('size' in parent)) {
+    if (decoration === undefined && bounds === undefined && !('size' in parent)) {
         console.error('could not find bounds or decoration data to render this element: ' + rendering + ' for this parent: ' + parent)
         return
-    } else if (isNullOrUndefined(decoration) && isNullOrUndefined(bounds)) {
+    } else if (decoration === undefined && bounds === undefined) {
         console.error('could not find bounds or decoration data to render this element. Using parent bounds as a fallback.')
         bounds = (parent as any).size
     }
@@ -337,14 +364,97 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
     }
 }
 
+export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: KGraphElement, context: KGraphRenderingContext, lines: number) {
+    let bounds: {
+            x: number | undefined,
+            y: number | undefined,
+            height: number | undefined,
+            width: number | undefined
+    } = {
+        x: undefined,
+        y: undefined,
+        width: undefined,
+        height: undefined
+    }
+    let decoration
+    if (rendering.calculatedTextBounds !== undefined) {
+        const textWidth = rendering.calculatedTextBounds.width
+        const textHeight = rendering.calculatedTextBounds.height
+
+        if (rendering.calculatedBounds !== undefined) {
+            const foundBounds = rendering.calculatedBounds
+            bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
+            bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
+            bounds.width = foundBounds.width
+            bounds.height = foundBounds.height
+        }
+        // if no bounds have been found yet, they should be in the boundsMap
+        if (bounds.x === undefined && context.boundsMap !== undefined) {
+            const foundBounds = findById(context.boundsMap, rendering.id)
+            if (bounds !== undefined) {
+                bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
+                bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
+                bounds.width = foundBounds.width
+                bounds.height = foundBounds.height
+            }
+        }
+        // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
+        if (rendering.calculatedDecoration !== undefined) {
+            decoration = rendering.calculatedDecoration
+            bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment, textWidth)
+            bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment, lines)
+            bounds.width = decoration.bounds.width
+            bounds.height = decoration.bounds.height
+        }
+        // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
+        if (decoration === undefined && context.decorationMap !== undefined) {
+            decoration = findById(context.decorationMap, rendering.id)
+            if (decoration !== undefined) {
+                bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment, textWidth)
+                bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment, lines)
+                bounds.width = decoration.bounds.width
+                bounds.height = decoration.bounds.height
+            }
+        }
+        // Error check: If there are no bounds or decoration, at least try to fall back to a possible size attribute in the parent element.
+        // If the parent element has no bounds either, the object can not be rendered.
+        if (decoration === undefined && bounds.x === undefined && !('size' in parent)) {
+            console.error('could not find bounds or decoration data to render this element: ' + rendering + ' for this parent: ' + parent)
+            return
+        } else if (decoration === undefined && bounds.x === undefined) {
+            console.error('could not find bounds or decoration data to render this element. Using parent bounds as a fallback.')
+            bounds.x = (parent as any).size.x
+            bounds.y = (parent as any).size.y
+            bounds.width = (parent as any).size.width
+            bounds.height = (parent as any).size.height
+        }
+    }
+
+
+    // If still no bounds are found, set x to 0. This will be the case when the texts are drawn first to estimate their sizes.
+    // Multiline texts should still be rendered beneath each other, so the x coordinate is important for each <tspan>
+    if (bounds.x === undefined) {
+        bounds.x = 0
+    }
+    // Calculate the svg transformation function string for this element given the bounds and decoration.
+    const transformation = getTransformation(bounds as Bounds, decoration, styles.kRotation, false, true)
+    return {
+        bounds: bounds,
+        transformation: transformation
+    }
+}
+
 export interface BoundsAndTransformation {
     bounds: Bounds,
     transformation: string | undefined
 }
 
-export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | null, isEdge?: boolean) {
+export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | undefined, isEdge?: boolean, isText?: boolean) {
     if (isEdge === undefined) {
         isEdge = false
+    }
+    if (isText === undefined) {
+        isText = false
     }
     let transform = ''
     let isTransform = false
@@ -360,14 +470,14 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, rotati
         transform += ')'
     }
 
-    // Translate if there are bounds and if the transformation is not for an edge. This replicates the behavior of KIELER as edges don't really define bounds.
-    if (!isEdge && bounds !== undefined && (bounds.x !== 0 || bounds.y !== 0)) {
+    // Translate if there are bounds and if the transformation is not for an edge or a text. This replicates the behavior of KIELER as edges don't really define bounds.
+    if (!isEdge && !isText && bounds !== undefined && (bounds.x !== 0 || bounds.y !== 0)) {
         isTransform = true
         transform += `translate(${bounds.x},${bounds.y})`
     }
 
     // Rotate the element also if a KRotation style has to be applied
-    if (rotation !== null && rotation.rotation !== 0) {
+    if (rotation !== undefined && rotation.rotation !== 0) {
         // The rotation itself
         transform += `rotate(${rotation.rotation}`
         isTransform = true
