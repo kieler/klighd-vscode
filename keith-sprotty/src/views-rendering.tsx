@@ -3,14 +3,10 @@ import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KEllipse, KNode, KPort, KRoundedRectangle, KRectangle,
     KSpline, KEdge, KPolyline, KPolygon, KText, KLabel, KContainerRendering, KGraphData,
     KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
-import { KGraphRenderingContext, findById, camelToKebab,
-    verticalAlignmentText, calculateX, calculateY, findBoundsAndTransformationData, addDefinitions, getPoints } from "./views-common"
-import { isNullOrUndefined } from "util"
+import { KGraphRenderingContext, findBoundsAndTransformationData, addDefinitions, getPoints, findTextBoundsAndTransformationData } from "./views-common"
 import { VNode } from "snabbdom/vnode"
-import { getKStyles, DEFAULT_FONT_ITALIC, DEFAULT_FONT_BOLD, DEFAULT_VERTICAL_ALIGNMENT,
-    getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles } from "./views-styles"
+import { getKStyles, getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles, getSvgTextStyles } from "./views-styles"
 import { SVGAttributes } from 'react';
-import { SvgPropertiesHyphen } from 'csstype';
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -464,79 +460,75 @@ export function renderKPolygon(rendering: KPolygon, parent: KGraphElement, conte
 }
 
 export function renderKText(rendering: KText, parent: KGraphElement | KLabel, context: KGraphRenderingContext): VNode {
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-
-    let text = null
+    // Find the text to write first.
+    let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
     if ('text' in parent) { // if parent is KLabel
         text = parent.text
     } else {
         text = rendering.text
     }
-    if (isNullOrUndefined(text)) return <g/>
+    // If no text can be found, return here.
+    if (text === undefined) return <g/>
 
-    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
-
-    const italic = styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? null : 'italic'
-    const bold = styles.kFontBold.bold === DEFAULT_FONT_BOLD ? null : 'bold'
-    const fontName = camelToKebab(styles.kFontName.name)
-
-    const verticalAlignment = verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === null ? DEFAULT_VERTICAL_ALIGNMENT : styles.kVerticalAlignment.verticalAlignment)
-
+    // The text split into an array for each individual line
     let lines = text.split("\n")
 
-    let x: number | undefined = undefined
-    let y: number | undefined = undefined
-    let textWidth = undefined
-    if (!isNullOrUndefined(rendering.calculatedTextBounds)) {
-        textWidth = rendering.calculatedTextBounds.width
+    // Extract the styles of the rendering into a more presentable object.
+    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+
+    // Determine the bounds of the rendering first and where it has to be placed.
+    const boundsAndTransformation = findTextBoundsAndTransformationData(rendering, styles, parent, context, lines.length)
+    if (boundsAndTransformation === undefined) {
+        // If no bounds are found, the rendering can not be drawn.
+        return <g/>
     }
 
-    if (!isNullOrUndefined(rendering.calculatedBounds)) {
-        x = calculateX(rendering.calculatedBounds.x, rendering.calculatedBounds.width, styles.kHorizontalAlignment, textWidth)
-        y = calculateY(rendering.calculatedBounds.y, rendering.calculatedBounds.height, styles.kVerticalAlignment, lines.length)
-    }
-    // if no bounds have been found yet, they should be in the boundsMap
-    if (isNullOrUndefined(x) && !isNullOrUndefined(context.boundsMap)) {
-        const bounds = findById(context.boundsMap, rendering.id)
-        if (isNullOrUndefined(bounds)) {
-            console.error('the boundsMap does not contain the id for this rendering.')
-        } else {
-            x = calculateX(bounds.x, bounds.width, styles.kHorizontalAlignment, textWidth)
-            y = calculateY(bounds.y, bounds.height, styles.kVerticalAlignment, lines.length)
-        }
+    const gAttrs: SVGAttributes<SVGGElement>  = {
+        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
     }
 
-    // If still no bounds are found, set x to 0. This will be the case when the texts are drawn first to estimate their sizes.
-    // Multiline texts should still be rendered beneath each other, so the x coordinate is important for each <tspan>
-    if (isNullOrUndefined(x)) {
-        x = 0
+    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // only render its children transformed by the transformation already calculated.
+    const invisibilityStyles = getSvgInvisibilityStyles(styles)
+
+    if (invisibilityStyles.opacity === 0) {
+        return <g/>
     }
+
+    // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
+    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
+    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const textStyles = getSvgTextStyles(styles, parent, rendering)
 
     // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
     // contained in the general style, otherwise it has to be repeated in every contained <tspan> element.
     let style = {
-        ...{'font-family': fontName},
+        ...{'font-family': textStyles.fontName},
         ...{'font-size': styles.kFontSize.size + 'pt'},
-        ...{'font-style': italic},
-        ...{'font-weight': bold},
-        ...(lines.length === 1 ? {'alignment-baseline': verticalAlignment} : {})
-    } as React.CSSProperties | SvgPropertiesHyphen
+        ...{'font-style': textStyles.italic},
+        ...{'font-weight': textStyles.bold},
+        ...(lines.length === 1 ? {'alignment-baseline': textStyles.verticalAlignment} : {}),
+        ...{'text-decoration-line': textStyles.textDecorationLine},
+        ...{'text-decoration-style': textStyles.textDecorationStyle}
+    }
 
     // The children to be contained in the returned text node.
     let children: any[]
 
     // The attributes to be contained in the returned text node.
     let attrs = {
+        opacity: invisibilityStyles.opacity,
         style: style,
-        ...(y ? {y: y} : {}),
+        ...(boundsAndTransformation.bounds.y ? {y: boundsAndTransformation.bounds.y} : {}),
         fill: colorStyle.color,
+        filter: shadowStyles.filter,
         ...{'xml:space' : "preserve"} // This attribute makes the text size estimation include any trailing white spaces.
     } as any
 
     if (lines.length === 1) {
         // If the text has only one line, just put the text in the text node directly.
-        attrs.x = x;
+        attrs.x = boundsAndTransformation.bounds.x;
         children = [lines[0]]
     } else {
         // Otherwise, put each line of text in a separate <tspan> element.
@@ -552,9 +544,9 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
             children.push(
                 <tspan
                     style = {{
-                        'alignment-baseline': verticalAlignment, // Somehow, svg ignores this style on its parent. So put it here for every individual tspan.
+                        'alignment-baseline': textStyles.verticalAlignment, // Somehow, svg ignores this style on its parent. So put it here for every individual tspan.
                     } as React.CSSProperties}
-                    x = {x}
+                    x = {boundsAndTransformation.bounds.x}
                     {...(dy ? {dy: dy} : {})}
                 >{line}</tspan>
             )
@@ -562,24 +554,26 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         });
     }
 
-    // build the text node from the above defined attributes and children
-    let textNode = <text
-        {...attrs}
-    >{...children}</text>
+    // build the element from the above defined attributes and children
+    let element = <g {...gAttrs}>
+        <text {...attrs}>
+            {...children}
+        </text>
+    </g>
 
-    // If the text color depends on some complex color definition, add it here.
+    // Check if additional definitions for the color or shadow need to be added to the svg element.
     if (colorStyle.definition) {
-        return <g>
-            {colorStyle.definition}
-            {textNode}
-        </g>
-    } else {
-        return textNode
+        (element.children as (string | VNode)[]).push(colorStyle.definition)
     }
+    if (shadowStyles.definition) {
+        (element.children as (string | VNode)[]).push(shadowStyles.definition)
+    }
+
+    return element
 }
 
-export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, context: KGraphRenderingContext): (VNode | null)[] {
-    let renderings: (VNode | null)[] = []
+export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, context: KGraphRenderingContext): (VNode | undefined)[] {
+    let renderings: (VNode | undefined)[] = []
     for (let childRendering of parentRendering.children) {
         let rendering = getRendering([childRendering], parentElement, context)
         renderings.push(rendering)
@@ -587,7 +581,7 @@ export function renderChildRenderings(parentRendering: KContainerRendering, pare
     return renderings
 }
 
-export function getRendering(datas: KGraphData[], parent: KGraphElement, context: KGraphRenderingContext): VNode | null { // TODO: not all of these are implemented yet
+export function getRendering(datas: KGraphData[], parent: KGraphElement, context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
     for (let data of datas) {
         if (data === null)
             continue
@@ -659,5 +653,5 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, context
             }
         }
     }
-    return null
+    return undefined
 }
