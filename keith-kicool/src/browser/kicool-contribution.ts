@@ -109,7 +109,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
     onFilesChanged(fileChange: FileChange) {
         // TODO receives two event if file is saved
-        if (this.compilerWidget.autoCompile) {
+        if (this.compilerWidget && this.compilerWidget.autoCompile) {
             this.compilerWidget.compileSelectedCompilationSystem()
         }
     }

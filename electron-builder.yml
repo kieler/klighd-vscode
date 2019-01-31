@@ -19,7 +19,7 @@ win:
   # copy ls
   extraResources:
     - 
-      from: "../language-server/kieler"
+      from: "../language-server"
       to: "app/kieler/"
       filter: ["**/*"]  
   target:
