@@ -3,7 +3,7 @@
 # Adds the following to the kieler.ini of the language server to run without UI
 # -application
 # de.cau.cs.kieler.language.server.LanguageServer
-#--noSplash
+# -noSplash
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     # Linux
     sed -i '1s/^/-application\nde.cau.cs.kieler.language.server.LanguageServer\n-noSplash\n/' ./language-server/kieler.ini
