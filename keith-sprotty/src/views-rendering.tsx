@@ -1,6 +1,6 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'
-import { KChildArea, KGraphElement, KEllipse, KNode, KPort, KRoundedRectangle, KRectangle,
+import { KChildArea, KGraphElement, KRoundedRectangle,
     KEdge, KPolyline, KText, KLabel, KContainerRendering, KGraphData,
     KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
 import { KGraphRenderingContext, findBoundsAndTransformationData, addDefinitions, getPoints, findTextBoundsAndTransformationData } from "./views-common"
@@ -59,7 +59,7 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     return element
 }
 
-export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, context: KGraphRenderingContext): VNode {
+export function renderRectangularShape(rendering: KContainerRendering, parent: KGraphElement, context: KGraphRenderingContext): VNode {
     // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
 
@@ -90,95 +90,67 @@ export function renderKEllipse(rendering: KEllipse, parent: KGraphElement, conte
     const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
     // Create the svg element for this rendering.
-    let element = <g {...gAttrs}>
-        <ellipse
-            opacity = {invisibilityStyles.opacity}
-            cx = {boundsAndTransformation.bounds.width / 2}
-            cy = {boundsAndTransformation.bounds.height / 2}
-            rx = {boundsAndTransformation.bounds.width / 2}
-            ry = {boundsAndTransformation.bounds.height / 2}
-            style = {{
-                'stroke-linecap': lineStyles.lineCap,
-                'stroke-linejoin': lineStyles.lineJoin,
-                'stroke-width': lineStyles.lineWidth,
-                'stroke-dasharray': lineStyles.lineStyle,
-                'stroke-miterlimit': lineStyles.miterLimit
-            } as React.CSSProperties}
-            stroke = {colorStyles.foreground.color}
-            fill = {colorStyles.background.color}
-            filter = {shadowStyles.filter}
-        />
-        {renderChildRenderings(rendering, parent, context)}
-    </g>
+    let element: VNode
+    switch (rendering.type) {
+        case K_ELLIPSE: {
+            element = <g {...gAttrs}>
+                <ellipse
+                    opacity = {invisibilityStyles.opacity}
+                    cx = {boundsAndTransformation.bounds.width / 2}
+                    cy = {boundsAndTransformation.bounds.height / 2}
+                    rx = {boundsAndTransformation.bounds.width / 2}
+                    ry = {boundsAndTransformation.bounds.height / 2}
+                    style = {{
+                        'stroke-linecap': lineStyles.lineCap,
+                        'stroke-linejoin': lineStyles.lineJoin,
+                        'stroke-width': lineStyles.lineWidth,
+                        'stroke-dasharray': lineStyles.lineStyle,
+                        'stroke-miterlimit': lineStyles.miterLimit
+                    } as React.CSSProperties}
+                    stroke = {colorStyles.foreground.color}
+                    fill = {colorStyles.background.color}
+                    filter = {shadowStyles.filter}
+                />
+                {renderChildRenderings(rendering, parent, context)}
+            </g>
+            break
+        }
+        case K_RECTANGLE:
+        case K_ROUNDED_RECTANGLE: {
+            // like this the rx and ry will be undefined during the rendering of a roundedRectangle and therefore those fields will be left out.
+            // Rounded rectangles work in svg just like regular rectangles just with those two added variables, so this call will result in a regular rectangle.
 
-    // Check if additional definitions for the colors or shadow need to be added to the svg element.
-    addDefinitions(element, colorStyles, shadowStyles)
+            // Rendering-specific attributes
+            const rx = (rendering as KRoundedRectangle).cornerWidth
+            const ry = (rendering as KRoundedRectangle).cornerHeight
 
-    return element
-}
-
-export function renderKRectangle(rendering: KRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
-    const roundedRendering = rendering as KRoundedRectangle
-    // like this the rx and ry will be undefined during the rendering of a roundedRectangle and therefore those fields will be left out.
-    // Rounded rectangles work in svg just like regular rectangles just with those two added variables, so this call will result in a regular rectangle.
-    return renderKRoundedRectangle(roundedRendering, parent, context)
-}
-
-export function renderKRoundedRectangle(rendering: KRoundedRectangle, parent: KGraphElement | KNode | KPort, context: KGraphRenderingContext): VNode {
-    // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
-
-    // Determine the bounds of the rendering first and where it has to be placed.
-    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
-    if (boundsAndTransformation === undefined) {
-        // If no bounds are found, the rendering can not be drawn.
-        return <g/>
+            element = <g {...gAttrs}>
+                <rect
+                    opacity = {invisibilityStyles.opacity}
+                    width  = {boundsAndTransformation.bounds.width}
+                    height = {boundsAndTransformation.bounds.height}
+                    {...(rx ? {rx: rx} : {})}
+                    {...(ry ? {ry: ry} : {})}
+                    style = {{
+                        'stroke-linecap': lineStyles.lineCap,
+                        'stroke-linejoin': lineStyles.lineJoin,
+                        'stroke-width': lineStyles.lineWidth,
+                        'stroke-dasharray': lineStyles.lineStyle,
+                        'stroke-miterlimit': lineStyles.miterLimit
+                    } as React.CSSProperties}
+                    stroke = {colorStyles.foreground.color}
+                    fill = {colorStyles.background.color}
+                    filter = {shadowStyles.filter}
+                />
+                {renderChildRenderings(rendering, parent, context)}
+            </g>
+            break
+        }
+        default: {
+            // This case can never happen. If it still does, happy debugging!
+            throw new Error("Rendering is neither an KEllipse, nor a KRectangle or KRoundedRectangle!")
+        }
     }
-
-    const gAttrs: SVGAttributes<SVGGElement>  = {
-        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
-    }
-
-    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
-    // only render its children transformed by the transformation already calculated.
-    const invisibilityStyles = getSvgInvisibilityStyles(styles)
-
-    if (invisibilityStyles.opacity === 0) {
-        return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, context)}
-        </g>
-    }
-
-    // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, parent, rendering)
-    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
-    const lineStyles = getSvgLineStyles(styles, parent, rendering)
-
-    // Rendering-specific attributes
-    const rx = rendering.cornerWidth
-    const ry = rendering.cornerHeight
-
-    // Create the svg element for this rendering.
-    let element = <g {...gAttrs}>
-        <rect
-            opacity = {invisibilityStyles.opacity}
-            width  = {boundsAndTransformation.bounds.width}
-            height = {boundsAndTransformation.bounds.height}
-            {...(rx ? {rx: rx} : {})}
-            {...(ry ? {ry: ry} : {})}
-            style = {{
-                'stroke-linecap': lineStyles.lineCap,
-                'stroke-linejoin': lineStyles.lineJoin,
-                'stroke-width': lineStyles.lineWidth,
-                'stroke-dasharray': lineStyles.lineStyle,
-                'stroke-miterlimit': lineStyles.miterLimit
-            } as React.CSSProperties}
-            stroke = {colorStyles.foreground.color}
-            fill = {colorStyles.background.color}
-            filter = {shadowStyles.filter}
-        />
-        {renderChildRenderings(rendering, parent, context)}
-    </g>
 
     // Check if additional definitions for the colors or shadow need to be added to the svg element.
     addDefinitions(element, colorStyles, shadowStyles)
@@ -494,8 +466,10 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, context
                 // data as KCustomRendering
                 break
             }
-            case K_ELLIPSE: {
-                return renderKEllipse(data as KEllipse, parent, context)
+            case K_ELLIPSE:
+            case K_RECTANGLE:
+            case K_ROUNDED_RECTANGLE: {
+                return renderRectangularShape(data as KContainerRendering, parent, context)
             }
             case K_IMAGE: {
                 console.error('The rendering for ' + data.type + ' is not implemented yet.')
@@ -507,12 +481,6 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, context
             case K_ROUNDED_BENDS_POLYLINE:
             case K_SPLINE: {
                 return renderLine(data as KPolyline, parent, context)
-            }
-            case K_RECTANGLE: {
-                return renderKRectangle(data as KRectangle, parent, context)
-            }
-            case K_ROUNDED_RECTANGLE: {
-                return renderKRoundedRectangle(data as KRoundedRectangle, parent, context)
             }
             case K_TEXT: {
                 return renderKText(data as KText, parent, context)
