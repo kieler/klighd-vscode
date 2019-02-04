@@ -19,7 +19,7 @@ import { join, resolve } from 'path'
 import { isWindows, isOSX } from "@theia/core";
 
 
-const osExtension = isWindows ? resolve(join('kieler', 'kieler.exe')) : (isOSX ? resolve(join('kieler.app', 'Contents', 'MacOs', 'kieler')) : resolve(join('kieler', 'kieler')))
+const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler', 'kieler'))
 const EXECUTABLE_PATH = resolve(join(__dirname, '..', '..', '..', '..', osExtension))
 
 function getPort(): number | undefined {
