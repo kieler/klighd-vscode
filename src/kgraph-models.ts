@@ -158,7 +158,7 @@ export interface PersistentEntry {
 
 export interface KPlacement {}
 
-export interface KGridPlacement extends KPlacement { // TODO: calculate this to absolute positions on the server already with the existing layouter for this
+export interface KGridPlacement extends KPlacement {
     numColumns: number
     topLeft: KPosition
     bottomRight: KPosition
