@@ -13,8 +13,6 @@ const K_BOTTOM_POSITION = 'KBottomPositionImpl'
 
 // ------------- constants for string building --------------- //
 const ID_SEPARATOR = '$'
-const BACKGROUND = 'background'
-const FOREGROUND = 'foreground'
 const SHADOW = 'shadow'
 const URL_START = 'url(#'
 const URL_END = ')'
@@ -27,6 +25,7 @@ export class KGraphRenderingContext extends ModelRenderer {
     boundsMap: any
     decorationMap: any
     kRenderingLibrary: KRenderingLibrary
+    colorDefs: Map<string, VNode>
 }
 
 export function lineCapText(lineCap: KLineCap): 'butt' | 'round' | 'square' {
@@ -260,14 +259,6 @@ export function isSingleColor(coloring: KColoring) {
     return coloring.targetColor === undefined || coloring.targetAlpha === undefined
 }
 
-export function fillBackground(id: string): string {
-    return URL_START + backgroundId(id) + URL_END
-}
-
-export function fillForeground(id: string): string {
-    return URL_START + foregroundId(id) + URL_END
-}
-
 export function fillSingleColor(coloring: KColoring) {
     if (coloring.alpha === undefined || coloring.alpha === 255) {
         return RGB_START + coloring.color.red   + ','
@@ -285,14 +276,6 @@ export function fillSingleColor(coloring: KColoring) {
 
 export function shadowFilter(id: string): string {
     return URL_START + shadowId(id) + URL_END
-}
-
-export function backgroundId(id: string): string {
-    return id + ID_SEPARATOR + BACKGROUND
-}
-
-export function foregroundId(id: string): string {
-    return id + ID_SEPARATOR + FOREGROUND
 }
 
 export function shadowId(id: string): string {
@@ -577,12 +560,6 @@ export function getPoints(parent: KGraphElement | KEdge, rendering: KPolyline, b
 }
 
 export function addDefinitions(element: VNode, colorStyles: ColorStyles, shadowStyles: ShadowStyles) {
-    if (colorStyles.background.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.background.definition)
-    }
-    if (colorStyles.foreground.definition) {
-        (element.children as (string | VNode)[]).push(colorStyles.foreground.definition)
-    }
     if (shadowStyles.definition) {
         (element.children as (string | VNode)[]).push(shadowStyles.definition)
     }

@@ -5,9 +5,8 @@ import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KF
     KTextUnderline, KVerticalAlignment, HorizontalAlignment, LineCap, LineJoin, LineStyle,
     VerticalAlignment, KStyleRef, KColoring, KGraphElement, KRendering, KText } from "./kgraph-models"
 import { VNode } from "snabbdom/vnode"
-import { toSVG } from "sprotty/lib"
-import { foregroundId, backgroundId, shadowId, isSingleColor, fillSingleColor, fillForeground, fillBackground,
-    shadowFilter, lineCapText, lineJoinText, lineStyleText, camelToKebab, verticalAlignmentText, textDecorationStyleText } from "./views-common"
+import { shadowId, isSingleColor, fillSingleColor,
+    shadowFilter, lineCapText, lineJoinText, lineStyleText, camelToKebab, verticalAlignmentText, textDecorationStyleText, KGraphRenderingContext } from "./views-common"
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -36,6 +35,13 @@ export const K_VERTICAL_ALIGNMENT = 'KVerticalAlignmentImpl'
 const GRADIENT_UNIT_OBJECT_BOUNDING_BOX = 'objectBoundingBox'
 const GRADIENT_TRANSFORM_ROTATE_START = 'rotate('
 const GRADIENT_TRANSFORM_ROTATE_END = ')'
+
+const RGB_START = 'rgb('
+const RGB_END = ')'
+const RGBA_START = 'rgba('
+const RGBA_END = ')'
+const URL_START = 'url(#'
+const URL_END = ')'
 
 /**
  * calculates the renderings for all styles contained in styleList into an object
@@ -236,50 +242,31 @@ export class KStyles {
 
 // ----------------------------- Functions for rendering different KStyles as VNodes in svg --------------------------------------------
 
-export function gradientDef(style: KColoring, id: string): VNode {
-    const startOpacity: number | undefined = (style.alpha / 255)
-    const startOpacityString = startOpacity === 1 ? undefined : startOpacity.toString()
-    let startColorStop = <stop
+export function definition(colorId: string, start: string, end: string, angle: number | undefined): VNode {
+    const startColorStop = <stop
         offset = {0}
         style = {{
-            'stop-color': toSVG(style.color),
-            'stop-opacity': startOpacityString
+            'stop-color': start
         } as React.CSSProperties}
     />
-
-    let stopColorStop = undefined
-    const stopOpacity: number | undefined = (style.targetAlpha / 255)
-    const stopOpacityString = stopOpacity === 1 ? undefined : stopOpacity.toString()
-
-    if (style.targetColor !== undefined && style.targetAlpha !== undefined && style.gradientAngle !== undefined) {
-        stopColorStop = <stop
-            offset = {1}
-            style = {{
-                'stop-color': toSVG(style.targetColor),
-                'stop-opacity': stopOpacityString
-            } as React.CSSProperties}
-        />
-    }
-    let angle = style.gradientAngle
+    const endColorStop = <stop
+        offset = {1}
+        style = {{
+            'stop-color': end
+        } as React.CSSProperties}
+    />
+    let angleFloat = angle === undefined ? 0 : angle
 
     const gradientAttributes = {
-        id: id,
+        id: colorId,
         // If the gradient is not rotated, the attributes for rotation should not be added.
-        ...(angle === 0 ? {} : {gradientUnits : GRADIENT_UNIT_OBJECT_BOUNDING_BOX}),
-        ...(angle === 0 ? {} : {gradientTransform : GRADIENT_TRANSFORM_ROTATE_START + style.gradientAngle + GRADIENT_TRANSFORM_ROTATE_END})
+        ...(angleFloat === 0 ? {} : {gradientUnits : GRADIENT_UNIT_OBJECT_BOUNDING_BOX}),
+        ...(angleFloat === 0 ? {} : {gradientTransform : GRADIENT_TRANSFORM_ROTATE_START + angle + GRADIENT_TRANSFORM_ROTATE_END})
     }
-
-    let linearGradient = <linearGradient {...gradientAttributes}>
+    return <linearGradient {...gradientAttributes}>
         {startColorStop}
+        {endColorStop}
     </linearGradient>
-
-    if (stopColorStop !== undefined) {
-        (linearGradient.children as (string | VNode)[]).push(stopColorStop)
-    }
-
-    return <defs>
-        {linearGradient}
-    </defs>
 }
 
 export function getSvgShadowStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): ShadowStyles {
@@ -289,32 +276,66 @@ export function getSvgShadowStyles(styles: KStyles, parent: KGraphElement, rende
     }
 }
 
-export function getSvgColorStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): ColorStyles {
+export function getSvgColorStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering, context: KGraphRenderingContext): ColorStyles {
+    const foreground = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, context, true)
+    const background = getSvgColorStyle(styles.kBackground as KBackground, parent, rendering, context, false)
     return {
-        foreground: getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true),
-        background: getSvgColorStyle(styles.kBackground as KBackground, parent, rendering, false)
+        foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
+        background: background === undefined ? DEFAULT_FILL       : background
     }
 }
 
 
-export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, rendering: KRendering, isForeground: boolean): ColorStyle {
-    let color, definition
-    if (coloring !== undefined && isSingleColor(coloring)) {
-        definition = undefined
-        color = fillSingleColor(coloring)
+export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, rendering: KRendering, context: KGraphRenderingContext, isForeground: boolean): string | undefined {
+    let colorId
+    if (coloring === undefined) {
+        return colorId
+    }
+    if (isSingleColor(coloring)) {
+        return fillSingleColor(coloring)
+    }
+    colorId = ''
+    let start
+    let end
+    let angle
+    if (coloring.alpha === undefined || coloring.alpha === 255) {
+        let startColors = coloring.color.red   + ','
+                        + coloring.color.green + ','
+                        + coloring.color.blue
+        colorId += startColors
+        start = RGB_START + startColors + RGB_END
     } else {
-        if (isForeground) {
-            definition = coloring === undefined ? undefined : foreground(coloring, (parent as KGraphElement).id + rendering.id)
-            color = coloring === undefined ? DEFAULT_FOREGROUND : fillForeground((parent as KGraphElement).id + rendering.id)
-        } else {
-            definition = coloring === undefined ? undefined : background(coloring, (parent as KGraphElement).id + rendering.id)
-            color = coloring === undefined ? DEFAULT_FILL : fillBackground((parent as KGraphElement).id + rendering.id)
-        }
+        let startColors = coloring.color.red + ','
+                        + coloring.color.green + ','
+                        + coloring.color.blue + ','
+                        + coloring.alpha / 255
+        colorId +=  startColors
+        start = RGBA_START + startColors + RGBA_END
     }
-    return {
-        color: color,
-        definition: definition
+    colorId += '$'
+    if (coloring.targetAlpha === undefined || coloring.targetAlpha === 255) {
+        let endColors = coloring.targetColor.red   + ','
+                      + coloring.targetColor.green + ','
+                      + coloring.targetColor.blue
+        colorId += endColors
+        end = RGB_START + endColors + RGB_END
+    } else {
+        let endColors = coloring.targetColor.red + ','
+                      + coloring.targetColor.green + ','
+                      + coloring.targetColor.blue + ','
+                      + coloring.targetAlpha / 255
+        colorId +=  endColors
+        end = RGBA_START + endColors + RGBA_END
     }
+    if (coloring.gradientAngle !== 0) {
+        angle = coloring.gradientAngle
+        colorId += '$' + angle
+    }
+
+    if (!context.colorDefs.has(colorId)) {
+        context.colorDefs.set(colorId, definition(colorId, start, end, angle))
+    }
+    return URL_START + colorId + URL_END
 }
 
 export function getSvgInvisibilityStyles(styles: KStyles): InvisibilityStyles {
@@ -360,14 +381,9 @@ export interface ShadowStyles {
     definition: VNode | undefined
 }
 
-export interface ColorStyle {
-    color: string,
-    definition: VNode | undefined
-}
-
 export interface ColorStyles {
-    foreground: ColorStyle,
-    background: ColorStyle
+    foreground: string | undefined,
+    background: string | undefined
 }
 
 export interface InvisibilityStyles {
@@ -389,17 +405,6 @@ export interface TextStyles {
     verticalAlignment: string | undefined,
     textDecorationLine: string | undefined,
     textDecorationStyle: string | undefined,
-    // textDecorationColor: string | undefined
-    // textDecorationColorDefinition:
-}
-
-// foreground and background both define a color the same way
-export function foreground(style: KForeground, id: string): VNode {
-    return gradientDef(style, foregroundId(id))
-}
-
-export function background(style: KBackground, id: string): VNode {
-    return gradientDef(style, backgroundId(id))
 }
 
 export function shadowDefinition(style: KShadow, id: string): VNode {

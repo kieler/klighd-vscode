@@ -85,7 +85,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, parent, rendering)
+    const colorStyles = getSvgColorStyles(styles, parent, rendering, context)
     const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
     const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
@@ -107,8 +107,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                         'stroke-dasharray': lineStyles.lineStyle,
                         'stroke-miterlimit': lineStyles.miterLimit
                     } as React.CSSProperties}
-                    stroke = {colorStyles.foreground.color}
-                    fill = {colorStyles.background.color}
+                    stroke = {colorStyles.foreground}
+                    fill = {colorStyles.background}
                     filter = {shadowStyles.filter}
                 />
                 {renderChildRenderings(rendering, parent, context)}
@@ -138,8 +138,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                         'stroke-dasharray': lineStyles.lineStyle,
                         'stroke-miterlimit': lineStyles.miterLimit
                     } as React.CSSProperties}
-                    stroke = {colorStyles.foreground.color}
-                    fill = {colorStyles.background.color}
+                    stroke = {colorStyles.foreground}
+                    fill = {colorStyles.background}
                     filter = {shadowStyles.filter}
                 />
                 {renderChildRenderings(rendering, parent, context)}
@@ -187,7 +187,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, parent, rendering)
+    const colorStyles = getSvgColorStyles(styles, parent, rendering, context)
     const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
     const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
@@ -294,8 +294,8 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
                 'stroke-dasharray': lineStyles.lineStyle,
                 'stroke-miterlimit': lineStyles.miterLimit
             } as React.CSSProperties}
-            stroke = {colorStyles.foreground.color}
-            fill = {colorStyles.background.color}
+            stroke = {colorStyles.foreground}
+            fill = {colorStyles.background}
             filter = {shadowStyles.filter}
         />
         {renderChildRenderings(rendering, parent, context)}
@@ -345,7 +345,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, true)
+    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, context, true)
     const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
     const textStyles = getSvgTextStyles(styles, parent, rendering)
 
@@ -369,7 +369,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         opacity: invisibilityStyles.opacity,
         style: style,
         ...(boundsAndTransformation.bounds.y ? {y: boundsAndTransformation.bounds.y} : {}),
-        fill: colorStyle.color,
+        fill: colorStyle,
         filter: shadowStyles.filter,
         ...{'xml:space' : "preserve"} // This attribute makes the text size estimation include any trailing white spaces.
     } as any
@@ -410,9 +410,6 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     </g>
 
     // Check if additional definitions for the color or shadow need to be added to the svg element.
-    if (colorStyle.definition) {
-        (element.children as (string | VNode)[]).push(colorStyle.definition)
-    }
     if (shadowStyles.definition) {
         (element.children as (string | VNode)[]).push(shadowStyles.definition)
     }
