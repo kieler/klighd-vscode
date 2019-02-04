@@ -17,8 +17,8 @@ import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KF
     KTextUnderline, KVerticalAlignment, HorizontalAlignment, LineCap, LineJoin, LineStyle,
     VerticalAlignment, KStyleRef, KColoring, KGraphElement, KRendering, KText } from "./kgraph-models"
 import { VNode } from "snabbdom/vnode"
-import { shadowId, isSingleColor, fillSingleColor,
-    shadowFilter, lineCapText, lineJoinText, lineStyleText, camelToKebab, verticalAlignmentText, textDecorationStyleText, KGraphRenderingContext } from "./views-common"
+import { isSingleColor, fillSingleColor,
+    lineCapText, lineJoinText, lineStyleText, camelToKebab, verticalAlignmentText, textDecorationStyleText, KGraphRenderingContext } from "./views-common"
 
 export const K_COLORING = 'KColoringImpl'
 export const K_BACKGROUND = 'KBackgroundImpl'
@@ -251,7 +251,7 @@ export class KStyles {
 
 // ----------------------------- Functions for rendering different KStyles as VNodes in svg --------------------------------------------
 
-export function definition(colorId: string, start: string, end: string, angle: number | undefined): VNode {
+export function colorDefinition(colorId: string, start: string, end: string, angle: number | undefined): VNode {
     const startColorStop = <stop
         offset = {0}
         style = {{
@@ -278,16 +278,66 @@ export function definition(colorId: string, start: string, end: string, angle: n
     </linearGradient>
 }
 
-export function getSvgShadowStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): ShadowStyles {
-    return {
-        filter: styles.kShadow === undefined ? DEFAULT_SHADOW : shadowFilter((parent as KGraphElement).id + rendering.id),
-        definition: styles.kShadow === undefined ? DEFAULT_SHADOW_DEF : shadowDefinition(styles.kShadow, (parent as KGraphElement).id + rendering.id)
-    }
+export function shadowDefinition(shadowId: string, color: string | undefined, blur: number, xOffset: number, yOffset: number): VNode {
+    // stdDev of 1 looks closest to KIELER style shadows, but looks nicer with this blur
+    // TODO: ultimately, this should be using the blur parameter again.
+    // TODO: use the color given in the shadow.
+    // TODO: maybe calculate the blurClip depending on the calculated size of the rendering and the x- and y-offset.
+    const STD_DEV = 1
+    const blurClip = 25
+    return <filter
+        id = {shadowId}
+        x = {`-${blurClip}%`}
+        y = {`-${blurClip}%`}
+        width = {`${100 + 2 * blurClip}%`}
+        height = {`${100 + 2 * blurClip}%`}>
+        <feDropShadow
+            dx = {xOffset / 4}
+            dy = {yOffset / 4}
+            stdDeviation = {STD_DEV}
+        />
+    </filter>
 }
 
-export function getSvgColorStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering, context: KGraphRenderingContext): ColorStyles {
-    const foreground = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, context, true)
-    const background = getSvgColorStyle(styles.kBackground as KBackground, parent, rendering, context, false)
+export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingContext): string | undefined {
+    const shadow = styles.kShadow as KShadow
+    if (shadow === undefined) {
+        return undefined
+    }
+    // Every shadow Id should start with an 's'.
+    let shadowId = 's'
+    let color
+    let blur = shadow.blur
+    let xOffset = shadow.xOffset
+    let yOffset = shadow.yOffset
+    if (shadow.color !== undefined) {
+        let shadowColor = shadow.color.red   + ','
+                        + shadow.color.green + ','
+                        + shadow.color.blue
+        shadowId += shadowColor
+        color = RGB_START + shadowColor + RGB_END
+    }
+    shadowId += '$'
+    if (blur !== undefined) {
+        shadowId += blur
+    }
+    shadowId += '$'
+    if (xOffset !== undefined) {
+        shadowId += xOffset
+    }
+    shadowId += '$'
+    if (yOffset !== undefined) {
+        shadowId += yOffset
+    }
+    if (!context.renderingDefs.has(shadowId)) {
+        context.renderingDefs.set(shadowId, shadowDefinition(shadowId, color, blur, xOffset, yOffset))
+    }
+    return URL_START + shadowId + URL_END
+}
+
+export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext): ColorStyles {
+    const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
+    const background = getSvgColorStyle(styles.kBackground as KBackground, context)
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
         background: background === undefined ? DEFAULT_FILL       : background
@@ -295,54 +345,54 @@ export function getSvgColorStyles(styles: KStyles, parent: KGraphElement, render
 }
 
 
-export function getSvgColorStyle(coloring: KColoring, parent: KGraphElement, rendering: KRendering, context: KGraphRenderingContext, isForeground: boolean): string | undefined {
-    let colorId
+export function getSvgColorStyle(coloring: KColoring, context: KGraphRenderingContext): string | undefined {
     if (coloring === undefined) {
-        return colorId
+        return undefined
     }
     if (isSingleColor(coloring)) {
         return fillSingleColor(coloring)
     }
-    colorId = ''
+    // Every color ID should start with a 'c'.
+    let colorId = 'c'
     let start
     let end
     let angle
     if (coloring.alpha === undefined || coloring.alpha === 255) {
-        let startColors = coloring.color.red   + ','
-                        + coloring.color.green + ','
-                        + coloring.color.blue
-        colorId += startColors
-        start = RGB_START + startColors + RGB_END
+        let startColor = coloring.color.red   + ','
+                       + coloring.color.green + ','
+                       + coloring.color.blue
+        colorId += startColor
+        start = RGB_START + startColor + RGB_END
     } else {
-        let startColors = coloring.color.red + ','
-                        + coloring.color.green + ','
-                        + coloring.color.blue + ','
-                        + coloring.alpha / 255
-        colorId +=  startColors
-        start = RGBA_START + startColors + RGBA_END
+        let startColor = coloring.color.red + ','
+                       + coloring.color.green + ','
+                       + coloring.color.blue + ','
+                       + coloring.alpha / 255
+        colorId +=  startColor
+        start = RGBA_START + startColor + RGBA_END
     }
     colorId += '$'
     if (coloring.targetAlpha === undefined || coloring.targetAlpha === 255) {
-        let endColors = coloring.targetColor.red   + ','
-                      + coloring.targetColor.green + ','
-                      + coloring.targetColor.blue
-        colorId += endColors
-        end = RGB_START + endColors + RGB_END
+        let endColor = coloring.targetColor.red   + ','
+                     + coloring.targetColor.green + ','
+                     + coloring.targetColor.blue
+        colorId += endColor
+        end = RGB_START + endColor + RGB_END
     } else {
-        let endColors = coloring.targetColor.red + ','
-                      + coloring.targetColor.green + ','
-                      + coloring.targetColor.blue + ','
-                      + coloring.targetAlpha / 255
-        colorId +=  endColors
-        end = RGBA_START + endColors + RGBA_END
+        let endColor = coloring.targetColor.red + ','
+                     + coloring.targetColor.green + ','
+                     + coloring.targetColor.blue + ','
+                     + coloring.targetAlpha / 255
+        colorId +=  endColor
+        end = RGBA_START + endColor + RGBA_END
     }
     if (coloring.gradientAngle !== 0) {
         angle = coloring.gradientAngle
         colorId += '$' + angle
     }
 
-    if (!context.colorDefs.has(colorId)) {
-        context.colorDefs.set(colorId, definition(colorId, start, end, angle))
+    if (!context.renderingDefs.has(colorId)) {
+        context.renderingDefs.set(colorId, colorDefinition(colorId, start, end, angle))
     }
     return URL_START + colorId + URL_END
 }
@@ -385,11 +435,6 @@ export function getSvgTextStyles(styles: KStyles, parent: KGraphElement, renderi
     }
 }
 
-export interface ShadowStyles {
-    filter: string | undefined,
-    definition: VNode | undefined
-}
-
 export interface ColorStyles {
     foreground: string | undefined,
     background: string | undefined
@@ -414,25 +459,4 @@ export interface TextStyles {
     verticalAlignment: string | undefined,
     textDecorationLine: string | undefined,
     textDecorationStyle: string | undefined,
-}
-
-export function shadowDefinition(style: KShadow, id: string): VNode {
-    // stdDev of 1 looks closest to KIELER style shadows, but looks nicer with this blur
-    const STD_DEV = 1
-    const blurClip = 25
-    return <defs>
-        <filter
-            id = {shadowId(id)}
-            x = {`-${blurClip}%`}
-            y = {`-${blurClip}%`}
-            width = {`${100 + 2 * blurClip}%`}
-            height = {`${100 + 2 * blurClip}%`}
-        >
-            <feDropShadow
-                dx = {style.xOffset / 4}
-                dy = {style.yOffset / 4}
-                stdDeviation = {STD_DEV}
-            />
-        </filter>
-    </defs>
 }

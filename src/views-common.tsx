@@ -15,7 +15,7 @@ import { KLineCap, LineCap, KLineJoin, LineJoin, KLineStyle, LineStyle, Horizont
     KColoring, KRendering, KGraphElement, Decoration, KRotation, KEdge, KPolyline, KText, KTextUnderline, Underline } from "./kgraph-models"
 import { Bounds, Point, toDegrees, ModelRenderer } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode";
-import { ColorStyles, ShadowStyles, KStyles } from "./views-styles";
+import { KStyles } from "./views-styles";
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -24,10 +24,6 @@ const K_TOP_POSITION = 'KTopPositionImpl'
 const K_BOTTOM_POSITION = 'KBottomPositionImpl'
 
 // ------------- constants for string building --------------- //
-const ID_SEPARATOR = '$'
-const SHADOW = 'shadow'
-const URL_START = 'url(#'
-const URL_END = ')'
 const RGB_START = 'rgb('
 const RGB_END = ')'
 const RGBA_START = 'rgba('
@@ -37,7 +33,7 @@ export class KGraphRenderingContext extends ModelRenderer {
     boundsMap: any
     decorationMap: any
     kRenderingLibrary: KRenderingLibrary
-    colorDefs: Map<string, VNode>
+    renderingDefs: Map<string, VNode>
 }
 
 export function lineCapText(lineCap: KLineCap): 'butt' | 'round' | 'square' {
@@ -284,14 +280,6 @@ export function fillSingleColor(coloring: KColoring) {
                           + coloring.alpha / 255
              + RGBA_END
     }
-}
-
-export function shadowFilter(id: string): string {
-    return URL_START + shadowId(id) + URL_END
-}
-
-export function shadowId(id: string): string {
-    return id + ID_SEPARATOR + SHADOW
 }
 
 export function angle(x0: Point, x1: Point): number {
@@ -569,10 +557,4 @@ export function getPoints(parent: KGraphElement | KEdge, rendering: KPolyline, b
         }
     }
     return points
-}
-
-export function addDefinitions(element: VNode, colorStyles: ColorStyles, shadowStyles: ShadowStyles) {
-    if (shadowStyles.definition) {
-        (element.children as (string | VNode)[]).push(shadowStyles.definition)
-    }
 }

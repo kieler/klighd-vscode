@@ -27,10 +27,10 @@ export class KNodeView implements IView {
         let rendering = getRendering(node.data, node, ctx)
         if (node.id === "$root") {
             // the root node should not be rendered, only its children should.
-            ctx.colorDefs = new Map
+            ctx.renderingDefs = new Map
             let children = ctx.renderChildren(node)
             let defs = <defs></defs>
-            ctx.colorDefs.forEach((value: VNode, key: String) => {
+            ctx.renderingDefs.forEach((value: VNode, key: String) => {
                 (defs.children as (string | VNode)[]).push(value)
             })
             return <g>

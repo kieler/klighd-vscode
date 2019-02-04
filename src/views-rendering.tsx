@@ -15,7 +15,7 @@ import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KRoundedRectangle,
     KEdge, KPolyline, KText, KLabel, KContainerRendering, KGraphData,
     KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
-import { KGraphRenderingContext, findBoundsAndTransformationData, addDefinitions, getPoints, findTextBoundsAndTransformationData } from "./views-common"
+import { KGraphRenderingContext, findBoundsAndTransformationData, getPoints, findTextBoundsAndTransformationData } from "./views-common"
 import { VNode } from "snabbdom/vnode"
 import { getKStyles, getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles, getSvgTextStyles } from "./views-styles"
 import { SVGAttributes } from 'react'
@@ -94,8 +94,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, parent, rendering, context)
-    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const colorStyles = getSvgColorStyles(styles, context)
+    const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
     // Create the svg element for this rendering.
@@ -118,7 +118,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                     } as React.CSSProperties}
                     stroke = {colorStyles.foreground}
                     fill = {colorStyles.background}
-                    filter = {shadowStyles.filter}
+                    filter = {shadowStyles}
                 />
                 {renderChildRenderings(rendering, parent, context)}
             </g>
@@ -149,7 +149,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                     } as React.CSSProperties}
                     stroke = {colorStyles.foreground}
                     fill = {colorStyles.background}
-                    filter = {shadowStyles.filter}
+                    filter = {shadowStyles}
                 />
                 {renderChildRenderings(rendering, parent, context)}
             </g>
@@ -160,9 +160,6 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
             throw new Error("Rendering is neither an KEllipse, nor a KRectangle or KRoundedRectangle!")
         }
     }
-
-    // Check if additional definitions for the colors or shadow need to be added to the svg element.
-    addDefinitions(element, colorStyles, shadowStyles)
 
     return element
 }
@@ -196,8 +193,8 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, parent, rendering, context)
-    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const colorStyles = getSvgColorStyles(styles, context)
+    const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles, parent, rendering)
 
     const points = getPoints(parent, rendering, boundsAndTransformation)
@@ -305,14 +302,10 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
             } as React.CSSProperties}
             stroke = {colorStyles.foreground}
             fill = {colorStyles.background}
-            filter = {shadowStyles.filter}
+            filter = {shadowStyles}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
-
-    // Check if additional definitions for the colors or shadow need to be added to the svg element.
-    addDefinitions(element, colorStyles, shadowStyles)
-
     return element
 }
 
@@ -354,8 +347,8 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, parent, rendering, context, true)
-    const shadowStyles = getSvgShadowStyles(styles, parent, rendering)
+    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
+    const shadowStyles = getSvgShadowStyles(styles, context)
     const textStyles = getSvgTextStyles(styles, parent, rendering)
 
     // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
@@ -379,7 +372,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         style: style,
         ...(boundsAndTransformation.bounds.y ? {y: boundsAndTransformation.bounds.y} : {}),
         fill: colorStyle,
-        filter: shadowStyles.filter,
+        filter: shadowStyles,
         ...{'xml:space' : "preserve"} // This attribute makes the text size estimation include any trailing white spaces.
     } as any
 
@@ -412,15 +405,17 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     }
 
     // build the element from the above defined attributes and children
-    let element = <g {...gAttrs}>
-        <text {...attrs}>
+    let element
+    if (gAttrs.transform === undefined) {
+        element = <text {...attrs}>
             {...children}
         </text>
-    </g>
-
-    // Check if additional definitions for the color or shadow need to be added to the svg element.
-    if (shadowStyles.definition) {
-        (element.children as (string | VNode)[]).push(shadowStyles.definition)
+    } else {
+        element = <g {...gAttrs}>
+            <text {...attrs}>
+                {...children}
+            </text>
+        </g>
     }
 
     return element
