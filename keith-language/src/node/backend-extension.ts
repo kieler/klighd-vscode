@@ -15,7 +15,6 @@ import { injectable, ContainerModule } from 'inversify'
 import { BaseLanguageServerContribution, IConnection, LanguageServerContribution } from '@theia/languages/lib/node'
 import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server'
 import * as net from 'net'
-import * as path from 'path'
 import { join, resolve } from 'path'
 import { isWindows, isOSX } from "@theia/core";
 
@@ -73,7 +72,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                 console.log("Starting with LS_PATH as argument")
             }
             console.log("Starting LS with path: " + lsPath)
-            const command = path.resolve(__dirname, lsPath);
+            const command = lsPath
             const serverConnection = this.createProcessStreamConnection(command, []);
             this.forward(clientConnection, serverConnection);
             serverConnection.onClose(() => console.log("Connection closed"))
