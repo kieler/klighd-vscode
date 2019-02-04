@@ -1,3 +1,15 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2019 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'
 import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KFontSize, KInvisibility,
@@ -7,9 +19,6 @@ import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KF
 import { VNode } from "snabbdom/vnode"
 import { shadowId, isSingleColor, fillSingleColor,
     shadowFilter, lineCapText, lineJoinText, lineStyleText, camelToKebab, verticalAlignmentText, textDecorationStyleText, KGraphRenderingContext } from "./views-common"
-// import * as snabbdom from 'snabbdom-jsx'
-// const JSX = {createElement: snabbdom.svg}
-
 
 export const K_COLORING = 'KColoringImpl'
 export const K_BACKGROUND = 'KBackgroundImpl'

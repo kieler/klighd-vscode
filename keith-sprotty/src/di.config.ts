@@ -1,8 +1,14 @@
 /*
- * Copyright (C) 2017 TypeFox and others.
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2019 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { Container, ContainerModule } from "inversify"
 import { ConsoleLogger, LogLevel, SGraph,
@@ -10,19 +16,16 @@ import { ConsoleLogger, LogLevel, SGraph,
         buttonModule, configureModelElement, defaultModule, expandModule,
         exportModule, fadeModule, hoverModule, modelSourceModule, moveModule,
         openModule, overrideViewerOptions, selectModule, undoRedoModule,
-        viewportModule } from 'sprotty/lib'
-import { popupModelFactory } from "./popup"
+        viewportModule, SGraphFactory} from 'sprotty/lib'
 import { KEdgeView,  KNodeView, KPortView, KLabelView} from "./views"
 import { KNode, KPort, KLabel, KEdge } from "./kgraph-models"
-import { KGraphModelFactory } from "./model-factory"
 import { RequestTextBoundsCommand } from "./actions"
 import { HiddenTextBoundsUpdater } from "./hidden-text-bounds-updater"
 
 const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
-    rebind(TYPES.IModelFactory).to(KGraphModelFactory).inSingletonScope()
-    bind(TYPES.PopupModelFactory).toConstantValue(popupModelFactory)
+    rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
     const context = { bind, unbind, isBound, rebind };
     configureModelElement(context, 'graph', SGraph, SGraphView);
     configureModelElement(context, 'node', KNode, KNodeView)
