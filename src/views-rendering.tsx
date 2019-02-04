@@ -1,3 +1,15 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2019 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KRoundedRectangle,
@@ -6,10 +18,7 @@ import { KChildArea, KGraphElement, KRoundedRectangle,
 import { KGraphRenderingContext, findBoundsAndTransformationData, addDefinitions, getPoints, findTextBoundsAndTransformationData } from "./views-common"
 import { VNode } from "snabbdom/vnode"
 import { getKStyles, getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles, getSvgTextStyles } from "./views-styles"
-import { SVGAttributes } from 'react';
-// import * as snabbdom from 'snabbdom-jsx'
-// const JSX = {createElement: snabbdom.svg}
-
+import { SVGAttributes } from 'react'
 
 // ----------- Rendering Class names ----------- //
 const K_RENDERING_REF = 'KRenderingRefImpl'
