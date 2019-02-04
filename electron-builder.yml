@@ -24,6 +24,7 @@ win:
       filter: ["**/*"]  
   target:
     - nsis
+    - zip
   icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.ico
 mac:
   # copy ls
