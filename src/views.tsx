@@ -10,6 +10,7 @@ import { RenderingContext, IView/*, setAttr*/ } from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
 import { KNode, KPort, KLabel, KEdge} from "./kgraph-models"
 import { getRendering } from "./views-rendering"
+import { KGraphRenderingContext } from './views-common';
 // import * as snabbdom from 'snabbdom-jsx'
 // const JSX = {createElement: snabbdom.svg}
 
@@ -17,18 +18,27 @@ import { getRendering } from "./views-rendering"
 
 export class KNodeView implements IView {
     render(node: KNode, context: RenderingContext): VNode {
+        // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
+        const ctx = context as any as KGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
-        let rendering = getRendering(node.data, node, context as any) // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
+        let rendering = getRendering(node.data, node, ctx)
         if (node.id === "$root") {
             // the root node should not be rendered, only its children should.
+            ctx.colorDefs = new Map
+            let children = ctx.renderChildren(node)
+            let defs = <defs></defs>
+            ctx.colorDefs.forEach((value: VNode, key: String) => {
+                (defs.children as (string | VNode)[]).push(value)
+            })
             return <g>
-                {context.renderChildren(node)}
+                {defs}
+                {...children}
             </g>
         }
         if (rendering === null) {
             return <g>
-                {context.renderChildren(node)}
+                {ctx.renderChildren(node)}
             </g>
         }
         if (node.areChildrenRendered) {
@@ -41,7 +51,7 @@ export class KNodeView implements IView {
             // how should that be handled?
             return <g>
                 {rendering}
-                {context.renderChildren(node)}
+                {ctx.renderChildren(node)}
             </g>
         }
     }
