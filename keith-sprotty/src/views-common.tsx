@@ -533,7 +533,7 @@ export function getPoints(parent: KGraphElement | KEdge, rendering: KPolyline, b
             maxX = p.x
         }
         if (p.y < minY) {
-            minX = p.y
+            minY = p.y
         }
         if (p.y > maxY) {
             maxY = p.y
