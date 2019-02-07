@@ -23,7 +23,6 @@ win:
       to: "app/kieler/"
       filter: ["**/*"]  
   target:
-    - nsis
     - zip
   icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.ico
 mac:
@@ -35,7 +34,7 @@ mac:
       to: "app/kieler.app/"
       filter: ["**/*"]
   target:
-    - dmg
+    - zip
   icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.icns
     # - dmg only possible on macOS
 linux:
