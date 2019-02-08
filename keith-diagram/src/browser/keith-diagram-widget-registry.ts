@@ -16,15 +16,12 @@ import { DiagramWidgetRegistry/*, DiagramWidget*/ } from "theia-sprotty/lib";
 import URI from "@theia/core/lib/common/uri";
 
 const DIAGRAM: string = "keith#"
+export const id: string = 'widget-diagram'
 
  @injectable()
  export class KeithDiagramWidgetRegistry extends DiagramWidgetRegistry {
     protected getKey(uri: URI, diagramType: string) {
         // The widget's ID is now only dependent on the diagram type
         return DIAGRAM + diagramType
-    }
-
-    public id(): string {
-        return 'widget-diagram'
     }
  }
