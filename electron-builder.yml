@@ -36,7 +36,6 @@ mac:
   target:
     - zip
   icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.icns
-    # - dmg only possible on macOS
 linux:
   # copy ls
   extraResources:
@@ -45,23 +44,11 @@ linux:
       to: "app/kieler/"
       filter: ["**/*"]
   target:
-    # - deb
+    - tar.gz
     - AppImage
   category: Development
   icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo-512.png
 
-nsis:
-  menuCategory: true
-  oneClick: false
-  perMachine: true
-  installerHeaderIcon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.ico
-  installerIcon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.ico
-  uninstallerIcon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.ico
-  installerSidebar: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo-256.bmp
-  uninstallerSidebar: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo-256.bmp
-  allowToChangeInstallationDirectory: true
-  runAfterFinish: false
-  artifactName: ${productName}-Installer-${version}.${ext}
 dmg:
   background: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo-512.png
   icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.icns
