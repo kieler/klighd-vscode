@@ -268,7 +268,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
 
         const uri = this.compilerWidget.sourceModelPath
-        console.log("Compiling " + uri)
         const lclient = await this.client.languageClient
         const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, clientId, command, this.compilerWidget.compileInplace]) as CodeContainer
         if (!this.compilerWidget.autoCompile) {

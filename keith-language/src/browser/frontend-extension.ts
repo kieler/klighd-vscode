@@ -48,8 +48,6 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
         const client = ctx.container.get(KeithLanguageClientContribution)
         client.languageClient.then(lClient => {
             lClient.sendRequest("keith/registration/get-languages").then((languages: LanguageDescription[]) => {
-                console.log("Got languages from LS")
-                console.log(languages)
                 languages.forEach((language: LanguageDescription) => {
                     if (monaco.languages.getEncodedLanguageId(language.id)) {
                         let mLanguage = monarchLanguage as KeithMonarchLanguage
