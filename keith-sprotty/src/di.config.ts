@@ -12,12 +12,12 @@
  */
 import { Container, ContainerModule } from "inversify"
 import { ConsoleLogger, LogLevel, SGraph,
-        SGraphView, TYPES, boundsModule,
+        TYPES, boundsModule,
         buttonModule, configureModelElement, defaultModule, expandModule,
         exportModule, fadeModule, hoverModule, modelSourceModule, moveModule,
         openModule, overrideViewerOptions, selectModule, undoRedoModule,
         viewportModule, SGraphFactory} from 'sprotty/lib'
-import { KEdgeView,  KNodeView, KPortView, KLabelView} from "./views"
+import { KEdgeView,  KNodeView, KPortView, KLabelView, SGraphView} from "./views"
 import { KNode, KPort, KLabel, KEdge } from "./kgraph-models"
 import { RequestTextBoundsCommand } from "./actions"
 import { HiddenTextBoundsUpdater } from "./hidden-text-bounds-updater"

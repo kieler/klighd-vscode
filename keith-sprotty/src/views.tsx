@@ -12,11 +12,26 @@
  */
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'
-import { RenderingContext, IView/*, setAttr*/ } from "sprotty/lib"
+import { RenderingContext, IView, SGraph} from "sprotty/lib"
 import { VNode } from "snabbdom/vnode"
 import { KNode, KPort, KLabel, KEdge} from "./kgraph-models"
 import { getRendering } from "./views-rendering"
 import { KGraphRenderingContext } from './views-common'
+
+export class SGraphView implements IView {
+
+    render(model: Readonly<SGraph>, context: RenderingContext): VNode {
+        // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
+        const ctx = context as any as KGraphRenderingContext
+        ctx.renderingDefs = new Map
+        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`
+        return <svg class-sprotty-graph={true}>
+            <g transform={transform}>
+                {context.renderChildren(model)}
+            </g>
+        </svg>
+    }
+}
 
 export class KNodeView implements IView {
     render(node: KNode, context: RenderingContext): VNode {
@@ -27,7 +42,6 @@ export class KNodeView implements IView {
         let rendering = getRendering(node.data, node, ctx)
         if (node.id === "$root") {
             // the root node should not be rendered, only its children should.
-            ctx.renderingDefs = new Map
             let children = ctx.renderChildren(node)
             let defs = <defs></defs>
             ctx.renderingDefs.forEach((value: VNode, key: String) => {
