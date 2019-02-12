@@ -76,7 +76,7 @@ export interface KIdentifier extends KGraphData {
 
 export interface KRendering extends KGraphData, KStyleHolder {
     placementData: KPlacementData
-    action: KAction[]
+    actions: KAction[]
     // not in the original java model, but is included in messages to remove the need to call '[Grid]?PlacementUtil.evaluate[Grid|Area|Point]Placement'
     // and similar methods on client side for every rendering
     calculatedBounds: Bounds
@@ -387,4 +387,40 @@ export interface Decoration {
     origin: Point
     bounds: Bounds
     rotation: number
+}
+
+
+// ----------- Rendering Class names ----------- //
+export const K_RENDERING_REF = 'KRenderingRefImpl'
+export const K_RENDERING_LIBRARY = 'KRenderingLibraryImpl'
+export const K_CHILD_AREA = 'KChildAreaImpl'
+export const K_CONTAINER_RENDERING = 'KContainerRenderingImpl'
+export const K_ARC = 'KArcImpl'
+export const K_CUSTOM_RENDERING = 'KCustomRenderingImpl'
+export const K_ELLIPSE = 'KEllipseImpl'
+export const K_IMAGE = 'KImageImpl'
+export const K_POLYLINE = 'KPolylineImpl'
+export const K_POLYGON = 'KPolygonImpl'
+export const K_ROUNDED_BENDS_POLYLINE = 'KRoundedBendsPolylineImpl'
+export const K_SPLINE = 'KSplineImpl'
+export const K_RECTANGLE = 'KRectangleImpl'
+export const K_ROUNDED_RECTANGLE = 'KRoundedRectangleImpl'
+export const K_TEXT = 'KTextImpl'
+
+export function isRendering(test: KGraphData): boolean {
+    const type = test.type
+    return type === K_RENDERING_REF
+    || type === K_CHILD_AREA
+    || type === K_CONTAINER_RENDERING
+    || type === K_ARC
+    || type === K_CUSTOM_RENDERING
+    || type === K_ELLIPSE
+    || type === K_IMAGE
+    || type === K_POLYLINE
+    || type === K_POLYGON
+    || type === K_ROUNDED_BENDS_POLYLINE
+    || type === K_SPLINE
+    || type === K_RECTANGLE
+    || type === K_ROUNDED_RECTANGLE
+    || type === K_TEXT
 }

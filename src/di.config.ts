@@ -19,8 +19,8 @@ import { ConsoleLogger, LogLevel, SGraph,
         viewportModule, SGraphFactory} from 'sprotty/lib'
 import { KEdgeView,  KNodeView, KPortView, KLabelView, SGraphView} from "./views"
 import { KNode, KPort, KLabel, KEdge } from "./kgraph-models"
-import { RequestTextBoundsCommand } from "./actions"
-import { HiddenTextBoundsUpdater } from "./hidden-text-bounds-updater"
+import actionModule from "./actions/actions-module";
+import textBoundsModule from "./textbounds/textbounds-module";
 
 const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
@@ -34,26 +34,11 @@ const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) 
     configureModelElement(context, 'label', KLabel, KLabelView)
 })
 
-const textBoundsModule = new ContainerModule((bind, unbind, isBound, rebind) => {
-    // TODO:
-    // This should really first unbind the RequestBoundsCommand from the TYPES.ICommand registry
-    // and the HiddenBoundsUpdater from the TYPES.HiddenVNodeDecorator registry, but inversify
-    // does not support such a feature.
-    // See the ticket https://github.com/inversify/InversifyJS/issues/1035
-    // I would like some syntax such as:
-    // unbind(Types.HiddenVNodeDecorator).from(HiddenBoundsUpdater)
-    // to remove only that specific binding, not all of the bindings registered for the Types.HiddenVNodeDecorator.
-    // With that, the HiddenBoundsUpdater should not be called anymore and not issue any CalculatedBoundsAction,
-    // which is currently only ignored by the overwritten handle method for that action in the KeithDiagramServer.
-    bind(TYPES.ICommand).toConstructor(RequestTextBoundsCommand)
-    bind(TYPES.HiddenVNodeDecorator).to(HiddenTextBoundsUpdater).inSingletonScope()
-});
-
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, moveModule, boundsModule, undoRedoModule, viewportModule,
         hoverModule, fadeModule, exportModule, expandModule, openModule, buttonModule, modelSourceModule,
-        kGraphDiagramModule, textBoundsModule)
+        kGraphDiagramModule, textBoundsModule, actionModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
