@@ -51,3 +51,15 @@ export class RequestTextBoundsCommand extends HiddenCommand {
         return ComputedTextBoundsAction.KIND;
     }
 }
+
+/**
+ * Sent from the client to the diagram server to perform a klighd action on the model.
+ * Causes the server to update the diagram accordingly to the action.
+ */
+export class PerformActionAction implements Action {
+    static readonly KIND = 'performAction'
+    kind = PerformActionAction.KIND
+
+    constructor(protected actionId: string, protected elementId: string) {
+    }
+}

@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { TheiaDiagramServer } from "theia-sprotty/lib";
 import { Action, ActionHandlerRegistry, ComputedBoundsAction, ActionMessage, SetModelCommand, FitToScreenAction } from "sprotty/lib";
-import { ComputedTextBoundsAction, RequestTextBoundsCommand } from "keith-sprotty/lib/actions";
+import { ComputedTextBoundsAction, RequestTextBoundsCommand, PerformActionAction } from "keith-sprotty/lib/actions/actions";
 import { Emitter, Event } from "@theia/core";
 
 /**
@@ -30,6 +30,8 @@ export class KeithDiagramServer extends TheiaDiagramServer {
                 return false
             case ComputedBoundsAction.KIND: // remove sending of a computedBoundsAction as well
                 return false
+            case PerformActionAction.KIND:
+                return true
         }
         return super.handleLocally(action)
     }
@@ -39,6 +41,7 @@ export class KeithDiagramServer extends TheiaDiagramServer {
 
         registry.register(RequestTextBoundsCommand.KIND, this)
         registry.register(ComputedTextBoundsAction.KIND, this)
+        registry.register(PerformActionAction.KIND, this)
     }
 
     handleComputedBounds(action: ComputedBoundsAction): boolean {

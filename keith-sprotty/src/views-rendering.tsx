@@ -14,28 +14,13 @@
 import { svg } from 'snabbdom-jsx'
 import { KChildArea, KGraphElement, KRoundedRectangle,
     KEdge, KPolyline, KText, KLabel, KContainerRendering, KGraphData,
-    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground } from "./kgraph-models"
+    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground, K_ELLIPSE, K_RECTANGLE, K_ROUNDED_RECTANGLE,
+    K_SPLINE, K_POLYLINE, K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_RENDERING_REF, K_RENDERING_LIBRARY, K_CONTAINER_RENDERING,
+    K_CHILD_AREA, K_ARC, K_CUSTOM_RENDERING, K_IMAGE, K_TEXT } from "./kgraph-models"
 import { KGraphRenderingContext, findBoundsAndTransformationData, getPoints, findTextBoundsAndTransformationData } from "./views-common"
 import { VNode } from "snabbdom/vnode"
 import { getKStyles, getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles, getSvgTextStyles } from "./views-styles"
 import { SVGAttributes } from 'react'
-
-// ----------- Rendering Class names ----------- //
-const K_RENDERING_REF = 'KRenderingRefImpl'
-const K_RENDERING_LIBRARY = 'KRenderingLibraryImpl'
-const K_CHILD_AREA = 'KChildAreaImpl'
-const K_CONTAINER_RENDERING = 'KContainerRenderingImpl'
-const K_ARC = 'KArcImpl'
-const K_CUSTOM_RENDERING = 'KCustomRenderingImpl'
-const K_ELLIPSE = 'KEllipseImpl'
-const K_IMAGE = 'KImageImpl'
-const K_POLYLINE = 'KPolylineImpl'
-const K_POLYGON = 'KPolygonImpl'
-const K_ROUNDED_BENDS_POLYLINE = 'KRoundedBendsPolylineImpl'
-const K_SPLINE = 'KSplineImpl'
-const K_RECTANGLE = 'KRectangleImpl'
-const K_ROUNDED_RECTANGLE = 'KRoundedRectangleImpl'
-const K_TEXT = 'KTextImpl'
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -61,7 +46,7 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
         ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
     }
 
-    let element = <g {...gAttrs}>
+    let element = <g id = {rendering.id} {...gAttrs}>
         {context.renderChildren(parent)}
     </g>
 
@@ -102,7 +87,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     let element: VNode
     switch (rendering.type) {
         case K_ELLIPSE: {
-            element = <g {...gAttrs}>
+            element = <g id = {rendering.id} {...gAttrs}>
                 <ellipse
                     opacity = {invisibilityStyles.opacity}
                     cx = {boundsAndTransformation.bounds.width / 2}
@@ -133,7 +118,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
             const rx = (rendering as KRoundedRectangle).cornerWidth
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
-            element = <g {...gAttrs}>
+            element = <g id = {rendering.id} {...gAttrs}>
                 <rect
                     opacity = {invisibilityStyles.opacity}
                     width  = {boundsAndTransformation.bounds.width}
@@ -289,7 +274,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     }
 
     // Create the svg element for this rendering.
-    let element = <g {...gAttrs}>
+    let element = <g id = {rendering.id} {...gAttrs}>
         <path
             opacity = {invisibilityStyles.opacity}
             d = {path}
@@ -407,11 +392,11 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     // build the element from the above defined attributes and children
     let element
     if (gAttrs.transform === undefined) {
-        element = <text {...attrs}>
+        element = <text id = {rendering.id} {...attrs}>
             {...children}
         </text>
     } else {
-        element = <g {...gAttrs}>
+        element = <g id = {rendering.id} {...gAttrs}>
             <text {...attrs}>
                 {...children}
             </text>

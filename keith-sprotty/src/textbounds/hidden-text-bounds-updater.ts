@@ -14,7 +14,7 @@ import { inject, injectable } from "inversify"
 import { VNode } from "snabbdom/vnode"
 import { Bounds, IVNodeDecorator, TYPES, IActionDispatcher, isExportable, ElementAndBounds,
      almostEquals, BoundsAware, isSizeable, SModelElement, SModelRoot } from "sprotty/lib"
-import { ComputedTextBoundsAction } from "./actions"
+import { ComputedTextBoundsAction } from "../actions/actions"
 
 export class TextBoundsData {
     vnode?: VNode
