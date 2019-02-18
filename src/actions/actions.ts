@@ -60,6 +60,6 @@ export class PerformActionAction implements Action {
     static readonly KIND = 'performAction'
     kind = PerformActionAction.KIND
 
-    constructor(protected actionId: string, protected elementId: string) {
+    constructor(protected actionId: string, protected kGraphElementId: string, protected kRenderingId: string) {
     }
 }
