@@ -22,7 +22,7 @@ import { KeithDiagramManager } from 'keith-diagram/lib/keith-diagram-manager';
 import URI from "@theia/core/lib/common/uri";
 import { SynthesisOption } from '../common/option-models';
 import { GET_OPTIONS, SET_OPTIONS } from '../common'
-import { KeithDiagramWidgetRegistry } from 'keith-diagram/lib/keith-diagram-widget-registry';
+import { KeithDiagramWidgetRegistry, id } from 'keith-diagram/lib/keith-diagram-widget-registry';
 import { DiagramWidgetRegistry } from 'theia-sprotty/lib'
 import { KeithDiagramWidget } from 'keith-diagram/lib/keith-diagram-widget';
 import { KeithDiagramServer } from 'keith-diagram/lib/keith-diagram-server';
@@ -104,7 +104,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
 
     async onDiagramOpened(uri: URI) {
         if (this.diagramWidgetRegistry instanceof KeithDiagramWidgetRegistry) {
-            const diagramWidget = this.diagramWidgetRegistry.getWidgetById(this.diagramWidgetRegistry.id())
+            const diagramWidget = this.diagramWidgetRegistry.getWidgetById(id)
             if (diagramWidget instanceof KeithDiagramWidget
                 && diagramWidget.currentModelSource instanceof KeithDiagramServer
                 && this.boundDiagramServer !== diagramWidget.currentModelSource) {

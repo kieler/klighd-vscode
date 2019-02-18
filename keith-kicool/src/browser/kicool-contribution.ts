@@ -33,6 +33,7 @@ import { compilerWidgetId, OPEN_COMPILER_WIDGET_KEYBINDING, COMPILE, GET_SYSTEMS
     SHOW_NEXT_KEYBINDING, EDITOR_UNDEFINED_MESSAGE, SHOW } from "../common";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { FileSystemWatcher, FileChange } from "@theia/filesystem/lib/browser";
+import { id as clientId } from 'keith-diagram/lib/keith-diagram-widget-registry'
 
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
@@ -249,7 +250,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     public async show(uri: string, index: number) {
         const lclient = await this.client.languageClient
         this.indexMap.set(uri, index)
-        await lclient.sendRequest(SHOW, [uri, index])
+        await lclient.sendRequest(SHOW, [uri, clientId, index])
     }
 
 
@@ -267,9 +268,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
 
         const uri = this.compilerWidget.sourceModelPath
-        console.log("Compiling " + uri)
         const lclient = await this.client.languageClient
-        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, command, this.compilerWidget.compileInplace]) as CodeContainer
+        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, clientId, command, this.compilerWidget.compileInplace]) as CodeContainer
         if (!this.compilerWidget.autoCompile) {
             this.message("Got compilation result for " + uri, "info")
         }

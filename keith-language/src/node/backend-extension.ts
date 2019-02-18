@@ -15,13 +15,12 @@ import { injectable, ContainerModule } from 'inversify'
 import { BaseLanguageServerContribution, IConnection, LanguageServerContribution } from '@theia/languages/lib/node'
 import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server'
 import * as net from 'net'
-import * as path from 'path'
+import { join, resolve } from 'path'
 import { isWindows, isOSX } from "@theia/core";
 
-const osExtension = isWindows ? '/kieler.exe' : (isOSX ? '.app/Contents/MacOs/kieler' : '/kieler')
 
-// path to language server for product version of KEITH for the different operating systems
-export const productLsPath:  string = './../../../../kieler' + osExtension;
+const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler', 'kieler'))
+const EXECUTABLE_PATH = resolve(join(__dirname, '..', '..', '..', '..', osExtension))
 
 function getPort(): number | undefined {
     let arg = process.argv.filter(arg => arg.startsWith('--LSP_PORT='))[0]
@@ -64,7 +63,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                 // --root-dir is only present in the arguments if KEITH is started in its development setup
                 let arg = process.argv.filter(arg => arg.startsWith('--root-dir='))[0]
                 if (!arg) {
-                    lsPath = productLsPath
+                    lsPath = EXECUTABLE_PATH
                     console.log("Starting with product path")
                 } else {
                     throw new Error("No path to LS was specified. Use '--LS_PATH=' to specify one.");
@@ -73,7 +72,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                 console.log("Starting with LS_PATH as argument")
             }
             console.log("Starting LS with path: " + lsPath)
-            const command = path.resolve(__dirname, lsPath);
+            const command = lsPath
             const serverConnection = this.createProcessStreamConnection(command, []);
             this.forward(clientConnection, serverConnection);
             serverConnection.onClose(() => console.log("Connection closed"))

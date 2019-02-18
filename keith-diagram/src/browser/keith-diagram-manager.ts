@@ -20,7 +20,7 @@ import { ThemeManager } from './theme-manager';
 import URI from '@theia/core/lib/common/uri';
 import { ApplicationShell, OpenerOptions } from '@theia/core/lib/browser';
 import { ModelSource, DiagramServer, IActionDispatcher, TYPES, RequestModelAction } from 'sprotty/lib';
-import { KeithDiagramWidgetRegistry } from './keith-diagram-widget-registry';
+import { KeithDiagramWidgetRegistry, id } from './keith-diagram-widget-registry';
 import { KeithDiagramWidget, KeithDiagramWidgetFactory } from './keith-diagram-widget';
 
 @injectable()
@@ -87,7 +87,7 @@ export class KeithDiagramManager extends DiagramManagerImpl {
     }
 
     createDiagramWidget(uri: URI): KeithDiagramWidget {
-        const widgetId = this.widgetRegistry.id()
+        const widgetId = id
         const svgContainerId = widgetId + '_sprotty'
         const diagramConfiguration = this.diagramConfigurationRegistry.get(this.diagramType)
         const diContainer = diagramConfiguration.createContainer(svgContainerId)
