@@ -56,7 +56,7 @@ export class ActionListener extends MouseListener {
                 && event.ctrlKey === action.ctrlCmdPressed
                 && event.shiftKey === action.shiftPressed
                 && this.eventsMatch(event, eventType, action.trigger)) {
-                    actions.push(new PerformActionAction(action.actionId, target.id + '$' + semanticElementId))
+                    actions.push(new PerformActionAction(action.actionId, target.id, semanticElementId))
                 }
         })
         return actions
