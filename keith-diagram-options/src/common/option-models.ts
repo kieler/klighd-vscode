@@ -21,6 +21,11 @@ export interface SynthesisOption {
     sourceHash: number
 }
 
+export interface ValuedSynthesisOption {
+    synthesisOption: SynthesisOption
+    currentValue: any
+}
+
 export interface RangeOption extends SynthesisOption {
     range: Range
     stepSize: number

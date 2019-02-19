@@ -20,7 +20,7 @@ import { WidgetManager, Widget, DidCreateWidgetEvent } from '@theia/core/lib/bro
 import { KeithLanguageClientContribution } from 'keith-language/lib/browser/keith-language-client-contribution'
 import { KeithDiagramManager } from 'keith-diagram/lib/keith-diagram-manager';
 import URI from "@theia/core/lib/common/uri";
-import { SynthesisOption } from '../common/option-models';
+import { SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { GET_OPTIONS, SET_OPTIONS } from '../common'
 import { KeithDiagramWidgetRegistry, id } from 'keith-diagram/lib/keith-diagram-widget-registry';
 import { DiagramWidgetRegistry } from 'theia-sprotty/lib'
@@ -139,9 +139,19 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             const param = {
                 uri: this.editorWidget.editor.uri.toString()
             }
-            const options: SynthesisOption[] = await lClient.sendRequest(GET_OPTIONS, param) as SynthesisOption[]
-            if (options) {
-                options.forEach(option => option.currentValue = option.initialValue)
+            const valuedOptions: ValuedSynthesisOption[] = await lClient.sendRequest(GET_OPTIONS, param) as ValuedSynthesisOption[]
+            const options: SynthesisOption[] = []
+
+            if (valuedOptions) {
+                valuedOptions.forEach(valuedOption => {
+                    const option = valuedOption.synthesisOption
+                    if (valuedOption.currentValue === undefined) {
+                        option.currentValue = option.initialValue
+                    } else {
+                        option.currentValue = valuedOption.currentValue
+                    }
+                    options.push(option)
+                })
             }
             this.diagramOptionsViewWidget.setDiagramOptions(options)
             this.diagramOptionsViewWidget.sourceModelPath = this.editorWidget.editor.uri.toString()
