@@ -52,7 +52,7 @@ export class KNodeView implements IView {
                 {...children}
             </g>
         }
-        if (rendering === null) {
+        if (rendering === undefined) {
             return <g>
                 {ctx.renderChildren(node)}
             </g>
@@ -77,7 +77,7 @@ export class KPortView implements IView {
     render(port: KPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
         let rendering = getRendering(port.data, port, context as any)
-        if (rendering === null) {
+        if (rendering === undefined) {
             rendering = createDefaultPortRendering(port)
             return <g>
                 {rendering}
@@ -118,7 +118,7 @@ export class KLabelView implements IView {
     render(label: KLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
         let rendering = getRendering(label.data, label, context as any)
-        if (rendering === null) {
+        if (rendering === undefined) {
             return <g>
                 {context.renderChildren(label)}
             </g>
@@ -140,7 +140,7 @@ export class KEdgeView implements IView {
     render(edge: KEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
         let rendering = getRendering(edge.data, edge, context as any)
-        if (rendering === null) {
+        if (rendering === undefined) {
             return <g>
                 {context.renderChildren(edge)}
             </g>
