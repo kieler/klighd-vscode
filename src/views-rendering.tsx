@@ -343,7 +343,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         ...{'font-size': styles.kFontSize.size + 'pt'},
         ...{'font-style': textStyles.italic},
         ...{'font-weight': textStyles.bold},
-        ...(lines.length === 1 ? {'alignment-baseline': textStyles.verticalAlignment} : {}),
+        ...{'dominant-baseline': textStyles.verticalAlignment},
         ...{'text-decoration-line': textStyles.textDecorationLine},
         ...{'text-decoration-style': textStyles.textDecorationStyle}
     }
@@ -378,9 +378,6 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
             }
             children.push(
                 <tspan
-                    style = {{
-                        'alignment-baseline': textStyles.verticalAlignment, // Somehow, svg ignores this style on its parent. So put it here for every individual tspan.
-                    } as React.CSSProperties}
                     x = {boundsAndTransformation.bounds.x}
                     {...(dy ? {dy: dy} : {})}
                 >{line}</tspan>
