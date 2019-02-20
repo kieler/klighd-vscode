@@ -291,12 +291,41 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
         y = {`-${blurClip}%`}
         width = {`${100 + 2 * blurClip}%`}
         height = {`${100 + 2 * blurClip}%`}>
-        <feDropShadow
-            dx = {xOffset / 4}
-            dy = {yOffset / 4}
+        <feGaussianBlur
+            // in = 'alpha-channel-of-feDropShadow-in'
+            in = 'SourceAlpha'
             stdDeviation = {STD_DEV}
         />
+        <feOffset
+            dx = {xOffset / 4}
+            dy = {yOffset / 4}
+            result = 'offsetblur'
+        />
+        <feFlood
+            // TODO: these colors
+            // flood-color = 'flood-color-of-feDropShadow'
+            // flood-opacity = 'flood-opacity-of-feDropShadow'
+        />
+        <feComposite
+            in2 = 'offsetblur'
+            operator = 'in'
+        />
+        <feMerge>
+            <feMergeNode/>
+            <feMergeNode
+                // in = 'in-of-feDropShadow'
+                in = 'SourceGraphic'
+            />
+        </feMerge>
     </filter>
+
+    // The above definition is equivalent to this shorthand SVG, but not all SVG renderers support and understand this (such as Inkscape).
+    // As every shadow is defined exactly once in the final SVG, this additional code does not add too much to the overall file size.
+    // <feDropShadow
+    // dx = {xOffset / 4}
+    // dy = {yOffset / 4}
+    // stdDeviation = {STD_DEV}
+    // />
 }
 
 export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingContext): string | undefined {
