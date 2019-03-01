@@ -28,6 +28,7 @@ import { KeithDiagramWidget } from 'keith-diagram/lib/keith-diagram-widget';
 import { KeithDiagramServer } from 'keith-diagram/lib/keith-diagram-server';
 
 export const DIAGRAM_OPTIONS_WIDGET_FACTORY_ID = 'diagramoptions-view'
+export const OPEN_DIAGRAM_OPTIONS_WIDGET_KEYBINDING = "ctrlcmd+shift+h"
 
 @injectable()
 export class DiagramOptionsViewContribution extends AbstractViewContribution<DiagramOptionsViewWidget> implements FrontendApplicationContribution {
@@ -49,7 +50,8 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                 area: 'right',
                 rank: 500
             },
-            toggleCommandId: 'diagramOptionsView:toggle'
+            toggleCommandId: 'diagramOptionsView:toggle',
+            toggleKeybinding: OPEN_DIAGRAM_OPTIONS_WIDGET_KEYBINDING
         })
 
         editorManager.onCurrentEditorChanged(this.currentEditorChanged.bind(this))
