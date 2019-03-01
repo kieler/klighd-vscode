@@ -30,6 +30,7 @@ export const languageDescriptions: LanguageDescription[] = [
     {id: "kext", name: "KExt"},
     {id: "anno", name: "Annotations"},
     {id: "sctx", name: "SCCharts"},
+    {id: "elkt", name: "Elk Graph"},
 ]
 
 export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Unbind, isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
