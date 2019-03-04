@@ -78,9 +78,7 @@ export class KPortView implements IView {
         port.areChildrenRendered = false
         let rendering = getRendering(port.data, port, context as any)
         if (rendering === undefined) {
-            rendering = createDefaultPortRendering(port)
             return <g>
-                {rendering}
                 {context.renderChildren(port)}
             </g>
         }
@@ -95,23 +93,6 @@ export class KPortView implements IView {
             </g>
         }
     }
-}
-
-/**
- * This creates the default rendering of a port. This is a special case, because KPorts don't get a default rendering attached
- * during synthesis. Should be removed, once ports have their rendering attached and are not treated as a special case anymore.
- */
-function createDefaultPortRendering(port: KPort): VNode {
-    return <g>
-        <rect
-            x = {0}
-            y = {0}
-            width = {port.size.width}
-            height = {port.size.height}
-            stroke = 'black'
-            fill = 'black'
-        />
-    </g>
 }
 
 export class KLabelView implements IView {
