@@ -414,10 +414,17 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
     }
 
 
-    // If still no bounds are found, set x to 0. This will be the case when the texts are drawn first to estimate their sizes.
-    // Multiline texts should still be rendered beneath each other, so the x coordinate is important for each <tspan>
+    // If still no bounds are found, set all by default to 0. This will be the case when the texts are drawn first to estimate their sizes.
     if (bounds.x === undefined) {
-        bounds.x = 0
+        bounds = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        }
+        // Do not apply any rotation style in that case either, as the bounds estimation may get confused then.
+        // TODO: really, the rotation style should not even be sent as a style on texts when estimating their sizes.
+        styles.kRotation = undefined
     }
     // Calculate the svg transformation function string for this element given the bounds and decoration.
     const transformation = getTransformation(bounds as Bounds, decoration, styles.kRotation, false, true)
