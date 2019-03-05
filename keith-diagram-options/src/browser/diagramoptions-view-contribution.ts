@@ -62,7 +62,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         }
         diagramManager.onDiagramOpened(this.onDiagramOpened.bind(this))
         widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
-        // TODO: when the diagram closes, also update the view to the default one
+
+        diagramWidgetRegistry.onWidgetsChanged()(this.onWidgetsChanged.bind(this))
+
         const widgetPromise = this.widgetManager.getWidget('diagramoptions-view')
         widgetPromise.then(widget => {
             this.initializeDiagramOptionsViewWidget(widget)
@@ -121,6 +123,11 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         if (this.diagramOptionsViewWidget) {
             this.updateContent()
         }
+    }
+
+    onWidgetsChanged(): void {
+        this.diagramOptionsViewWidget.setDiagramOptions([])
+        this.diagramOptionsViewWidget.update()
     }
 
     currentEditorChanged(eWidget: EditorWidget | undefined): void {
