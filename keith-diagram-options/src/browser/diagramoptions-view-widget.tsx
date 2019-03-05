@@ -164,11 +164,19 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
     private renderCategory(option: SynthesisOption, synthesisOptions: SynthesisOption[]): JSX.Element {
         return <div key={option.sourceHash} className="diagram-option category">
-            <details open>
+            <details
+                open = {option.currentValue}
+                onClick = {(e: React.MouseEvent<HTMLDetailsElement>) => this.onCategory(e, option)}
+            >
                 <summary>{option.name}</summary>
                 {this.renderCategoryOptions(synthesisOptions)}
             </details>
         </div>
+    }
+
+    private onCategory(event: React.MouseEvent<HTMLDetailsElement>, option: SynthesisOption) {
+        option.currentValue = event.currentTarget.open
+        this.sendNewOption(option)
     }
 
     private renderCategoryOptions(options: SynthesisOption[]): JSX.Element {
