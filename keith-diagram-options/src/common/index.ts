@@ -11,5 +11,11 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+ /**
+  * The message type of the language server protocol to get new options.
+  */
 export const GET_OPTIONS = 'keith/diagramOptions/getOptions'
+/**
+ * The message type of the language server protocol to set new options.
+ */
 export const SET_OPTIONS = 'keith/diagramOptions/setOptions'

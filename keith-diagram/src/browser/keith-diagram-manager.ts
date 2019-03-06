@@ -11,18 +11,21 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { inject, injectable } from 'inversify'
-import { LanguageClientContribution } from '@theia/languages/lib/browser'
-import { EditorManager, EditorWidget } from '@theia/editor/lib/browser'
-import { KeithLanguageClientContribution } from 'keith-language/lib/browser/keith-language-client-contribution'
-import { TheiaFileSaver, DiagramManagerImpl, DiagramWidgetRegistry, TheiaDiagramServer, TheiaSprottyConnector } from 'theia-sprotty/lib'
-import { ThemeManager } from './theme-manager';
+import { OpenerOptions } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
-import { ApplicationShell, OpenerOptions } from '@theia/core/lib/browser';
-import { ModelSource, DiagramServer, IActionDispatcher, TYPES, RequestModelAction } from 'sprotty/lib';
-import { KeithDiagramWidgetRegistry, id } from './keith-diagram-widget-registry';
-import { KeithDiagramWidget, KeithDiagramWidgetFactory } from './keith-diagram-widget';
+import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
+import { LanguageClientContribution } from '@theia/languages/lib/browser';
+import { inject, injectable } from 'inversify';
+import { KeithLanguageClientContribution } from 'keith-language/lib/browser/keith-language-client-contribution';
+import { RequestModelAction } from 'sprotty/lib';
+import { DiagramManagerImpl, DiagramWidget, DiagramWidgetRegistry, TheiaDiagramServer, TheiaFileSaver, TheiaSprottyConnector } from 'theia-sprotty/lib';
+import { KeithDiagramWidgetRegistry } from './keith-diagram-widget-registry';
 
+/**
+ * Class managing the creation of KEITH diagram widgets and connecting them to their diagram server.
+ * Based on the theia-yang-extension implementation by TypeFox.
+ * @see https://github.com/theia-ide/yangster/blob/master/theia-yang-extension/src/frontend/yangdiagram/yang-diagram-manager.ts
+ */
 @injectable()
 export class KeithDiagramManager extends DiagramManagerImpl {
 
@@ -32,13 +35,11 @@ export class KeithDiagramManager extends DiagramManagerImpl {
     _diagramConnector: TheiaSprottyConnector
 
     constructor(@inject(KeithLanguageClientContribution) languageClientContribution: LanguageClientContribution,
-                @inject(TheiaFileSaver) theiaFileSaver: TheiaFileSaver,
-                @inject(EditorManager) editorManager: EditorManager,
-                @inject(DiagramWidgetRegistry) diagramWidgetRegistry: DiagramWidgetRegistry,
-                @inject(ThemeManager) themeManager: ThemeManager,
-                @inject(KeithDiagramWidgetRegistry) protected readonly widgetRegistry: KeithDiagramWidgetRegistry) {
+        @inject(TheiaFileSaver) theiaFileSaver: TheiaFileSaver,
+        @inject(EditorManager) editorManager: EditorManager,
+        @inject(DiagramWidgetRegistry) diagramWidgetRegistry: DiagramWidgetRegistry,
+        @inject(KeithDiagramWidgetRegistry) protected readonly widgetRegistry: KeithDiagramWidgetRegistry) {
         super()
-        themeManager.initialize()
         this._diagramConnector = new TheiaSprottyConnector(languageClientContribution, theiaFileSaver, editorManager, diagramWidgetRegistry)
         editorManager.onCurrentEditorChanged(this.onCurrentEditorChanged.bind(this))
     }
@@ -57,7 +58,7 @@ export class KeithDiagramManager extends DiagramManagerImpl {
         }
     }
 
-    open(uri: URI, input?: OpenerOptions): Promise<KeithDiagramWidget> {
+    open(uri: URI, input?: OpenerOptions): Promise<DiagramWidget> {
         const promiseDiagramWidget = this.getOrCreateDiagramWidget(uri)
         promiseDiagramWidget.then(diagramWidget => {
             window.requestAnimationFrame(() => {
@@ -69,11 +70,11 @@ export class KeithDiagramManager extends DiagramManagerImpl {
         return promiseDiagramWidget
     }
 
-    async getOrCreateDiagramWidget(uri: URI): Promise<KeithDiagramWidget> {
+    async getOrCreateDiagramWidget(uri: URI): Promise<DiagramWidget> {
         const widget = await this.widgetRegistry.getWidget(uri, this.diagramType)
-        if (widget !== undefined && widget instanceof KeithDiagramWidget) {
+        if (widget !== undefined && widget instanceof DiagramWidget) {
             // reconfigure the diagram server to watch the new file by sending a new RequestModelAction with the new uri to the server.
-            if (widget.currentModelSource instanceof TheiaDiagramServer && this.diagramConnector) {
+            if (widget.modelSource instanceof TheiaDiagramServer && this.diagramConnector) {
                 widget.actionDispatcher.dispatch(new RequestModelAction({
                     sourceUri: uri.toString(true),
                     diagramType: this.diagramType
@@ -86,51 +87,13 @@ export class KeithDiagramManager extends DiagramManagerImpl {
         return Promise.resolve(newWidget)
     }
 
-    createDiagramWidget(uri: URI): KeithDiagramWidget {
-        const widgetId = id
-        const svgContainerId = widgetId + '_sprotty'
-        const diagramConfiguration = this.diagramConfigurationRegistry.get(this.diagramType)
-        const diContainer = diagramConfiguration.createContainer(svgContainerId)
-        const modelSource = diContainer.get<ModelSource>(TYPES.ModelSource)
-        if (modelSource instanceof DiagramServer)
-            modelSource.clientId = widgetId
-        if (modelSource instanceof TheiaDiagramServer && this.diagramConnector)
-            this.diagramConnector.connect(modelSource)
-        const newWidget = this.diagramWidgetFactory({
-            id: widgetId, svgContainerId, uri, diagramType: this.diagramType, modelSource,
-            actionDispatcher: diContainer.get<IActionDispatcher>(TYPES.IActionDispatcher)
-        })
-        newWidget.title.closable = true
+    createDiagramWidget(uri: URI): DiagramWidget {
+        const newWidget = super.createDiagramWidget(uri)
         newWidget.title.label = 'Diagram'
-        newWidget.title.icon = this.iconClass
-        this.widgetRegistry.addWidget(uri, this.diagramType, newWidget)
-        newWidget.disposed.connect(() => {
-            this.widgetRegistry.removeWidget(uri, this.diagramType)
-            if (modelSource instanceof TheiaDiagramServer && this.diagramConnector)
-                this.diagramConnector.disconnect(modelSource)
-        })
-        newWidget.currentUri = uri
-        newWidget.currentModelSource = modelSource
         return newWidget
     }
 
-    addToShell(widget: KeithDiagramWidget): void {
-        const currentEditor = this.editorManager.currentEditor
-        const options: ApplicationShell.WidgetOptions = {
-            area: 'main'
-        }
-        if (!!currentEditor && currentEditor.editor.uri.toString(true) === widget.uri.toString(true)) {
-            options.ref = currentEditor
-            options.mode = 'split-right'
-        }
-        this.shell.addWidget(widget, options)
-    }
-
-    get diagramWidgetFactory(): KeithDiagramWidgetFactory {
-        return options => new KeithDiagramWidget(options)
-    }
-
-    get diagramConnector() {
+    get diagramConnector() {
         return this._diagramConnector
     }
 

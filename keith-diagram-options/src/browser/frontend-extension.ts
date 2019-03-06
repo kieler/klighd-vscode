@@ -11,11 +11,14 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { ContainerModule, interfaces } from "inversify"
-import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } from "@theia/core/lib/browser"
-import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution"
-import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget"
+import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } from "@theia/core/lib/browser";
+import { ContainerModule, interfaces } from "inversify";
+import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution";
+import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget";
 
+/**
+ * Dependency injection container for the KEITH diagram options functionality.
+ */
 export default new ContainerModule((bind: interfaces.Bind) => {
     bindViewContribution(bind, DiagramOptionsViewContribution);
     bind(FrontendApplicationContribution).toService(DiagramOptionsViewContribution);

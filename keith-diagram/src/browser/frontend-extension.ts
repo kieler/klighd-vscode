@@ -11,19 +11,20 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { ContainerModule } from 'inversify'
-import { DiagramConfiguration, DiagramWidgetRegistry } from 'theia-sprotty/lib'
-import { KeithDiagramConfiguration } from './di.config'
-import { DiagramManager, DiagramManagerProvider } from 'theia-sprotty/lib'
-import { KeithDiagramManager } from './keith-diagram-manager'
-import { FrontendApplicationContribution, OpenHandler } from '@theia/core/lib/browser'
-import 'sprotty/css/sprotty.css'
-import 'theia-sprotty/css/theia-sprotty.css'
-import { ThemeManager } from './theme-manager'
-import { CommandContribution } from '@theia/core';
-import { KeithDiagramCommandContribution } from './keith-diagram-command-contribution';
+import { FrontendApplicationContribution, OpenHandler } from '@theia/core/lib/browser';
+import { ContainerModule } from 'inversify';
+import 'sprotty/css/sprotty.css';
+import 'theia-sprotty/css/theia-sprotty.css';
+import { DiagramConfiguration, DiagramManager, DiagramManagerProvider, DiagramWidgetRegistry } from 'theia-sprotty/lib';
+import { KeithDiagramConfiguration } from './di.config';
+import { KeithDiagramManager } from './keith-diagram-manager';
 import { KeithDiagramWidgetRegistry } from './keith-diagram-widget-registry';
 
+/**
+ * Dependency injection container for the KEITH frontend part of diagram functionality.
+ * Based on the theia-yang-extension implementation by TypeFox.
+ * @see https://github.com/theia-ide/yangster/blob/master/theia-yang-extension/src/frontend/language/frontend-extension.ts
+ */
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(DiagramConfiguration).to(KeithDiagramConfiguration).inSingletonScope()
     bind(DiagramManagerProvider).toProvider<DiagramManager>(context => {
@@ -37,8 +38,6 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(FrontendApplicationContribution).toDynamicValue(context => context.container.get(KeithDiagramManager))
     bind(OpenHandler).toDynamicValue(context => context.container.get(KeithDiagramManager))
 
-    bind(ThemeManager).toSelf().inSingletonScope()
-    bind(CommandContribution).to(KeithDiagramCommandContribution).inSingletonScope()
     rebind(DiagramWidgetRegistry).to(KeithDiagramWidgetRegistry).inSingletonScope()
     bind(KeithDiagramWidgetRegistry).toSelf().inSingletonScope()
 })

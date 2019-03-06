@@ -20,71 +20,72 @@ import { isNullOrUndefined } from 'util'
 import * as React from 'react'
 import '../../src/browser/style/index.css'
 
+/**
+ * The widget displaying the diagram options.
+ */
 @injectable()
 export class DiagramOptionsViewWidget extends ReactWidget {
     public static widgetId = 'diagramoptions-view'
 
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
     private synthesisOptions: SynthesisOption[]
-    public sourceModelPath: string
-    public hasContent: boolean
     private categoryMap: Map<string, SynthesisOption[]> = new Map
 
-    constructor(
-    ) {
+    constructor() {
         super()
 
         this.id = DiagramOptionsViewWidget.widgetId
         this.title.label = 'Diagram Options'
         this.addClass('theia-diagramoptions-view')
-        // TODO: add this.update?
     }
 
-    public setDiagramOptions(options: SynthesisOption[]): void {
+    /**
+     * Sets the synthesis options.
+     * @param options The options to set.
+     */
+    public setSynthesisOptions(options: SynthesisOption[]): void {
         this.synthesisOptions = options
         this.update()
     }
 
-    public getDiagramOptions(): SynthesisOption[] {
+    /**
+     * Gets the synthesis options.
+     */
+    public getSynthesisOptions(): SynthesisOption[] {
         return this.synthesisOptions
-    }
-
-    protected onUpdateRequest(msg: Message): void {
-        super.onUpdateRequest(msg)
     }
 
     protected render(): JSX.Element {
         if (isNullOrUndefined(this.synthesisOptions)) {
-            this.hasContent = false
+            // Default view if no diagram has been opened yet.
             return <div>
-                <div className = "diagram-option">
+                <div className='diagram-option'>
                     {'No open diagram found.'}
                 </div>
                 <div
-                    className = 'update-button'
-                    title = 'Update'
-                    onClick = {event => {
+                    className='update-button'
+                    title='Update'
+                    onClick={event => {
                         this.getOptions()
                     }}>
                     {'Update View'}
                 </div>
             </div>
         } else {
-            this.hasContent = true
             return this.renderOptions(this.synthesisOptions)
         }
     }
 
     /**
      * Renders the options, it is assumed that the options are ordered in a way
-     * that the category for each option comes before its correspoding options.
-     * @param synthesisOptions options for diagram synthesis
+     * that the category for each option comes before its corresponding options.
+     * @param synthesisOptions The Options for the diagram synthesis.
      */
     private renderOptions(synthesisOptions: SynthesisOption[]): JSX.Element {
         this.categoryMap.clear()
         let children: JSX.Element[] = []
         let optionsToRender: SynthesisOption[] = []
-        // add all options to their categories
+        // Add all options to their categories.
         synthesisOptions.forEach(option => {
             if (option.type === TransformationOptionType.CATEGORY) {
                 this.categoryMap.set(option.name, [])
@@ -107,7 +108,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                 }
             }
         })
-        // render all top level options
+        // Render all top level options.
         optionsToRender.forEach(option => {
             switch (option.type) {
                 case TransformationOptionType.CHECK: {
@@ -138,10 +139,90 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         return <div>{...children}</div>
     }
 
+    /**
+     * Renders a check SynthesisOption as an HTML checkbox.
+     * @param option The ckeck option to render.
+     */
+    private renderCheck(option: SynthesisOption): JSX.Element { // TODO: remove inputAttrs in renderChoiceValue
+        const currentValue = option.currentValue
+        let inputAttrs = {
+            type: 'checkbox',
+            id: option.name,
+            name: option.name,
+            defaultChecked: currentValue,
+            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheck(e, option)
+        }
+
+        return <div key={option.sourceHash} className='diagram-option'>
+            <label htmlFor={option.name}>
+                <input className='diagram-inputbox' {...inputAttrs} />
+                {option.name}
+            </label>
+        </div>
+    }
+
+    /**
+     * Called whenever a checkbox has been clicked. Updates the option that belongs to this checkbox.
+     * @param event The mouseEvent that clicked the checkbox.
+     * @param option The synthesis option connected to the clicked checkbox.
+     */
+    private onCheck(event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption) {
+        option.currentValue = event.currentTarget.checked
+        this.sendNewOption(option)
+    }
+
+    /**
+     * Renders a choice SynthesisOption as an HTML fieldset with multiple radio buttons.
+     *
+     * @param option The choice option to render.
+     */
+    private renderChoice(option: SynthesisOption): JSX.Element {
+        return <fieldset key={option.sourceHash} className='diagram-option'>
+            <legend>{option.name}</legend>
+            {option.values.map(value => this.renderChoiceValue(value, option))}
+        </fieldset>
+    }
+
+    /**
+     * Renders a radio button input for a choice option.
+     *
+     * @param value The value of the choice option.
+     * @param option The option this radio button belongs to.
+     */
+    private renderChoiceValue(value: any, option: SynthesisOption): JSX.Element {
+        return <div key={'' + option.sourceHash + value}>
+            <label htmlFor={value}>
+                <input
+                    type='radio'
+                    id={value}
+                    name={option.name}
+                    defaultChecked={value === option.currentValue}
+                    onClick={e => this.onChoice(option, value)}
+                />
+                {value}
+            </label>
+        </div>
+    }
+
+    /**
+     * Called whenever a choice radio button has been clicked. Updates the option that belongs to this button.
+     * @param event The mouseEvent that clicked the radio button.
+     * @param option The synthesis option connected to the clicked radio button.
+     */
+    private onChoice(option: SynthesisOption, value: any) {
+        option.currentValue = value
+        this.sendNewOption(option)
+    }
+
+    /**
+     * Renders a range SynthesisOption as an HTML input with a range.
+     *
+     * @param option The range option to render.
+     */
     private renderRange(option: RangeOption): JSX.Element {
         const currentValue = option.currentValue
         let inputAttrs = {
-            type: "range",
+            type: 'range',
             id: option.name,
             name: option.name,
             min: option.range.first,
@@ -150,23 +231,45 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             step: option.stepSize,
             onChange: (event: React.ChangeEvent<HTMLInputElement>) => this.onRange(event, option)
         }
-        return <div key={option.sourceHash} className="diagram-option">
-            <label htmlFor = {option.name}>{option.name}: {option.currentValue}</label>
-            <input {...inputAttrs}/>
+        return <div key={option.sourceHash} className='diagram-option'>
+            <label htmlFor={option.name}>{option.name}: {option.currentValue}</label>
+            <input {...inputAttrs} />
         </div>
     }
 
+    /**
+     * Called whenever a range slider has been modified. Updates the option that belongs to this range slider.
+     * @param event The mouseEvent that updated the range slider.
+     * @param option The synthesis option connected to the range slider.
+     */
     private onRange(event: React.ChangeEvent<HTMLInputElement>, option: SynthesisOption) {
         option.currentValue = event.currentTarget.value
         this.update()
         this.sendNewOption(option)
     }
 
+    /**
+     * Renders a separator SynthesisOption as an HTML label.
+     *
+     * @param option The separator option to render.
+     */
+    private renderSeperator(option: SynthesisOption) {
+        return <div key={option.sourceHash} className='diagram-option seperator'>
+            <label htmlFor={option.name}>{option.name}</label>
+        </div>
+    }
+
+    /**
+     * Renders a category SynthesisOption as an HTML details tag.
+     * Also recursively renders all synthesis options that belong in this category.
+     *
+     * @param option The category option to render.
+     */
     private renderCategory(option: SynthesisOption, synthesisOptions: SynthesisOption[]): JSX.Element {
-        return <div key={option.sourceHash} className="diagram-option category">
+        return <div key={option.sourceHash} className='diagram-option category'>
             <details
-                open = {option.currentValue}
-                onClick = {(e: React.MouseEvent<HTMLDetailsElement>) => this.onCategory(e, option)}
+                open={option.currentValue}
+                onClick={(e: React.MouseEvent<HTMLDetailsElement>) => this.onCategory(e, option)}
             >
                 <summary>{option.name}</summary>
                 {this.renderCategoryOptions(synthesisOptions)}
@@ -174,11 +277,20 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         </div>
     }
 
+    /**
+     * Called whenever a category details tag is opened or closed. Updates the option that belongs to this category.
+     * @param event The mouseEvent that updated the category.
+     * @param option The synthesis option connected to the category.
+     */
     private onCategory(event: React.MouseEvent<HTMLDetailsElement>, option: SynthesisOption) {
         option.currentValue = event.currentTarget.open
         this.sendNewOption(option)
     }
 
+    /**
+     * Renders the options in this category.
+     * @param options The options in this category.
+     */
     private renderCategoryOptions(options: SynthesisOption[]): JSX.Element {
         let children: JSX.Element[] = []
         options.forEach(option => {
@@ -208,49 +320,12 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                 }
             }
         })
-        return <div className="category-options">{...children}</div>
-    }
-
-    private renderSeperator(option: SynthesisOption) {
-        return <div key={option.sourceHash} className="diagram-option seperator">
-            <label htmlFor = {option.name}>{option.name}</label>
-        </div>
-    }
-
-    /**
-     * Renders a check SynthesisOption as a HTML checkbox
-     * @param option The ckeck option to render
-     */
-    private renderCheck(option: SynthesisOption): JSX.Element { // TODO: remove inputAttrs in renderChoiceValue
-        const currentValue = option.currentValue
-        let inputAttrs = {
-            type: "checkbox",
-            id: option.name,
-            name: option.name,
-            defaultChecked: currentValue,
-            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheck(e, option)
-        }
-
-        return <div key = {option.sourceHash} className="diagram-option">
-            <label htmlFor = {option.name}>
-                <input className="diagram-inputbox" {...inputAttrs}/>
-                {option.name}
-            </label>
-        </div>
-    }
-
-    private onCheck(event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption) {
-        option.currentValue = event.currentTarget.checked
-        this.sendNewOption(option)
-    }
-
-    private onChoice(option: SynthesisOption, value: any) {
-        option.currentValue = value
-        this.sendNewOption(option)
+        return <div className='category-options'>{...children}</div>
     }
 
     onActivateRequest(msg: Message): void {
         super.onActivateRequest(msg)
+        // Always update the view on activate.
         this.onUpdateRequest(msg)
     }
 
@@ -261,6 +336,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     readonly onSendNewOption: Event<SynthesisOption> = this.onSendNewOptionEmitter.event
 
+    /**
+     * Call this when an option changed and that should be communicated to other listening methods.
+     * @param option The option that has changed.
+     */
     public sendNewOption(option: SynthesisOption): void {
         this.onSendNewOptionEmitter.fire(option)
     }
@@ -272,40 +351,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     readonly onGetOptions: Event<DiagramOptionsViewWidget | undefined> = this.onGetOptionsEmitter.event
 
+    /**
+     * Call this when this view should pull new options.
+     */
     public getOptions(): void {
         this.onGetOptionsEmitter.fire(this)
-    }
-
-    /**
-     * Returns a JSX element containing a choice SynthesisOption as a HTML fieldset with multiple radio buttons.
-     *
-     * @param option The choice option to generate
-     */
-    private renderChoice(option: SynthesisOption): JSX.Element {
-        return <fieldset key = {option.sourceHash} className="diagram-option">
-            <legend>{option.name}</legend>
-            {option.values.map(value => this.renderChoiceValue(value, option))}
-        </fieldset>
-    }
-
-    /**
-     * Returns a JSX Element as a radio button input containing to a choice option
-     *
-     * @param value The value of the choice option.
-     * @param option The option this radio button belongs to.
-     */
-    private renderChoiceValue(value: any, option: SynthesisOption): JSX.Element {
-        return <div key = {'' + option.sourceHash + value}>
-            <label htmlFor = {value}>
-                <input
-                    type = "radio"
-                    id = {value}
-                    name = {option.name}
-                    defaultChecked = {value === option.currentValue}
-                    onClick = {e => this.onChoice(option, value)}
-                />
-                {value}
-            </label>
-        </div>
     }
 }
