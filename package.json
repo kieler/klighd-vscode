@@ -20,9 +20,9 @@
     "sprotty": "0.4.2"
   },
   "devDependencies": {
-    "rimraf": "^2.6.1",
-    "tslint": "^5.5.0",
-    "typescript": "2.9.1"
+    "rimraf": "^2.6.3",
+    "tslint": "^5.13.1",
+    "typescript": "3.3.3333"
   },
   "files": [
     "lib",
