@@ -10,10 +10,13 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { MouseListener, Action } from "sprotty/lib"
-import { Trigger, KAction, KGraphElement, isRendering, KRendering, KContainerRendering, KPolyline } from "../kgraph-models"
-import { PerformActionAction } from "./actions";
+import { Action, MouseListener } from 'sprotty/lib';
+import { isRendering, KAction, KContainerRendering, KGraphElement, KPolyline, KRendering, Trigger } from '../kgraph-models';
+import { PerformActionAction } from './actions';
 
+/**
+ * Mouse listener handling KLighD actions that can be defined on KGraphElements in the model.
+ */
 export class ActionListener extends MouseListener {
     mouseMoved: boolean = false
 
@@ -39,41 +42,64 @@ export class ActionListener extends MouseListener {
         return [];
     }
 
+    /**
+     * Returns the actions defined on the target KGraphElement that should be performed with the given event.
+     * @param target The KGraphElement under the mouse when this event is issued.
+     * @param event The MouseEvent that triggered this listener.
+     * @param eventType The event type of the event (e.g. 'dblclk', 'clk', etc.).
+     */
     protected actions(target: KGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
-        // Look up the ID of the semantic element that was clicked.
-        const semanticElementId = this.getSemanticElement(event.target as Element).id
-
-        // Search the actions in the target element.
-        const kActions = this.findActions(target, semanticElementId)
-
         let actions: Action[] = []
-        if (kActions === undefined) {
-            return actions
-        }
-        // For each kAction, return a ActionAction if the event matches the event in the kAction.
-        kActions.forEach(action => {
-            if (event.altKey === action.altPressed
-                && event.ctrlKey === action.ctrlCmdPressed
-                && event.shiftKey === action.shiftPressed
-                && this.eventsMatch(event, eventType, action.trigger)) {
+        // Look up the ID of the semantic element that was clicked.
+        const targetSvg = event.target
+        if (targetSvg instanceof SVGElement) {
+            const semanticElement = this.getSemanticElement(targetSvg)
+            if (semanticElement === undefined) {
+                return actions
+            }
+            const semanticElementId = semanticElement.id
+
+            // Search the actions in the target element.
+            const kActions = this.findActions(target, semanticElementId)
+
+            if (kActions === undefined) {
+                return actions
+            }
+            // For each kAction, return an ActionAction if the event matches the event in the kAction.
+            kActions.forEach(action => {
+                if (event.altKey === action.altPressed
+                    && event.ctrlKey === action.ctrlCmdPressed
+                    && event.shiftKey === action.shiftPressed
+                    && this.eventsMatch(event, eventType, action.trigger)) {
                     actions.push(new PerformActionAction(action.actionId, target.id, semanticElementId))
                 }
-        })
+            })
+        }
         return actions
     }
 
-    protected getSemanticElement(element: Element): Element {
+    /**
+     * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
+     * @param element The topmost SVG element clicked.
+     */
+    protected getSemanticElement(element: SVGElement): SVGElement | undefined {
+        let currentElement: Element | null = element
         let semanticElement = undefined
-        while (semanticElement === undefined) {
-            if (element.id !== '') {
-                semanticElement = element
+        while (semanticElement === undefined && currentElement instanceof SVGElement) {
+            if (currentElement.id !== '') {
+                semanticElement = currentElement
             } else {
-                element = element.parentElement as Element
+                currentElement = currentElement.parentElement
             }
         }
         return semanticElement
     }
 
+    /**
+     * Finds the actions defined in the KGraphElement in its rendering with the given ID.
+     * @param element The KGraphElement to look in.
+     * @param id The ID of the KRendering within that KGraphElement.
+     */
     protected findActions(element: KGraphElement, id: string): KAction[] {
         // The first rendering has to be extracted from the KGraphElement. It is the first data object that is a KRendering.
         let currentElement: KRendering = element.data.find(possibleRendering => { // TODO: We could be looking at a KRenderingRef!
@@ -106,6 +132,12 @@ export class ActionListener extends MouseListener {
         return currentElement.actions
     }
 
+    /**
+     * Returns true if the event type and button match the trigger.
+     * @param event The MouseEvent to check.
+     * @param eventType The eventType of that MouseEvent
+     * @param trigger The trigger to check against.
+     */
     protected eventsMatch(event: MouseEvent, eventType: string, trigger: Trigger): boolean {
         switch (trigger) {
             case Trigger.SINGLECLICK: {

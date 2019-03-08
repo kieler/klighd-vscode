@@ -10,11 +10,14 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { ContainerModule } from "inversify"
-import { TYPES } from "sprotty/lib"
-import { RequestTextBoundsCommand } from "../actions/actions"
-import { HiddenTextBoundsUpdater } from "./hidden-text-bounds-updater"
+import { ContainerModule } from 'inversify';
+import { TYPES } from 'sprotty/lib';
+import { RequestTextBoundsCommand } from '../actions/actions';
+import { HiddenTextBoundsUpdater } from './hidden-text-bounds-updater';
 
+/**
+ * Dependency injection module that adds functionality to handle the hidden text bounds estimation for the RequestTextBoudndsAction.
+ */
 const textBoundsModule = new ContainerModule((bind) => {
     // TODO:
     // This should really first unbind the RequestBoundsCommand from the TYPES.ICommand registry

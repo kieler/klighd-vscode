@@ -10,11 +10,10 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { inject, injectable } from "inversify"
-import { VNode } from "snabbdom/vnode"
-import { Bounds, IVNodeDecorator, TYPES, IActionDispatcher, isExportable, ElementAndBounds,
-     almostEquals, BoundsAware, isSizeable, SModelElement, SModelRoot } from "sprotty/lib"
-import { ComputedTextBoundsAction } from "../actions/actions"
+import { inject, injectable } from 'inversify';
+import { VNode } from 'snabbdom/vnode';
+import { almostEquals, Bounds, BoundsAware, ElementAndBounds, IActionDispatcher, isExportable, isSizeable, IVNodeDecorator, SModelElement, SModelRoot, TYPES } from 'sprotty/lib';
+import { ComputedTextBoundsAction } from '../actions/actions';
 
 export class TextBoundsData {
     vnode?: VNode
@@ -23,14 +22,18 @@ export class TextBoundsData {
 }
 
 /**
- * Grabs the bounds from hidden SVG DOM elements and fires ComputedTextBoundsActions.
+ * Grabs the bounds from hidden SVG DOM elements and fires a ComputedTextBoundsActions.
  *
  * The actual bounds of text elements can usually not be determined from the SModel
  * as they depend on the view implementation, CSS stylings and the browser, how texts are rendered.
  * So the best way is to grab them from a live (but hidden) SVG using getBBox().
+ * Inspired by sprotty's HiddenBoundsUpdater.
+ * @see HiddenBoundsUpdater
  */
 @injectable()
 export class HiddenTextBoundsUpdater implements IVNodeDecorator {
+    // This class differs from the HiddenBoundsUpdater that it only calculates and returns the bounds and not the position of the elements
+    // and that it dispatches a ComputedTextBoundsAction instead of a ComputedBoundsAction.
 
     constructor(@inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher) {
     }

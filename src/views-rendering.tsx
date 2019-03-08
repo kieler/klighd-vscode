@@ -11,23 +11,29 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'
-import { KChildArea, KGraphElement, KRoundedRectangle,
-    KEdge, KPolyline, KText, KLabel, KContainerRendering, KGraphData,
-    KRenderingRef, KRenderingLibrary, KRoundedBendsPolyline, KForeground, K_ELLIPSE, K_RECTANGLE, K_ROUNDED_RECTANGLE,
-    K_SPLINE, K_POLYLINE, K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_RENDERING_REF, K_RENDERING_LIBRARY, K_CONTAINER_RENDERING,
-    K_CHILD_AREA, K_ARC, K_CUSTOM_RENDERING, K_IMAGE, K_TEXT } from "./kgraph-models"
-import { KGraphRenderingContext, findBoundsAndTransformationData, getPoints, findTextBoundsAndTransformationData } from "./views-common"
-import { VNode } from "snabbdom/vnode"
-import { getKStyles, getSvgColorStyles, getSvgColorStyle, getSvgInvisibilityStyles, getSvgShadowStyles, getSvgLineStyles, getSvgTextStyles } from "./views-styles"
-import { SVGAttributes } from 'react'
+import { SVGAttributes } from 'react';
+import { svg } from 'snabbdom-jsx';
+import { VNode } from 'snabbdom/vnode';
+import {
+    KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
+    K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
+} from './kgraph-models';
+import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, KGraphRenderingContext } from './views-common';
+import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible } from './views-styles';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
+/**
+ * Translates a KChildArea rendering into an SVG rendering.
+ * @param rendering The rendering.
+ * @param parent The parent element.
+ * @param context The rendering context for this element.
+ */
 export function renderChildArea(rendering: KChildArea, parent: KGraphElement, context: KGraphRenderingContext) {
     if (parent.areChildrenRendered) {
         console.error('This element contains multiple child areas, skipping this one.')
-        return <g/>
+        return <g />
     }
     // remember, that this parent's children are now already rendered
     parent.areChildrenRendered = true
@@ -39,20 +45,27 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g/>
+        return <g />
     }
 
-    const gAttrs: SVGAttributes<SVGGElement>  = {
-        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
+    const gAttrs: SVGAttributes<SVGGElement> = {
+        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
-    let element = <g id = {rendering.id} {...gAttrs}>
+    let element = <g id={rendering.id} {...gAttrs}>
         {context.renderChildren(parent)}
     </g>
 
     return element
 }
 
+/**
+ * Translates a rectangular rendering into an SVG rendering.
+ * This includes KEllipse, KRectangle and KRoundedRectangle.
+ * @param rendering The rendering.
+ * @param parent The parent element.
+ * @param context The rendering context for this element.
+ */
 export function renderRectangularShape(rendering: KContainerRendering, parent: KGraphElement, context: KGraphRenderingContext): VNode {
     // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
@@ -61,18 +74,16 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g/>
+        return <g />
     }
 
-    const gAttrs: SVGAttributes<SVGGElement>  = {
-        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
+    const gAttrs: SVGAttributes<SVGGElement> = {
+        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
-    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // Check the invisibility first. If this rendering is supposed to be invisible, do not render it,
     // only render its children transformed by the transformation already calculated.
-    const invisibilityStyles = getSvgInvisibilityStyles(styles)
-
-    if (invisibilityStyles.opacity === 0) {
+    if (isInvisible(styles)) {
         return <g {...gAttrs}>
             {renderChildRenderings(rendering, parent, context)}
         </g>
@@ -81,29 +92,28 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context)
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const lineStyles = getSvgLineStyles(styles, parent, rendering)
+    const lineStyles = getSvgLineStyles(styles)
 
     // Create the svg element for this rendering.
     let element: VNode
     switch (rendering.type) {
         case K_ELLIPSE: {
-            element = <g id = {rendering.id} {...gAttrs}>
+            element = <g id={rendering.id} {...gAttrs}>
                 <ellipse
-                    opacity = {invisibilityStyles.opacity}
-                    cx = {boundsAndTransformation.bounds.width / 2}
-                    cy = {boundsAndTransformation.bounds.height / 2}
-                    rx = {boundsAndTransformation.bounds.width / 2}
-                    ry = {boundsAndTransformation.bounds.height / 2}
-                    style = {{
+                    cx={boundsAndTransformation.bounds.width / 2}
+                    cy={boundsAndTransformation.bounds.height / 2}
+                    rx={boundsAndTransformation.bounds.width / 2}
+                    ry={boundsAndTransformation.bounds.height / 2}
+                    style={{
                         'stroke-linecap': lineStyles.lineCap,
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
-                        'stroke-dasharray': lineStyles.lineStyle,
+                        'stroke-dasharray': lineStyles.dashArray,
                         'stroke-miterlimit': lineStyles.miterLimit
                     } as React.CSSProperties}
-                    stroke = {colorStyles.foreground}
-                    fill = {colorStyles.background}
-                    filter = {shadowStyles}
+                    stroke={colorStyles.foreground}
+                    fill={colorStyles.background}
+                    filter={shadowStyles}
                 />
                 {renderChildRenderings(rendering, parent, context)}
             </g>
@@ -118,23 +128,22 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
             const rx = (rendering as KRoundedRectangle).cornerWidth
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
-            element = <g id = {rendering.id} {...gAttrs}>
+            element = <g id={rendering.id} {...gAttrs}>
                 <rect
-                    opacity = {invisibilityStyles.opacity}
-                    width  = {boundsAndTransformation.bounds.width}
-                    height = {boundsAndTransformation.bounds.height}
-                    {...(rx ? {rx: rx} : {})}
-                    {...(ry ? {ry: ry} : {})}
-                    style = {{
+                    width={boundsAndTransformation.bounds.width}
+                    height={boundsAndTransformation.bounds.height}
+                    {...(rx ? { rx: rx } : {})}
+                    {...(ry ? { ry: ry } : {})}
+                    style={{
                         'stroke-linecap': lineStyles.lineCap,
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
-                        'stroke-dasharray': lineStyles.lineStyle,
+                        'stroke-dasharray': lineStyles.dashArray,
                         'stroke-miterlimit': lineStyles.miterLimit
                     } as React.CSSProperties}
-                    stroke = {colorStyles.foreground}
-                    fill = {colorStyles.background}
-                    filter = {shadowStyles}
+                    stroke={colorStyles.foreground}
+                    fill={colorStyles.background}
+                    filter={shadowStyles}
                 />
                 {renderChildRenderings(rendering, parent, context)}
             </g>
@@ -142,13 +151,20 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
         }
         default: {
             // This case can never happen. If it still does, happy debugging!
-            throw new Error("Rendering is neither an KEllipse, nor a KRectangle or KRoundedRectangle!")
+            throw new Error('Rendering is neither an KEllipse, nor a KRectangle or KRoundedRectangle!')
         }
     }
 
     return element
 }
 
+/**
+ * Translates a line rendering into an SVG rendering.
+ * This includes all subclasses of and the KPolyline rendering itself.
+ * @param rendering The rendering.
+ * @param parent The parent element.
+ * @param context The rendering context for this element.
+ */
 export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
     // TODO: implement junction point rendering
 
@@ -160,18 +176,16 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context, true)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g/>
+        return <g />
     }
 
-    const gAttrs: SVGAttributes<SVGGElement>  = {
-        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
+    const gAttrs: SVGAttributes<SVGGElement> = {
+        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
-    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // Check the invisibility first. If this rendering is supposed to be invisible, do not render it,
     // only render its children transformed by the transformation already calculated.
-    const invisibilityStyles = getSvgInvisibilityStyles(styles)
-
-    if (invisibilityStyles.opacity === 0) {
+    if (isInvisible(styles)) {
         return <g {...gAttrs}>
             {renderChildRenderings(rendering, parent, context)}
         </g>
@@ -180,7 +194,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context)
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const lineStyles = getSvgLineStyles(styles, parent, rendering)
+    const lineStyles = getSvgLineStyles(styles)
 
     const points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
@@ -202,11 +216,11 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
                 } else if (remainingPoints === 2) {
                     // if two routing points are left, draw a quadratic bezier curve with those two points.
                     path += `Q${points[i].x},${points[i].y} ${points[i + 1].x},${points[i + 1].y}`
-                } else  {
+                } else {
                     // if three or more routing points are left, draw a cubic bezier curve with those points.
                     path += `C${points[i].x},${points[i].y} `
-                    + `${points[i + 1].x},${points[i + 1].y} `
-                    + `${points[i + 2].x},${points[i + 2].y}`
+                        + `${points[i + 1].x},${points[i + 1].y} `
+                        + `${points[i + 2].x},${points[i + 2].y}`
                 }
             }
             break
@@ -274,26 +288,31 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     }
 
     // Create the svg element for this rendering.
-    let element = <g id = {rendering.id} {...gAttrs}>
+    let element = <g id={rendering.id} {...gAttrs}>
         <path
-            opacity = {invisibilityStyles.opacity}
-            d = {path}
-            style = {{
+            d={path}
+            style={{
                 'stroke-linecap': lineStyles.lineCap,
                 'stroke-linejoin': lineStyles.lineJoin,
                 'stroke-width': lineStyles.lineWidth,
-                'stroke-dasharray': lineStyles.lineStyle,
+                'stroke-dasharray': lineStyles.dashArray,
                 'stroke-miterlimit': lineStyles.miterLimit
             } as React.CSSProperties}
-            stroke = {colorStyles.foreground}
-            fill = {colorStyles.background}
-            filter = {shadowStyles}
+            stroke={colorStyles.foreground}
+            fill={colorStyles.background}
+            filter={shadowStyles}
         />
         {renderChildRenderings(rendering, parent, context)}
     </g>
     return element
 }
 
+/**
+ * Translates a text rendering into an SVG text rendering.
+ * @param rendering The rendering.
+ * @param parent The parent element.
+ * @param context The rendering context for this element.
+ */
 export function renderKText(rendering: KText, parent: KGraphElement | KLabel, context: KGraphRenderingContext): VNode {
     // Find the text to write first.
     let text = undefined
@@ -304,10 +323,10 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         text = rendering.text
     }
     // If no text can be found, return here.
-    if (text === undefined) return <g/>
+    if (text === undefined) return <g />
 
     // The text split into an array for each individual line
-    let lines = text.split("\n")
+    let lines = text.split('\n')
 
     // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
@@ -316,36 +335,34 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     const boundsAndTransformation = findTextBoundsAndTransformationData(rendering, styles, parent, context, lines.length)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g/>
+        return <g />
     }
 
-    const gAttrs: SVGAttributes<SVGGElement>  = {
-        ...(boundsAndTransformation.transformation !== undefined ? {transform: boundsAndTransformation.transformation} : {})
+    const gAttrs: SVGAttributes<SVGGElement> = {
+        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
-    // Check the invisibilityStyle first. If this rendering is supposed to be invisible, do not render it,
+    // Check the invisibility first. If this rendering is supposed to be invisible, do not render it,
     // only render its children transformed by the transformation already calculated.
-    const invisibilityStyles = getSvgInvisibilityStyles(styles)
-
-    if (invisibilityStyles.opacity === 0) {
-        return <g/>
+    if (isInvisible(styles)) {
+        return <g />
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const textStyles = getSvgTextStyles(styles, parent, rendering)
+    const textStyles = getSvgTextStyles(styles)
 
     // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
     // contained in the general style, otherwise it has to be repeated in every contained <tspan> element.
     let style = {
-        ...{'font-family': textStyles.fontName},
-        ...{'font-size': styles.kFontSize.size + 'pt'},
-        ...{'font-style': textStyles.italic},
-        ...{'font-weight': textStyles.bold},
-        ...{'dominant-baseline': textStyles.verticalAlignment},
-        ...{'text-decoration-line': textStyles.textDecorationLine},
-        ...{'text-decoration-style': textStyles.textDecorationStyle}
+        ...{ 'dominant-baseline': textStyles.dominantBaseline },
+        ...{ 'font-family': textStyles.fontFamily },
+        ...{ 'font-size': textStyles.fontSize },
+        ...{ 'font-style': textStyles.fontStyle },
+        ...{ 'font-weight': textStyles.fontWeight },
+        ...{ 'text-decoration-line': textStyles.textDecorationLine },
+        ...{ 'text-decoration-style': textStyles.textDecorationStyle }
     }
 
     // The children to be contained in the returned text node.
@@ -353,12 +370,11 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
 
     // The attributes to be contained in the returned text node.
     let attrs = {
-        opacity: invisibilityStyles.opacity,
         style: style,
-        ...(boundsAndTransformation.bounds.y ? {y: boundsAndTransformation.bounds.y} : {}),
+        ...(boundsAndTransformation.bounds.y ? { y: boundsAndTransformation.bounds.y } : {}),
         fill: colorStyle,
         filter: shadowStyles,
-        ...{'xml:space' : "preserve"} // This attribute makes the text size estimation include any trailing white spaces.
+        ...{ 'xml:space': 'preserve' } // This attribute makes the text size estimation include any trailing white spaces.
     } as any
 
     if (lines.length === 1) {
@@ -373,13 +389,13 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
             // If the line is just a blank line, add a dummy space character so the size estimation will
             // include this character without rendering anything further visible to the screen.
             // Also, the <tspan> attribute dy needs at least one character per text so the offset is correctly applied.
-            if (line === "") {
-                line = " "
+            if (line === '') {
+                line = ' '
             }
             children.push(
                 <tspan
-                    x = {boundsAndTransformation.bounds.x}
-                    {...(dy ? {dy: dy} : {})}
+                    x={boundsAndTransformation.bounds.x}
+                    {...(dy ? { dy: dy } : {})}
                 >{line}</tspan>
             )
             dy = '1.1em' // Have a distance of 1.1em for every new line after the first one.
@@ -389,11 +405,11 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     // build the element from the above defined attributes and children
     let element
     if (gAttrs.transform === undefined) {
-        element = <text id = {rendering.id} {...attrs}>
+        element = <text id={rendering.id} {...attrs}>
             {...children}
         </text>
     } else {
-        element = <g id = {rendering.id} {...gAttrs}>
+        element = <g id={rendering.id} {...gAttrs}>
             <text {...attrs}>
                 {...children}
             </text>
@@ -403,6 +419,12 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     return element
 }
 
+/**
+ * Renders all child renderings of the given container rendering.
+ * @param parentRendering The parent rendering.
+ * @param parent The parent element containing this rendering.
+ * @param context The rendering context for this element.
+ */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, context: KGraphRenderingContext): (VNode | undefined)[] {
     let renderings: (VNode | undefined)[] = []
     for (let childRendering of parentRendering.children) {
@@ -412,6 +434,12 @@ export function renderChildRenderings(parentRendering: KContainerRendering, pare
     return renderings
 }
 
+/**
+ * Looks up the KRendering in the given data pool and generates a SVG rendering from that.
+ * @param datas The list of possible KRenderings
+ * @param parent The parent element containing this rendering.
+ * @param context The rendering context for this rendering.
+ */
 export function getRendering(datas: KGraphData[], parent: KGraphElement, context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
     for (let data of datas) {
         if (data === null)
