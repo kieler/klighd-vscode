@@ -10,35 +10,37 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { Container, ContainerModule } from "inversify"
-import { ConsoleLogger, LogLevel, SGraph,
-        TYPES, boundsModule,
-        buttonModule, configureModelElement, defaultModule, expandModule,
-        exportModule, fadeModule, hoverModule, modelSourceModule, moveModule,
-        openModule, overrideViewerOptions, selectModule, undoRedoModule,
-        viewportModule, SGraphFactory} from 'sprotty/lib'
-import { KEdgeView,  KNodeView, KPortView, KLabelView, SGraphView} from "./views"
-import { KNode, KPort, KLabel, KEdge } from "./kgraph-models"
-import actionModule from "./actions/actions-module";
-import textBoundsModule from "./textbounds/textbounds-module";
+import { Container, ContainerModule } from 'inversify';
+import {
+    configureModelElement, ConsoleLogger, defaultModule, exportModule, LogLevel, moveModule, overrideViewerOptions, selectModule, SGraph, SGraphFactory, TYPES,
+    viewportModule
+} from 'sprotty/lib';
+import actionModule from './actions/actions-module';
+import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
+import textBoundsModule from './textbounds/textbounds-module';
+import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
+/**
+ * Dependency injection module that adds functionality for diagrams and configures the views for KGraphElements.
+ */
 const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
     rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
     const context = { bind, unbind, isBound, rebind };
-    configureModelElement(context, 'graph', SGraph, SGraphView);
+    configureModelElement(context, 'graph', SGraph, SKGraphView);
     configureModelElement(context, 'node', KNode, KNodeView)
     configureModelElement(context, 'edge', KEdge, KEdgeView)
     configureModelElement(context, 'port', KPort, KPortView)
     configureModelElement(context, 'label', KLabel, KLabelView)
 })
 
+/**
+ * Dependency injection container that bundles all needed sprotty and custom modules to allow KGraphs to be drawn with sprotty.
+ */
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
-    container.load(defaultModule, selectModule, moveModule, boundsModule, undoRedoModule, viewportModule,
-        hoverModule, fadeModule, exportModule, expandModule, openModule, buttonModule, modelSourceModule,
-        kGraphDiagramModule, textBoundsModule, actionModule)
+    container.load(defaultModule, selectModule, moveModule, viewportModule, exportModule, kGraphDiagramModule, textBoundsModule, actionModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,

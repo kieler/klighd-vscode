@@ -11,15 +11,18 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'
-import { KStyle, KBackground, KForeground, KFontBold, KFontItalic, KFontName, KFontSize, KInvisibility,
-    KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KTextStrikeout,
-    KTextUnderline, KVerticalAlignment, HorizontalAlignment, LineCap, LineJoin, LineStyle,
-    VerticalAlignment, KStyleRef, KColoring, KGraphElement, KRendering, KText } from "./kgraph-models"
-import { VNode } from "snabbdom/vnode"
-import { isSingleColor, fillSingleColor,
-    lineCapText, lineJoinText, lineStyleText, camelToKebab, verticalAlignmentText, textDecorationStyleText, KGraphRenderingContext } from "./views-common"
+import { svg } from 'snabbdom-jsx';
+import { VNode } from 'snabbdom/vnode';
+import {
+    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin,
+    KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment
+} from './kgraph-models';
+import {
+    camelToKebab, fillSingleColor, isSingleColor, KGraphRenderingContext, lineCapText, lineJoinText, lineStyleText, textDecorationStyleText, verticalAlignmentText
+} from './views-common';
 
+
+// ----------------------------- type string definitions for all styles ------------------------------------- //
 export const K_COLORING = 'KColoringImpl'
 export const K_BACKGROUND = 'KBackgroundImpl'
 export const K_FOREGROUND = 'KForegroundImpl'
@@ -53,9 +56,9 @@ const URL_START = 'url(#'
 const URL_END = ')'
 
 /**
- * calculates the renderings for all styles contained in styleList into an object
- * @param styleList The list of all styles that should have their rendering calculated
- * @param parent the containing node of these styles
+ * Calculates the renderings for all styles contained in styleList into an object.
+ * @param styleList The list of all styles that should have their rendering calculated.
+ * @param parent The containing node of these styles.
  */
 export function getKStyles(styleList: KStyle[], id: string): KStyles { // TODO: not all of these are implemented yet
     let styles = new KStyles
@@ -154,9 +157,8 @@ export function getKStyles(styleList: KStyle[], id: string): KStyles { // TODO: 
     return styles
 }
 
-/**
- * Default values for most Styles, that are used if no style is given Default values taken from PNodeController.java
- */
+
+// Default values for most Styles, that are used if no style is given Default values taken from PNodeController.java
 export const DEFAULT_FONT_BOLD = false
 export const DEFAULT_FONT_ITALIC = false
 export const DEFAULT_FONT_NAME = 'sans-serif' // TODO: on windows this is 'arial' (if server or if client is windows?)
@@ -245,22 +247,29 @@ export class KStyles {
         this.kTextUnderline = undefined
         this.kVerticalAlignment = {
             verticalAlignment: DEFAULT_VERTICAL_ALIGNMENT
-        }as KVerticalAlignment
+        } as KVerticalAlignment
     }
 }
 
 // ----------------------------- Functions for rendering different KStyles as VNodes in svg --------------------------------------------
 
+/**
+ * SVG element for color gradient definition.
+ * @param colorId The unique identifying string for this color.
+ * @param start The SVG string for the start color of the gradient.
+ * @param end The SVG string for the end color of the gradient.
+ * @param angle The angle at which the gradient should flow.
+ */
 export function colorDefinition(colorId: string, start: string, end: string, angle: number | undefined): VNode {
     const startColorStop = <stop
-        offset = {0}
-        style = {{
+        offset={0}
+        style={{
             'stop-color': start
         } as React.CSSProperties}
     />
     const endColorStop = <stop
-        offset = {1}
-        style = {{
+        offset={1}
+        style={{
             'stop-color': end
         } as React.CSSProperties}
     />
@@ -269,8 +278,8 @@ export function colorDefinition(colorId: string, start: string, end: string, ang
     const gradientAttributes = {
         id: colorId,
         // If the gradient is not rotated, the attributes for rotation should not be added.
-        ...(angleFloat === 0 ? {} : {gradientUnits : GRADIENT_UNIT_OBJECT_BOUNDING_BOX}),
-        ...(angleFloat === 0 ? {} : {gradientTransform : GRADIENT_TRANSFORM_ROTATE_START + angle + GRADIENT_TRANSFORM_ROTATE_END})
+        ...(angleFloat === 0 ? {} : { gradientUnits: GRADIENT_UNIT_OBJECT_BOUNDING_BOX }),
+        ...(angleFloat === 0 ? {} : { gradientTransform: GRADIENT_TRANSFORM_ROTATE_START + angle + GRADIENT_TRANSFORM_ROTATE_END })
     }
     return <linearGradient {...gradientAttributes}>
         {startColorStop}
@@ -278,6 +287,14 @@ export function colorDefinition(colorId: string, start: string, end: string, ang
     </linearGradient>
 }
 
+/**
+ * SVG element for a shadow definition.
+ * @param shadowId The unique identifying string for this shadow.
+ * @param color The color of the shadow.
+ * @param blur The amound of blur of the shadow.
+ * @param xOffset The x-offset of the shadow.
+ * @param yOffset The y-offset of the shadow.
+ */
 export function shadowDefinition(shadowId: string, color: string | undefined, blur: number, xOffset: number, yOffset: number): VNode {
     // stdDev of 1 looks closest to KIELER style shadows, but looks nicer with this blur
     // TODO: ultimately, this should be using the blur parameter again.
@@ -286,20 +303,21 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
     const STD_DEV = 1
     const blurClip = 25
     return <filter
-        id = {shadowId}
-        x = {`-${blurClip}%`}
-        y = {`-${blurClip}%`}
-        width = {`${100 + 2 * blurClip}%`}
-        height = {`${100 + 2 * blurClip}%`}>
+        id={shadowId}
+        // Extend the region around the element in which the shadow should be rendered.
+        x={`-${blurClip}%`}
+        y={`-${blurClip}%`}
+        width={`${100 + 2 * blurClip}%`}
+        height={`${100 + 2 * blurClip}%`}>
         <feGaussianBlur
-            // in = 'alpha-channel-of-feDropShadow-in'
-            in = 'SourceAlpha'
-            stdDeviation = {STD_DEV}
+            in='SourceAlpha'
+            stdDeviation={STD_DEV}
         />
         <feOffset
-            dx = {xOffset / 4}
-            dy = {yOffset / 4}
-            result = 'offsetblur'
+            // A smaller offset causes the blur not to overlap too much.
+            dx={xOffset / 4}
+            dy={yOffset / 4}
+            result='offsetblur'
         />
         <feFlood
             // TODO: these colors
@@ -307,14 +325,13 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
             // flood-opacity = 'flood-opacity-of-feDropShadow'
         />
         <feComposite
-            in2 = 'offsetblur'
-            operator = 'in'
+            in2='offsetblur'
+            operator='in'
         />
         <feMerge>
-            <feMergeNode/>
+            <feMergeNode />
             <feMergeNode
-                // in = 'in-of-feDropShadow'
-                in = 'SourceGraphic'
+                in='SourceGraphic'
             />
         </feMerge>
     </filter>
@@ -322,35 +339,45 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
     // The above definition is equivalent to this shorthand SVG, but not all SVG renderers support and understand this (such as Inkscape).
     // As every shadow is defined exactly once in the final SVG, this additional code does not add too much to the overall file size.
     // <feDropShadow
-    // dx = {xOffset / 4}
-    // dy = {yOffset / 4}
-    // stdDeviation = {STD_DEV}
+    //     dx={ xOffset / 4 }
+    //     dy={ yOffset / 4 }
+    //     stdDeviation={ STD_DEV }
     // />
 }
 
+/**
+ * Returns the identifying string for the given shadow style, that can be put into the SVG 'filter' attribute.
+ * Also remembers the shadow definition in the rendering context to be added to the top of the final SVG.
+ * @param styles The KStyles of the rendering.
+ * @param context The rendering context.
+ */
 export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingContext): string | undefined {
-    const shadow = styles.kShadow as KShadow
+    const shadow = styles.kShadow
     if (shadow === undefined) {
         return undefined
     }
-    // Every shadow Id should start with an 's'.
+    // Every shadow ID should start with an 's'.
     let shadowId = 's'
     let color
     let blur = shadow.blur
     let xOffset = shadow.xOffset
     let yOffset = shadow.yOffset
+    // Extract the color and also put it in the ID.
     if (shadow.color !== undefined) {
-        let shadowColor = shadow.color.red   + ','
-                        + shadow.color.green + ','
-                        + shadow.color.blue
+        let shadowColor = shadow.color.red + ','
+            + shadow.color.green + ','
+            + shadow.color.blue
         shadowId += shadowColor
         color = RGB_START + shadowColor + RGB_END
     }
+    // Separator for unique identification.
     shadowId += '$'
+    // Add the blur to the ID.
     if (blur !== undefined) {
         shadowId += blur
     }
     shadowId += '$'
+    // Add the x- and y-offset to the ID.
     if (xOffset !== undefined) {
         shadowId += xOffset
     }
@@ -358,81 +385,117 @@ export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingCont
     if (yOffset !== undefined) {
         shadowId += yOffset
     }
+    // Remember the shadow definition to be added at the top level of the SVG, if the same shadow has not been defined previously.
     if (!context.renderingDefs.has(shadowId)) {
         context.renderingDefs.set(shadowId, shadowDefinition(shadowId, color, blur, xOffset, yOffset))
     }
+    // Return the reference of the above defined ID to be put in the filter attribute of any SVG element.
     return URL_START + shadowId + URL_END
 }
 
+/**
+ * Returns the identifying strings for the given foreground- and background styles that can be put in the SVG 'stroke' and 'fill' attributes,
+ * depending on the rendering the styles have to be applied for.
+ * The identifying string can either be a simple rgb color reference (such as rgb(0,0,0) for black), a rgba color reference (such as rgba(0,0,0,128) for a transparent black)
+ * or a url for a gradient color definition that is remembered in the rendering context and has to be added to the SVG later.
+ * @param styles The KStyles of the rendering.
+ * @param context The rendering context.
+ */
 export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
-        background: background === undefined ? DEFAULT_FILL       : background
+        background: background === undefined ? DEFAULT_FILL : background
     }
 }
 
 
-export function getSvgColorStyle(coloring: KColoring, context: KGraphRenderingContext): string | undefined {
+/**
+ * The same as getSvgColorStyles, only that it only handles one of the two styles.
+ * @param coloring The KColoring of which the color string should be returned.
+ * @param context The rendering context.
+ * @see getSvgColorStyles
+ */
+export function getSvgColorStyle(coloring: KColoring | undefined, context: KGraphRenderingContext): string | undefined {
     if (coloring === undefined) {
         return undefined
     }
+    // If the color is a single color, just return its corresponding rgb resp. rgba color.
     if (isSingleColor(coloring)) {
         return fillSingleColor(coloring)
     }
+    // Otherwise, build an ID for the gradient color to refer to the definition described below.
     // Every color ID should start with a 'c'.
     let colorId = 'c'
     let start
     let end
     let angle
     if (coloring.alpha === undefined || coloring.alpha === 255) {
-        let startColor = coloring.color.red   + ','
-                       + coloring.color.green + ','
-                       + coloring.color.blue
+        // If the start color has no alpha or the alpha is full opaque, set it to an rgb color.
+        let startColor = coloring.color.red + ','
+            + coloring.color.green + ','
+            + coloring.color.blue
         colorId += startColor
         start = RGB_START + startColor + RGB_END
     } else {
+        // Otherwise, set the start color to an rgba color.
         let startColor = coloring.color.red + ','
-                       + coloring.color.green + ','
-                       + coloring.color.blue + ','
-                       + coloring.alpha / 255
-        colorId +=  startColor
+            + coloring.color.green + ','
+            + coloring.color.blue + ','
+            + coloring.alpha / 255
+        colorId += startColor
         start = RGBA_START + startColor + RGBA_END
     }
+    // Separate the individual parts in the ID to guarantee uniqueness.
     colorId += '$'
+    // Do the same for the end color.
     if (coloring.targetAlpha === undefined || coloring.targetAlpha === 255) {
-        let endColor = coloring.targetColor.red   + ','
-                     + coloring.targetColor.green + ','
-                     + coloring.targetColor.blue
+        let endColor = coloring.targetColor.red + ','
+            + coloring.targetColor.green + ','
+            + coloring.targetColor.blue
         colorId += endColor
         end = RGB_START + endColor + RGB_END
     } else {
         let endColor = coloring.targetColor.red + ','
-                     + coloring.targetColor.green + ','
-                     + coloring.targetColor.blue + ','
-                     + coloring.targetAlpha / 255
-        colorId +=  endColor
+            + coloring.targetColor.green + ','
+            + coloring.targetColor.blue + ','
+            + coloring.targetAlpha / 255
+        colorId += endColor
         end = RGBA_START + endColor + RGBA_END
     }
+    // Add the angle of the gradient to the ID.
     if (coloring.gradientAngle !== 0) {
         angle = coloring.gradientAngle
         colorId += '$' + angle
     }
 
+    // Remember the color definition to be added at the top level of the SVG, if the same color has not been defined previously.
     if (!context.renderingDefs.has(colorId)) {
         context.renderingDefs.set(colorId, colorDefinition(colorId, start, end, angle))
     }
+    // Return the reference of the above defined ID to be put in the fill or stroke attribute of any SVG element.
     return URL_START + colorId + URL_END
 }
 
-export function getSvgInvisibilityStyles(styles: KStyles): InvisibilityStyles {
-    return {
-        opacity: styles.kInvisibility === undefined || styles.kInvisibility.invisible === false ? undefined : 0
-    }
+/**
+ * Returns if the rendering should be rendered or if it is invisible and only its children are relevant.
+ * @param styles The KStyles of the rendering.
+ */
+export function isInvisible(styles: KStyles): boolean {
+    return styles.kInvisibility !== undefined && styles.kInvisibility.invisible
 }
 
-export function getSvgLineStyles(styles: KStyles, parent: KGraphElement, rendering: KRendering): LineStyles {
+/**
+ * Returns the SVG strings for line styles that can be applied to the following SVG attributes:
+ * 'stroke-linecap' has to be set to the lineCap style,
+ * 'stroke-linejoin' has to be set to the lineJoin style,
+ * 'stroke-width' has to be set to the lineWidth style,
+ * 'stroke-dasharray' has to be set to the dashArray style,
+ * 'stroke-miterlimit' has to be set to the miterLimit style. (This is not a string, but a number.)
+ * @param styles The KStyles of the rendering.
+ */
+export function getSvgLineStyles(styles: KStyles): LineStyles {
     const lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)
     const lineJoin = styles.kLineJoin === undefined ? undefined : lineJoinText(styles.kLineJoin)
@@ -441,7 +504,7 @@ export function getSvgLineStyles(styles: KStyles, parent: KGraphElement, renderi
         lineWidth: lineWidth === DEFAULT_LINE_WIDTH ? undefined : lineWidth + 'px',
         lineCap: lineCap === DEFAULT_LINE_CAP_SVG ? undefined : lineCap,
         lineJoin: lineJoin === DEFAULT_LINE_JOIN_SVG ? undefined : lineJoin,
-        lineStyle: styles.kLineStyle === undefined ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
+        dashArray: styles.kLineStyle === undefined ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
         // Note: Here the miter limit value is also omitted if the value equals KGraph's default value of 10, because otherwise the resulting SVG would
         // always contain the miterLimit style to be set to 10, even though it is not intended by the creator of the KGraph model and it would not
         // even make any difference in the rendering. Here I cannot distinguish if the model creator really wanted to have the specific miter limit of 10
@@ -450,13 +513,25 @@ export function getSvgLineStyles(styles: KStyles, parent: KGraphElement, renderi
     }
 }
 
-export function getSvgTextStyles(styles: KStyles, parent: KGraphElement, rendering: KText): TextStyles {
+/**
+ * Returns the SVG strings for text styles that can be applied to the following SVG attributes:
+ * 'dominant-baseline' has to be set to the dominantBaseline style,
+ * 'font-family' has to be set to the fontFamily style,
+ * 'font-size' has to be set to the dominantBaseline style,
+ * 'font-style' has to be set to the dominantBaseline style,
+ * 'font-weight' has to be set to the dominantBaseline style,
+ * 'text-decoration-line' has to be set to the dominantBaseline style,
+ * 'text-decoration-style' has to be set to the dominantBaseline style.
+ * @param styles The KStyles of the rendering.
+ */
+export function getSvgTextStyles(styles: KStyles): TextStyles {
     return {
-        italic: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
-        bold: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
-        fontName: styles.kFontName === undefined ? undefined : camelToKebab(styles.kFontName.name),
-        verticalAlignment: verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === undefined ?
+        dominantBaseline: verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === undefined ?
             DEFAULT_VERTICAL_ALIGNMENT : styles.kVerticalAlignment.verticalAlignment),
+        fontFamily: styles.kFontName === undefined ? undefined : camelToKebab(styles.kFontName.name),
+        fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size + 'pt',
+        fontStyle: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
+        fontWeight: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
         textDecorationLine: styles.kTextUnderline === undefined ? undefined : 'underline',
         textDecorationStyle: styles.kTextUnderline === undefined ? undefined : textDecorationStyleText(styles.kTextUnderline as KTextUnderline)
         // textDecorationColor: styles.kTextUnderline === undefined ? undefined : textDecorationColor(styles.kTextUnderline as KTextUnderline),
@@ -464,28 +539,34 @@ export function getSvgTextStyles(styles: KStyles, parent: KGraphElement, renderi
     }
 }
 
+/**
+ * Data class holding the different SVG attributes for color related styles.
+ */
 export interface ColorStyles {
     foreground: string | undefined,
     background: string | undefined
 }
 
-export interface InvisibilityStyles {
-    opacity: number | undefined
-}
-
+/**
+ * Data class holding the different SVG attributes for line related styles.
+ */
 export interface LineStyles {
     lineWidth: string | undefined,
     lineCap: 'butt' | 'round' | 'square' | undefined,
     lineJoin: 'bevel' | 'miter' | 'round' | undefined,
-    lineStyle: string | undefined,
+    dashArray: string | undefined,
     miterLimit: number | undefined
 }
 
+/**
+ * Data class holding the different SVG attributes for text related styles.
+ */
 export interface TextStyles {
-    italic: string | undefined,
-    bold: string | undefined,
-    fontName: string | undefined,
-    verticalAlignment: string | undefined,
+    dominantBaseline: string | undefined,
+    fontFamily: string | undefined,
+    fontSize: string | undefined,
+    fontStyle: string | undefined,
+    fontWeight: string | undefined,
     textDecorationLine: string | undefined,
     textDecorationStyle: string | undefined,
 }

@@ -10,10 +10,13 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { ContainerModule } from "inversify"
-import { TYPES } from "sprotty/lib";
-import { ActionListener } from "./action-listener";
+import { ContainerModule } from 'inversify';
+import { TYPES } from 'sprotty/lib';
+import { ActionListener } from './action-listener';
 
+/**
+ * Dependency injection module that adds functionality for triggering KLighD actions.
+ */
 const actionModule = new ContainerModule(bind => {
     bind(TYPES.MouseListener).to(ActionListener)
 });

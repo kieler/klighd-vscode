@@ -11,28 +11,29 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'
-import { RenderingContext, IView, SGraph} from "sprotty/lib"
-import { VNode } from "snabbdom/vnode"
-import { KNode, KPort, KLabel, KEdge} from "./kgraph-models"
-import { getRendering } from "./views-rendering"
-import { KGraphRenderingContext } from './views-common'
+import { svg } from 'snabbdom-jsx';
+import { VNode } from 'snabbdom/vnode';
+import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
+import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
+import { KGraphRenderingContext } from './views-common';
+import { getRendering } from './views-rendering';
 
-export class SGraphView implements IView {
-
+/**
+ * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
+ * Extends the SGraphView by initializing the context for KGraph rendering.
+ */
+export class SKGraphView extends SGraphView {
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
         const ctx = context as any as KGraphRenderingContext
         ctx.renderingDefs = new Map
-        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`
-        return <svg class-sprotty-graph={true}>
-            <g transform={transform}>
-                {context.renderChildren(model)}
-            </g>
-        </svg>
+        return super.render(model, context)
     }
 }
 
+/**
+ * IView component that translates a KNode and its children into a tree of virtual DOM elements.
+ */
 export class KNodeView implements IView {
     render(node: KNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
@@ -40,9 +41,10 @@ export class KNodeView implements IView {
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
         let rendering = getRendering(node.data, node, ctx)
-        if (node.id === "$root") {
+        if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
             let children = ctx.renderChildren(node)
+            // Add all color and shadow definitions put into the context by the child renderings.
             let defs = <defs></defs>
             ctx.renderingDefs.forEach((value: VNode, key: String) => {
                 (defs.children as (string | VNode)[]).push(value)
@@ -52,19 +54,18 @@ export class KNodeView implements IView {
                 {...children}
             </g>
         }
+        // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
                 {ctx.renderChildren(node)}
             </g>
         }
+        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
         if (node.areChildrenRendered) {
             return <g>
                 {rendering}
             </g>
         } else {
-            // TODO: sometimes the children should be rendered, although there is no child area (kgt without explicit childArea)
-            // and sometimes the children should not be rendered, when there is no child area (collapsed renderings of sct) (not tested yet)
-            // how should that be handled?
             return <g>
                 {rendering}
                 {ctx.renderChildren(node)}
@@ -73,15 +74,20 @@ export class KNodeView implements IView {
     }
 }
 
+/**
+ * IView component that translates a KPort and its children into a tree of virtual DOM elements.
+ */
 export class KPortView implements IView {
     render(port: KPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
         let rendering = getRendering(port.data, port, context as any)
+        // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
                 {context.renderChildren(port)}
             </g>
         }
+        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
         if (port.areChildrenRendered) {
             return <g>
                 {rendering}
@@ -95,15 +101,20 @@ export class KPortView implements IView {
     }
 }
 
+/**
+ * IView component that translates a KLabel and its children into a tree of virtual DOM elements.
+ */
 export class KLabelView implements IView {
     render(label: KLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
         let rendering = getRendering(label.data, label, context as any)
+        // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
                 {context.renderChildren(label)}
             </g>
         }
+        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
         if (label.areChildrenRendered) {
             return <g>
                 {rendering}
@@ -117,15 +128,20 @@ export class KLabelView implements IView {
     }
 }
 
+/**
+ * IView component that translates a KEdge and its children into a tree of virtual DOM elements.
+ */
 export class KEdgeView implements IView {
     render(edge: KEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
         let rendering = getRendering(edge.data, edge, context as any)
+        // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
                 {context.renderChildren(edge)}
             </g>
         }
+        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
         if (edge.areChildrenRendered) {
             return <g>
                 {rendering}
