@@ -5,7 +5,7 @@
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
     "license": "EPL-1.0",
     "dependencies": {
-        "@fortawesome/fontawesome-free" : "^5.2.0",
+        "@fortawesome/fontawesome-free" : "^5.7.2",
         "@theia/core": "latest",
         "@theia/editor": "latest",
         "@theia/editorconfig": "latest",
@@ -29,12 +29,12 @@
         "@theia/workspace": "latest",
         "keith-diagram-options": "0.1.0",
         "keith-kicool": "0.1.0",
-        "vscode-jsonrpc": "^3.6.2",
-        "vscode-nsfw": "^1.0.17"
+        "vscode-jsonrpc": "^4.0.0",
+        "vscode-nsfw": "^1.1.2"
     },
     "devDependencies": {
         "@theia/cli": "latest",
-        "reflect-metadata": "^0.1.12"
+        "reflect-metadata": "^0.1.13"
     },
     "scripts": {
         "prepare": "theia build --mode development",
