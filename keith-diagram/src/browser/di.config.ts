@@ -13,8 +13,11 @@
 
 import { Container, injectable } from 'inversify';
 import { createKeithDiagramContainer } from 'keith-sprotty/lib';
-import { KeyTool, TYPES } from 'sprotty/lib';
-import { DiagramConfiguration, TheiaKeyTool } from 'theia-sprotty/lib';
+import {
+    CompletionLabelEditor, DeleteWithWorkspaceEditCommand, DiagramConfiguration, LSTheiaDiagramServer, LSTheiaDiagramServerProvider, RenameLabelEditor, TheiaDiagramServer,
+    TheiaKeyTool, WorkspaceEditCommand
+} from 'sprotty-theia/lib';
+import { configureCommand, KeyTool, TYPES } from 'sprotty/lib';
 import { KeithDiagramServer } from './keith-diagram-server';
 
 /**
@@ -28,8 +31,26 @@ export class KeithDiagramConfiguration implements DiagramConfiguration {
 
     createContainer(widgetId: string): Container {
         const container = createKeithDiagramContainer(widgetId)
-        container.bind(TYPES.ModelSource).to(KeithDiagramServer).inSingletonScope()
+        container.bind(KeithDiagramServer).toSelf().inSingletonScope()
+        container.bind(TheiaDiagramServer).toService(KeithDiagramServer)
+        container.bind(LSTheiaDiagramServer).toService(KeithDiagramServer)
+        container.bind(TYPES.ModelSource).toService(TheiaDiagramServer)
         container.rebind(KeyTool).to(TheiaKeyTool).inSingletonScope()
+
+        container.bind(LSTheiaDiagramServerProvider).toProvider<LSTheiaDiagramServer>((context) => {
+            return () => {
+                return new Promise<LSTheiaDiagramServer>((resolve) => {
+                    resolve(context.container.get(LSTheiaDiagramServer))
+                })
+            }
+        })
+
+        configureCommand(container, DeleteWithWorkspaceEditCommand)
+        configureCommand(container, WorkspaceEditCommand)
+
+        container.bind(CompletionLabelEditor).toSelf().inSingletonScope();
+        container.bind(RenameLabelEditor).toSelf().inSingletonScope();
+
         return container
     }
 }

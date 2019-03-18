@@ -10,7 +10,8 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot, SModelRootSchema } from 'sprotty/lib';
+import { inject, injectable } from 'inversify';
+import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot, SModelRootSchema, TYPES } from 'sprotty/lib';
 
 /**
  * Sent from the model source to the client to request bounds for the given texts. The texts are
@@ -39,10 +40,11 @@ export class ComputedTextBoundsAction implements Action {
 /**
  * The command triggered to perform a hidden rendering of the text diagram defined in the constructor's RequestTextBoundsAction.
  */
+@injectable()
 export class RequestTextBoundsCommand extends HiddenCommand {
     static readonly KIND: string = 'requestTextBounds'
 
-    constructor(protected action: RequestTextBoundsAction) {
+    constructor(@inject(TYPES.Action) protected action: RequestTextBoundsAction) {
         super()
     }
 

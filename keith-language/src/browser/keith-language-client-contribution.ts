@@ -11,33 +11,26 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { inject, injectable, named } from 'inversify';
-import { FrontendApplication } from '@theia/core/lib/browser';
-import {
-    BaseLanguageClientContribution,
-    LanguageClientFactory,
-    Languages,
-    Workspace,
-} from '@theia/languages/lib/browser';
 import { Disposable } from '@theia/core/lib/common';
-import { DiagramManagerProvider, DiagramManager } from 'theia-sprotty/lib';
+import { LanguageClientFactory, Languages, Workspace } from '@theia/languages/lib/browser';
+import { inject, injectable, multiInject } from 'inversify';
+import { DiagramLanguageClientContribution, DiagramManagerProvider } from 'sprotty-theia/lib';
 import { ContextMenuCommands } from './dynamic-commands';
-import URI from '@theia/core/lib/common/uri';
 import { languageDescriptions } from './frontend-extension';
+
 @injectable()
-export class KeithLanguageClientContribution extends BaseLanguageClientContribution {
+export class KeithLanguageClientContribution extends DiagramLanguageClientContribution {
 
     readonly id = 'keith'
     readonly name = 'Keith'
 
     constructor(
-        @inject(DiagramManagerProvider)@named('keith-diagram') protected keithDiagramManagerProvider: DiagramManagerProvider,
-        @inject(ContextMenuCommands) protected commands: ContextMenuCommands,
-        @inject(Workspace) workspace: Workspace,
-        @inject(Languages) languages: Languages,
-        @inject(LanguageClientFactory) languageClientFactory: LanguageClientFactory
-    ) {
-        super(workspace, languages, languageClientFactory)
+        @inject(Workspace) protected readonly workspace: Workspace,
+        @inject(Languages) protected readonly languages: Languages,
+        @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory,
+        @multiInject(DiagramManagerProvider) protected diagramManagerProviders: DiagramManagerProvider[],
+        @inject(ContextMenuCommands) protected commands: ContextMenuCommands) {
+        super(workspace, languages, languageClientFactory, diagramManagerProviders)
     }
 
     /**
@@ -53,24 +46,6 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
      */
     protected get documentSelector(): string[] {
         return languageDescriptions.map(languageDescription => languageDescription.id)
-    }
-
-    waitForActivation(app: FrontendApplication): Promise<any> {
-        return Promise.race([
-            super.waitForActivation(app),
-            this.waitForOpenDiagrams(this.keithDiagramManagerProvider())
-        ])
-    }
-
-    protected waitForOpenDiagrams(diagramManagerProvider: Promise<DiagramManager>): Promise<any> {
-        return diagramManagerProvider.then(diagramManager => {
-            return new Promise<URI>((resolve) => {
-                const disposable = diagramManager.onDiagramOpened(uri => {
-                    disposable.dispose()
-                    resolve(uri)
-                })
-            })
-        })
     }
 
     registerCommand(id: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {

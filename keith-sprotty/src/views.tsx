@@ -11,6 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
+import { injectable } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
@@ -22,6 +23,7 @@ import { getRendering } from './views-rendering';
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
  * Extends the SGraphView by initializing the context for KGraph rendering.
  */
+@injectable()
 export class SKGraphView extends SGraphView {
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
@@ -34,6 +36,7 @@ export class SKGraphView extends SGraphView {
 /**
  * IView component that translates a KNode and its children into a tree of virtual DOM elements.
  */
+@injectable()
 export class KNodeView implements IView {
     render(node: KNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
@@ -77,6 +80,7 @@ export class KNodeView implements IView {
 /**
  * IView component that translates a KPort and its children into a tree of virtual DOM elements.
  */
+@injectable()
 export class KPortView implements IView {
     render(port: KPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
@@ -104,6 +108,7 @@ export class KPortView implements IView {
 /**
  * IView component that translates a KLabel and its children into a tree of virtual DOM elements.
  */
+@injectable()
 export class KLabelView implements IView {
     render(label: KLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
@@ -131,6 +136,7 @@ export class KLabelView implements IView {
 /**
  * IView component that translates a KEdge and its children into a tree of virtual DOM elements.
  */
+@injectable()
 export class KEdgeView implements IView {
     render(edge: KEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false

@@ -19,6 +19,7 @@ import { KeithLanguageClientContribution } from './keith-language-client-contrib
 import { LanguageClientContribution } from '@theia/languages/lib/browser';
 import { RegistrationContribution, LanguageDescription, monarchLanguage, KeithMonarchLanguage, configuration } from './registration-contribution';
 import { CommandContribution } from '@theia/core';
+import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 
 // Language register, holds all languages that are supported by KEITH
 export const languageDescriptions: LanguageDescription[] = [
@@ -67,10 +68,13 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
         })
         return returnValue
     })
-    bind(LanguageClientContribution).toDynamicValue(ctx => ctx.container.get(KeithLanguageClientContribution))
+    bind(KeithLanguageClientContribution).toSelf().inSingletonScope()
+    bind(LanguageClientContribution).toService(KeithLanguageClientContribution)
+
+    bind(KeithDiagramLanguageClient).toSelf().inSingletonScope()
+
     bind(ContextMenuCommands).to(ContextMenuCommands).inSingletonScope()
 
-    bind(KeithLanguageClientContribution).toSelf().inSingletonScope()
     bind(RegistrationContribution).toSelf().inSingletonScope()
     rebind(MonacoEditorProvider).to(KeithMonacoEditorProvider).inSingletonScope()
 })

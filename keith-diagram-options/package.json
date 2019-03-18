@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "keith-diagram": "0.1.0",
-    "sprotty": "0.4.2"
+    "sprotty": "0.6.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
