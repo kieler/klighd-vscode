@@ -17,7 +17,7 @@
     "watch": "tsc -w -p ./tsconfig.json"
   },
   "dependencies": {
-    "sprotty": "0.4.2"
+    "sprotty": "0.6.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.3",
