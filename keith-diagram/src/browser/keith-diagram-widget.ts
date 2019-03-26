@@ -12,7 +12,9 @@
  */
 import { Emitter, Event } from '@theia/core';
 import URI from '@theia/core/lib/common/uri';
+import { ModelSource, TYPES } from 'sprotty';
 import { DiagramWidget } from 'sprotty-theia';
+import { KeithDiagramServer } from './keith-diagram-server';
 
 /**
  * The single diagram widget that is openable for KEITH diagrams.
@@ -41,6 +43,12 @@ export class KeithDiagramWidget extends DiagramWidget {
      * @param uri The URI that should be listened to now.
      */
     public initialize(uri: URI): void {
+        // If there already is a diagram server, then disconnect it first before re-initializing.
+        const modelSource = this.diContainer.get<ModelSource>(TYPES.ModelSource)
+        if (modelSource instanceof KeithDiagramServer && this.connector !== undefined) {
+            this.connector.disconnect(modelSource)
+        }
+        // Re-initialize the widget with the new uri.
         this.options.uri = uri.toString(true)
         this.initializeSprotty()
     }
