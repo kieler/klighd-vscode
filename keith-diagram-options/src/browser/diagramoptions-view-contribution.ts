@@ -109,11 +109,13 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
-        // Initialize the widget and update its content when the widget is created.
         if (e.factoryId === 'keith-diagram-diagram-manager') {
+            // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
             if (e.widget instanceof KeithDiagramWidget) {
                 e.widget.onModelUpdated(this.onModelUpdated.bind(this))
             }
+        } else if (e.factoryId === DIAGRAM_OPTIONS_WIDGET_FACTORY_ID) {
+            // Initialize the widget and update its content when the widget is created.
             this.initializeDiagramOptionsViewWidget(e.widget)
             this.updateContent()
         }
