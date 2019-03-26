@@ -11,28 +11,21 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { inject, injectable } from "inversify";
-import { CommandRegistry, MessageService, Command, MenuModelRegistry } from '@theia/core/lib/common';
-import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import {
-    FrontendApplication,
-    AbstractViewContribution,
-    KeybindingRegistry,
-    DidCreateWidgetEvent,
-    Widget,
-    WidgetManager,
-    FrontendApplicationContribution,
-    CommonMenus
+    AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager
 } from "@theia/core/lib/browser";
-import { KeithLanguageClientContribution } from "keith-language/lib/browser/keith-language-client-contribution";
-import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
-import { CompilerWidget } from "./compiler-widget";
+import { Command, CommandRegistry, MenuModelRegistry, MessageService } from '@theia/core/lib/common';
+import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
+import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { Workspace } from "@theia/languages/lib/browser";
-import { CompilationSystems, CodeContainer } from "../common/kicool-models";
-import { compilerWidgetId, OPEN_COMPILER_WIDGET_KEYBINDING, COMPILE, GET_SYSTEMS, SHOW_PREVIOUS_KEYBINDING,
-    SHOW_NEXT_KEYBINDING, EDITOR_UNDEFINED_MESSAGE, SHOW } from "../common";
+import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
+import { inject, injectable } from "inversify";
+import { KeithDiagramManager } from 'keith-diagram/lib/keith-diagram-manager';
+import { KeithLanguageClientContribution } from "keith-language/lib/browser/keith-language-client-contribution";
+import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING } from "../common";
+import { CodeContainer, CompilationSystems } from "../common/kicool-models";
+import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
-import { FileSystemWatcher, FileChange } from "@theia/filesystem/lib/browser";
 
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
@@ -249,7 +242,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     public async show(uri: string, index: number) {
         const lclient = await this.client.languageClient
         this.indexMap.set(uri, index)
-        await lclient.sendRequest(SHOW, [uri, 'keith-diagram-diagram', index])
+        await lclient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
     }
 
 
@@ -268,7 +261,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
         const uri = this.compilerWidget.sourceModelPath
         const lclient = await this.client.languageClient
-        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, 'keith-diagram-diagram', command,
+        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command,
             this.compilerWidget.compileInplace]) as CodeContainer
         if (!this.compilerWidget.autoCompile) {
             this.message("Got compilation result for " + uri, "info")

@@ -29,7 +29,8 @@ import { KeithDiagramWidget } from './keith-diagram-widget';
 @injectable()
 export class KeithDiagramManager extends DiagramManager {
 
-    readonly diagramType = 'keith-diagram'
+    public static DIAGRAM_TYPE = 'keith-diagram'
+    readonly diagramType = KeithDiagramManager.DIAGRAM_TYPE
     readonly iconClass = 'fa fa-square-o'
 
     _diagramConnector: LSTheiaSprottyConnector
@@ -64,7 +65,7 @@ export class KeithDiagramManager extends DiagramManager {
                 const diagramWidgetPromise = this.open(editorWidget.getResourceUri() as URI)
                 diagramWidgetPromise.then(widget => {
                     if (widget instanceof KeithDiagramWidget) {
-                        widget.initialize(uri)
+                        widget.reInitialize(uri)
                     }
                 })
             }
@@ -106,6 +107,6 @@ export class KeithDiagramManager extends DiagramManager {
     }
 
     createClientId() {
-        return this.diagramType + '-diagram'
+        return this.diagramType
     }
 }
