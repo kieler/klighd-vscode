@@ -1,0 +1,13 @@
+.show-button.style1 {
+    color: var(--theia-ui-font-color1);
+    background-color: var(--theia-layout-color0);
+}
+
+.preference-button.style1 {
+    background-color: var(--theia-layout-color0);
+    color: var(--theia-ui-font-color1);
+}
+
+.style-list.style1 {
+    margin-left: auto;
+}

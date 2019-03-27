@@ -32,7 +32,8 @@
     "rebuild:electron": "theia rebuild:electron",
     "publish:latest": "lerna publish --registry=https://registry.npmjs.org/ --exact --skip-git",
     "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --skip-git --yes",
-    "update": "git pull origin master && git submodule foreach git pull origin master"
+    "update": "git pull origin master && git submodule foreach git pull origin master",
+    "watch": "lerna run watch --parallel"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.2.0",

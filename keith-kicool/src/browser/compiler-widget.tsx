@@ -23,6 +23,7 @@ import { compilerWidgetId } from "../common";
 import { KiCoolContribution } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
+import '../../src/browser/style/style1.css'
 
 /**
  * Widget to compile and navigate compilation results. Should be linked to editor.
@@ -41,6 +42,10 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 
     systems: CompilationSystems[]
+
+    styles: string[] = [" default", " style1"]
+    selectedStyle: string = " default"
+
 
     autoCompile: boolean
     compileInplace: boolean
@@ -73,15 +78,22 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
                 if (this.showPrivateSystems || system.isPublic) {
-                    compilationElements.push(<option value={system.id} key={system.id}>{system.label}</option>)
+                    compilationElements.push(<option value={system.id}>{system.label}</option>)
                 }
+            });
+            const stylesToSelect: React.ReactNode[] = [];
+            this.styles.forEach(style => {
+                stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
             return <React.Fragment>
                 <div className="compilation-panel">
+                    <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)} onChange={() => this.handleSelectionOfStyle()}>
+                        {stylesToSelect}
+                    </select>
                     {this.renderPrivateButton()}
                     {this.renderInplaceButton()}
                     {this.renderAutoCompileButton()}
-                    <select id='compilation-list' className='compilation-list'>
+                    <select id='compilation-list' className={'selection-list' + (this.selectedStyle)}>
                         {compilationElements}
                     </select>
                     {this.renderCompileButton()}
@@ -89,6 +101,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 {this.renderShowButtons()}
             </React.Fragment>
         }
+    }
+
+    handleSelectionOfStyle() {
+        const index = (document.getElementById("style-list") as HTMLSelectElement).selectedIndex
+        this.selectedStyle = this.styles[index];
+        this.update()
     }
 
     onActivateRequest(msg: Message): void {
@@ -120,7 +138,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
             showButtons.push(
                 <div key={index} id={"showButton" + (index < 10 ? "0" + index : index)} className={'show-button'.concat((snapshot.errors.length > 0) ? ' error' :
-                    (snapshot.warnings.length > 0) ? ' warn' : (snapshot.infos.length > 0 ) ? ' info' : '')}
+                    (snapshot.warnings.length > 0) ? ' warn' : (snapshot.infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}
                     title={snapshot.name}
                     onClick={event => {
                         if (!uri) {
@@ -142,37 +160,37 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             onClick={event => {
                 this.compileSelectedCompilationSystem()
             }}>
-            <div className='fa fa-play-circle'> </div>
+            <div className='icon fa fa-play-circle'> </div>
         </div>
     }
 
     renderPrivateButton(): React.ReactNode {
-        return <div title="Show private Systems" key="private-button" className={'preference-button' + (this.showPrivateSystems ? '' : ' off')}
+        return <div title="Show private Systems" key="private-button" className={'preference-button' + (this.showPrivateSystems ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
                 this.showPrivateSystems = !this.showPrivateSystems
                 this.update()
             }}>
-            <div className='fa fa-unlock-alt'> </div>
+            <div className='icon fa fa-unlock-alt'/>
         </div>
     }
 
     renderInplaceButton(): React.ReactNode {
-        return <div title="Inplace" key="inplace-button" className={'preference-button' + (this.compileInplace ? '' : ' off')}
+        return <div title="Inplace" key="inplace-button" className={'preference-button' + (this.compileInplace ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
                 this.compileInplace = !this.compileInplace
                 this.update()
             }}>
-            <div className='fa fa-share'> </div>
+            <div className='icon fa fa-share'/>
         </div>
     }
 
     renderAutoCompileButton(): React.ReactNode {
-        return <div title="Auto compile" key="auto-compile-button" className={'preference-button' + (this.autoCompile ? '' : ' off')}
+        return <div title="Auto compile" key="auto-compile-button" className={'preference-button' + (this.autoCompile ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
                 this.autoCompile = !this.autoCompile
                 this.update()
             }}>
-            <div className='fa fa-cog'> </div>
+            <div className='icon fa fa-cog'/>
         </div>
     }
 
