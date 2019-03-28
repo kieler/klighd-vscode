@@ -62,14 +62,23 @@ export class KeithDiagramManager extends DiagramManager {
         if (editorWidget) {
             const uri = editorWidget.getResourceUri()
             if (uri instanceof URI) {
-                const diagramWidgetPromise = this.open(editorWidget.getResourceUri() as URI)
-                diagramWidgetPromise.then(widget => {
-                    if (widget instanceof KeithDiagramWidget) {
-                        widget.reInitialize(uri)
-                    }
-                })
+                this.drawDiagram(uri)
             }
         }
+    }
+
+    /**
+     * Reveals the diagram-widget and draws a diagram for a uri.
+     * TODO Currently this redraws the last displayed snapshot of the model and not the original model.
+     * @param uri uri of model
+     */
+    public drawDiagram(uri: URI) {
+        const diagramWidgetPromise = this.open(uri)
+        diagramWidgetPromise.then(widget => {
+            if (widget instanceof KeithDiagramWidget) {
+                widget.reInitialize(uri)
+            }
+        })
     }
 
     open(uri: URI, input?: OpenerOptions): Promise<DiagramWidget> {
