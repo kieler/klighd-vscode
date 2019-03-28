@@ -25,6 +25,7 @@ import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
 import '../../src/browser/style/reverse-toolbar.css'
+import URI from "@theia/core/lib/common/uri";
 
 /**
  * Widget to compile and navigate compilation results. Should be linked to editor.
@@ -141,6 +142,19 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         if (!snapshots) {
             return
         }
+        // Add show original mpdel button
+        showButtons.push(
+            <div key={"original"} id={"showButtonOriginal"} className={'show-button' + (this.selectedStyle)}
+                    title={"Original"}
+                    onClick={event => {
+                        // Draw diagram of original model
+                        this.commands.diagramManager.drawDiagram(new URI(uri))
+                    }
+                }>
+                Original
+            </div >
+        )
+        // Add show buttons for all snapshots
         snapshots.files.forEach((snapshot: Snapshots, index: number) => {
 
             showButtons.push(

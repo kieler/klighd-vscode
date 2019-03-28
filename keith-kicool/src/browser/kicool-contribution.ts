@@ -52,6 +52,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager,
         @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext,
         @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
+        @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
     ) {
         super({
             widgetId: compilerWidgetId,
