@@ -26,6 +26,7 @@ import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_
 import { CodeContainer, CompilationSystems } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
+import { delay } from "../common/helper"
 
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
@@ -126,6 +127,13 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         if (this.editor) {
             const lClient = await this.client.languageClient
             const uri = this.editor.editor.uri.toString()
+            // Check if language client was already initialized and wait till it is
+            let initializeResult = lClient.initializeResult
+            while (!initializeResult) {
+                // language client was not initialized
+                await delay(100)
+                initializeResult = lClient.initializeResult
+            }
             const systems: CompilationSystems[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystems[]
             this.compilerWidget.systems = systems
             this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
