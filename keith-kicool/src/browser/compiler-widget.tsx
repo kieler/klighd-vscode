@@ -23,7 +23,8 @@ import { compilerWidgetId } from "../common";
 import { KiCoolContribution } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
-import '../../src/browser/style/style1.css'
+import '../../src/browser/style/black-white.css'
+import '../../src/browser/style/reverse-toolbar.css'
 
 /**
  * Widget to compile and navigate compilation results. Should be linked to editor.
@@ -43,8 +44,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     systems: CompilationSystems[]
 
-    styles: string[] = [" default", " style1"]
+    readonly styles: string[] = [" default", " black-white", " reverse-toolbar"]
     selectedStyle: string = " default"
+    selectedIndex: number = 0
 
 
     autoCompile: boolean
@@ -57,7 +59,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     ) {
         super();
         this.id = compilerWidgetId
-        this.title.label = 'Compile'
+        this.title.label = 'KIELER Compiler'
         this.title.iconClass = 'fa fa-play-circle';
         this.addClass(compilerWidgetId) // class for index.css
         this.systems = [{id: "NONE", label: "NONE", isPublic: true}]
@@ -78,18 +80,18 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
                 if (this.showPrivateSystems || system.isPublic) {
-                    compilationElements.push(<option value={system.id}>{system.label}</option>)
+                    compilationElements.push(<option value={system.id} key={system.id}>{system.label}</option>)
                 }
             });
             const stylesToSelect: React.ReactNode[] = [];
-            this.styles.forEach(style => {
+            this.styles.forEach((style, index) => {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
             return <React.Fragment>
-                <div className="compilation-panel">
-                    <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)} onChange={() => this.handleSelectionOfStyle()}>
-                        {stylesToSelect}
-                    </select>
+                <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)} onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
+                    {stylesToSelect}
+                </select>
+                <div className={"compilation-panel" + (this.selectedStyle)}>
                     {this.renderPrivateButton()}
                     {this.renderInplaceButton()}
                     {this.renderAutoCompileButton()}
@@ -105,8 +107,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     handleSelectionOfStyle() {
         const index = (document.getElementById("style-list") as HTMLSelectElement).selectedIndex
-        this.selectedStyle = this.styles[index];
-        this.update()
+        if (index !== null) {
+            this.selectedStyle = this.styles[index];
+            this.selectedIndex = index
+            this.update()
+        } else {
+            console.log("This is wrong")
+        }
     }
 
     onActivateRequest(msg: Message): void {
@@ -156,7 +163,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderCompileButton(): React.ReactNode {
-        return <div className='compile-button' title="Compile"
+        return <div className={'compile-button' + (this.selectedStyle)} title="Compile"
             onClick={event => {
                 this.compileSelectedCompilationSystem()
             }}>
@@ -212,7 +219,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             autoCompile : this.autoCompile,
             compileInplace : this.compileInplace,
             showPrivateSystems : this.showPrivateSystems,
-            systems : this.systems
+            systems : this.systems,
+            selectedStyle : this.selectedStyle,
+            selectedIndex : this.selectedIndex
         }
     }
 
@@ -220,7 +229,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.autoCompile = oldState.autoCompile
         this.compileInplace = oldState.compileInplace
         this.showPrivateSystems = oldState.showPrivateSystems
-        this.systems = this.systems
+        this.systems = oldState.systems
+        this.selectedStyle = oldState.selectedStyle
+        this.selectedIndex = oldState.selectedIndex
     }
 }
 
@@ -229,6 +240,8 @@ export namespace CompilerWidget {
         autoCompile: boolean,
         compileInplace: boolean,
         showPrivateSystems: boolean,
-        systems: CompilationSystems[]
+        systems: CompilationSystems[],
+        selectedStyle: string,
+        selectedIndex: number
     }
 }

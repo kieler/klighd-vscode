@@ -65,7 +65,7 @@ button, .show-button {
 .selection-list {
     line-height: var(--theia-content-line-height);
     font-size: var(--theia-ui-font-size1);
-    border-width: 1px;
+    border-width: 2px;
     border-style: solid;
     border-color: var(--theia-border-color1);
     background: var(--theia-layout-color0);
@@ -81,7 +81,6 @@ button, .show-button {
 }
 
 .compile-button {
-    box-sizing: border-box;
     color: var(--theia-ui-button-font-color);
     background-color: var(--theia-ui-button-color);
     block-size: var(--theia-content-line-height);
@@ -97,7 +96,6 @@ button, .show-button {
 }
 
 .preference-button {
-    box-sizing: border-box;
     background-color: var(--theia-ui-button-color);
     color: var(--theia-ui-button-font-color);
     block-size: var(--theia-content-line-height);

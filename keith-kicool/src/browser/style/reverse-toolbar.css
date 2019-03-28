@@ -1,0 +1,7 @@
+
+.compilation-panel.reverse-toolbar {
+    margin-top: 12px;
+    display: flex;
+    margin-left: calc(var(--theia-ui-padding)*2);
+    flex-direction: row-reverse;
+}
