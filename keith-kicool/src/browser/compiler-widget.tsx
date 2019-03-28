@@ -44,7 +44,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     systems: CompilationSystems[]
 
-    readonly styles: string[] = [" default", " black-white", " reverse-toolbar"]
+    readonly styles: string[] = [" default", " black-white", " reverse-toolbar", " black-white reverse-toolbar"]
     selectedStyle: string = " default"
     selectedIndex: number = 0
 
@@ -219,7 +219,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             autoCompile : this.autoCompile,
             compileInplace : this.compileInplace,
             showPrivateSystems : this.showPrivateSystems,
-            systems : this.systems,
             selectedStyle : this.selectedStyle,
             selectedIndex : this.selectedIndex
         }
@@ -229,7 +228,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.autoCompile = oldState.autoCompile
         this.compileInplace = oldState.compileInplace
         this.showPrivateSystems = oldState.showPrivateSystems
-        this.systems = oldState.systems
         this.selectedStyle = oldState.selectedStyle
         this.selectedIndex = oldState.selectedIndex
     }
@@ -240,7 +238,6 @@ export namespace CompilerWidget {
         autoCompile: boolean,
         compileInplace: boolean,
         showPrivateSystems: boolean,
-        systems: CompilationSystems[],
         selectedStyle: string,
         selectedIndex: number
     }

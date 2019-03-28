@@ -36,7 +36,7 @@
     background-color: var(--theia-ui-font-color1);
     border-color: var(--theia-layout-color0);
     border: 2px;
-    box-shadow: 0px 1px 5px 0px var(--theia-layout-color0), 0px 1px 2px 0px var(--theia-layout-color0), 0px 1px 1px -2px var(--theia-layout-color0);
+    box-shadow: 0px 1px 5px 0px var(--theia-ui-font-color1), 0px 1px 2px 0px var(--theia-ui-font-color1), 0px 1px 1px -2px var(--theia-ui-font-color1);
     transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 }
 .compile-button.black-white {
@@ -44,6 +44,12 @@
     background-color: var(--theia-ui-font-color1);
     border-color:var(--theia-layout-color0);
     border: 2px;
-    box-shadow: 0px 1px 5px 0px var(--theia-layout-color0), 0px 1px 2px 0px var(--theia-layout-color0), 0px 1px 1px -2px var(--theia-layout-color0);
+    box-shadow: 0px 1px 5px 0px var(--theia-ui-font-color1), 0px 1px 2px 0px var(--theia-ui-font-color1), 0px 1px 1px -2px var(--theia-ui-font-color1);
+    transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+}
+
+.selection-list.black-white {
+    border: 2px;
+    box-shadow: 0px 1px 5px 0px var(--theia-ui-font-color1), 0px 1px 2px 0px var(--theia-ui-font-color1), 0px 1px 1px -2px var(--theia-ui-font-color1);
     transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
 }
