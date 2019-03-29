@@ -333,8 +333,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             showPrivateSystems : this.showPrivateSystems,
             selectedStyle : this.selectedStyle,
             selectedIndex : this.selectedIndex,
-            showAdvancedToolbar : this.showAdvancedToolbar,
-            compilationSystemFilter : this.compilationSystemFilter
+            showAdvancedToolbar : this.showAdvancedToolbar
         }
     }
 
@@ -347,7 +346,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.showPrivateSystems = oldState.showPrivateSystems
         this.selectedStyle = oldState.selectedStyle
         this.selectedIndex = oldState.selectedIndex
-        this.compilationSystemFilter = oldState.compilationSystemFilter
         this.showAdvancedToolbar = oldState.showAdvancedToolbar
     }
 }
@@ -362,7 +360,6 @@ export namespace CompilerWidget {
         showPrivateSystems: boolean,
         selectedStyle: string,
         selectedIndex: number,
-        showAdvancedToolbar: boolean,
-        compilationSystemFilter: string
+        showAdvancedToolbar: boolean
     }
 }
