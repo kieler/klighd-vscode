@@ -122,7 +122,8 @@ button, .show-button {
 
 .style-list {
     width: fit-content;
-    margin-right: 10px;
+    margin-left: 2px;
+    margin-right: 2px;
     border: 1px;
 }
 
