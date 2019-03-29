@@ -33,26 +33,69 @@ import URI from "@theia/core/lib/common/uri";
 @injectable()
 export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
+    /**
+     * Id of widget. Can be used to get an instance of this widget via the WidgetManager.
+     */
     public static widgetId = compilerWidgetId
 
 
     protected readonly onRequestSystemDescriptionsEmitter = new Emitter<CompilerWidget | undefined>()
+
     /**
      * Emit when compilation systems are requested.
      */
     readonly requestSystemDescriptions: Event<CompilerWidget | undefined> = this.onRequestSystemDescriptionsEmitter.event
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 
+    /**
+     * Holds all compilation system that where requested from the LS for a specific model.
+     * These are filtered on the client side to display the private or public systems.
+     * The compilation systems are updated on selection of a current editor.
+     */ 
     systems: CompilationSystems[]
 
+    protected showStyleToolbar: boolean = false
+
+    /**
+     * Selectable css styles. Their names have to correspond to the names used in the dedicated css style file.
+     */
     readonly styles: string[] = [" default", " black-white", " reverse-toolbar", " black-white reverse-toolbar"]
+
+    /**
+     * Currently selected css style. See styles for a list of available css styles.
+     * This should correspond to the selectedIndex property.
+     * Is saved as part of the state of the widget.
+     */
     selectedStyle: string = " default"
+
+    /**
+     * Index of selected css style file. Should always correspond to the selectedStyle property.
+     * Is saved as part of the state of the widget.
+     */
     selectedIndex: number = 0
 
-
+    /**
+     * Option whether auto compile is enabled.
+     * Is saved as part of the state of the widget.
+     */
     autoCompile: boolean
+
+    /**
+     * Enables inplace compilation.
+     * Is saved as part of the state of the widget.
+     */
     compileInplace: boolean
+
+    /**
+     * Boolean property to enbale filtering of compilation systems saved in field systems.
+     * Is saved as part of the state of the widget.
+     */
     showPrivateSystems: boolean
+
+    /**
+     * Holds the uri of the model in the current editor.
+     * This is updated on change of the current editor.
+     */
     public sourceModelPath: string
 
     constructor(
@@ -63,17 +106,20 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.title.label = 'KIELER Compiler'
         this.title.iconClass = 'fa fa-play-circle';
         this.addClass(compilerWidgetId) // class for index.css
-        this.systems = [{id: "NONE", label: "NONE", isPublic: true}]
+        this.systems = []
         this.autoCompile = false
         this.showPrivateSystems = false
         this.compileInplace = false
     }
 
     render(): React.ReactNode {
-        if (!this.systems || this.systems.length === 1) {
+        if (!this.systems || this.systems.length === 0) {
+            // Case no connection to the LS was astablished or no compilation systems are present.
             if (this.commands && this.commands.editor) {
+                // Try to request compilation systems.
                 this.requestSystemDescription()
             }
+            // If no compilation systems could be requested, show spinner instead.
             return <div className='spinnerContainer'>
                 <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
             </div>;
@@ -107,6 +153,10 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    /**
+     * Handles the selection of a new css style for the widget.
+     * It saves the index and name of teh current selected style and updates the widget.
+     */
     handleSelectionOfStyle() {
         const index = (document.getElementById("style-list") as HTMLSelectElement).selectedIndex
         if (index !== null) {
@@ -128,6 +178,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.render()
     }
 
+    /**
+     * Fires event to request compilation systems. This event is bound and caught in the KiCoolContribution.
+     */
     public requestSystemDescription(): void {
         this.onRequestSystemDescriptionsEmitter.fire(this)
     }
@@ -216,6 +269,10 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
+    /**
+     * Compiles the active model via the currently selected compilation system.
+     * Called by compile button or invoked by the KiCoolContribution if auto compile is enabled.
+     */
     public compileSelectedCompilationSystem(): void {
         const selection = document.getElementById("compilation-list") as HTMLSelectElement;
         const systems = this.systems.filter(system => {
@@ -229,6 +286,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    /**
+     * Store the state of the widget.
+     */
     storeState(): CompilerWidget.Data {
         return {
             autoCompile : this.autoCompile,
@@ -239,6 +299,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    /**
+     * Restore the state of the widget on reload.
+     */
     restoreState(oldState: CompilerWidget.Data): void {
         this.autoCompile = oldState.autoCompile
         this.compileInplace = oldState.compileInplace
@@ -248,6 +311,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 }
 
+/**
+ * Definition of the state of the corresponding {@link CompilerWidget}.
+ */
 export namespace CompilerWidget {
     export interface Data {
         autoCompile: boolean,
