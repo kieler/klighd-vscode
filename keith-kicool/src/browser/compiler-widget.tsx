@@ -297,7 +297,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderShowAdvancedToolbar(): React.ReactNode {
-        return <div title="Show advanced toolbar" key="show-advanted-toolbar" className={'preference-button' + (this.showAdvancedToolbar ? '' : ' off') + (this.selectedStyle)}
+        return <div title={this.showAdvancedToolbar ? "Hide advanced toolbar" : "Show advanced toolbar"}
+                    key="show-advanted-toolbar"
+                    className={'preference-button' + (this.showAdvancedToolbar ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
                 this.showAdvancedToolbar = !this.showAdvancedToolbar
                 this.update()
