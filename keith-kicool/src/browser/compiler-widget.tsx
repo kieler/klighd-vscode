@@ -54,7 +54,10 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */ 
     systems: CompilationSystems[]
 
-    protected showStyleToolbar: boolean = false
+    /**
+     * If enebaled, the style selection menu and the snapshot seach field are displayed.
+     */
+    protected showAdvancedToolbar: boolean = false
 
     /**
      * Selectable css styles. Their names have to correspond to the names used in the dedicated css style file.
@@ -134,11 +137,18 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             this.styles.forEach((style, index) => {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
-            return <React.Fragment>
-                <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)}
+            var styleSelectbox= <React.Fragment></React.Fragment>
+            if (this.showAdvancedToolbar) {
+                styleSelectbox = <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)}
                         onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
                     {stylesToSelect}
                 </select>
+            }
+            return <React.Fragment>
+                <div className={"compilation-panel" + (this.selectedStyle)}>
+                {this.renderShowAdvancedToolbar()}
+                {styleSelectbox}
+                </div>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                     {this.renderPrivateButton()}
                     {this.renderInplaceButton()}
@@ -266,6 +276,16 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 this.update()
             }}>
             <div className='icon fa fa-cog'/>
+        </div>
+    }
+
+    renderShowAdvancedToolbar(): React.ReactNode {
+        return <div title="Show advanced toolbar" key="show-advanted-toolbar" className={'preference-button' + (this.showAdvancedToolbar ? '' : ' off') + (this.selectedStyle)}
+            onClick={event => {
+                this.showAdvancedToolbar = !this.showAdvancedToolbar
+                this.update()
+            }}>
+            <div className={'icon fa ' + (this.showAdvancedToolbar ? 'fa-minus' : 'fa-plus')}/>
         </div>
     }
 
