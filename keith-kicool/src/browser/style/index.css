@@ -127,3 +127,21 @@ button, .show-button {
     border: 1px;
 }
 
+.kicool-input {
+    width: auto;
+    line-height: var(--theia-content-line-height);
+    font-size: var(--theia-ui-font-size1);
+    border-width: 2px;
+    border-style: solid;
+    border-color: var(--theia-border-color1);
+    background: var(--theia-layout-color0);
+    color: var(--theia-ui-font-color1);
+    margin-left: 1px;
+    margin-right: 1px;
+    height: fit-content;
+}
+
+.kicool-input::placeholder {
+    font-style: italic;
+}
+

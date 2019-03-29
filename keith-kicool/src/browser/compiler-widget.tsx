@@ -51,11 +51,14 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * Holds all compilation system that where requested from the LS for a specific model.
      * These are filtered on the client side to display the private or public systems.
      * The compilation systems are updated on selection of a current editor.
-     */ 
+     */
     systems: CompilationSystems[]
 
+    protected compilationSystemFilter: string = ""
+
     /**
-     * If enebaled, the style selection menu and the snapshot seach field are displayed.
+     * If enebaled, the style selection menu.
+     * Is saved as part of the state of the widget.
      */
     protected showAdvancedToolbar: boolean = false
 
@@ -133,17 +136,24 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     compilationElements.push(<option value={system.id} key={system.id}>{system.label}</option>)
                 }
             });
+            // Add css styles to selectbox
             const stylesToSelect: React.ReactNode[] = [];
             this.styles.forEach((style, index) => {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
-            var styleSelectbox= <React.Fragment></React.Fragment>
+        
+            let styleSelectbox = <React.Fragment></React.Fragment>
+            let searchbox = <input id="compilation-system-filter" className="kicool-input" type='search' defaultValue='' name={this.compilationSystemFilter}
+                onInput={() => this.handleSearchChange()} placeholder='Filter snapshots'/>
+
+            // Add advanced features to toolbars
             if (this.showAdvancedToolbar) {
                 styleSelectbox = <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)}
                         onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
                     {stylesToSelect}
                 </select>
             }
+            
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                 {this.renderShowAdvancedToolbar()}
@@ -157,10 +167,16 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                         {compilationElements}
                     </select>
                     {this.renderCompileButton()}
+                    {searchbox}
                 </div>
                 {this.renderShowButtons()}
             </React.Fragment>
         }
+    }
+
+    handleSearchChange() {
+        this.compilationSystemFilter = (document.getElementById("compilation-system-filter") as HTMLInputElement).value
+        this.update()
     }
 
     /**
@@ -220,20 +236,21 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         )
         // Add show buttons for all snapshots
         snapshots.files.forEach((snapshot: Snapshots, index: number) => {
-
-            showButtons.push(
-                <div key={index} id={"showButton" + (index < 10 ? "0" + index : index)} className={'show-button'.concat((snapshot.errors.length > 0) ? ' error' :
-                    (snapshot.warnings.length > 0) ? ' warn' : (snapshot.infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}
-                    title={snapshot.name}
-                    onClick={event => {
-                        if (!uri) {
-                            return
-                        }
-                        this.commands.show(uri.toString(), index)
-                    }}>
-                    {snapshot.snapshotIndex === 0 ? snapshot.name : ""}
-                </div >
-            )
+            if (snapshot.name.search(this.compilationSystemFilter) > -1) {
+                showButtons.push(
+                    <div key={index} id={"showButton" + (index < 10 ? "0" + index : index)} className={'show-button'.concat((snapshot.errors.length > 0) ? ' error' :
+                        (snapshot.warnings.length > 0) ? ' warn' : (snapshot.infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}
+                        title={snapshot.name}
+                        onClick={event => {
+                            if (!uri) {
+                                return
+                            }
+                            this.commands.show(uri.toString(), index)
+                        }}>
+                        {snapshot.snapshotIndex === 0 ? snapshot.name : ""}
+                    </div >
+                )
+            }
         });
         return <div id="showButtonContainer0" className='buttonContainer'>
             {showButtons}
@@ -315,7 +332,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             compileInplace : this.compileInplace,
             showPrivateSystems : this.showPrivateSystems,
             selectedStyle : this.selectedStyle,
-            selectedIndex : this.selectedIndex
+            selectedIndex : this.selectedIndex,
+            showAdvancedToolbar : this.showAdvancedToolbar,
+            compilationSystemFilter : this.compilationSystemFilter
         }
     }
 
@@ -328,6 +347,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.showPrivateSystems = oldState.showPrivateSystems
         this.selectedStyle = oldState.selectedStyle
         this.selectedIndex = oldState.selectedIndex
+        this.compilationSystemFilter = oldState.compilationSystemFilter
+        this.showAdvancedToolbar = oldState.showAdvancedToolbar
     }
 }
 
@@ -340,6 +361,8 @@ export namespace CompilerWidget {
         compileInplace: boolean,
         showPrivateSystems: boolean,
         selectedStyle: string,
-        selectedIndex: number
+        selectedIndex: number,
+        showAdvancedToolbar: boolean,
+        compilationSystemFilter: string
     }
 }
