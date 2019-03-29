@@ -88,7 +88,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
             return <React.Fragment>
-                <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)} onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
+                <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)}
+                        onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
                     {stylesToSelect}
                 </select>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
