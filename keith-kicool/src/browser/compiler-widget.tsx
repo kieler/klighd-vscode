@@ -344,8 +344,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.autoCompile = oldState.autoCompile
         this.compileInplace = oldState.compileInplace
         this.showPrivateSystems = oldState.showPrivateSystems
-        this.selectedStyle = oldState.selectedStyle
-        this.selectedIndex = oldState.selectedIndex
+        if (oldState.selectedIndex === null || oldState.selectedStyle === null) {
+            this.selectedIndex = 0
+            this.selectedStyle = this.styles[0]
+        } else {
+            this.selectedStyle = oldState.selectedStyle
+            this.selectedIndex = oldState.selectedIndex
+        }
         this.showAdvancedToolbar = oldState.showAdvancedToolbar
     }
 }
