@@ -39,7 +39,7 @@
     "scripts": {
         "prepare": "theia build --mode development",
         "start": "theia start --root-dir=../workspace",
-        "socket": "node ./src-gen/backend/main.js --root-dir=../workspace --LSP_PORT=5007 --port=3000 --loglevel=debug",
+        "socket": "node ./src-gen/backend/main.js --root-dir=../workspace --LSP_PORT=5007 --port=3000 --loglevel=debug --no-cluster",
         "watch": "theia build --watch --mode development"
     },
     "theia": {
