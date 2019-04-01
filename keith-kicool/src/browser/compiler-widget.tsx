@@ -141,7 +141,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             this.styles.forEach((style, index) => {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
-        
             let styleSelectbox = <React.Fragment></React.Fragment>
             let searchbox = <input id="compilation-system-filter" className="kicool-input" type='search' defaultValue='' name={this.compilationSystemFilter}
                 onInput={() => this.handleSearchChange()} placeholder='Filter snapshots'/>
@@ -153,7 +152,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     {stylesToSelect}
                 </select>
             }
-            
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                 {this.renderShowAdvancedToolbar()}
