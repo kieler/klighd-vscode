@@ -55,7 +55,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     systems: CompilationSystems[]
 
-    protected compilationSystemFilter: string = ""
+    protected snapshotFilter: string = ""
 
     /**
      * If enebaled, the style selection menu.
@@ -144,7 +144,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             });
 
             let styleSelectbox = <React.Fragment></React.Fragment>
-            let searchbox = <input id="compilation-system-filter" className="kicool-input" type='search' defaultValue='' name={this.compilationSystemFilter}
+            let searchbox = <input id="snapshot-filter"
+                title=". is the wildcard; * and + are supported"
+                className="kicool-input"
+                type='search'
+                defaultValue=''
+                name={this.snapshotFilter}
                 onInput={() => this.handleSearchChange()} placeholder='Filter snapshots'/>
 
             // Add advanced features to toolbars
@@ -175,8 +180,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    /**
+     * If something in the search box is changed, the filter for filtering snapshots is updated.
+     * The widget is updated, which leads to a redraw.
+     */
     handleSearchChange() {
-        this.compilationSystemFilter = (document.getElementById("compilation-system-filter") as HTMLInputElement).value
+        this.snapshotFilter = (document.getElementById("snapshot-filter") as HTMLInputElement).value
         this.update()
     }
 
@@ -243,7 +252,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         let snapshotsListOfLists: Snapshot[][] = snapshots.files
         let resultingMaxIndex = 0
         snapshotsListOfLists.forEach((snapshots: Snapshot[], index: number) => {
-            if (snapshots[0].name.search(this.compilationSystemFilter) > -1) {
+            let filter
+            try {
+                filter = snapshots[0].name.toLowerCase().search(this.snapshotFilter.toLowerCase()) > -1
+            } catch (error) {
+                filter = true // do not filter if search causes an error
+            }
+            if (filter) {
                 let list: React.ReactNodeArray = []
                 snapshots.forEach((snapshot: Snapshot, innerIndex: number) => {
                     const currentIndex = resultingMaxIndex
