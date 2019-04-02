@@ -12,8 +12,8 @@
  */
 import { Container, ContainerModule } from 'inversify';
 import {
-    configureModelElement, ConsoleLogger, defaultModule, exportModule, LogLevel, moveModule, overrideViewerOptions, selectModule, SGraph, SGraphFactory, TYPES,
-    viewportModule
+    configureModelElement, ConsoleLogger, defaultModule, exportModule, LogLevel, modelSourceModule, moveModule, overrideViewerOptions, selectModule, SGraph, SGraphFactory, TYPES,
+    viewportModule, updateModule
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
@@ -40,11 +40,12 @@ const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) 
  */
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
-    container.load(defaultModule, selectModule, moveModule, viewportModule, exportModule, kGraphDiagramModule, textBoundsModule, actionModule)
+    container.load(defaultModule, selectModule, moveModule, viewportModule, exportModule, modelSourceModule, updateModule, kGraphDiagramModule, textBoundsModule, actionModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
-        baseDiv: widgetId
+        baseDiv: widgetId,
+        hiddenDiv: widgetId + '_hidden'
     })
     return container
 }

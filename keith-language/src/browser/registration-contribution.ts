@@ -12,10 +12,11 @@
  */
 
 import { injectable } from 'inversify';
-import { CommandContribution, CommandRegistry } from '@theia/core';
+import { CommandRegistry } from '@theia/core';
+import { LSDiagramCommandContribution } from 'sprotty-theia';
 
 @injectable()
-export class RegistrationContribution implements CommandContribution {
+export class RegistrationContribution extends LSDiagramCommandContribution {
 
     registerCommands(commands: CommandRegistry): void {
         // not needed

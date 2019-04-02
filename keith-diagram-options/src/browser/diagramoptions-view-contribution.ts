@@ -14,14 +14,12 @@
 import { DidCreateWidgetEvent, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { FrontendApplication, FrontendApplicationContribution } from '@theia/core/lib/browser/frontend-application';
 import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
-import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
 import { KeithDiagramManager } from 'keith-diagram/lib/keith-diagram-manager';
 import { KeithDiagramServer } from 'keith-diagram/lib/keith-diagram-server';
-import { id, KeithDiagramWidgetRegistry } from 'keith-diagram/lib/keith-diagram-widget-registry';
+import { KeithDiagramWidget } from 'keith-diagram/lib/keith-diagram-widget';
 import { KeithLanguageClientContribution } from 'keith-language/lib/browser/keith-language-client-contribution';
-import { DiagramWidget, DiagramWidgetRegistry } from 'theia-sprotty/lib';
 import { GET_OPTIONS, SET_OPTIONS } from '../common';
 import { SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
@@ -48,8 +46,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         @inject(EditorManager) protected readonly editorManager: EditorManager,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
         @inject(KeithLanguageClientContribution) protected readonly client: KeithLanguageClientContribution,
-        @inject(KeithDiagramManager) protected readonly diagramManager: KeithDiagramManager,
-        @inject(DiagramWidgetRegistry) protected readonly diagramWidgetRegistry: DiagramWidgetRegistry
+        @inject(KeithDiagramManager) protected readonly diagramManager: KeithDiagramManager
     ) {
         super({
             widgetId: DIAGRAM_OPTIONS_WIDGET_FACTORY_ID,
@@ -69,9 +66,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.editorWidget = editorManager.activeEditor
             this.currentEditorChanged(this.editorWidget)
         }
-        diagramManager.onDiagramOpened(this.onDiagramOpened.bind(this))
         widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
-        diagramWidgetRegistry.onWidgetsChanged()(this.onDiagramWidgetsChanged.bind(this))
 
         // Create and initialize a new widget.
         const widgetPromise = this.widgetManager.getWidget(DiagramOptionsViewWidget.widgetId)
@@ -114,27 +109,15 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
-        // Initialize the widget and update its content when the widget is created.
-        if (e.factoryId === DiagramOptionsViewWidget.widgetId) {
+        if (e.factoryId === 'keith-diagram-diagram-manager') {
+            // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
+            if (e.widget instanceof KeithDiagramWidget) {
+                e.widget.onModelUpdated(this.onModelUpdated.bind(this))
+            }
+        } else if (e.factoryId === DIAGRAM_OPTIONS_WIDGET_FACTORY_ID) {
+            // Initialize the widget and update its content when the widget is created.
             this.initializeDiagramOptionsViewWidget(e.widget)
             this.updateContent()
-        }
-    }
-
-    /**
-     * Called whenever a new diagram view is created and this view should listen to its model changes to update the visible options.
-     * @param uri The URI of the opened diagram.
-     */
-    async onDiagramOpened(uri: URI) {
-        if (this.diagramWidgetRegistry instanceof KeithDiagramWidgetRegistry) {
-            const diagramWidget = this.diagramWidgetRegistry.getWidgetById(id)
-            if (diagramWidget instanceof DiagramWidget
-                && diagramWidget.modelSource instanceof KeithDiagramServer
-                && this.boundDiagramServer !== diagramWidget.modelSource) {
-                // Binds the diagram server to call this onModelUpdated function when its model gets updated.
-                this.boundDiagramServer = diagramWidget.modelSource
-                diagramWidget.modelSource.onModelUpdated(this.onModelUpdated.bind(this))
-            }
         }
     }
 

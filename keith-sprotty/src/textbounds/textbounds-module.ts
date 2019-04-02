@@ -11,14 +11,14 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { ContainerModule } from 'inversify';
-import { TYPES } from 'sprotty/lib';
+import { TYPES, configureCommand } from 'sprotty/lib';
 import { RequestTextBoundsCommand } from '../actions/actions';
 import { HiddenTextBoundsUpdater } from './hidden-text-bounds-updater';
 
 /**
  * Dependency injection module that adds functionality to handle the hidden text bounds estimation for the RequestTextBoudndsAction.
  */
-const textBoundsModule = new ContainerModule((bind) => {
+const textBoundsModule = new ContainerModule((bind, _unbind, isBound) => {
     // TODO:
     // This should really first unbind the RequestBoundsCommand from the TYPES.ICommand registry
     // and the HiddenBoundsUpdater from the TYPES.HiddenVNodeDecorator registry, but inversify
@@ -29,9 +29,8 @@ const textBoundsModule = new ContainerModule((bind) => {
     // to remove only that specific binding, not all of the bindings registered for the Types.HiddenVNodeDecorator.
     // With that, the HiddenBoundsUpdater should not be called anymore and not issue any CalculatedBoundsAction,
     // which is currently only ignored by the overwritten handle method for that action in the KeithDiagramServer.
-    bind(TYPES.ICommand).toConstructor(RequestTextBoundsCommand)
+    configureCommand({ bind, isBound }, RequestTextBoundsCommand);
     bind(TYPES.HiddenVNodeDecorator).to(HiddenTextBoundsUpdater).inSingletonScope()
 });
 
 export default textBoundsModule
-

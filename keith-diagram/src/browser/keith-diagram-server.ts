@@ -11,34 +11,32 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Emitter, Event } from '@theia/core';
 import { injectable } from 'inversify';
 import { ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand } from 'keith-sprotty/lib/actions/actions';
+import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
 import { Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, FitToScreenAction, SetModelCommand } from 'sprotty/lib';
-import { TheiaDiagramServer } from 'theia-sprotty/lib';
+import { KeithDiagramWidget } from './keith-diagram-widget';
+
+export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
+
+export type KeithDiagramServerProvider = () => Promise<KeithDiagramServer>;
 
 /**
  * This class extends the Theia diagram Server to also handle the Request- and ComputedTextBoundsAction
  */
 @injectable()
-export class KeithDiagramServer extends TheiaDiagramServer {
-
-    /**
-     * Emitter that should be fired whenever the model is updated.
-     */
-    protected readonly onModelUpdatedEmitter = new Emitter<string>()
-
-    /**
-     * Event that can be listened to that triggered whenever the model handled by this server is updated.
-     */
-    public readonly onModelUpdated: Event<string> = this.onModelUpdatedEmitter.event
-
+export class KeithDiagramServer extends LSTheiaDiagramServer {
     messageReceived(message: ActionMessage) {
         super.messageReceived(message)
         // Special handling for the SetModel action.
         if (message.action.kind === SetModelCommand.KIND) {
-            // Activate any method listening to the model update event.
-            this.onModelUpdatedEmitter.fire(message.clientId)
+            // Fire the widget's event that a new model was received.
+            const widgetPromise = this.connector.widgetManager.getWidget('keith-diagram-diagram-manager') // TODO: use the ID from where it is defined
+            widgetPromise.then(widget => {
+                if (widget instanceof KeithDiagramWidget) {
+                    widget.modelUpdated()
+                }
+            })
             // Fit the received model to the widget size.
             this.actionDispatcher.dispatch(new FitToScreenAction([], undefined, undefined, false))
         }
