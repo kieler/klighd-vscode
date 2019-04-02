@@ -18,13 +18,14 @@ import { Message,
     ReactWidget} from "@theia/core/lib/browser";
 import { Event } from '@theia/core/lib/common'
 import * as React from "react";
-import { CompilationSystems, Snapshots } from "../common/kicool-models";
+import { CompilationSystems, Snapshot } from "../common/kicool-models";
 import { compilerWidgetId } from "../common";
 import { KiCoolContribution } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
 import '../../src/browser/style/reverse-toolbar.css'
+import '../../src/browser/style/tree.css'
 import URI from "@theia/core/lib/common/uri";
 
 /**
@@ -65,7 +66,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     /**
      * Selectable css styles. Their names have to correspond to the names used in the dedicated css style file.
      */
-    readonly styles: string[] = [" default", " black-white", " reverse-toolbar", " black-white reverse-toolbar"]
+    readonly styles: string[] = [" default", " black-white", " reverse-toolbar", " black-white reverse-toolbar", " tree", " black-white tree"]
 
     /**
      * Currently selected css style. See styles for a list of available css styles.
@@ -141,7 +142,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             this.styles.forEach((style, index) => {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
-        
+
             let styleSelectbox = <React.Fragment></React.Fragment>
             let searchbox = <input id="compilation-system-filter" className="kicool-input" type='search' defaultValue='' name={this.compilationSystemFilter}
                 onInput={() => this.handleSearchChange()} placeholder='Filter snapshots'/>
@@ -153,7 +154,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     {stylesToSelect}
                 </select>
             }
-            
+
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                 {this.renderShowAdvancedToolbar()}
@@ -211,6 +212,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.onRequestSystemDescriptionsEmitter.fire(this)
     }
 
+    /**
+     * Renders all show buttons. These are the buttons displayed for each snapshot.
+     */
     renderShowButtons(): React.ReactNode {
 
         const showButtons: React.ReactNode[] = [];
@@ -222,37 +226,66 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         if (!snapshots) {
             return
         }
-        // Add show original mpdel button
+        // Add show original model button
         showButtons.push(
-            <div key={"original"} id={"showButtonOriginal"} className={'show-button' + (this.selectedStyle)}
-                    title={"Original"}
-                    onClick={event => {
-                        // Draw diagram of original model
-                        this.commands.diagramManager.drawDiagram(new URI(uri))
-                    }
-                }>
-                Original
-            </div >
-        )
-        // Add show buttons for all snapshots
-        snapshots.files.forEach((snapshot: Snapshots, index: number) => {
-            if (snapshot.name.search(this.compilationSystemFilter) > -1) {
-                showButtons.push(
-                    <div key={index} id={"showButton" + (index < 10 ? "0" + index : index)} className={'show-button'.concat((snapshot.errors.length > 0) ? ' error' :
-                        (snapshot.warnings.length > 0) ? ' warn' : (snapshot.infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}
-                        title={snapshot.name}
+            <ul key="original" className={"snapshot-list" + (this.selectedStyle)}>
+                <li key={"original"} id={"showButtonOriginal"} className={'show-button' + (this.selectedStyle)}
+                        title={"Original"}
                         onClick={event => {
-                            if (!uri) {
-                                return
-                            }
-                            this.commands.show(uri.toString(), index)
-                        }}>
-                        {snapshot.snapshotIndex === 0 ? snapshot.name : ""}
-                    </div >
-                )
+                            // Draw diagram of original model
+                            this.commands.diagramManager.drawDiagram(new URI(uri))
+                        }
+                    }>
+                    Original
+                </li >
+            </ul>
+        )
+        let snapshotsListOfLists: Snapshot[][] = snapshots.files
+        let resultingMaxIndex = 0
+        snapshotsListOfLists.forEach((snapshots: Snapshot[], index: number) => {
+            if (snapshots[0].name.search(this.compilationSystemFilter) > -1) {
+                let list: React.ReactNodeArray = []
+                snapshots.forEach((snapshot: Snapshot, innerIndex: number) => {
+                    const currentIndex = resultingMaxIndex
+                    // default case
+                    list.push(
+                        <li key={resultingMaxIndex}
+                            id={"showButton" + (resultingMaxIndex < 10 ? "0" + resultingMaxIndex : resultingMaxIndex)}
+                            className={'show-button'.concat((snapshot.errors.length > 0) ? ' error' :
+                            (snapshot.warnings.length > 0) ? ' warn' : (snapshot.infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}
+                            title={snapshot.name}
+                            onClick={event => {
+                                if (!uri) {
+                                    return
+                                }
+                                this.commands.show(uri.toString(), currentIndex)
+                            }}>
+                            {(snapshot.snapshotIndex === 0 && // draw the name of the snapshot if it is the first snapshot with a style that needs this
+                                (!this.selectedStyle.includes("tree") ||
+                                snapshots.length === 1)) ? snapshot.name : ""}
+                        </li>
+                    )
+                    resultingMaxIndex++
+                })
+                // construct default ReactNode
+                const node = <ul key={snapshots[0].name} className={"snapshot-list" + (this.selectedStyle)}>{list}</ul>
+                // if a tree style is selected draw snapshots for processors with more than one output as detail element
+                if (this.selectedStyle.includes("tree") && snapshots.length > 1) {
+                    // case a tree style is selected
+                    showButtons.push(
+                        <details key={index} className={"showButtonDetail" + (this.selectedStyle)}>
+                            <summary className={'show-button'.concat((snapshots[0].errors.length > 0) ? ' error' :
+                        (snapshots[0].warnings.length > 0) ? ' warn' : (snapshots[0].infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}>{snapshots[0].name}</summary>
+                            {node}
+                        </details>
+                    )
+                } else {
+                    // default cause, no detail element is needed
+                    showButtons.push(node)
+                }
             }
-        });
-        return <div id="showButtonContainer0" className='buttonContainer'>
+        })
+        return <div id="showButtonContainer0" className={"buttonContainer" + (this.selectedStyle)}>
             {showButtons}
         </div>
     }
