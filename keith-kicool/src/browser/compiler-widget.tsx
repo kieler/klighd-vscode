@@ -142,7 +142,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             this.styles.forEach((style, index) => {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
-
             let styleSelectbox = <React.Fragment></React.Fragment>
             let searchbox = <input id="snapshot-filter"
                 title=". is the wildcard; * and + are supported"
@@ -159,7 +158,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     {stylesToSelect}
                 </select>
             }
-
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                 {this.renderShowAdvancedToolbar()}
