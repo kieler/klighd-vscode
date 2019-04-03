@@ -1,5 +1,5 @@
 .buttonContainer.tree {
-    display: contents
+    display: inherit
 }
 
 .snapshot-list.tree {
