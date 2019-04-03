@@ -36,12 +36,13 @@
     },
     "devDependencies": {
         "@theia/cli": "latest",
-        "electron": "4.0.7",
+        "electron": "4.1.3",
         "reflect-metadata": "^0.1.13"
     },
     "scripts": {
         "prepare": "theia build --mode development",
-        "start": "theia start --root-dir=../workspace",
+        "start": "theia start --root-dir=../workspace --no-cluster",
+        "socket": "theia start --root-dir=../workspace --LSP_PORT=5008 --no-cluster",
         "watch": "theia build --watch --mode development"
     },
     "theia": {

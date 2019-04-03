@@ -2,7 +2,7 @@
   "name": "keith",
   "version": "0.1.0",
   "private": true,
-  "electronVersion": "4.0.7",
+  "electronVersion": "4.1.3",
   "main": "src-gen/frontend/electron-main.js",
   "description": "KIEL Environment Integrated in Theia",
   "theia": {
@@ -97,6 +97,7 @@
     "keith-app",
     "keith-language",
     "keith-sprotty",
-    "keith-kicool"
+    "keith-kicool",
+    "keith-app-electron"
   ]
 }
