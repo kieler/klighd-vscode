@@ -158,3 +158,13 @@ button, .show-button {
     font-style: italic;
 }
 
+.buttonContainer {
+    display: inline-block
+}
+
+.snapshot-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    float: left;
+}

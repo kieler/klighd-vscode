@@ -28,6 +28,24 @@ import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { delay } from "../common/helper"
 
+export const SAVE: Command = {
+    id: 'core.save',
+    label: 'Save'
+};
+
+export const SHOW_NEXT: Command = {
+    id: 'show_next',
+    label: 'Show next'
+}
+export const SHOW_PREVIOUS: Command = {
+    id: 'show_previous',
+    label: 'Show previous'
+}
+export const COMPILER: Command = {
+    id: 'compiler:toggle',
+    label: 'Compiler'
+}
+
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
  */
@@ -199,6 +217,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     this.message("Length is undefined", "error")
                     return false
                 }
+                if (index === length - 1) { // no show necessary, since the last snapshot is already drawn
+                    return
+                }
                 this.show(uri, Math.min(index + 1, length - 1))
             }
         })
@@ -218,6 +239,10 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     this.message("Index is undefined", "error")
                     return false
                 }
+                if (index === 0) { // no show necessary, since the first snapshot is already drawn
+                    return
+                }
+                // TODO add show for original model here
                 this.show(uri, Math.max(index - 1, 0))
             }
         })
@@ -288,22 +313,3 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
     }
 }
-
-export const SAVE: Command = {
-    id: 'core.save',
-    label: 'Save'
-};
-
-export const SHOW_NEXT: Command = {
-    id: 'show_next',
-    label: 'Show next'
-}
-export const SHOW_PREVIOUS: Command = {
-    id: 'show_previous',
-    label: 'Show previous'
-}
-export const COMPILER: Command = {
-    id: 'compiler:toggle',
-    label: 'Compiler'
-}
-
