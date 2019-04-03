@@ -26,7 +26,6 @@ import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
 import '../../src/browser/style/reverse-toolbar.css'
 import '../../src/browser/style/tree.css'
-import URI from "@theia/core/lib/common/uri";
 
 /**
  * Widget to compile and navigate compilation results. Should be linked to editor.
@@ -240,7 +239,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                         title={"Original"}
                         onClick={event => {
                             // Draw diagram of original model
-                            this.commands.diagramManager.drawDiagram(new URI(uri))
+                            this.commands.show(uri.toString(), -1)
                         }
                     }>
                     Original
