@@ -1,0 +1,16 @@
+.preference-button.inline-block {
+    height: 18px;
+}
+
+.compile-button.inline-block {
+    height: 18px;
+}
+
+.kicool-input.inline-block {
+    height: 20px;
+}
+
+.compilation-panel.inline-block {
+    display: inline-block;
+}
+
