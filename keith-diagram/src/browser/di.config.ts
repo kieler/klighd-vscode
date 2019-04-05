@@ -12,7 +12,7 @@
  */
 
 import { Container, injectable } from 'inversify';
-import { createKeithDiagramContainer } from 'keith-sprotty/lib';
+import { createKeithDiagramContainer } from '@kieler/keith-sprotty/lib';
 import {
     CompletionLabelEditor, DeleteWithWorkspaceEditCommand, DiagramConfiguration, LSTheiaDiagramServer, LSTheiaDiagramServerProvider, RenameLabelEditor, TheiaDiagramServer,
     TheiaKeyTool, WorkspaceEditCommand

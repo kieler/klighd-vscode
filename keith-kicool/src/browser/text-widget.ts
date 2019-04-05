@@ -19,7 +19,7 @@ import { MaybePromise } from "@theia/core";
 import { Disposable } from "@theia/languages/lib/browser";
 
 /**
- * Mock widget to display text.
+ * Mock widget to display text. Currently not in use.
  */
 @injectable()
 export class TextWidget extends BaseWidget {

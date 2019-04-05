@@ -12,7 +12,7 @@
  */
 
 import { injectable } from 'inversify';
-import { ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand } from 'keith-sprotty/lib/actions/actions';
+import { ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand } from '@kieler/keith-sprotty/lib/actions/actions';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
 import { Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, FitToScreenAction, SetModelCommand } from 'sprotty/lib';
 import { KeithDiagramWidget } from './keith-diagram-widget';

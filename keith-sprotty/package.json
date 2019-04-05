@@ -1,7 +1,7 @@
 {
-  "name": "keith-sprotty",
+  "name": "@kieler/keith-sprotty",
   "version": "0.1.0",
-  "description": "sprotty diagrams for Keith RiCharts",
+  "description": "sprotty diagrams for KEITH",
   "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
   "license": "EPL-1.0",
   "keywords": [
