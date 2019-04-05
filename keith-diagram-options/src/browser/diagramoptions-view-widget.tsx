@@ -267,11 +267,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private renderCategory(option: SynthesisOption, synthesisOptions: SynthesisOption[]): JSX.Element {
         return <div key={option.sourceHash} className='diagram-option category'>
-            <details
-                open={option.currentValue}
-                onClick={(e: React.MouseEvent<HTMLDetailsElement>) => this.onCategory(e, option)}
-            >
-                <summary>{option.name}</summary>
+            <details open={option.currentValue}>
+                <summary
+                    onClick={(e: React.MouseEvent) => this.onCategory(e, option)}
+                >{option.name}</summary>
                 {this.renderCategoryOptions(synthesisOptions)}
             </details>
         </div>
@@ -282,8 +281,14 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param event The mouseEvent that updated the category.
      * @param option The synthesis option connected to the category.
      */
-    private onCategory(event: React.MouseEvent<HTMLDetailsElement>, option: SynthesisOption) {
-        option.currentValue = event.currentTarget.open
+    private onCategory(event: React.MouseEvent, option: SynthesisOption) {
+        const clickedDetailsElement = event.currentTarget.parentElement
+        // By the above definition, the parent of this element has to be the details element surrounding it.
+        if (clickedDetailsElement === null || !(clickedDetailsElement instanceof HTMLDetailsElement)) {
+            return
+        }
+        // This is called before the target opened or closed, so the inverted current open value is the correct value to use here.
+        option.currentValue = !clickedDetailsElement.open
         this.sendNewOption(option)
     }
 
