@@ -1,0 +1,17 @@
+.buttonContainer.tree {
+    display: inherit
+}
+
+.snapshot-list.tree {
+    list-style-type: none;
+    margin-top: 0;
+    padding: 0;
+}
+
+.showButtonDetail.tree {
+    padding-left: 20px;
+}
+
+.snapshot-list.tree {
+    padding-left: 20px;
+}

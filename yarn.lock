@@ -836,22 +836,6 @@
     webpack-cli "2.0.12"
     worker-loader "^1.1.1"
 
-"@theia/application-package@^0.3.19":
-  version "0.3.19"
-  resolved "https://registry.yarnpkg.com/@theia/application-package/-/application-package-0.3.19.tgz#31c111e727b081ac0e8c7dc4d0cbfecc1cdec533"
-  integrity sha512-dQ4xvabtCpXl7NAqEl4akRubVgvyes1/Z7iDMJQyKFci+DE4u7AS8BDn5fg8jCTOi/Q5MnXjNCSSWYkv/KBVlw==
-  dependencies:
-    "@types/fs-extra" "^4.0.2"
-    "@types/request" "^2.0.3"
-    "@types/semver" "^5.4.0"
-    "@types/write-json-file" "^2.2.1"
-    changes-stream "^2.2.0"
-    fs-extra "^4.0.2"
-    is-electron "^2.1.0"
-    request "^2.82.0"
-    semver "^5.4.1"
-    write-json-file "^2.2.0"
-
 "@theia/application-package@^0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@theia/application-package/-/application-package-0.4.0.tgz#7a7eed427c9975fedb204129490b39dcaca8af44"
@@ -874,50 +858,6 @@
   integrity sha512-yPJfzadqE3jpDkLMnzytNktt6Qa9pm1I3fZ+W0qs05765qxQ0HyjUvF1lFOe9Ztxj8WLlKlx0xdndBEv8gAEyQ==
   dependencies:
     "@theia/application-manager" "^0.4.0"
-
-"@theia/core@^0.3.3":
-  version "0.3.19"
-  resolved "https://registry.yarnpkg.com/@theia/core/-/core-0.3.19.tgz#4bc0830224d94cef163a0dbe55042b9570d05f10"
-  integrity sha512-LS8UwImoWjVS2qBSuHF/6DZyNHJ3YdAboG8c0c2VAuVa1NCqlMCLag5WPyJ7aoQHpSyNbGcnuLa0hLS5EfRcEQ==
-  dependencies:
-    "@phosphor/widgets" "^1.5.0"
-    "@theia/application-package" "^0.3.19"
-    "@types/body-parser" "^1.16.4"
-    "@types/bunyan" "^1.8.0"
-    "@types/express" "^4.16.0"
-    "@types/lodash.debounce" "4.0.3"
-    "@types/lodash.throttle" "^4.1.3"
-    "@types/react" "^16.4.1"
-    "@types/react-dom" "^16.0.6"
-    "@types/react-virtualized" "^9.18.3"
-    "@types/route-parser" "^0.1.1"
-    "@types/ws" "^5.1.2"
-    "@types/yargs" "^11.1.0"
-    ajv "^6.5.3"
-    body-parser "^1.17.2"
-    electron "^2.0.14"
-    es6-promise "^4.2.4"
-    express "^4.16.3"
-    file-icons-js "^1.0.3"
-    fix-path "^2.1.0"
-    font-awesome "^4.7.0"
-    fuzzy "^0.1.3"
-    inversify "^4.14.0"
-    lodash.debounce "^4.0.8"
-    lodash.throttle "^4.1.1"
-    perfect-scrollbar "^1.3.0"
-    react "^16.4.1"
-    react-dom "^16.4.1"
-    react-virtualized "^9.20.0"
-    reconnecting-websocket "^3.0.7"
-    reflect-metadata "^0.1.10"
-    route-parser "^0.0.5"
-    vscode-languageserver-types "^3.10.0"
-    vscode-nsfw "^1.0.17"
-    vscode-uri "^1.0.1"
-    vscode-ws-jsonrpc "^0.0.2-1"
-    ws "^5.2.2"
-    yargs "^11.1.0"
 
 "@theia/core@^0.4.0", "@theia/core@latest":
   version "0.4.0"
@@ -1141,13 +1081,6 @@
   integrity sha512-Uy/laifIRZI86QMq5HrU0nXiyafNF9zi04ftIldWoPQqw0P3YUSrYGV4lp7IYGrPfsJDcBN5xc0b85yTSuDH7w==
   dependencies:
     "@theia/core" "^0.4.0"
-
-"@theia/preferences-api@latest":
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/@theia/preferences-api/-/preferences-api-0.3.3.tgz#e3d7a796e348c4e7f53effd8a6f8c4faa80a04c6"
-  integrity sha512-t7Ox8fHxFcgXw8jhTKlloyLuuiaWCLGJMHYicunBrek9o6kE3o7KaINQFmvV8dC328shGSkV4XokScXW4ta09A==
-  dependencies:
-    "@theia/core" "^0.3.3"
 
 "@theia/preferences@latest":
   version "0.4.0"
@@ -11415,7 +11348,7 @@ vscode-nls@^4.0.0:
   resolved "https://registry.yarnpkg.com/vscode-nls/-/vscode-nls-4.0.0.tgz#4001c8a6caba5cedb23a9c5ce1090395c0e44002"
   integrity sha512-qCfdzcH+0LgQnBpZA53bA32kzp9rpq/f66Som577ObeuDlFIrtbEJ+A/+CCxjIh4G8dpJYNCKIsxpRAHIfsbNw==
 
-vscode-nsfw@^1.0.17, vscode-nsfw@^1.1.2:
+vscode-nsfw@^1.0.17:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vscode-nsfw/-/vscode-nsfw-1.1.2.tgz#9cb9073b5854386801afe41f7152f721b4ea9e80"
   integrity sha512-J0So+JNK/5kQboTO1hKNk4ie/wwUegrJilYSY5sVxU9JJlo3aQdP0zi2NtU8CEK3kkN6qRp0MbXCzbT0LKGorg==

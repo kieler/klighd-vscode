@@ -24,13 +24,13 @@ export class CompilationSystems {
  * Equivalent to CodeContainer send by LS
  */
 export interface CodeContainer {
-    files: Snapshots[]
+    files: Snapshot[][]
 }
 
 /**
  * (name, snapshotId) should be unique. GroupId for bundling in phases
  */
-export class Snapshots {
+export class Snapshot {
     name: string;
     snapshotIndex: number;
     errors: string[];
