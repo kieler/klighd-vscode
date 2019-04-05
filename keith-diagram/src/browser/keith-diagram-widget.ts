@@ -42,10 +42,14 @@ export class KeithDiagramWidget extends DiagramWidget {
      * @param uri The URI that should be listened to now.
      */
     public reInitialize(uri: URI): void {
-        this.options.uri = uri.toString(true)
-        this.actionDispatcher.dispatch(new RequestModelAction({
-            sourceUri: this.options.uri,
-            diagramType: this.options.diagramType
-        }));
+        const uriString = uri.toString(true)
+        // If the uri is already set as this one in the uri, the re-initialization is not necessary.
+        if (this.options.uri !== uriString) {
+            this.options.uri = uriString
+            this.actionDispatcher.dispatch(new RequestModelAction({
+                sourceUri: this.options.uri,
+                diagramType: this.options.diagramType
+            }));
+        }
     }
 }
