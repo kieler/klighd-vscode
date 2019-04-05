@@ -69,7 +69,6 @@ export class KeithDiagramManager extends DiagramManager {
 
     /**
      * Reveals the diagram-widget and draws a diagram for a uri.
-     * TODO Currently this redraws the last displayed snapshot of the model and not the original model.
      * @param uri uri of model
      */
     public drawDiagram(uri: URI) {
