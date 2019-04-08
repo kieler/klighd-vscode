@@ -15,7 +15,7 @@ import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import {
-    KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
     KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
     K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
 } from './kgraph-models';
@@ -45,7 +45,7 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g />
+        return renderError(rendering)
     }
 
     const gAttrs: SVGAttributes<SVGGElement> = {
@@ -74,7 +74,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g />
+        return renderError(rendering)
     }
 
     const gAttrs: SVGAttributes<SVGGElement> = {
@@ -176,7 +176,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context, true)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g />
+        return renderError(rendering)
     }
 
     const gAttrs: SVGAttributes<SVGGElement> = {
@@ -335,7 +335,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     const boundsAndTransformation = findTextBoundsAndTransformationData(rendering, styles, parent, context, lines.length)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
-        return <g />
+        return renderError(rendering)
     }
 
     const gAttrs: SVGAttributes<SVGGElement> = {
@@ -385,7 +385,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
         // Otherwise, put each line of text in a separate <tspan> element.
         let dy: string | undefined = undefined
         children = []
-        lines.forEach((line, index) => {
+        lines.forEach(line => {
             // If the line is just a blank line, add a dummy space character so the size estimation will
             // include this character without rendering anything further visible to the screen.
             // Also, the <tspan> attribute dy needs at least one character per text so the offset is correctly applied.
@@ -432,6 +432,14 @@ export function renderChildRenderings(parentRendering: KContainerRendering, pare
         renderings.push(rendering)
     }
     return renderings
+}
+
+export function renderError(rendering: KRendering) {
+    return <text>
+        {'Rendering cannot be drawn!\n' +
+            'Type: ' + rendering.type + '\n' +
+            'ID: ' + rendering.id}
+    </text>
 }
 
 /**
