@@ -20,7 +20,7 @@ import { isWindows, isOSX } from "@theia/core";
 
 
 const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler', 'kieler'))
-const EXECUTABLE_PATH = resolve(join(__dirname, '..', '..', '..', '..', osExtension))
+const EXECUTABLE_PATH = resolve(join(__dirname, '..', '..', '..', '..', '..', osExtension))
 
 function getPort(): number | undefined {
     let arg = process.argv.filter(arg => arg.startsWith('--LSP_PORT='))[0]
