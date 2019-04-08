@@ -16,10 +16,10 @@ import { FrontendApplication, FrontendApplicationContribution } from '@theia/cor
 import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
-import { KeithDiagramManager } from 'keith-diagram/lib/keith-diagram-manager';
-import { KeithDiagramServer } from 'keith-diagram/lib/keith-diagram-server';
-import { KeithDiagramWidget } from 'keith-diagram/lib/keith-diagram-widget';
-import { KeithLanguageClientContribution } from 'keith-language/lib/browser/keith-language-client-contribution';
+import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
+import { KeithDiagramServer } from '@kieler/keith-diagram/lib/keith-diagram-server';
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
+import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
 import { GET_OPTIONS, SET_OPTIONS } from '../common';
 import { SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';

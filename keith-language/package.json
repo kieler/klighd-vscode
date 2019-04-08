@@ -1,5 +1,5 @@
 {
-  "name": "keith-language",
+  "name": "@kieler/keith-language",
   "version": "0.1.0",
   "description": "An extension for Theia connection language support for KEITH",
   "author": "Kiel University https://rtsys.informatik.uni-kiel.de/kieler",
@@ -16,6 +16,10 @@
     "lint": "tslint -c ../tslint.json --project ./tsconfig.json",
     "build": "tsc && yarn lint",
     "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@theia/monaco": "latest",
+    "sprotty-theia": "0.6.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

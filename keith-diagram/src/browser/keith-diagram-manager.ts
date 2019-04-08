@@ -17,7 +17,7 @@ import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { Workspace } from '@theia/languages/lib/browser';
 import { inject, injectable } from 'inversify';
-import { KeithDiagramLanguageClient } from 'keith-language/lib/browser/keith-diagram-language-client';
+import { KeithDiagramLanguageClient } from '@kieler/keith-language/lib/browser/keith-diagram-language-client';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 

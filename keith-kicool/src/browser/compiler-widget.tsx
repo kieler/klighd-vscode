@@ -26,6 +26,7 @@ import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
 import '../../src/browser/style/reverse-toolbar.css'
 import '../../src/browser/style/tree.css'
+import '../../src/browser/style/inline-block.css'
 
 /**
  * Widget to compile and navigate compilation results. Should be linked to editor.
@@ -65,7 +66,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     /**
      * Selectable css styles. Their names have to correspond to the names used in the dedicated css style file.
      */
-    readonly styles: string[] = [" default", " black-white", " reverse-toolbar", " black-white reverse-toolbar", " tree", " black-white tree"]
+    readonly styles: string[] = [" default", " black-white", " reverse-toolbar",
+        " black-white reverse-toolbar", " tree", " black-white tree", " inline-block"]
 
     /**
      * Currently selected css style. See styles for a list of available css styles.
@@ -144,7 +146,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             let styleSelectbox = <React.Fragment></React.Fragment>
             let searchbox = <input id="snapshot-filter"
                 title=". is the wildcard; * and + are supported"
-                className="kicool-input"
+                className={"kicool-input" + (this.selectedStyle)}
                 type='search'
                 defaultValue=''
                 name={this.snapshotFilter}
