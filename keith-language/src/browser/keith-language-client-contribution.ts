@@ -17,6 +17,7 @@ import { inject, injectable, multiInject } from 'inversify';
 import { DiagramLanguageClientContribution, DiagramManagerProvider } from 'sprotty-theia/lib';
 import { ContextMenuCommands } from './dynamic-commands';
 import { languageDescriptions } from './frontend-extension';
+import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
 
 @injectable()
 export class KeithLanguageClientContribution extends DiagramLanguageClientContribution {
@@ -50,5 +51,34 @@ export class KeithLanguageClientContribution extends DiagramLanguageClientContri
 
     registerCommand(id: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
         return this.commands.registerCommand(id, callback, thisArg)
+    }
+
+    // tslint:disable-next-line:no-any
+    waitForActivation(app: FrontendApplication): Promise<any> {
+        // tslint:disable-next-line:no-any
+        const activationPromises: Promise<any>[] = [];
+        const workspaceContains = this.workspaceContains;
+        if (workspaceContains.length !== 0) {
+            activationPromises.push(this.waitForItemInWorkspace());
+        }
+        const documentSelector = this.documentSelector;
+        if (documentSelector) {
+            activationPromises.push(this.waitForOpenTextDocument(documentSelector));
+        }
+        if (activationPromises.length !== 0) {
+            return Promise.all([
+                this.workspace.ready,
+                Promise.race(activationPromises.map(p => new Promise(async resolve => {
+                    try {
+                        // do not wait for opening of a file, hust start the LS
+                        // await p;
+                        resolve();
+                    } catch (e) {
+                        console.error(e);
+                    }
+                })))
+            ]);
+        }
+        return this.workspace.ready;
     }
 }
