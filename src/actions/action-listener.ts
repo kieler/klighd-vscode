@@ -10,7 +10,7 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { Action, MouseListener } from 'sprotty/lib';
+import { Action, MouseListener, SModelElement } from 'sprotty/lib';
 import { isRendering, KAction, KContainerRendering, KGraphElement, KPolyline, KRendering, Trigger } from '../kgraph-models';
 import { PerformActionAction } from './actions';
 
@@ -20,24 +20,28 @@ import { PerformActionAction } from './actions';
 export class ActionListener extends MouseListener {
     mouseMoved: boolean = false
 
-    doubleClick(target: KGraphElement, event: WheelEvent): (Action | Promise<Action>)[] {
-        return this.actions(target, event, event.type)
+    doubleClick(target: SModelElement, event: WheelEvent): (Action | Promise<Action>)[] {
+        // Ignore the event if the top level graph element is clicked, as that is not a KGraphElement.
+        if (target.type !== 'graph') {
+            return this.actions(target as KGraphElement, event, event.type)
+        }
+        return [];
     }
 
-    mouseDown(target: KGraphElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseDown(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         this.mouseMoved = false
         return [];
     }
 
-    mouseMove(target: KGraphElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseMove(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         this.mouseMoved = true
         return [];
     }
 
-    mouseUp(target: KGraphElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         // counts as a click if the mouse has not moved since the last mouseDown event.
-        if (!this.mouseMoved) {
-            return this.actions(target, event, 'click')
+        if (!this.mouseMoved && target.type !== 'graph') {
+            return this.actions(target as KGraphElement, event, 'click')
         }
         return [];
     }
