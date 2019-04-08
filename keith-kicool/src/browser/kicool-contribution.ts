@@ -115,6 +115,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
+        if (e.widget instanceof EditorWidget) {
+            e.widget.activate()
+        }
         if (e.factoryId === CompilerWidget.widgetId) {
             this.initializeCompilerWidget(e.widget)
         }
