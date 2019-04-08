@@ -356,14 +356,17 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
             }
         }
     }
-    // Error check: If there are no bounds or decoration, at least try to fall back to a possible size attribute in the parent element.
+    // Error check: If there are no bounds or decoration, at least try to fall back to possible size and position attributes in the parent element.
     // If the parent element has no bounds either, the object can not be rendered.
-    if (decoration === undefined && bounds === undefined && !('size' in parent)) {
-        console.error('could not find bounds or decoration data to render this element: ' + rendering + ' for this parent: ' + parent)
-        return
+    if (decoration === undefined && bounds === undefined && 'size' in parent && 'position' in parent) {
+        bounds = {
+            x: (parent as any).position.x,
+            y: (parent as any).position.y,
+            width: (parent as any).size.width,
+            height: (parent as any).size.height
+        }
     } else if (decoration === undefined && bounds === undefined) {
-        console.error('could not find bounds or decoration data to render this element. Using parent bounds as a fallback.')
-        bounds = (parent as any).size
+        return
     }
     // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
     const transformation = getTransformation(bounds, decoration, kRotation, isEdge)
@@ -434,17 +437,15 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
                 bounds.height = decoration.bounds.height
             }
         }
-        // Error check: If there are no bounds or decoration, at least try to fall back to a possible size attribute in the parent element.
+        // Error check: If there are no bounds or decoration, at least try to fall back to possible size and position attributes in the parent element.
         // If the parent element has no bounds either, the object can not be rendered.
-        if (decoration === undefined && bounds.x === undefined && !('size' in parent)) {
-            console.error('could not find bounds or decoration data to render this element: ' + rendering + ' for this parent: ' + parent)
-            return
-        } else if (decoration === undefined && bounds.x === undefined) {
-            console.error('could not find bounds or decoration data to render this element. Using parent bounds as a fallback.')
-            bounds.x = (parent as any).size.x
-            bounds.y = (parent as any).size.y
+        if (decoration === undefined && bounds.x === undefined && 'size' in parent && 'position' in parent) {
+            bounds.x = (parent as any).position.x
+            bounds.y = (parent as any).position.y
             bounds.width = (parent as any).size.width
             bounds.height = (parent as any).size.height
+        } else if (decoration === undefined && bounds.x === undefined) {
+            return
         }
     }
 
