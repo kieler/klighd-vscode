@@ -240,14 +240,22 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.onRequestSystemDescriptionsEmitter.fire(this)
     }
 
-    renderSearchbox(id: string, placeholder: string, value: string, onChange: () => void) {
+    /**
+     * Renders a searchBox. The onInput function must be added as parameter in big arrow notations ,
+     * since the scope should not change. This allows to access this in the function.
+     * @param id id of generated input element
+     * @param placeholder placeholder of searcbox
+     * @param value defaultValue and name of searchbox
+     * @param onInput function that is bound to onInput, must be written with big arrow notation: () => function()
+     */
+    renderSearchbox(id: string, placeholder: string, value: string, onInput: () => void) {
         return <input id={id}
         title=". is the wildcard; * and + are supported"
         className={"kicool-input" + (this.selectedStyle)}
         type='search'
         defaultValue={value}
         name={value}
-        onInput={() => onChange()} placeholder={placeholder}/>
+        onInput={() => onInput()} placeholder={placeholder}/>
     }
 
     /**
