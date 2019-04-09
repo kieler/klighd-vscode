@@ -14,7 +14,7 @@
 import {
     AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager
 } from "@theia/core/lib/browser";
-import { Command, CommandRegistry, MenuModelRegistry, MessageService } from '@theia/core/lib/common';
+import { Command, CommandRegistry, MenuModelRegistry, MessageService, CommandHandler } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { Workspace } from "@theia/languages/lib/browser";
@@ -61,6 +61,11 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     editor: EditorWidget
     compilerWidget: CompilerWidget
 
+    /**
+     * Holds all commands, updates after new compilation systems are requested.
+     */
+    kicoolCommands: Command[] = []
+
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
@@ -71,7 +76,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager,
         @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext,
         @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
-        @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
+        @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager,
+        @inject(CommandRegistry) protected registry: CommandRegistry
     ) {
         super({
             widgetId: compilerWidgetId,
@@ -157,9 +163,32 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             }
             const systems: CompilationSystems[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystems[]
             this.compilerWidget.systems = systems
+            this.addCompilationSystemToCommandPalette(systems)
             this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
             this.compilerWidget.update()
         }
+    }
+
+    /**
+     * Removes all old compilation systems from command palette and adds new ones.
+     * @param systems compilation systems that should get a compile command
+     */
+    addCompilationSystemToCommandPalette(systems: CompilationSystems[]) {
+        // remove existing commands
+        this.kicoolCommands.forEach(command => {
+            this.registry.unregisterCommand(command)
+        })
+        // add new commands
+        systems.forEach(system => {
+            const command: Command = {id: "kicool: " + system.id, label: "kicool: " + system.label}
+            this.kicoolCommands.push(command)
+            const handler: CommandHandler = {
+                execute: () => {
+                    this.compile(system.id);
+                }
+            }
+            this.registry.registerCommand(command, handler)
+        })
     }
 
     registerKeybindings(keybindings: KeybindingRegistry): void {
