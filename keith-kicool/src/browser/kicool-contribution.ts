@@ -35,11 +35,11 @@ export const SAVE: Command = {
 
 export const SHOW_NEXT: Command = {
     id: 'kicool:show_next',
-    label: 'Show next'
+    label: 'kicool: Show next'
 }
 export const SHOW_PREVIOUS: Command = {
     id: 'kicool:show_previous',
-    label: 'Show previous'
+    label: 'kicool: Show previous'
 }
 export const COMPILER: Command = {
     id: 'compiler:toggle',
@@ -107,7 +107,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext,
         @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
         @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager,
-        @inject(CommandRegistry) protected registry: CommandRegistry
+        @inject(CommandRegistry) protected commandRegistry: CommandRegistry,
+        @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
     ) {
         super({
             widgetId: compilerWidgetId,
@@ -213,7 +214,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     addCompilationSystemToCommandPalette(systems: CompilationSystems[]) {
         // remove existing commands
         this.kicoolCommands.forEach(command => {
-            this.registry.unregisterCommand(command)
+            this.commandRegistry.unregisterCommand(command)
         })
         // add new commands
         systems.forEach(system => {
@@ -224,22 +225,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     this.compile(system.id);
                 }
             }
-            this.registry.registerCommand(command, handler)
+            this.commandRegistry.registerCommand(command, handler)
         })
     }
 
     registerKeybindings(keybindings: KeybindingRegistry): void {
         [
-            {
-                command: SHOW_PREVIOUS.id,
-                context: this.kicoolKeybindingContext.id,
-                keybinding: SHOW_PREVIOUS_KEYBINDING
-            },
-            {
-                command: SHOW_NEXT.id,
-                context: this.kicoolKeybindingContext.id,
-                keybinding: SHOW_NEXT_KEYBINDING
-            },
             {
                 command: COMPILER.id,
                 keybinding: OPEN_COMPILER_WIDGET_KEYBINDING
@@ -306,56 +297,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 })
             }
         })
-        commands.registerCommand(SHOW_NEXT, {
-            execute: () => {
-                if (!this.editor) {
-                    this.message(EDITOR_UNDEFINED_MESSAGE, "error")
-                    return false;
-                }
-                const uri = this.compilerWidget.sourceModelPath
-                if (!this.isCompiled.get(uri)) {
-                    this.message(uri + " was not compiled", "error")
-                    return false
-                }
-                const index = this.indexMap.get(uri)
-                if (index !== 0 && !index) {
-                    this.message("Index is undefined", "error")
-                    return false
-                }
-                const length = this.lengthMap.get(uri)
-                if (length !== 0 && !length) {
-                    this.message("Length is undefined", "error")
-                    return false
-                }
-                if (index === length - 1) { // no show necessary, since the last snapshot is already drawn
-                    return
-                }
-                this.show(uri, Math.min(index + 1, length - 1))
-            }
-        })
-        commands.registerCommand(SHOW_PREVIOUS, {
-            execute: () => {
-                if (!this.editor) {
-                    this.message(EDITOR_UNDEFINED_MESSAGE, "error")
-                    return false;
-                }
-                const uri = this.compilerWidget.sourceModelPath
-                if (!this.isCompiled.get(uri)) {
-                    this.message(uri + " was not compiled", "error")
-                    return false
-                }
-                const index = this.indexMap.get(uri)
-                if (index !== 0 && !index) {
-                    this.message("Index is undefined", "error")
-                    return false
-                }
-                if (index === 0) { // no show necessary, since the first snapshot is already drawn
-                    return
-                }
-                // TODO add show for original model here
-                this.show(uri, Math.max(index - 1, 0))
-            }
-        })
     }
     public message(message: string, type: string) {
         switch (type) {
@@ -407,6 +348,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         const lclient = await this.client.languageClient
         const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command,
             this.compilerWidget.compileInplace]) as CodeContainer
+        // Show next/previous command and keybinding if not already added
+        if (!this.commandRegistry.getCommand(SHOW_NEXT.id)) {
+            this.registerShowNext()
+            this.registerShowPrevious()
+        }
+        // Add show commands to command palette if needed
         if (this.commandPaletteEnabled) {
             this.addShowSnapshotToCommandPalette(snapshotsDescriptions.files)
         }
@@ -426,7 +373,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     addShowSnapshotToCommandPalette(snapshots: Snapshot[][]) {
         let resultingMaxIndex = 0
         this.showCommands.forEach(command => {
-            this.registry.unregisterCommand(command)
+            this.commandRegistry.unregisterCommand(command)
         })
         snapshots.forEach(list => {
             const currentIndex = resultingMaxIndex
@@ -438,9 +385,75 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                         this.show(this.compilerWidget.sourceModelPath, currentIndex)
                     }
                 }
-                this.registry.registerCommand(command, handler)
+                this.commandRegistry.registerCommand(command, handler)
                 resultingMaxIndex++
             })
+        })
+    }
+
+    registerShowNext() {
+        this.commandRegistry.registerCommand(SHOW_NEXT, {
+            execute: () => {
+                if (!this.editor) {
+                    this.message(EDITOR_UNDEFINED_MESSAGE, "error")
+                    return false;
+                }
+                const uri = this.compilerWidget.sourceModelPath
+                if (!this.isCompiled.get(uri)) {
+                    this.message(uri + " was not compiled", "error")
+                    return false
+                }
+                const index = this.indexMap.get(uri)
+                if (index !== 0 && !index) {
+                    this.message("Index is undefined", "error")
+                    return false
+                }
+                const length = this.lengthMap.get(uri)
+                if (length !== 0 && !length) {
+                    this.message("Length is undefined", "error")
+                    return false
+                }
+                if (index === length - 1) { // no show necessary, since the last snapshot is already drawn
+                    return
+                }
+                this.show(uri, Math.min(index + 1, length - 1))
+            }
+        })
+        this.keybindingRegistry.registerKeybinding({
+            command: SHOW_PREVIOUS.id,
+            context: this.kicoolKeybindingContext.id,
+            keybinding: SHOW_PREVIOUS_KEYBINDING
+        })
+    }
+
+    registerShowPrevious() {
+        this.commandRegistry.registerCommand(SHOW_PREVIOUS, {
+            execute: () => {
+                if (!this.editor) {
+                    this.message(EDITOR_UNDEFINED_MESSAGE, "error")
+                    return false;
+                }
+                const uri = this.compilerWidget.sourceModelPath
+                if (!this.isCompiled.get(uri)) {
+                    this.message(uri + " was not compiled", "error")
+                    return false
+                }
+                const index = this.indexMap.get(uri)
+                if (index !== 0 && !index) {
+                    this.message("Index is undefined", "error")
+                    return false
+                }
+                if (index === 0) { // no show necessary, since the first snapshot is already drawn
+                    return
+                }
+                // TODO add show for original model here
+                this.show(uri, Math.max(index - 1, 0))
+            }
+        })
+        this.keybindingRegistry.registerKeybinding({
+            command: SHOW_NEXT.id,
+            context: this.kicoolKeybindingContext.id,
+            keybinding: SHOW_NEXT_KEYBINDING
         })
     }
 }
