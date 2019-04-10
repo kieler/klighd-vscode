@@ -184,6 +184,15 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         } else {
             this.requestSystemDescriptions()
         }
+        if (this.commandPaletteEnabled) {
+            this.kicoolCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
+            this.showCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
+            this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
+            const codeContainer = this.resultMap.get(this.compilerWidget.sourceModelPath)
+            if (codeContainer) {
+                this.addShowSnapshotToCommandPalette(codeContainer.files)
+            }
+        }
     }
 
     async requestSystemDescriptions() {
@@ -260,11 +269,22 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.commandPaletteEnabled = !this.commandPaletteEnabled
                 if (this.commandPaletteEnabled) {
                     this.registerGeneralKiCoolCommands()
+                    this.registerShowNext()
+                    this.registerShowPrevious()
+                    this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
+                    const codeContainer = this.resultMap.get(this.compilerWidget.sourceModelPath)
+                    if (codeContainer) {
+                        this.addShowSnapshotToCommandPalette(codeContainer.files)
+                    }
                 } else {
                     commands.unregisterCommand(TOGGLE_AUTO_COMPILE)
                     commands.unregisterCommand(TOGGLE_PRIVATE_SYSTEMS)
                     commands.unregisterCommand(TOGGLE_INPLACE)
                     commands.unregisterCommand(REQUEST_CS)
+                    commands.unregisterCommand(SHOW_NEXT)
+                    commands.unregisterCommand(SHOW_PREVIOUS)
+                    this.kicoolCommands.forEach(command => commands.unregisterCommand(command))
+                    this.showCommands.forEach(command => commands.unregisterCommand(command))
                 }
             }
         })
