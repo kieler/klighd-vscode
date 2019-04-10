@@ -218,14 +218,18 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
         // add new commands
         systems.forEach(system => {
-            const command: Command = {id: "kicool: " + system.id, label: "kicool: " + system.label}
-            this.kicoolCommands.push(command)
-            const handler: CommandHandler = {
-                execute: () => {
-                    this.compile(system.id);
+            if (system.isPublic || this.compilerWidget.showPrivateSystems) {
+                const command: Command = {id: "kicool: " + system.id, label: "kicool: " + system.label}
+                this.kicoolCommands.push(command)
+                const handler: CommandHandler = {
+                    execute: () => {
+                        this.compile(system.id);
+                    }
                 }
+                this.commandRegistry.registerCommand(command, handler)
+            } else {
+                // Do not register this command, since it is private
             }
-            this.commandRegistry.registerCommand(command, handler)
         })
     }
 
@@ -278,6 +282,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(TOGGLE_AUTO_COMPILE, {
             execute: () => {
                 if (this.compilerWidget) {
+                    this.message("Set autoCompile from " + this.compilerWidget.autoCompile + " to " + !this.compilerWidget.autoCompile, "INFO")
                     this.compilerWidget.autoCompile = !this.compilerWidget.autoCompile
                     this.compilerWidget.update()
                 }
@@ -286,7 +291,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(TOGGLE_PRIVATE_SYSTEMS, {
             execute: () => {
                 if (this.compilerWidget) {
+                    this.message("Set showPrivateSystems from " + this.compilerWidget.showPrivateSystems + " to " + !this.compilerWidget.showPrivateSystems, "INFO")
                     this.compilerWidget.showPrivateSystems = !this.compilerWidget.showPrivateSystems
+                    // Update compile commands accordingly
+                    if (this.commandPaletteEnabled) {
+                        this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
+                    }
                     this.compilerWidget.update()
                 }
             }
@@ -294,6 +304,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(TOGGLE_INPLACE, {
             execute: () => {
                 if (this.compilerWidget) {
+                    this.message("Set compileInplace from " + this.compilerWidget.compileInplace + " to " + !this.compilerWidget.compileInplace, "INFO")
                     this.compilerWidget.compileInplace = !this.compilerWidget.compileInplace
                     this.compilerWidget.update()
                 }
@@ -302,6 +313,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(REQUEST_CS, {
             execute: async () => {
                 this.requestSystemDescriptions()
+                this.message("Registered compilation systems", "INFO")
             }
         })
     }
