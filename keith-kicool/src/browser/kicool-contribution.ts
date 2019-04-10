@@ -248,39 +248,14 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     registerCommands(commands: CommandRegistry): void {
+        if (this.commandPaletteEnabled) {
+            this.registerGeneralKiCoolCommands()
+        }
         commands.registerCommand(TOGGLE_ENABLE_CP, {
             execute: () => {
                 this.commandPaletteEnabled = !this.commandPaletteEnabled
                 if (this.commandPaletteEnabled) {
-                    commands.registerCommand(TOGGLE_AUTO_COMPILE, {
-                        execute: () => {
-                            if (this.compilerWidget) {
-                                this.compilerWidget.autoCompile = !this.compilerWidget.autoCompile
-                                this.compilerWidget.update()
-                            }
-                        }
-                    })
-                    commands.registerCommand(TOGGLE_PRIVATE_SYSTEMS, {
-                        execute: () => {
-                            if (this.compilerWidget) {
-                                this.compilerWidget.showPrivateSystems = !this.compilerWidget.showPrivateSystems
-                                this.compilerWidget.update()
-                            }
-                        }
-                    })
-                    commands.registerCommand(TOGGLE_INPLACE, {
-                        execute: () => {
-                            if (this.compilerWidget) {
-                                this.compilerWidget.compileInplace = !this.compilerWidget.compileInplace
-                                this.compilerWidget.update()
-                            }
-                        }
-                    })
-                    commands.registerCommand(REQUEST_CS, {
-                        execute: async () => {
-                            this.requestSystemDescriptions()
-                        }
-                    })
+                    this.registerGeneralKiCoolCommands()
                 } else {
                     commands.unregisterCommand(TOGGLE_AUTO_COMPILE)
                     commands.unregisterCommand(TOGGLE_PRIVATE_SYSTEMS)
@@ -298,6 +273,39 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             }
         })
     }
+
+    registerGeneralKiCoolCommands() {
+        this.commandRegistry.registerCommand(TOGGLE_AUTO_COMPILE, {
+            execute: () => {
+                if (this.compilerWidget) {
+                    this.compilerWidget.autoCompile = !this.compilerWidget.autoCompile
+                    this.compilerWidget.update()
+                }
+            }
+        })
+        this.commandRegistry.registerCommand(TOGGLE_PRIVATE_SYSTEMS, {
+            execute: () => {
+                if (this.compilerWidget) {
+                    this.compilerWidget.showPrivateSystems = !this.compilerWidget.showPrivateSystems
+                    this.compilerWidget.update()
+                }
+            }
+        })
+        this.commandRegistry.registerCommand(TOGGLE_INPLACE, {
+            execute: () => {
+                if (this.compilerWidget) {
+                    this.compilerWidget.compileInplace = !this.compilerWidget.compileInplace
+                    this.compilerWidget.update()
+                }
+            }
+        })
+        this.commandRegistry.registerCommand(REQUEST_CS, {
+            execute: async () => {
+                this.requestSystemDescriptions()
+            }
+        })
+    }
+
     public message(message: string, type: string) {
         switch (type) {
             case "error":
