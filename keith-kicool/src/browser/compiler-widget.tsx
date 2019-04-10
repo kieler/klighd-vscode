@@ -53,7 +53,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * These are filtered on the client side to display the private or public systems.
      * The compilation systems are updated on selection of a current editor.
      */
-    systems: CompilationSystems[]
+    systems: CompilationSystems[] = []
 
     /**
      * Is saved as part of the state of the widget.
@@ -94,19 +94,19 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * Option whether auto compile is enabled.
      * Is saved as part of the state of the widget.
      */
-    autoCompile: boolean
+    autoCompile: boolean = false
 
     /**
      * Enables inplace compilation.
      * Is saved as part of the state of the widget.
      */
-    compileInplace: boolean
+    compileInplace: boolean = false
 
     /**
      * Boolean property to enbale filtering of compilation systems saved in field systems.
      * Is saved as part of the state of the widget.
      */
-    showPrivateSystems: boolean
+    showPrivateSystems: boolean = false
 
     /**
      * Holds the uri of the model in the current editor.
@@ -122,10 +122,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.title.label = 'KIELER Compiler'
         this.title.iconClass = 'fa fa-play-circle';
         this.addClass(compilerWidgetId) // class for index.css
-        this.systems = []
-        this.autoCompile = false
-        this.showPrivateSystems = false
-        this.compileInplace = false
     }
 
     render(): React.ReactNode {

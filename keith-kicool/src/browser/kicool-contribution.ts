@@ -23,7 +23,7 @@ import { inject, injectable } from "inversify";
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING } from "../common";
-import { CodeContainer, CompilationSystems } from "../common/kicool-models";
+import { CodeContainer, CompilationSystems, Snapshot } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { delay } from "../common/helper"
@@ -34,16 +34,36 @@ export const SAVE: Command = {
 };
 
 export const SHOW_NEXT: Command = {
-    id: 'show_next',
+    id: 'kicool:show_next',
     label: 'Show next'
 }
 export const SHOW_PREVIOUS: Command = {
-    id: 'show_previous',
+    id: 'kicool:show_previous',
     label: 'Show previous'
 }
 export const COMPILER: Command = {
     id: 'compiler:toggle',
     label: 'Compiler'
+}
+export const REQUEST_CS: Command = {
+    id: 'kicool:request-compilation-systems',
+    label: 'kicool: Request compilation systems'
+}
+export const TOGGLE_INPLACE: Command = {
+    id: 'kicool:toggle-inplace',
+    label: 'kicool: Toggle inplace compilation'
+}
+export const TOGGLE_PRIVATE_SYSTEMS: Command = {
+    id: 'kicool:toggle-private-systems',
+    label: 'kicool: Toggle show private systems'
+}
+export const TOGGLE_AUTO_COMPILE: Command = {
+    id: 'kicool:toggle-auto-compile',
+    label: 'kicool: Toggle auto compile'
+}
+export const TOGGLE_ENABLE_CP: Command = {
+    id: 'kicool:toggle-cp',
+    label: 'kicool: Toggle command palette enabled'
 }
 
 /**
@@ -65,6 +85,16 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * Holds all commands, updates after new compilation systems are requested.
      */
     kicoolCommands: Command[] = []
+
+    /**
+     * Holds all commands, updates after new compilation systems are requested.
+     */
+    showCommands: Command[] = []
+
+    /**
+     * Enables dynamic registration of command palette commands
+     */
+    commandPaletteEnabled: boolean = false
 
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
@@ -101,7 +131,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         // TODO: when the diagram closes, also update the view to the default one
         const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
         widgetPromise.then(widget => {
-            this.initializeCompilerWidget(widget)
+            if (this.compilerWidget === undefined || this.compilerWidget === null) {
+                // widget has to be created
+                this.initializeCompilerWidget(new CompilerWidget(this))
+            } else {
+                this.initializeCompilerWidget(widget)
+            }
         })
     }
 
@@ -163,7 +198,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             }
             const systems: CompilationSystems[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystems[]
             this.compilerWidget.systems = systems
-            this.addCompilationSystemToCommandPalette(systems)
+            if (this.commandPaletteEnabled) {
+                this.addCompilationSystemToCommandPalette(systems)
+            }
             this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
             this.compilerWidget.update()
         }
@@ -220,6 +257,47 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     registerCommands(commands: CommandRegistry): void {
+        commands.registerCommand(TOGGLE_ENABLE_CP, {
+            execute: () => {
+                this.commandPaletteEnabled = !this.commandPaletteEnabled
+                if (this.commandPaletteEnabled) {
+                    commands.registerCommand(TOGGLE_AUTO_COMPILE, {
+                        execute: () => {
+                            if (this.compilerWidget) {
+                                this.compilerWidget.autoCompile = !this.compilerWidget.autoCompile
+                                this.compilerWidget.update()
+                            }
+                        }
+                    })
+                    commands.registerCommand(TOGGLE_PRIVATE_SYSTEMS, {
+                        execute: () => {
+                            if (this.compilerWidget) {
+                                this.compilerWidget.showPrivateSystems = !this.compilerWidget.showPrivateSystems
+                                this.compilerWidget.update()
+                            }
+                        }
+                    })
+                    commands.registerCommand(TOGGLE_INPLACE, {
+                        execute: () => {
+                            if (this.compilerWidget) {
+                                this.compilerWidget.compileInplace = !this.compilerWidget.compileInplace
+                                this.compilerWidget.update()
+                            }
+                        }
+                    })
+                    commands.registerCommand(REQUEST_CS, {
+                        execute: async () => {
+                            this.requestSystemDescriptions()
+                        }
+                    })
+                } else {
+                    commands.unregisterCommand(TOGGLE_AUTO_COMPILE)
+                    commands.unregisterCommand(TOGGLE_PRIVATE_SYSTEMS)
+                    commands.unregisterCommand(TOGGLE_INPLACE)
+                    commands.unregisterCommand(REQUEST_CS)
+                }
+            }
+        })
         commands.registerCommand(COMPILER, {
             execute: async () => {
                 this.openView({
@@ -329,6 +407,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         const lclient = await this.client.languageClient
         const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command,
             this.compilerWidget.compileInplace]) as CodeContainer
+        if (this.commandPaletteEnabled) {
+            this.addShowSnapshotToCommandPalette(snapshotsDescriptions.files)
+        }
         if (!this.compilerWidget.autoCompile) {
             this.message("Got compilation result for " + uri, "info")
         }
@@ -339,9 +420,27 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.resultMap.set(uri as string, snapshotsDescriptions)
         this.indexMap.set(uri as string, -1)
         this.lengthMap.set(uri as string, snapshotsDescriptions.files.length)
-        const widget = this.front.shell.revealWidget(compilerWidgetId)
-        if (widget) {
-            widget.update()
-        }
+        this.compilerWidget.update()
+    }
+
+    addShowSnapshotToCommandPalette(snapshots: Snapshot[][]) {
+        let resultingMaxIndex = 0
+        this.showCommands.forEach(command => {
+            this.registry.unregisterCommand(command)
+        })
+        snapshots.forEach(list => {
+            const currentIndex = resultingMaxIndex
+            list.forEach(snapshot => {
+                const command = {id: snapshot.name + snapshot.snapshotIndex, label: "kicool: Show " + snapshot.name + " " + snapshot.snapshotIndex}
+                this.showCommands.push(command)
+                const handler = {
+                    execute: () => {
+                        this.show(this.compilerWidget.sourceModelPath, currentIndex)
+                    }
+                }
+                this.registry.registerCommand(command, handler)
+                resultingMaxIndex++
+            })
+        })
     }
 }
