@@ -424,7 +424,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         if (option.currentValue === undefined) {
             option.currentValue = option.defaultValue.k
         }
-        return <div key={option.optionId} className='diagram-option'>
+        return <div key={option.optionId} title={option.description} className='diagram-option'>
             <label htmlFor={option.name}>{option.name}: {option.currentValue}</label>
             <input
                 type='range'
@@ -456,7 +456,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             const readableValue = readableValues[index]
             children.push(this.renderEnumValue(value, readableValue, initialValue === readableValue, option))
         });
-        return <fieldset key={option.optionId} className='diagram-option'>
+        return <fieldset key={option.optionId} title={option.description} className='diagram-option'>
             <legend>{option.name}</legend>
             {...children}
         </fieldset>
