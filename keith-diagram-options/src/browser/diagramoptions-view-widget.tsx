@@ -94,14 +94,19 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * Renders the actions.
      * @param actions The action data.
      */
-    private renderActions(actions: DisplayedActionData[]): JSX.Element {
+    private renderActions(actions: DisplayedActionData[]): JSX.Element | undefined {
         let children: JSX.Element[] = []
         actions.forEach(action => {
             children.push(this.renderAction(action))
         })
-        return <div key='actions' className='diagram-option'>
-            {...children}
-        </div>
+        if (children.length === 0) {
+            return undefined
+        } else {
+            return <div key='actions'>
+                <p className='diagram-option seperator'>{'Actions'}</p>
+                {...children}
+            </div>
+        }
     }
 
     /**
@@ -125,7 +130,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * that the category for each option comes before its corresponding options.
      * @param synthesisOptions The synthesis options for the diagram synthesis.
      */
-    private renderSynthesisOptions(synthesisOptions: SynthesisOption[]): JSX.Element {
+    private renderSynthesisOptions(synthesisOptions: SynthesisOption[]): JSX.Element | undefined {
         this.categoryMap.clear()
         let children: JSX.Element[] = []
         let optionsToRender: SynthesisOption[] = []
@@ -180,9 +185,14 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                 }
             }
         })
-        return <div key='synthesisOptions'>
-            {...children}
-        </div>
+        if (children.length === 0) {
+            return undefined
+        } else {
+            return <div key='synthesisOptions'>
+                <p className='diagram-option seperator'>{'Diagram Options'}</p>
+                {...children}
+            </div>
+        }
     }
 
     /**
