@@ -11,17 +11,17 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
+import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
+import { Command, CommandHandler, CommandRegistry } from '@theia/core';
 import { DidCreateWidgetEvent, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { FrontendApplication, FrontendApplicationContribution } from '@theia/core/lib/browser/frontend-application';
 import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
-import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
-import { KeithDiagramServer } from '@kieler/keith-diagram/lib/keith-diagram-server';
-import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
-import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
-import { GetOptionsResult, SynthesisOption, ValuedSynthesisOption, LayoutOptionValue } from '../common/option-models';
+import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
 
 /**
@@ -40,13 +40,15 @@ export const OPEN_DIAGRAM_OPTIONS_WIDGET_KEYBINDING = 'ctrlcmd+shift+h'
 export class DiagramOptionsViewContribution extends AbstractViewContribution<DiagramOptionsViewWidget> implements FrontendApplicationContribution {
     editorWidget: EditorWidget
     diagramOptionsViewWidget: DiagramOptionsViewWidget
-    protected boundDiagramServer: KeithDiagramServer
+
+    protected registeredCommands: Command[]
 
     constructor(
         @inject(EditorManager) protected readonly editorManager: EditorManager,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
         @inject(KeithLanguageClientContribution) protected readonly client: KeithLanguageClientContribution,
-        @inject(KeithDiagramManager) protected readonly diagramManager: KeithDiagramManager
+        @inject(KeithDiagramManager) protected readonly diagramManager: KeithDiagramManager,
+        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry
     ) {
         super({
             widgetId: DIAGRAM_OPTIONS_WIDGET_FACTORY_ID,
@@ -58,6 +60,8 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             toggleCommandId: 'diagramOptionsView:toggle',
             toggleKeybinding: OPEN_DIAGRAM_OPTIONS_WIDGET_KEYBINDING
         })
+
+        this.registeredCommands = []
 
         // Set up event listeners.
         editorManager.onCurrentEditorChanged(this.currentEditorChanged.bind(this))
@@ -206,6 +210,22 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                     synthesisOptions.push(option)
                 })
             }
+
+            // Register commands in the command palette.
+            this.registeredCommands.forEach(command => {
+                this.commandRegistry.unregisterCommand(command)
+            });
+            result.actions.forEach( action => {
+                const command: Command = {id: "Diagram: " + action.actionId, label: "Diagram: " + action.displayedName}
+                this.registeredCommands.push(command)
+                const handler: CommandHandler = {
+                    execute: () => {
+                        this.sendNewAction(action.actionId);
+                    }
+                }
+                this.commandRegistry.registerCommand(command, handler)
+            })
+
             // Update the widget.
             this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
             this.diagramOptionsViewWidget.setLayoutOptions(result.layoutOptions)
