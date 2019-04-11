@@ -20,8 +20,8 @@ import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-man
 import { KeithDiagramServer } from '@kieler/keith-diagram/lib/keith-diagram-server';
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
 import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
-import { GET_OPTIONS, SET_OPTIONS } from '../common';
-import { SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
+import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
+import { GetOptionsResult, SynthesisOption, ValuedSynthesisOption, LayoutOptionValue } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
 
 /**
@@ -83,29 +83,50 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * Initializes the widget.
      * @param widget The diagram options widget to initialize
      */
-    private initializeDiagramOptionsViewWidget(widget: Widget | undefined) {
+    private initializeDiagramOptionsViewWidget(widget: Widget | undefined): void {
         if (widget instanceof DiagramOptionsViewWidget) {
             this.diagramOptionsViewWidget = widget as DiagramOptionsViewWidget
-            this.diagramOptionsViewWidget.onSendNewOption(this.sendNewOption.bind(this))
+            this.diagramOptionsViewWidget.onSendNewSynthesisOption(this.sendNewSynthesisOption.bind(this))
+            this.diagramOptionsViewWidget.onSendNewLayoutOption(this.sendNewLayoutOption.bind(this))
+            this.diagramOptionsViewWidget.onSendNewAction(this.sendNewAction.bind(this))
             this.diagramOptionsViewWidget.onActivateRequest(this.updateContent.bind(this))
             this.diagramOptionsViewWidget.onGetOptions(this.updateContent.bind(this))
         }
     }
 
     /**
-     * Sends the new option to the server via the language client. The server then might cause the diagram to update with this new option.
+     * Sends the new synthesis option to the server via the language client. The server then might cause the diagram to update with this new option.
      * @param option The newly configured synthesis option.
      */
-    async sendNewOption(option: SynthesisOption) {
+    async sendNewSynthesisOption(option: SynthesisOption): Promise<void> {
+        this.sendNewRequestMessage(SET_SYNTHESIS_OPTIONS, { synthesisOptions: [option] })
+    }
+
+    /**
+     * Sends the new layout option to the server via the language client. The server then might cause the diagram to update with this new option.
+     * @param optionValue The newly configured layout option.
+     */
+    async sendNewLayoutOption(optionValue: LayoutOptionValue): Promise<void> {
+        this.sendNewRequestMessage(SET_LAYOUT_OPTIONS, { layoutOptions: [optionValue] })
+    }
+
+    /**
+     * Sends the action id to the language server via the language client. The server then will perform the action matching that id and might cause the diagram to update with this
+     * new option.
+     * @param actionId The id of the action that should be performed.
+     */
+    async sendNewAction(actionId: string): Promise<void> {
+        this.sendNewRequestMessage(PERFORM_ACTION, { actionId: actionId })
+    }
+
+    /**
+     * Sends any message with any parameter as a request to the language server.
+     * @param messageType The message type as a complete string, such as 'module/specificRequest'
+     * @param param The parameter to be sent with the message. There is nothing checking if the parameter fits the message type.
+     */
+    async sendNewRequestMessage(messageType: string, param: any): Promise<void> {
         const lClient = await this.client.languageClient
-        const param = {
-            uri: this.editorWidget.editor.uri.toString(),
-            synthesisOptions: [{
-                currentValue: option.currentValue,
-                sourceHash: option.sourceHash
-            }]
-        }
-        await lClient.sendRequest(SET_OPTIONS, param)
+        await lClient.sendRequest(messageType, { uri: this.editorWidget.editor.uri.toString(), ...param })
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
@@ -125,7 +146,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * Called whenever a new model is being displayed by the diagram view. Updates the visible options according to the new model.
      * @param uri The URI the model was created from.
      */
-    async onModelUpdated(uri: string) {
+    async onModelUpdated(uri: string): Promise<void> {
         if (this.diagramOptionsViewWidget) {
             this.updateContent()
         }
@@ -136,6 +157,8 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      */
     onDiagramWidgetsChanged(): void {
         this.diagramOptionsViewWidget.setSynthesisOptions([])
+        this.diagramOptionsViewWidget.setLayoutOptions([])
+        this.diagramOptionsViewWidget.setActions([])
         this.diagramOptionsViewWidget.update()
     }
 
@@ -160,15 +183,16 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     /**
      * Updates the content of the diagram options widget. Sends a request to the server to get the options of the currently opened model and display them in the widget.
      */
-    async updateContent() {
+    async updateContent(): Promise<void> {
         if (this.editorWidget) {
             // Get the options from the server.
             const lClient = await this.client.languageClient
             const param = {
                 uri: this.editorWidget.editor.uri.toString()
             }
-            const valuedOptions: ValuedSynthesisOption[] = await lClient.sendRequest(GET_OPTIONS, param) as ValuedSynthesisOption[]
-            const options: SynthesisOption[] = []
+            const result: GetOptionsResult = await lClient.sendRequest(GET_OPTIONS, param) as GetOptionsResult
+            const valuedOptions: ValuedSynthesisOption[] = result.valuedSynthesisOptions
+            const synthesisOptions: SynthesisOption[] = []
 
             // Set up the current value of all options.
             if (valuedOptions) {
@@ -179,11 +203,13 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                     } else {
                         option.currentValue = valuedOption.currentValue
                     }
-                    options.push(option)
+                    synthesisOptions.push(option)
                 })
             }
             // Update the widget.
-            this.diagramOptionsViewWidget.setSynthesisOptions(options)
+            this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
+            this.diagramOptionsViewWidget.setLayoutOptions(result.layoutOptions)
+            this.diagramOptionsViewWidget.setActions(result.actions)
             this.diagramOptionsViewWidget.update()
         }
     }
