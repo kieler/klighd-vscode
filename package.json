@@ -41,6 +41,7 @@
     "@kieler/keith-diagram-options": "0.1.0",
     "@kieler/keith-kicool": "0.1.0",
     "@kieler/keith-language": "0.1.0",
+    "@kieler/keith-simulation": "0.1.0",
     "@kieler/keith-sprotty": "0.1.0",
     "@theia/core": "latest",
     "@theia/editor": "latest",
@@ -96,6 +97,7 @@
     "keith-language",
     "keith-sprotty",
     "keith-kicool",
-    "keith-app-electron"
+    "keith-app-electron",
+    "keith-simulation"
   ]
 }

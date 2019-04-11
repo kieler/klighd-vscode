@@ -1,0 +1,15 @@
+.simulation-table {
+    margin: 20px
+}
+
+.simulation-data-row {
+    display: table-row
+}
+
+.simulation-data-box {
+    color: var(--theia-ui-font-color1);
+}
+
+.simulation-data-inputbox::placeholder {
+    font-style: italic;
+}
