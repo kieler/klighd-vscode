@@ -17,6 +17,7 @@ import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server'
 import * as net from 'net'
 import { join, resolve } from 'path'
 import { isWindows, isOSX } from "@theia/core";
+import { LS_ID, LS_NAME } from '../common';
 
 
 const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler', 'kieler'))
@@ -43,12 +44,15 @@ function getLsPath(): string | undefined {
 @injectable()
 class KeithLanguageServerContribution extends BaseLanguageServerContribution {
 
-    readonly id = "keith"
-    readonly name = "Keith"
+    readonly id = LS_ID
+    readonly name = LS_NAME
 
     start(clientConnection: IConnection): void {
         let socketPort = getPort();
+        // check if user specified a port to connect to the LS.
+        // If this is the case connect to this port
         if (socketPort) {
+            // socket case. Used mostly for debugging.
             console.log("Starting LS over socket.")
             const socket = new net.Socket()
             const serverConnection = createSocketConnection(socket, socket, () => {
@@ -57,6 +61,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
             this.forward(clientConnection, serverConnection)
             socket.connect(socketPort)
         } else {
+            // stdio case. Used for electron app.
             let lsPath = getLsPath()
             // check whether the path to the LS was specified
             if (!lsPath) {
@@ -66,6 +71,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                     lsPath = EXECUTABLE_PATH
                     console.log("Starting with product path")
                 } else {
+                    // An exception is thrown if no LS_PATH is specified in the developer setup.
                     throw new Error("No path to LS was specified. Use '--LS_PATH=' to specify one.");
                 }
             } else {

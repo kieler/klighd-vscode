@@ -18,12 +18,13 @@ import { DiagramLanguageClientContribution, DiagramManagerProvider } from 'sprot
 import { ContextMenuCommands } from './dynamic-commands';
 import { languageDescriptions } from './frontend-extension';
 import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
+import { LS_ID, LS_NAME } from '../common';
 
 @injectable()
 export class KeithLanguageClientContribution extends DiagramLanguageClientContribution {
 
-    readonly id = 'keith'
-    readonly name = 'Keith'
+    readonly id = LS_ID
+    readonly name = LS_NAME
 
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
@@ -36,14 +37,15 @@ export class KeithLanguageClientContribution extends DiagramLanguageClientContri
 
     /**
      * Define pattern of supported languages from language server registered in backend with id and name of class.
-     * Name for extension defined by mapping via monaco registration in frotend
+     * Name for extension defined by mapping via monaco registration in frontend.
+     * Creates a FileSystemWatcher for each pattern. Not needed for functionality.
      */
     protected get globPatterns() {
         return []
     }
 
     /**
-     * Define id for pattern seen in globPatterns()
+     * Editors with this languageId are supported by the LS.
      */
     protected get documentSelector(): string[] {
         return languageDescriptions.map(languageDescription => languageDescription.id)
@@ -53,6 +55,13 @@ export class KeithLanguageClientContribution extends DiagramLanguageClientContri
         return this.commands.registerCommand(id, callback, thisArg)
     }
 
+    /**
+     * Handle when the LS for this contribution is started.
+     * Currently started immediatly.
+     * The original idea was to start it if a document with an id in the documentSelector is opened.
+     *
+     * @param app not needed
+     */
     // tslint:disable-next-line:no-any
     waitForActivation(app: FrontendApplication): Promise<any> {
         // tslint:disable-next-line:no-any
@@ -70,7 +79,7 @@ export class KeithLanguageClientContribution extends DiagramLanguageClientContri
                 this.workspace.ready,
                 Promise.race(activationPromises.map(p => new Promise(async resolve => {
                     try {
-                        // do not wait for opening of a file, hust start the LS
+                        // do not wait for opening of a file, just start the LS
                         // await p;
                         resolve();
                     } catch (e) {

@@ -53,8 +53,16 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * These are filtered on the client side to display the private or public systems.
      * The compilation systems are updated on selection of a current editor.
      */
-    systems: CompilationSystems[]
+    systems: CompilationSystems[] = []
 
+    /**
+     * Is saved as part of the state of the widget.
+     */
+    protected compilationSystemFilter: string = ""
+
+    /**
+     * Is saved as part of the state of the widget.
+     */
     protected snapshotFilter: string = ""
 
     /**
@@ -86,19 +94,19 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * Option whether auto compile is enabled.
      * Is saved as part of the state of the widget.
      */
-    autoCompile: boolean
+    autoCompile: boolean = false
 
     /**
      * Enables inplace compilation.
      * Is saved as part of the state of the widget.
      */
-    compileInplace: boolean
+    compileInplace: boolean = false
 
     /**
      * Boolean property to enbale filtering of compilation systems saved in field systems.
      * Is saved as part of the state of the widget.
      */
-    showPrivateSystems: boolean
+    showPrivateSystems: boolean = false
 
     /**
      * Holds the uri of the model in the current editor.
@@ -114,10 +122,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.title.label = 'KIELER Compiler'
         this.title.iconClass = 'fa fa-play-circle';
         this.addClass(compilerWidgetId) // class for index.css
-        this.systems = []
-        this.autoCompile = false
-        this.showPrivateSystems = false
-        this.compileInplace = false
     }
 
     render(): React.ReactNode {
@@ -134,7 +138,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         } else {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
-                if (this.showPrivateSystems || system.isPublic) {
+                if ((this.showPrivateSystems || system.isPublic) &&
+                    system.label.toLowerCase().search(this.compilationSystemFilter.toLowerCase()) > -1) {
                     compilationElements.push(<option value={system.id} key={system.id}>{system.label}</option>)
                 }
             });
@@ -144,25 +149,27 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
             let styleSelectbox = <React.Fragment></React.Fragment>
-            let searchbox = <input id="snapshot-filter"
-                title=". is the wildcard; * and + are supported"
-                className={"kicool-input" + (this.selectedStyle)}
-                type='search'
-                defaultValue=''
-                name={this.snapshotFilter}
-                onInput={() => this.handleSearchChange()} placeholder='Filter snapshots'/>
-
+            let searchbox = this.renderSearchbox("snapshot-filter",
+                "Filter snapshots",
+                this.snapshotFilter,
+                () => this.handleSearchChange())
+            let compilationSystemSearchbox
             // Add advanced features to toolbars
             if (this.showAdvancedToolbar) {
                 styleSelectbox = <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)}
                         onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
                     {stylesToSelect}
                 </select>
+                compilationSystemSearchbox = this.renderSearchbox("compilation-system-filter",
+                    "Filter systems",
+                    this.compilationSystemFilter,
+                    () => this.handleCSSearchChange())
             }
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                 {this.renderShowAdvancedToolbar()}
                 {styleSelectbox}
+                {compilationSystemSearchbox}
                 </div>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                     {this.renderPrivateButton()}
@@ -185,6 +192,15 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     handleSearchChange() {
         this.snapshotFilter = (document.getElementById("snapshot-filter") as HTMLInputElement).value
+        this.update()
+    }
+
+    /**
+     * If something in the compilation system search box is changed, the filter for filtering compilation systems is updated.
+     * The widget is updated, which leads to a redraw.
+     */
+    handleCSSearchChange() {
+        this.compilationSystemFilter = (document.getElementById("compilation-system-filter") as HTMLInputElement).value
         this.update()
     }
 
@@ -218,6 +234,24 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public requestSystemDescription(): void {
         this.onRequestSystemDescriptionsEmitter.fire(this)
+    }
+
+    /**
+     * Renders a searchBox. The onInput function must be added as parameter in big arrow notations ,
+     * since the scope should not change. This allows to access this in the function.
+     * @param id id of generated input element
+     * @param placeholder placeholder of searcbox
+     * @param value defaultValue and name of searchbox
+     * @param onInput function that is bound to onInput, must be written with big arrow notation: () => function()
+     */
+    renderSearchbox(id: string, placeholder: string, value: string, onInput: () => void) {
+        return <input id={id}
+        title=". is the wildcard; * and + are supported"
+        className={"kicool-input" + (this.selectedStyle)}
+        type='search'
+        defaultValue={value}
+        name={value}
+        onInput={() => onInput()} placeholder={placeholder}/>
     }
 
     /**
@@ -382,7 +416,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             showPrivateSystems : this.showPrivateSystems,
             selectedStyle : this.selectedStyle,
             selectedIndex : this.selectedIndex,
-            showAdvancedToolbar : this.showAdvancedToolbar
+            showAdvancedToolbar : this.showAdvancedToolbar,
+            compilationSystemFilter : this.compilationSystemFilter,
+            snapshotFilter : this.snapshotFilter
         }
     }
 
@@ -401,6 +437,16 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             this.selectedIndex = oldState.selectedIndex
         }
         this.showAdvancedToolbar = oldState.showAdvancedToolbar
+        if (oldState.compilationSystemFilter) {
+            this.compilationSystemFilter = oldState.compilationSystemFilter
+        } else {
+            this.compilationSystemFilter = ""
+        }
+        if (oldState.snapshotFilter) {
+            this.snapshotFilter = oldState.snapshotFilter
+        } else {
+            this.snapshotFilter = ""
+        }
     }
 }
 
@@ -415,5 +461,7 @@ export namespace CompilerWidget {
         selectedStyle: string,
         selectedIndex: number,
         showAdvancedToolbar: boolean
+        compilationSystemFilter: string
+        snapshotFilter: string
     }
 }
