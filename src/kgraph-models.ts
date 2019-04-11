@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Bounds, boundsFeature, Point, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SParentElement } from 'sprotty/lib';
+import { Bounds, boundsFeature, Point, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SParentElement, moveFeature } from 'sprotty/lib';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -39,7 +39,7 @@ export class KNode extends RectangularNode implements KGraphElement {
     data: KGraphData[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === moveFeature
     }
 }
 
