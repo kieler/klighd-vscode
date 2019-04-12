@@ -60,3 +60,119 @@ export enum TransformationOptionType {
     SEPARATOR = 3,
     CATEGORY = 4
 }
+
+/**
+ * Data class to hold the result of a keith/diagramOptions/getOptions message.
+ * Includes a list of the synthesisOptions with their current value, a list of the layout options and a list of the
+ * actions performable for the current diagram.
+ */
+export interface GetOptionsResult {
+    /**
+     * The list of all displayed synthesis options for the diagram for the given URI.
+     */
+    valuedSynthesisOptions: ValuedSynthesisOption[]
+
+    /**
+     * The list of all displayed layout options for the diagram for the given URI.
+     */
+    layoutOptions: LayoutOptionUIData[]
+
+    /**
+     * The list of all displayed actions for the diagram for the given URI.
+     */
+    actions: DisplayedActionData[]
+}
+
+export interface LayoutOptionUIData {
+    /** identifier of the layout option. */
+    optionId: string
+    /** the default value of this option. */
+    defaultValue: Pair<any, string>
+    /** type of the layout option. */
+    type: Type
+    /** user friendly name of the layout option. */
+    name: string
+    /** a description to be displayed in the UI. */
+    description: string
+    /** cached value of the available choices. */
+    choices: string[]
+    /** the minimal value for the option, or {@code undefined} */
+    minValue: number
+    /** the maximal value for the option, or {@code undefined} */
+    maxValue: number
+    /** the set of values to offer, or {@code undefined} */
+    availableValues: Pair<any[], string[]>
+    /** The current value of this option, if necessary */
+    currentValue: any
+}
+
+export interface LayoutOptionValue {
+    /**
+     * Identifier of the layout option.
+     */
+    optionId: string
+    /**
+     * The new value of this option.
+     */
+    value: any
+}
+
+/**
+ * A key-value pair matching the interface of org.eclipse.xtext.xbase.lib.Pair
+ */
+export interface Pair<K, V> {
+    k: K
+    v: V
+}
+
+/**
+ * Enumeration of data types for layout options.
+ * From java class org.eclipse.elk.core.data.Type
+ */
+export enum Type {
+    /** undefined type. */
+    UNDEFINED,
+    /** boolean type. */
+    BOOLEAN,
+    /** integer type. */
+    INT,
+    /** string type. */
+    STRING,
+    /** double type. */
+    DOUBLE,
+    /** enumeration type. */
+    ENUM,
+    /** enumeration set type. */
+    ENUMSET,
+    /** {@link IDataObject} type. */
+    OBJECT
+}
+
+/**
+ * From java class org.eclipse.elk.graph.properties.IProperty:
+ * Interface for property identifiers. Properties have a type and a default value, and
+ * they have an internal mechanism for identification, which should be compatible
+ * with their {@link java.lang.Object#equals(Object)} and {@link java.lang.Object#hashCode()}
+ * implementations.
+ *
+ * @param <T> type of the property
+ */
+export interface IProperty<T> {
+    default: T
+    id: string
+    lowerBound: any
+    upperBound: any
+}
+
+/**
+ * From java class de.cau.cs.kieler.klighd.DisplayedActionData:
+ * A concise helper record class accommodating the required information for
+ * {@link de.cau.cs.kieler.klighd.IAction IAction}'s offered in the UI's side bar.
+ */
+export interface DisplayedActionData {
+    actionId: string
+    displayedName: string
+    // enablementTester: any
+    // image: any
+    tooltipText: string
+}
