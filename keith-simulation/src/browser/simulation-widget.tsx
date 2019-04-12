@@ -35,7 +35,39 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     protected readonly onRequestSimulationSystemsEmitter = new Emitter<SimulationWidget | undefined>()
 
+    /**
+     * Trace for each symbol.
+     */
     public simulationData: Map<string, SimulationData> = new Map
+
+    /**
+     * Holds the value that is set in the next tick.
+     * Assume that each value is never undefined, since the default value is set when the simulation is started
+     */
+    public valuesForNextStep: Map<string, any> = new Map
+
+    /**
+     * Map which holds wether a event listener is registered for a symbol
+     */
+    public eventListenerRegistered: Map<string, boolean> = new Map
+
+    /**
+     * Whether the input/output column is added to the table.
+     * this is part of the state of the widget.
+     */
+    protected displayInOut = false
+
+    /**
+     * Wether next simulation step should be requested after a time specified by simulation delay
+     */
+    protected play = false
+
+    /**
+     * Time in milliseconds to wait till next simulation step is requested in play mode.
+     */
+    protected simulationDelay: number = 100
+
+    protected simulationTypes: string[] = ["Periodic", "Manual", "Dynamic"]
 
     /**
      * Emit when compilation systems are requested.
@@ -51,73 +83,188 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         this.title.label = 'Simulation'
         this.title.iconClass = 'fa fa-table ';
         this.addClass(simulationWidgetId) // class for index.css
-        this.simulationData.set("TEst", {data: [[1], [2], [3], [4]]})
+        this.update()
     }
 
     protected render(): React.ReactNode {
         return <React.Fragment>
-             <div className="simulation-table">{this.renderSimulationData()}</div>
+            {this.renderSimulationPanel()}
+            <div key="table" className="simulation-table">{this.renderSimulationData()}</div>
         </React.Fragment>
 
     }
-    renderSimulationData(): React.ReactNode {
-        let list: React.ReactElement[] = []
-        this.simulationData.forEach((data, key) => {
-            data.data.toString = () => this.simulationDataToString(data.data)
-            if (data.data.length > 0) {
-                data.data[0].toString = () => this.simulationDataToString(data.data[0])
-            }
-            const node: React.ReactElement = <tr key={key} className="simulation-data-row">
-                    <th key="label" className="simulation-data-box">{key}</th>
-                    <td key="value" className="simulation-data-box">{data.data[0].toString()}</td>
-                    <td key="input" className="simulation-data-box">
-                        <input id={"input-box-" + key}
-                            title={"Current value is " + data.data[0].toString()}
-                            className={"simulation-data-inputbox"}
-                            type='text'
-                            onClick={() => {this.setContentOfInputbox("input-box-" + key, key, data.data[0].toString())}}
-                            placeholder={""}/>
-                    </td>
-                    <td key="history" className="simulation-data-box">{data.data.toString()}</td>
-                </tr>
-            list.push(node)
+
+    renderSimulationPanel() {
+        return <div className="simulation-panel">
+            {this.renderPlayPauseButton()}
+            {this.renderStepButton()}
+            {this.renderStopButton()}
+            {this.renderSimulationTypeSelectbox()}
+            {this.renderSimulationSpeedInputbox()}
+        </div>
+    }
+    renderPlayPauseButton(): React.ReactNode {
+        return <div title={this.play ? "Pause" : "Play"} key="play-pause-button" className={'preference-button' + (this.play ? '' : ' off')}
+            onClick={event => {
+                this.play = !this.play
+                // TODO start simulation thread or something
+                this.update()
+            }}>
+            <div className={'icon fa ' + (this.play ? 'fa-play-circle' : 'fa-pause-circle')}/>
+        </div>
+    }
+    renderStepButton(): React.ReactNode {
+        return <div title="Step" key="step-button" className={'preference-button'}
+            onClick={event => {
+                // TODO send something to ls to step, await value and show it after that. This should be the same method which is used in play
+                this.update()
+            }}>
+            <div className={'icon fa fa-step-forward'}/>
+        </div>
+    }
+    renderStopButton(): React.ReactNode {
+        return <div title="Stop" key="stop-button" className={'preference-button'}
+            onClick={event => {
+                // Stop all simulation, i.e. empty maps and kill simulation process on LS
+                this.valuesForNextStep.clear()
+                this.simulationData.clear()
+                // TODO kill some executable process by requested its termination on the LS
+                this.update()
+            }}>
+            <div className={'icon fa fa-stop'}/>
+        </div>
+    }
+    renderSimulationTypeSelectbox(): React.ReactNode {
+        let selectionList: React.ReactNode[] = []
+        this.simulationTypes.forEach(type => {
+            selectionList.push(
+                <option value={type} key={type}>{type}</option>
+            )
+            // TODO do stuff
         })
-        return <table className={"simulation-data-table"}>
-            <thead>
-                <tr key="headings" className="simulation-data-row">
-                    <th key="label" className="simulation-data-box">label</th>
-                    <th key="value" className="simulation-data-box">Current Value</th>
-                    <th key="input" className="simulation-data-box">Input</th>
-                    <th key="history" className="simulation-data-box">History</th>
-                </tr>
-            </thead>
-            <tbody>
-                {list}
-            </tbody>
-            </table>
+        return <div>
+            <select id="simulation-type-list" className={'selection-list simulation-type-list'}
+                onChange={() => this.handleSelectionOfSimulationType()} defaultValue={this.simulationTypes[0]}>
+            {selectionList}
+            </select>
+        </div>
     }
 
-    setContentOfInputbox(id: string, key: string,  value: any) {
-        const elem = document.getElementById(id) as HTMLInputElement
-        if (elem.placeholder === "") {
-            elem.value = value
-            elem.addEventListener("keyup", (event) => {
-                if (event.keyCode === 13) {
-                    console.log("I got input" + elem.value)
-                    elem.placeholder = elem.value
-                    console.log("Got event with keycode " + event.keyCode)
-                    elem.value = ""
-                    const array = JSON.parse(elem.placeholder);
-                    console.log("Array 0 is " + array[0])
-                }
-            })
+    handleSelectionOfSimulationType(): void {
+        throw new Error("Method not implemented.");
+    }
+    renderSimulationSpeedInputbox(): React.ReactNode {
+        return <div></div>
+    }
+
+    renderSimulationData(): React.ReactNode {
+        let list: React.ReactElement[] = []
+        if (this.simulationData.size === 0) {
+
         } else {
-            console.log("Set value to palcehodler")
-            elem.value = elem.placeholder
+            this.simulationData.forEach((data, key) => {
+                // nextStep is never undefined
+                let nextStep = this.valuesForNextStep.get(key)
+                if (nextStep === undefined) {
+                    this.valuesForNextStep.set(key, data.data[data.data.length - 1])
+                    if (data.data.length > 0) {
+                        nextStep = data.data[data.data.length - 1]
+                    }
+                }
+                let node: React.ReactElement;
+                if (typeof nextStep === "boolean") { // boolean values are rendered as buttons
+                    node = <tr key={key} className="simulation-data-row">
+                        <th key="label" className="simulation-data-box">{key}</th>
+                        <td key="value" className="simulation-data-box">{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</td>
+                        <td key="input" className="simulation-data-box">
+                            <input id={"input-box-" + key}
+                                title={data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}
+                                className={"simulation-data-button"}
+                                type='button'
+                                onClick={() => { this.setBooleanInput("input-box-" + key, key, nextStep as boolean, data) }}
+                                placeholder={""} />
+                        </td>
+                        <td key="history" className="simulation-data-box">{data.data ? JSON.stringify(data.data.reverse()) : ""}</td>
+                        <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
+                    </tr>
+                } else {
+                    node = <tr key={key} className="simulation-data-row">
+                        <th key="label" className="simulation-data-box">{key}</th>
+                        <td key="value" className="simulation-data-box">{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</td>
+                        <td key="input" className="simulation-data-box">
+                            <input id={"input-box-" + key}
+                                title={data.data ? "Current value is " + JSON.stringify(data.data[data.data.length - 1]) : ""}
+                                className={"simulation-data-inputbox"}
+                                type='text'
+                                onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
+                                placeholder={""} />
+                        </td>
+                        <td key="history" className="simulation-data-box">{data.data ? JSON.stringify(data.data.reverse()) : ""}</td>
+                        <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
+                    </tr>
+                }
+                list.push(node)
+            })
+            return <table className={"simulation-data-table"}>
+                <thead>
+                    <tr key="headings" className="simulation-data-row">
+                        <th key="label" className="simulation-data-box" align="left">Symbol</th>
+                        <th key="value" className="simulation-data-box" align="left">Last Value</th>
+                        <th key="input" className="simulation-data-box" align="left">Input</th>
+                        <th key="history" className="simulation-data-box" align="left">History</th>
+                        <th key="next-step" className="simulation-data-box" align="left">Value for Next Tick</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {list}
+                </tbody>
+            </table>
         }
     }
 
-    handleInput(id: string, input: string) {
+    setBooleanInput(id: string, key: string,  value: any, data: any) {
+        // if the value is a boolean just toggle it on click
+        const elem = document.getElementById(id) as HTMLInputElement
+        elem.value = (!value).toString()
+        this.valuesForNextStep.set(key, !value)
+        this.update()
+    }
+
+
+    /**
+     * Set in values in the next step. On click the current nextValue is set as value of the inputbox.
+     * One can be sure that the LS handles the type checking.
+     */
+    setContentOfInputbox(id: string, key: string,  currentNextValue: any) {
+        const elem = document.getElementById(id) as HTMLInputElement
+        // set value that is the current value that will be set next tick as value of inputbox
+        // Add event listener for inputbox
+        // on enter the current value of the inputbox should be set as value for the next step
+        const eventListenerRegistered = this.eventListenerRegistered.get(key)
+        if (!eventListenerRegistered) {
+            elem.value = JSON.stringify(currentNextValue)
+            elem.addEventListener("keyup", (event) => {
+                if (event.keyCode === 13) {
+                    // prevents enter from doing things it should not do
+                    event.preventDefault()
+                    // parse value as JSON
+                    let parsedValue
+                    try {
+                        parsedValue = JSON.parse(elem.value);
+                    } catch (error) {
+                        // return if not parsable
+                        const currentNextValue = this.valuesForNextStep.get(key)
+                        elem.value = JSON.stringify(currentNextValue)
+                        this.commands.message(error.toString(), "ERROR")
+                        return
+                    }
+                    // always assume that the parsed value is valid
+                    this.valuesForNextStep.set(key, parsedValue)
+                    elem.placeholder = JSON.stringify(parsedValue)
+                    this.update()
+                }
+            })
+        }
     }
 
     onActivateRequest(msg: Message): void {
@@ -131,11 +278,13 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     storeState(): SimulationWidget.Data {
-        throw new Error("Method not implemented.");
+        return {
+            displayInOut: this.displayInOut
+        }
     }
 
     restoreState(oldState: SimulationWidget.Data): void {
-        throw new Error("Method not implemented.");
+        this.displayInOut = oldState.displayInOut
     }
 
     simulationDataToString(data: any) {
@@ -164,5 +313,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
  */
 export namespace SimulationWidget {
     export interface Data {
+        displayInOut: boolean
     }
 }

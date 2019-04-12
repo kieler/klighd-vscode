@@ -66,7 +66,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     protected snapshotFilter: string = ""
 
     /**
-     * If enebaled, the style selection menu.
+     * If enabled, the style selection menu.
      * Is saved as part of the state of the widget.
      */
     protected showAdvancedToolbar: boolean = false
@@ -103,7 +103,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     compileInplace: boolean = false
 
     /**
-     * Boolean property to enbale filtering of compilation systems saved in field systems.
+     * Boolean property to enable filtering of compilation systems saved in field systems.
      * Is saved as part of the state of the widget.
      */
     showPrivateSystems: boolean = false
@@ -126,7 +126,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     render(): React.ReactNode {
         if (!this.systems || this.systems.length === 0) {
-            // Case no connection to the LS was astablished or no compilation systems are present.
+            // Case no connection to the LS was established or no compilation systems are present.
             if (this.commands && this.commands.editor) {
                 // Try to request compilation systems.
                 this.requestSystemDescription()
@@ -206,7 +206,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     /**
      * Handles the selection of a new css style for the widget.
-     * It saves the index and name of teh current selected style and updates the widget.
+     * It saves the index and name of the current selected style and updates the widget.
      */
     handleSelectionOfStyle() {
         const index = (document.getElementById("style-list") as HTMLSelectElement).selectedIndex
@@ -240,7 +240,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * Renders a searchBox. The onInput function must be added as parameter in big arrow notations ,
      * since the scope should not change. This allows to access this in the function.
      * @param id id of generated input element
-     * @param placeholder placeholder of searcbox
+     * @param placeholder placeholder of searchbox
      * @param value defaultValue and name of searchbox
      * @param onInput function that is bound to onInput, must be written with big arrow notation: () => function()
      */
@@ -379,7 +379,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     renderShowAdvancedToolbar(): React.ReactNode {
         return <div title={this.showAdvancedToolbar ? "Hide advanced toolbar" : "Show advanced toolbar"}
-                    key="show-advanted-toolbar"
+                    key="show-advanced-toolbar"
                     className={'preference-button' + (this.showAdvancedToolbar ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
                 this.showAdvancedToolbar = !this.showAdvancedToolbar
