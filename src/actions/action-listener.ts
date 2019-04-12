@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { Action, MouseListener, SModelElement } from 'sprotty/lib';
-import { isRendering, KAction, KContainerRendering, KGraphElement, KPolyline, KRendering, Trigger } from '../kgraph-models';
+import { isRendering, KAction, KContainerRendering, KGraphElement, KPolyline, KRendering, K_RENDERING_REF, Trigger } from '../kgraph-models';
 import { PerformActionAction } from './actions';
 
 /**
@@ -110,22 +110,32 @@ export class ActionListener extends MouseListener {
             return isRendering(possibleRendering)
         }) as KRendering
         const idPath = id.split('$')
-        // The rendering id always starts with rendering$R[number]$[something] and the first rendering is already found, so start with index 2 as two $ signs can be skipped.
-        for (let i = 2; i < idPath.length; i++) {
-            if (idPath[i].startsWith('R')) {
-                // Take the child rendering whose ID is the prefix if the searched ID.
-                currentElement = (currentElement as KContainerRendering).children.find(childRendering => {
-                    return id.startsWith(childRendering.id)
-                }) as KRendering
-            } else if (idPath[i].startsWith('J')) {
-                // Take the junction point rendering
-                currentElement = (currentElement as KPolyline).junctionPointRendering
-            } else {
-                console.error('Misformed rendering id found: ' + id)
-            }
-            if (currentElement === undefined) {
-                console.error(id + ' can not be found in the renderings of the element: ' + element)
+        if (currentElement.type === K_RENDERING_REF) {
+            // KRenderingRefs' ids always start with the identifying name of the reference and may continue with $<something> to refer to renderings within that reference.
+            // Start with index 1 since the currentElement already contains the rendering with the identifying name.
+            // for (let i = 1; i < idPath.length; i++) {
+            if (idPath.length > 1) {
+                console.error('Actions in rendering references hierarchies are not supported yet.')
                 return []
+            }
+        } else {
+            // The rendering id always starts with rendering$R<number>$<something> and the first rendering is already found, so start with index 2 as two $ signs can be skipped.
+            for (let i = 2; i < idPath.length; i++) {
+                if (idPath[i].startsWith('R')) {
+                    // Take the child rendering whose ID is the prefix if the searched ID.
+                    currentElement = (currentElement as KContainerRendering).children.find(childRendering => {
+                        return id.startsWith(childRendering.id)
+                    }) as KRendering
+                } else if (idPath[i].startsWith('J')) {
+                    // Take the junction point rendering
+                    currentElement = (currentElement as KPolyline).junctionPointRendering
+                } else {
+                    console.error('Misformed rendering id found: ' + id)
+                }
+                if (currentElement === undefined) {
+                    console.error(id + ' can not be found in the renderings of the element: ' + element)
+                    return []
+                }
             }
         }
         // Now the currentElement should be the element searched for by the id.
