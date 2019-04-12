@@ -89,8 +89,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.simulationWidget.valuesForNextStep.set("boolEmpty", false)
                 this.simulationWidget.simulationData.set("booleanArray", {data: []})
                 this.simulationWidget.valuesForNextStep.set("booleanArray",   [false, false, false])
-                console.log("Simulation data after testing adding is")
-                console.log(this.simulationWidget.simulationData)
                 this.simulationWidget.update()
             }
         })

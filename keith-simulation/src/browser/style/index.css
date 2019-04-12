@@ -89,3 +89,11 @@
     background-size: 4px 5px;
     background-repeat: no-repeat;
 }
+
+.simulation-history-inputbox {
+    width: auto;
+}
+
+.simulation-data-box.history {
+    width: auto;
+}
