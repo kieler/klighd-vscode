@@ -4,24 +4,37 @@ export const OPEN_SIMULATION_WIDGET_KEYBINDING = "ctrlcmd+alt+s"
 
 export class SimulationData {
     data: any[]
+    input: boolean
+    output: boolean
 }
 
-export class SimulationDataType {
-    value: any
+export class SimulationStartedMessage {
+    successful: boolean
+    error: string
+    initialValues: SimulationStartedData[]
+}
 
-    public toString() {
-        return JSON.stringify(this.value)
+export class SimulationStepMessage {
+    values: SimulationStepData[]
+}
+
+export class SimulationStepData {
+    symbol: string
+    value:  any
+    constructor(symbol: string, value: any) {
+        this.symbol = symbol
+        this.value = value
     }
 }
 
-export class SimulationBoolean extends SimulationDataType {
-    value: boolean
+export class SimulationStartedData {
+    symbol: string
+    initialValue: any
+    input: boolean
+    output: boolean
 }
 
-export class SimulationNumber extends SimulationDataType {
-    value: number
-}
-
-export class SimulationArray extends SimulationDataType {
-    value: SimulationDataType[]
+export class SimulationStoppedMessage {
+    successful: boolean
+    error: string
 }

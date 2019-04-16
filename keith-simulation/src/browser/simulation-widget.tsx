@@ -16,7 +16,7 @@ import { injectable, LazyServiceIdentifer, inject } from "inversify";
 import { StatefulWidget, ReactWidget, Message} from "@theia/core/lib/browser";
 import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
-import { simulationWidgetId, SimulationData } from "../common"
+import { simulationWidgetId, SimulationData, SimulationStoppedMessage, SimulationStepMessage, SimulationStepData } from "../common"
 import { Emitter } from "@theia/core";
 import { Event } from '@theia/core/lib/common'
 import { delay } from '../common/helper'
@@ -66,7 +66,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     /**
      * Time in milliseconds to wait till next simulation step is requested in play mode.
      */
-    protected simulationDelay: number = 100
+    protected simulationDelay: number = 1000
 
     protected simulationTypes: string[] = ["Periodic", "Manual", "Dynamic"]
 
@@ -75,6 +75,14 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
      */
     readonly requestSystemDescriptions: Event<SimulationWidget | undefined> = this.onRequestSimulationSystemsEmitter.event
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
+
+    /**
+     * Set by SimulationContribution after a simulation is started or stopped.
+     * If false disables step, stop and play.
+     */
+    public controlsEnabled: boolean
+
+    protected inputOutputColumnEnabled: boolean
 
     constructor(
         @inject(new LazyServiceIdentifer(() => SimulationContribution)) protected readonly commands: SimulationContribution
@@ -97,13 +105,15 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderSimulationPanel() {
         return <div className="simulation-panel">
-            {this.renderPlayPauseButton()}
-            {this.renderStepButton()}
-            {this.renderStopButton()}
+            {false ? this.renderPlayPauseButton() : ""}
+            {this.controlsEnabled ? this.renderStepButton() : ""}
+            {this.controlsEnabled ? this.renderStopButton() : ""}
+            {this.controlsEnabled ? this.renderIOButton() : ""}
             {this.renderSimulationTypeSelectbox()}
             {this.renderSimulationSpeedInputbox()}
         </div>
     }
+
     renderPlayPauseButton(): React.ReactNode {
         return <div title={this.play ? "Pause" : "Play"} key="play-pause-button" className={'preference-button' + (this.play ? '' : ' off')}
             onClick={event => this.startOrPauseSimulation()}>
@@ -111,7 +121,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
-    startOrPauseSimulation() {
+    async startOrPauseSimulation() {
         this.play = !this.play
         // TODO all the things
         if (this.play) {
@@ -122,6 +132,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     async waitForNextStep() {
         while (this.play) {
+            console.log("Waiting for delay")
             this.executeSimulationStep()
             delay(this.simulationDelay)
             this.update()
@@ -135,17 +146,31 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
-    executeSimulationStep() {
-        // TODO send something to ls to step, await value and show it after that. This should be the same method which is used in play
-        this.valuesForNextStep.forEach((value, key) => {
-            const history = this.simulationData.get(key)
-            if (history === undefined) {
-                // TODO add error message
-                return
-            } else {
-                history.data.push(value)
-            }
+    async executeSimulationStep() {
+        const lClient = await this.commands.client.languageClient
+        let list: SimulationStepData[] = []
+        this.valuesForNextStep.forEach((value, symbol) => {
+            list.push(new SimulationStepData(symbol, value))
         })
+        const message: SimulationStepMessage = await lClient.sendRequest("keith/simulation/step", [list, "Manual"]) as SimulationStepMessage
+        if (message && message.values !== undefined) {
+            message.values.forEach(stepData => {
+                console.log(stepData    )
+                const history = this.simulationData.get(stepData.symbol)
+                if (history !== undefined) {
+                    history.data.push(stepData.value)
+                    this.simulationData.set(stepData.symbol, history)
+                    this.valuesForNextStep.set(stepData.symbol, stepData.value)
+                } else {
+                    this.stopSimulation()
+                    this.commands.message("Unexpected value in simulation data, stopping simulation", "ERROR")
+                    this.update()
+                    return
+                }
+            });
+        } else {
+            this.commands.message("Simulation data values are undefined", "ERROR")
+        }
         this.update()
     }
 
@@ -156,12 +181,29 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
-    stopSimulation() {
+    public async stopSimulation() {
         // Stop all simulation, i.e. empty maps and kill simulation process on LS
         this.valuesForNextStep.clear()
         this.simulationData.clear()
+        this.play = false
+        this.controlsEnabled = false
+        const lClient = await this.commands.client.languageClient
+        const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
+        if (message.successful) {
+            this.commands.message(message.error, "INFO")
+        } else {
+            this.commands.message(message.error, "ERROR")
+        }
         // TODO kill some executable process by requested its termination on the LS
         this.update()
+    }
+
+    renderIOButton(): React.ReactNode {
+        return <div title={"IO"}
+            key="io-button" className={'preference-button'}
+            onClick={event => this.toggleIO()}>
+            <div className={'icon fa fa-exchange'}/>
+        </div>
     }
 
     renderSimulationTypeSelectbox(): React.ReactNode {
@@ -178,6 +220,11 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {selectionList}
             </select>
         </div>
+    }
+
+    toggleIO() {
+        this.inputOutputColumnEnabled = !this.inputOutputColumnEnabled
+        this.update()
     }
 
     handleSelectionOfSimulationType(): void {
@@ -207,6 +254,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                 let node: React.ReactElement;
                 if (typeof nextStep === "boolean") { // boolean values are rendered as buttons
                     node = <tr key={key} className="simulation-data-row">
+                        {this.renderInputOutputColumn(data)}
                         <th key="label" className="simulation-data-box" align="right">{key}</th>
                         <td key="value" className="simulation-data-box">{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</td>
                         <td key="input" className="simulation-data-box">
@@ -217,16 +265,17 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                 onClick={() => { this.setBooleanInput("input-box-" + key, key, nextStep as boolean, data) }}
                                 placeholder={""} />
                         </td>
+                        <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
                         <td key="history" className="simulation-data-box history">
                             <input id={"input-box-" + key}
                                     className={"simulation-history-inputbox"}
                                     type='text'
                                     value={data.data ? JSON.stringify(data.data.reverse()) : ""}
                                     placeholder={""} readOnly/></td>
-                        <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
                     </tr>
                 } else {
                     node = <tr key={key} className="simulation-data-row">
+                        {this.renderInputOutputColumn(data)}
                         <th key="label" className="simulation-data-box" align="right">{key}</th>
                         <td key="value" className="simulation-data-box">{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</td>
                         <td key="input" className="simulation-data-box">
@@ -237,13 +286,13 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                 onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
                                 placeholder={""} />
                         </td>
+                        <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
                         <td key="history" className="simulation-data-box history">
                             <input id={"input-box-" + key}
                                     className={"simulation-history-inputbox"}
                                     type='text'
                                     value={data.data ? JSON.stringify(data.data.reverse()) : ""}
                                     placeholder={""} readOnly/></td>
-                        <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
                     </tr>
                 }
                 list.push(node)
@@ -251,17 +300,34 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             return <table className={"simulation-data-table"}>
                 <thead>
                     <tr key="headings" className="simulation-data-row">
+                        {this.renderInputOutputColumnHeader()}
                         <th key="label" className="simulation-data-box" align="left">Symbol</th>
                         <th key="value" className="simulation-data-box" align="left">Last Value</th>
                         <th key="input" className="simulation-data-box" align="left">Input</th>
-                        <th key="history" className="simulation-data-box history" align="left">History</th>
                         <th key="next-step" className="simulation-data-box" align="left">Value for Next Tick</th>
+                        <th key="history" className="simulation-data-box history" align="left">History</th>
                     </tr>
                 </thead>
                 <tbody>
                     {list}
                 </tbody>
             </table>
+        }
+    }
+
+    renderInputOutputColumn(data: SimulationData): React.ReactNode {
+        if (this.inputOutputColumnEnabled) {
+            return <td key="inputoutput" className="simulation-data-box" align="left">{data.input ? "input" : ""}{data.output ? "output" : ""}</td>
+        } else {
+            return
+        }
+    }
+
+    renderInputOutputColumnHeader(): React.ReactNode {
+        if (this.inputOutputColumnEnabled) {
+            return <th key="inputoutput" className="simulation-data-box" align="left">Input/Output</th>
+        } else {
+            return
         }
     }
 

@@ -18,7 +18,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@kieler/keith-language": "0.1.0",
+    "@kieler/keith-kicool": "0.1.0",
     "@theia/editor": "latest"
   },
   "devDependencies": {
