@@ -10,9 +10,10 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
+import { Widget } from '@phosphor/widgets';
 import { Emitter, Event } from '@theia/core';
 import URI from '@theia/core/lib/common/uri';
-import { RequestModelAction } from 'sprotty';
+import { InitializeCanvasBoundsAction, RequestModelAction } from 'sprotty';
 import { DiagramWidget } from 'sprotty-theia';
 
 /**
@@ -51,5 +52,10 @@ export class KeithDiagramWidget extends DiagramWidget {
                 diagramType: this.options.diagramType
             }));
         }
+    }
+
+    onResize(_msg: Widget.ResizeMessage): void {
+        const newBounds = this.getBoundsInPage(this.node as Element)
+        this.actionDispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds))
     }
 }
