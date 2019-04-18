@@ -17,8 +17,6 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@kieler/keith-diagram": "0.1.0",
-    "@kieler/keith-language": "0.1.0",
     "@theia/filesystem": "latest"
   },
   "devDependencies": {
@@ -33,10 +31,5 @@
     "lib",
     "src",
     "build"
-  ],
-  "theiaExtensions": [
-    {
-      "frontend": "lib/frontend-extension"
-    }
   ]
 }
