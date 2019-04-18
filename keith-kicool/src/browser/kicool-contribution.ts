@@ -157,9 +157,10 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
-        if (e.widget instanceof EditorWidget) {
-            e.widget.activate()
-        }
+        // This does not work, because sometimes you will write in an editor that is currently hidden.
+        // if (e.widget instanceof EditorWidget) {
+        //     e.widget.activate()
+        // }
         if (e.factoryId === CompilerWidget.widgetId) {
             this.initializeCompilerWidget(e.widget)
         }
