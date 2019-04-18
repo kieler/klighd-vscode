@@ -1,5 +1,7 @@
 import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveable, SRoutingHandle,
-    isCreatingOnDrag, SelectAllAction, edgeInProgressID, SelectAction, SwitchEditModeAction, edgeInProgressTargetHandleID } from "sprotty";
+    isCreatingOnDrag, SelectAllAction, edgeInProgressID, SelectAction, SwitchEditModeAction,
+    edgeInProgressTargetHandleID, SRoutableElement, translatePoint, findChildrenAtPosition,
+    isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction } from "sprotty";
 
 export class NewMouseListener extends MoveMouseListener {
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
@@ -25,6 +27,54 @@ export class NewMouseListener extends MoveMouseListener {
             }
         }
         console.log("hallo");
+        return result;
+    }
+
+    mouseUp(target: SModelElement, event: MouseEvent): Action[] {
+        const result: Action[] = [];
+        let hasReconnected = false;
+        if (this.lastDragPosition) {
+            target.root.index.all()
+                .forEach(element => {
+                    if (element instanceof SRoutingHandle) {
+                        const parent = element.parent;
+                        if (parent instanceof SRoutableElement && element.danglingAnchor) {
+                            const handlePos = this.getHandlePosition(element);
+                            if (handlePos) {
+                                const handlePosAbs = translatePoint(handlePos, element.parent, element.root);
+                                const newEnd = findChildrenAtPosition(target.root, handlePosAbs)
+                                    .find(e => isConnectable(e) && e.canConnect(parent, element.kind as ('source' | 'target')));
+                                if (newEnd && this.hasDragged) {
+                                    result.push(new ReconnectAction(element.parent.id,
+                                        element.kind === 'source' ? newEnd.id : parent.sourceId,
+                                        element.kind === 'target' ? newEnd.id : parent.targetId));
+                                    hasReconnected = true;
+                                }
+                            }
+                        }
+                        if (element.editMode)
+                            result.push(new SwitchEditModeAction([], [element.id]));
+                    }
+                });
+        }
+        if (!hasReconnected) {
+            const edgeInProgress = target.root.index.getById(edgeInProgressID);
+            if (edgeInProgress instanceof SChildElement) {
+                const deleteIds: string[] = [];
+                deleteIds.push(edgeInProgressID);
+                edgeInProgress.children.forEach(c => {
+                    if (c instanceof SRoutingHandle && c.danglingAnchor)
+                        deleteIds.push(c.danglingAnchor.id);
+                });
+                result.push(new DeleteElementAction(deleteIds));
+            }
+        }
+        if (this.hasDragged) {
+            result.push(new CommitModelAction());
+            console.log("Target: " + target.id);
+        }
+        this.hasDragged = false;
+        this.lastDragPosition = undefined;
         return result;
     }
 }
