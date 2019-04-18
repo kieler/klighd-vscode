@@ -6,3 +6,15 @@
 export function delay(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
 }
+
+export function strMapToObj(strMap: Map<string, any>) {
+    let obj = Object.create(null);
+    strMap.forEach((v, k) => {
+        obj[k] = v
+    });
+    return obj;
+}
+
+export function strMapToJson(strMap: any) {
+    return JSON.stringify(strMapToObj(strMap));
+}

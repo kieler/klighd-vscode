@@ -16,10 +16,10 @@ import { injectable, LazyServiceIdentifer, inject } from "inversify";
 import { StatefulWidget, ReactWidget, Message} from "@theia/core/lib/browser";
 import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
-import { simulationWidgetId, SimulationData, SimulationStoppedMessage, SimulationStepMessage, SimulationStepData } from "../common"
+import { simulationWidgetId, SimulationData, SimulationStoppedMessage, SimulationStepMessage } from "../common"
 import { Emitter } from "@theia/core";
 import { Event } from '@theia/core/lib/common'
-import { delay } from '../common/helper'
+import { delay, strMapToObj } from '../common/helper'
 
 
 /**
@@ -42,8 +42,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     public simulationData: Map<string, SimulationData> = new Map
 
     /**
-     * Holds the value that is set in the next tick.
-     * Assume that each value is never undefined, since the default value is set when the simulation is started
+     * Holds the value that is set in the next tick. Holds only the inputs of the simulation
      */
     public valuesForNextStep: Map<string, any> = new Map
 
@@ -146,21 +145,27 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
+    /**
+     * Executes a simulation step on the LS.
+     */
     async executeSimulationStep() {
         const lClient = await this.commands.client.languageClient
-        let list: SimulationStepData[] = []
-        this.valuesForNextStep.forEach((value, symbol) => {
-            list.push(new SimulationStepData(symbol, value))
-        })
-        const message: SimulationStepMessage = await lClient.sendRequest("keith/simulation/step", [list, "Manual"]) as SimulationStepMessage
-        if (message && message.values !== undefined) {
-            message.values.forEach(stepData => {
-                console.log(stepData    )
-                const history = this.simulationData.get(stepData.symbol)
+        // Transform the input map to an object since this is the format the LS supports
+        let jsonObject = strMapToObj(this.valuesForNextStep)
+        const message: SimulationStepMessage = await lClient.sendRequest("keith/simulation/step", [jsonObject, "Manual"]) as SimulationStepMessage
+        // Transform jsonObject back to map
+        const pool: Map<string, any> = new Map(Object.entries(message.values));
+        if (pool) {
+            pool.forEach((value, key) => {
+                // push value in history and set new input value
+                const history = this.simulationData.get(key)
                 if (history !== undefined) {
-                    history.data.push(stepData.value)
-                    this.simulationData.set(stepData.symbol, history)
-                    this.valuesForNextStep.set(stepData.symbol, stepData.value)
+                    history.data.push(value)
+                    this.simulationData.set(key, history)
+                    if (this.valuesForNextStep.get(key) !== undefined) {
+                        console.log("Setting value for next step of " + key)
+                        this.valuesForNextStep.set(key, value)
+                    }
                 } else {
                     this.stopSimulation()
                     this.commands.message("Unexpected value in simulation data, stopping simulation", "ERROR")
@@ -181,6 +186,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
+    /**
+     * Request a simulation stop from the LS.
+     */
     public async stopSimulation() {
         // Stop all simulation, i.e. empty maps and kill simulation process on LS
         this.valuesForNextStep.clear()
@@ -190,9 +198,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         const lClient = await this.commands.client.languageClient
         const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
         if (message.successful) {
-            this.commands.message(message.error, "INFO")
+            this.commands.message(message.message, "INFO")
         } else {
-            this.commands.message(message.error, "ERROR")
+            this.commands.message(message.message, "ERROR")
         }
         // TODO kill some executable process by requested its termination on the LS
         this.update()
@@ -245,12 +253,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             this.simulationData.forEach((data, key) => {
                 // nextStep is never undefined
                 let nextStep = this.valuesForNextStep.get(key)
-                if (nextStep === undefined) {
-                    this.valuesForNextStep.set(key, data.data[data.data.length - 1])
-                    if (data.data.length > 0) {
-                        nextStep = data.data[data.data.length - 1]
-                    }
-                }
                 let node: React.ReactElement;
                 if (typeof nextStep === "boolean") { // boolean values are rendered as buttons
                     node = <tr key={key} className="simulation-data-row">
@@ -263,7 +265,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                 className={"simulation-data-button"}
                                 type='button'
                                 onClick={() => { this.setBooleanInput("input-box-" + key, key, nextStep as boolean, data) }}
-                                placeholder={""} />
+                                placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
                         </td>
                         <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
                         <td key="history" className="simulation-data-box history">
@@ -284,7 +286,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                 className={"simulation-data-inputbox"}
                                 type='text'
                                 onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
-                                placeholder={""} />
+                                placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
                         </td>
                         <td key="next-step" className="simulation-data-box">{JSON.stringify(nextStep)}</td>
                         <td key="history" className="simulation-data-box history">
@@ -332,11 +334,13 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     setBooleanInput(id: string, key: string,  value: any, data: any) {
-        // if the value is a boolean just toggle it on click
-        const elem = document.getElementById(id) as HTMLInputElement
-        elem.value = (!value).toString()
-        this.valuesForNextStep.set(key, !value)
-        this.update()
+        if (this.valuesForNextStep.has(key)) {
+            // if the value is a boolean just toggle it on click
+            const elem = document.getElementById(id) as HTMLInputElement
+            elem.value = (!value).toString()
+            this.valuesForNextStep.set(key, !value)
+            this.update()
+        }
     }
 
 

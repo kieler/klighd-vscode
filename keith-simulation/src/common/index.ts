@@ -11,20 +11,12 @@ export class SimulationData {
 export class SimulationStartedMessage {
     successful: boolean
     error: string
-    initialValues: SimulationStartedData[]
+    dataPool: object
+    input: object
 }
 
 export class SimulationStepMessage {
-    values: SimulationStepData[]
-}
-
-export class SimulationStepData {
-    symbol: string
-    value:  any
-    constructor(symbol: string, value: any) {
-        this.symbol = symbol
-        this.value = value
-    }
+    values: object
 }
 
 export class SimulationStartedData {
@@ -36,5 +28,5 @@ export class SimulationStartedData {
 
 export class SimulationStoppedMessage {
     successful: boolean
-    error: string
+    message: string
 }

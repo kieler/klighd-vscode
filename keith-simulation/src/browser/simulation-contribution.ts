@@ -121,22 +121,23 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                     }
                     const startMessage: SimulationStartedMessage = await lClient.sendRequest("keith/simulation/start", [uri, "Manual"]) as SimulationStartedMessage
                     // handle message
-                    if (startMessage.successful && startMessage.initialValues) {
-                        startMessage.initialValues.forEach((data) => {
-                            this.simulationWidget.simulationData.set(data.symbol, {data: [], input: data.input, output: data.output})
-                            this.simulationWidget.valuesForNextStep.set(data.symbol, data.initialValue)
-                            this.simulationWidget.controlsEnabled = true
-                        })
-                        // reveal simulation widget
-                        const widget = this.front.shell.revealWidget(simulationWidgetId)
-                        if (widget) {
-                            widget.update()
+                    const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
+                    const input: Map<string, any> = new Map(Object.entries(startMessage.input));
+                    console.log("Datapool:")
+                    console.log(pool)
+                    console.log("Inputs:")
+                    console.log(input)
+                    pool.forEach((value, key) => {
+                        this.simulationWidget.simulationData.set(key, {data: [], input: input.has(key), output: false})
+                        if (input.get(key) !== undefined) {
+                            console.log("Added " + key + " as input")
+                            this.simulationWidget.valuesForNextStep.set(key, value)
                         }
-                    } else {
-                        this.message(startMessage.error, "ERROR")
-                        this.simulationWidget.stopSimulation()
-                        // TODO somehow kill simulation of try to reconnect or something like this
-                        return
+                        this.simulationWidget.controlsEnabled = true
+                    })
+                    const widget = this.front.shell.revealWidget(simulationWidgetId)
+                    if (widget) {
+                        widget.update()
                     }
                 }
             }
