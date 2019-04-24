@@ -95,11 +95,18 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     protected render(): React.ReactNode {
-        return <React.Fragment>
-            {this.renderSimulationPanel()}
-            <div key="table" className="simulation-table">{this.renderSimulationData()}</div>
-        </React.Fragment>
-
+        if (!this.commands.kicoolContribution ||
+            !this.commands.kicoolContribution.compilerWidget ||
+            this.commands.kicoolContribution.compilerWidget.systems.length === 0) {
+            return <div className='spinnerContainer'>
+                <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
+            </div>;
+        } else {
+            return <React.Fragment>
+                {this.renderSimulationPanel()}
+                <div key="table" className="simulation-table">{this.renderSimulationData()}</div>
+            </React.Fragment>
+        }
     }
 
     renderSimulationPanel() {
@@ -110,6 +117,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.controlsEnabled ? this.renderIOButton() : ""}
             {this.renderSimulationTypeSelectbox()}
             {this.renderSimulationSpeedInputbox()}
+            {this.commands.simulateRunning ? "" : this.renderSimulationSelectionBox()}
+            {this.commands.simulateRunning ? "" : this.renderCompileButton()}
+            {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") ? this.renderRestartButton : ""}
         </div>
     }
 
@@ -195,6 +205,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         this.simulationData.clear()
         this.play = false
         this.controlsEnabled = false
+        this.commands.simulateRunning = false
         const lClient = await this.commands.client.languageClient
         const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
         if (message.successful) {
@@ -240,6 +251,49 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
     renderSimulationSpeedInputbox(): React.ReactNode {
         return <div></div>
+    }
+
+
+    renderSimulationSelectionBox(): React.ReactNode {
+        const simulationCommands: React.ReactNode[] = [];
+        this.commands.kicoolContribution.compilerWidget.systems.forEach(system => {
+            if (system.label.toLowerCase().search("simulation") > -1) {
+                simulationCommands.push(<option value={system.id} key={system.id}>{system.label}</option>)
+            }
+        })
+        return <select id="simulation-list" className={'selection-list simulation-list'}>
+            {simulationCommands}
+        </select>
+    }
+
+    renderCompileButton(): React.ReactNode {
+        return <div className={'compile-button'} title="Compile"
+            onClick={event => {
+                this.startSimulation()
+            }}>
+            <div className='icon fa fa-play-circle'> </div>
+        </div>
+    }
+
+    async startSimulation() {
+        const selection = document.getElementById("simulation-list") as HTMLSelectElement;
+        const option = selection.selectedOptions[0]
+        if (option !== undefined) {
+            this.commands.kicoolContribution.compile(option.value)
+            this.commands.simulate()
+        } else {
+            console.log("Option is undefined, did not simulate")
+        }
+    }
+
+    renderRestartButton(): React.ReactNode {
+        console.log("Rendered restart button")
+        return <div className={'compile-button'} title="Restart"
+            onClick={event => {
+                this.commands.simulate()
+            }}>
+            <div className='icon fa fa-reply'> </div>
+        </div>
     }
 
     /**

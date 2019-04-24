@@ -31,6 +31,8 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     simulationWidget: SimulationWidget
 
+    public simulateRunning: boolean
+
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
@@ -41,7 +43,8 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager,
         @inject(SimulationKeybindingContext) protected readonly simulationKeybindingContext: SimulationKeybindingContext,
         @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
-        @inject(KiCoolContribution) protected readonly kicoolContribution: KiCoolContribution
+        @inject(KiCoolContribution) public readonly kicoolContribution: KiCoolContribution,
+        @inject(CommandRegistry) public readonly commandRegistry: CommandRegistry
     ) {
         super({
             widgetId: simulationWidgetId,
@@ -109,39 +112,44 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         })
         commands.registerCommand(SIMULATE, {
             execute: async () => {
-                if (this.kicoolContribution.editor) {
-                    const lClient = await this.client.languageClient
-                    const uri = this.kicoolContribution.editor.editor.uri.toString()
-                    // Check if language client was already initialized and wait till it is
-                    let initializeResult = lClient.initializeResult
-                    while (!initializeResult) {
-                        // language client was not initialized
-                        await delay(100)
-                        initializeResult = lClient.initializeResult
-                    }
-                    const startMessage: SimulationStartedMessage = await lClient.sendRequest("keith/simulation/start", [uri, "Manual"]) as SimulationStartedMessage
-                    // handle message
-                    const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
-                    const input: Map<string, any> = new Map(Object.entries(startMessage.input));
-                    console.log("Datapool:")
-                    console.log(pool)
-                    console.log("Inputs:")
-                    console.log(input)
-                    pool.forEach((value, key) => {
-                        this.simulationWidget.simulationData.set(key, {data: [], input: input.has(key), output: false})
-                        if (input.get(key) !== undefined) {
-                            console.log("Added " + key + " as input")
-                            this.simulationWidget.valuesForNextStep.set(key, value)
-                        }
-                        this.simulationWidget.controlsEnabled = true
-                    })
-                    const widget = this.front.shell.revealWidget(simulationWidgetId)
-                    if (widget) {
-                        widget.update()
-                    }
-                }
+                this.simulate()
             }
         })
+    }
+
+    async simulate() {
+        if (this.kicoolContribution.editor && !this.simulateRunning) {
+            const lClient = await this.client.languageClient
+            const uri = this.kicoolContribution.editor.editor.uri.toString()
+            // Check if language client was already initialized and wait till it is
+            let initializeResult = lClient.initializeResult
+            while (!initializeResult) {
+                // language client was not initialized
+                await delay(100)
+                initializeResult = lClient.initializeResult
+            }
+            const startMessage: SimulationStartedMessage = await lClient.sendRequest("keith/simulation/start", [uri, "Manual"]) as SimulationStartedMessage
+            this.simulateRunning = true
+            // handle message
+            const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
+            const input: Map<string, any> = new Map(Object.entries(startMessage.input));
+            console.log("Datapool:")
+            console.log(pool)
+            console.log("Inputs:")
+            console.log(input)
+            pool.forEach((value, key) => {
+                this.simulationWidget.simulationData.set(key, {data: [], input: input.has(key), output: false})
+                if (input.get(key) !== undefined) {
+                    console.log("Added " + key + " as input")
+                    this.simulationWidget.valuesForNextStep.set(key, value)
+                }
+                this.simulationWidget.controlsEnabled = true
+            })
+            const widget = this.front.shell.revealWidget(simulationWidgetId)
+            if (widget) {
+                widget.update()
+            }
+        }
     }
 
     registerKeybindings(keybindings: KeybindingRegistry): void {
