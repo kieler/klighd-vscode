@@ -53,7 +53,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * These are filtered on the client side to display the private or public systems.
      * The compilation systems are updated on selection of a current editor.
      */
-    systems: CompilationSystems[] = []
+    public systems: CompilationSystems[] = []
 
     /**
      * Is saved as part of the state of the widget.
@@ -113,6 +113,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * This is updated on change of the current editor.
      */
     public sourceModelPath: string
+
+    /**
+     * Holds the id of the last invoked compilation system.
+     * This is used by the simulation to decide whether a simulation can be restarted.
+     */
+    public lastInvokedCompilation: string = ""
 
     constructor(
         @inject(new LazyServiceIdentifer(() => KiCoolContribution)) protected readonly commands: KiCoolContribution

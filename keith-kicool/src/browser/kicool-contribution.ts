@@ -372,6 +372,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
 
     public compile(command: string) {
+        this.compilerWidget.lastInvokedCompilation = command
         if (!this.compilerWidget.autoCompile) {
             this.message("Compiling with " + command, "info")
         }
