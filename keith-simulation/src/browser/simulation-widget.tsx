@@ -119,7 +119,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.renderSimulationSpeedInputbox()}
             {this.commands.simulateRunning ? "" : this.renderSimulationSelectionBox()}
             {this.commands.simulateRunning ? "" : this.renderCompileButton()}
-            {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") ? this.renderRestartButton : ""}
+            {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") && !this.commands.simulateRunning ? this.renderRestartButton() : ""}
         </div>
     }
 
@@ -282,17 +282,16 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             this.commands.kicoolContribution.compile(option.value)
             this.commands.simulate()
         } else {
-            console.log("Option is undefined, did not simulate")
+            this.commands.message("Option is undefined, did not simulate", "ERROR")
         }
     }
 
     renderRestartButton(): React.ReactNode {
-        console.log("Rendered restart button")
         return <div className={'compile-button'} title="Restart"
             onClick={event => {
                 this.commands.simulate()
             }}>
-            <div className='icon fa fa-reply'> </div>
+            <div className='icon rotate180 fa fa-reply'> </div>
         </div>
     }
 

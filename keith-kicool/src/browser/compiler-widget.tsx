@@ -220,8 +220,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             this.selectedStyle = this.styles[index];
             this.selectedIndex = index
             this.update()
-        } else {
-            console.log("This is wrong")
         }
     }
 
