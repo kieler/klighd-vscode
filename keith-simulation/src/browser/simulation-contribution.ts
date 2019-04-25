@@ -31,8 +31,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     simulationWidget: SimulationWidget
 
-    public simulateRunning: boolean
-
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
@@ -118,7 +116,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     async simulate() {
-        if (this.kicoolContribution.editor && !this.simulateRunning) {
+        if (this.kicoolContribution.editor && !this.simulationWidget.simulationRunning) {
             const lClient = await this.client.languageClient
             const uri = this.kicoolContribution.editor.editor.uri.toString()
             // Check if language client was already initialized and wait till it is
@@ -129,7 +127,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 initializeResult = lClient.initializeResult
             }
             const startMessage: SimulationStartedMessage = await lClient.sendRequest("keith/simulation/start", [uri, "Manual"]) as SimulationStartedMessage
-            this.simulateRunning = true
+            this.simulationWidget.simulationRunning = true
             // handle message
             const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
             const input: Map<string, any> = new Map(Object.entries(startMessage.input));
