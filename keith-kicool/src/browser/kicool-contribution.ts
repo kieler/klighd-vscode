@@ -372,12 +372,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
 
-    public compile(command: string) {
+    public async compile(command: string): Promise<void> {
         this.compilerWidget.lastInvokedCompilation = command
         if (!this.compilerWidget.autoCompile) {
             this.message("Compiling with " + command, "info")
         }
-        this.executeCompile(command)
+        await this.executeCompile(command)
     }
 
     async executeCompile(command: string): Promise<void> {
