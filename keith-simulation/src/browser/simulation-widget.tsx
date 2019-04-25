@@ -294,7 +294,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         const selection = document.getElementById("simulation-list") as HTMLSelectElement;
         const option = selection.selectedOptions[0]
         if (option !== undefined) {
-            this.commands.kicoolContribution.compile(option.value)
+            await this.commands.kicoolContribution.compile(option.value)
             this.commands.simulate()
         } else {
             this.commands.message("Option is undefined, did not simulate", "ERROR")
