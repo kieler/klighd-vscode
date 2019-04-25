@@ -41,10 +41,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
 
     protected readonly onRequestSystemDescriptionsEmitter = new Emitter<CompilerWidget | undefined>()
+    public readonly onNewSystemsAddedEmitter = new Emitter<CompilerWidget | undefined>()
 
     /**
      * Emit when compilation systems are requested.
      */
+    public readonly newSystemsAdded: Event<CompilerWidget | undefined> = this.onNewSystemsAddedEmitter.event
     readonly requestSystemDescriptions: Event<CompilerWidget | undefined> = this.onRequestSystemDescriptionsEmitter.event
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 

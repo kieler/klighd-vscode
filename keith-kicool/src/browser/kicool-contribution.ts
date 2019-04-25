@@ -213,6 +213,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             }
             this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
             this.compilerWidget.update()
+            this.compilerWidget.onNewSystemsAddedEmitter.fire(this.compilerWidget)
         }
     }
 
