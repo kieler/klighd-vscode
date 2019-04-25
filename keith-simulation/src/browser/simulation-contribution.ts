@@ -13,14 +13,20 @@ import { SimulationKeybindingContext } from "./simulation-keybinding-context";
 import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-contribution"
 import { delay } from "../common/helper";
 
-
+/**
+ * Command to open the simulation widget
+ */
 export const SIMULATION: Command = {
     id: 'simulation:toggle',
     label: 'Simulation View'
 }
+
+/**
+ * Command to restart a simulation.
+ */
 export const SIMULATE: Command = {
     id: 'simulate',
-    label: 'Simulate latest snapshot compilation'
+    label: 'Restart simulation'
 }
 
 /**
@@ -56,50 +62,46 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         });
         this.widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
         // TODO: when the diagram closes, also update the view to the default one
-        const widgetPromise = this.widgetManager.getWidget(SimulationWidget.widgetId)
-        widgetPromise.then(widget => {
-            if (this.simulationWidget === undefined || this.simulationWidget === null) {
-                // widget has to be created
-                this.initializeCompilerWidget(new SimulationWidget(this))
-            } else {
-                this.initializeCompilerWidget(widget)
-            }
-        })
     }
 
     async initializeLayout(app: FrontendApplication): Promise<void> {
         await this.openView()
     }
-    private initializeCompilerWidget(widget: Widget | undefined) {
+
+    /**
+     * Initializes the simulation widget and simulation contribution.
+     * Currently this includes setting the simulation widget in the simulation contribution and
+     * binding a function on the event that indicates that new compilation systems are added.
+     *
+     * @param widget created simulation widget
+     */
+    private initializeSimulationWidget(widget: Widget | undefined) {
         if (widget) {
             this.simulationWidget = widget as SimulationWidget
+            // whenever the compiler widget got new compilation systems from the LS new systems is invoked.
+            this.kicoolContribution.compilerWidget.newSystemsAdded(this.newSystemsAdded.bind(this))
         }
     }
 
+    /**
+     * Is executed whenever the compiler widget got new compilation systems from the LS.
+     * Updates simulation widget, since these new compilation systems may contain simulation compilation systems.
+     */
+    newSystemsAdded() {
+        this.simulationWidget.update()
+    }
+
+    /**
+     * Executed whenever a widget is created.
+     * If a simulation widget is created this simulation contribution is initialized using this widget.
+     */
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
         if (e.factoryId === SimulationWidget.widgetId) {
-            this.initializeCompilerWidget(e.widget)
+            this.initializeSimulationWidget(e.widget)
         }
     }
 
     registerCommands(commands: CommandRegistry) {
-        commands.registerCommand({id: "test", label: "Testing widget"}, {
-            execute: () => {
-                this.simulationWidget.simulationData.set("NumArray", {data: [[1, 2], [2, 2], [3, 2], [4, 2]], input: false, output: false})
-                this.simulationWidget.valuesForNextStep.set("NumArray", [4, 2])
-                this.simulationWidget.simulationData.set("numArray", {data: [1, 2, 3, 4], input: false, output: false})
-                this.simulationWidget.valuesForNextStep.set("numArray", 4)
-                this.simulationWidget.simulationData.set("boolean", {data: [true, false, true], input: false, output: false})
-                this.simulationWidget.valuesForNextStep.set("boolean", true)
-                this.simulationWidget.simulationData.set("numEmpty", {data: [], input: false, output: false})
-                this.simulationWidget.valuesForNextStep.set("numEmpty", 0)
-                this.simulationWidget.simulationData.set("boolEmpty", {data: [], input: false, output: false})
-                this.simulationWidget.valuesForNextStep.set("boolEmpty", false)
-                this.simulationWidget.simulationData.set("booleanArray", {data: [], input: false, output: false})
-                this.simulationWidget.valuesForNextStep.set("booleanArray",   [false, false, false])
-                this.simulationWidget.update()
-            }
-        })
         commands.registerCommand(SIMULATION, {
             execute: async () => {
                 this.openView({
@@ -115,9 +117,15 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         })
     }
 
+    /**
+     * Invoke simulation.
+     * >To be successful a compilation with a simulation compilation system has to be invoked before this function call.
+     */
     async simulate() {
+        // A simulation can only be invoked if a current editor widget exists and no simulation is currently running.
         if (this.kicoolContribution.editor && !this.simulationWidget.simulationRunning) {
             const lClient = await this.client.languageClient
+            // The uri of the current editor is needed to identify the already compiled snapshot that is used to start the simulation.
             const uri = this.kicoolContribution.editor.editor.uri.toString()
             // Check if language client was already initialized and wait till it is
             let initializeResult = lClient.initializeResult
@@ -169,7 +177,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     public message(message: string, type: string) {
-        switch (type) {
+        switch (type.toLowerCase()) {
             case "error":
                 this.messageService.error(message)
                 this.outputManager.getChannel("SCTX").appendLine("ERROR: " + message)

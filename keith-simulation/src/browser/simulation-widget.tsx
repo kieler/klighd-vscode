@@ -18,8 +18,8 @@ import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData, SimulationStoppedMessage, SimulationStepMessage } from "../common"
 import { Emitter } from "@theia/core";
-import { Event } from '@theia/core/lib/common'
 import { delay, strMapToObj } from '../common/helper'
+import { CompilationSystems } from "@kieler/keith-kicool/lib/common/kicool-models"
 
 
 /**
@@ -69,10 +69,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     protected simulationTypes: string[] = ["Periodic", "Manual", "Dynamic"]
 
-    /**
-     * Emit when compilation systems are requested.
-     */
-    readonly requestSystemDescriptions: Event<SimulationWidget | undefined> = this.onRequestSimulationSystemsEmitter.event
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 
     /**
@@ -81,8 +77,14 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
      */
     public controlsEnabled: boolean
 
+    /**
+     * Indicates whether the input/output column should be displayed.
+     */
     protected inputOutputColumnEnabled: boolean
 
+    /**
+     * Indicates whether a simulation is currently running.
+     */
     public simulationRunning: boolean
 
     constructor(
@@ -111,12 +113,20 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    /**
+     * Renders the control panel of the simulation widget.
+     * The play/pause button is hidden. TODO shot it whenever a simulation is running.
+     * Step, stop, and IO button are only shown if a simulation is running.
+     * The simulation type selectbox and simulation speed input box are always shown.
+     * The simulation compilation system selectbox and the compile button are only shown if no simulation is running.
+     * The restart button is only shown if the last invoked compilation system is a simulation compilation system.
+     */
     renderSimulationPanel() {
         return <div className="simulation-panel">
             {false ? this.renderPlayPauseButton() : ""}
-            {this.controlsEnabled ? this.renderStepButton() : ""}
-            {this.controlsEnabled ? this.renderStopButton() : ""}
-            {this.controlsEnabled ? this.renderIOButton() : ""}
+            {this.simulationRunning ? this.renderStepButton() : ""}
+            {this.simulationRunning ? this.renderStopButton() : ""}
+            {this.simulationRunning ? this.renderIOButton() : ""}
             {this.renderSimulationTypeSelectbox()}
             {this.renderSimulationSpeedInputbox()}
             {this.simulationRunning ? "" : this.renderSimulationSelectionBox()}
@@ -132,6 +142,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
+    /**
+     * TODO implement
+     */
     async startOrPauseSimulation() {
         this.play = !this.play
         // TODO all the things
@@ -258,7 +271,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderSimulationSelectionBox(): React.ReactNode {
         const simulationCommands: React.ReactNode[] = [];
-        this.commands.kicoolContribution.compilerWidget.systems.forEach(system => {
+        this.commands.kicoolContribution.compilerWidget.systems.forEach((system: CompilationSystems)  => {
             if (system.label.toLowerCase().search("simulation") > -1) {
                 simulationCommands.push(<option value={system.id} key={system.id}>{system.label}</option>)
             }
