@@ -193,7 +193,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                     history.data.push(value)
                     this.simulationData.set(key, history)
                     if (this.valuesForNextStep.get(key) !== undefined) {
-                        console.log("Setting value for next step of " + key + " to " + value)
                         this.valuesForNextStep.set(key, value)
                     }
                 } else {
