@@ -17,7 +17,8 @@
 }
 
 .simulation-data-inputbox {
-    width: 97%;
+    border: 0px;
+    width: 98%;
     padding-left: 1%;
     padding-right: 1%;
 }
@@ -97,7 +98,8 @@
 }
 
 .simulation-history-inputbox {
-    width: 97%;
+    border: 0px;
+    width: 98%;
     padding-left: 1%;
     padding-right: 1%;
 }
