@@ -9,6 +9,7 @@ export class SimulationData {
     data: any[]
     input: boolean
     output: boolean
+    categories: string[]
 }
 
 /**
@@ -19,6 +20,13 @@ export class SimulationStartedMessage {
     error: string
     dataPool: object
     input: object
+    output: object
+    propertySet: Map<string, string[]>
+}
+
+export class Category {
+    name: string
+    symbols: string[]
 }
 
 /**

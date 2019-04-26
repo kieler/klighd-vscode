@@ -87,6 +87,10 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
      */
     public simulationRunning: boolean
 
+    protected showInternalVariables: boolean
+
+    public categories: string[] = []
+
     constructor(
         @inject(new LazyServiceIdentifer(() => SimulationContribution)) protected readonly commands: SimulationContribution
     ) {
@@ -127,6 +131,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.simulationRunning ? this.renderStepButton() : ""}
             {this.simulationRunning ? this.renderStopButton() : ""}
             {this.simulationRunning ? this.renderIOButton() : ""}
+            {this.simulationRunning ? this.renderShowInternalButton() : ""}
             {this.renderSimulationTypeSelectbox()}
             {this.renderSimulationSpeedInputbox()}
             {this.simulationRunning ? "" : this.renderSimulationSelectionBox()}
@@ -188,12 +193,12 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                     history.data.push(value)
                     this.simulationData.set(key, history)
                     if (this.valuesForNextStep.get(key) !== undefined) {
-                        console.log("Setting value for next step of " + key)
+                        console.log("Setting value for next step of " + key + " to " + value)
                         this.valuesForNextStep.set(key, value)
                     }
                 } else {
                     this.stopSimulation()
-                    this.commands.message("Unexpected value in simulation data, stopping simulation", "ERROR")
+                    this.commands.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
                     this.update()
                     return
                 }
@@ -234,10 +239,28 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderIOButton(): React.ReactNode {
         return <div title={"IO"}
-            key="io-button" className={'preference-button'}
+            key="io-button" className={'preference-button' + (this.inputOutputColumnEnabled ? '' : ' off')}
             onClick={event => this.toggleIO()}>
             <div className={'icon fa fa-exchange'}/>
         </div>
+    }
+
+    toggleIO() {
+        this.inputOutputColumnEnabled = !this.inputOutputColumnEnabled
+        this.update()
+    }
+
+    renderShowInternalButton(): React.ReactNode {
+        return <div title={this.showInternalVariables ? "Disable internal variables" : "Show internal variables"}
+            key="toggle-internal-button" className={'preference-button' + (this.showInternalVariables ? '' : ' off')}
+            onClick={event => this.toggleShowInternal()}>
+            <div className={'icon fa fa-cog'}/>
+        </div>
+    }
+
+    toggleShowInternal() {
+        this.showInternalVariables = !this.showInternalVariables
+        this.update()
     }
 
     renderSimulationTypeSelectbox(): React.ReactNode {
@@ -254,11 +277,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {selectionList}
             </select>
         </div>
-    }
-
-    toggleIO() {
-        this.inputOutputColumnEnabled = !this.inputOutputColumnEnabled
-        this.update()
     }
 
     handleSelectionOfSimulationType(): void {
@@ -319,62 +337,65 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
         } else {
             this.simulationData.forEach((data, key) => {
-                // nextStep is never undefined
-                let nextStep = this.valuesForNextStep.get(key)
-                let node: React.ReactElement;
-                if (typeof nextStep === "boolean") { // boolean values are rendered as buttons
-                    node = <tr key={key} className="simulation-data-row">
-                        {this.renderInputOutputColumn(data)}
-                        <th key="label" className="simulation-data-box" align="left"><div>{key}</div></th>
-                        <td key="value" className="simulation-data-box">
-                            <div>{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</div>
-                        </td>
-                        <td key="input" className="simulation-data-box">
-                            <div>
-                                <input id={"input-box-" + key}
-                                    title={data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}
-                                    className={"simulation-data-button"}
-                                    type='button'
-                                    onClick={() => { this.setBooleanInput("input-box-" + key, key, nextStep as boolean, data) }}
-                                    placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
-                            </div>
-                        </td>
-                        <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
-                        <td key="history" className="simulation-data-box history"><div>
-                            <input id={"input-box-" + key}
-                                    className={"simulation-history-inputbox"}
-                                    type='text'
-                                    value={data.data ? JSON.stringify(data.data.reverse()) : ""}
-                                    placeholder={""} readOnly/></div></td>
-                    </tr>
-                } else {
-                    node = <tr key={key} className="simulation-data-row">
-                        {this.renderInputOutputColumn(data)}
-                        <th key="label" className="simulation-data-box" align="left"><div>{key}</div></th>
-                        <td key="value" className="simulation-data-box">
-                            <div>{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</div>
-                        </td>
-                        <td key="input" className="simulation-data-box">
-                            <div>
-                                <input id={"input-box-" + key}
-                                    title={data.data ? "Current value is " + JSON.stringify(data.data[data.data.length - 1]) : ""}
-                                    className={"simulation-data-inputbox"}
-                                    type='text'
-                                    onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
-                                    placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
-                            </div>
-                        </td>
-                        <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
-                        <td key="history" className="simulation-data-box history">
-                            <div>
+                // only add data that if input, output or internal data should be shown
+                if (this.showInternalVariables || !this.isInternal(data)) {
+                    // nextStep is never undefined
+                    let nextStep = this.valuesForNextStep.get(key)
+                    let node: React.ReactElement;
+                    if (typeof nextStep === "boolean") { // boolean values are rendered as buttons
+                        node = <tr key={key} className="simulation-data-row">
+                            {this.renderInputOutputColumn(data)}
+                            <th key="label" className="simulation-data-box" align="left"><div>{key}</div></th>
+                            <td key="value" className="simulation-data-box">
+                                <div>{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</div>
+                            </td>
+                            <td key="input" className="simulation-data-box">
+                                <div>
+                                    <input id={"input-box-" + key}
+                                        title={data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}
+                                        className={"simulation-data-button"}
+                                        type='button'
+                                        onClick={() => { this.setBooleanInput("input-box-" + key, key, nextStep as boolean, data) }}
+                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
+                                </div>
+                            </td>
+                            <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
+                            <td key="history" className="simulation-data-box history"><div>
                                 <input id={"input-box-" + key}
                                         className={"simulation-history-inputbox"}
                                         type='text'
                                         value={data.data ? JSON.stringify(data.data.reverse()) : ""}
                                         placeholder={""} readOnly/></div></td>
-                    </tr>
+                        </tr>
+                    } else {
+                        node = <tr key={key} className="simulation-data-row">
+                            {this.renderInputOutputColumn(data)}
+                            <th key="label" className="simulation-data-box" align="left"><div>{key}</div></th>
+                            <td key="value" className="simulation-data-box">
+                                <div>{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</div>
+                            </td>
+                            <td key="input" className="simulation-data-box">
+                                <div>
+                                    <input id={"input-box-" + key}
+                                        title={data.data ? "Current value is " + JSON.stringify(data.data[data.data.length - 1]) : ""}
+                                        className={"simulation-data-inputbox"}
+                                        type='text'
+                                        onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
+                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
+                                </div>
+                            </td>
+                            <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
+                            <td key="history" className="simulation-data-box history">
+                                <div>
+                                    <input id={"input-box-" + key}
+                                            className={"simulation-history-inputbox"}
+                                            type='text'
+                                            value={data.data ? JSON.stringify(data.data.reverse()) : ""}
+                                            placeholder={""} readOnly/></div></td>
+                        </tr>
+                    }
+                    list.push(node)
                 }
-                list.push(node)
             })
             return <table className={"simulation-data-table"}>
                 <thead>
@@ -382,7 +403,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                         {this.renderInputOutputColumnHeader()}
                         <th key="label" className="simulation-data-box" align="left"><div className="simulation-div">Symbol</div></th>
                         <th key="value" className="simulation-data-box" align="left"><div className="simulation-div">Last Value</div></th>
-                        <th key="input" className="simulation-data-box" align="left"><div className="simulation-div">Input</div></th>
+                        <th key="input" className="simulation-data-box" align="left"><div>Input</div></th>
                         <th key="next-step" className="simulation-data-box" align="left"><div className="simulation-div">Value for Next Tick</div></th>
                         <th key="history" className="simulation-data-box history" align="left"><div className="simulation-div">History</div></th>
                     </tr>
@@ -394,9 +415,19 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    isInternal(data: SimulationData) {
+        return data.categories.includes("guard") || data.categories.includes("sccharts-generated") || data.categories.includes("term")|| data.categories.includes("ticktime")
+    }
+
     renderInputOutputColumn(data: SimulationData): React.ReactNode {
         if (this.inputOutputColumnEnabled) {
-            return <td key="inputoutput" className="simulation-data-box" align="left"><div>{data.input ? "input" : ""}{data.output ? "output" : ""}</div></td>
+            return <td key="inputoutput" className="simulation-data-box" align="left">
+                    <div>
+                        {data.input ? "input" : ""}
+                        {data.output ? "output" : ""}
+                        {data.categories}
+                    </div>
+                </td>
         } else {
             return
         }

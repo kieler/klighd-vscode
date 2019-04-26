@@ -139,14 +139,22 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             // handle message
             const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
             const input: Map<string, any> = new Map(Object.entries(startMessage.input));
-            console.log("Datapool:")
-            console.log(pool)
-            console.log("Inputs:")
-            console.log(input)
+            const output: Map<string, any> = new Map(Object.entries(startMessage.output));
+            const propertySet: Map<string, any> = new Map(Object.entries(startMessage.propertySet));
+            // Construct list of all categories
+            propertySet.forEach((list, key) => {
+                this.simulationWidget.categories.push(key)
+            })
             pool.forEach((value, key) => {
-                this.simulationWidget.simulationData.set(key, {data: [], input: input.has(key), output: false})
+                // Add list of properties to SimulationData
+                let categoriesList: string[] = []
+                propertySet.forEach((list, propertyKey) => {
+                    if (list.includes(key)) {
+                        categoriesList.push(propertyKey)
+                    }
+                })
+                this.simulationWidget.simulationData.set(key, {data: [], input: input.has(key), output: output.has(key), categories: categoriesList})
                 if (input.get(key) !== undefined) {
-                    console.log("Added " + key + " as input")
                     this.simulationWidget.valuesForNextStep.set(key, value)
                 }
                 this.simulationWidget.controlsEnabled = true
