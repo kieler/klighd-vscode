@@ -415,7 +415,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     isInternal(data: SimulationData) {
-        return data.categories.includes("guard") || data.categories.includes("sccharts-generated") || data.categories.includes("term")|| data.categories.includes("ticktime")
+        return data.categories.includes("guard") || data.categories.includes("sccharts-generated") || data.categories.includes("term") || data.categories.includes("ticktime")
     }
 
     renderInputOutputColumn(data: SimulationData): React.ReactNode {
