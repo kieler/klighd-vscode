@@ -11,11 +11,12 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand, SetSynthesesAction, SetSynthesisAction } from '@kieler/keith-sprotty/lib/actions/actions';
 import { injectable } from 'inversify';
-import { ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand } from '@kieler/keith-sprotty/lib/actions/actions';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
-import { Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, FitToScreenAction, SetModelCommand } from 'sprotty/lib';
+import { Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, FitToScreenAction, ICommand, SetModelCommand } from 'sprotty/lib';
 import { KeithDiagramWidget } from './keith-diagram-widget';
+import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
@@ -52,8 +53,25 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
                 return false
             case PerformActionAction.KIND:
                 return true
+            case SetSynthesisAction.KIND:
+                return true
         }
         return super.handleLocally(action)
+    }
+
+    handle(action: Action): void | ICommand | Action {
+        if (action.kind === SetSynthesesAction.KIND) {
+            this.connector.synthesisRegistry.setAvailableSyntheses((action as SetSynthesesAction).syntheses)
+            this.connector.synthesisRegistry.setProvidingDiagramServer(this)
+        } else {
+            super.handle(action)
+        }
+    }
+
+    disconnect() {
+        super.disconnect()
+        // Unregister all commands for this server on disconnect.
+        this.connector.synthesisRegistry.clearAvailableSyntheses()
     }
 
     initialize(registry: ActionHandlerRegistry): void {
@@ -63,14 +81,20 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(RequestTextBoundsCommand.KIND, this)
         registry.register(ComputedTextBoundsAction.KIND, this)
         registry.register(PerformActionAction.KIND, this)
+        registry.register(SetSynthesesAction.KIND, this)
+        registry.register(SetSynthesisAction.KIND, this)
     }
 
-    handleComputedBounds(action: ComputedBoundsAction): boolean {
+    handleComputedBounds(_action: ComputedBoundsAction): boolean {
         // ComputedBounds actions should not be generated and forwarded anymore, since only the computedTextBounds action is used by kgraph diagrams
         if (this.viewerOptions.needsServerLayout) {
             return true;
         } else {
             return false
         }
+    }
+
+    get connector(): KeithTheiaSprottyConnector {
+        return this._connector as KeithTheiaSprottyConnector;
     }
 }

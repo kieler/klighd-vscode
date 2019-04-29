@@ -41,6 +41,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     editorWidget: EditorWidget
     diagramOptionsViewWidget: DiagramOptionsViewWidget
 
+    /**
+     * The dynamically registered commands for the current diagram options.
+     */
     protected registeredCommands: Command[]
 
     constructor(
@@ -215,6 +218,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.registeredCommands.forEach(command => {
                 this.commandRegistry.unregisterCommand(command)
             });
+            this.registeredCommands = []
             result.actions.forEach( action => {
                 const command: Command = {id: "Diagram: " + action.actionId, label: "Diagram: " + action.displayedName}
                 this.registeredCommands.push(command)

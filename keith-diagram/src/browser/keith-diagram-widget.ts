@@ -32,7 +32,6 @@ export class KeithDiagramWidget extends DiagramWidget {
 
     /**
      * Method to fire the internal event that should be caused whenever the model displayed in this widget is changed.
-     * TODO: this really should not have to go through the diagram widget. Ask TypeFox for a generic solution.
      */
     public modelUpdated(): void {
         this.onModelUpdatedEmitter.fire()

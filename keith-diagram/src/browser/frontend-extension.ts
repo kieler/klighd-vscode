@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,12 +11,15 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
+import { CommandContribution, MenuContribution } from '@theia/core';
 import { FrontendApplicationContribution, OpenHandler, WidgetFactory, WidgetManager } from '@theia/core/lib/browser';
 import { ContainerModule } from 'inversify';
 import 'sprotty-theia/css/theia-sprotty.css';
 import { DiagramConfiguration, DiagramManager, DiagramManagerProvider } from 'sprotty-theia/lib';
 import 'sprotty/css/sprotty.css';
 import { KeithDiagramConfiguration } from './di.config';
+import { SynthesisCommandContribution } from './keith-diagram-commands';
 import { KeithDiagramManager } from './keith-diagram-manager';
 import { KeithWidgetManager } from './keith-widget-manager';
 
@@ -40,4 +43,8 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
         }
     })
     rebind(WidgetManager).to(KeithWidgetManager).inSingletonScope()
+
+    bind(SynthesisRegistry).toSelf().inSingletonScope()
+    bind(MenuContribution).to(SynthesisCommandContribution).inSingletonScope()
+    bind(CommandContribution).to(SynthesisCommandContribution).inSingletonScope()
 })
