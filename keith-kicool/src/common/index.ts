@@ -13,6 +13,8 @@
 
 export const compilerWidgetId = "compiler-widget"
 export const COMPILE: string = 'keith/kicool/compile'
+export const CANCEL_COMPILATION: string = "keith/kicool/cancel-compilation"
+export const CANCEL_GET_SYSTEMS: string = "keith/kicool/cancel-get-systems"
 export const SHOW: string = 'keith/kicool/show'
 export const GET_SYSTEMS: string = 'keith/kicool/get-systems'
 

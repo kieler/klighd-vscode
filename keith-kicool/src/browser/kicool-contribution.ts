@@ -22,7 +22,9 @@ import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { Workspace } from "@theia/languages/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { inject, injectable } from "inversify";
-import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING } from "../common";
+import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING,
+    CANCEL_COMPILATION, 
+    CANCEL_GET_SYSTEMS} from "../common";
 import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystems, Snapshot } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
@@ -95,6 +97,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * Enables dynamic registration of command palette commands
      */
     commandPaletteEnabled: boolean = false
+
+    doNotRequest: boolean
 
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
@@ -176,6 +180,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     onCurrentEditorChanged(editorWidget: EditorWidget | undefined): void {
         if (editorWidget) {
             this.editor = editorWidget
+            if (this.editor.editor.uri.path.ext === this.compilerWidget.lastRequestedUriExtension) {
+                this.doNotRequest = true
+            }
         }
         if (!this.compilerWidget || this.compilerWidget.isDisposed) {
             const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
@@ -197,7 +204,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     async requestSystemDescriptions() {
-        if (this.editor) {
+        if (!this.doNotRequest && this.editor) {
+            this.compilerWidget.requestedSystems = true
+            this.compilerWidget.update()
             const lClient = await this.client.languageClient
             const uri = this.editor.editor.uri.toString()
             // Check if language client was already initialized and wait till it is
@@ -213,8 +222,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.addCompilationSystemToCommandPalette(systems)
             }
             this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
+            this.compilerWidget.requestedSystems = false
+            this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
             this.compilerWidget.update()
             this.compilerWidget.onNewSystemsAddedEmitter.fire(this.compilerWidget)
+        } else {
+            this.doNotRequest = false
         }
     }
 
@@ -374,11 +387,13 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
 
     public async compile(command: string): Promise<void> {
-        this.compilerWidget.lastInvokedCompilation = command
         if (!this.compilerWidget.autoCompile) {
             this.message("Compiling with " + command, "info")
         }
+        this.compilerWidget.compiling = true
         await this.executeCompile(command)
+        this.compilerWidget.lastInvokedCompilation = command
+        this.compilerWidget.update()
     }
 
     async executeCompile(command: string): Promise<void> {
@@ -413,6 +428,33 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }, 0)
         this.lengthMap.set(uri as string, length)
         this.indexMap.set(uri as string, length - 1)
+        this.compilerWidget.compiling = false
+        this.compilerWidget.update()
+    }
+
+    /**
+     * Cancels compilation by stopping the compilation thread on the LS.
+     */
+    public async cancelCompilation(): Promise<void> {
+        const lclient = await this.client.languageClient
+        const success = await lclient.sendRequest(CANCEL_COMPILATION)
+        if (success) {
+            this.compilerWidget.compiling = false
+        }
+        this.compilerWidget.update()
+    }
+
+    /**
+     * Cancels compilation by stopping the compilation thread on the LS.
+     */
+    public async cancelGetSystems(): Promise<void> {
+        const lclient = await this.client.languageClient
+
+        console.log("Did it")
+        const success = await lclient.sendRequest(CANCEL_GET_SYSTEMS)
+        if (success) {
+            this.compilerWidget.requestedSystems = false
+        }
         this.compilerWidget.update()
     }
 
