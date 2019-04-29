@@ -106,15 +106,20 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         if (!this.commands.kicoolContribution ||
             !this.commands.kicoolContribution.compilerWidget ||
             this.commands.kicoolContribution.compilerWidget.systems.length === 0) {
-            return <div className='spinnerContainer'>
-                <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
-            </div>;
+            return this.renderSpinner()
         } else {
             return <React.Fragment>
                 {this.renderSimulationPanel()}
+                {this.commands.kicoolContribution.compilerWidget.compiling ? this.renderSpinner() : ""}
                 <div key="table" className="simulation-table">{this.renderSimulationData()}</div>
             </React.Fragment>
         }
+    }
+
+    renderSpinner() {
+        return <div className='spinnerContainer'>
+            <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
+        </div>;
     }
 
     /**
@@ -494,7 +499,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     onUpdateRequest(msg: Message): void {
         super.onUpdateRequest(msg);
-        this.render()
     }
 
     storeState(): SimulationWidget.Data {
