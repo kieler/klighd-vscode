@@ -126,7 +126,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * Indicates whether a compilation is currently running.
      * Enables to stop compilation button.
      */
-    public compiling: boolean
+    public compiling: boolean = false
 
     public requestedSystems: boolean
 
@@ -188,6 +188,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     this.compilationSystemFilter,
                     () => this.handleCSSearchChange())
             }
+            console.log("Currently compiling " + this.compiling)
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                 {this.renderShowAdvancedToolbar()}
@@ -249,7 +250,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     onUpdateRequest(msg: Message): void {
         super.onUpdateRequest(msg);
-        this.render()
     }
 
     /**
