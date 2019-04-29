@@ -23,7 +23,7 @@ import { Workspace } from "@theia/languages/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { inject, injectable } from "inversify";
 import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING,
-    CANCEL_COMPILATION, 
+    CANCEL_COMPILATION,
     CANCEL_GET_SYSTEMS} from "../common";
 import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystems, Snapshot } from "../common/kicool-models";
@@ -354,7 +354,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     public message(message: string, type: string) {
-        switch (type) {
+        switch (type.toLowerCase()) {
             case "error":
                 this.messageService.error(message)
                 this.outputManager.getChannel("SCTX").appendLine("ERROR: " + message)
@@ -391,6 +391,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.message("Compiling with " + command, "info")
         }
         this.compilerWidget.compiling = true
+        this.compilerWidget.update()
+        console.log(this.compilerWidget.compiling)
         await this.executeCompile(command)
         this.compilerWidget.lastInvokedCompilation = command
         this.compilerWidget.update()
