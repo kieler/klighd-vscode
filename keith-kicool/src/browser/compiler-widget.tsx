@@ -122,6 +122,16 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public lastInvokedCompilation: string = ""
 
+    /*
+     * Indicates whether a compilation is currently running.
+     * Enables to stop compilation button.
+     */
+    public compiling: boolean
+
+    public requestedSystems: boolean
+
+    public lastRequestedUriExtension: string
+
     constructor(
         @inject(new LazyServiceIdentifer(() => KiCoolContribution)) protected readonly commands: KiCoolContribution
     ) {
@@ -133,16 +143,21 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     render(): React.ReactNode {
-        if (!this.systems || this.systems.length === 0) {
+        if (this.requestedSystems) {
+            return <div>
+                <div key="panel" className={"compilation-panel" + (this.selectedStyle)}>
+                    {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems()) : ""}
+                </div>
+                {this.renderSpinner()}
+            </div>;
+        } else if (!this.systems || this.systems.length === 0) {
             // Case no connection to the LS was established or no compilation systems are present.
             if (this.commands && this.commands.editor) {
                 // Try to request compilation systems.
                 this.requestSystemDescription()
             }
             // If no compilation systems could be requested, show spinner instead.
-            return <div className='spinnerContainer'>
-                <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
-            </div>;
+            return this.renderSpinner()
         } else {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
@@ -186,10 +201,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     <select id='compilation-list' className={'selection-list' + (this.selectedStyle)}>
                         {compilationElements}
                     </select>
-                    {this.renderCompileButton()}
+                    {this.compiling ? "" : this.renderCompileButton()}
+                    {this.compiling ? this.renderCancelButton(() => this.commands.cancelCompilation()) : ""}
                     {searchbox}
                 </div>
                 {this.renderShowButtons()}
+                {this.compiling ? this.renderSpinner() : ""}
             </React.Fragment>
         }
     }
@@ -240,6 +257,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public requestSystemDescription(): void {
         this.onRequestSystemDescriptionsEmitter.fire(this)
+    }
+
+    renderSpinner(): React.ReactNode {
+        return <div className='spinnerContainer'>
+                <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
+            </div>;
     }
 
     /**
@@ -350,6 +373,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 this.compileSelectedCompilationSystem()
             }}>
             <div className='icon fa fa-play-circle'> </div>
+        </div>
+    }
+
+    renderCancelButton(method: () => Promise<void>): React.ReactNode {
+        return <div className={'preference-button' + (this.selectedStyle)} title="Cancel"
+            onClick={() => method()}>
+            <div className='icon fa fa-square'> </div>
         </div>
     }
 
