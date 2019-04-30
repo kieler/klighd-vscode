@@ -60,12 +60,13 @@ export class KeithDiagramManager extends DiagramManager {
     }
 
     /**
-     * Opens the diagram widget automatically if the current editor has changed.
+     * Reloads the diagram widget automatically if the current editor has changed.
      *
      * @param editorWidget The editor that is now active.
      */
-    onCurrentEditorChanged(editorWidget: EditorWidget | undefined): void {
-        if (editorWidget) {
+    async onCurrentEditorChanged(editorWidget: EditorWidget | undefined): Promise<void> {
+        const diagramWidget = this.widgetManager.getWidgets(this.id).pop()
+        if (diagramWidget && editorWidget) {
             const uri = editorWidget.getResourceUri()
             if (uri instanceof URI) {
                 this.drawDiagram(uri)

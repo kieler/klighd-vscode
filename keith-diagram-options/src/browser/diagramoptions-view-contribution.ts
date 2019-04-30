@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -198,6 +198,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                 uri: this.editorWidget.editor.uri.toString()
             }
             const result: GetOptionsResult = await lClient.sendRequest(GET_OPTIONS, param) as GetOptionsResult
+            if (!result) {
+                return
+            }
             const valuedOptions: ValuedSynthesisOption[] = result.valuedSynthesisOptions
             const synthesisOptions: SynthesisOption[] = []
 

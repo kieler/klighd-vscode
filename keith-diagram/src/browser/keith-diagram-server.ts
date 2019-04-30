@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -32,12 +32,10 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         // Special handling for the SetModel action.
         if (message.action.kind === SetModelCommand.KIND) {
             // Fire the widget's event that a new model was received.
-            const widgetPromise = this.connector.widgetManager.getWidget(this.connector.diagramManager.id)
-            widgetPromise.then(widget => {
-                if (widget instanceof KeithDiagramWidget) {
-                    widget.modelUpdated()
-                }
-            })
+            const diagramWidget = this.connector.widgetManager.getWidgets(this.connector.diagramManager.id).pop()
+            if (diagramWidget instanceof KeithDiagramWidget) {
+                diagramWidget.modelUpdated()
+            }
             // Fit the received model to the widget size.
             this.actionDispatcher.dispatch(new FitToScreenAction([], undefined, undefined, false))
         }

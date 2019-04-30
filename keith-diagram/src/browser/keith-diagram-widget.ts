@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -56,5 +56,14 @@ export class KeithDiagramWidget extends DiagramWidget {
     onResize(_msg: Widget.ResizeMessage): void {
         const newBounds = this.getBoundsInPage(this.node as Element)
         this.actionDispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds))
+    }
+
+    storeState(): object {
+        return {
+            diagramType: this.options.diagramType,
+            label: this.options.label,
+            iconClass: this.options.iconClass,
+            uri: ' ' // The uri is not important for restoring.
+        }
     }
 }
