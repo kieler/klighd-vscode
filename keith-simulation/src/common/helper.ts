@@ -1,3 +1,4 @@
+import { SimulationData } from ".";
 
 /**
  * In an asynchronous context this method can be called to wait for some time.
@@ -17,4 +18,8 @@ export function strMapToObj(strMap: Map<string, any>) {
 
 export function strMapToJson(strMap: any) {
     return JSON.stringify(strMapToObj(strMap));
+}
+
+export function isInternal(data: SimulationData) {
+    return data.categories.includes("guard") || data.categories.includes("sccharts-generated") || data.categories.includes("term") || data.categories.includes("ticktime")
 }

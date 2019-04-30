@@ -16,9 +16,9 @@ import { injectable, LazyServiceIdentifer, inject } from "inversify";
 import { StatefulWidget, ReactWidget, Message} from "@theia/core/lib/browser";
 import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
-import { simulationWidgetId, SimulationData, SimulationStoppedMessage, SimulationStepMessage } from "../common"
+import { simulationWidgetId, SimulationData } from "../common"
 import { Emitter } from "@theia/core";
-import { delay, strMapToObj } from '../common/helper'
+import { delay, isInternal } from '../common/helper'
 import { CompilationSystems } from "@kieler/keith-kicool/lib/common/kicool-models"
 
 
@@ -60,7 +60,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     /**
      * Wether next simulation step should be requested after a time specified by simulation delay
      */
-    protected play = false
+    public play = false
 
     /**
      * Time in milliseconds to wait till next simulation step is requested in play mode.
@@ -140,7 +140,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.renderSimulationTypeSelectbox()}
             {this.renderSimulationSpeedInputbox()}
             {this.simulationRunning ? "" : this.renderSimulationSelectionBox()}
-            {this.simulationRunning ? "" : this.renderCompileButton()}
+            {this.simulationRunning ? "" : this.renderSimulationButton()}
             {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") && !this.simulationRunning ? this.renderRestartButton() : ""}
         </div>
     }
@@ -164,10 +164,13 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         this.update()
     }
 
+    /**
+     * TODO implement
+     */
     async waitForNextStep() {
         while (this.play) {
             console.log("Waiting for delay")
-            this.executeSimulationStep()
+            this.commands.executeSimulationStep()
             delay(this.simulationDelay)
             this.update()
         }
@@ -175,81 +178,27 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderStepButton(): React.ReactNode {
         return <div title="Step" key="step-button" className={'preference-button'}
-            onClick={event => this.executeSimulationStep()}>
+            onClick={event => this.commands.executeSimulationStep()}>
             <div className={'icon fa fa-step-forward'}/>
         </div>
     }
 
-    /**
-     * Executes a simulation step on the LS.
-     */
-    async executeSimulationStep() {
-        const lClient = await this.commands.client.languageClient
-        // Transform the input map to an object since this is the format the LS supports
-        let jsonObject = strMapToObj(this.valuesForNextStep)
-        const message: SimulationStepMessage = await lClient.sendRequest("keith/simulation/step", [jsonObject, "Manual"]) as SimulationStepMessage
-        // Transform jsonObject back to map
-        const pool: Map<string, any> = new Map(Object.entries(message.values));
-        if (pool) {
-            pool.forEach((value, key) => {
-                // push value in history and set new input value
-                const history = this.simulationData.get(key)
-                if (history !== undefined) {
-                    history.data.push(value)
-                    this.simulationData.set(key, history)
-                    if (this.valuesForNextStep.get(key) !== undefined) {
-                        this.valuesForNextStep.set(key, value)
-                    }
-                } else {
-                    this.stopSimulation()
-                    this.commands.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
-                    this.update()
-                    return
-                }
-            });
-        } else {
-            this.commands.message("Simulation data values are undefined", "ERROR")
-        }
-        this.update()
-    }
-
     renderStopButton(): React.ReactNode {
         return <div title="Stop" key="stop-button" className={'preference-button'}
-            onClick={event => this.stopSimulation()}>
+            onClick={event => this.commands.stopSimulation()}>
             <div className={'icon fa fa-stop'}/>
         </div>
-    }
-
-    /**
-     * Request a simulation stop from the LS.
-     */
-    public async stopSimulation() {
-        // Stop all simulation, i.e. empty maps and kill simulation process on LS
-        this.valuesForNextStep.clear()
-        this.simulationData.clear()
-        this.play = false
-        this.controlsEnabled = false
-        this.simulationRunning = false
-        const lClient = await this.commands.client.languageClient
-        const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
-        if (message.successful) {
-            this.commands.message(message.message, "INFO")
-        } else {
-            this.commands.message(message.message, "ERROR")
-        }
-        // TODO kill some executable process by requested its termination on the LS
-        this.update()
     }
 
     renderIOButton(): React.ReactNode {
         return <div title={"IO"}
             key="io-button" className={'preference-button' + (this.inputOutputColumnEnabled ? '' : ' off')}
-            onClick={event => this.toggleIO()}>
+            onClick={event => this.toggleIODiplayButton()}>
             <div className={'icon fa fa-exchange'}/>
         </div>
     }
 
-    toggleIO() {
+    toggleIODiplayButton() {
         this.inputOutputColumnEnabled = !this.inputOutputColumnEnabled
         this.update()
     }
@@ -283,13 +232,19 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
+    /**
+     * TODO
+     */
     handleSelectionOfSimulationType(): void {
         throw new Error("Method not implemented.");
     }
+
+    /**
+     * TODO
+     */
     renderSimulationSpeedInputbox(): React.ReactNode {
         return <div></div>
     }
-
 
     renderSimulationSelectionBox(): React.ReactNode {
         const simulationCommands: React.ReactNode[] = [];
@@ -303,24 +258,13 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </select>
     }
 
-    renderCompileButton(): React.ReactNode {
+    renderSimulationButton(): React.ReactNode {
         return <div className={'compile-button'} title="Compile"
             onClick={event => {
-                this.startSimulation()
+                this.commands.compileAndStartSimulation()
             }}>
             <div className='icon fa fa-play-circle'> </div>
         </div>
-    }
-
-    async startSimulation() {
-        const selection = document.getElementById("simulation-list") as HTMLSelectElement;
-        const option = selection.selectedOptions[0]
-        if (option !== undefined) {
-            await this.commands.kicoolContribution.compile(option.value)
-            this.commands.simulate()
-        } else {
-            this.commands.message("Option is undefined, did not simulate", "ERROR")
-        }
     }
 
     renderRestartButton(): React.ReactNode {
@@ -342,7 +286,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         } else {
             this.simulationData.forEach((data, key) => {
                 // only add data that if input, output or internal data should be shown
-                if (this.showInternalVariables || !this.isInternal(data)) {
+                if (this.showInternalVariables || !isInternal(data)) {
                     // nextStep is never undefined
                     let nextStep = this.valuesForNextStep.get(key)
                     let node: React.ReactElement;
@@ -417,10 +361,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                 </tbody>
             </table>
         }
-    }
-
-    isInternal(data: SimulationData) {
-        return data.categories.includes("guard") || data.categories.includes("sccharts-generated") || data.categories.includes("term") || data.categories.includes("ticktime")
     }
 
     renderInputOutputColumn(data: SimulationData): React.ReactNode {

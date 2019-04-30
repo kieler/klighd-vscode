@@ -7,11 +7,11 @@ import { MessageService, Command, CommandRegistry, MenuModelRegistry } from "@th
 import { EditorManager } from "@theia/editor/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
-import { simulationWidgetId, OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationStartedMessage } from "../common";
+import { simulationWidgetId, OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationStartedMessage, SimulationStoppedMessage, SimulationStepMessage } from "../common";
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import { SimulationKeybindingContext } from "./simulation-keybinding-context";
 import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-contribution"
-import { delay } from "../common/helper";
+import { delay, strMapToObj } from "../common/helper";
 
 /**
  * Command to open the simulation widget
@@ -27,6 +27,11 @@ export const SIMULATION: Command = {
 export const SIMULATE: Command = {
     id: 'simulate',
     label: 'Restart simulation'
+}
+
+export const COMPILE_AND_SIMULATE: Command = {
+    id: 'compile-and-simulate',
+    label: 'Simulate'
 }
 
 /**
@@ -115,11 +120,31 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.simulate()
             }
         })
+        commands.registerCommand(COMPILE_AND_SIMULATE, {
+            execute: async () => {
+                this.compileAndStartSimulation()
+            }
+        })
+    }
+
+    /**
+     * Invoke a simulation. This includes the compilation via a simulation CS.
+     */
+    async compileAndStartSimulation() {
+        const selection = document.getElementById("simulation-list") as HTMLSelectElement;
+        const option = selection.selectedOptions[0]
+        if (option !== undefined) {
+            // when simulating it should always compile inplace
+            await this.kicoolContribution.compile(option.value, true)
+            this.simulate()
+        } else {
+            this.message("Option is undefined, did not simulate", "ERROR")
+        }
     }
 
     /**
      * Invoke simulation.
-     * >To be successful a compilation with a simulation compilation system has to be invoked before this function call.
+     * To be successful a compilation with a simulation compilation system has to be invoked before this function call.
      */
     async simulate() {
         // A simulation can only be invoked if a current editor widget exists and no simulation is currently running.
@@ -135,7 +160,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 initializeResult = lClient.initializeResult
             }
             const startMessage: SimulationStartedMessage = await lClient.sendRequest("keith/simulation/start", [uri, "Manual"]) as SimulationStartedMessage
-            this.simulationWidget.simulationRunning = true
+            if (!startMessage.successful) {
+                this.message(startMessage.error, "error")
+                return
+            }
             // handle message
             const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
             const input: Map<string, any> = new Map(Object.entries(startMessage.input));
@@ -159,11 +187,67 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 }
                 this.simulationWidget.controlsEnabled = true
             })
+            this.simulationWidget.simulationRunning = true
             const widget = this.front.shell.revealWidget(simulationWidgetId)
             if (widget) {
                 widget.update()
             }
         }
+    }
+
+
+
+    /**
+     * Executes a simulation step on the LS.
+     */
+    async executeSimulationStep() {
+        const lClient = await this.client.languageClient
+        // Transform the input map to an object since this is the format the LS supports
+        let jsonObject = strMapToObj(this.simulationWidget.valuesForNextStep)
+        const message: SimulationStepMessage = await lClient.sendRequest("keith/simulation/step", [jsonObject, "Manual"]) as SimulationStepMessage
+        // Transform jsonObject back to map
+        const pool: Map<string, any> = new Map(Object.entries(message.values));
+        if (pool) {
+            pool.forEach((value, key) => {
+                // push value in history and set new input value
+                const history = this.simulationWidget.simulationData.get(key)
+                if (history !== undefined) {
+                    history.data.push(value)
+                    this.simulationWidget.simulationData.set(key, history)
+                    if (this.simulationWidget.valuesForNextStep.get(key) !== undefined) {
+                        this.simulationWidget.valuesForNextStep.set(key, value)
+                    }
+                } else {
+                    this.stopSimulation()
+                    this.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
+                    this.simulationWidget.update()
+                    return
+                }
+            });
+        } else {
+            this.message("Simulation data values are undefined", "ERROR")
+        }
+        this.simulationWidget.update()
+    }
+
+    /**
+     * Request a simulation stop from the LS.
+     */
+    public async stopSimulation() {
+        // Stop all simulation, i.e. empty maps and kill simulation process on LS
+        this.simulationWidget.valuesForNextStep.clear()
+        this.simulationWidget.simulationData.clear()
+        this.simulationWidget.play = false
+        this.simulationWidget.controlsEnabled = false
+        this.simulationWidget.simulationRunning = false
+        const lClient = await this.client.languageClient
+        const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
+        if (message.successful) {
+            this.message(message.message, "INFO")
+        } else {
+            this.message(message.message, "ERROR")
+        }
+        this.simulationWidget.update()
     }
 
     registerKeybindings(keybindings: KeybindingRegistry): void {
