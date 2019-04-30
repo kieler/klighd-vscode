@@ -188,7 +188,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     this.compilationSystemFilter,
                     () => this.handleCSSearchChange())
             }
-            console.log("Currently compiling " + this.compiling)
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                 {this.renderShowAdvancedToolbar()}
@@ -437,7 +436,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             return this.showPrivateSystems || system.isPublic
         })
         if (systems.length > 0) {
-            this.commands.compile(systems[selection.selectedIndex].id)
+            this.commands.compile(systems[selection.selectedIndex].id, this.compileInplace)
         } else {
             this.commands.message("No compilation systems found", "error")
             return

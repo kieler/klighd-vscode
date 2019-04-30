@@ -98,8 +98,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      */
     commandPaletteEnabled: boolean = false
 
-    doNotRequest: boolean
-
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
@@ -180,9 +178,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     onCurrentEditorChanged(editorWidget: EditorWidget | undefined): void {
         if (editorWidget) {
             this.editor = editorWidget
-            if (this.editor.editor.uri.path.ext === this.compilerWidget.lastRequestedUriExtension) {
-                this.doNotRequest = true
-            }
         }
         if (!this.compilerWidget || this.compilerWidget.isDisposed) {
             const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
@@ -204,7 +199,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     async requestSystemDescriptions() {
-        if (!this.doNotRequest && this.editor) {
+        if (this.editor) {
             this.compilerWidget.requestedSystems = true
             this.compilerWidget.update()
             const lClient = await this.client.languageClient
@@ -226,8 +221,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
             this.compilerWidget.update()
             this.compilerWidget.onNewSystemsAddedEmitter.fire(this.compilerWidget)
-        } else {
-            this.doNotRequest = false
         }
     }
 
@@ -247,7 +240,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.kicoolCommands.push(command)
                 const handler: CommandHandler = {
                     execute: () => {
-                        this.compile(system.id);
+                        this.compile(system.id, this.compilerWidget.compileInplace);
                     }
                 }
                 this.commandRegistry.registerCommand(command, handler)
@@ -386,19 +379,18 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
 
-    public async compile(command: string): Promise<void> {
+    public async compile(command: string, inplace: boolean): Promise<void> {
         if (!this.compilerWidget.autoCompile) {
             this.message("Compiling with " + command, "info")
         }
         this.compilerWidget.compiling = true
         this.compilerWidget.update()
-        console.log(this.compilerWidget.compiling)
-        await this.executeCompile(command)
+        await this.executeCompile(command, inplace)
         this.compilerWidget.lastInvokedCompilation = command
         this.compilerWidget.update()
     }
 
-    async executeCompile(command: string): Promise<void> {
+    async executeCompile(command: string, inplace: boolean): Promise<void> {
         if (!this.editor) {
             this.message(EDITOR_UNDEFINED_MESSAGE, "error")
             return;
@@ -406,8 +398,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
         const uri = this.compilerWidget.sourceModelPath
         const lclient = await this.client.languageClient
-        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command,
-            this.compilerWidget.compileInplace]) as CodeContainer
+        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace]) as CodeContainer
         // Show next/previous command and keybinding if not already added
         if (!this.commandRegistry.getCommand(SHOW_NEXT.id)) {
             this.registerShowNext()
@@ -451,8 +442,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      */
     public async cancelGetSystems(): Promise<void> {
         const lclient = await this.client.languageClient
-
-        console.log("Did it")
         const success = await lclient.sendRequest(CANCEL_GET_SYSTEMS)
         if (success) {
             this.compilerWidget.requestedSystems = false
