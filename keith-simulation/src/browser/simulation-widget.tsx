@@ -141,11 +141,12 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     /**
      * Renders the control panel of the simulation widget.
-     * The play/pause button is hidden. TODO shot it whenever a simulation is running.
+     * The play/pause button is shown whenever a simulation is running.
      * Step, stop, and IO button are only shown if a simulation is running.
      * The simulation type selectbox and simulation speed input box are always shown.
      * The simulation compilation system selectbox and the compile button are only shown if no simulation is running.
      * The restart button is only shown if the last invoked compilation system is a simulation compilation system.
+     * The step counter is only shown, if the simulation is running.
      */
     renderSimulationPanel() {
         return <div className="simulation-panel">
@@ -216,7 +217,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             selectionList.push(
                 <option value={type} key={type}>{type}</option>
             )
-            // TODO do stuff
         })
         return <div>
             <select id="simulation-type-list" value={this.simulationType} className={'selection-list simulation-type-list'}
@@ -227,7 +227,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     /**
-     * Set the 
+     * Set the simulation type according to the selection ion the simulation-type-list
      */
     handleSelectionOfSimulationType(): void {
         const options = (document.getElementById('simulation-type-list') as HTMLSelectElement).selectedOptions
@@ -393,7 +393,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderStepCounter(): React.ReactNode {
-        return <div key="step-counter">{this.simulationStep}</div>
+        return <div className={'preference-button'} title="Step Counter">
+            <div className='icon'>{this.simulationStep}</div>
+        </div>
     }
 
     setBooleanInput(id: string, key: string,  value: any, data: any) {
