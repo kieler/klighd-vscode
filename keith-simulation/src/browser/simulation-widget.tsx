@@ -192,12 +192,12 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     renderIOButton(): React.ReactNode {
         return <div title={"IO"}
             key="io-button" className={'preference-button' + (this.inputOutputColumnEnabled ? '' : ' off')}
-            onClick={event => this.toggleIODiplayButton()}>
+            onClick={event => this.toggleIODisplayButton()}>
             <div className={'icon fa fa-exchange'}/>
         </div>
     }
 
-    toggleIODiplayButton() {
+    toggleIODisplayButton() {
         this.inputOutputColumnEnabled = !this.inputOutputColumnEnabled
         this.update()
     }
