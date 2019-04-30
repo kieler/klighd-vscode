@@ -131,12 +131,16 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      * Invoke a simulation. This includes the compilation via a simulation CS.
      */
     async compileAndStartSimulation() {
+        this.simulationWidget.compilingSimulation = true
+        this.simulationWidget.update()
         const selection = document.getElementById("simulation-list") as HTMLSelectElement;
         const option = selection.selectedOptions[0]
         if (option !== undefined) {
             // when simulating it should always compile inplace
             await this.kicoolContribution.compile(option.value, true)
-            this.simulate()
+            this.simulationWidget.compilingSimulation = false
+            this.simulationWidget.update()
+            await this.simulate()
         } else {
             this.message("Option is undefined, did not simulate", "ERROR")
         }

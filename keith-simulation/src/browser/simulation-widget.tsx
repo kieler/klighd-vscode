@@ -108,6 +108,8 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     public simulationStep: number = -1
 
+    public compilingSimulation: boolean = false
+
     constructor(
         @inject(new LazyServiceIdentifer(() => SimulationContribution)) protected readonly commands: SimulationContribution
     ) {
@@ -127,7 +129,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         } else {
             return <React.Fragment>
                 {this.renderSimulationPanel()}
-                {this.commands.kicoolContribution.compilerWidget.compiling ? this.renderSpinner() : ""}
+                {this.commands.kicoolContribution.compilerWidget.compiling || this.compilingSimulation ? this.renderSpinner() : ""}
                 <div key="table" className="simulation-table">{this.renderSimulationData()}</div>
             </React.Fragment>
         }
@@ -157,9 +159,11 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.simulationRunning ? this.renderShowInternalButton() : ""}
             {this.renderSimulationTypeSelectbox()}
             {this.renderSimulationSpeedInputbox()}
-            {this.simulationRunning ? "" : this.renderSimulationSelectionBox()}
-            {this.simulationRunning ? "" : this.renderSimulationButton()}
-            {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") && !this.simulationRunning ? this.renderRestartButton() : ""}
+            {this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationSelectionBox()}
+            {this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationButton()}
+            {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation")
+                && !this.simulationRunning
+                && !this.compilingSimulation ? this.renderRestartButton() : ""}
             {this.simulationRunning ? this.renderStepCounter() : ""}
         </div>
     }
@@ -465,7 +469,11 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     restoreState(oldState: SimulationWidget.Data): void {
         this.displayInOut = oldState.displayInOut
         this.simulationType = oldState.simulationType
-        this.simulationStepDelay = oldState.simulationStepDelay
+        if (oldState.simulationStepDelay) {
+            this.simulationStepDelay = oldState.simulationStepDelay
+        } else {
+            this.simulationStepDelay = 300
+        }
     }
 
     simulationDataToString(data: any) {
