@@ -18,7 +18,7 @@ import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData } from "../common"
 import { Emitter } from "@theia/core";
-import { delay, isInternal } from '../common/helper'
+import { delay, isInternal, reverse } from '../common/helper'
 import { CompilationSystems } from "@kieler/keith-kicool/lib/common/kicool-models"
 
 
@@ -312,7 +312,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                 <input id={"input-box-" + key}
                                         className={"simulation-history-inputbox"}
                                         type='text'
-                                        value={data.data ? JSON.stringify(data.data.reverse()) : ""}
+                                        value={data.data ? JSON.stringify(reverse(data.data)) : ""}
                                         placeholder={""} readOnly/></div></td>
                         </tr>
                     } else {
@@ -338,7 +338,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                     <input id={"input-box-" + key}
                                             className={"simulation-history-inputbox"}
                                             type='text'
-                                            value={data.data ? JSON.stringify(data.data.reverse()) : ""}
+                                            value={data.data ? JSON.stringify(reverse(data.data)) : ""}
                                             placeholder={""} readOnly/></div></td>
                         </tr>
                     }

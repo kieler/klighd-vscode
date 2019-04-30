@@ -23,3 +23,7 @@ export function strMapToJson(strMap: any) {
 export function isInternal(data: SimulationData) {
     return data.categories.includes("guard") || data.categories.includes("sccharts-generated") || data.categories.includes("term") || data.categories.includes("ticktime")
 }
+
+export function reverse(array: any[]) {
+    return array.map((item, idx) => array[array.length - 1 - idx])
+}
