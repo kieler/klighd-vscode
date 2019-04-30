@@ -32,7 +32,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         // Special handling for the SetModel action.
         if (message.action.kind === SetModelCommand.KIND) {
             // Fire the widget's event that a new model was received.
-            const widgetPromise = this.connector.widgetManager.getWidget('keith-diagram-diagram-manager') // TODO: use the ID from where it is defined
+            const widgetPromise = this.connector.widgetManager.getWidget(this.connector.diagramManager.id)
             widgetPromise.then(widget => {
                 if (widget instanceof KeithDiagramWidget) {
                     widget.modelUpdated()

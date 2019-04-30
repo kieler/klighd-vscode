@@ -137,7 +137,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
-        if (e.factoryId === 'keith-diagram-diagram-manager') {
+        if (e.factoryId === this.diagramManager.id) {
             // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
             if (e.widget instanceof KeithDiagramWidget) {
                 e.widget.onModelUpdated(this.onModelUpdated.bind(this))
@@ -154,7 +154,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param uri The URI the model was created from.
      */
     async onModelUpdated(uri: string): Promise<void> {
-        if (this.diagramOptionsViewWidget) {
+        if (this.diagramOptionsViewWidget && !this.diagramOptionsViewWidget.isDisposed) {
             this.updateContent()
         }
     }
