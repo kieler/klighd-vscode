@@ -221,9 +221,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 if (history !== undefined) {
                     history.data.push(value)
                     this.simulationWidget.simulationData.set(key, history)
-                    if (this.simulationWidget.valuesForNextStep.get(key) !== undefined) {
-                        this.simulationWidget.valuesForNextStep.set(key, value)
-                    }
+                    // set values for next tick is removed, since a change may overwrite a change initialized by the user
                 } else {
                     this.stopSimulation()
                     this.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")

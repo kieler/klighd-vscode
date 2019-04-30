@@ -169,9 +169,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderPlayPauseButton(): React.ReactNode {
-        return <div title={this.play ? "Pause" : "Play"} key="play-pause-button" className={'preference-button' + (this.play ? '' : ' off')}
+        return <div title={this.play ? "Pause" : "Play"} key="play-pause-button" className={'preference-button'}
             onClick={event => this.commands.startOrPauseSimulation()}>
-            <div className={'icon fa ' + (this.play ? 'fa-play-circle' : 'fa-pause-circle')}/>
+            <div className={'icon fa ' + (this.play ? 'fa-pause-circle' : 'fa-play-circle')}/>
         </div>
     }
 
@@ -311,11 +311,12 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                             <td key="input" className="simulation-data-box">
                                 <div>
                                     <input id={"input-box-" + key}
-                                        title={data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}
+                                        title={JSON.stringify(nextStep)}
+                                        value={JSON.stringify(nextStep)}
                                         className={"simulation-data-button"}
                                         type='button'
                                         onClick={() => { this.setBooleanInput("input-box-" + key, key, nextStep as boolean, data) }}
-                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)} size={1}/>
+                                        placeholder={""} readOnly={!data.input} size={1}/>
                                 </div>
                             </td>
                             <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
@@ -340,7 +341,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                         className={"simulation-data-inputbox"}
                                         type='text'
                                         onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
-                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)} size={1}/>
+                                        placeholder={""} readOnly={!data.input} size={1}/>
                                 </div>
                             </td>
                             <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
@@ -363,7 +364,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                         <th key="label" className="simulation-data-box" align="left"><div className="simulation-div">Symbol</div></th>
                         <th key="value" className="simulation-data-box" align="left"><div className="simulation-div">Last Value</div></th>
                         <th key="input" className="simulation-data-box" align="left"><div>Input</div></th>
-                        <th key="next-step" className="simulation-data-box" align="left"><div className="simulation-div">Value for Next Tick</div></th>
+                        <th key="next-step" className="simulation-data-box" align="left"><div className="simulation-div">Input for Next Tick</div></th>
                         <th key="history" className="simulation-data-box history" align="left"><div className="simulation-div">History</div></th>
                     </tr>
                 </thead>
@@ -405,8 +406,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     setBooleanInput(id: string, key: string,  value: any, data: any) {
         if (this.valuesForNextStep.has(key)) {
             // if the value is a boolean just toggle it on click
-            const elem = document.getElementById(id) as HTMLInputElement
-            elem.value = (!value).toString()
             this.valuesForNextStep.set(key, !value)
             this.update()
         }
