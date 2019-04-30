@@ -144,15 +144,16 @@ td {
     border: 2px solid black;
     padding: 0;
     margin: 0px;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .simulation-div {
     resize: horizontal;
-    overflow: auto;
+    overflow: hidden;
     margin: 0px;
     padding: 0px;
     display:block;
+    min-width: fit-content;
 
 }
 

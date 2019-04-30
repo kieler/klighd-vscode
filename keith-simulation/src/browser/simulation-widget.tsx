@@ -315,7 +315,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                         className={"simulation-data-button"}
                                         type='button'
                                         onClick={() => { this.setBooleanInput("input-box-" + key, key, nextStep as boolean, data) }}
-                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
+                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)} size={1}/>
                                 </div>
                             </td>
                             <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
@@ -324,7 +324,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                         className={"simulation-history-inputbox"}
                                         type='text'
                                         value={data.data ? JSON.stringify(reverse(data.data)) : ""}
-                                        placeholder={""} readOnly/></div></td>
+                                        placeholder={""} readOnly size={1}/></div></td>
                         </tr>
                     } else {
                         node = <tr key={key} className="simulation-data-row">
@@ -340,7 +340,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                         className={"simulation-data-inputbox"}
                                         type='text'
                                         onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
-                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)}/>
+                                        placeholder={""} readOnly={!this.valuesForNextStep.has(key)} size={1}/>
                                 </div>
                             </td>
                             <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
@@ -350,7 +350,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                             className={"simulation-history-inputbox"}
                                             type='text'
                                             value={data.data ? JSON.stringify(reverse(data.data)) : ""}
-                                            placeholder={""} readOnly/></div></td>
+                                            placeholder={""} readOnly size={1}/></div></td>
                         </tr>
                     }
                     list.push(node)
