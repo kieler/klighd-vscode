@@ -304,10 +304,8 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                     if (typeof nextStep === "boolean") { // boolean values are rendered as buttons
                         node = <tr key={key} className="simulation-data-row">
                             {this.renderInputOutputColumn(data)}
-                            <th key="label" className="simulation-data-box" align="left"><div>{key}</div></th>
-                            <td key="value" className="simulation-data-box">
-                                <div>{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</div>
-                            </td>
+                            {this.renderLabelColumn(key)}
+                            {this.renderLastValueColumn(data)}
                             <td key="input" className="simulation-data-box">
                                 <div>
                                     <input id={"input-box-" + key}
@@ -319,39 +317,25 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                         placeholder={""} readOnly={!data.input} size={1}/>
                                 </div>
                             </td>
-                            <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
-                            <td key="history" className="simulation-data-box history"><div>
-                                <input id={"input-box-" + key}
-                                        className={"simulation-history-inputbox"}
-                                        type='text'
-                                        value={data.data ? JSON.stringify(reverse(data.data)) : ""}
-                                        placeholder={""} readOnly size={1}/></div></td>
+                            {this.renderValueForNextStepColumn(nextStep)}
+                            {this.renderHistoryColumn(data, key)}
                         </tr>
                     } else {
                         node = <tr key={key} className="simulation-data-row">
                             {this.renderInputOutputColumn(data)}
-                            <th key="label" className="simulation-data-box" align="left"><div>{key}</div></th>
-                            <td key="value" className="simulation-data-box">
-                                <div>{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</div>
-                            </td>
+                            {this.renderLabelColumn(key)}
+                            {this.renderLastValueColumn(data)}
                             <td key="input" className="simulation-data-box">
                                 <div>
                                     <input id={"input-box-" + key}
-                                        title={data.data ? "Current value is " + JSON.stringify(data.data[data.data.length - 1]) : ""}
                                         className={"simulation-data-inputbox"}
                                         type='text'
                                         onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
                                         placeholder={""} readOnly={!data.input} size={1}/>
                                 </div>
                             </td>
-                            <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
-                            <td key="history" className="simulation-data-box history">
-                                <div>
-                                    <input id={"input-box-" + key}
-                                            className={"simulation-history-inputbox"}
-                                            type='text'
-                                            value={data.data ? JSON.stringify(reverse(data.data)) : ""}
-                                            placeholder={""} readOnly size={1}/></div></td>
+                            {this.renderValueForNextStepColumn(nextStep)}
+                            {this.renderHistoryColumn(data, key)}
                         </tr>
                     }
                     list.push(node)
@@ -377,10 +361,10 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderInputOutputColumn(data: SimulationData): React.ReactNode {
         if (this.inputOutputColumnEnabled) {
-            return <td key="inputoutput" className="simulation-data-box" align="left">
+            return <td key="input-output" className="simulation-data-box" align="left">
                     <div>
-                        {data.input ? "input" : ""}
-                        {data.output ? "output" : ""}
+                        {data.input ? <div className='icon fa fa-sign-in'></div> : ""}
+                        {data.output ? <div className='icon fa fa-sign-out'></div> : ""}
                         {data.categories}
                     </div>
                 </td>
@@ -389,9 +373,34 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    renderLabelColumn(key: string): React.ReactNode {
+        return <th key="label" className="simulation-data-box" align="left"><div>{key}</div></th>
+    }
+
+    renderLastValueColumn(data: SimulationData) {
+        return <td key="value" className="simulation-data-box">
+            <div>{data.data ? JSON.stringify(data.data[data.data.length - 1]) : ""}</div>
+        </td>
+    }
+
+    renderValueForNextStepColumn(nextStep: any) {
+        return <td key="next-step" className="simulation-data-box"><div>{JSON.stringify(nextStep)}</div></td>
+    }
+
+    renderHistoryColumn(data: SimulationData, key: string) {
+        return <td key="history" className="simulation-data-box history">
+            <div>
+                <input id={"input-box-" + key}
+                        className={"simulation-history-inputbox"}
+                        type='text'
+                        value={data.data ? JSON.stringify(reverse(data.data)) : ""}
+                        placeholder={""} readOnly size={1}/>
+            </div></td>
+    }
+
     renderInputOutputColumnHeader(): React.ReactNode {
         if (this.inputOutputColumnEnabled) {
-            return <th key="inputoutput" className="simulation-data-box" align="left"><div className="simulation-div">Input/Output</div></th>
+            return <th key="input-output" className="simulation-data-box" align="left"><div className="simulation-div">Input/Output</div></th>
         } else {
             return
         }
