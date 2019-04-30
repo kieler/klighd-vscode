@@ -159,7 +159,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 await delay(100)
                 initializeResult = lClient.initializeResult
             }
-            const startMessage: SimulationStartedMessage = await lClient.sendRequest("keith/simulation/start", [uri, "Manual"]) as SimulationStartedMessage
+            const startMessage: SimulationStartedMessage = await lClient.sendRequest(
+                "keith/simulation/start",
+                [uri, this.simulationWidget.simulationType]) as SimulationStartedMessage
             if (!startMessage.successful) {
                 this.message(startMessage.error, "error")
                 return
@@ -188,6 +190,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.simulationWidget.controlsEnabled = true
             })
             this.simulationWidget.simulationRunning = true
+            this.simulationWidget.simulationStep = 0
             const widget = this.front.shell.revealWidget(simulationWidgetId)
             if (widget) {
                 widget.update()
@@ -200,7 +203,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     /**
      * Executes a simulation step on the LS.
      */
-    async executeSimulationStep() {
+    async executeSimulationStep(): Promise<boolean> {
         const lClient = await this.client.languageClient
         // Transform the input map to an object since this is the format the LS supports
         let jsonObject = strMapToObj(this.simulationWidget.valuesForNextStep)
@@ -221,13 +224,15 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                     this.stopSimulation()
                     this.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
                     this.simulationWidget.update()
-                    return
+                    return false
                 }
             });
         } else {
             this.message("Simulation data values are undefined", "ERROR")
         }
+        this.simulationWidget.simulationStep++
         this.simulationWidget.update()
+        return true
     }
 
     /**
@@ -242,12 +247,37 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         this.simulationWidget.simulationRunning = false
         const lClient = await this.client.languageClient
         const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
-        if (message.successful) {
-            this.message(message.message, "INFO")
-        } else {
+        if (!message.successful) {
             this.message(message.message, "ERROR")
         }
         this.simulationWidget.update()
+    }
+
+    /**
+     * Toggles play.
+     * Begins to execute steps while waiting simulationWidget.simulationDelay between each step.
+     */
+    async startOrPauseSimulation() {
+        this.simulationWidget.play = !this.simulationWidget.play
+        this.simulationWidget.update()
+        if (this.simulationWidget.play) {
+            await this.waitForNextStep()
+        }
+    }
+
+    /**
+     * Execute a simulation step with a delay.
+     */
+    async waitForNextStep() {
+        while (this.simulationWidget.play) {
+            const success = await this.executeSimulationStep()
+            if (!success) {
+                this.stopSimulation()
+                this.simulationWidget.update()
+                return
+            }
+            await delay(this.simulationWidget.simulationDelay)
+        }
     }
 
     registerKeybindings(keybindings: KeybindingRegistry): void {

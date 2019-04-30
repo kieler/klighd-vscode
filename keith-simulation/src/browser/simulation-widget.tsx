@@ -18,7 +18,7 @@ import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData } from "../common"
 import { Emitter } from "@theia/core";
-import { delay, isInternal, reverse } from '../common/helper'
+import { isInternal, reverse } from '../common/helper'
 import { CompilationSystems } from "@kieler/keith-kicool/lib/common/kicool-models"
 
 
@@ -65,9 +65,18 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     /**
      * Time in milliseconds to wait till next simulation step is requested in play mode.
      */
-    protected simulationDelay: number = 1000
+    public simulationDelay: number = 1000
 
+    /**
+     * All simulation types
+     */
     protected simulationTypes: string[] = ["Periodic", "Manual", "Dynamic"]
+
+    /**
+     * The currently selected simulation type.
+     * The value of this attribute is simulation type selected by default.
+     */
+    public simulationType: string = "Periodic"
 
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 
@@ -87,9 +96,17 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
      */
     public simulationRunning: boolean
 
+    /**
+     * Show internal variables of simulation (e.g. guards, ...)
+     */
     protected showInternalVariables: boolean
 
+    /**
+     * Categories of variables with their respective members.
+     */
     public categories: string[] = []
+
+    public simulationStep: number = -1
 
     constructor(
         @inject(new LazyServiceIdentifer(() => SimulationContribution)) protected readonly commands: SimulationContribution
@@ -132,7 +149,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
      */
     renderSimulationPanel() {
         return <div className="simulation-panel">
-            {false ? this.renderPlayPauseButton() : ""}
+            {this.simulationRunning ? this.renderPlayPauseButton() : ""}
             {this.simulationRunning ? this.renderStepButton() : ""}
             {this.simulationRunning ? this.renderStopButton() : ""}
             {this.simulationRunning ? this.renderIOButton() : ""}
@@ -142,38 +159,15 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.simulationRunning ? "" : this.renderSimulationSelectionBox()}
             {this.simulationRunning ? "" : this.renderSimulationButton()}
             {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") && !this.simulationRunning ? this.renderRestartButton() : ""}
+            {this.simulationRunning ? this.renderStepCounter() : ""}
         </div>
     }
 
     renderPlayPauseButton(): React.ReactNode {
         return <div title={this.play ? "Pause" : "Play"} key="play-pause-button" className={'preference-button' + (this.play ? '' : ' off')}
-            onClick={event => this.startOrPauseSimulation()}>
+            onClick={event => this.commands.startOrPauseSimulation()}>
             <div className={'icon fa ' + (this.play ? 'fa-play-circle' : 'fa-pause-circle')}/>
         </div>
-    }
-
-    /**
-     * TODO implement
-     */
-    async startOrPauseSimulation() {
-        this.play = !this.play
-        // TODO all the things
-        if (this.play) {
-            this.waitForNextStep()
-        }
-        this.update()
-    }
-
-    /**
-     * TODO implement
-     */
-    async waitForNextStep() {
-        while (this.play) {
-            console.log("Waiting for delay")
-            this.commands.executeSimulationStep()
-            delay(this.simulationDelay)
-            this.update()
-        }
     }
 
     renderStepButton(): React.ReactNode {
@@ -225,25 +219,38 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             // TODO do stuff
         })
         return <div>
-            <select id="simulation-type-list" className={'selection-list simulation-type-list'}
-                onChange={() => this.handleSelectionOfSimulationType()} defaultValue={this.simulationTypes[0]}>
+            <select id="simulation-type-list" value={this.simulationType} className={'selection-list simulation-type-list'}
+                onChange={() => this.handleSelectionOfSimulationType()}>
             {selectionList}
             </select>
         </div>
     }
 
     /**
-     * TODO
+     * Set the 
      */
     handleSelectionOfSimulationType(): void {
-        throw new Error("Method not implemented.");
+        const options = (document.getElementById('simulation-type-list') as HTMLSelectElement).selectedOptions
+        this.simulationType = options[0].value
+        this.update()
     }
 
     /**
-     * TODO
+     * Input box for simulation speed.
      */
     renderSimulationSpeedInputbox(): React.ReactNode {
-        return <div></div>
+        return <input id={'simulation-speed'}
+            title="Insert simulation speed"
+            className={"simulation-speed-input-box"}
+            type='number'
+            defaultValue={this.simulationDelay.toString()}
+            name={'Simulation Speed'}
+            onInput={() => this.changeSimulationSpeed()}/>
+    }
+
+    changeSimulationSpeed() {
+        this.simulationDelay = (document.getElementById('simulation-speed') as HTMLInputElement).valueAsNumber
+        this.update()
     }
 
     renderSimulationSelectionBox(): React.ReactNode {
@@ -259,7 +266,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderSimulationButton(): React.ReactNode {
-        return <div className={'compile-button'} title="Compile"
+        return <div className={'compile-button'} title="Simulate"
             onClick={event => {
                 this.commands.compileAndStartSimulation()
             }}>
@@ -385,6 +392,10 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         }
     }
 
+    renderStepCounter(): React.ReactNode {
+        return <div key="step-counter">{this.simulationStep}</div>
+    }
+
     setBooleanInput(id: string, key: string,  value: any, data: any) {
         if (this.valuesForNextStep.has(key)) {
             // if the value is a boolean just toggle it on click
@@ -443,12 +454,14 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     storeState(): SimulationWidget.Data {
         return {
-            displayInOut: this.displayInOut
+            displayInOut: this.displayInOut,
+            simulationType: this.simulationType
         }
     }
 
     restoreState(oldState: SimulationWidget.Data): void {
         this.displayInOut = oldState.displayInOut
+        this.simulationType = oldState.simulationType
     }
 
     simulationDataToString(data: any) {
@@ -478,5 +491,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 export namespace SimulationWidget {
     export interface Data {
         displayInOut: boolean
+        simulationType: string
     }
 }
