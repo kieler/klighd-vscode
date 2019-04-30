@@ -167,3 +167,8 @@ th div {
 .simulation-speed-input-box {
     width: 50px;
 }
+
+.step-counter {
+    padding-left: 5px;
+    padding-right: 5px;
+}

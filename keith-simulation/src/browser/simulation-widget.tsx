@@ -65,7 +65,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     /**
      * Time in milliseconds to wait till next simulation step is requested in play mode.
      */
-    public simulationDelay: number = 1000
+    public simulationStepDelay: number = 300
 
     /**
      * All simulation types
@@ -243,13 +243,13 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             title="Insert simulation speed"
             className={"simulation-speed-input-box"}
             type='number'
-            defaultValue={this.simulationDelay.toString()}
+            defaultValue={this.simulationStepDelay.toString()}
             name={'Simulation Speed'}
             onInput={() => this.changeSimulationSpeed()}/>
     }
 
     changeSimulationSpeed() {
-        this.simulationDelay = (document.getElementById('simulation-speed') as HTMLInputElement).valueAsNumber
+        this.simulationStepDelay = (document.getElementById('simulation-speed') as HTMLInputElement).valueAsNumber
         this.update()
     }
 
@@ -394,7 +394,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderStepCounter(): React.ReactNode {
         return <div className={'preference-button'} title="Step Counter">
-            <div className='icon'>{this.simulationStep}</div>
+            <div className='icon step-counter'>{this.simulationStep}</div>
         </div>
     }
 
@@ -457,13 +457,15 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     storeState(): SimulationWidget.Data {
         return {
             displayInOut: this.displayInOut,
-            simulationType: this.simulationType
+            simulationType: this.simulationType,
+            simulationStepDelay: this.simulationStepDelay
         }
     }
 
     restoreState(oldState: SimulationWidget.Data): void {
         this.displayInOut = oldState.displayInOut
         this.simulationType = oldState.simulationType
+        this.simulationStepDelay = oldState.simulationStepDelay
     }
 
     simulationDataToString(data: any) {
@@ -494,5 +496,6 @@ export namespace SimulationWidget {
     export interface Data {
         displayInOut: boolean
         simulationType: string
+        simulationStepDelay: number
     }
 }

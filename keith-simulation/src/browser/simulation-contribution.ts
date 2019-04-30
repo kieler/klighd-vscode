@@ -276,7 +276,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.simulationWidget.update()
                 return
             }
-            await delay(this.simulationWidget.simulationDelay)
+            await delay(this.simulationWidget.simulationStepDelay)
         }
     }
 
