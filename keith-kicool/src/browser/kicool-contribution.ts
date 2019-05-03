@@ -19,7 +19,7 @@ import {
 import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
-import { Workspace } from "@theia/languages/lib/browser";
+import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { inject, injectable } from "inversify";
 import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING,
@@ -67,6 +67,8 @@ export const TOGGLE_ENABLE_CP: Command = {
     id: 'kicool:toggle-cp',
     label: 'kicool: Toggle command palette enabled'
 }
+
+export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
@@ -146,7 +148,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     async initializeLayout(app: FrontendApplication): Promise<void> {
         await this.openView()
     }
-    private initializeCompilerWidget(widget: Widget | undefined) {
+    private async initializeCompilerWidget(widget: Widget | undefined) {
         if (widget) {
             this.compilerWidget = widget as CompilerWidget
             this.compilerWidget.requestSystemDescriptions(this.requestSystemDescriptions.bind(this))
@@ -155,6 +157,11 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
                 this.requestSystemDescriptions()
             }
+            const lClient = await this.client.languageClient
+            while (!this.client.running) {
+                await delay(100)
+            }
+            lClient.onNotification(snapshotDescriptionMessageType, this.handleNewSnapshotDescriptions.bind(this))
         }
     }
 
@@ -398,7 +405,13 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
         const uri = this.compilerWidget.sourceModelPath
         const lclient = await this.client.languageClient
-        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace]) as CodeContainer
+        lclient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace])
+    }
+
+    /**
+     * Handles the visualization of new snapshot descriptions send by the LS.
+     */
+    handleNewSnapshotDescriptions(snapshotsDescriptions: CodeContainer, uri: string) {
         // Show next/previous command and keybinding if not already added
         if (!this.commandRegistry.getCommand(SHOW_NEXT.id)) {
             this.registerShowNext()
@@ -407,12 +420,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         // Add show commands to command palette if needed
         if (this.commandPaletteEnabled) {
             this.addShowSnapshotToCommandPalette(snapshotsDescriptions.files)
-        }
-        if (!this.compilerWidget.autoCompile) {
-            this.message("Got compilation result for " + uri, "info")
-        }
-        if (uri.startsWith("\"")) {
-            this.message("Found error in " + uri, "error")
         }
         this.isCompiled.set(uri as string, true)
         this.resultMap.set(uri as string, snapshotsDescriptions)
