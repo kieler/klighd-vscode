@@ -2,7 +2,7 @@ import { SimulationWidget } from "./simulation-widget";
 import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
     FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent } from "@theia/core/lib/browser";
-import { Workspace } from "@theia/languages/lib/browser";
+import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { MessageService, Command, CommandRegistry, MenuModelRegistry } from "@theia/core";
 import { EditorManager } from "@theia/editor/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
@@ -42,6 +42,8 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     simulationWidget: SimulationWidget
 
+    progressMessageType = new NotificationType<any, void>('keith/kicool/progress');
+
     constructor(
         @inject(Workspace) protected readonly workspace: Workspace,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
@@ -67,10 +69,19 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         });
         this.widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
         // TODO: when the diagram closes, also update the view to the default one
+
     }
 
+    /**
+     * TODO This is never called ?!
+     * @param app
+     */
     async initializeLayout(app: FrontendApplication): Promise<void> {
         await this.openView()
+    }
+
+    async handleProgress(message: any) {
+        console.log("Real Progress!!!!!" + message)
     }
 
     /**
@@ -100,9 +111,14 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      * Executed whenever a widget is created.
      * If a simulation widget is created this simulation contribution is initialized using this widget.
      */
-    onDidCreateWidget(e: DidCreateWidgetEvent): void {
+    async onDidCreateWidget(e: DidCreateWidgetEvent): Promise<void> {
         if (e.factoryId === SimulationWidget.widgetId) {
-            this.initializeSimulationWidget(e.widget)
+            await this.initializeSimulationWidget(e.widget)
+            const lClient = await this.client.languageClient
+            while (!this.client.running) {
+                await delay(100)
+            }
+            lClient.onNotification(this.progressMessageType, this.handleProgress.bind(this))
         }
     }
 
