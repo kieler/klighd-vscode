@@ -18,6 +18,7 @@ import { Command, CommandHandler, CommandRegistry } from '@theia/core';
 import { DidCreateWidgetEvent, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { FrontendApplication, FrontendApplicationContribution } from '@theia/core/lib/browser/frontend-application';
 import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
+import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
@@ -154,6 +155,13 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param uri The URI the model was created from.
      */
     async onModelUpdated(uri: string): Promise<void> {
+        // If no editor widget was activated before, try to find an open editor widget matching the given uri
+        if (!this.editorWidget) {
+            const editorForUri = await this.editorManager.getByUri(new URI(uri))
+            if (editorForUri !== undefined) {
+                this.editorWidget = editorForUri
+            }
+        }
         if (this.diagramOptionsViewWidget && !this.diagramOptionsViewWidget.isDisposed) {
             this.updateContent()
         }
