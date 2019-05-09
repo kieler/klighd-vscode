@@ -12,8 +12,8 @@
  */
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
-    configureModelElement, ConsoleLogger, defaultModule, exportModule, LogLevel, modelSourceModule, overrideViewerOptions, selectModule, SGraph, SGraphFactory, TYPES,
-    viewportModule, updateModule
+    configureModelElement, ConsoleLogger, defaultModule, exportModule, LogLevel, modelSourceModule, moveModule, overrideViewerOptions, selectModule, SGraph, SGraphFactory, TYPES,
+    updateModule, viewportModule
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
