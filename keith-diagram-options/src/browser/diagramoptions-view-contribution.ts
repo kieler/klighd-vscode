@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,6 +18,7 @@ import { Command, CommandHandler, CommandRegistry } from '@theia/core';
 import { DidCreateWidgetEvent, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { FrontendApplication, FrontendApplicationContribution } from '@theia/core/lib/browser/frontend-application';
 import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
+import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
@@ -41,6 +42,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     editorWidget: EditorWidget
     diagramOptionsViewWidget: DiagramOptionsViewWidget
 
+    /**
+     * The dynamically registered commands for the current diagram options.
+     */
     protected registeredCommands: Command[]
 
     constructor(
@@ -134,7 +138,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
-        if (e.factoryId === 'keith-diagram-diagram-manager') {
+        if (e.factoryId === this.diagramManager.id) {
             // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
             if (e.widget instanceof KeithDiagramWidget) {
                 e.widget.onModelUpdated(this.onModelUpdated.bind(this))
@@ -151,7 +155,14 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param uri The URI the model was created from.
      */
     async onModelUpdated(uri: string): Promise<void> {
-        if (this.diagramOptionsViewWidget) {
+        // If no editor widget was activated before, try to find an open editor widget matching the given uri
+        if (!this.editorWidget) {
+            const editorForUri = await this.editorManager.getByUri(new URI(uri))
+            if (editorForUri !== undefined) {
+                this.editorWidget = editorForUri
+            }
+        }
+        if (this.diagramOptionsViewWidget && !this.diagramOptionsViewWidget.isDisposed) {
             this.updateContent()
         }
     }
@@ -195,6 +206,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                 uri: this.editorWidget.editor.uri.toString()
             }
             const result: GetOptionsResult = await lClient.sendRequest(GET_OPTIONS, param) as GetOptionsResult
+            if (!result) {
+                return
+            }
             const valuedOptions: ValuedSynthesisOption[] = result.valuedSynthesisOptions
             const synthesisOptions: SynthesisOption[] = []
 
@@ -215,6 +229,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.registeredCommands.forEach(command => {
                 this.commandRegistry.unregisterCommand(command)
             });
+            this.registeredCommands = []
             result.actions.forEach( action => {
                 const command: Command = {id: "Diagram: " + action.actionId, label: "Diagram: " + action.displayedName}
                 this.registeredCommands.push(command)

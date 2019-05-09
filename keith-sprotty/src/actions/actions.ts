@@ -12,15 +12,27 @@
  */
 import { inject, injectable } from 'inversify';
 import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot, SModelRootSchema, TYPES } from 'sprotty/lib';
+import { SetSynthesesActionData } from '../syntheses/synthesis-message-data';
 
 /**
- * Sent from the model source to the client to request bounds for the given texts. The texts are
- * rendered invisibly so the bounds can derived from the DOM. The response is a ComputedTextBoundsAction.
+ * Sent from the server to the client to send a list of all available syntheses for the current model.
  */
-export class RequestTextBoundsAction implements Action {
-    readonly kind = RequestTextBoundsCommand.KIND
+export class SetSynthesesAction implements Action {
+    static readonly KIND: string = 'setSyntheses'
+    readonly kind = SetSynthesesAction.KIND
 
-    constructor(public readonly textDiagram: SModelRootSchema) {
+    constructor(public readonly syntheses: SetSynthesesActionData[]) {
+    }
+}
+
+/**
+ * Sent from the client to the server to request a new diagram with the given synthesis.
+ */
+export class SetSynthesisAction implements Action {
+    static readonly KIND: string = 'setSynthesis'
+    readonly kind = SetSynthesisAction.KIND
+
+    constructor(public readonly id: string) {
     }
 }
 
@@ -54,6 +66,17 @@ export class RequestTextBoundsCommand extends HiddenCommand {
 
     get blockUntilActionKind() {
         return ComputedTextBoundsAction.KIND;
+    }
+}
+
+/**
+ * Sent from the model source to the client to request bounds for the given texts. The texts are
+ * rendered invisibly so the bounds can derived from the DOM. The response is a ComputedTextBoundsAction.
+ */
+export class RequestTextBoundsAction implements Action {
+    readonly kind = RequestTextBoundsCommand.KIND
+
+    constructor(public readonly textDiagram: SModelRootSchema) {
     }
 }
 

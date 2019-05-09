@@ -11,22 +11,22 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
+import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import {
     AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager
 } from "@theia/core/lib/browser";
-import { Command, CommandRegistry, MenuModelRegistry, MessageService, CommandHandler } from '@theia/core/lib/common';
+import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { Workspace } from "@theia/languages/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { inject, injectable } from "inversify";
-import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
-import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING } from "../common";
+import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystems, Snapshot } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
-import { delay } from "../common/helper"
 
 export const SAVE: Command = {
     id: 'core.save',
@@ -157,9 +157,10 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
-        if (e.widget instanceof EditorWidget) {
-            e.widget.activate()
-        }
+        // This does not work, because sometimes you will write in an editor that is currently hidden.
+        // if (e.widget instanceof EditorWidget) {
+        //     e.widget.activate()
+        // }
         if (e.factoryId === CompilerWidget.widgetId) {
             this.initializeCompilerWidget(e.widget)
         }
@@ -405,8 +406,11 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
         this.isCompiled.set(uri as string, true)
         this.resultMap.set(uri as string, snapshotsDescriptions)
-        this.indexMap.set(uri as string, -1)
-        this.lengthMap.set(uri as string, snapshotsDescriptions.files.length)
+        const length = snapshotsDescriptions.files.reduce((previousSum, snapshots) => {
+            return previousSum + snapshots.length
+        }, 0)
+        this.lengthMap.set(uri as string, length)
+        this.indexMap.set(uri as string, length - 1)
         this.compilerWidget.update()
     }
 
@@ -443,8 +447,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     this.message(uri + " was not compiled", "error")
                     return false
                 }
-                const index = this.indexMap.get(uri)
-                if (index !== 0 && !index) {
+                const lastIndex = this.indexMap.get(uri)
+                if (lastIndex !== 0 && !lastIndex) {
                     this.message("Index is undefined", "error")
                     return false
                 }
@@ -453,16 +457,16 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     this.message("Length is undefined", "error")
                     return false
                 }
-                if (index === length - 1) { // no show necessary, since the last snapshot is already drawn
+                if (lastIndex === length - 1) { // No show necessary, since the last snapshot is already drawn.
                     return
                 }
-                this.show(uri, Math.min(index + 1, length - 1))
+                this.show(uri, Math.min(lastIndex + 1, length - 1))
             }
         })
         this.keybindingRegistry.registerKeybinding({
-            command: SHOW_PREVIOUS.id,
+            command: SHOW_NEXT.id,
             context: this.kicoolKeybindingContext.id,
-            keybinding: SHOW_PREVIOUS_KEYBINDING
+            keybinding: SHOW_NEXT_KEYBINDING
         })
     }
 
@@ -478,22 +482,22 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     this.message(uri + " was not compiled", "error")
                     return false
                 }
-                const index = this.indexMap.get(uri)
-                if (index !== 0 && !index) {
+                const lastIndex = this.indexMap.get(uri)
+                if (lastIndex !== 0 && !lastIndex) {
                     this.message("Index is undefined", "error")
                     return false
                 }
-                if (index === 0) { // no show necessary, since the first snapshot is already drawn
+                if (lastIndex === -1) { // No show necessary, since the original model is already drawn.
                     return
                 }
-                // TODO add show for original model here
-                this.show(uri, Math.max(index - 1, 0))
+                // Show for original model is on the lower bound of -1.
+                this.show(uri, Math.max(lastIndex - 1, -1))
             }
         })
         this.keybindingRegistry.registerKeybinding({
-            command: SHOW_NEXT.id,
+            command: SHOW_PREVIOUS.id,
             context: this.kicoolKeybindingContext.id,
-            keybinding: SHOW_NEXT_KEYBINDING
+            keybinding: SHOW_PREVIOUS_KEYBINDING
         })
     }
 }

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,15 +11,17 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { KeithDiagramLanguageClient } from '@kieler/keith-language/lib/browser/keith-diagram-language-client';
+import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
 import { Emitter, Event } from '@theia/core';
 import { OpenerOptions, Widget, WidgetManager, WidgetOpenerOptions } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { Workspace } from '@theia/languages/lib/browser';
 import { inject, injectable } from 'inversify';
-import { KeithDiagramLanguageClient } from '@kieler/keith-language/lib/browser/keith-diagram-language-client';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
 import { KeithDiagramWidget } from './keith-diagram-widget';
+import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
 
 /**
  * Class managing the creation of KEITH diagram widgets and connecting them to their diagram server.
@@ -46,20 +48,25 @@ export class KeithDiagramManager extends DiagramManager {
         @inject(TheiaFileSaver) fileSaver: TheiaFileSaver,
         @inject(EditorManager) editorManager: EditorManager,
         @inject(WidgetManager) widgetManager: WidgetManager,
-        @inject(Workspace) workspace: Workspace
+        @inject(Workspace) workspace: Workspace,
+        @inject(SynthesisRegistry) synthesisRegistry: SynthesisRegistry
         ) {
         super()
-        this._diagramConnector = new LSTheiaSprottyConnector({ diagramLanguageClient, fileSaver, editorManager, widgetManager, workspace , diagramManager: this })
+        this._diagramConnector = new KeithTheiaSprottyConnector({
+            diagramLanguageClient, fileSaver, editorManager, widgetManager, workspace, diagramManager: this,
+            synthesisRegistry
+        })
         editorManager.onCurrentEditorChanged(this.onCurrentEditorChanged.bind(this))
     }
 
     /**
-     * Opens the diagram widget automatically if the current editor has changed.
+     * Reloads the diagram widget automatically if the current editor has changed.
      *
      * @param editorWidget The editor that is now active.
      */
-    onCurrentEditorChanged(editorWidget: EditorWidget | undefined): void {
-        if (editorWidget) {
+    async onCurrentEditorChanged(editorWidget: EditorWidget | undefined): Promise<void> {
+        const diagramWidget = this.widgetManager.getWidgets(this.id).pop()
+        if (diagramWidget && editorWidget) {
             const uri = editorWidget.getResourceUri()
             if (uri instanceof URI) {
                 this.drawDiagram(uri)
