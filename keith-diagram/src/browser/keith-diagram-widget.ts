@@ -23,18 +23,18 @@ export class KeithDiagramWidget extends DiagramWidget {
     /**
      * Emitter that should be fired whenever the model is updated.
      */
-    protected readonly onModelUpdatedEmitter = new Emitter<void>()
+    protected readonly onModelUpdatedEmitter = new Emitter<string>()
 
     /**
      * Event that can be listened to that triggered whenever the model handled by this server is updated.
      */
-    public readonly onModelUpdated: Event<void> = this.onModelUpdatedEmitter.event
+    public readonly onModelUpdated: Event<string> = this.onModelUpdatedEmitter.event
 
     /**
      * Method to fire the internal event that should be caused whenever the model displayed in this widget is changed.
      */
     public modelUpdated(): void {
-        this.onModelUpdatedEmitter.fire()
+        this.onModelUpdatedEmitter.fire(this.options.uri)
     }
 
     /**
@@ -56,14 +56,5 @@ export class KeithDiagramWidget extends DiagramWidget {
     onResize(_msg: Widget.ResizeMessage): void {
         const newBounds = this.getBoundsInPage(this.node as Element)
         this.actionDispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds))
-    }
-
-    storeState(): object {
-        return {
-            diagramType: this.options.diagramType,
-            label: this.options.label,
-            iconClass: this.options.iconClass,
-            uri: ' ' // The uri is not important for restoring.
-        }
     }
 }

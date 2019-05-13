@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,12 +11,12 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { injectable, ContainerModule } from 'inversify'
-import { BaseLanguageServerContribution, IConnection, LanguageServerContribution } from '@theia/languages/lib/node'
-import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server'
-import * as net from 'net'
-import { join, resolve } from 'path'
-import { isWindows, isOSX } from "@theia/core";
+import { isOSX, isWindows } from "@theia/core";
+import { BaseLanguageServerContribution, IConnection, LanguageServerContribution } from '@theia/languages/lib/node';
+import { ContainerModule, injectable } from 'inversify';
+import * as net from 'net';
+import { join, resolve } from 'path';
+import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server';
 import { LS_ID, LS_NAME } from '../common';
 
 
@@ -47,7 +47,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
     readonly id = LS_ID
     readonly name = LS_NAME
 
-    start(clientConnection: IConnection): void {
+    async start(clientConnection: IConnection): Promise<void> {
         let socketPort = getPort();
         // check if user specified a port to connect to the LS.
         // If this is the case connect to this port
@@ -79,7 +79,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
             }
             console.log("Starting LS with path: " + lsPath)
             const command = lsPath
-            const serverConnection = this.createProcessStreamConnection(command, []);
+            const serverConnection = await this.createProcessStreamConnectionAsync(command, []);
             this.forward(clientConnection, serverConnection);
             serverConnection.onClose(() => console.log("Connection closed"))
         }

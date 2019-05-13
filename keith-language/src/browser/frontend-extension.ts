@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,15 +11,16 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { ContainerModule, interfaces } from 'inversify'
-import { MonacoEditorProvider } from '@theia/monaco/lib/browser/monaco-editor-provider'
-import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider"
-import { ContextMenuCommands } from './dynamic-commands';
-import { KeithLanguageClientContribution } from './keith-language-client-contribution';
+import { CommandContribution, MenuContribution } from '@theia/core';
 import { LanguageClientContribution } from '@theia/languages/lib/browser';
-import { RegistrationContribution, LanguageDescription, monarchLanguage, KeithMonarchLanguage, configuration } from './registration-contribution';
-import { CommandContribution } from '@theia/core';
+import { MonacoEditorProvider } from '@theia/monaco/lib/browser/monaco-editor-provider';
+import { ContainerModule, interfaces } from 'inversify';
+import { ContextMenuCommands } from './dynamic-commands';
+import { KeithInitializationService, KeithOptionsCommandContribution, ShouldSelectDiagramCommandContribution, ShouldSelectTextCommandContribution } from './initialization-options';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
+import { KeithLanguageClientContribution } from './keith-language-client-contribution';
+import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
+import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
 
 // Language register, holds all languages that are supported by KEITH
 export const languageDescriptions: LanguageDescription[] = [
@@ -77,4 +78,12 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
 
     bind(RegistrationContribution).toSelf().inSingletonScope()
     rebind(MonacoEditorProvider).to(KeithMonacoEditorProvider).inSingletonScope()
+
+    // Bindings for the initialization options.
+    bind(KeithInitializationService).toDynamicValue(() => KeithInitializationService.get())
+    bind(ShouldSelectDiagramCommandContribution).toSelf().inSingletonScope()
+    bind(ShouldSelectTextCommandContribution).toSelf().inSingletonScope()
+    bind(KeithOptionsCommandContribution).toSelf().inSingletonScope()
+    bind(CommandContribution).to(KeithOptionsCommandContribution).inSingletonScope()
+    bind(MenuContribution).to(KeithOptionsCommandContribution).inSingletonScope()
 })
