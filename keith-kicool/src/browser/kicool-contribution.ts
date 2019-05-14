@@ -69,6 +69,7 @@ export const TOGGLE_ENABLE_CP: Command = {
 }
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
+export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
 
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
@@ -162,6 +163,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 await delay(100)
             }
             lClient.onNotification(snapshotDescriptionMessageType, this.handleNewSnapshotDescriptions.bind(this))
+            lClient.onNotification(cancelCompilationMessageType, this.cancelCompilation.bind(this))
         }
     }
 
@@ -411,7 +413,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     /**
      * Handles the visualization of new snapshot descriptions send by the LS.
      */
-    handleNewSnapshotDescriptions(snapshotsDescriptions: CodeContainer, uri: string) {
+    handleNewSnapshotDescriptions(snapshotsDescriptions: CodeContainer, uri: string, finished: boolean) {
         // Show next/previous command and keybinding if not already added
         if (!this.commandRegistry.getCommand(SHOW_NEXT.id)) {
             this.registerShowNext()
@@ -428,26 +430,38 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }, 0)
         this.lengthMap.set(uri as string, length)
         this.indexMap.set(uri as string, length - 1)
-        this.compilerWidget.compiling = false
-        this.compilerWidget.update()
-    }
-
-    /**
-     * Cancels compilation by stopping the compilation thread on the LS.
-     */
-    public async cancelCompilation(): Promise<void> {
-        const lclient = await this.client.languageClient
-        const success = await lclient.sendRequest(CANCEL_COMPILATION)
-        if (success) {
+        if (finished)  {
             this.compilerWidget.compiling = false
         }
         this.compilerWidget.update()
     }
 
     /**
+     * Notifies the LS to cancel the compilation.
+     */
+    public async requestCancelCompilation(): Promise<void> {
+        const lclient = await this.client.languageClient
+        this.compilerWidget.cancellingCompilation = true
+        lclient.sendNotification(CANCEL_COMPILATION)
+        this.compilerWidget.update()
+    }
+
+    /**
+     * Notification from LS that the compilation was cancelled.
+     * @param success wether cancelling the compilation was successful
+     */
+    public async cancelCompilation(success: boolean) {
+        this.compilerWidget.cancellingCompilation = false
+        if (success) {
+            this.compilerWidget.compiling = false
+        }
+    }
+
+    /**
      * Cancels compilation by stopping the compilation thread on the LS.
      */
     public async cancelGetSystems(): Promise<void> {
+        this.message("This is currently not working, but try it anyway", "warn")
         const lclient = await this.client.languageClient
         const success = await lclient.sendRequest(CANCEL_GET_SYSTEMS)
         if (success) {
