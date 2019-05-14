@@ -132,6 +132,11 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     public lastRequestedUriExtension: string
 
+    /**
+     * Indicates that a compilation is currently being cancelled
+     */
+    public cancellingCompilation: boolean
+
     constructor(
         @inject(new LazyServiceIdentifer(() => KiCoolContribution)) protected readonly commands: KiCoolContribution
     ) {
@@ -202,7 +207,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                         {compilationElements}
                     </select>
                     {this.compiling ? "" : this.renderCompileButton()}
-                    {this.compiling ? this.renderCancelButton(() => this.commands.cancelCompilation()) : ""}
+                    {this.compiling && this.cancellingCompilation ?
+                        this.renderSpinnerButton() : this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation()) : ""}
                     {searchbox}
                 </div>
                 {this.renderShowButtons()}
@@ -264,6 +270,15 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         return <div className='spinnerContainer'>
                 <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
             </div>;
+    }
+
+
+    renderSpinnerButton(): React.ReactNode {
+        return <div className={'preference-button' + (this.selectedStyle)} title="Cancel">
+            <div className='spinnerContainer'>
+                <div className='fa fa-spinner fa-pulse fa-fw'></div>
+            </div>
+        </div>
     }
 
     /**
