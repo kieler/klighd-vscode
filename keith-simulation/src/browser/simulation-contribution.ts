@@ -96,6 +96,8 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.simulationWidget = widget as SimulationWidget
             // whenever the compiler widget got new compilation systems from the LS new systems is invoked.
             this.kicoolContribution.compilerWidget.newSystemsAdded(this.newSystemsAdded.bind(this))
+            this.kicoolContribution.compilationFinished(this.compilationFinished.bind(this))
+            this.kicoolContribution.compilationStarted(this.compilationStarted.bind(this))
         }
     }
 
@@ -105,6 +107,20 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      */
     newSystemsAdded() {
         this.simulationWidget.update()
+    }
+
+    compilationStarted() {
+        this.simulationWidget.update()
+    }
+
+    compilationFinished() {
+        if (this.simulationWidget.compilingSimulation) {
+            this.simulationWidget.compilingSimulation = false
+            this.simulationWidget.update()
+            this.simulate()
+        } else {
+            this.simulationWidget.update()
+        }
     }
 
     /**
@@ -154,9 +170,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         if (option !== undefined) {
             // when simulating it should always compile inplace
             await this.kicoolContribution.compile(option.value, true)
-            this.simulationWidget.compilingSimulation = false
-            this.simulationWidget.update()
-            await this.simulate()
         } else {
             this.message("Option is undefined, did not simulate", "ERROR")
         }
