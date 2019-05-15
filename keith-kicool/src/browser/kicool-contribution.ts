@@ -16,7 +16,7 @@ import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/brow
 import {
     AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager
 } from "@theia/core/lib/browser";
-import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService } from '@theia/core/lib/common';
+import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
@@ -101,19 +101,26 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      */
     commandPaletteEnabled: boolean = false
 
+    public readonly compilationStartedEmitter = new Emitter<KiCoolContribution | undefined>()
+    public readonly compilationFinishedEmitter = new Emitter<KiCoolContribution | undefined>()
+
+    public readonly compilationStarted: Event<KiCoolContribution | undefined> = this.compilationStartedEmitter.event
+    public readonly compilationFinished: Event<KiCoolContribution | undefined> = this.compilationFinishedEmitter.event
+
+    @inject(Workspace) protected readonly workspace: Workspace
+    @inject(MessageService) protected readonly messageService: MessageService
+    @inject(FrontendApplication) public readonly front: FrontendApplication
+    @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution
+    @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
+    @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext
+    @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
+    @inject(CommandRegistry) protected commandRegistry: CommandRegistry
+    @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
+
     constructor(
-        @inject(Workspace) protected readonly workspace: Workspace,
-        @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
-        @inject(MessageService) protected readonly messageService: MessageService,
-        @inject(FrontendApplication) public readonly front: FrontendApplication,
-        @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution,
         @inject(EditorManager) public readonly editorManager: EditorManager,
-        @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager,
-        @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext,
         @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
-        @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager,
-        @inject(CommandRegistry) protected commandRegistry: CommandRegistry,
-        @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
+        @inject(WidgetManager) protected readonly widgetManager: WidgetManager
     ) {
         super({
             widgetId: compilerWidgetId,
@@ -382,9 +389,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * @param index index of snapshot
      */
     public async show(uri: string, index: number) {
-        const lclient = await this.client.languageClient
+        const lClient = await this.client.languageClient
         this.indexMap.set(uri, index)
-        await lclient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
+        await lClient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
     }
 
 
@@ -406,8 +413,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
 
         const uri = this.compilerWidget.sourceModelPath
-        const lclient = await this.client.languageClient
-        lclient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace])
+        const lClient = await this.client.languageClient
+        lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace])
+        this.compilationStartedEmitter.fire(this)
     }
 
     /**
@@ -432,6 +440,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.indexMap.set(uri as string, length - 1)
         if (finished)  {
             this.compilerWidget.compiling = false
+            this.compilationFinishedEmitter.fire(this)
         }
         this.compilerWidget.update()
     }
@@ -440,9 +449,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * Notifies the LS to cancel the compilation.
      */
     public async requestCancelCompilation(): Promise<void> {
-        const lclient = await this.client.languageClient
+        const lClient = await this.client.languageClient
         this.compilerWidget.cancellingCompilation = true
-        lclient.sendNotification(CANCEL_COMPILATION)
+        lClient.sendNotification(CANCEL_COMPILATION)
         this.compilerWidget.update()
     }
 
@@ -462,8 +471,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      */
     public async cancelGetSystems(): Promise<void> {
         this.message("This is currently not working, but try it anyway", "warn")
-        const lclient = await this.client.languageClient
-        const success = await lclient.sendRequest(CANCEL_GET_SYSTEMS)
+        const lClient = await this.client.languageClient
+        const success = await lClient.sendRequest(CANCEL_GET_SYSTEMS)
         if (success) {
             this.compilerWidget.requestedSystems = false
         }
