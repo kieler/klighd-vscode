@@ -3,20 +3,41 @@ import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveab
     edgeInProgressTargetHandleID, SRoutableElement, translatePoint, findChildrenAtPosition,
     isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction } from "sprotty";
 
-import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
-import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
+// import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
+// import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
 import { inject} from 'inversify';
-import { LSTheiaDiagramServer } from "sprotty-theia/lib/"
+import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
+import { NotificationType } from "@theia/languages/lib/browser";
 
+export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
 export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
+    diagramClient: DiagramLanguageClient
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
         super();
+        this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
+        this.wasteTime()
+    }
+
+    onMessageReceived(str: string){
+        console.log("Message was received: " + str)
+    }
+
+    async wasteTime(){
+       const lClient = await this.diagramClient.languageClient
+       while (!this.diagramClient.languageClientContribution.running) {
+           await this.delay(120)
+       }
+       lClient.onNotification(goodbyeType, this.onMessageReceived.bind(this))
+    }
+
+    delay(ms: number) {
+        return new Promise( resolve => setTimeout(resolve, ms))
     }
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
@@ -87,7 +108,7 @@ export class NewMouseListener extends MoveMouseListener {
         if (this.hasDragged) {
             result.push(new CommitModelAction());
             // create a workspaceEditAction to write text in the editor
-            let edi = this.editorManager.currentEditor
+            /*let edi = this.editorManager.currentEditor
             if (edi !== undefined) {
                 let uri = edi.editor.document.uri;
                 const pos: Position = {line: 0, character: 0};
@@ -95,7 +116,12 @@ export class NewMouseListener extends MoveMouseListener {
                 let workeditaction: WorkspaceEditAction = new WorkspaceEditAction(workedit);
                 result.push(workeditaction);
                 console.log("Target: " + target.id + " \n" + uri);
-            }
+            }*/
+            this.diagramClient.languageClient.then (lClient => {
+                lClient.sendNotification("keith/constraints/sayhello", "Client")
+            })
+
+
         }
         this.hasDragged = false;
         this.lastDragPosition = undefined;
