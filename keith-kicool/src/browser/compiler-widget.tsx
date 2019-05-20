@@ -121,7 +121,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * This is used by the simulation to decide whether a simulation can be restarted.
      */
     public lastInvokedCompilation: string = ""
-    
+
     /**
      * Holds the uri of the last compiled model, if any.
      * This is used by the simulation to decide whether a simulation can be restarted.
