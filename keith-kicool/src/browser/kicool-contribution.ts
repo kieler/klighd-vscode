@@ -403,6 +403,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.compilerWidget.update()
         await this.executeCompile(command, inplace)
         this.compilerWidget.lastInvokedCompilation = command
+        this.compilerWidget.lastCompiledUri = this.compilerWidget.sourceModelPath
         this.compilerWidget.update()
     }
 
