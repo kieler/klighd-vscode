@@ -184,7 +184,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         if (this.kicoolContribution.editor && !this.simulationWidget.simulationRunning) {
             const lClient = await this.client.languageClient
             // The uri of the current editor is needed to identify the already compiled snapshot that is used to start the simulation.
-            const uri = this.kicoolContribution.editor.editor.uri.toString()
+            const uri = this.kicoolContribution.compilerWidget.lastCompiledUri
             // Check if language client was already initialized and wait till it is
             let initializeResult = lClient.initializeResult
             while (!initializeResult) {
