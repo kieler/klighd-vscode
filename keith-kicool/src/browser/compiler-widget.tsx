@@ -41,10 +41,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
 
     protected readonly onRequestSystemDescriptionsEmitter = new Emitter<CompilerWidget | undefined>()
+    public readonly onNewSystemsAddedEmitter = new Emitter<CompilerWidget | undefined>()
 
     /**
      * Emit when compilation systems are requested.
      */
+    public readonly newSystemsAdded: Event<CompilerWidget | undefined> = this.onNewSystemsAddedEmitter.event
     readonly requestSystemDescriptions: Event<CompilerWidget | undefined> = this.onRequestSystemDescriptionsEmitter.event
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 
@@ -53,7 +55,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * These are filtered on the client side to display the private or public systems.
      * The compilation systems are updated on selection of a current editor.
      */
-    systems: CompilationSystems[] = []
+    public systems: CompilationSystems[] = []
 
     /**
      * Is saved as part of the state of the widget.
@@ -114,6 +116,33 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public sourceModelPath: string
 
+    /**
+     * Holds the id of the last invoked compilation system.
+     * This is used by the simulation to decide whether a simulation can be restarted.
+     */
+    public lastInvokedCompilation: string = ""
+
+    /**
+     * Holds the uri of the last compiled model, if any.
+     * This is used by the simulation to decide whether a simulation can be restarted.
+     */
+    public lastCompiledUri: string = ""
+
+    /*
+     * Indicates whether a compilation is currently running.
+     * Enables to stop compilation button.
+     */
+    public compiling: boolean = false
+
+    public requestedSystems: boolean
+
+    public lastRequestedUriExtension: string
+
+    /**
+     * Indicates that a compilation is currently being cancelled
+     */
+    public cancellingCompilation: boolean
+
     constructor(
         @inject(new LazyServiceIdentifer(() => KiCoolContribution)) protected readonly commands: KiCoolContribution
     ) {
@@ -125,16 +154,21 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     render(): React.ReactNode {
-        if (!this.systems || this.systems.length === 0) {
-            // Case no connection to the LS was astablished or no compilation systems are present.
+        if (this.requestedSystems) {
+            return <div>
+                <div key="panel" className={"compilation-panel" + (this.selectedStyle)}>
+                    {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems()) : ""}
+                </div>
+                {this.renderSpinner()}
+            </div>;
+        } else if (!this.systems || this.systems.length === 0) {
+            // Case no connection to the LS was established or no compilation systems are present.
             if (this.commands && this.commands.editor) {
                 // Try to request compilation systems.
                 this.requestSystemDescription()
             }
             // If no compilation systems could be requested, show spinner instead.
-            return <div className='spinnerContainer'>
-                <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
-            </div>;
+            return this.renderSpinner()
         } else {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
@@ -178,10 +212,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     <select id='compilation-list' className={'selection-list' + (this.selectedStyle)}>
                         {compilationElements}
                     </select>
-                    {this.renderCompileButton()}
+                    {this.compiling ? "" : this.renderCompileButton()}
+                    {this.compiling && this.cancellingCompilation ?
+                        this.renderSpinnerButton() : this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation()) : ""}
                     {searchbox}
                 </div>
                 {this.renderShowButtons()}
+                {this.compiling ? this.renderSpinner() : ""}
             </React.Fragment>
         }
     }
@@ -226,7 +263,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     onUpdateRequest(msg: Message): void {
         super.onUpdateRequest(msg);
-        this.render()
     }
 
     /**
@@ -234,6 +270,21 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public requestSystemDescription(): void {
         this.onRequestSystemDescriptionsEmitter.fire(this)
+    }
+
+    renderSpinner(): React.ReactNode {
+        return <div className='spinnerContainer'>
+                <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
+            </div>;
+    }
+
+
+    renderSpinnerButton(): React.ReactNode {
+        return <div className={'preference-button' + (this.selectedStyle)} title="Cancel">
+            <div className='spinnerContainer'>
+                <div className='fa fa-spinner fa-pulse fa-fw'></div>
+            </div>
+        </div>
     }
 
     /**
@@ -347,6 +398,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
+    renderCancelButton(method: () => Promise<void>): React.ReactNode {
+        return <div className={'preference-button' + (this.selectedStyle)} title="Cancel"
+            onClick={() => method()}>
+            <div className='icon fa fa-square'> </div>
+        </div>
+    }
+
     renderPrivateButton(): React.ReactNode {
         return <div title="Show private Systems" key="private-button" className={'preference-button' + (this.showPrivateSystems ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
@@ -399,7 +457,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             return this.showPrivateSystems || system.isPublic
         })
         if (systems.length > 0) {
-            this.commands.compile(systems[selection.selectedIndex].id)
+            this.commands.compile(systems[selection.selectedIndex].id, this.compileInplace)
         } else {
             this.commands.message("No compilation systems found", "error")
             return
