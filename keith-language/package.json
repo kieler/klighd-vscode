@@ -18,8 +18,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@theia/monaco": "latest",
-    "sprotty-theia": "0.6.0"
+    "@theia/monaco": "latest"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

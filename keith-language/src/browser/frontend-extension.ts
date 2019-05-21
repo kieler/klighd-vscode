@@ -16,7 +16,6 @@ import { LanguageClientContribution } from '@theia/languages/lib/browser';
 import { MonacoEditorProvider } from '@theia/monaco/lib/browser/monaco-editor-provider';
 import { ContainerModule, interfaces } from 'inversify';
 import { KeithInitializationService, KeithOptionsCommandContribution, ShouldSelectDiagramCommandContribution, ShouldSelectTextCommandContribution } from './initialization-options';
-import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
 import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
 import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
@@ -70,8 +69,6 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
     })
     bind(KeithLanguageClientContribution).toSelf().inSingletonScope()
     bind(LanguageClientContribution).toService(KeithLanguageClientContribution)
-
-    bind(KeithDiagramLanguageClient).toSelf().inSingletonScope()
 
     bind(RegistrationContribution).toSelf().inSingletonScope()
     rebind(MonacoEditorProvider).to(KeithMonacoEditorProvider).inSingletonScope()
