@@ -15,7 +15,6 @@ import { CommandContribution, MenuContribution } from '@theia/core';
 import { LanguageClientContribution } from '@theia/languages/lib/browser';
 import { MonacoEditorProvider } from '@theia/monaco/lib/browser/monaco-editor-provider';
 import { ContainerModule, interfaces } from 'inversify';
-import { ContextMenuCommands } from './dynamic-commands';
 import { KeithInitializationService, KeithOptionsCommandContribution, ShouldSelectDiagramCommandContribution, ShouldSelectTextCommandContribution } from './initialization-options';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
@@ -73,8 +72,6 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
     bind(LanguageClientContribution).toService(KeithLanguageClientContribution)
 
     bind(KeithDiagramLanguageClient).toSelf().inSingletonScope()
-
-    bind(ContextMenuCommands).to(ContextMenuCommands).inSingletonScope()
 
     bind(RegistrationContribution).toSelf().inSingletonScope()
     rebind(MonacoEditorProvider).to(KeithMonacoEditorProvider).inSingletonScope()

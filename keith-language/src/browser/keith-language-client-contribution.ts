@@ -12,13 +12,11 @@
  */
 
 import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
-import { Disposable } from '@theia/core/lib/common';
 import { LanguageClientFactory, Languages, Workspace } from '@theia/languages/lib/browser';
 import { inject, injectable, multiInject } from 'inversify';
 import { DiagramLanguageClientContribution, DiagramManagerProvider } from 'sprotty-theia/lib';
 import { LS_ID, LS_NAME } from '../common';
 import { KeithInitializationOptions } from '../common/initialization-protocol';
-import { ContextMenuCommands } from './dynamic-commands';
 import { languageDescriptions } from './frontend-extension';
 import { KeithInitializationService } from './initialization-options';
 
@@ -32,8 +30,7 @@ export class KeithLanguageClientContribution extends DiagramLanguageClientContri
         @inject(Workspace) protected readonly workspace: Workspace,
         @inject(Languages) protected readonly languages: Languages,
         @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory,
-        @multiInject(DiagramManagerProvider) protected diagramManagerProviders: DiagramManagerProvider[],
-        @inject(ContextMenuCommands) protected commands: ContextMenuCommands) {
+        @multiInject(DiagramManagerProvider) protected diagramManagerProviders: DiagramManagerProvider[]) {
         super(workspace, languages, languageClientFactory, diagramManagerProviders)
     }
 
@@ -51,10 +48,6 @@ export class KeithLanguageClientContribution extends DiagramLanguageClientContri
      */
     protected get documentSelector(): string[] {
         return languageDescriptions.map(languageDescription => languageDescription.id)
-    }
-
-    registerCommand(id: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
-        return this.commands.registerCommand(id, callback, thisArg)
     }
 
     /**
