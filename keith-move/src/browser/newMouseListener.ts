@@ -9,8 +9,6 @@ import { inject} from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
-import { sort } from "semver";
-import { SSL_OP_NO_TLSv1_1 } from "constants";
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
@@ -31,7 +29,6 @@ export class NewMouseListener extends MoveMouseListener {
     }
 
     async waitOnLCContribution() {
-    async wasteTime() {
        const lClient = await this.diagramClient.languageClient
        while (!this.diagramClient.languageClientContribution.running) {
            await this.delay(120)
@@ -156,18 +153,20 @@ export class NewMouseListener extends MoveMouseListener {
                 found = true
             }
             curLayer[c] = node
+            c++
             curX = posX + node.size.width > curX ? posX + node.size.width : curX
-            console.log("node x pos: " + node.position.x)
-            console.log("node width: " + node.size.width)
         }
         console.log("layer of the node: " + layer)
+
+        let i = this.getPosForConstraint(curLayer, targetNode)
+        console.log("Position: " + i)
 
         /*this.diagramClient.languageClient.then (lClient => {
             lClient.sendNotification("keith/constraints/sayhello", "Client")
         }) */
     }
 
-    copyNodes(graphNodes: any) {
+    private copyNodes(graphNodes: any) {
         let nodes: SNode[] = []
         let counter = 0
         for (let i = 0; i < graphNodes.length; i++) {
@@ -181,22 +180,18 @@ export class NewMouseListener extends MoveMouseListener {
         return nodes
     }
 
-/**
- * Expects the expected layer as an array. Returns the abstract position
- * to which the node is meant to be placed by a constraint.
- * @param layerNs
- * @param dragPosY
- */
-private getPosForConstraint (layerNs: SNode[], dragPosY: number): number {
-    // Sort the layer array by y.
-    layerNs.sort((a, b) => a.position.y - b.position.y)
-    // Find the first node that is below the drag position.
-    let succIndex: number = layerNs.findIndex(n => n.position.y < dragPosY)
-
-    return succIndex
-}
-
-
-
+    /**
+     * Expects the expected layer as an array. Returns the abstract position
+     * to which the node is meant to be placed by a constraint.
+     * @param layerNs
+     * @param dragPosY
+     */
+    private getPosForConstraint (layerNs: SNode[], target: SNode): number {
+        // Sort the layer array by y.
+        layerNs.sort((a, b) => a.position.y - b.position.y)
+        // Find the first node that is below the drag position.
+        let succIndex: number = layerNs.indexOf(target)
+        return succIndex
+    }
 
 }
