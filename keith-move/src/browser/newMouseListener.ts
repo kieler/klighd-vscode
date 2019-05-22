@@ -1,7 +1,7 @@
 import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveable, SRoutingHandle,
     isCreatingOnDrag, SelectAllAction, edgeInProgressID, SelectAction, SwitchEditModeAction,
     edgeInProgressTargetHandleID, SRoutableElement, translatePoint, findChildrenAtPosition,
-    isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction } from "sprotty";
+    isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction, SNode } from "sprotty";
 
 // import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
 // import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
@@ -9,6 +9,8 @@ import { inject} from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
+import { sort } from "semver";
+import { SSL_OP_NO_TLSv1_1 } from "constants";
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
@@ -21,14 +23,14 @@ export class NewMouseListener extends MoveMouseListener {
         super();
         this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
-        this.wasteTime()
+        this.waitOnLCContribution()
     }
 
-    onMessageReceived(str: string){
+    onMessageReceived(str: string) {
         console.log("Message was received: " + str)
     }
 
-    async wasteTime(){
+    async waitOnLCContribution() {
        const lClient = await this.diagramClient.languageClient
        while (!this.diagramClient.languageClientContribution.running) {
            await this.delay(120)
@@ -117,6 +119,7 @@ export class NewMouseListener extends MoveMouseListener {
                 result.push(workeditaction);
                 console.log("Target: " + target.id + " \n" + uri);
             }*/
+
             this.diagramClient.languageClient.then (lClient => {
                 lClient.sendNotification("keith/constraints/sayhello", "Client")
             })
@@ -127,4 +130,22 @@ export class NewMouseListener extends MoveMouseListener {
         this.lastDragPosition = undefined;
         return result;
     }
+/**
+ * Expects the expected layer as an array. Returns the abstract position
+ * to which the node is meant to be placed by a constraint.
+ * @param layerNs
+ * @param dragPosY
+ */
+private getPosForConstraint (layerNs: SNode[], dragPosY: number): number {
+    // Sort the layer array by y.
+    layerNs.sort((a, b) => a.position.y - b.position.y)
+    // Find the first node that is below the drag position.
+    let succIndex: number = layerNs.findIndex(n => n.position.y < dragPosY)
+
+    return succIndex
+}
+
+
+
+
 }
