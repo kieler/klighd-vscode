@@ -117,8 +117,9 @@ export class NewMouseListener extends MoveMouseListener {
                 result.push(workeditaction);
                 console.log("Target: " + target.id + " \n" + uri);
             }*/
+            if (target instanceof SNode) {
             this.setProperty(target, event);
-
+            }
         }
         this.hasDragged = false;
         this.lastDragPosition = undefined;
@@ -171,7 +172,8 @@ export class NewMouseListener extends MoveMouseListener {
         let counter = 0
         for (let i = 0; i < graphNodes.length; i++) {
             let gNode = graphNodes[i]
-            if (!gNode.id.includes('$$E')) {
+            // if (!gNode.id.includes('$$E')) {
+            if (gNode instanceof SNode) {
                 nodes[counter] = gNode as SNode
                 counter++
             }
