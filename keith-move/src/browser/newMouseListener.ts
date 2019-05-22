@@ -31,6 +31,7 @@ export class NewMouseListener extends MoveMouseListener {
     }
 
     async waitOnLCContribution() {
+    async wasteTime() {
        const lClient = await this.diagramClient.languageClient
        while (!this.diagramClient.languageClientContribution.running) {
            await this.delay(120)
@@ -119,17 +120,67 @@ export class NewMouseListener extends MoveMouseListener {
                 result.push(workeditaction);
                 console.log("Target: " + target.id + " \n" + uri);
             }*/
-
-            this.diagramClient.languageClient.then (lClient => {
-                lClient.sendNotification("keith/constraints/sayhello", "Client")
-            })
-
+            this.setProperty(target, event);
 
         }
         this.hasDragged = false;
         this.lastDragPosition = undefined;
         return result;
     }
+
+    private setProperty(target: SModelElement, event: MouseEvent): void {
+        let targetNode: SNode = target as SNode
+        let graphNodes = targetNode.parent.children
+        let targetID = target.id
+
+        // calculate property that should be set
+
+        let gNodes = this.copyNodes(graphNodes)
+        gNodes.sort((a, b) => a.position.x - b.position.x)
+        let curX = -1
+        let layer = -1
+        let curLayer: SNode[] = []
+        let c = 0
+        let found = false
+        for (let node of gNodes) {
+            let posX = node.position.x
+            if (posX > curX) {
+                if (found) {
+                    break
+                }
+                layer = layer + 1
+                curLayer = []
+                c = 0
+            }
+            if (node.id === targetID) {
+                found = true
+            }
+            curLayer[c] = node
+            curX = posX + node.size.width > curX ? posX + node.size.width : curX
+            console.log("node x pos: " + node.position.x)
+            console.log("node width: " + node.size.width)
+        }
+        console.log("layer of the node: " + layer)
+
+        /*this.diagramClient.languageClient.then (lClient => {
+            lClient.sendNotification("keith/constraints/sayhello", "Client")
+        }) */
+    }
+
+    copyNodes(graphNodes: any) {
+        let nodes: SNode[] = []
+        let counter = 0
+        for (let i = 0; i < graphNodes.length; i++) {
+            let gNode = graphNodes[i]
+            if (!gNode.id.includes('$$E')) {
+                nodes[counter] = gNode as SNode
+                counter++
+            }
+        }
+
+        return nodes
+    }
+
 /**
  * Expects the expected layer as an array. Returns the abstract position
  * to which the node is meant to be placed by a constraint.
