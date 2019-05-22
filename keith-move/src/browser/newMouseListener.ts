@@ -117,8 +117,10 @@ export class NewMouseListener extends MoveMouseListener {
                 result.push(workeditaction);
                 console.log("Target: " + target.id + " \n" + uri);
             }*/
+
+            // if a node is moved set properties
             if (target instanceof SNode) {
-            this.setProperty(target, event);
+                this.setProperty(target);
             }
         }
         this.hasDragged = false;
@@ -126,59 +128,82 @@ export class NewMouseListener extends MoveMouseListener {
         return result;
     }
 
-    private setProperty(target: SModelElement, event: MouseEvent): void {
+    /**
+     * sets properties of the target accordingly to the position the target is moved to
+     * @param target SModelElement that is moved
+     */
+    private setProperty(target: SModelElement): void {
         let targetNode: SNode = target as SNode
-        let graphNodes = targetNode.parent.children
-        let targetID = target.id
+        let nodes = this.filterSNodes(targetNode.parent.children)
+        // calculate layer and position the target has in the graph at the new position
+        let layerInfos = this.getLayerInformations(targetNode, nodes)
+        let layerOfTarget = layerInfos[0]
+        let nodesOfLayer = layerInfos[1]
+        let positionOfTarget = this.getPosForConstraint(nodesOfLayer, targetNode)
 
-        // calculate property that should be set
+        // test
+        console.log("layer of the node: " + layerOfTarget)
+        console.log("Position: " + positionOfTarget)
 
-        let gNodes = this.copyNodes(graphNodes)
-        gNodes.sort((a, b) => a.position.x - b.position.x)
-        let curX = -1
-        let layer = -1
-        let curLayer: SNode[] = []
-        let c = 0
-        let found = false
-        for (let node of gNodes) {
-            let posX = node.position.x
-            if (posX > curX) {
-                if (found) {
-                    break
-                }
-                layer = layer + 1
-                curLayer = []
-                c = 0
-            }
-            if (node.id === targetID) {
-                found = true
-            }
-            curLayer[c] = node
-            c++
-            curX = posX + node.size.width > curX ? posX + node.size.width : curX
-        }
-        console.log("layer of the node: " + layer)
-
-        let i = this.getPosForConstraint(curLayer, targetNode)
-        console.log("Position: " + i)
+        // TODO: communication with server to set the properties
 
         /*this.diagramClient.languageClient.then (lClient => {
             lClient.sendNotification("keith/constraints/sayhello", "Client")
         }) */
     }
 
-    private copyNodes(graphNodes: any) {
+    /**
+     * caculates the layer the target is in and collect all nodes that are in the same layer
+     * @param target SNode which layer should be calculated
+     * @param nodes all SNodes the graph contains
+     */
+    getLayerInformations(target: SNode, nodes: SNode[]): [number, SNode[]] {
+        nodes.sort((a, b) => a.position.x - b.position.x)
+        let rightmostX = Number.NEGATIVE_INFINITY
+        let currentLayer = -1
+        let nodesOfLayer: SNode[] = []
+        let counter = 0
+        let targetFound = false
+
+        for (let node of nodes) {
+            let posX = node.position.x
+            // if the x position of the current node is greater than the rightmostX
+            // of all previous nodes the current node is in a new layer
+            if (posX > rightmostX) {
+                // if the target was in the previous layer the method can stop
+                if (targetFound) {
+                    break
+                }
+                currentLayer++
+                // reset
+                nodesOfLayer = []
+                counter = 0
+            }
+            if (node.id === target.id) {
+                targetFound = true
+            }
+            nodesOfLayer[counter] = node
+            counter++
+            // update the rightmost occurence of the nodes
+            rightmostX = posX + node.size.width > rightmostX ? posX + node.size.width : rightmostX
+        }
+
+        return [currentLayer, nodesOfLayer]
+    }
+
+    /**
+     * filters the SNodes out of graphElements
+     * @param graphElements all elements the graph contains
+     */
+    private filterSNodes(graphElements: any) {
         let nodes: SNode[] = []
         let counter = 0
-        for (let i = 0; i < graphNodes.length; i++) {
-            let gNode = graphNodes[i]
-            // if (!gNode.id.includes('$$E')) {
-            if (gNode instanceof SNode) {
-                nodes[counter] = gNode as SNode
+        for (let elem of graphElements) {
+            if (elem instanceof SNode) {
+                nodes[counter] = elem as SNode
                 counter++
             }
         }
-
         return nodes
     }
 
@@ -191,7 +216,7 @@ export class NewMouseListener extends MoveMouseListener {
     private getPosForConstraint (layerNs: SNode[], target: SNode): number {
         // Sort the layer array by y.
         layerNs.sort((a, b) => a.position.y - b.position.y)
-        // Find the first node that is below the drag position.
+        // Find the position of the target
         let succIndex: number = layerNs.indexOf(target)
         return succIndex
     }
