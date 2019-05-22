@@ -12,25 +12,18 @@
  */
 
 import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
-import { LanguageClientFactory, Languages, Workspace, BaseLanguageClientContribution } from '@theia/languages/lib/browser';
-import { inject, injectable } from 'inversify';
+import { BaseLanguageClientContribution } from '@theia/languages/lib/browser';
+import { injectable, multiInject, optional } from 'inversify';
 import { LS_ID, LS_NAME } from '../common';
-import { KeithInitializationOptions } from '../common/initialization-protocol';
 import { languageDescriptions } from './frontend-extension';
-import { KeithInitializationService } from './initialization-options';
+import { InitializationService } from './initialization-service';
 
 @injectable()
 export class KeithLanguageClientContribution extends BaseLanguageClientContribution {
 
     readonly id = LS_ID
     readonly name = LS_NAME
-
-    constructor(
-        @inject(Workspace) protected readonly workspace: Workspace,
-        @inject(Languages) protected readonly languages: Languages,
-        @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory) {
-        super(workspace, languages, languageClientFactory)
-    }
+    @multiInject(InitializationService)@optional() protected readonly initializationServices: InitializationService[]
 
     /**
      * Define pattern of supported languages from language server registered in backend with id and name of class.
@@ -62,10 +55,11 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
 
     // tslint:disable-next-line:no-any
     protected get initializationOptions(): any | (() => any) | undefined {
-        const initializer = KeithInitializationService.get()
-        return {
-            shouldSelectDiagram: initializer.getShouldSelectDiagram(),
-            shouldSelectText: initializer.getShouldSelectText(),
-        } as KeithInitializationOptions
+        // tslint:disable-next-line:no-any
+        let initializationOptions: any = {}
+        for (let initializationService of this.initializationServices) {
+            initializationOptions = {...initializationOptions, ...initializationService.getOptions()}
+        }
+        return initializationOptions
     }
 }

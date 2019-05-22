@@ -15,9 +15,12 @@ import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/brow
 import { EditorManager } from "@theia/editor/lib/browser";
 import { inject, injectable } from "inversify";
 import { DiagramLanguageClient } from "sprotty-theia";
+import { KeithDiagramPreferenceService } from './diagram-preferences';
 
 @injectable()
 export class KeithDiagramLanguageClient extends DiagramLanguageClient {
+    @inject(KeithDiagramPreferenceService) protected readonly preferenceService: KeithDiagramPreferenceService
+
     constructor(
         @inject(KeithLanguageClientContribution) languageClientContribution: KeithLanguageClientContribution,
         @inject(EditorManager) editorManager: EditorManager) {

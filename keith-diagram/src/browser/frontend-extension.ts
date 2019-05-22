@@ -19,10 +19,11 @@ import 'sprotty-theia/css/theia-sprotty.css';
 import { DiagramConfiguration, DiagramManager, DiagramManagerProvider } from 'sprotty-theia/lib';
 import 'sprotty/css/sprotty.css';
 import { KeithDiagramConfiguration } from './di.config';
+import { bindDiagramPreferences, KeithDiagramPreferenceService } from './diagram-preferences';
 import { SynthesisCommandContribution } from './keith-diagram-commands';
+import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithDiagramManager } from './keith-diagram-manager';
 import { KeithWidgetManager } from './keith-widget-manager';
-import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 
 /**
  * Dependency injection container for the KEITH frontend part of diagram functionality.
@@ -48,5 +49,8 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     bind(SynthesisRegistry).toSelf().inSingletonScope()
     bind(MenuContribution).to(SynthesisCommandContribution).inSingletonScope()
     bind(CommandContribution).to(SynthesisCommandContribution).inSingletonScope()
+    bindDiagramPreferences(bind)
     bind(KeithDiagramLanguageClient).toSelf().inSingletonScope()
+
+    bind(KeithDiagramPreferenceService).toSelf().inSingletonScope()
 })
