@@ -3,24 +3,30 @@ import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveab
     edgeInProgressTargetHandleID, SRoutableElement, translatePoint, findChildrenAtPosition,
     isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction, SNode } from "sprotty";
 
-// import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
-// import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
+import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
+import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
 import { inject} from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
+import URI from "@theia/core/lib/common/uri";
+import { LayerConstraint } from "./LayerConstraint";
+
+
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
 export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
+    uri: URI
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
         super();
         this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
+        this.uri = dserver.connector.diagramManager.all[0].uri
         this.waitOnLCContribution()
     }
 
@@ -107,16 +113,13 @@ export class NewMouseListener extends MoveMouseListener {
         }
         if (this.hasDragged) {
             result.push(new CommitModelAction());
-            // create a workspaceEditAction to write text in the editor
-            /*let edi = this.editorManager.currentEditor
-            if (edi !== undefined) {
-                let uri = edi.editor.document.uri;
-                const pos: Position = {line: 0, character: 0};
-                const workedit: WorkspaceEdit = {changes: {[uri]: [TextEdit.insert(pos, "Hallo: " + target.id + "\n")]}};
+                // create a workspaceEditAction to write text in the editor
+                /* const pos: Position = {line: 0, character: 0};
+                const workedit: WorkspaceEdit = {changes: {[this.uri.toString(true)]: [TextEdit.insert(pos, "Hallo: " + target.id + "\n")]}};
                 let workeditaction: WorkspaceEditAction = new WorkspaceEditAction(workedit);
                 result.push(workeditaction);
-                console.log("Target: " + target.id + " \n" + uri);
-            }*/
+                console.log("Target: " + target.id + " \n" + this.uri);
+                */
 
             // if a node is moved set properties
             if (target instanceof SNode) {
@@ -141,15 +144,19 @@ export class NewMouseListener extends MoveMouseListener {
         let nodesOfLayer = layerInfos[1]
         let positionOfTarget = this.getPosForConstraint(nodesOfLayer, targetNode)
 
-        // test
+        // test (works)
         console.log("layer of the node: " + layerOfTarget)
         console.log("Position: " + positionOfTarget)
 
         // TODO: communication with server to set the properties
 
-        /*this.diagramClient.languageClient.then (lClient => {
-            lClient.sendNotification("keith/constraints/sayhello", "Client")
-        }) */
+        // testing setLayerConstraint-method
+        let uriStr = this.uri.toString(true)
+        let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
+        this.diagramClient.languageClient.then (lClient => {
+            lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
+        })
+
     }
 
     /**
@@ -157,7 +164,7 @@ export class NewMouseListener extends MoveMouseListener {
      * @param target SNode which layer should be calculated
      * @param nodes all SNodes the graph contains
      */
-    getLayerInformations(target: SNode, nodes: SNode[]): [number, SNode[]] {
+    private getLayerInformations(target: SNode, nodes: SNode[]): [number, SNode[]] {
         nodes.sort((a, b) => a.position.x - b.position.x)
         let rightmostX = Number.NEGATIVE_INFINITY
         let currentLayer = -1
