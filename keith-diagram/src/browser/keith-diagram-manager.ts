@@ -17,6 +17,7 @@ import { OpenerOptions, Widget, WidgetManager, WidgetOpenerOptions } from '@thei
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { Workspace } from '@theia/languages/lib/browser';
+import { UserStorageUri } from "@theia/userstorage/lib/browser";
 import { inject, injectable } from 'inversify';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
@@ -65,8 +66,12 @@ export class KeithDiagramManager extends DiagramManager {
      * @param editorWidget The editor that is now active.
      */
     async onCurrentEditorChanged(editorWidget: EditorWidget | undefined): Promise<void> {
+        // Ignore changes to user storage files, as they are have no representation on the server.
+        if (!editorWidget || editorWidget.editor.uri.scheme === UserStorageUri.SCHEME) {
+            return
+        }
         const diagramWidget = this.widgetManager.getWidgets(this.id).pop()
-        if (diagramWidget && editorWidget) {
+        if (diagramWidget) {
             const uri = editorWidget.getResourceUri()
             if (uri instanceof URI) {
                 this.drawDiagram(uri)
