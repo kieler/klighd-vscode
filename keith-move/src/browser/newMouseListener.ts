@@ -3,8 +3,8 @@ import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveab
     edgeInProgressTargetHandleID, SRoutableElement, translatePoint, findChildrenAtPosition,
     isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction, SNode } from "sprotty";
 
-import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
-import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
+// import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
+// import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
 import { inject} from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
