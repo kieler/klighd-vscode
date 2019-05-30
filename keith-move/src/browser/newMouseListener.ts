@@ -21,6 +21,7 @@ export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
     uri: URI
+    private oldLayer: number
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
@@ -69,7 +70,16 @@ export class NewMouseListener extends MoveMouseListener {
                 result.push(new SwitchEditModeAction([target.id], []));
             }
         }
-        console.log("hallo");
+
+        // if a node is clicked
+        if (target instanceof SNode) {
+            let targetNode: SNode = target as SNode
+            let nodes = this.filterSNodes(targetNode.parent.children)
+            // calculate the layer the target has in the graph
+            let layerInfos = this.getLayerInformations(targetNode, nodes)
+            this.oldLayer = layerInfos[0]
+        }
+
         return result;
     }
 
@@ -150,16 +160,17 @@ export class NewMouseListener extends MoveMouseListener {
         console.log("Position: " + positionOfTarget)
         console.log("ID vom target: " + targetNode.id)
 
-        // TODO: communication with server to set the properties
-
-        // testing setLayerConstraint-method
         let uriStr = this.uri.toString(true)
-        let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
-        this.diagramClient.languageClient.then (lClient => {
-            lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
-        })
+        // layer constraint should only be set if the layer changed
+        if (this.oldLayer !== layerOfTarget) {
+            // set the layer constraint
+            let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
+            this.diagramClient.languageClient.then (lClient => {
+                lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
+            })
+        }
 
-        // testing setPositionConstraint-method
+        // set the position constraint
         let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget)
         this.diagramClient.languageClient.then (lClient => {
             lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
