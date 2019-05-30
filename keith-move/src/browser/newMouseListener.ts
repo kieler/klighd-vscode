@@ -11,6 +11,7 @@ import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { LayerConstraint } from "./LayerConstraint";
+import { PositionConstraint } from "./PositionConstraint";
 
 
 
@@ -147,6 +148,7 @@ export class NewMouseListener extends MoveMouseListener {
         // test (works)
         console.log("layer of the node: " + layerOfTarget)
         console.log("Position: " + positionOfTarget)
+        console.log("ID vom target: " + targetNode.id)
 
         // TODO: communication with server to set the properties
 
@@ -157,6 +159,11 @@ export class NewMouseListener extends MoveMouseListener {
             lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
         })
 
+        // testing setPositionConstraint-method
+        let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget)
+        this.diagramClient.languageClient.then (lClient => {
+            lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
+        })
     }
 
     /**
