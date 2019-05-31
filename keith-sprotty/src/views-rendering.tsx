@@ -15,8 +15,8 @@ import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import {
-    KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
-    KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
+    isRendering, KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef,
+    KRoundedBendsPolyline, KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
     K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
 } from './kgraph-models';
 import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, KGraphRenderingContext } from './views-common';
@@ -444,11 +444,84 @@ export function renderError(rendering: KRendering) {
 
 /**
  * Looks up the KRendering in the given data pool and generates a SVG rendering from that.
- * @param datas The list of possible KRenderings
+ * @param datas The list of possible KRenderings and additional data.
  * @param parent The parent element containing this rendering.
  * @param context The rendering context for this rendering.
  */
-export function getRendering(datas: KGraphData[], parent: KGraphElement, context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
+export function getRendering(datas: KGraphData[], parent: KGraphElement, context: KGraphRenderingContext): VNode | undefined {
+    const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
+
+    if (kRenderingLibrary !== undefined) {
+        // register the rendering library if found in the parent node
+        context.kRenderingLibrary = kRenderingLibrary as KRenderingLibrary
+    }
+
+    const kRendering = getKRendering(datas, context)
+
+    if (kRendering === undefined) {
+        return undefined
+    }
+
+    return renderKRendering(kRendering, parent, context)
+}
+
+/**
+ * Translates any KRendering into an SVG rendering.
+ * @param kRendering The rendering.
+ * @param parent The parent element.
+ * @param context The rendering context for this element.
+ */
+export function renderKRendering(kRendering: KRendering, parent: KGraphElement, context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
+    switch (kRendering.type) {
+        case K_CONTAINER_RENDERING: {
+            console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
+            return undefined
+        }
+        case K_CHILD_AREA: {
+            return renderChildArea(kRendering as KChildArea, parent, context)
+        }
+        case K_ARC: {
+            console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
+            // data as KArc
+            return undefined
+        }
+        case K_CUSTOM_RENDERING: {
+            console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
+            // data as KCustomRendering
+            return undefined
+        }
+        case K_ELLIPSE:
+        case K_RECTANGLE:
+        case K_ROUNDED_RECTANGLE: {
+            return renderRectangularShape(kRendering as KContainerRendering, parent, context)
+        }
+        case K_IMAGE: {
+            console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
+            // data as KImage
+            return undefined
+        }
+        case K_POLYLINE:
+        case K_POLYGON:
+        case K_ROUNDED_BENDS_POLYLINE:
+        case K_SPLINE: {
+            return renderLine(kRendering as KPolyline, parent, context)
+        }
+        case K_TEXT: {
+            return renderKText(kRendering as KText, parent, context)
+        }
+        default: {
+            console.error('The rendering is of an unknown type:' + kRendering.type)
+            return undefined
+        }
+    }
+}
+
+/**
+ * Looks up the first KRendering in the list of data and returns it. KRenderingReferences are handled and dereferenced as well, so only 'real' renderings are returned.
+ * @param datas The list of possible renderings.
+ * @param context The rendering context for this rendering.
+ */
+export function getKRendering(datas: KGraphData[], context: KGraphRenderingContext): KRendering | undefined {
     for (let data of datas) {
         if (data === null)
             continue
@@ -458,57 +531,73 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, context
                 if (rendering.id === id) {
                     context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
                     context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
-                    data = rendering as any // TODO: fix: persistentEntry is missing
+                    return rendering as KRendering
                 }
             }
         }
-        switch (data.type) {
-            case K_RENDERING_LIBRARY: {
-                // register the rendering library if found in the parent node
-                context.kRenderingLibrary = data as KRenderingLibrary
-                break
-            }
-            case K_CONTAINER_RENDERING: {
-                console.error('A rendering can not be a ' + data.type + ' by itself, it needs to be a subclass of it.')
-                break
-            }
-            case K_CHILD_AREA: {
-                return renderChildArea(data as KChildArea, parent, context)
-            }
-            case K_ARC: {
-                console.error('The rendering for ' + data.type + ' is not implemented yet.')
-                // data as KArc
-                break
-            }
-            case K_CUSTOM_RENDERING: {
-                console.error('The rendering for ' + data.type + ' is not implemented yet.')
-                // data as KCustomRendering
-                break
-            }
-            case K_ELLIPSE:
-            case K_RECTANGLE:
-            case K_ROUNDED_RECTANGLE: {
-                return renderRectangularShape(data as KContainerRendering, parent, context)
-            }
-            case K_IMAGE: {
-                console.error('The rendering for ' + data.type + ' is not implemented yet.')
-                // data as KImage
-                break
-            }
-            case K_POLYLINE:
-            case K_POLYGON:
-            case K_ROUNDED_BENDS_POLYLINE:
-            case K_SPLINE: {
-                return renderLine(data as KPolyline, parent, context)
-            }
-            case K_TEXT: {
-                return renderKText(data as KText, parent, context)
-            }
-            default: {
-                // do nothing. The data is something other than a rendering
-                break
-            }
+        if (isRendering(data)) {
+            return data
         }
     }
     return undefined
+}
+
+/**
+ * Renders all junction points of the given edge.
+ * @param edge The edge the junction points should be rendered for.
+ * @param context The rendering context for this rendering.
+ */
+export function getJunctionPointRenderings(edge: KEdge, context: KGraphRenderingContext): VNode[] {
+    const kRenderingLibrary = edge.data.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
+
+    if (kRenderingLibrary !== undefined) {
+        // register the rendering library if found in the parent node
+        context.kRenderingLibrary = kRenderingLibrary as KRenderingLibrary
+    }
+
+    const kRendering = getKRendering(edge.data, context)
+
+    if (kRendering === undefined) {
+        return []
+    }
+
+    // The rendering of an edge has to be a KPolyline or a sub type of KPolyline except KPolygon,
+    // or a KCustomRendering providing a KCustomConnectionFigureNode.
+    let junctionPointRendering: KRendering
+    switch (kRendering.type) {
+        case K_CUSTOM_RENDERING: {
+            console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
+            // junctionPointRendering = ?
+            return []
+        }
+        case K_POLYLINE:
+        case K_ROUNDED_BENDS_POLYLINE:
+        case K_SPLINE: {
+            junctionPointRendering = (kRendering as KPolyline).junctionPointRendering
+            break
+        }
+        default: {
+            console.error('The rendering of an edge has to be a KPolyline or a sub type of KPolyline except KPolygon, ' +
+            'or a KCustomRendering providing a KCustomConnectionFigureNode, but is ' + kRendering.type)
+            return []
+        }
+    }
+
+    if (edge.junctionPoints.length === 0) {
+        return []
+    }
+    // Render each junction point.
+    const vNode = renderKRendering(junctionPointRendering, edge, context)
+    if (vNode === undefined) {
+        return []
+    }
+
+    const renderings: VNode[] = []
+    edge.junctionPoints.forEach(junctionPoint => {
+        const junctionPointVNode = <g transform = {`translate(${junctionPoint.x},${junctionPoint.y})`}>
+            {vNode}
+        </g>
+        renderings.push(junctionPointVNode)
+    })
+    return renderings
 }

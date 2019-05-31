@@ -75,6 +75,7 @@ export class KLabel extends SLabel implements KGraphElement {
 export class KEdge extends SEdge implements KGraphElement {
     trace?: string
     data: KGraphData[]
+    junctionPoints: Point[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
