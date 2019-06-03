@@ -15,7 +15,7 @@ import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import {
-    isRendering, KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef,
+    Arc, isRendering, KArc, KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef,
     KRoundedBendsPolyline, KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
     K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
 } from './kgraph-models';
@@ -97,6 +97,79 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     // Create the svg element for this rendering.
     let element: VNode
     switch (rendering.type) {
+        case K_ARC: {
+            const kArcRendering = rendering as KArc
+
+            let sweepFlag = 0
+            let angle = kArcRendering.arcAngle
+            // For a negative angle, rotate the other way around.
+            if (angle < 0) {
+                angle = -angle
+                sweepFlag = 1
+            }
+            // If the angle is bigger than or equal to 360 degrees, use the same rendering as a KEllipse via fallthrough to that rendering instead.
+            if (angle < 360) {
+                // Calculation to get the start and endpoint of the arc from the angles given.
+                // Reduce the width and height by half the linewidth on both sides, so the ellipse really stays within the given bounds.
+                const width = boundsAndTransformation.bounds.width - styles.kLineWidth.lineWidth
+                const height = boundsAndTransformation.bounds.height - styles.kLineWidth.lineWidth
+                const rX = width / 2
+                const rY = height / 2
+                const midX = rX + styles.kLineWidth.lineWidth / 2
+                const midY = rY + styles.kLineWidth.lineWidth / 2
+                const startX = midX + rX * Math.cos(kArcRendering.startAngle * Math.PI / 180)
+                const startY = midY - rY * Math.sin(kArcRendering.startAngle * Math.PI / 180)
+                const endAngle = kArcRendering.startAngle + kArcRendering.arcAngle
+                const endX = midX + rX * Math.cos(endAngle * Math.PI / 180)
+                const endY = midY - rY * Math.sin(endAngle * Math.PI / 180)
+
+
+                // If the angle is bigger or equal 180 degrees, use the large arc as of the w3c path specification
+                // https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
+                const largeArcFlag = angle >= 180 ? 1 : 0
+                // Rotation is not handled via KArcs but via KRotations, so leave this value as 0.
+                const rotate = 0
+
+                // The main arc.
+                let d = `M${startX},${startY}A${rX},${rY},${rotate},${largeArcFlag},${sweepFlag},${endX},${endY}`
+                switch (kArcRendering.arcType) {
+                    case Arc.OPEN: {
+                        // Open chords do not have any additional lines.
+                        break
+                    }
+                    case Arc.CHORD: {
+                        // Add a straight line from the end to the beginning point.
+                        d += `L${startX},${startY}`
+                        break
+                    }
+                    case Arc.PIE: {
+                        // Add a straight line from the end to the center and then back to the beginning point.
+                        d += `L${midX},${midY}L${startX},${startY}`
+                        break
+                    }
+                }
+
+                element = <g id={rendering.id} {...gAttrs}>
+                    <path
+                        d={d}
+                        style={{
+                            'stroke-linecap': lineStyles.lineCap,
+                            'stroke-linejoin': lineStyles.lineJoin,
+                            'stroke-width': lineStyles.lineWidth,
+                            'stroke-dasharray': lineStyles.dashArray,
+                            'stroke-miterlimit': lineStyles.miterLimit
+                        } as React.CSSProperties}
+                        stroke={colorStyles.foreground}
+                        fill={colorStyles.background}
+                        filter={shadowStyles}
+                    />
+                    {renderChildRenderings(rendering, parent, context)}
+                </g>
+                break
+            } else {
+                // Fallthrough to KEllipse case.
+            }
+        }
         case K_ELLIPSE: {
             element = <g id={rendering.id} {...gAttrs}>
                 <ellipse
@@ -480,16 +553,12 @@ export function renderKRendering(kRendering: KRendering, parent: KGraphElement, 
         case K_CHILD_AREA: {
             return renderChildArea(kRendering as KChildArea, parent, context)
         }
-        case K_ARC: {
-            console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
-            // data as KArc
-            return undefined
-        }
         case K_CUSTOM_RENDERING: {
             console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
             // data as KCustomRendering
             return undefined
         }
+        case K_ARC:
         case K_ELLIPSE:
         case K_RECTANGLE:
         case K_ROUNDED_RECTANGLE: {
