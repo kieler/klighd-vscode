@@ -652,7 +652,7 @@ export function getJunctionPointRenderings(edge: KEdge, context: KGraphRendering
         }
     }
 
-    if (edge.junctionPoints.length === 0) {
+    if (edge.junctionPoints.length === 0 || junctionPointRendering === undefined) {
         return []
     }
     // Render each junction point.
