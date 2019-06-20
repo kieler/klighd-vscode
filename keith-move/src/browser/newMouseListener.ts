@@ -5,7 +5,7 @@ import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveab
 
 // import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
 // import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
-import { inject} from 'inversify';
+import { inject, injectable } from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
@@ -18,16 +18,19 @@ import { ConstraintUtils } from "./ConstraintUtils";
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
+@injectable()
 export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
     uri: URI
+    moving: boolean = false
     private oldLayer: number
     private oldLayerMates: SNode[]
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
         super();
+        console.log("KOnstruktor")
         this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
         this.uri = dserver.connector.diagramManager.all[0].uri
@@ -75,12 +78,14 @@ export class NewMouseListener extends MoveMouseListener {
 
         // if a node is clicked
         if (target instanceof SNode) {
+            this.moving = true
             let targetNode: SNode = target as SNode
             let nodes = this.filterSNodes(targetNode.parent.children)
             // calculate the layer the target has in the graph
             let layerInfos = this.getLayerInformation(targetNode, nodes)
             this.oldLayer = layerInfos[0]
             this.oldLayerMates = layerInfos[1]
+            console.log("Moving?:" + this.moving)
         }
 
         return result;
@@ -138,6 +143,7 @@ export class NewMouseListener extends MoveMouseListener {
             // if a node is moved set properties
             if (target instanceof SNode) {
                 this.setProperty(target);
+                this.moving = false
             }
         }
         this.hasDragged = false;
@@ -175,9 +181,11 @@ export class NewMouseListener extends MoveMouseListener {
         * However, the list of its old layer mates and new layer mates are not equal
         * since the target changed its layer.
         */
-        if (this.oldLayer !== layerOfTarget || (ConstraintUtils.nodeArEquals(this.oldLayerMates, [targetNode])
-        && !ConstraintUtils.nodeArEquals([targetNode], nodesOfLayer)) ) {
-
+        if (this.oldLayer === layerOfTarget && ConstraintUtils.nodeArEquals(this.oldLayerMates, [targetNode])
+        && !ConstraintUtils.nodeArEquals([targetNode], nodesOfLayer)) {
+           layerOfTarget++
+        }
+        if (this.oldLayer !== layerOfTarget ) {
             // set the layer constraint
             let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
             this.diagramClient.languageClient.then (lClient => {

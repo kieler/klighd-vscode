@@ -11,13 +11,14 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
+import { IView, RenderingContext, SGraph, SGraphView, SChildElement, SNode } from 'sprotty/lib';
 import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
+import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener'
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -38,6 +39,9 @@ export class SKGraphView extends SGraphView {
  */
 @injectable()
 export class KNodeView implements IView {
+
+    @inject(NewMouseListener) mListener: NewMouseListener
+
     render(node: KNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
         const ctx = context as any as KGraphRenderingContext
@@ -52,10 +56,21 @@ export class KNodeView implements IView {
             ctx.renderingDefs.forEach((value: VNode, key: String) => {
                 (defs.children as (string | VNode)[]).push(value)
             })
-            return <g>
-                {defs}
-                {...children}
-            </g>
+
+            if (this.mListener.moving) {
+                console.log("Moving")
+                return <g>
+                    {this.renderLayer(node)}
+                    {defs}
+                    {...children}
+                </g>
+            } else  {
+                console.log("notMoving")
+                return <g>
+                    {defs}
+                    {...children}
+                </g>
+            }
         }
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
@@ -75,6 +90,83 @@ export class KNodeView implements IView {
             </g>
         }
     }
+
+    private renderLayer(node: KNode) {
+        // TODO:
+        // should layer be drawn? (add boolean in newMouseListener)
+        let children = node.children
+        return this.renderCurrentLayer(children)
+        this.renderOtherLayer(children)
+    }
+
+    private renderCurrentLayer(nodes: SChildElement[]) {
+        // TODO:
+        // #1 select nodes in the current layer (save the current in newMouseListener)
+        // #2 calculate position and dimension of layer
+        // #3 return svg of the layer (retangle)
+
+        // test drawing
+        for (let el of nodes) {
+            if (el instanceof SNode) {
+                let node = el as SNode
+                let element =
+                    <g> <rect
+                            x={node.position.x - 10}
+                            y={node.position.y - 10}
+                            width={node.bounds.width + 20}
+                            height={node.bounds.height + 20}>
+                        </rect>
+                    </g>
+                return element
+            }
+        }
+
+       /* let element = <g id={rendering.id} {...gAttrs}>
+        <rect
+            width={boundsAndTransformation.bounds.width}
+            height={boundsAndTransformation.bounds.height}
+            {...(rx ? { rx: rx } : {})}
+            {...(ry ? { ry: ry } : {})}
+            style={{
+                'stroke-linecap': lineStyles.lineCap,
+                'stroke-linejoin': lineStyles.lineJoin,
+                'stroke-width': lineStyles.lineWidth,
+                'stroke-dasharray': lineStyles.dashArray,
+                'stroke-miterlimit': lineStyles.miterLimit
+            } as React.CSSProperties}
+            stroke={colorStyles.foreground}
+            fill={colorStyles.background}
+            filter={shadowStyles}
+        />
+        {renderChildRenderings(rendering, parent, context)}
+    </g>*/
+    }
+
+    private renderOtherLayer(nodes: SChildElement[]) {
+        // TODO:
+        // #1 sort nodes based on their layer
+        // #2 delete nodes in the current layer (save the current in newMouseListener)
+        // #3 calculate position and dimension of layer
+        // #4 return svg of the layer (line)
+
+        /*let element = <g id={rendering.id} {...gAttrs}>
+        <path
+            d={path}
+            style={{
+                'stroke-linecap': lineStyles.lineCap,
+                'stroke-linejoin': lineStyles.lineJoin,
+                'stroke-width': lineStyles.lineWidth,
+                'stroke-dasharray': lineStyles.dashArray,
+                'stroke-miterlimit': lineStyles.miterLimit
+            } as React.CSSProperties}
+            stroke={colorStyles.foreground}
+            fill={colorStyles.background}
+            filter={shadowStyles}
+        />
+        {renderChildRenderings(rendering, parent, context)}
+    </g>*/
+    }
+
 }
 
 /**
