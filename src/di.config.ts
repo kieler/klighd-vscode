@@ -20,6 +20,7 @@ import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 import { newMoveModule } from '@kieler/keith-move/lib/new-mode-module'
+// import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener';
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for KGraphElements.
@@ -28,6 +29,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
     rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
+   // bind(NewMouseListener).toSelf().inSingletonScope()
     const context = { bind, unbind, isBound, rebind };
     configureModelElement(context, 'graph', SGraph, SKGraphView);
     configureModelElement(context, 'node', KNode, KNodeView)
