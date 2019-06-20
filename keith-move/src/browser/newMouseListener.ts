@@ -12,6 +12,7 @@ import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { LayerConstraint } from "./LayerConstraint";
 import { PositionConstraint } from "./PositionConstraint";
+import { ConstraintUtils } from "./ConstraintUtils";
 
 
 
@@ -22,6 +23,7 @@ export class NewMouseListener extends MoveMouseListener {
     diagramClient: DiagramLanguageClient
     uri: URI
     private oldLayer: number
+    private oldLayerMates: SNode[]
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
@@ -76,8 +78,9 @@ export class NewMouseListener extends MoveMouseListener {
             let targetNode: SNode = target as SNode
             let nodes = this.filterSNodes(targetNode.parent.children)
             // calculate the layer the target has in the graph
-            let layerInfos = this.getLayerInformations(targetNode, nodes)
+            let layerInfos = this.getLayerInformation(targetNode, nodes)
             this.oldLayer = layerInfos[0]
+            this.oldLayerMates = layerInfos[1]
         }
 
         return result;
@@ -143,14 +146,14 @@ export class NewMouseListener extends MoveMouseListener {
     }
 
     /**
-     * sets properties of the target accordingly to the position the target is moved to
+     * Sets properties of the target accordingly to the position the target is moved to
      * @param target SModelElement that is moved
      */
     private setProperty(target: SModelElement): void {
         let targetNode: SNode = target as SNode
         let nodes = this.filterSNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
-        let layerInfos = this.getLayerInformations(targetNode, nodes)
+        let layerInfos = this.getLayerInformation(targetNode, nodes)
         let layerOfTarget = layerInfos[0]
         let nodesOfLayer = layerInfos[1]
         let positionOfTarget = this.getPosForConstraint(nodesOfLayer, targetNode)
@@ -161,8 +164,20 @@ export class NewMouseListener extends MoveMouseListener {
         console.log("ID vom target: " + targetNode.id)
 
         let uriStr = this.uri.toString(true)
-        // layer constraint should only be set if the layer changed
-        if (this.oldLayer !== layerOfTarget) {
+
+     //   console.log(this.oldLayerMates);
+     //   console.log(nodesOfLayer)
+     //   console.log("OldLayers und target" + ConstraintUtils.nodeArEquals(this.oldLayerMates, [targetNode]))
+
+        // layer constraint should only be set if the layer index changed
+        /*There is one particular edge case: If the moved node was the last node of its layer
+        * and is moved to the neighbouring right layer then its new layer index is equal to its old layer index.
+        * However, the list of its old layer mates and new layer mates are not equal
+        * since the target changed its layer.
+        */
+        if (this.oldLayer !== layerOfTarget || (ConstraintUtils.nodeArEquals(this.oldLayerMates, [targetNode])
+        && !ConstraintUtils.nodeArEquals([targetNode], nodesOfLayer)) ) {
+
             // set the layer constraint
             let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
             this.diagramClient.languageClient.then (lClient => {
@@ -178,11 +193,11 @@ export class NewMouseListener extends MoveMouseListener {
     }
 
     /**
-     * caculates the layer the target is in and collect all nodes that are in the same layer
-     * @param target SNode which layer should be calculated
+     * Calculates the target's layer and collects all nodes that are in the same layer.
+     * @param target SNode of which the layer should be calculated
      * @param nodes all SNodes the graph contains
      */
-    private getLayerInformations(target: SNode, nodes: SNode[]): [number, SNode[]] {
+    private getLayerInformation(target: SNode, nodes: SNode[]): [number, SNode[]] {
         nodes.sort((a, b) => a.position.x - b.position.x)
         let rightmostX = Number.NEGATIVE_INFINITY
         let currentLayer = -1
@@ -209,7 +224,7 @@ export class NewMouseListener extends MoveMouseListener {
             }
             nodesOfLayer[counter] = node
             counter++
-            // update the rightmost occurence of the nodes
+            // update the rightmost occurence of the nodes - it's the rightmost of the currently examined layer
             rightmostX = posX + node.size.width > rightmostX ? posX + node.size.width : rightmostX
         }
 
@@ -217,8 +232,9 @@ export class NewMouseListener extends MoveMouseListener {
     }
 
     /**
-     * filters the SNodes out of graphElements
-     * @param graphElements all elements the graph contains
+     * Filters the SNodes out of graphElements.
+     * @param graphElements all elements that the graph contains
+     * @returns all SNodes that the graph contains
      */
     private filterSNodes(graphElements: any) {
         let nodes: SNode[] = []
