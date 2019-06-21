@@ -23,14 +23,13 @@ export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
     uri: URI
-    moving: boolean = false
     private oldLayer: number
     private oldLayerMates: SNode[]
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
         super();
-        console.log("KOnstruktor")
+        console.log("Konstruktor")
         this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
         this.uri = dserver.connector.diagramManager.all[0].uri
@@ -78,14 +77,12 @@ export class NewMouseListener extends MoveMouseListener {
 
         // if a node is clicked
         if (target instanceof SNode) {
-            this.moving = true
             let targetNode: SNode = target as SNode
             let nodes = this.filterSNodes(targetNode.parent.children)
             // calculate the layer the target has in the graph
             let layerInfos = this.getLayerInformation(targetNode, nodes)
             this.oldLayer = layerInfos[0]
             this.oldLayerMates = layerInfos[1]
-            console.log("Moving?:" + this.moving)
         }
 
         return result;
@@ -143,7 +140,6 @@ export class NewMouseListener extends MoveMouseListener {
             // if a node is moved set properties
             if (target instanceof SNode) {
                 this.setProperty(target);
-                this.moving = false
             }
         }
         this.hasDragged = false;

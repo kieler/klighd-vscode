@@ -57,7 +57,7 @@ export class KNodeView implements IView {
                 (defs.children as (string | VNode)[]).push(value)
             })
 
-            if (this.mListener.moving) {
+            if (this.mListener.hasDragged) {
                 console.log("Moving")
                 return <g>
                     {this.renderLayer(node)}
