@@ -41,6 +41,10 @@ export class KNode extends RectangularNode implements KGraphElement {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === moveFeature
     }
+
+    layerId: number
+    layerCons: number
+    posCons: number
 }
 
 /**
