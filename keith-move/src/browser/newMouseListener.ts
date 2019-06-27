@@ -175,15 +175,17 @@ export class NewMouseListener extends MoveMouseListener {
         * However, the list of its old layer mates and new layer mates are not equal
         * since the target changed its layer.
         */
-        if (this.oldLayer !== layerOfTarget || (ConstraintUtils.nodeArEquals(this.oldLayerMates, [targetNode])
-        && !ConstraintUtils.nodeArEquals([targetNode], nodesOfLayer)) ) {
-
-            // set the layer constraint
-            let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
-            this.diagramClient.languageClient.then (lClient => {
-                lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
-            })
-        }
+       if (this.oldLayer === layerOfTarget && ConstraintUtils.nodeArEquals(this.oldLayerMates, [targetNode])
+       && !ConstraintUtils.nodeArEquals([targetNode], nodesOfLayer)) {
+          layerOfTarget++
+       }
+       if (this.oldLayer !== layerOfTarget ) {
+           // set the layer constraint
+           let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
+           this.diagramClient.languageClient.then (lClient => {
+               lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
+           })
+       }
 
         // set the position constraint
         let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget)
