@@ -14,7 +14,7 @@
 import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { IView, RenderingContext, SGraph, SGraphView, SChildElement, SNode } from 'sprotty/lib';
+import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
 import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
@@ -43,6 +43,10 @@ export class KNodeView implements IView {
     @inject(NewMouseListener) mListener: NewMouseListener
 
     render(node: KNode, context: RenderingContext): VNode {
+        /*console.log("Node: " + node.id)
+        console.log("ID: " + node.layerId)
+        console.log("Layer: " + node.layerCons)*/
+
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
         const ctx = context as any as KGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
@@ -58,14 +62,12 @@ export class KNodeView implements IView {
             })
 
             if (this.mListener.hasDragged) {
-                console.log("Moving")
                 return <g>
                     {this.renderLayer(node)}
                     {defs}
                     {...children}
                 </g>
             } else  {
-                console.log("notMoving")
                 return <g>
                     {defs}
                     {...children}
@@ -92,82 +94,141 @@ export class KNodeView implements IView {
     }
 
     private renderLayer(node: KNode) {
-        // TODO:
-        // should layer be drawn? (add boolean in newMouseListener)
         let children = node.children
-        return this.renderCurrentLayer(children)
-        this.renderOtherLayer(children)
-    }
-
-    private renderCurrentLayer(nodes: SChildElement[]) {
-        // TODO:
-        // #1 select nodes in the current layer (save the current in newMouseListener)
-        // #2 calculate position and dimension of layer
-        // #3 return svg of the layer (retangle)
-
-        // test drawing
-        for (let el of nodes) {
-            if (el instanceof SNode) {
-                let node = el as SNode
-                let element =
-                    <g> <rect
-                            x={node.position.x - 10}
-                            y={node.position.y - 10}
-                            width={node.bounds.width + 20}
-                            height={node.bounds.height + 20}>
-                        </rect>
-                    </g>
-                return element
+        // filter KNodes
+        let nodes: KNode[] = []
+        let counter = 0
+        for (let elem of children) {
+            if (elem instanceof KNode) {
+                nodes[counter] = elem as KNode
+                counter++
             }
         }
 
-       /* let element = <g id={rendering.id} {...gAttrs}>
-        <rect
-            width={boundsAndTransformation.bounds.width}
-            height={boundsAndTransformation.bounds.height}
-            {...(rx ? { rx: rx } : {})}
-            {...(ry ? { ry: ry } : {})}
-            style={{
-                'stroke-linecap': lineStyles.lineCap,
-                'stroke-linejoin': lineStyles.lineJoin,
-                'stroke-width': lineStyles.lineWidth,
-                'stroke-dasharray': lineStyles.dashArray,
-                'stroke-miterlimit': lineStyles.miterLimit
-            } as React.CSSProperties}
-            stroke={colorStyles.foreground}
-            fill={colorStyles.background}
-            filter={shadowStyles}
-        />
-        {renderChildRenderings(rendering, parent, context)}
-    </g>*/
+        // sort nodes based on their layer
+        nodes.sort((a, b) => a.layerId - b.layerId)
+
+        // TODO: calculate current
+        // create layer indicators
+        let current = this.calcCurrentLayer(nodes)
+        return  <g>
+                    {this.renderCurrentLayer(nodes, current)}
+                    {this.renderOtherLayer(nodes, current)}
+                </g>
     }
 
-    private renderOtherLayer(nodes: SChildElement[]) {
-        // TODO:
-        // #1 sort nodes based on their layer
-        // #2 delete nodes in the current layer (save the current in newMouseListener)
-        // #3 calculate position and dimension of layer
-        // #4 return svg of the layer (line)
-
-        /*let element = <g id={rendering.id} {...gAttrs}>
-        <path
-            d={path}
-            style={{
-                'stroke-linecap': lineStyles.lineCap,
-                'stroke-linejoin': lineStyles.lineJoin,
-                'stroke-width': lineStyles.lineWidth,
-                'stroke-dasharray': lineStyles.dashArray,
-                'stroke-miterlimit': lineStyles.miterLimit
-            } as React.CSSProperties}
-            stroke={colorStyles.foreground}
-            fill={colorStyles.background}
-            filter={shadowStyles}
-        />
-        {renderChildRenderings(rendering, parent, context)}
-    </g>*/
+    private calcCurrentLayer(nodes: KNode[]) {
+        // TODO: calculate current
+        for (let node of nodes) {
+            if (node.selected) {
+                return node.layerId
+            }
+        }
+        return 0
     }
 
-}
+    private renderCurrentLayer(nodes: KNode[], current: number) {
+        let leftX = Number.MAX_VALUE
+        let topY = Number.MAX_VALUE
+        let rightX = Number.MIN_VALUE
+        let botY = Number.MIN_VALUE
+
+        // caluclate position and bounds of the layer
+        for (let node of nodes) {
+            if (!node.selected) {
+                if (node.layerId === current) {
+                    if (node.position.x < leftX) {
+                        leftX = node.position.x
+                    }
+                    if (node.position.x + node.size.width > rightX) {
+                        rightX = node.position.x + node.size.width
+                    }
+                }
+                if (node.position.y + node.size.height > botY) {
+                    botY = node.position.y + node.size.height
+                }
+                if (node.position.y < topY) {
+                    topY = node.position.y
+                }
+            }
+        }
+        // create rectangle that indicatees the current layer
+        return this.createRect(leftX, topY, rightX - leftX, botY - topY)
+    }
+
+    private renderOtherLayer(nodes: KNode[], current: number) {
+        let layer = 0
+        let leftX = Number.MAX_VALUE
+        let topY = Number.MAX_VALUE
+        let rightX = Number.MIN_VALUE
+        let botY = Number.MIN_VALUE
+        let xValues = []
+        // TODO: current layer should be ignored
+        // create line for every layer except the current one
+        for (let node of nodes) {
+            if (!node.selected) {
+                if (node.layerId !== layer) {
+                    xValues[layer] = leftX + (rightX - leftX) / 2
+                    leftX = Number.MAX_VALUE
+                    rightX = Number.MIN_VALUE
+                    layer++
+                }
+                if (node.position.x < leftX) {
+                    leftX = node.position.x
+                }
+                if (node.position.y < topY) {
+                    topY = node.position.y
+                }
+                if (node.position.x + node.size.width > rightX) {
+                    rightX = node.position.x + node.size.width
+                }
+                if (node.position.y + node.size.height > botY) {
+                    botY = node.position.y + node.size.height
+                }
+            }
+        }
+        xValues[layer] = leftX + (rightX - leftX) / 2
+
+        let result = <g></g>
+        for (let i = 0; i < xValues.length; i++) {
+            if (i !== current) {
+                result = <g>{result}{this.createLine(xValues[i], topY, botY)}</g>
+            }
+        }
+        return result
+    }
+
+    private createRect(leftX: number, topY: number, width: number, height: number) {
+        let element =
+            <g> <rect
+                    x={leftX - 10}
+                    y={topY - 10}
+                    width={width + 20}
+                    height={height + 20}
+                    fill='none'
+                    stroke='grey'
+                    style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
+                </rect>
+            </g>
+        return element
+    }
+
+    private createLine(x: number, topY: number, botY: number) {
+        let element =
+            <g> <line
+                    x1={x}
+                    y1={topY - 10}
+                    x2={x}
+                    y2={botY + 10}
+                    fill='none'
+                    stroke='grey'
+                    style={{ 'stroke-dasharray': "4" } as React.CSSProperties}
+                />
+            </g>
+        return element
+    }
+ }
+
 
 /**
  * IView component that translates a KPort and its children into a tree of virtual DOM elements.
