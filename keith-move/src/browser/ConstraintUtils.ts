@@ -1,4 +1,5 @@
 import { SNode } from "sprotty";
+import { KNode } from "@kieler/keith-sprotty/lib/kgraph-models"
 
 export class ConstraintUtils {
    /**
@@ -43,5 +44,131 @@ export class ConstraintUtils {
             }
         }
         return true
+    }
+
+    /**
+     * Calculates the layer the noe is in
+     * @param node node which layer should be calculated
+     * @param nodes all nodes the graph contains
+     */
+    public static getLayerOfNode(node: KNode, nodes: KNode[]) {
+        // if the moved node is the last of a layer, it can not be moved back to this layer
+        // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
+        let layerCoords = this.getLayerCoordinates(nodes)
+        let curX = node.position.x
+        if (curX < layerCoords[0]) {
+            return 0
+        }
+        for (let i = 2; i < layerCoords.length; i = i + 2) {
+            let coordinate = layerCoords[i]
+            if (coordinate !== Number.MIN_VALUE && curX < coordinate) {
+                let shift = 1
+                if (layerCoords[i - 1] === Number.MIN_VALUE) {
+                    shift = 2
+                }
+                let mid = layerCoords[i - shift] + (coordinate - layerCoords[i - shift]) / 2
+                if (curX < mid) {
+                    return i / 2 - shift
+                } else {
+                    return i / 2
+                }
+            }
+        }
+        // TODO: add offset for last layer
+        if (curX < layerCoords[layerCoords.length - 1]) {
+            return layerCoords.length / 2 - 1
+        }
+        return layerCoords.length / 2
+    }
+
+    /**
+     * Calculates the left and right coordinates of the layers in a graph
+     * @param nodes all nodes the graph which layer coordinates should be calculated contains
+     */
+    public static getLayerCoordinates(nodes: KNode[]) {
+        nodes.sort((a, b) => a.layerId - b.layerId)
+        let coordinates = []
+        let layer = 0
+        let leftX = Number.MAX_VALUE
+        let rightX = Number.MIN_VALUE
+        for (let i = 0; i < nodes.length; i++) {
+            let node = nodes[i]
+            if (!node.selected) {
+                if (node.layerId !== layer) {
+                    // node is in the next layer
+                    coordinates[2 * layer] = leftX
+                    coordinates[2 * layer + 1] = rightX
+                    leftX = Number.MAX_VALUE
+                    rightX = Number.MIN_VALUE
+                    layer++
+                    if (node.layerId !== layer) {
+                        coordinates[2 * layer] = Number.MIN_VALUE
+                        coordinates[2 * layer + 1] = Number.MIN_VALUE
+                        // TODO: calcEmptyLayerCoordinates?
+                        layer++
+                    }
+                }
+
+                if (node.position.x < leftX) {
+                    leftX = node.position.x
+                }
+                if (node.size.width + node.position.x > rightX) {
+                    rightX = node.position.x + node.size.width
+                }
+            }
+        }
+        coordinates[2 * layer] = leftX
+        coordinates[2 * layer + 1] = rightX
+        return coordinates
+    }
+
+    /**
+     * Calculates the nodes that are in the layer
+     * @param layer the layer which containing nodes should be calculated
+     * @param nodes all nodes the graph contains
+     */
+    public static getNodesOfLayer(layer: number, nodes: KNode[]) {
+        let nodesOfLayer = []
+        let counter = 0
+        for (let node of nodes) {
+            if (node.layerId === layer) {
+                nodesOfLayer[counter] = node
+                counter++
+            }
+        }
+        return nodesOfLayer
+    }
+
+    /**
+     * Calculates the position of the target node in relation to the nodes in layerNs based on their y coordinates
+     * @param layerNs nodes of the layer the target is in
+     * @param target node which position should be calculated
+     */
+    public static getPosInLayer (layerNs: KNode[], target: KNode): number {
+        if (layerNs.indexOf(target) === -1) {
+            layerNs[layerNs.length] = target
+        }
+        // Sort the layer array by y.
+        layerNs.sort((a, b) => a.position.y - b.position.y)
+        // Find the position of the target
+        let succIndex: number = layerNs.indexOf(target)
+        return succIndex
+    }
+
+    /**
+     * Filters the KNodes out of graphElements.
+     * @param graphElements all elements that the graph contains
+     * @returns all KNodes that the graph contains
+     */
+    public static filterKNodes(graphElements: any) {
+        let nodes: KNode[] = []
+        let counter = 0
+        for (let elem of graphElements) {
+            if (elem instanceof KNode) {
+                nodes[counter] = elem as KNode
+                counter++
+            }
+        }
+        return nodes
     }
 }
