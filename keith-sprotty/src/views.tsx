@@ -19,6 +19,7 @@ import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
 import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener'
+import { ConstraintUtils } from '@kieler/keith-move/lib/ConstraintUtils'
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -94,108 +95,58 @@ export class KNodeView implements IView {
     }
 
     private renderLayer(node: KNode) {
-        let children = node.children
         // filter KNodes
-        let nodes: KNode[] = []
-        let counter = 0
-        for (let elem of children) {
-            if (elem instanceof KNode) {
-                nodes[counter] = elem as KNode
-                counter++
-            }
-        }
+        let nodes: KNode[] = ConstraintUtils.filterKNodes(node.children)
 
         // sort nodes based on their layer
         nodes.sort((a, b) => a.layerId - b.layerId)
 
-        // TODO: calculate current
-        // create layer indicators
-        let current = this.calcCurrentLayer(nodes)
-        return  <g>
-                    {this.renderCurrentLayer(nodes, current)}
-                    {this.renderOtherLayer(nodes, current)}
-                </g>
+        let current = this.currentLayer(nodes)
+
+        let layerCoords = ConstraintUtils.getLayerCoordinates(nodes)
+
+        // calculate y coordinates of the layers
+        let topY = 0
+        let botY = 0
+        for (let node of nodes) {
+            if (!node.selected) {
+                let tY = node.position.y
+                let bY = node.position.y + node.size.height
+                if (tY < topY) {
+                    topY = tY
+                }
+                if (bY > botY) {
+                    botY = bY
+                }
+            }
+        }
+
+        // create layers
+        // TODO: should I show an empty layer on the right/left side?
+        // TODO: ignore empty layer
+        let result = <g></g>
+        for (let i = 0; i < layerCoords.length / 2; i++) {
+            if (i === current) {
+                let rectLeftX = layerCoords[2 * i]
+                let rectRightX = layerCoords[2 * i + 1]
+                result = <g>{result}{this.createRect(rectLeftX, topY, rectRightX - rectLeftX, botY - topY)}</g>
+            } else {
+                let lineX = layerCoords[2 * i] + (layerCoords[2 * i + 1] - layerCoords[2 * i]) / 2
+                result  = <g>{result}{this.createLine(lineX, topY, botY)}</g>
+            }
+        }
+
+        return result
     }
 
-    private calcCurrentLayer(nodes: KNode[]) {
-        // TODO: calculate current
+    private currentLayer(nodes: KNode[]) {
         for (let node of nodes) {
             if (node.selected) {
-                return node.layerId
+                return ConstraintUtils.getLayerOfNode(node, nodes)
             }
         }
-        return 0
-    }
-
-    private renderCurrentLayer(nodes: KNode[], current: number) {
-        let leftX = Number.MAX_VALUE
-        let topY = Number.MAX_VALUE
-        let rightX = Number.MIN_VALUE
-        let botY = Number.MIN_VALUE
-
-        // caluclate position and bounds of the layer
-        for (let node of nodes) {
-            if (!node.selected) {
-                if (node.layerId === current) {
-                    if (node.position.x < leftX) {
-                        leftX = node.position.x
-                    }
-                    if (node.position.x + node.size.width > rightX) {
-                        rightX = node.position.x + node.size.width
-                    }
-                }
-                if (node.position.y + node.size.height > botY) {
-                    botY = node.position.y + node.size.height
-                }
-                if (node.position.y < topY) {
-                    topY = node.position.y
-                }
-            }
-        }
-        // create rectangle that indicatees the current layer
-        return this.createRect(leftX, topY, rightX - leftX, botY - topY)
-    }
-
-    private renderOtherLayer(nodes: KNode[], current: number) {
-        let layer = 0
-        let leftX = Number.MAX_VALUE
-        let topY = Number.MAX_VALUE
-        let rightX = Number.MIN_VALUE
-        let botY = Number.MIN_VALUE
-        let xValues = []
-        // TODO: current layer should be ignored
-        // create line for every layer except the current one
-        for (let node of nodes) {
-            if (!node.selected) {
-                if (node.layerId !== layer) {
-                    xValues[layer] = leftX + (rightX - leftX) / 2
-                    leftX = Number.MAX_VALUE
-                    rightX = Number.MIN_VALUE
-                    layer++
-                }
-                if (node.position.x < leftX) {
-                    leftX = node.position.x
-                }
-                if (node.position.y < topY) {
-                    topY = node.position.y
-                }
-                if (node.position.x + node.size.width > rightX) {
-                    rightX = node.position.x + node.size.width
-                }
-                if (node.position.y + node.size.height > botY) {
-                    botY = node.position.y + node.size.height
-                }
-            }
-        }
-        xValues[layer] = leftX + (rightX - leftX) / 2
-
-        let result = <g></g>
-        for (let i = 0; i < xValues.length; i++) {
-            if (i !== current) {
-                result = <g>{result}{this.createLine(xValues[i], topY, botY)}</g>
-            }
-        }
-        return result
+        // should not be reached
+        return -1
     }
 
     private createRect(leftX: number, topY: number, width: number, height: number) {

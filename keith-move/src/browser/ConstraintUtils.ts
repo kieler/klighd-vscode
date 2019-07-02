@@ -55,7 +55,7 @@ export class ConstraintUtils {
         // if the moved node is the last of a layer, it can not be moved back to this layer
         // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
         let layerCoords = this.getLayerCoordinates(nodes)
-        let curX = node.position.x
+        let curX = node.position.x + node.size.width / 2
         if (curX < layerCoords[0]) {
             return 0
         }
