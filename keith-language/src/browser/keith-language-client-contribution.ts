@@ -12,30 +12,18 @@
  */
 
 import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
-import { Disposable } from '@theia/core/lib/common';
-import { LanguageClientFactory, Languages, Workspace } from '@theia/languages/lib/browser';
-import { inject, injectable, multiInject } from 'inversify';
-import { DiagramLanguageClientContribution, DiagramManagerProvider } from 'sprotty-theia/lib';
+import { BaseLanguageClientContribution } from '@theia/languages/lib/browser';
+import { injectable, multiInject, optional } from 'inversify';
 import { LS_ID, LS_NAME } from '../common';
-import { KeithInitializationOptions } from '../common/initialization-protocol';
-import { ContextMenuCommands } from './dynamic-commands';
 import { languageDescriptions } from './frontend-extension';
-import { KeithInitializationService } from './initialization-options';
+import { InitializationService } from './initialization-service';
 
 @injectable()
-export class KeithLanguageClientContribution extends DiagramLanguageClientContribution {
+export class KeithLanguageClientContribution extends BaseLanguageClientContribution {
 
     readonly id = LS_ID
     readonly name = LS_NAME
-
-    constructor(
-        @inject(Workspace) protected readonly workspace: Workspace,
-        @inject(Languages) protected readonly languages: Languages,
-        @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory,
-        @multiInject(DiagramManagerProvider) protected diagramManagerProviders: DiagramManagerProvider[],
-        @inject(ContextMenuCommands) protected commands: ContextMenuCommands) {
-        super(workspace, languages, languageClientFactory, diagramManagerProviders)
-    }
+    @multiInject(InitializationService)@optional() protected readonly initializationServices: InitializationService[]
 
     /**
      * Define pattern of supported languages from language server registered in backend with id and name of class.
@@ -53,52 +41,25 @@ export class KeithLanguageClientContribution extends DiagramLanguageClientContri
         return languageDescriptions.map(languageDescription => languageDescription.id)
     }
 
-    registerCommand(id: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
-        return this.commands.registerCommand(id, callback, thisArg)
-    }
-
     /**
      * Handle when the LS for this contribution is started.
-     * Currently started immediatly.
+     * Currently started immediatly when the workspace is ready.
      * The original idea was to start it if a document with an id in the documentSelector is opened.
      *
-     * @param app not needed
+     * @param _app not needed
      */
     // tslint:disable-next-line:no-any
-    waitForActivation(app: FrontendApplication): Promise<any> {
-        // tslint:disable-next-line:no-any
-        const activationPromises: Promise<any>[] = [];
-        const workspaceContains = this.workspaceContains;
-        if (workspaceContains.length !== 0) {
-            activationPromises.push(this.waitForItemInWorkspace());
-        }
-        const documentSelector = this.documentSelector;
-        if (documentSelector) {
-            activationPromises.push(this.waitForOpenTextDocument(documentSelector));
-        }
-        if (activationPromises.length !== 0) {
-            return Promise.all([
-                this.workspace.ready,
-                Promise.race(activationPromises.map(p => new Promise(async resolve => {
-                    try {
-                        // do not wait for opening of a file, just start the LS
-                        // await p;
-                        resolve();
-                    } catch (e) {
-                        console.error(e);
-                    }
-                })))
-            ]);
-        }
+    waitForActivation(_app: FrontendApplication): Promise<any> {
         return this.workspace.ready;
     }
 
     // tslint:disable-next-line:no-any
     protected get initializationOptions(): any | (() => any) | undefined {
-        const initializer = KeithInitializationService.get()
-        return {
-            shouldSelectDiagram: initializer.getShouldSelectDiagram(),
-            shouldSelectText: initializer.getShouldSelectText(),
-        } as KeithInitializationOptions
+        // tslint:disable-next-line:no-any
+        let initializationOptions: any = {}
+        for (let initializationService of this.initializationServices) {
+            initializationOptions = {...initializationOptions, ...initializationService.getOptions()}
+        }
+        return initializationOptions
     }
 }

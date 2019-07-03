@@ -11,13 +11,10 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { CommandContribution, MenuContribution } from '@theia/core';
+import { CommandContribution } from '@theia/core';
 import { LanguageClientContribution } from '@theia/languages/lib/browser';
 import { MonacoEditorProvider } from '@theia/monaco/lib/browser/monaco-editor-provider';
 import { ContainerModule, interfaces } from 'inversify';
-import { ContextMenuCommands } from './dynamic-commands';
-import { KeithInitializationService, KeithOptionsCommandContribution, ShouldSelectDiagramCommandContribution, ShouldSelectTextCommandContribution } from './initialization-options';
-import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
 import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
 import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
@@ -35,7 +32,7 @@ export const languageDescriptions: LanguageDescription[] = [
     {id: "elkt", name: "Elk Graph"},
 ]
 
-export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Unbind, isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
+export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.Unbind, _isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
     // register languages
     languageDescriptions.forEach((language: LanguageDescription) => {
         monaco.languages.register({
@@ -72,18 +69,6 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
     bind(KeithLanguageClientContribution).toSelf().inSingletonScope()
     bind(LanguageClientContribution).toService(KeithLanguageClientContribution)
 
-    bind(KeithDiagramLanguageClient).toSelf().inSingletonScope()
-
-    bind(ContextMenuCommands).to(ContextMenuCommands).inSingletonScope()
-
     bind(RegistrationContribution).toSelf().inSingletonScope()
     rebind(MonacoEditorProvider).to(KeithMonacoEditorProvider).inSingletonScope()
-
-    // Bindings for the initialization options.
-    bind(KeithInitializationService).toDynamicValue(() => KeithInitializationService.get())
-    bind(ShouldSelectDiagramCommandContribution).toSelf().inSingletonScope()
-    bind(ShouldSelectTextCommandContribution).toSelf().inSingletonScope()
-    bind(KeithOptionsCommandContribution).toSelf().inSingletonScope()
-    bind(CommandContribution).to(KeithOptionsCommandContribution).inSingletonScope()
-    bind(MenuContribution).to(KeithOptionsCommandContribution).inSingletonScope()
 })

@@ -21,6 +21,7 @@ import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
+import { UserStorageUri } from "@theia/userstorage/lib/browser";
 import { inject, injectable } from "inversify";
 import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING,
     CANCEL_COMPILATION,
@@ -192,9 +193,11 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     onCurrentEditorChanged(editorWidget: EditorWidget | undefined): void {
-        if (editorWidget) {
-            this.editor = editorWidget
+        // Ignore changes to user storage files, as they are have no representation on the server.
+        if (!editorWidget || editorWidget.editor.uri.scheme === UserStorageUri.SCHEME) {
+            return
         }
+        this.editor = editorWidget
         if (!this.compilerWidget || this.compilerWidget.isDisposed) {
             const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
             widgetPromise.then(widget => {
