@@ -63,8 +63,10 @@ export class KNodeView implements IView {
             })
 
             if (this.mListener.hasDragged) {
+                // filter KNodes
+                let nodes: KNode[] = ConstraintUtils.filterKNodes(node.children)
                 return <g>
-                    {this.renderLayer(node)}
+                    {this.renderLayer(nodes)}
                     {defs}
                     {...children}
                 </g>
@@ -94,20 +96,18 @@ export class KNodeView implements IView {
         }
     }
 
-    private renderLayer(node: KNode) {
-        // filter KNodes
-        let nodes: KNode[] = ConstraintUtils.filterKNodes(node.children)
-
-        // sort nodes based on their layer
-        nodes.sort((a, b) => a.layerId - b.layerId)
-
+    /**
+     * creates a rectangle and lines that visualize the different layers
+     * @param node all nodes of the graph
+     */
+    private renderLayer(nodes: KNode[]) {
         let current = this.currentLayer(nodes)
 
         let layerCoords = ConstraintUtils.getLayerCoordinates(nodes)
 
         // calculate y coordinates of the layers
-        let topY = 0
-        let botY = 0
+        let topY = Number.MAX_VALUE
+        let botY = Number.MIN_VALUE
         for (let node of nodes) {
             if (!node.selected) {
                 let tY = node.position.y
@@ -136,9 +136,13 @@ export class KNodeView implements IView {
             }
         }
 
-        return result
+        return <g>{result}{this.renderPositions(current, nodes, layerCoords)}</g>
     }
 
+    /**
+     * calculates the layer the seleted node is in
+     * @param nodes all nodes of the graph
+     */
     private currentLayer(nodes: KNode[]) {
         for (let node of nodes) {
             if (node.selected) {
@@ -149,13 +153,20 @@ export class KNodeView implements IView {
         return -1
     }
 
-    private createRect(leftX: number, topY: number, width: number, height: number) {
+    /**
+     * crates a rectangle
+     * @param x left position of the rectangle
+     * @param y top position of the rectangle
+     * @param width width of the rectangle
+     * @param height height of the rectangle
+     */
+    private createRect(x: number, y: number, width: number, height: number) {
         let element =
             <g> <rect
-                    x={leftX - 10}
-                    y={topY - 10}
+                    x={x - 10}
+                    y={y - 20}
                     width={width + 20}
-                    height={height + 20}
+                    height={height + 40}
                     fill='none'
                     stroke='grey'
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
@@ -164,19 +175,113 @@ export class KNodeView implements IView {
         return element
     }
 
+    /**
+     * creates a vertical line
+     * @param x x coordinate of the line
+     * @param topY start of the line on the y-axis
+     * @param botY end of the line on the y-axis
+     */
     private createLine(x: number, topY: number, botY: number) {
         let element =
             <g> <line
                     x1={x}
-                    y1={topY - 10}
+                    y1={topY - 20}
                     x2={x}
-                    y2={botY + 10}
+                    y2={botY + 20}
                     fill='none'
                     stroke='grey'
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}
                 />
             </g>
         return element
+    }
+
+    /**
+     * creates circles that indicate the available positions.
+     * The position the node would be set to if it released is indicated by a not filled circle.
+     * @param current number of the layer the moved node is currently in
+     * @param nodes all nodes of the graph
+     * @param layerCoords coordinates of all layers
+     */
+    private renderPositions(current: number, nodes: KNode[], layerCoords: number[]) {
+        let layerNodes: KNode[] = ConstraintUtils.getNodesOfLayer(current, nodes)
+
+        // get the moved node
+        let target = undefined
+        for (let node of nodes) {
+            if (node.selected) {
+                target = node
+            }
+        }
+        // position of moved node
+        let curPos = ConstraintUtils.getPosInLayer(layerNodes, target)
+
+        layerNodes.sort((a, b) => a.posId - b.posId)
+
+        if (layerNodes.length > 0) {
+            let result = <g></g>
+            // mid of the current layer
+            let x = layerCoords[2 * current] + (layerCoords[2 * current + 1] - layerCoords[2 * current]) / 2
+
+            let shift = 1
+            // calculate positions between nodes
+            for (let i = 0; i < layerNodes.length - 1; i++) {
+                let node = layerNodes[i]
+                if (!node.selected && !layerNodes[i + 1].selected) {
+                    let topY = node.position.y + node.size.height
+                    let botY = layerNodes[i + 1].position.y
+                    let midY = topY + (botY - topY) / 2
+                    result = <g>{result}{this.createCircle(curPos !== i + shift, x, midY)}</g>
+                } else {
+                    shift = 0
+                }
+            }
+            // position above the first node is available if the first node is not the selected one
+            let first = layerNodes[0]
+            if (!first.selected) {
+                result = <g>{result}{this.createCircle(curPos !== 0, x, first.position.y - 10)}</g>
+            }
+            // position below the last node is available if the last node is not the selected one
+            let last = layerNodes[layerNodes.length - 1]
+            if (!last.selected) {
+                result = <g>{result}{this.createCircle(curPos !== layerNodes.length - 1 + shift, x, last.position.y + last.size.height + 10)}</g>
+            }
+
+            return result
+        } else {
+            return <g></g>
+        }
+    }
+
+    /**
+     * creates a circle
+     * @param fill determines whether the circle is filled
+     * @param x the x coordinate of the center
+     * @param y the y coordinate of the center
+     */
+    private createCircle(fill: boolean, x: number, y: number) {
+        if (fill) {
+            return  <g>
+                        <circle
+                            cx={x}
+                            cy={y}
+                            r="1"
+                            stroke="grey"
+                            fill="grey"
+                        />
+                    </g>
+        } else {
+            return  <g>
+                        <circle
+                            cx={x}
+                            cy={y}
+                            r="1"
+                            stroke="grey"
+                            fill="none"
+                            style={{ 'stroke-width': "0.5" } as React.CSSProperties}
+                        />
+                    </g>
+        }
     }
  }
 
