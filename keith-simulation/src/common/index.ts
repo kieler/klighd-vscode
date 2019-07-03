@@ -43,3 +43,5 @@ export class SimulationStoppedMessage {
     successful: boolean
     message: string
 }
+
+export let SimulationDataBlackList: string[]  = ["#interface"]

@@ -16,7 +16,7 @@ import { injectable, LazyServiceIdentifer, inject } from "inversify";
 import { StatefulWidget, ReactWidget, Message} from "@theia/core/lib/browser";
 import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
-import { simulationWidgetId, SimulationData } from "../common"
+import { simulationWidgetId, SimulationData, SimulationDataBlackList } from "../common"
 import { Emitter } from "@theia/core";
 import { isInternal, reverse } from '../common/helper'
 import { CompilationSystems } from "@kieler/keith-kicool/lib/common/kicool-models"
@@ -296,8 +296,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
         } else {
             this.simulationData.forEach((data, key) => {
+                const onBlackList = SimulationDataBlackList.includes(key)
                 // only add data that if input, output or internal data should be shown
-                if (this.showInternalVariables || !isInternal(data)) {
+                if (!onBlackList && (this.showInternalVariables || !isInternal(data))) {
                     // nextStep is never undefined
                     let nextStep = this.valuesForNextStep.get(key)
                     let node: React.ReactElement;
