@@ -43,6 +43,7 @@ export class KNode extends RectangularNode implements KGraphElement {
     }
 
     layerId: number
+    posId: number
     layerCons: number
     posCons: number
 }
