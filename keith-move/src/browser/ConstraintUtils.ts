@@ -127,8 +127,8 @@ export class ConstraintUtils {
      * @param layer the layer which containing nodes should be calculated
      * @param nodes all nodes the graph contains
      */
-    public static getNodesOfLayer(layer: number, nodes: KNode[]) {
-        let nodesOfLayer = []
+    public static getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
+        let nodesOfLayer: KNode[] = []
         let counter = 0
         for (let node of nodes) {
             if (node.layerId === layer) {
@@ -145,14 +145,18 @@ export class ConstraintUtils {
      * @param target node which position should be calculated
      */
     public static getPosInLayer (layerNs: KNode[], target: KNode): number {
-        if (layerNs.indexOf(target) === -1) {
-            layerNs[layerNs.length] = target
-        }
         // Sort the layer array by y.
         layerNs.sort((a, b) => a.position.y - b.position.y)
         // Find the position of the target
-        let succIndex: number = layerNs.indexOf(target)
-        return succIndex
+        if (layerNs.indexOf(target) !== -1) {
+            return layerNs.indexOf(target)
+        }
+        for (let i = 0; i < layerNs.length; i++) {
+            if (target.position.y < layerNs[i].position.y) {
+                return i
+            }
+        }
+        return layerNs.length
     }
 
     /**
