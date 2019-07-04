@@ -6,7 +6,7 @@ import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveab
 // import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
 // import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
 import { inject} from 'inversify';
-import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
+import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
@@ -23,13 +23,15 @@ export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
     uri: URI
+    widget: DiagramWidget
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
         super();
         this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
-        this.uri = dserver.connector.diagramManager.all[0].uri
+        this.widget = dserver.connector.diagramManager.all[0]
+        this.uri = this.widget.uri
         this.waitOnLCContribution()
     }
 
@@ -140,11 +142,7 @@ export class NewMouseListener extends MoveMouseListener {
         let nodesOfLayer = ConstraintUtils.getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = ConstraintUtils.getPosInLayer(nodesOfLayer, targetNode)
 
-        // test
-       // console.log("layer of the node: " + layerOfTarget)
-       // console.log("Position: " + positionOfTarget)
-       // console.log("old layer: " + targetNode.layerId)
-
+        this.uri = this.widget.uri
         let uriStr = this.uri.toString(true)
 
         // layer constraint should only be set if the layer index changed
