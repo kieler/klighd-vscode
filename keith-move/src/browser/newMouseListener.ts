@@ -154,19 +154,22 @@ export class NewMouseListener extends MoveMouseListener {
         let uriStr = this.uri.toString(true)
 
         // layer constraint should only be set if the layer index changed
-       if (targetNode.layerId !== layerOfTarget ) {
-           // set the layer constraint
-           let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
-           this.diagramClient.languageClient.then (lClient => {
-               lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
-           })
-       }
+        if (targetNode.layerId !== layerOfTarget ) {
+            // set the layer constraint
+            let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
+            this.diagramClient.languageClient.then (lClient => {
+                lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
+            })
+        }
 
-        // set the position constraint
-        let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget)
-        this.diagramClient.languageClient.then (lClient => {
-            lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
-        })
+        // position constraint should only be set if the position of the node changed
+        if (targetNode.layerId !== layerOfTarget || targetNode.posId !== positionOfTarget) {
+            // set the position constraint
+            let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget)
+            this.diagramClient.languageClient.then (lClient => {
+                lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
+            })
+        }
     }
 
 }
