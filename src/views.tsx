@@ -128,6 +128,7 @@ export class KNodeView implements IView {
             }
         }
 
+        // TODO: only show the empty layer if in the last layer are more nodes than only the moved one
         // show a new empty last layer the node can be moved to
         let lastL = layers[layers.length - 1]
         if (current === layers.length) {
@@ -238,6 +239,7 @@ export class KNodeView implements IView {
                     shift = 0
                 }
             }
+
             // position above the first node is available if the first node is not the selected one
             let first = layerNodes[0]
             if (!first.selected) {
@@ -251,8 +253,11 @@ export class KNodeView implements IView {
 
             return result
         } else {
-            // TODO: show a circle in the middle of the layer
-            return <g></g>
+            // show a circle in the middle of the layer
+            let lastL = layers[layers.length - 1]
+            let x = lastL.mid + (lastL.rightX - lastL.leftX)
+            let y = lastL.topY + (lastL.botY - lastL.topY) / 2
+            return <g>{this.createCircle(true, x, y)}</g>
         }
     }
 
@@ -302,7 +307,15 @@ export class KNodeView implements IView {
                 </g>
     }
 
-
+    /* private renderConstraints(node: KNode) {
+        let result = <g></g>
+        if (node.layerCons !== -1) {
+            result = <g>
+                        {result}
+                        <image xlink:href="https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png" x="0" y="0" height="50px" width="50px"></image>
+                    </g>
+        }
+    } */
  }
 
 
