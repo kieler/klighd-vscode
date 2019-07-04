@@ -1,5 +1,6 @@
 import { SNode } from "sprotty";
 import { KNode } from "@kieler/keith-sprotty/lib/kgraph-models"
+import { Layer, Shadow } from "./ConstraintClasses";
 
 export class ConstraintUtils {
    /**
@@ -47,79 +48,117 @@ export class ConstraintUtils {
     }
 
     /**
-     * Calculates the layer the noe is in
+     * Calculates the layer the node is in
      * @param node node which layer should be calculated
      * @param nodes all nodes the graph contains
+     * @param shadow Shadow of the node that is moved
      */
-    public static getLayerOfNode(node: KNode, nodes: KNode[]) {
-        // if the moved node is the last of a layer, it can not be moved back to this layer
+    public static getLayerOfNode(node: KNode, nodes: KNode[], shadow: Shadow) {
         // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
-        let layerCoords = this.getLayerCoordinates(nodes)
+        let layers = this.getLayers(nodes, shadow)
         let curX = node.position.x + node.size.width / 2
-        if (curX < layerCoords[0]) {
-            return 0
-        }
-        for (let i = 2; i < layerCoords.length; i = i + 2) {
-            let coordinate = layerCoords[i]
-            if (coordinate !== Number.MIN_VALUE && curX < coordinate) {
-                let shift = 1
-                if (layerCoords[i - 1] === Number.MIN_VALUE) {
-                    shift = 2
-                }
-                let mid = layerCoords[i - shift] + (coordinate - layerCoords[i - shift]) / 2
-                if (curX < mid) {
-                    return i / 2 - shift
-                } else {
-                    return i / 2
-                }
+        for (let i = 0; i < layers.length; i++) {
+            let layer = layers[i]
+            if (curX < layer.rightX) {
+                return i
             }
         }
-        // TODO: add offset for last layer
-        if (curX < layerCoords[layerCoords.length - 1]) {
-            return layerCoords.length / 2 - 1
-        }
-        return layerCoords.length / 2
+
+        // node is in a new last layer
+        return layers.length
     }
 
     /**
-     * Calculates the left and right coordinates of the layers in a graph
-     * @param nodes all nodes the graph which layer coordinates should be calculated contains
+     * Calculates the layers in a graph
+     * @param nodes all nodes the graph which layers should be calculated
+     * @param shadow Shadow of the node that is moved
      */
-    public static getLayerCoordinates(nodes: KNode[]) {
+    public static getLayers(nodes: KNode[], shadow: Shadow) {
         nodes.sort((a, b) => a.layerId - b.layerId)
-        let coordinates = []
+        let layers = []
         let layer = 0
         let leftX = Number.MAX_VALUE
         let rightX = Number.MIN_VALUE
+        let topY = Number.MAX_VALUE
+        let botY = Number.MIN_VALUE
+        // calculate bounds of the layers
         for (let i = 0; i < nodes.length; i++) {
             let node = nodes[i]
-            if (!node.selected) {
-                if (node.layerId !== layer) {
-                    // node is in the next layer
-                    coordinates[2 * layer] = leftX
-                    coordinates[2 * layer + 1] = rightX
-                    leftX = Number.MAX_VALUE
-                    rightX = Number.MIN_VALUE
-                    layer++
-                    if (node.layerId !== layer) {
-                        coordinates[2 * layer] = Number.MIN_VALUE
-                        coordinates[2 * layer + 1] = Number.MIN_VALUE
-                        // TODO: calcEmptyLayerCoordinates?
-                        layer++
-                    }
-                }
+            if (node.layerId !== layer) {
+                // node is in the next layer
+                let l = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
+                layers[layer] = l
+                leftX = Number.MAX_VALUE
+                rightX = Number.MIN_VALUE
+                layer++
+            }
 
-                if (node.position.x < leftX) {
-                    leftX = node.position.x
-                }
-                if (node.size.width + node.position.x > rightX) {
-                    rightX = node.position.x + node.size.width
-                }
+            // coordinates of the current node
+            let curLX = 0
+            let curRX = 0
+            let curTY = 0
+            let curBY = 0
+            if (!node.selected) {
+                curLX = node.position.x
+                curRX = node.position.x + node.size.width
+                curTY = node.position.y
+                curBY = node.position.y + node.size.height
+            } else {
+                curLX = shadow.x
+                curRX = shadow.x + shadow.width
+                curTY = shadow.y
+                curBY = shadow.y + shadow.height
+            }
+
+            // update coordinates of the current layer
+            if (curLX < leftX) {
+                leftX = curLX
+            }
+            if (curRX > rightX) {
+                rightX = curRX
+            }
+            if (curTY < topY) {
+                topY = curTY
+            }
+            if (curBY > botY) {
+                botY = curBY
             }
         }
-        coordinates[2 * layer] = leftX
-        coordinates[2 * layer + 1] = rightX
-        return coordinates
+        let l = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
+        layers[layer] = l
+
+        // update left and right bounds of the layers
+        // set y bounds of the layers
+        for (let i = 0; i < layers.length - 1; i++) {
+            let leftL = layers[i]
+            let rightL = layers[i + 1]
+            let mid = leftL.rightX + (rightL.leftX - leftL.rightX) / 2
+            leftL.rightX = mid
+            rightL.leftX = mid
+            leftL.topY = topY
+            leftL.botY = botY
+            rightL.topY = topY
+            leftL.botY = botY
+        }
+
+        // special case: only one layer exists
+        if (layers.length === 1) {
+            let firstL = layers[0]
+            firstL.leftX = firstL.leftX - 10
+            firstL.rightX = firstL.rightX - 10
+        } else {
+            // update left bound of the first layer
+            let firstL = layers[0]
+            firstL.leftX = firstL.mid - (firstL.rightX - firstL.mid)
+
+            // update bounds of the last layer
+            let lastL = layers[layers.length - 1]
+            lastL.leftX = layers[layers.length - 2].rightX
+            let dist = lastL.mid - lastL.leftX
+            lastL.rightX = lastL.mid + dist
+        }
+
+        return layers
     }
 
     /**

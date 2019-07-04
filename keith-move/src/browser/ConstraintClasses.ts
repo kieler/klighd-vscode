@@ -11,3 +11,18 @@ export class Shadow {
         this.height = height
     }
 }
+
+export class Layer {
+    leftX: number
+    rightX: number
+    mid: number
+    topY: number
+    botY: number
+
+    constructor(leftX: number, rightX: number, mid: number) {
+        this.leftX = leftX
+        this.rightX = rightX
+        this.mid = mid
+    }
+
+}
