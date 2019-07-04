@@ -20,6 +20,7 @@ import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
 import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener'
 import { ConstraintUtils } from '@kieler/keith-move/lib/ConstraintUtils'
+import { Layer } from '@kieler/keith-move/lib/ConstraintClasses'
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -110,40 +111,33 @@ export class KNodeView implements IView {
     private renderLayer(nodes: KNode[]) {
         let current = this.currentLayer(nodes)
 
-        let layerCoords = ConstraintUtils.getLayerCoordinates(nodes)
+        let layers: Layer[] = ConstraintUtils.getLayers(nodes, this.mListener.oldNode)
 
-        // calculate y coordinates of the layers
-        let topY = Number.MAX_VALUE
-        let botY = Number.MIN_VALUE
-        for (let node of nodes) {
-            if (!node.selected) {
-                let tY = node.position.y
-                let bY = node.position.y + node.size.height
-                if (tY < topY) {
-                    topY = tY
-                }
-                if (bY > botY) {
-                    botY = bY
-                }
-            }
-        }
+        // y coordinates of the layers
+        let topY = layers[0].topY
+        let botY = layers[0].botY
 
         // create layers
-        // TODO: should I show an empty layer on the right/left side?
-        // TODO: ignore empty layer
         let result = <g></g>
-        for (let i = 0; i < layerCoords.length / 2; i++) {
+        for (let i = 0; i < layers.length; i++) {
+            let layer = layers[i]
             if (i === current) {
-                let rectLeftX = layerCoords[2 * i]
-                let rectRightX = layerCoords[2 * i + 1]
-                result = <g>{result}{this.createRect(rectLeftX, topY, rectRightX - rectLeftX, botY - topY)}</g>
+                result = <g>{result}{this.createRect(layer.leftX, topY, layer.rightX - layer.leftX, botY - topY)}</g>
             } else {
-                let lineX = layerCoords[2 * i] + (layerCoords[2 * i + 1] - layerCoords[2 * i]) / 2
-                result  = <g>{result}{this.createLine(lineX, topY, botY)}</g>
+                result  = <g>{result}{this.createLine(layer.mid, topY, botY)}</g>
             }
         }
 
-        return <g>{result}{this.renderPositions(current, nodes, layerCoords)}</g>
+        // show a new empty last layer the node can be moved to
+        let lastL = layers[layers.length - 1]
+        if (current === layers.length) {
+            result = <g>{result}{this.createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY)}</g>
+        } else {
+            result = <g>{result}{this.createLine(lastL.mid + (lastL.rightX - lastL.leftX), topY, botY)}</g>
+        }
+
+        // add available positions
+        return <g>{result}{this.renderPositions(current, nodes, layers)}</g>
     }
 
     /**
@@ -153,10 +147,11 @@ export class KNodeView implements IView {
     private currentLayer(nodes: KNode[]) {
         for (let node of nodes) {
             if (node.selected) {
-                return ConstraintUtils.getLayerOfNode(node, nodes)
+                return ConstraintUtils.getLayerOfNode(node, nodes, this.mListener.oldNode)
             }
         }
         // should not be reached
+        // TODO: throw an error
         return -1
     }
 
@@ -170,9 +165,9 @@ export class KNodeView implements IView {
     private createRect(x: number, y: number, width: number, height: number) {
         let element =
             <g> <rect
-                    x={x - 10}
+                    x={x}
                     y={y - 20}
-                    width={width + 20}
+                    width={width}
                     height={height + 40}
                     fill='none'
                     stroke='grey'
@@ -208,9 +203,9 @@ export class KNodeView implements IView {
      * The position the node would be set to if it released is indicated by a not filled circle.
      * @param current number of the layer the moved node is currently in
      * @param nodes all nodes of the graph
-     * @param layerCoords coordinates of all layers
+     * @param layers coordinates of all layers
      */
-    private renderPositions(current: number, nodes: KNode[], layerCoords: number[]) {
+    private renderPositions(current: number, nodes: KNode[], layers: Layer[]) {
         let layerNodes: KNode[] = ConstraintUtils.getNodesOfLayer(current, nodes)
 
         // get the moved node
@@ -228,7 +223,7 @@ export class KNodeView implements IView {
         if (layerNodes.length > 0) {
             let result = <g></g>
             // mid of the current layer
-            let x = layerCoords[2 * current] + (layerCoords[2 * current + 1] - layerCoords[2 * current]) / 2
+            let x = layers[current].mid
 
             let shift = 1
             // calculate positions between nodes
