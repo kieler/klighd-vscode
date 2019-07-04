@@ -3,8 +3,6 @@ import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveab
     edgeInProgressTargetHandleID, SRoutableElement, translatePoint, findChildrenAtPosition,
     isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction } from "sprotty";
 
-// import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
-// import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
 import { inject, injectable } from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
@@ -14,6 +12,7 @@ import { LayerConstraint } from "./LayerConstraint";
 import { PositionConstraint } from "./PositionConstraint";
 import { ConstraintUtils } from "./ConstraintUtils";
 import { KNode } from "@kieler/keith-sprotty/lib/kgraph-models"
+import { Shadow } from "./Shadow";
 
 
 
@@ -24,6 +23,7 @@ export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
     uri: URI
+    oldNode: Shadow
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
@@ -72,6 +72,10 @@ export class NewMouseListener extends MoveMouseListener {
             } else if (isRoutingHandle) {
                 result.push(new SwitchEditModeAction([target.id], []));
             }
+        }
+        if (target instanceof KNode) {
+            let targetNode = target as KNode
+            this.oldNode = new Shadow(targetNode.position.x, targetNode.position.y, targetNode.size.width, targetNode.size.height)
         }
 
         return result;

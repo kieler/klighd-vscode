@@ -44,10 +44,6 @@ export class KNodeView implements IView {
     @inject(NewMouseListener) mListener: NewMouseListener
 
     render(node: KNode, context: RenderingContext): VNode {
-        /*console.log("Node: " + node.id)
-        console.log("ID: " + node.layerId)
-        console.log("Layer: " + node.layerCons)*/
-
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
         const ctx = context as any as KGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
@@ -63,10 +59,8 @@ export class KNodeView implements IView {
             })
 
             if (this.mListener.hasDragged) {
-                // filter KNodes
-                let nodes: KNode[] = ConstraintUtils.filterKNodes(node.children)
                 return <g>
-                    {this.renderLayer(nodes)}
+                    {this.renderInteractiveLayout(node)}
                     {defs}
                     {...children}
                 </g>
@@ -94,6 +88,19 @@ export class KNodeView implements IView {
                 {ctx.renderChildren(node)}
             </g>
         }
+    }
+
+    /**
+     * renders the graph for the interactive layout
+     * @param root root of the graph
+     */
+    private renderInteractiveLayout(root: KNode) {
+        // filter KNodes
+        let nodes: KNode[] = ConstraintUtils.filterKNodes(root.children)
+        return  <g>
+                    {this.renderLayer(nodes)}
+                    {this.renderShadow()}
+                </g>
     }
 
     /**
@@ -207,7 +214,7 @@ export class KNodeView implements IView {
         let layerNodes: KNode[] = ConstraintUtils.getNodesOfLayer(current, nodes)
 
         // get the moved node
-        let target = undefined
+        let target = nodes[0]
         for (let node of nodes) {
             if (node.selected) {
                 target = node
@@ -231,7 +238,7 @@ export class KNodeView implements IView {
                     let topY = node.position.y + node.size.height
                     let botY = layerNodes[i + 1].position.y
                     let midY = topY + (botY - topY) / 2
-                    result = <g>{result}{this.createCircle(curPos !== i + shift, x, midY)}</g>
+                    result = <g>{result}{this.createCircle(curPos === i + shift, x, midY)}</g>
                 } else {
                     shift = 0
                 }
@@ -239,16 +246,17 @@ export class KNodeView implements IView {
             // position above the first node is available if the first node is not the selected one
             let first = layerNodes[0]
             if (!first.selected) {
-                result = <g>{result}{this.createCircle(curPos !== 0, x, first.position.y - 10)}</g>
+                result = <g>{result}{this.createCircle(curPos === 0, x, first.position.y - 10)}</g>
             }
             // position below the last node is available if the last node is not the selected one
             let last = layerNodes[layerNodes.length - 1]
             if (!last.selected) {
-                result = <g>{result}{this.createCircle(curPos !== layerNodes.length - 1 + shift, x, last.position.y + last.size.height + 10)}</g>
+                result = <g>{result}{this.createCircle(curPos === layerNodes.length - 1 + shift, x, last.position.y + last.size.height + 10)}</g>
             }
 
             return result
         } else {
+            // TODO: show a circle in the middle of the layer
             return <g></g>
         }
     }
@@ -260,14 +268,16 @@ export class KNodeView implements IView {
      * @param y the y coordinate of the center
      */
     private createCircle(fill: boolean, x: number, y: number) {
+        let radius = 2
+        let color = "grey"
         if (fill) {
             return  <g>
                         <circle
                             cx={x}
                             cy={y}
-                            r="1"
-                            stroke="grey"
-                            fill="grey"
+                            r={radius}
+                            stroke={color}
+                            fill={color}
                         />
                     </g>
         } else {
@@ -275,14 +285,29 @@ export class KNodeView implements IView {
                         <circle
                             cx={x}
                             cy={y}
-                            r="1"
-                            stroke="grey"
+                            r={radius}
+                            stroke={color}
                             fill="none"
                             style={{ 'stroke-width': "0.5" } as React.CSSProperties}
                         />
                     </g>
         }
     }
+
+    private renderShadow() {
+        let shadow = this.mListener.oldNode
+        return <g> <rect
+                        x={shadow.x}
+                        y={shadow.y}
+                        width={shadow.width}
+                        height={shadow.height}
+                        fill='gainsboro'
+                        stroke='darkgrey'>
+                    </rect>
+                </g>
+    }
+
+
  }
 
 
