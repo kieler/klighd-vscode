@@ -19,8 +19,6 @@ export class SimulationStartedMessage {
     successful: boolean
     error: string
     dataPool: object
-    input: object
-    output: object
     propertySet: Map<string, string[]>
 }
 

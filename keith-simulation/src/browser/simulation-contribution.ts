@@ -7,7 +7,7 @@ import { MessageService, Command, CommandRegistry, MenuModelRegistry } from "@th
 import { EditorManager } from "@theia/editor/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
-import { simulationWidgetId, OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationStartedMessage, SimulationStoppedMessage, SimulationStepMessage } from "../common";
+import { simulationWidgetId, OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationStartedMessage, SimulationStoppedMessage, SimulationStepMessage, SimulationData } from "../common";
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import { SimulationKeybindingContext } from "./simulation-keybinding-context";
 import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-contribution"
@@ -199,15 +199,16 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.message(startMessage.error, "error")
                 return
             }
-            // handle message
+            // Get the start configuration for the simulation
             const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
-            const input: Map<string, any> = new Map(Object.entries(startMessage.input));
-            const output: Map<string, any> = new Map(Object.entries(startMessage.output));
             const propertySet: Map<string, any> = new Map(Object.entries(startMessage.propertySet));
+            // Inputs and outputs are handled separately
+            const inputs: string[] = propertySet.get("input")
+            const outputs: string[] = propertySet.get("output")
+            propertySet.delete("input")
+            propertySet.delete("output")
             // Construct list of all categories
-            propertySet.forEach((list, key) => {
-                this.simulationWidget.categories.push(key)
-            })
+            this.simulationWidget.categories = Array.from(propertySet.keys())
             pool.forEach((value, key) => {
                 // Add list of properties to SimulationData
                 let categoriesList: string[] = []
@@ -216,8 +217,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                         categoriesList.push(propertyKey)
                     }
                 })
-                this.simulationWidget.simulationData.set(key, {data: [], input: input.has(key), output: output.has(key), categories: categoriesList})
-                if (input.get(key) !== undefined) {
+                const newData: SimulationData = {data: [], input: inputs.includes(key), output: outputs.includes(key), categories: categoriesList}
+                this.simulationWidget.simulationData.set(key, newData)
+                // Set the value for which will be set for the next step for inputs
+                if (inputs.includes(key)) {
                     this.simulationWidget.valuesForNextStep.set(key, value)
                 }
                 this.simulationWidget.controlsEnabled = true
