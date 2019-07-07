@@ -24,6 +24,7 @@ export class NewMouseListener extends MoveMouseListener {
     diagramClient: DiagramLanguageClient
     uri: URI
     oldNode: Shadow
+    widget: DiagramWidget
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
         ) {
@@ -31,7 +32,8 @@ export class NewMouseListener extends MoveMouseListener {
         console.log("Konstruktor")
         this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
-        this.uri = dserver.connector.diagramManager.all[0].uri
+        this.widget = dserver.connector.diagramManager.all[0]
+        this.uri = this.widget.uri
         this.waitOnLCContribution()
     }
 
@@ -146,11 +148,7 @@ export class NewMouseListener extends MoveMouseListener {
         let nodesOfLayer = ConstraintUtils.getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = ConstraintUtils.getPosInLayer(nodesOfLayer, targetNode)
 
-        // test
-       // console.log("layer of the node: " + layerOfTarget)
-       // console.log("Position: " + positionOfTarget)
-       // console.log("old layer: " + targetNode.layerId)
-
+        this.uri = this.widget.uri
         let uriStr = this.uri.toString(true)
 
         // layer constraint should only be set if the layer index changed
