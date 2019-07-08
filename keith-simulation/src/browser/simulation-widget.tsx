@@ -260,7 +260,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     renderSimulationSelectionBox(): React.ReactNode {
         const simulationCommands: React.ReactNode[] = [];
         this.commands.kicoolContribution.compilerWidget.systems.forEach((system: CompilationSystems)  => {
-            if (system.label.toLowerCase().search("simulation") > -1) {
+            if (system.simulation) {
                 simulationCommands.push(<option value={system.id} key={system.id}>{system.label}</option>)
             }
         })
