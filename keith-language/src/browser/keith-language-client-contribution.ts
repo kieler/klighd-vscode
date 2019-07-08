@@ -46,10 +46,10 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
      * Currently started immediatly when the workspace is ready.
      * The original idea was to start it if a document with an id in the documentSelector is opened.
      *
-     * @param _app not needed
+     * @param app not needed
      */
     // tslint:disable-next-line:no-any
-    waitForActivation(_app: FrontendApplication): Promise<any> {
+    waitForActivation(app: FrontendApplication): Promise<void> {
         return this.workspace.ready;
     }
 
