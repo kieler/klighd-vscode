@@ -231,6 +231,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 initializeResult = lClient.initializeResult
             }
             const systems: CompilationSystems[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystems[]
+            // Sort all compilation systems by id
+            systems.sort((a, b) => (a.id > b.id) ? 1 : -1)
             this.compilerWidget.systems = systems
             if (this.commandPaletteEnabled) {
                 this.addCompilationSystemToCommandPalette(systems)
