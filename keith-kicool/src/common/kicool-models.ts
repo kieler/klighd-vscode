@@ -18,6 +18,7 @@ export class CompilationSystems {
     label: string
     id: string
     isPublic: boolean
+    simulation: boolean
 }
 
 /**
