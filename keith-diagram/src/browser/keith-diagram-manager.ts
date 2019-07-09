@@ -16,7 +16,7 @@ import { Emitter, Event } from '@theia/core';
 import { OpenerOptions, Widget, WidgetManager, WidgetOpenerOptions } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
-import { Workspace } from '@theia/languages/lib/browser';
+import { MonacoWorkspace } from "@theia/monaco/lib/browser/monaco-workspace";
 import { UserStorageUri } from "@theia/userstorage/lib/browser";
 import { inject, injectable } from 'inversify';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
@@ -44,12 +44,13 @@ export class KeithDiagramManager extends DiagramManager {
         return this.onDiagramOpenedEmitter.event
     }
 
+
     constructor(
         @inject(KeithDiagramLanguageClient) diagramLanguageClient: KeithDiagramLanguageClient,
         @inject(TheiaFileSaver) fileSaver: TheiaFileSaver,
         @inject(EditorManager) editorManager: EditorManager,
         @inject(WidgetManager) widgetManager: WidgetManager,
-        @inject(Workspace) workspace: Workspace,
+        @inject(MonacoWorkspace) workspace: MonacoWorkspace,
         @inject(SynthesisRegistry) synthesisRegistry: SynthesisRegistry
         ) {
         super()

@@ -18,7 +18,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@theia/monaco": "latest"
+    "@theia/monaco": "next"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
@@ -26,7 +26,7 @@
     "@types/mocha": "^5.2.6",
     "mocha": "^6.0.2",
     "ts-node": "^8.0.3",
-    "typescript": "3.3.3333"
+    "typescript": "latest"
   },
   "files": [
     "lib",

@@ -47,7 +47,7 @@ linux:
     - tar.gz
     - AppImage
   category: Development
-  icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo-512.png
+  icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/
 
 dmg:
   background: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo-512.png
