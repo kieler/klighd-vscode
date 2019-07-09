@@ -22,7 +22,7 @@
   "devDependencies": {
     "rimraf": "^2.6.3",
     "tslint": "^5.13.1",
-    "typescript": "3.3.3333"
+    "typescript": "latest"
   },
   "files": [
     "lib",

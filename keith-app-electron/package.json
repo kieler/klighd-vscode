@@ -7,9 +7,9 @@
     "theia": {
         "target": "electron",
         "frontend": {
-        "config": {
-            "applicationName": "Keith Electron App"
-        }
+            "config": {
+                "applicationName": "Keith Electron App"
+            }
         }
     },
     "dependencies": {
@@ -18,7 +18,6 @@
         "@theia/core": "next",
         "@theia/editor": "next",
         "@theia/editorconfig": "next",
-        "@theia/electron": "next",
         "@theia/file-search": "next",
         "@theia/filesystem": "next",
         "@theia/languages": "next",
@@ -39,16 +38,15 @@
     },
     "devDependencies": {
         "@theia/cli": "next",
-        "electron": "3.1.7",
+        "electron": "^3.1.7",
         "reflect-metadata": "^0.1.13"
     },
     "scripts": {
-        "prepare": "theia build --mode development",
+        "prepare": "yarn run clean && yarn build",
+        "clean": "theia clean",
+        "build": "theia build --mode development",
         "start": "theia start --root-dir=../workspace --plugins=local-dir:../",
         "socket": "theia start --root-dir=../workspace --plugins=local-dir:../ --LSP_PORT=5008",
         "watch": "theia build --watch --mode development"
-    },
-    "theia": {
-        "target": "electron"
     }
 }
