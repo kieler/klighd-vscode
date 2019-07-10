@@ -1,6 +1,6 @@
 import { SNode } from "sprotty";
-import { KNode } from "@kieler/keith-sprotty/lib/kgraph-models"
 import { Layer, Shadow } from "./ConstraintClasses";
+import { KNode } from "./ConstraintClasses";
 
 export class ConstraintUtils {
    /**
@@ -212,7 +212,7 @@ export class ConstraintUtils {
         let nodes: KNode[] = []
         let counter = 0
         for (let elem of graphElements) {
-            if (elem instanceof KNode) {
+            if (elem instanceof SNode) {
                 nodes[counter] = elem as KNode
                 counter++
             }
