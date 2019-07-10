@@ -1,20 +1,17 @@
 import { MoveMouseListener, SModelElement, Action, findParentByFeature, isMoveable, SRoutingHandle,
     isCreatingOnDrag, SelectAllAction, edgeInProgressID, SelectAction, SwitchEditModeAction,
     edgeInProgressTargetHandleID, SRoutableElement, translatePoint, findChildrenAtPosition,
-    isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction } from "sprotty";
+    isConnectable, ReconnectAction, SChildElement, DeleteElementAction, CommitModelAction, SNode } from "sprotty";
 
-// import { WorkspaceEditAction } from "sprotty-theia/lib/sprotty/languageserver/workspace-edit-command";
-// import { WorkspaceEdit, TextEdit, Position } from "monaco-languageclient";
-import { inject} from 'inversify';
+import {  inject } from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "sprotty-theia/lib/"
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
-import { LayerConstraint } from "./LayerConstraint";
-import { PositionConstraint } from "./PositionConstraint";
-import { ConstraintUtils } from "./ConstraintUtils";
-import { KNode } from "@kieler/keith-sprotty/lib/kgraph-models"
-
+import { KNode } from "./ConstraintClasses";
+import { ConstraintUtils } from './ConstraintUtils';
+import { LayerConstraint } from './LayerConstraint';
+import { PositionConstraint } from './PositionConstraint';
 
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
@@ -120,7 +117,8 @@ export class NewMouseListener extends MoveMouseListener {
             result.push(new CommitModelAction());
 
             // if a node is moved set properties
-            if (target instanceof KNode) {
+            if (target instanceof SNode) {
+
                 this.setProperty(target);
             }
         }
@@ -163,5 +161,7 @@ export class NewMouseListener extends MoveMouseListener {
             })
         }
     }
+
+
 
 }
