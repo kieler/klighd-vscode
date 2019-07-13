@@ -15,12 +15,15 @@ import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
-import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
+import { KEdge, KLabel, KPort, /*, KColoring */
+KNode} from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
 import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener'
-import { ConstraintUtils } from '@kieler/keith-move/lib/ConstraintUtils'
 import { Layer } from '@kieler/keith-move/lib/ConstraintClasses'
+import { ConstraintUtils } from '@kieler/keith-move/lib/ConstraintUtils'
+/* import { KPolyline } from './kgraph-models';
+import { getKStyles } from './views-styles'; */
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -62,11 +65,13 @@ export class KNodeView implements IView {
             if (this.mListener.hasDragged) {
                 return <g>
                     {this.renderInteractiveLayout(node)}
+                    {this.renderConstraints(node)}
                     {defs}
                     {...children}
                 </g>
             } else  {
                 return <g>
+                    {this.renderConstraints(node)}
                     {defs}
                     {...children}
                 </g>
@@ -90,14 +95,13 @@ export class KNodeView implements IView {
             </g>
         }
     }
-
-    /**
+     /**
      * renders the graph for the interactive layout
      * @param root root of the graph
      */
-    private renderInteractiveLayout(root: KNode) {
+    public renderInteractiveLayout(root: KNode) {
         // filter KNodes
-        let nodes: KNode[] = ConstraintUtils.filterKNodes(root.children)
+        let nodes = ConstraintUtils.filterKNodes(root.children)
         return  <g>
                     {this.renderLayer(nodes)}
                     {this.renderShadow()}
@@ -128,7 +132,7 @@ export class KNodeView implements IView {
             }
         }
 
-        // TODO: only show the empty layer if in the last layer are more nodes than only the moved one
+        // TODO: only show the empty layer if in the last layer are more nodes than only the moved one?
         // show a new empty last layer the node can be moved to
         let lastL = layers[layers.length - 1]
         if (current === layers.length) {
@@ -307,15 +311,79 @@ export class KNodeView implements IView {
                 </g>
     }
 
-    /* private renderConstraints(node: KNode) {
+    public renderConstraints(root: KNode) {
+        // filter KNodes
+        let nodes = ConstraintUtils.filterKNodes(root.children)
         let result = <g></g>
-        if (node.layerCons !== -1) {
-            result = <g>
-                        {result}
-                        <image xlink:href="https://mdn.mozillademos.org/files/6457/mdn_logo_only_color.png" x="0" y="0" height="50px" width="50px"></image>
-                    </g>
+        for (let node of nodes) {
+            let x = node.position.x + node.size.width + 2
+            let y = node.position.y - 2
+            if (node.layerCons !== -1 && node.posCons !== -1) {
+                result = <g>{result}{this.lock(x - 2, y + 2)}</g>
+            } else if (node.layerCons !== -1) {
+                result = <g>{result}{this.layerCons(x, y)}</g>
+            } else if (node.posCons !== -1) {
+                result = <g>{result}{this.posCons(x, y)}</g>
+            }
         }
-    } */
+        return result
+    }
+
+    private layerCons(x: number, y: number) {
+        let image = <g>
+                        {this.lock(x, y)}
+                        {this.arrow(x - 2.15, y + 2.6, false)}
+                    </g>
+        return image
+    }
+
+    private posCons(x: number, y: number) {
+        let image = <g>
+                        {this.lock(x, y)}
+                        {this.arrow(x + 0.1, y + 2.5, true)}
+                    </g>
+        return image
+    }
+
+    private lock(xTranslate: number, yTranslate: number) {
+        let s = "translate(" + xTranslate + ","
+                + yTranslate + ") scale(0.0004,-0.00036)"
+        let image = <g transform={s}
+                        fill="grey" stroke="none">
+                        <path d="M4265 12794 c-22 -2 -92 -9 -155 -15 -1278 -120 -2434 -919 -3018
+                            -2085 -162 -323 -287 -708 -346 -1064 -49 -297 -49 -287 -53 -1502 l-4 -1158
+                            -329 0 c-285 0 -331 -2 -344 -16 -15 -14 -16 -343 -16 -3468 0 -3332 1 -3453
+                            18 -3469 17 -16 343 -17 4484 -17 4313 0 4465 1 4481 18 16 17 17 272 17 3470
+                            0 3124 -1 3452 -16 3466 -13 14 -59 16 -344 16 l-329 0 -4 1158 c-4 1215 -4
+                            1205 -53 1502 -119 720 -458 1409 -960 1952 -617 666 -1440 1082 -2359 1194
+                            -122 14 -579 27 -670 18z m609 -1079 c136 -19 236 -40 351 -71 1030 -282 1806
+                            -1137 1984 -2184 38 -225 41 -318 41 -1417 l0 -1073 -2750 0 -2750 0 0 1073
+                            c0 1099 3 1192 41 1417 178 1047 953 1900 1984 2184 149 41 348 75 525 90 98
+                            8 471 -4 574 -19z"/>
+                    </g>
+        return image
+    }
+
+    private arrow(xTranslate: number, yTranslate: number, vertical: boolean) {
+        let s = "translate(" + xTranslate + ","
+                + yTranslate + ")"
+        if (vertical) {
+            s += " scale(0.0004,-0.0006) rotate(90)"
+        } else {
+            s += " scale(0.0006,-0.0004)"
+        }
+        let image = <g transform={s}
+                        fill="grey" stroke="none">
+                        <path d="M3583 6153 c-44 -34 -632 -506 -2778 -2233 -845 -681 -824 -662 -794
+                            -726 20 -41 3601 -2972 3637 -2976 33 -5 78 16 92 41 6 13 10 256 10 710 l0
+                            691 2650 0 2650 0 0 -695 0 -696 25 -24 c17 -18 35 -25 64 -25 37 0 122 68
+                            1838 1473 1100 901 1803 1484 1812 1501 30 64 51 45 -794 726 -2415 1943
+                            -2788 2243 -2813 2257 -40 23 -93 11 -115 -26 -16 -27 -17 -86 -17 -720 l0
+                            -691 -2650 0 -2650 0 0 690 c0 587 -2 695 -15 719 -28 54 -84 56 -152 4z"/>
+                    </g>
+        return image
+    }
+
  }
 
 
