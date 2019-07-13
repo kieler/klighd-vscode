@@ -1,6 +1,6 @@
 import { SNode } from "sprotty";
-import { Layer, Shadow } from "./ConstraintClasses";
-import { KNode } from "./ConstraintClasses";
+import { KNode, Layer, Shadow } from "./ConstraintClasses";
+
 
 export class ConstraintUtils {
    /**

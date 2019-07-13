@@ -74,8 +74,8 @@ export class NewMouseListener extends MoveMouseListener {
                 result.push(new SwitchEditModeAction([target.id], []));
             }
         }
-        if (target instanceof KNode) {
-            let targetNode = target as KNode
+        if (target instanceof SNode) {
+            let targetNode = target as SNode
             this.oldNode = new Shadow(targetNode.position.x, targetNode.position.y, targetNode.size.width, targetNode.size.height)
         }
 
@@ -168,6 +168,7 @@ export class NewMouseListener extends MoveMouseListener {
                 lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
             })
         }
+        // TODO: layout sollte auch neu gemacht werden, wenn kein constraint gesetzt wurde
     }
 
 
