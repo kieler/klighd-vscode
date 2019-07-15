@@ -55,7 +55,6 @@ export class ConstraintUtils {
      */
     public static getLayerOfNode(node: KNode, nodes: KNode[], shadow: Shadow) {
         // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
-        // TODO: is not correct for the moved node if it was the last in its former layer and is moved to the right
         let layers = this.getLayers(nodes, shadow)
         let curX = node.position.x + node.size.width / 2
         for (let i = 0; i < layers.length; i++) {
@@ -66,7 +65,13 @@ export class ConstraintUtils {
         }
 
         // node is in a new last layer
-        return layers.length
+        let lastLNodes = this.getNodesOfLayer(layers.length - 1, nodes)
+        if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
+            return layers.length
+        }
+
+        // node is in new last layer
+        return layers.length - 1
     }
 
     /**
