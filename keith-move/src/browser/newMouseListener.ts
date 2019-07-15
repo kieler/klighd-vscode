@@ -10,7 +10,7 @@ import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "spro
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
-import { KNode } from "./ConstraintClasses";
+import { KNode, Shadow } from "./ConstraintClasses";
 import { ConstraintUtils } from './ConstraintUtils';
 import { LayerConstraint } from './LayerConstraint';
 import { PositionConstraint } from './PositionConstraint';
@@ -23,6 +23,7 @@ export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
     uri: URI
+    oldNode: Shadow
     widget: DiagramWidget
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
@@ -72,6 +73,10 @@ export class NewMouseListener extends MoveMouseListener {
             } else if (isRoutingHandle) {
                 result.push(new SwitchEditModeAction([target.id], []));
             }
+        }
+        if (target instanceof SNode) {
+            let targetNode = target as SNode
+            this.oldNode = new Shadow(targetNode.position.x, targetNode.position.y, targetNode.size.width, targetNode.size.height)
         }
 
         return result;
@@ -139,7 +144,7 @@ export class NewMouseListener extends MoveMouseListener {
         let nodes = ConstraintUtils.filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
         // let layerInfos = this.getLayerInformation(targetNode, nodes)
-        let layerOfTarget = ConstraintUtils.getLayerOfNode(targetNode, nodes)
+        let layerOfTarget = ConstraintUtils.getLayerOfNode(targetNode, nodes, this.oldNode)
         let nodesOfLayer = ConstraintUtils.getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = ConstraintUtils.getPosInLayer(nodesOfLayer, targetNode)
 
