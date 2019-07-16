@@ -38,6 +38,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
         this.id = DiagramOptionsViewWidget.widgetId
         this.title.label = 'Diagram Options'
+        this.title.iconClass = 'fa fa-cogs'
         this.addClass('theia-diagramoptions-view')
     }
 
