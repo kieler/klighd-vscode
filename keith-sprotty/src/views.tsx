@@ -132,13 +132,16 @@ export class KNodeView implements IView {
             }
         }
 
-        // TODO: only show the empty layer if in the last layer are more nodes than only the moved one?
         // show a new empty last layer the node can be moved to
         let lastL = layers[layers.length - 1]
-        if (current === layers.length) {
-            result = <g>{result}{this.createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY)}</g>
-        } else {
-            result = <g>{result}{this.createLine(lastL.mid + (lastL.rightX - lastL.leftX), topY, botY)}</g>
+        let lastLNodes = ConstraintUtils.getNodesOfLayer(layers.length - 1, nodes)
+        if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
+            // only show the layer if the moved node is not (the only node) in the last layer
+            if (current === layers.length) {
+                result = <g>{result}{this.createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY)}</g>
+            } else {
+                result = <g>{result}{this.createLine(lastL.mid + (lastL.rightX - lastL.leftX), topY, botY)}</g>
+            }
         }
 
         // add available positions
