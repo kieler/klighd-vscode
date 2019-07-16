@@ -14,8 +14,8 @@ import { KNode, Shadow } from "./ConstraintClasses";
 import { ConstraintUtils } from './ConstraintUtils';
 import { LayerConstraint } from './LayerConstraint';
 import { PositionConstraint } from './PositionConstraint';
+import { DeleteConstraint } from './DeleteConstraint';
 import { StaticConstraint } from './StaticConstraint';
-
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
@@ -185,7 +185,8 @@ export class NewMouseListener extends MoveMouseListener {
         }
         // If the node was moved without setting a constraint - let it snap back
         if (!constraintSet) {
-            console.log("refreshcase")
+            /*let dc: DeleteConstraint = new DeleteConstraint(uriStr, targetNode.id)
+            this.diagramClient.languageClient.then(lClient => { lClient.sendNotification("keith/constraints/deleteStaticConstraint", dc) })*/
             this.diagramClient.languageClient.then(lClient => { lClient.sendNotification("keith/constraints/refreshLayout", uriStr) })
         }
 
