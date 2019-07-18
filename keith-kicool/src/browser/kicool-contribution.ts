@@ -261,7 +261,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.kicoolCommands.push(command)
                 const handler: CommandHandler = {
                     execute: () => {
-                        this.compile(system.id, this.compilerWidget.compileInplace);
+                        this.compile(system.id, this.compilerWidget.compileInplace, true);
                     }
                 }
                 this.commandRegistry.registerCommand(command, handler)
@@ -400,19 +400,19 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
 
-    public async compile(command: string, inplace: boolean): Promise<void> {
+    public async compile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
         if (!this.compilerWidget.autoCompile) {
             this.message("Compiling with " + command, "info")
         }
         this.compilerWidget.compiling = true
         this.compilerWidget.update()
-        await this.executeCompile(command, inplace)
+        await this.executeCompile(command, inplace, showResultingModel)
         this.compilerWidget.lastInvokedCompilation = command
         this.compilerWidget.lastCompiledUri = this.compilerWidget.sourceModelPath
         this.compilerWidget.update()
     }
 
-    async executeCompile(command: string, inplace: boolean): Promise<void> {
+    async executeCompile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
         if (!this.editor) {
             this.message(EDITOR_UNDEFINED_MESSAGE, "error")
             return;
@@ -420,7 +420,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
         const uri = this.compilerWidget.sourceModelPath
         const lClient = await this.client.languageClient
-        lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace])
+        lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace, showResultingModel])
         this.compilationStartedEmitter.fire(this)
     }
 
