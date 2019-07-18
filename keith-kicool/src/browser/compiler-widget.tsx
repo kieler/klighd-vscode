@@ -457,7 +457,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             return this.showPrivateSystems || system.isPublic
         })
         if (systems.length > 0) {
-            this.commands.compile(systems[selection.selectedIndex].id, this.compileInplace)
+            this.commands.compile(systems[selection.selectedIndex].id, this.compileInplace, true)
         } else {
             this.commands.message("No compilation systems found", "error")
             return
