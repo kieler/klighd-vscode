@@ -170,7 +170,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         const option = selection.selectedOptions[0]
         if (option !== undefined) {
             // when simulating it should always compile inplace
-            await this.kicoolContribution.compile(option.value, true)
+            await this.kicoolContribution.compile(option.value, true, false)
         } else {
             this.message("Option is undefined, did not simulate", "ERROR")
         }
