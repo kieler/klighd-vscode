@@ -12,7 +12,6 @@ import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/brow
 import { SimulationKeybindingContext } from "./simulation-keybinding-context";
 import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-contribution"
 import { delay, strMapToObj } from "../common/helper";
-import { KeithDiagramManager } from "@kieler/keith-diagram/lib/keith-diagram-manager";
 
 /**
  * Command to open the simulation widget
@@ -200,7 +199,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.message(startMessage.error, "error")
                 return
             }
-            lClient.sendNotification("keith/kicool/show", [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', -1])
 
             // Get the start configuration for the simulation
             const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
