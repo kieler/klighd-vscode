@@ -14,7 +14,7 @@ import { KNode, Shadow } from "./ConstraintClasses";
 import { ConstraintUtils } from './ConstraintUtils';
 import { LayerConstraint } from './LayerConstraint';
 import { PositionConstraint } from './PositionConstraint';
-import { DeleteConstraint } from './DeleteConstraint';
+// import { DeleteConstraint } from './DeleteConstraint';
 import { StaticConstraint } from './StaticConstraint';
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
@@ -143,7 +143,6 @@ export class NewMouseListener extends MoveMouseListener {
         let targetNode: KNode = target as KNode
         let nodes = ConstraintUtils.filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
-        // let layerInfos = this.getLayerInformation(targetNode, nodes)
         let layerOfTarget = ConstraintUtils.getLayerOfNode(targetNode, nodes, this.oldNode)
         let nodesOfLayer = ConstraintUtils.getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = ConstraintUtils.getPosInLayer(nodesOfLayer, targetNode)
