@@ -151,7 +151,7 @@ export class ConstraintUtils {
         if (layers.length === 1) {
             let firstL = layers[0]
             firstL.leftX = firstL.leftX - 10
-            firstL.rightX = firstL.rightX - 10
+            firstL.rightX = firstL.rightX + 10
             firstL.topY = topY
             firstL.botY = botY
         } else {
