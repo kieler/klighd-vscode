@@ -462,9 +462,22 @@ export class KLabelView implements IView {
  */
 @injectable()
 export class KEdgeView implements IView {
+
+    @inject(NewMouseListener) mListener: NewMouseListener
+
     render(edge: KEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
+
+        // edge should be greyed out if the source or target is moved
+        let s = edge.source
+        let t = edge.target
+        if (s !== undefined && t !== undefined && s instanceof KNode && t instanceof KNode) {
+            edge.moved = (s.selected || t.selected) && this.mListener.hasDragged
+        }
+
         let rendering = getRendering(edge.data, edge, context as any)
+        edge.moved = false
+
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
