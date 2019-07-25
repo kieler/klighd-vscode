@@ -15,15 +15,12 @@ import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
-import { KEdge, KLabel, KPort, /*, KColoring */
-KNode} from './kgraph-models';
+import { KEdge, KLabel, KPort, KNode} from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
 import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener'
 import { Layer } from '@kieler/keith-move/lib/ConstraintClasses'
 import { ConstraintUtils } from '@kieler/keith-move/lib/ConstraintUtils'
-/* import { KPolyline } from './kgraph-models';
-import { getKStyles } from './views-styles'; */
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -47,12 +44,25 @@ export class KNodeView implements IView {
 
     @inject(NewMouseListener) mListener: NewMouseListener
 
+    private color = 'grey'
+
     render(node: KNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
         const ctx = context as any as KGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
+
+        let shadowNode = node.shadow
+        let res = undefined
+        if (shadowNode) {
+            // render shadow of the node
+            res = getRendering(node.data, node, context as any)
+            node.shadow = false
+        }
+
         let rendering = getRendering(node.data, node, ctx)
+        node.shadow = shadowNode
+
         if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
             let children = ctx.renderChildren(node)
@@ -62,60 +72,60 @@ export class KNodeView implements IView {
                 (defs.children as (string | VNode)[]).push(value)
             })
 
+            let result = <g>
+                            {this.renderConstraints(node)}
+                            {defs}
+                            {...children}
+                        </g>
+
             if (this.mListener.hasDragged) {
-                return <g>
-                    {this.renderInteractiveLayout(node)}
-                    {this.renderConstraints(node)}
-                    {defs}
-                    {...children}
-                </g>
-            } else  {
-                return <g>
-                    {this.renderConstraints(node)}
-                    {defs}
-                    {...children}
-                </g>
+                result = <g>{this.renderInteractiveLayout(node, context)}{result}</g>
             }
+
+            return result
         }
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
+                {res}
                 {ctx.renderChildren(node)}
             </g>
         }
         // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
         if (node.areChildrenRendered) {
             return <g>
+                {res}
                 {rendering}
             </g>
         } else {
             return <g>
+                {res}
                 {rendering}
                 {ctx.renderChildren(node)}
             </g>
         }
     }
+
      /**
      * renders the graph for the interactive layout
      * @param root root of the graph
      */
-    public renderInteractiveLayout(root: KNode) {
+    private renderInteractiveLayout(root: KNode, context: RenderingContext) {
         // filter KNodes
         let nodes = ConstraintUtils.filterKNodes(root.children)
         return  <g>
                     {this.renderLayer(nodes)}
-                    {this.renderShadow()}
                 </g>
     }
 
     /**
-     * creates a rectangle and lines that visualize the different layers
+     * creates a rectangle with positions and lines that visualize the different layers
      * @param node all nodes of the graph
      */
     private renderLayer(nodes: KNode[]) {
         let current = this.currentLayer(nodes)
 
-        let layers: Layer[] = ConstraintUtils.getLayers(nodes, this.mListener.oldNode)
+        let layers: Layer[] = ConstraintUtils.getLayers(nodes)
 
         // y coordinates of the layers
         let topY = layers[0].topY
@@ -155,7 +165,7 @@ export class KNodeView implements IView {
     private currentLayer(nodes: KNode[]) {
         for (let node of nodes) {
             if (node.selected) {
-                return ConstraintUtils.getLayerOfNode(node, nodes, this.mListener.oldNode)
+                return ConstraintUtils.getLayerOfNode(node, nodes)
             }
         }
         // should not be reached
@@ -178,7 +188,7 @@ export class KNodeView implements IView {
                     width={width}
                     height={height + 40}
                     fill='none'
-                    stroke='grey'
+                    stroke={this.color}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
                 </rect>
             </g>
@@ -199,7 +209,7 @@ export class KNodeView implements IView {
                     x2={x}
                     y2={botY + 20}
                     fill='none'
-                    stroke='grey'
+                    stroke={this.color}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}
                 />
             </g>
@@ -208,7 +218,7 @@ export class KNodeView implements IView {
 
     /**
      * creates circles that indicate the available positions.
-     * The position the node would be set to if it released is indicated by a not filled circle.
+     * The position the node would be set to if it released is indicated by a filled circle.
      * @param current number of the layer the moved node is currently in
      * @param nodes all nodes of the graph
      * @param layers coordinates of all layers
@@ -275,46 +285,23 @@ export class KNodeView implements IView {
      * @param y the y coordinate of the center
      */
     private createCircle(fill: boolean, x: number, y: number) {
-        let radius = 2
-        let color = "grey"
-        if (fill) {
-            return  <g>
-                        <circle
-                            cx={x}
-                            cy={y}
-                            r={radius}
-                            stroke={color}
-                            fill={color}
-                        />
-                    </g>
-        } else {
-            return  <g>
-                        <circle
-                            cx={x}
-                            cy={y}
-                            r={radius}
-                            stroke={color}
-                            fill="none"
-                            style={{ 'stroke-width': "0.5" } as React.CSSProperties}
-                        />
-                    </g>
-        }
-    }
-
-    private renderShadow() {
-        let shadow = this.mListener.oldNode
-        return <g> <rect
-                        x={shadow.x}
-                        y={shadow.y}
-                        width={shadow.width}
-                        height={shadow.height}
-                        fill='gainsboro'
-                        stroke='darkgrey'>
-                    </rect>
+        return  <g>
+                    <circle
+                        cx={x}
+                        cy={y}
+                        r="2"
+                        stroke={this.color}
+                        fill={fill ? this.color : "none"}
+                        style={{ 'stroke-width': "0.5" } as React.CSSProperties}
+                    />
                 </g>
     }
 
-    public renderConstraints(root: KNode) {
+    /**
+     * For every node the set constraints are visualized through an icon
+     * @param root KNode that represents the root of the graph
+     */
+    private renderConstraints(root: KNode) {
         // filter KNodes
         let nodes = ConstraintUtils.filterKNodes(root.children)
         let result = <g></g>
@@ -332,6 +319,11 @@ export class KNodeView implements IView {
         return result
     }
 
+    /**
+     * creates icon that visualizes a layer constraint
+     * @param x
+     * @param y
+     */
     private layerCons(x: number, y: number) {
         let image = <g>
                         {this.lock(x, y)}
@@ -340,14 +332,27 @@ export class KNodeView implements IView {
         return image
     }
 
+    /**
+     * creates icon that visualizes a position constraint
+     * @param x
+     * @param y
+     */
     private posCons(x: number, y: number) {
         let image = <g>
                         {this.lock(x, y)}
                         {this.arrow(x + 0.1, y + 2.5, true)}
+                        {/* <image x="0" y="0" width="50" height="50"
+                            xlinkHref="C:/Bachelorarbeit/SVG-Test/Test.svg">
+                        </image> */}
                     </g>
         return image
     }
 
+    /**
+     * crates a lock icon
+     * @param xTranslate
+     * @param yTranslate
+     */
     private lock(xTranslate: number, yTranslate: number) {
         let s = "translate(" + xTranslate + ","
                 + yTranslate + ") scale(0.0004,-0.00036)"
@@ -367,6 +372,12 @@ export class KNodeView implements IView {
         return image
     }
 
+    /**
+     * creates an arrow icon
+     * @param xTranslate
+     * @param yTranslate
+     * @param vertical determines whether the arrow should be vertical or horizontal
+     */
     private arrow(xTranslate: number, yTranslate: number, vertical: boolean) {
         let s = "translate(" + xTranslate + ","
                 + yTranslate + ")"

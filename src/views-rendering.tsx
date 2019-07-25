@@ -17,7 +17,7 @@ import { VNode } from 'snabbdom/vnode';
 import {
     KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
     KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
-    K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
+    K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, KNode
 } from './kgraph-models';
 import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, KGraphRenderingContext } from './views-common';
 import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible } from './views-styles';
@@ -90,7 +90,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
     const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles)
 
@@ -192,7 +192,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
     const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles)
 
@@ -426,12 +426,16 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
  * @param context The rendering context for this element.
  */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, context: KGraphRenderingContext): (VNode | undefined)[] {
-    let renderings: (VNode | undefined)[] = []
-    for (let childRendering of parentRendering.children) {
-        let rendering = getRendering([childRendering], parentElement, context)
-        renderings.push(rendering)
+    // children only should be rendered if the parentElement is not a shadow
+    if (!(parentElement instanceof KNode) || !parentElement.shadow) {
+        let renderings: (VNode | undefined)[] = []
+        for (let childRendering of parentRendering.children) {
+            let rendering = getRendering([childRendering], parentElement, context)
+            renderings.push(rendering)
+        }
+        return renderings
     }
-    return renderings
+    return []
 }
 
 export function renderError(rendering: KRendering) {
