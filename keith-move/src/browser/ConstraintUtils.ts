@@ -1,5 +1,5 @@
 import { SNode } from "sprotty";
-import { KNode, Layer, Shadow } from "./ConstraintClasses";
+import { KNode, Layer } from "./ConstraintClasses";
 
 
 export class ConstraintUtils {
@@ -53,9 +53,9 @@ export class ConstraintUtils {
      * @param nodes all nodes the graph contains
      * @param shadow Shadow of the node that is moved
      */
-    public static getLayerOfNode(node: KNode, nodes: KNode[], shadow: Shadow) {
+    public static getLayerOfNode(node: KNode, nodes: KNode[]) {
         // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
-        let layers = this.getLayers(nodes, shadow)
+        let layers = this.getLayers(nodes)
         let curX = node.position.x + node.size.width / 2
         for (let i = 0; i < layers.length; i++) {
             let layer = layers[i]
@@ -79,7 +79,7 @@ export class ConstraintUtils {
      * @param nodes all nodes the graph which layers should be calculated
      * @param shadow Shadow of the node that is moved
      */
-    public static getLayers(nodes: KNode[], shadow: Shadow) {
+    public static getLayers(nodes: KNode[]) {
         nodes.sort((a, b) => a.layerId - b.layerId)
         let layers = []
         let layer = 0
@@ -104,16 +104,16 @@ export class ConstraintUtils {
             let curRX = 0
             let curTY = 0
             let curBY = 0
-            if (!node.selected) {
+            if (!node.shadow) {
                 curLX = node.position.x
                 curRX = node.position.x + node.size.width
                 curTY = node.position.y
                 curBY = node.position.y + node.size.height
             } else {
-                curLX = shadow.x
-                curRX = shadow.x + shadow.width
-                curTY = shadow.y
-                curBY = shadow.y + shadow.height
+                curLX = node.shadowX
+                curRX = node.shadowX + node.size.width
+                curTY = node.shadowY
+                curBY = node.shadowY + node.size.height
             }
 
             // update coordinates of the current layer
@@ -151,7 +151,7 @@ export class ConstraintUtils {
         if (layers.length === 1) {
             let firstL = layers[0]
             firstL.leftX = firstL.leftX - 10
-            firstL.rightX = firstL.rightX - 10
+            firstL.rightX = firstL.rightX + 10
             firstL.topY = topY
             firstL.botY = botY
         } else {

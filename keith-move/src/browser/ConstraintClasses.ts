@@ -1,20 +1,5 @@
 import { RectangularNode, selectFeature, moveFeature, SParentElement } from 'sprotty/lib';
 
-
-export class Shadow {
-    x: number
-    y: number
-    width: number
-    height: number
-
-    constructor(x: number, y: number, width: number, height: number) {
-        this.x = x
-        this.y = y
-        this.width = width
-        this.height = height
-    }
-}
-
 export class Layer {
     leftX: number
     rightX: number
@@ -57,7 +42,11 @@ export class KNode extends RectangularNode implements KGraphElement {
     data: KGraphData[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || feature === moveFeature
+        if (this.interactiveLayout) {
+            return feature === selectFeature || feature === moveFeature
+        } else {
+            return feature === selectFeature
+        }
     }
 
     layerId: number
@@ -65,6 +54,9 @@ export class KNode extends RectangularNode implements KGraphElement {
     layerCons: number
     posCons: number
     interactiveLayout: boolean
+    shadow: boolean
+    shadowX: number
+    shadowY: number
 }
 
 /**
