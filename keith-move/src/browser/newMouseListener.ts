@@ -10,7 +10,7 @@ import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "spro
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
-import { KNode, Shadow } from "./ConstraintClasses";
+import { KNode } from "./ConstraintClasses";
 import { ConstraintUtils } from './ConstraintUtils';
 import { LayerConstraint } from './LayerConstraint';
 import { PositionConstraint } from './PositionConstraint';
@@ -23,7 +23,6 @@ export class NewMouseListener extends MoveMouseListener {
     editorManager: EditorManager
     diagramClient: DiagramLanguageClient
     uri: URI
-    oldNode: Shadow
     widget: DiagramWidget
 
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
@@ -74,9 +73,13 @@ export class NewMouseListener extends MoveMouseListener {
                 result.push(new SwitchEditModeAction([target.id], []));
             }
         }
+
         if (target instanceof SNode) {
-            let targetNode = target as SNode
-            this.oldNode = new Shadow(targetNode.position.x, targetNode.position.y, targetNode.size.width, targetNode.size.height)
+            // save the coordinates as shadow coordinates
+            let targetNode = target as KNode
+            targetNode.shadowX = targetNode.position.x
+            targetNode.shadowY = targetNode.position.y
+            targetNode.shadow = true
         }
 
         return result;
@@ -126,7 +129,6 @@ export class NewMouseListener extends MoveMouseListener {
 
             // if a node is moved set properties
             if (target instanceof SNode) {
-
                 this.setProperty(target);
             }
         }
@@ -143,7 +145,7 @@ export class NewMouseListener extends MoveMouseListener {
         let targetNode: KNode = target as KNode
         let nodes = ConstraintUtils.filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
-        let layerOfTarget = ConstraintUtils.getLayerOfNode(targetNode, nodes, this.oldNode)
+        let layerOfTarget = ConstraintUtils.getLayerOfNode(targetNode, nodes)
         let nodesOfLayer = ConstraintUtils.getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = ConstraintUtils.getPosInLayer(nodesOfLayer, targetNode)
 
