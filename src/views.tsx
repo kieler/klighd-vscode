@@ -52,16 +52,22 @@ export class KNodeView implements IView {
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
 
-        let shadowNode = node.shadow
-        let res = undefined
-        if (shadowNode) {
+        let isShadow = node.shadow
+        let shadow = undefined
+        if (this.mListener.hasDragged && isShadow) {
             // render shadow of the node
-            res = getRendering(node.data, node, context as any)
+            shadow = getRendering(node.data, node, context as any)
             node.shadow = false
         }
 
         let rendering = getRendering(node.data, node, ctx)
-        node.shadow = shadowNode
+        node.shadow = isShadow
+
+        let layer = undefined
+        if (this.mListener.hasDragged && ConstraintUtils.isChildSelected(node)) {
+            // render the objects indicating the layer and positions in the graph
+            layer = <g>{this.renderInteractiveLayout(node , context)}</g>
+        }
 
         if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
@@ -73,34 +79,35 @@ export class KNodeView implements IView {
             })
 
             let result = <g>
+                            {layer}
                             {this.renderConstraints(node)}
                             {defs}
                             {...children}
                         </g>
 
-            if (this.mListener.hasDragged) {
-                result = <g>{this.renderInteractiveLayout(node, context)}{result}</g>
-            }
 
             return result
         }
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
-                {res}
+                {shadow}
+                {layer}
                 {ctx.renderChildren(node)}
             </g>
         }
         // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
         if (node.areChildrenRendered) {
             return <g>
-                {res}
+                {shadow}
                 {rendering}
+                {layer}
             </g>
         } else {
             return <g>
-                {res}
+                {shadow}
                 {rendering}
+                {layer}
                 {ctx.renderChildren(node)}
             </g>
         }
