@@ -71,6 +71,8 @@ export class KNodeView implements IView {
             layer = <g>{this.renderInteractiveLayout(node , context)}</g>
         }
 
+        let constraints = this.renderConstraints(node)
+
         if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
             let children = ctx.renderChildren(node)
@@ -85,7 +87,6 @@ export class KNodeView implements IView {
             }
             result = <g>
                         {result}
-                        {this.renderConstraints(node)}
                         {defs}
                         {...children}
                     </g>
@@ -103,7 +104,7 @@ export class KNodeView implements IView {
         }
         // Default case. If the children are not already rendered within a KChildArea add the children by default.
         if (!node.areChildrenRendered) {
-            result = <g>{result}{ctx.renderChildren(node)}</g>
+            result = <g>{result}{constraints}{ctx.renderChildren(node)}</g>
         }
         return result
     }
@@ -300,23 +301,19 @@ export class KNodeView implements IView {
     }
 
     /**
-     * For every node the set constraints are visualized through an icon
-     * @param root KNode that represents the root of the graph
+     * generates an icon to visualize the set Constraints of the node
+     * @param node KNode which Constraints should be rendered
      */
-    private renderConstraints(root: KNode) {
-        // filter KNodes
-        let nodes = ConstraintUtils.filterKNodes(root.children)
+    private renderConstraints(node: KNode) {
         let result = <g></g>
-        for (let node of nodes) {
-            let x = node.position.x + node.size.width + 2
-            let y = node.position.y - 2
-            if (node.layerCons !== -1 && node.posCons !== -1) {
-                result = <g>{result}{this.lock(x - 2, y + 2)}</g>
-            } else if (node.layerCons !== -1) {
-                result = <g>{result}{this.layerCons(x, y)}</g>
-            } else if (node.posCons !== -1) {
-                result = <g>{result}{this.posCons(x, y)}</g>
-            }
+        let x = node.size.width
+        let y = 0
+        if (node.layerCons !== -1 && node.posCons !== -1) {
+            result = <g>{result}{this.lock(x, y)}</g>
+        } else if (node.layerCons !== -1) {
+            result = <g>{result}{this.layerCons(x + 2, y - 2)}</g>
+        } else if (node.posCons !== -1) {
+            result = <g>{result}{this.posCons(x + 2, y - 2)}</g>
         }
         return result
     }
