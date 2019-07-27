@@ -52,6 +52,8 @@ export class KNodeView implements IView {
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
 
+        let result = <g></g>
+
         let isShadow = node.shadow
         let shadow = undefined
         if (this.mListener.hasDragged && isShadow) {
@@ -78,39 +80,32 @@ export class KNodeView implements IView {
                 (defs.children as (string | VNode)[]).push(value)
             })
 
-            let result = <g>
-                            {layer}
-                            {this.renderConstraints(node)}
-                            {defs}
-                            {...children}
-                        </g>
-
+            if (layer !== undefined) {
+                result = <g>{result}{layer}</g>
+            }
+            result = <g>
+                        {result}
+                        {this.renderConstraints(node)}
+                        {defs}
+                        {...children}
+                    </g>
 
             return result
         }
-        // If no rendering could be found, just render its children.
-        if (rendering === undefined) {
-            return <g>
-                {shadow}
-                {layer}
-                {ctx.renderChildren(node)}
-            </g>
+        if (shadow !== undefined) {
+            result = <g>{result}{shadow}</g>
         }
-        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
-        if (node.areChildrenRendered) {
-            return <g>
-                {shadow}
-                {rendering}
-                {layer}
-            </g>
-        } else {
-            return <g>
-                {shadow}
-                {rendering}
-                {layer}
-                {ctx.renderChildren(node)}
-            </g>
+        if (rendering !== undefined) {
+            result = <g>{result}{rendering}</g>
         }
+        if (layer !== undefined) {
+            result = <g>{result}{layer}</g>
+        }
+        // Default case. If the children are not already rendered within a KChildArea add the children by default.
+        if (!node.areChildrenRendered) {
+            result = <g>{result}{ctx.renderChildren(node)}</g>
+        }
+        return result
     }
 
      /**
