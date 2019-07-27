@@ -132,6 +132,7 @@ export class NewMouseListener extends MoveMouseListener {
             // if a node is moved set properties
             if (target instanceof SNode) {
                 this.setProperty(target);
+                (target as KNode).shadow = false
             }
         }
         this.hasDragged = false;

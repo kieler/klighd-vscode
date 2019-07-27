@@ -224,4 +224,20 @@ export class ConstraintUtils {
         }
         return nodes
     }
+
+    /**
+     * determines if one fo the children is selected
+     * @param root node which children should be checked
+     */
+    public static isChildSelected(root: SNode): boolean {
+        let nodes = root.children
+        if (nodes !== undefined) {
+            for (let node of nodes) {
+                if (node instanceof SNode && node.selected) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 }
