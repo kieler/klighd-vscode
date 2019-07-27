@@ -241,3 +241,18 @@ export class ConstraintUtils {
         return false
     }
 }
+
+
+/**
+ * Calculates the layer the selected node is in.
+ * Returns -1 if no node of the nodes is selected.
+ * @param nodes All nodes of one hierarchical level.
+ */
+export function layerOfSelectedNode(nodes: KNode[]): number {
+    for (let node of nodes) {
+        if (node.selected) {
+            return ConstraintUtils.getLayerOfNode(node, nodes)
+        }
+    }
+    return -1
+}
