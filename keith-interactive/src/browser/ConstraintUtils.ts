@@ -1,244 +1,196 @@
 import { SNode } from "sprotty";
-import { KNode, Layer } from "./ConstraintClasses";
+import { KNode, Layer } from "./ConstraintClasses"
 
-
-export class ConstraintUtils {
-   /**
-     * Checks whether two arrays of SNodes are equal based on the id of their nodes.
-     * It's explicitly no set equality. Two shuffled arrays are not equal according to this function.
-     * @param ar1
-     * @param ar2
-     */
-    public static nodeArEquals(ar1: SNode[], ar2: SNode[]): Boolean {
-        if (ar1.length !== ar2.length) {
-            return false
+/**
+ * Calculates the layer the node is in.
+ * @param node Node which layer should be calculated.
+ * @param nodes All nodes in the same hierarchical level as the node which layer should be calculated.
+ */
+export function getLayerOfNode(node: KNode, nodes: KNode[]): number {
+    // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
+    let layers = getLayers(nodes)
+    let curX = node.position.x + node.size.width / 2
+    // check for all layers if the node is in the layer
+    for (let i = 0; i < layers.length; i++) {
+        let layer = layers[i]
+        if (curX < layer.rightX) {
+            return i
         }
-        for (let i = 0; i < ar1.length; i++) {
-            if (ar1[i].id !== ar2[i].id) {
-                return false
-            }
-        }
-
-
-        return true
     }
 
-    /**
-     *Checks whether two SNode arrays include the same nodes.
-     * @param ar1
-     * @param ar2
-     */
-    public static sameNodeSet(ar1: SNode[], ar2: SNode[]): Boolean {
-        if (ar1.length !== ar2.length) {
-            return false
-        }
-
-        for (let e1 of ar1) {
-            if ( !ar1.includes(e1)) {
-                return false
-            }
-        }
-
-        for (let e2 of ar2) {
-            if ( !ar2.includes(e2)) {
-                return false
-            }
-        }
-        return true
-    }
-
-    /**
-     * Calculates the layer the node is in
-     * @param node node which layer should be calculated
-     * @param nodes all nodes the graph contains
-     * @param shadow Shadow of the node that is moved
-     */
-    public static getLayerOfNode(node: KNode, nodes: KNode[]) {
-        // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
-        let layers = this.getLayers(nodes)
-        let curX = node.position.x + node.size.width / 2
-        for (let i = 0; i < layers.length; i++) {
-            let layer = layers[i]
-            if (curX < layer.rightX) {
-                return i
-            }
-        }
-
-        // node is in a new last layer
-        let lastLNodes = this.getNodesOfLayer(layers.length - 1, nodes)
-        if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
-            return layers.length
-        }
-
-        // node is in new last layer
+    // if the node is the only one in the last layer it can not be in a new last layer
+    let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
+    if (lastLNodes.length === 1 && lastLNodes[0].selected) {
+        // node is in last layer
         return layers.length - 1
     }
+    // node is in a new last layer
+    return layers.length
+}
 
-    /**
-     * Calculates the layers in a graph
-     * @param nodes all nodes the graph which layers should be calculated
-     * @param shadow Shadow of the node that is moved
-     */
-    public static getLayers(nodes: KNode[]) {
-        nodes.sort((a, b) => a.layerId - b.layerId)
-        let layers = []
-        let layer = 0
-        let leftX = Number.MAX_VALUE
-        let rightX = Number.MIN_VALUE
-        let topY = Number.MAX_VALUE
-        let botY = Number.MIN_VALUE
-        // calculate bounds of the layers
-        for (let i = 0; i < nodes.length; i++) {
-            let node = nodes[i]
-            if (node.layerId !== layer) {
-                // node is in the next layer
-                let l = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
-                layers[layer] = l
-                leftX = Number.MAX_VALUE
-                rightX = Number.MIN_VALUE
-                layer++
-            }
-
-            // coordinates of the current node
-            let curLX = 0
-            let curRX = 0
-            let curTY = 0
-            let curBY = 0
-            if (!node.shadow) {
-                curLX = node.position.x
-                curRX = node.position.x + node.size.width
-                curTY = node.position.y
-                curBY = node.position.y + node.size.height
-            } else {
-                curLX = node.shadowX
-                curRX = node.shadowX + node.size.width
-                curTY = node.shadowY
-                curBY = node.shadowY + node.size.height
-            }
-
-            // update coordinates of the current layer
-            if (curLX < leftX) {
-                leftX = curLX
-            }
-            if (curRX > rightX) {
-                rightX = curRX
-            }
-            if (curTY < topY) {
-                topY = curTY
-            }
-            if (curBY > botY) {
-                botY = curBY
-            }
-        }
-        let l = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
-        layers[layer] = l
-
-        // update left and right bounds of the layers
-        // set y bounds of the layers
-        for (let i = 0; i < layers.length - 1; i++) {
-            let leftL = layers[i]
-            let rightL = layers[i + 1]
-            let mid = leftL.rightX + (rightL.leftX - leftL.rightX) / 2
-            leftL.rightX = mid
-            rightL.leftX = mid
-            leftL.topY = topY
-            leftL.botY = botY
-            rightL.topY = topY
-            leftL.botY = botY
+/**
+ * Calculates the layers in a graph based on the layer IDs and positions of the nodes.
+ * @param nodes All nodes of the graph which layers should be calculated.
+ */
+export function getLayers(nodes: KNode[]): Layer[] {
+    nodes.sort((a, b) => a.layerId - b.layerId)
+    let layers = []
+    let layer = 0
+    let leftX = Number.MAX_VALUE
+    let rightX = Number.MIN_VALUE
+    let topY = Number.MAX_VALUE
+    let botY = Number.MIN_VALUE
+    // calculate bounds of the layers
+    for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i]
+        if (node.layerId !== layer) {
+            // node is in the next layer
+            layers[layer] = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
+            leftX = Number.MAX_VALUE
+            rightX = Number.MIN_VALUE
+            layer++
         }
 
-        // special case: only one layer exists
-        if (layers.length === 1) {
-            let firstL = layers[0]
-            firstL.leftX = firstL.leftX - 10
-            firstL.rightX = firstL.rightX + 10
-            firstL.topY = topY
-            firstL.botY = botY
-        } else {
-            // update left bound of the first layer
-            let firstL = layers[0]
-            firstL.leftX = firstL.mid - (firstL.rightX - firstL.mid)
+        // coordinates of the current node
+        let curLX = node.shadow ? node.shadowX : node.position.x
+        let curRX = curLX + node.size.width
+        let curTY = node.shadow ? node.shadowY : node.position.y
+        let curBY = curTY + node.size.height
 
-            // update bounds of the last layer
-            let lastL = layers[layers.length - 1]
-            lastL.leftX = layers[layers.length - 2].rightX
-            let dist = lastL.mid - lastL.leftX
-            lastL.rightX = lastL.mid + dist
-            lastL.topY = topY
-            lastL.botY = botY
-        }
+        // update coordinates of the current layer
+        leftX = min(curLX, leftX)
+        rightX = max(curRX, rightX)
+        topY = min(curTY, topY)
+        botY = max(curBY, botY)
+    }
+    // add last layer
+    layers[layer] = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
 
-        return layers
+    // update left and right bounds of the layers and set y bounds
+    for (let i = 0; i < layers.length - 1; i++) {
+        // calculate the mid between two layers
+        let leftL = layers[i]
+        let rightL = layers[i + 1]
+        let mid = leftL.rightX + (rightL.leftX - leftL.rightX) / 2
+
+        // set right bound of the first and left bound of the second layer to the calculated mid
+        leftL.rightX = mid
+        rightL.leftX = mid
+
+        // set y coordinates
+        leftL.topY = topY
+        leftL.botY = botY
+        rightL.topY = topY
+        leftL.botY = botY
     }
 
-    /**
-     * Calculates the nodes that are in the layer
-     * @param layer the layer which containing nodes should be calculated
-     * @param nodes all nodes the graph contains
-     */
-    public static getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
-        let nodesOfLayer: KNode[] = []
-        let counter = 0
-        for (let node of nodes) {
-            if (node.layerId === layer) {
-                nodesOfLayer[counter] = node
-                counter++
-            }
-        }
-        return nodesOfLayer
+    // special case: only one layer exists
+    if (layers.length === 1) {
+        let firstL = layers[0]
+        // add padding to x bounds
+        firstL.leftX = firstL.leftX - 10
+        firstL.rightX = firstL.rightX + 10
+        firstL.topY = topY
+        firstL.botY = botY
+    } else {
+        // update left bound of the first layer
+        // add padding
+        let firstL = layers[0]
+        firstL.leftX = firstL.mid - (firstL.rightX - firstL.mid)
+
+        // update bounds of the last layer
+        // left bound of the layer is the right bound of the layer left of it
+        let lastL = layers[layers.length - 1]
+        lastL.leftX = layers[layers.length - 2].rightX
+        // distance from mid of the last layer to the right bound should be the same as to the left bound
+        let dist = lastL.mid - lastL.leftX
+        lastL.rightX = lastL.mid + dist
+        // set y coordinates
+        lastL.topY = topY
+        lastL.botY = botY
     }
 
-    /**
-     * Calculates the position of the target node in relation to the nodes in layerNs based on their y coordinates
-     * @param layerNs nodes of the layer the target is in
-     * @param target node which position should be calculated
-     */
-    public static getPosInLayer (layerNs: KNode[], target: KNode): number {
-        // Sort the layer array by y.
-        layerNs.sort((a, b) => a.position.y - b.position.y)
-        // Find the position of the target
-        if (layerNs.indexOf(target) !== -1) {
-            return layerNs.indexOf(target)
+    return layers
+}
+
+/**
+ * Calculates the nodes that are in the given layer based on the layer IDs of the nodes.
+ * @param layer The layer which containing nodes should be calculated.
+ * @param nodes All nodes the graph contains.
+ */
+export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
+    let nodesOfLayer: KNode[] = []
+    let counter = 0
+    for (let node of nodes) {
+        if (node.layerId === layer) {
+            nodesOfLayer[counter] = node
+            counter++
         }
-        for (let i = 0; i < layerNs.length; i++) {
-            if (target.position.y < layerNs[i].position.y) {
-                return i
-            }
-        }
-        return layerNs.length
+    }
+    return nodesOfLayer
+}
+
+/**
+ * Calculates the position of the target node in relation to the nodes in layerNs based on their y coordinates.
+ * @param layerNs Nodes of the layer the target is in.
+ * @param target Node which position should be calculated.
+ */
+export function getPosInLayer(layerNs: KNode[], target: KNode): number {
+    // Sort the layer array by y coordinate.
+    layerNs.sort((a, b) => a.position.y - b.position.y)
+    // Find the position of the target
+    if (layerNs.indexOf(target) !== -1) {
+        // target is already in the list
+        return layerNs.indexOf(target)
     }
 
-    /**
-     * Filters the KNodes out of graphElements.
-     * @param graphElements all elements that the graph contains
-     * @returns all KNodes that the graph contains
-     */
-    public static filterKNodes(graphElements: any) {
-        let nodes: KNode[] = []
-        let counter = 0
-        for (let elem of graphElements) {
-            if (elem instanceof SNode) {
-                nodes[counter] = elem as KNode
-                counter++
-            }
+    for (let i = 0; i < layerNs.length; i++) {
+        if (target.position.y < layerNs[i].position.y) {
+            return i
         }
-        return nodes
     }
+    return layerNs.length
+}
 
-    /**
-     * determines if one fo the children is selected
-     * @param root node which children should be checked
-     */
-    public static isChildSelected(root: SNode): boolean {
-        let nodes = root.children
-        if (nodes !== undefined) {
-            for (let node of nodes) {
-                if (node instanceof SNode && node.selected) {
-                    return true
-                }
-            }
+/**
+ * Filters the KNodes out of graphElements.
+ * @param graphElements Elements which should be filtered.
+ */
+export function filterKNodes(graphElements: any): KNode[] {
+    let nodes: KNode[] = []
+    let counter = 0
+    for (let elem of graphElements) {
+        if (elem instanceof SNode) {
+            nodes[counter] = elem as KNode
+            counter++
         }
-        return false
+    }
+    return nodes
+}
+
+/**
+ * Calculates the maximum of two numbers.
+ * @param a First number.
+ * @param b Second nummber.
+ */
+function max(a: number, b: number): number {
+    if (a < b) {
+        return b
+    } else {
+        return a
+    }
+}
+
+/**
+ * Calculates the minimum of two numbers.
+ * @param a First number.
+ * @param b Second nummber.
+ */
+function min(a: number, b: number): number {
+    if (a < b) {
+        return a
+    } else {
+        return b
     }
 }
 
@@ -251,8 +203,25 @@ export class ConstraintUtils {
 export function layerOfSelectedNode(nodes: KNode[]): number {
     for (let node of nodes) {
         if (node.selected) {
-            return ConstraintUtils.getLayerOfNode(node, nodes)
+            return getLayerOfNode(node, nodes)
         }
     }
     return -1
+}
+
+
+/**
+* determines if one fo the children is selected
+* @param root node which children should be checked
+*/
+export function isChildSelected(root: SNode): boolean {
+    let nodes = root.children
+    if (nodes !== undefined) {
+        for (let node of nodes) {
+            if (node instanceof SNode && node.selected) {
+                return true
+            }
+        }
+    }
+    return false
 }

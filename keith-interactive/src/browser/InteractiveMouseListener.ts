@@ -11,11 +11,9 @@ import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { KNode } from "./ConstraintClasses";
-import { ConstraintUtils } from './ConstraintUtils';
-import { LayerConstraint } from './LayerConstraint';
-import { PositionConstraint } from './PositionConstraint';
-// import { DeleteConstraint } from './DeleteConstraint';
-import { StaticConstraint } from './StaticConstraint';
+import { LayerConstraint, PositionConstraint, StaticConstraint } from './Constraint-types';
+import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer } from "./ConstraintUtils";
+
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
@@ -146,11 +144,11 @@ export class InteractiveMouseListener extends MoveMouseListener {
      */
     private setProperty(target: SModelElement): void {
         let targetNode: KNode = target as KNode
-        let nodes = ConstraintUtils.filterKNodes(targetNode.parent.children)
+        let nodes = filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
-        let layerOfTarget = ConstraintUtils.getLayerOfNode(targetNode, nodes)
-        let nodesOfLayer = ConstraintUtils.getNodesOfLayer(layerOfTarget, nodes)
-        let positionOfTarget = ConstraintUtils.getPosInLayer(nodesOfLayer, targetNode)
+        let layerOfTarget = getLayerOfNode(targetNode, nodes)
+        let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
+        let positionOfTarget = getPosInLayer(nodesOfLayer, targetNode)
 
         this.uri = this.widget.uri
         let uriStr = this.uri.toString(true)

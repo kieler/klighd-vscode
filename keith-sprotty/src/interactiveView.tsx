@@ -1,6 +1,6 @@
 /** @jsx svg */
 import { KNode, Layer } from "@kieler/keith-interactive/lib/ConstraintClasses";
-import { ConstraintUtils, layerOfSelectedNode } from "@kieler/keith-interactive/lib/ConstraintUtils";
+import { layerOfSelectedNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer } from "@kieler/keith-interactive/lib/ConstraintUtils";
 import { svg } from 'snabbdom-jsx';
 import { createRect, createVerticalLine, createCircle, lock, arrow } from "./interactiveView-objects";
 import { VNode } from "snabbdom/vnode";
@@ -11,7 +11,7 @@ import { VNode } from "snabbdom/vnode";
  */
 export function renderInteractiveLayout(root: KNode): VNode {
     // filter KNodes
-    let nodes = ConstraintUtils.filterKNodes(root.children)
+    let nodes = filterKNodes(root.children)
     return  <g>
                 {renderLayer(nodes)}
             </g>
@@ -24,7 +24,7 @@ export function renderInteractiveLayout(root: KNode): VNode {
  */
 function renderLayer(nodes: KNode[]): VNode {
     let currentLayer = layerOfSelectedNode(nodes)
-    let layers: Layer[] = ConstraintUtils.getLayers(nodes)
+    let layers: Layer[] = getLayers(nodes)
 
     // y coordinates of the layers
     let topY = layers[0].topY
@@ -43,7 +43,7 @@ function renderLayer(nodes: KNode[]): VNode {
 
     // show a new empty last layer the node can be moved to
     let lastL = layers[layers.length - 1]
-    let lastLNodes = ConstraintUtils.getNodesOfLayer(layers.length - 1, nodes)
+    let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
     if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
         // only show the layer if the moved node is not (the only node) in the last layer
         if (currentLayer === layers.length) {
@@ -65,7 +65,7 @@ function renderLayer(nodes: KNode[]): VNode {
  * @param layers All layers in the graph at the hierarchival level.
  */
 function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNode {
-    let layerNodes: KNode[] = ConstraintUtils.getNodesOfLayer(current, nodes)
+    let layerNodes: KNode[] = getNodesOfLayer(current, nodes)
 
     // get the selected node
     let target = nodes[0]
@@ -75,7 +75,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNod
         }
     }
     // position of selected node
-    let curPos = ConstraintUtils.getPosInLayer(layerNodes, target)
+    let curPos = getPosInLayer(layerNodes, target)
 
     layerNodes.sort((a, b) => a.posId - b.posId)
 
