@@ -19,7 +19,7 @@ import actionModule from './actions/actions-module';
 import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
-import { newMoveModule } from '@kieler/keith-move/lib/new-mode-module'
+import { interactiveModule } from '@kieler/keith-interactive/lib/interactive-module'
 // import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener';
 
 /**
@@ -43,7 +43,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
  */
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
-    container.load(defaultModule, selectModule, newMoveModule, viewportModule, exportModule, modelSourceModule, updateModule, kGraphDiagramModule, textBoundsModule, actionModule)
+    container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, kGraphDiagramModule, textBoundsModule, actionModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
