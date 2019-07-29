@@ -10,11 +10,9 @@ import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "spro
 import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
-import { KNode } from "@kieler/keith-constraints/lib/ConstraintClasses";
-import { LayerConstraint } from '@kieler/keith-constraints/lib/LayerConstraint';
-import { PositionConstraint } from '@kieler/keith-constraints/lib/PositionConstraint';
+import { KNode } from "./ConstraintClasses";
+import { LayerConstraint, PositionConstraint, StaticConstraint } from './Constraint-types';
 // import { DeleteConstraint } from '@kieler/keith-constraints/lib/DeleteConstraint';
-import { StaticConstraint } from '@kieler/keith-constraints/lib/StaticConstraint';
 import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer } from "./ConstraintUtils";
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')

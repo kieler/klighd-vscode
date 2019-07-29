@@ -1,5 +1,5 @@
 import { SNode } from "sprotty";
-import { KNode, Layer } from "@kieler/keith-constraints/lib/ConstraintClasses"
+import { KNode, Layer } from "./ConstraintClasses"
 
 /**
  * Calculates the layer the node is in.

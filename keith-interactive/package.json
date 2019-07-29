@@ -18,8 +18,7 @@
   },
   "dependencies": {
     "@theia/filesystem": "latest",
-    "sprotty-theia": "0.6.0",
-    "@kieler/keith-constraints": "0.1.0"
+    "sprotty-theia": "0.6.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
