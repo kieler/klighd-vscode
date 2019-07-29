@@ -24,6 +24,8 @@ import { inject, injectable } from 'inversify';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
+import { ROptions } from '@kieler/keith-sprotty/lib/options';
+import { /* RO,  */RenderOption } from '@kieler/keith-sprotty/lib/interfaces';
 
 /**
  * The ID of the diagram options view widget.
@@ -52,7 +54,8 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
         @inject(KeithLanguageClientContribution) protected readonly client: KeithLanguageClientContribution,
         @inject(KeithDiagramManager) protected readonly diagramManager: KeithDiagramManager,
-        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry
+        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry,
+        @inject(ROptions) protected readonly rOptions: ROptions
     ) {
         super({
             widgetId: DIAGRAM_OPTIONS_WIDGET_FACTORY_ID,
@@ -99,6 +102,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.diagramOptionsViewWidget.onSendNewAction(this.sendNewAction.bind(this))
             this.diagramOptionsViewWidget.onActivateRequest(this.updateContent.bind(this))
             this.diagramOptionsViewWidget.onGetOptions(this.updateContent.bind(this))
+            this.diagramOptionsViewWidget.onSendNewRenderOption(this.sendNewRenderOption.bind(this))
         }
     }
 
@@ -125,6 +129,10 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      */
     async sendNewAction(actionId: string): Promise<void> {
         this.sendNewRequestMessage(PERFORM_ACTION, { actionId: actionId })
+    }
+
+    private sendNewRenderOption(option: RenderOption) {
+        this.rOptions.updateRenderOption(option)
     }
 
     /**
@@ -172,6 +180,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      */
     onDiagramWidgetsChanged(): void {
         this.diagramOptionsViewWidget.setSynthesisOptions([])
+        this.diagramOptionsViewWidget.setRenderOptions([])
         this.diagramOptionsViewWidget.setLayoutOptions([])
         this.diagramOptionsViewWidget.setActions([])
         this.diagramOptionsViewWidget.update()
@@ -243,9 +252,14 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
 
             // Update the widget.
             this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
+            this.diagramOptionsViewWidget.setRenderOptions(this.getRenderOptions())
             this.diagramOptionsViewWidget.setLayoutOptions(result.layoutOptions)
             this.diagramOptionsViewWidget.setActions(result.actions)
             this.diagramOptionsViewWidget.update()
         }
+    }
+
+    private getRenderOptions(): RenderOption[] {
+        return this.rOptions.getRenderOptions()
     }
 }

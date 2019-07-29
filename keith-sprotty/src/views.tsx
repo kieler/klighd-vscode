@@ -21,6 +21,7 @@ import { getRendering } from './views-rendering';
 import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener'
 import { ConstraintUtils } from '@kieler/keith-move/lib/ConstraintUtils'
 import { renderInteractiveLayout, renderConstraints } from './interactiveView';
+import { ROptions } from './options';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -43,6 +44,7 @@ export class SKGraphView extends SGraphView {
 export class KNodeView implements IView {
 
     @inject(NewMouseListener) mListener: NewMouseListener
+    @inject(ROptions) protected rOptions: ROptions
 
     render(node: KNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)

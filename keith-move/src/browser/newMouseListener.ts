@@ -29,7 +29,6 @@ export class NewMouseListener extends MoveMouseListener {
     constructor(@inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
     ) {
         super();
-        console.log("Konstruktor")
         this.diagramClient = dserver.connector.diagramLanguageClient
         this.editorManager = dserver.connector.editorManager
         this.widget = dserver.connector.diagramManager.all[0]

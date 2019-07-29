@@ -15,6 +15,8 @@ import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } 
 import { ContainerModule, interfaces } from "inversify";
 import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution";
 import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget";
+import { ROptions } from "@kieler/keith-sprotty/lib/options";
+import { RO } from "@kieler/keith-sprotty/lib/interfaces"
 
 /**
  * Dependency injection container for the KEITH diagram options functionality.
@@ -28,4 +30,6 @@ export default new ContainerModule((bind: interfaces.Bind) => {
         createWidget: () => ctx.container.get(DiagramOptionsViewWidget)
     }))
     bind(DiagramOptionsViewWidget).toSelf()
+    bind(ROptions).toSelf().inSingletonScope()
+    bind(RO).toService(ROptions)
 })
