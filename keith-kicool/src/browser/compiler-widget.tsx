@@ -194,7 +194,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     {stylesToSelect}
                 </select>
                 compilationSystemSearchbox = this.renderSearchbox("compilation-system-filter",
-                    "Filter systems",
+                    "Filter systems by label",
                     this.compilationSystemFilter,
                     () => this.handleCSSearchChange())
             }
@@ -450,9 +450,10 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public compileSelectedCompilationSystem(): void {
         const selection = document.getElementById("compilation-list") as HTMLSelectElement;
-        const systems = this.systems.filter(system => {
+        let systems = this.systems.filter(system => {
             return this.showPrivateSystems || system.isPublic
         })
+        systems = systems.filter(system => system.label.toLowerCase().search(this.compilationSystemFilter.toLowerCase()) > -1)
         if (systems.length > 0) {
             this.commands.compile(systems[selection.selectedIndex].id, this.compileInplace, true)
         } else {
