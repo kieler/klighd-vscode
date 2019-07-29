@@ -20,7 +20,6 @@ import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 import { interactiveModule } from '@kieler/keith-interactive/lib/interactive-module'
-// import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener';
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for KGraphElements.

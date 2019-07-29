@@ -19,7 +19,7 @@ import { KEdge, KLabel, KPort, KNode} from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
 import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
-import { ConstraintUtils } from '@kieler/keith-interactive/lib/ConstraintUtils'
+import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
 import { renderInteractiveLayout, renderConstraints } from './interactiveView';
 
 /**
@@ -66,7 +66,7 @@ export class KNodeView implements IView {
 
         // render the objects indicating the layer and positions in the graph
         let layer = undefined
-        if (this.mListener.hasDragged && ConstraintUtils.isChildSelected(node)) {
+        if (this.mListener.hasDragged && isChildSelected(node)) {
             layer = <g>{renderInteractiveLayout(node)}</g>
         }
 
