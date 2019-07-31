@@ -11,7 +11,7 @@ import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { KNode } from "./ConstraintClasses";
-import { LayerConstraint, PositionConstraint, StaticConstraint } from './Constraint-types';
+import { PositionConstraint, StaticConstraint } from './Constraint-types';
 // import { DeleteConstraint } from '@kieler/keith-constraints/lib/DeleteConstraint';
 import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer } from "./ConstraintUtils";
 
@@ -156,19 +156,11 @@ export class InteractiveMouseListener extends MoveMouseListener {
         if (targetNode.layerId !== layerOfTarget) {
             constraintSet = true
 
-            if (targetNode.posId !== positionOfTarget) {
-                // If layer and positional Constraint should be set - send them both in one StaticConstraint
-                let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, positionOfTarget)
-                this.diagramClient.languageClient.then(lClient => {
-                    lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
-                })
-            } else {
-                // set a simple layer Constraint
-                let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
-                this.diagramClient.languageClient.then(lClient => {
-                    lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
-                })
-            }
+            // If layer and positional Constraint should be set - send them both in one StaticConstraint
+            let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, positionOfTarget)
+            this.diagramClient.languageClient.then(lClient => {
+                lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
+            })
         } else {
             // position Constraint should only be set if the position of the node changed
             if (targetNode.posId !== positionOfTarget) {
