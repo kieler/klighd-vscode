@@ -15,7 +15,7 @@ import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
-import { KEdge, KLabel, KPort, KNode} from './kgraph-models';
+import { KEdge, KLabel, KPort, KNode } from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
 import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
@@ -51,6 +51,9 @@ export class KNodeView implements IView {
         node.areChildrenRendered = false
 
         let result = <g></g>
+        // reset hierarchical bounds
+        node.hierHeight = 0
+        node.hierWidth = 0
 
         // render shadow of the node
         let isShadow = node.shadow
@@ -60,18 +63,23 @@ export class KNodeView implements IView {
             node.shadow = false
         }
 
-        // render node
-        let rendering = getRendering(node.data, node, ctx)
-        node.shadow = isShadow
-
         // render the objects indicating the layer and positions in the graph
         let layer = undefined
         if (this.mListener.hasDragged && isChildSelected(node)) {
             layer = <g>{renderInteractiveLayout(node)}</g>
         }
 
-        // render icons visualizing the set Constraints
-        let constraints = renderConstraints(node)
+        // render node
+        let rendering = undefined
+        let constraints = <g></g>
+        if (!this.mListener.hasDragged || isChildSelected(node) || isChildSelected(node.parent as KNode)) {
+            // node should only be visible if the node is in the same hierarchical level as the moved node or it is the
+            // root of the moved node or no node is moved at all
+            rendering = getRendering(node.data, node, ctx)
+            // render icons visualizing the set Constraints
+            constraints = renderConstraints(node)
+        }
+        node.shadow = isShadow
 
         if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
@@ -187,7 +195,12 @@ export class KEdgeView implements IView {
             edge.moved = (s.selected || t.selected) && this.mListener.hasDragged
         }
 
-        let rendering = getRendering(edge.data, edge, context as any)
+        let rendering = undefined
+        if (!this.mListener.hasDragged || isChildSelected(edge.parent as KNode)) {
+            // edge should only be visible if it is in the same hierarchical level as
+            // the moved node or no node is moved at all
+            rendering = getRendering(edge.data, edge, context as any)
+        }
         edge.moved = false
 
         // If no rendering could be found, just render its children.
