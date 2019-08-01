@@ -14,7 +14,7 @@ import { VNode } from 'snabbdom/vnode';
 import { Bounds, ModelRenderer, Point, toDegrees } from 'sprotty/lib';
 import {
     Decoration, HorizontalAlignment, KColoring, KEdge, KGraphElement, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering,
-    KRenderingLibrary, KRotation, KText, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, Underline, VerticalAlignment
+    KRenderingLibrary, KRotation, KText, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, Underline, VerticalAlignment, KNode
 } from './kgraph-models';
 import { KStyles } from './views-styles';
 
@@ -368,6 +368,17 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
     } else if (decoration === undefined && bounds === undefined) {
         return
     }
+
+    if (parent instanceof KNode && parent.shadow) {
+        // bounds of the shadow indicating the old position of the node
+        bounds = {
+            x: parent.shadowX - parent.position.x,
+            y: parent.shadowY - parent.position.y,
+            width: parent.size.width,
+            height: parent.size.height
+        }
+    }
+
     // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
     const transformation = getTransformation(bounds, decoration, kRotation, isEdge)
 

@@ -1,4 +1,4 @@
-import { RectangularNode, selectFeature, moveFeature, SParentElement } from 'sprotty/lib';
+import { RectangularNode, selectFeature, moveFeature, SParentElement, SEdge } from 'sprotty/lib';
 
 export class Layer {
     leftX: number
@@ -66,4 +66,17 @@ export class KNode extends RectangularNode implements KGraphElement {
  */
 export interface KGraphData {
     type: string
+}
+/**
+ * Represents its java counterpart in KLighD.
+ */
+export class KEdge extends SEdge implements KGraphElement {
+    trace?: string
+    data: KGraphData[]
+    areChildrenRendered = false
+    hasFeature(feature: symbol): boolean {
+        return feature === selectFeature
+    }
+
+    moved: boolean
 }

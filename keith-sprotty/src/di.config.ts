@@ -28,6 +28,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
     rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
+   // bind(NewMouseListener).toSelf().inSingletonScope()
     const context = { bind, unbind, isBound, rebind };
     configureModelElement(context, 'graph', SGraph, SKGraphView);
     configureModelElement(context, 'node', KNode, KNodeView)

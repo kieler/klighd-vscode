@@ -193,3 +193,35 @@ function min(a: number, b: number): number {
         return b
     }
 }
+
+
+/**
+ * Calculates the layer the selected node is in.
+ * Returns -1 if no node of the nodes is selected.
+ * @param nodes All nodes of one hierarchical level.
+ */
+export function layerOfSelectedNode(nodes: KNode[]): number {
+    for (let node of nodes) {
+        if (node.selected) {
+            return getLayerOfNode(node, nodes)
+        }
+    }
+    return -1
+}
+
+
+/**
+* determines if one fo the children is selected
+* @param root node which children should be checked
+*/
+export function isChildSelected(root: SNode): boolean {
+    let nodes = root.children
+    if (nodes !== undefined) {
+        for (let node of nodes) {
+            if (node instanceof SNode && node.selected) {
+                return true
+            }
+        }
+    }
+    return false
+}

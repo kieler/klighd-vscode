@@ -15,7 +15,7 @@ import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin,
-    KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment
+    KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment, KGraphElement, KEdge, KNode
 } from './kgraph-models';
 import {
     camelToKebab, fillSingleColor, isSingleColor, KGraphRenderingContext, lineCapText, lineJoinText, lineStyleText, textDecorationStyleText, verticalAlignmentText
@@ -401,9 +401,26 @@ export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingCont
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext): ColorStyles {
+export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext, parent: KGraphElement | KEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
+
+    if (parent instanceof KEdge && parent.moved) {
+        // edge should be greyed out
+        return {
+            foreground: 'darkgrey',
+            background: background === undefined ? DEFAULT_FILL : 'darkgrey'
+        }
+    }
+
+    if (parent instanceof KNode && parent.shadow) {
+        // colors of the shadow node
+        return {
+            foreground: 'darkgrey',
+            background: background === undefined ? DEFAULT_FILL : 'gainsboro'
+        }
+    }
+
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
         background: background === undefined ? DEFAULT_FILL : background
