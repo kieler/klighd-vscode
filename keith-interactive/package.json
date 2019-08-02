@@ -1,5 +1,5 @@
 {
-  "name": "@kieler/keith-move",
+  "name": "@kieler/keith-interactive",
   "version": "0.1.0",
   "description": "An extension for Theia connection language support for KEITH to compile models",
   "author": "Kiel University https://rtsys.informatik.uni-kiel.de/kieler",

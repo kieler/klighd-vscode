@@ -18,8 +18,8 @@ import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
 import { KEdge, KLabel, KPort, KNode} from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
 import { getRendering } from './views-rendering';
-import { NewMouseListener } from '@kieler/keith-move/lib/newMouseListener'
-import { ConstraintUtils } from '@kieler/keith-move/lib/ConstraintUtils'
+import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
+import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
 import { renderInteractiveLayout, renderConstraints } from './interactiveView';
 import { ROptions } from './options';
 
@@ -43,7 +43,7 @@ export class SKGraphView extends SGraphView {
 @injectable()
 export class KNodeView implements IView {
 
-    @inject(NewMouseListener) mListener: NewMouseListener
+    @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
     @inject(ROptions) protected rOptions: ROptions
 
     render(node: KNode, context: RenderingContext): VNode {
@@ -68,7 +68,7 @@ export class KNodeView implements IView {
 
         // render the objects indicating the layer and positions in the graph
         let layer = undefined
-        if (this.mListener.hasDragged && ConstraintUtils.isChildSelected(node)) {
+        if (this.mListener.hasDragged && isChildSelected(node)) {
             layer = <g>{renderInteractiveLayout(node)}</g>
         }
 
@@ -177,7 +177,7 @@ export class KLabelView implements IView {
 @injectable()
 export class KEdgeView implements IView {
 
-    @inject(NewMouseListener) mListener: NewMouseListener
+    @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
 
     render(edge: KEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
