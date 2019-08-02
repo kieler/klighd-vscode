@@ -13,7 +13,7 @@ export function renderInteractiveLayout(root: KNode): VNode {
     // filter KNodes
     let nodes = filterKNodes(root.children)
     return  <g>
-                {renderLayer(nodes)}
+                {renderLayer(nodes, root)}
             </g>
 }
 
@@ -21,14 +21,18 @@ export function renderInteractiveLayout(root: KNode): VNode {
  * Visualize the layer the selected node is in as a rectangle and all other layers as a vertical line.
  * The rectangle contains circles indicating the available positions.
  * @param node All nodes in the hierarchical level for which the layers should be visualized.
+ * @param root Root of the hierarchical level.
  */
-function renderLayer(nodes: KNode[]): VNode {
+function renderLayer(nodes: KNode[], root: KNode): VNode {
     let currentLayer = layerOfSelectedNode(nodes)
     let layers: Layer[] = getLayers(nodes)
 
     // y coordinates of the layers
     let topY = layers[0].topY
     let botY = layers[0].botY
+
+    // rightmost x coordinate
+    let rightX = layers[layers.length - 1].rightX
 
     // create layers
     let result = <g></g>
@@ -46,12 +50,17 @@ function renderLayer(nodes: KNode[]): VNode {
     let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
     if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
         // only show the layer if the moved node is not (the only node) in the last layer
+        rightX = lastL.rightX + lastL.rightX - lastL.leftX
         if (currentLayer === layers.length) {
             result = <g>{result}{createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY)}</g>
         } else {
             result = <g>{result}{createVerticalLine(lastL.mid + (lastL.rightX - lastL.leftX), topY, botY)}</g>
         }
     }
+
+    // set hierarchical bounds for the node
+    root.hierHeight = root.size.height
+    root.hierWidth = rightX - layers[0].leftX + 10
 
     // add available positions
     return <g>{result}{renderPositions(currentLayer, nodes, layers)}</g>
@@ -128,7 +137,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNod
  */
 export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
-    let x = node.size.width
+    let x = node.hierWidth !== 0 ? node.hierWidth : node.size.width
     let y = 0
     if (node.layerCons !== -1 && node.posCons !== -1) {
         // layer and position COnstraint are set
