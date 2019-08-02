@@ -15,6 +15,11 @@
     color: var(--theia-ui-font-color1);
     border: 1px solid var(--theia-ui-font-color1);
     border-collapse: collapse;
+    white-space: nowrap;
+    max-width: 400px;
+    overflow: auto;
+    min-width: 5px;
+    width: 100px;
 }
 
 .simulation-data-inputbox::placeholder {
@@ -153,16 +158,15 @@ td {
     margin: 0px;
     padding: 0px;
     display:block;
-    min-width: fit-content;
 
 }
 
 th div {
     border: 0;
-    width: auto;
-    height: auto;
     min-height: 20px;
     min-width: 20px;
+    display: inline-block;
+    width: 120px;
 }
 
 .simulation-speed-input-box {
