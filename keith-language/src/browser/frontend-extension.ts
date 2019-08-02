@@ -18,6 +18,9 @@ import { ContainerModule, interfaces } from 'inversify';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
 import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
 import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
+import { LabelProviderContribution } from '@theia/core/lib/browser';
+import { SCChartsIconProvider } from './sccharts-icon-provider';
+import "../../src/browser/style/index.css"
 
 // Language register, holds all languages that are supported by KEITH
 export const languageDescriptions: LanguageDescription[] = [
@@ -71,4 +74,5 @@ export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.U
 
     bind(RegistrationContribution).toSelf().inSingletonScope()
     rebind(MonacoEditorProvider).to(KeithMonacoEditorProvider).inSingletonScope()
+    bind(LabelProviderContribution).to(SCChartsIconProvider).inSingletonScope()
 })
