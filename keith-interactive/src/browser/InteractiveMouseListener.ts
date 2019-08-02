@@ -11,7 +11,7 @@ import { EditorManager } from "@theia/editor/lib/browser";
 import { NotificationType } from "@theia/languages/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { KNode } from "./ConstraintClasses";
-import { LayerConstraint, PositionConstraint, StaticConstraint } from './Constraint-types';
+import { PositionConstraint, StaticConstraint } from './Constraint-types';
 import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer } from "./ConstraintUtils";
 
 
@@ -159,24 +159,15 @@ export class InteractiveMouseListener extends MoveMouseListener {
         if (targetNode.layerId !== layerOfTarget) {
             constraintSet = true
 
-            if (targetNode.layerId !== layerOfTarget || targetNode.posId !== positionOfTarget) {
-                // If layer and positional constraint should be set - send them both in one StaticConstraint
-                let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, positionOfTarget)
-                this.diagramClient.languageClient.then(lClient => {
-                    lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
-                })
-            } else {
-
-                // set a simple  layer constraint
-                let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget)
-                this.diagramClient.languageClient.then(lClient => {
-                    lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
-                })
-            }
+            // If layer and positional Constraint should be set - send them both in one StaticConstraint
+            let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, positionOfTarget)
+            this.diagramClient.languageClient.then(lClient => {
+                lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
+            })
         } else {
 
             // position constraint should only be set if the position of the node changed
-            if (targetNode.layerId !== layerOfTarget || targetNode.posId !== positionOfTarget) {
+            if (targetNode.posId !== positionOfTarget) {
                 constraintSet = true
                 // set the position constraint
                 let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget)
