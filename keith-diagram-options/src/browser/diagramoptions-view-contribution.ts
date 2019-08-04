@@ -24,8 +24,7 @@ import { inject, injectable } from 'inversify';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
-import { RenderOptions } from '@kieler/keith-sprotty/lib/options';
-import { RenderOption } from '@kieler/keith-sprotty/lib/interfaces';
+import { RenderOption, RenderOptions } from '@kieler/keith-sprotty/lib/options';
 
 /**
  * The ID of the diagram options view widget.

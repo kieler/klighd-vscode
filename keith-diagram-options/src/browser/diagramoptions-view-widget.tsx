@@ -19,7 +19,7 @@ import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
 import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, TransformationOptionType, Type } from '../common/option-models';
-import { RenderOption } from '@kieler/keith-sprotty/lib/interfaces'
+import { RenderOption } from '@kieler/keith-sprotty/lib/options'
 
 /**
  * The widget displaying the diagram options.
