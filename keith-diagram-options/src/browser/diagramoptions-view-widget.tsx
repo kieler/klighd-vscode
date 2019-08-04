@@ -132,34 +132,31 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         </div>
     }
 
+    /**
+     * Renders the render options.
+     * @param renderOptions The render options for the diagram.
+     */
     private renderRenderOptions(renderOptions: RenderOption[]): JSX.Element | undefined {
         let children: JSX.Element[] = []
         // Render all top level options.
         renderOptions.forEach(option => {
             switch (option.type) {
                 case TransformationOptionType.CHECK: {
-                    children.push(this.renderCheckRO(option))
+                    children.push(this.renderCheckROption(option))
                     break
                 }
-                /* case TransformationOptionType.CHOICE: {
-                    children.push(this.renderChoice(option))
+                case TransformationOptionType.CHOICE: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
                     break
                 }
                 case TransformationOptionType.RANGE: {
-                    children.push(this.renderRange(option as RangeOption))
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
                     break
-                } */
-               /*  case TransformationOptionType.SEPARATOR: {
-                    children.push(this.renderSeperator(option))
+                }
+                case TransformationOptionType.SEPARATOR: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
                     break
-                } */
-                /* case TransformationOptionType.CATEGORY: {
-                    const list = this.categoryMap.get(option.name)
-                    if (list) {
-                        children.push(this.renderCategory(option, list))
-                    }
-                    break
-                } */
+                }
             }
         })
         if (children.length === 0) {
@@ -171,14 +168,19 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             </div>
         }
     }
-    private renderCheckRO(option: RenderOption): JSX.Element {
+
+    /**
+     * Renders a check RenderOption as an HTML checkbox.
+     * @param option The ckeck option to render.
+     */
+    private renderCheckROption(option: RenderOption): JSX.Element {
         const currentValue = option.currentValue
         let inputAttrs = {
             type: 'checkbox',
             id: option.name,
             name: option.name,
             defaultChecked: currentValue,
-            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheckRO(e, option)
+            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheckROption(e, option)
         }
 
         return <div key={option.sourceHash} className='render-option'>
@@ -189,7 +191,12 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         </div>
     }
 
-    private onCheckRO(event: React.MouseEvent<HTMLInputElement>, option: RenderOption) {
+    /**
+     * Called whenever a checkbox has been clicked. Updates the option that belongs to this checkbox.
+     * @param event The mouseEvent that clicked the checkbox.
+     * @param option The render option connected to the clicked checkbox.
+     */
+    private onCheckROption(event: React.MouseEvent<HTMLInputElement>, option: RenderOption) {
         option.currentValue = event.currentTarget.checked
         this.sendNewRenderOption(option)
     }
@@ -595,12 +602,18 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
     protected readonly onSendNewRenderOptionEmitter = new Emitter<RenderOption>()
 
+    /**
+     * Emit when a render option has been changed.
+     */
     readonly onSendNewRenderOption: Event<RenderOption> = this.onSendNewRenderOptionEmitter.event
 
+    /**
+     * Call this when a render option changed and that should be communicated to other listening methods.
+     * @param option The render option that has changed.
+     */
     public sendNewRenderOption(option: RenderOption): void {
         this.onSendNewRenderOptionEmitter.fire(option)
     }
-
 
     protected readonly onSendNewLayoutOptionEmitter = new Emitter<LayoutOptionValue>()
 

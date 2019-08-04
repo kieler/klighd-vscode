@@ -20,8 +20,7 @@ import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 import { interactiveModule } from '@kieler/keith-interactive/lib/interactive-module'
-import { ROptions } from './options';
-import { RO } from './interfaces'
+import { RenderOptions } from './options'
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for KGraphElements.
@@ -36,8 +35,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     configureModelElement(context, 'edge', KEdge, KEdgeView)
     configureModelElement(context, 'port', KPort, KPortView)
     configureModelElement(context, 'label', KLabel, KLabelView)
-    bind(ROptions).toSelf().inSingletonScope()
-    bind(RO).toService(ROptions)
+    bind(RenderOptions).toSelf().inSingletonScope()
 })
 
 /**

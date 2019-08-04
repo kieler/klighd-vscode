@@ -21,7 +21,7 @@ import { getRendering } from './views-rendering';
 import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
 import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
 import { renderInteractiveLayout, renderConstraints } from './interactiveView';
-import { ROptions } from './options';
+import { RenderOptions } from './options';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -44,7 +44,7 @@ export class SKGraphView extends SGraphView {
 export class KNodeView implements IView {
 
     @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
-    @inject(ROptions) protected rOptions: ROptions
+    @inject(RenderOptions) protected rOptions: RenderOptions
 
     render(node: KNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
@@ -78,8 +78,10 @@ export class KNodeView implements IView {
             // node should only be visible if the node is in the same hierarchical level as the moved node or it is the
             // root of the moved node or no node is moved at all
             rendering = getRendering(node.data, node, ctx)
-            // render icons visualizing the set Constraints
-            constraints = renderConstraints(node)
+            if (this.rOptions.getShowConstraint()) {
+                // render icons visualizing the set Constraints
+                constraints = renderConstraints(node)
+            }
         }
         node.shadow = isShadow
 

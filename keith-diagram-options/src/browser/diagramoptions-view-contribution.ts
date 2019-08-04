@@ -24,8 +24,8 @@ import { inject, injectable } from 'inversify';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
-import { ROptions } from '@kieler/keith-sprotty/lib/options';
-import { /* RO,  */RenderOption } from '@kieler/keith-sprotty/lib/interfaces';
+import { RenderOptions } from '@kieler/keith-sprotty/lib/options';
+import { RenderOption } from '@kieler/keith-sprotty/lib/interfaces';
 
 /**
  * The ID of the diagram options view widget.
@@ -44,6 +44,8 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     editorWidget: EditorWidget
     diagramOptionsViewWidget: DiagramOptionsViewWidget
 
+    private rOptions: RenderOptions
+
     /**
      * The dynamically registered commands for the current diagram options.
      */
@@ -54,8 +56,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
         @inject(KeithLanguageClientContribution) protected readonly client: KeithLanguageClientContribution,
         @inject(KeithDiagramManager) protected readonly diagramManager: KeithDiagramManager,
-        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry,
-        @inject(ROptions) protected readonly rOptions: ROptions
+        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry
     ) {
         super({
             widgetId: DIAGRAM_OPTIONS_WIDGET_FACTORY_ID,
@@ -131,8 +132,17 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         this.sendNewRequestMessage(PERFORM_ACTION, { actionId: actionId })
     }
 
-    private sendNewRenderOption(option: RenderOption) {
+    /**
+     * Updates the render option and the diagram.
+     * @param option The newly configured render option.
+     */
+    async sendNewRenderOption(option: RenderOption) {
+        if (this.rOptions === undefined) {
+            this.rOptions = this.diagramManager.container.get(RenderOptions)
+        }
         this.rOptions.updateRenderOption(option)
+      /*   const lClient = await this.client.languageClient
+        await lClient.sendNotification("updateDiagram", this.editorWidget.editor.uri.toString()) */
     }
 
     /**
@@ -259,7 +269,13 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         }
     }
 
+    /**
+     * Returns the current render options.
+     */
     private getRenderOptions(): RenderOption[] {
+        if (this.rOptions === undefined) {
+            this.rOptions = this.diagramManager.container.get(RenderOptions)
+        }
         return this.rOptions.getRenderOptions()
     }
 }

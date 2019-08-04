@@ -1,17 +1,28 @@
 import { injectable } from "inversify";
-import { RO, RenderOption, TransformationOptionType } from "./interfaces";
 
+export interface RenderOption {
+    name: string
+    type: TransformationOptionType
+    initialValue: any
+    currentValue: any
+    sourceHash: number
+}
 
+export enum TransformationOptionType {
+    CHECK = 0,
+    CHOICE = 1,
+    RANGE = 2,
+    SEPARATOR = 3
+}
 
 @injectable()
-export class ROptions implements RO {
+export class RenderOptions {
     renderOptions: RenderOption[]
 
     constructor() {
-        let option: RenderOption = {name: "Set Constraint", type: TransformationOptionType.CHECK, initialValue: false,
-                    values: [false, true], currentValue: false, sourceHash: 0o101}
+        let option: RenderOption = {name: "Show Constraint", type: TransformationOptionType.CHECK, initialValue: false,
+                    currentValue: false, sourceHash: 0o101}
         this.renderOptions = [option]
-        console.log("ROptions")
     }
 
     public getRenderOptions(): RenderOption[] {
@@ -20,5 +31,14 @@ export class ROptions implements RO {
 
     public updateRenderOption(option: RenderOption) {
         this.renderOptions[0] = option
+    }
+
+    public getShowConstraint(): boolean {
+        for (let option of this.renderOptions) {
+            if (option.name === "Show Constraint") {
+                return option.currentValue
+            }
+        }
+        return false
     }
 }

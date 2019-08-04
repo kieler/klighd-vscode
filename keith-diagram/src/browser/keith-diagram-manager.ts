@@ -18,7 +18,7 @@ import { OpenerOptions, Widget, WidgetManager, WidgetOpenerOptions } from '@thei
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { Workspace } from '@theia/languages/lib/browser';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, Container } from 'inversify';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
@@ -38,6 +38,8 @@ export class KeithDiagramManager extends DiagramManager {
     _diagramConnector: LSTheiaSprottyConnector
 
     protected readonly onDiagramOpenedEmitter = new Emitter<URI>()
+
+    public container: Container
 
     get onDiagramOpened(): Event<URI> {
         return this.onDiagramOpenedEmitter.event
@@ -107,6 +109,7 @@ export class KeithDiagramManager extends DiagramManager {
             const clientId = this.createClientId();
             const config = this.diagramConfigurationRegistry.get(options.diagramType);
             const diContainer = config.createContainer(clientId + '_sprotty');
+            this.container = diContainer
             const diagramWidget = new KeithDiagramWidget(options, clientId, diContainer, this.diagramConnector);
             return diagramWidget;
         }
