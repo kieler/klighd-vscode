@@ -19,6 +19,7 @@ import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
 import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, TransformationOptionType, Type } from '../common/option-models';
+import { RenderOption } from '@kieler/keith-sprotty/lib/interfaces'
 
 /**
  * The widget displaying the diagram options.
@@ -30,6 +31,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
     private synthesisOptions: SynthesisOption[]
     private layoutOptions: LayoutOptionUIData[]
+    private renderOptions: RenderOption[]
     private actions: DisplayedActionData[]
     private categoryMap: Map<string, SynthesisOption[]> = new Map
 
@@ -65,6 +67,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         this.actions = actions
     }
 
+    public setRenderOptions(renderOptions: RenderOption[]) {
+        this.renderOptions = renderOptions
+    }
+
     protected render(): JSX.Element {
         if (isNullOrUndefined(this.synthesisOptions)) {
             // Default view if no diagram has been opened yet.
@@ -85,6 +91,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             return <div>
                 {this.renderActions(this.actions)}
                 {this.renderSynthesisOptions(this.synthesisOptions)}
+                {this.renderRenderOptions(this.renderOptions)}
                 {this.renderLayoutOptions(this.layoutOptions)}
             </div>
         }
@@ -123,6 +130,75 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             }}>
             {action.displayedName}
         </div>
+    }
+
+    /**
+     * Renders the render options.
+     * @param renderOptions The render options for the diagram.
+     */
+    private renderRenderOptions(renderOptions: RenderOption[]): JSX.Element | undefined {
+        let children: JSX.Element[] = []
+        // Render all top level options.
+        renderOptions.forEach(option => {
+            switch (option.type) {
+                case TransformationOptionType.CHECK: {
+                    children.push(this.renderCheckROption(option))
+                    break
+                }
+                case TransformationOptionType.CHOICE: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
+                case TransformationOptionType.RANGE: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
+                case TransformationOptionType.SEPARATOR: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
+            }
+        })
+        if (children.length === 0) {
+            return undefined
+        } else {
+            return <div key='renderOptions'>
+                <p className='render-option seperator'>{'Render Options'}</p>
+                {...children}
+            </div>
+        }
+    }
+
+    /**
+     * Renders a check RenderOption as an HTML checkbox.
+     * @param option The ckeck option to render.
+     */
+    private renderCheckROption(option: RenderOption): JSX.Element {
+        const currentValue = option.currentValue
+        let inputAttrs = {
+            type: 'checkbox',
+            id: option.name,
+            name: option.name,
+            defaultChecked: currentValue,
+            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheckROption(e, option)
+        }
+
+        return <div key={option.sourceHash} className='render-option'>
+            <label htmlFor={option.name}>
+                <input className='diagrams-inputbox' {...inputAttrs} />
+                {option.name}
+            </label>
+        </div>
+    }
+
+    /**
+     * Called whenever a checkbox has been clicked. Updates the option that belongs to this checkbox.
+     * @param event The mouseEvent that clicked the checkbox.
+     * @param option The render option connected to the clicked checkbox.
+     */
+    private onCheckROption(event: React.MouseEvent<HTMLInputElement>, option: RenderOption) {
+        option.currentValue = event.currentTarget.checked
+        this.sendNewRenderOption(option)
     }
 
     /**
@@ -524,6 +600,20 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         this.onSendNewSynthesisOptionEmitter.fire(option)
     }
 
+    protected readonly onSendNewRenderOptionEmitter = new Emitter<RenderOption>()
+
+    /**
+     * Emit when a render option has been changed.
+     */
+    readonly onSendNewRenderOption: Event<RenderOption> = this.onSendNewRenderOptionEmitter.event
+
+    /**
+     * Call this when a render option changed and that should be communicated to other listening methods.
+     * @param option The render option that has changed.
+     */
+    public sendNewRenderOption(option: RenderOption): void {
+        this.onSendNewRenderOptionEmitter.fire(option)
+    }
 
     protected readonly onSendNewLayoutOptionEmitter = new Emitter<LayoutOptionValue>()
 

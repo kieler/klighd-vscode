@@ -24,6 +24,8 @@ import { inject, injectable } from 'inversify';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
+import { RenderOptions } from '@kieler/keith-sprotty/lib/options';
+import { RenderOption } from '@kieler/keith-sprotty/lib/interfaces';
 
 /**
  * The ID of the diagram options view widget.
@@ -41,6 +43,8 @@ export const OPEN_DIAGRAM_OPTIONS_WIDGET_KEYBINDING = 'ctrlcmd+shift+h'
 export class DiagramOptionsViewContribution extends AbstractViewContribution<DiagramOptionsViewWidget> implements FrontendApplicationContribution {
     editorWidget: EditorWidget
     diagramOptionsViewWidget: DiagramOptionsViewWidget
+
+    private rOptions: RenderOptions
 
     /**
      * The dynamically registered commands for the current diagram options.
@@ -99,6 +103,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.diagramOptionsViewWidget.onSendNewAction(this.sendNewAction.bind(this))
             this.diagramOptionsViewWidget.onActivateRequest(this.updateContent.bind(this))
             this.diagramOptionsViewWidget.onGetOptions(this.updateContent.bind(this))
+            this.diagramOptionsViewWidget.onSendNewRenderOption(this.sendNewRenderOption.bind(this))
         }
     }
 
@@ -125,6 +130,19 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      */
     async sendNewAction(actionId: string): Promise<void> {
         this.sendNewRequestMessage(PERFORM_ACTION, { actionId: actionId })
+    }
+
+    /**
+     * Updates the render option and the diagram.
+     * @param option The newly configured render option.
+     */
+    async sendNewRenderOption(option: RenderOption) {
+        if (this.rOptions === undefined) {
+            this.rOptions = this.diagramManager.container.get(RenderOptions)
+        }
+        this.rOptions.updateRenderOption(option)
+      /*   const lClient = await this.client.languageClient
+        await lClient.sendNotification("updateDiagram", this.editorWidget.editor.uri.toString()) */
     }
 
     /**
@@ -172,6 +190,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      */
     onDiagramWidgetsChanged(): void {
         this.diagramOptionsViewWidget.setSynthesisOptions([])
+        this.diagramOptionsViewWidget.setRenderOptions([])
         this.diagramOptionsViewWidget.setLayoutOptions([])
         this.diagramOptionsViewWidget.setActions([])
         this.diagramOptionsViewWidget.update()
@@ -243,9 +262,20 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
 
             // Update the widget.
             this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
+            this.diagramOptionsViewWidget.setRenderOptions(this.getRenderOptions())
             this.diagramOptionsViewWidget.setLayoutOptions(result.layoutOptions)
             this.diagramOptionsViewWidget.setActions(result.actions)
             this.diagramOptionsViewWidget.update()
         }
+    }
+
+    /**
+     * Returns the current render options.
+     */
+    private getRenderOptions(): RenderOption[] {
+        if (this.rOptions === undefined) {
+            this.rOptions = this.diagramManager.container.get(RenderOptions)
+        }
+        return this.rOptions.getRenderOptions()
     }
 }
