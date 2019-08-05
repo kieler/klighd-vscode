@@ -252,7 +252,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     async executeSimulationStep() {
         const lClient = await this.client.languageClient
         // Transform the input map to an object since this is the format the LS supports
-        let jsonObject = strMapToObj(this.simulationWidget.valuesForNextStep)
+        let jsonObject = strMapToObj(this.simulationWidget.changedValuesForNextStep)
         lClient.sendNotification("keith/simulation/step", [jsonObject, "Manual"])
         // TODO Update data to indicate that a step is in process
         this.simulationWidget.update()
@@ -341,7 +341,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         }
     }
 
-
+    /**
+     * Is executed after the server finishes a step.
+     * @param message data of step, includes new values.
+     */
     handleStepMessage(message: SimulationStepMessage) {
         const pool: Map<string, any> = new Map(Object.entries(message.values));
         if (pool) {
@@ -363,6 +366,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.message("Simulation data values are undefined", "ERROR")
         }
         this.simulationWidget.simulationStep++
+        this.simulationWidget.changedValuesForNextStep.clear()
         this.simulationWidget.update()
         return true
     }

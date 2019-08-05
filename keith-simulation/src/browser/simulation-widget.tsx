@@ -47,6 +47,11 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     public valuesForNextStep: Map<string, any> = new Map
 
     /**
+     * Indicates whether an input value should be sent to the server.
+     */
+    public changedValuesForNextStep: Map<string, any> = new Map
+
+    /**
      * Map which holds wether a event listener is registered for a symbol
      */
     public eventListenerRegistered: Map<string, boolean> = new Map
@@ -425,6 +430,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         if (this.valuesForNextStep.has(key)) {
             // if the value is a boolean just toggle it on click
             this.valuesForNextStep.set(key, !value)
+            this.changedValuesForNextStep.set(key, !value)
             this.update()
         }
     }
@@ -459,6 +465,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                     }
                     // always assume that the parsed value is valid
                     this.valuesForNextStep.set(key, parsedValue)
+                    this.changedValuesForNextStep.set(key, parsedValue)
                     elem.placeholder = JSON.stringify(parsedValue)
                     this.update()
                 }
