@@ -92,6 +92,8 @@ export class KEdge extends SEdge implements KGraphElement {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
     }
+
+    moved: boolean
 }
 
 /**

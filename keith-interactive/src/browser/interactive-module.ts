@@ -15,11 +15,13 @@
  ********************************************************************************/
 
 import { ContainerModule } from "inversify";
-import { TYPES, configureCommand, MoveCommand, LocationDecorator } from "sprotty";
+import { TYPES, configureCommand, MoveCommand, LocationDecorator, MoveMouseListener } from "sprotty";
 import { InteractiveMouseListener } from "./InteractiveMouseListener"
 
-export const interactiveModule = new ContainerModule((bind, _unbind, isBound) => {
-    bind(TYPES.MouseListener).to(InteractiveMouseListener);
+export const interactiveModule = new ContainerModule((bind, _unbind, isBound, rebind) => {
+    bind(InteractiveMouseListener).toSelf().inSingletonScope()
+    bind(TYPES.MouseListener).toService(InteractiveMouseListener)
+    bind(MoveMouseListener).toService(InteractiveMouseListener)
     configureCommand({ bind, isBound }, MoveCommand);
     bind(TYPES.IVNodeDecorator).to(LocationDecorator);
     bind(TYPES.HiddenVNodeDecorator).to(LocationDecorator);
