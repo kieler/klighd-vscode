@@ -82,6 +82,11 @@
     color: var(--theia-ui-button-font-color-secondary);
 }
 
+.right-aligned-button {
+    margin-left: auto;
+    margin-right: 5px;
+}
+
 .simulation-panel {
     margin-top: 12px;
     display: flex;
