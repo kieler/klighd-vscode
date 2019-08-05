@@ -76,7 +76,6 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNod
     }
     // position of selected node
     let curPos = getPosInLayer(layerNodes, target)[0]
-    console.log("currentPos" + curPos)
 
     layerNodes.sort((a, b) => a.posId - b.posId)
 
