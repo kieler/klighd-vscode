@@ -13,7 +13,7 @@ import URI from "@theia/core/lib/common/uri";
 import { KNode } from "./ConstraintClasses";
 import { PositionConstraint, StaticConstraint } from './Constraint-types';
 // import { DeleteConstraint } from '@kieler/keith-constraints/lib/DeleteConstraint';
-import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer } from "./ConstraintUtils";
+import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer } from "./ConstraintUtils";
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
 
@@ -145,7 +145,11 @@ export class InteractiveMouseListener extends MoveMouseListener {
         // calculate layer and position the target has in the graph at the new position
         let layerOfTarget = getLayerOfNode(targetNode, nodes)
         let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
-        let positionOfTarget = getPosInLayer(nodesOfLayer, targetNode)
+        let posAndCons = getPosInLayer(nodesOfLayer, targetNode)
+        let positionOfTarget = posAndCons[0]
+        let newPositionCons = posAndCons[1]
+
+        let newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)
 
         this.uri = this.widget.uri
         let uriStr = this.uri.toString(true)
@@ -157,7 +161,7 @@ export class InteractiveMouseListener extends MoveMouseListener {
             constraintSet = true
 
             // If layer and positional Constraint should be set - send them both in one StaticConstraint
-            let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, positionOfTarget)
+            let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, newLayerCons, newPositionCons)
             this.diagramClient.languageClient.then(lClient => {
                 lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
             })
@@ -166,7 +170,7 @@ export class InteractiveMouseListener extends MoveMouseListener {
             if (targetNode.posId !== positionOfTarget) {
                 constraintSet = true
                 // set the position Constraint
-                let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget)
+                let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, newPositionCons)
                 this.diagramClient.languageClient.then(lClient => {
                     lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
                 })
