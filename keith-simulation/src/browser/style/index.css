@@ -11,17 +11,22 @@
     display: table-row
 }
 
-.simulation-data-box {
+.simulation-data-truncate {
     color: var(--theia-ui-font-color1);
     border: 1px solid var(--theia-ui-font-color1);
     border-collapse: collapse;
     white-space: nowrap;
-    max-width: 400px;
     overflow: auto;
-    min-width: 5px;
-    width: 100px;
+    max-width: 1px;
 }
 
+
+.simulation-data-fix-size {
+    color: var(--theia-ui-font-color1);
+    border: 1px solid var(--theia-ui-font-color1);
+    border-collapse: collapse;
+    white-space: nowrap;
+}
 .simulation-data-inputbox::placeholder {
     font-style: italic;
 }
@@ -145,20 +150,16 @@ table {
     border-collapse: collapse;
     border-spacing: 0px;
 }
-td {
+simulation-td {
     border: 2px solid black;
     padding: 0;
     margin: 0px;
-    overflow: hidden;
 }
 
 .simulation-div {
-    resize: horizontal;
-    overflow: hidden;
     margin: 0px;
     padding: 0px;
     display:block;
-
 }
 
 th div {
