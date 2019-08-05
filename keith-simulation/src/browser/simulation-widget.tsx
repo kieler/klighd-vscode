@@ -344,7 +344,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             })
             return <table className={"simulation-data-table"}>
                 <colgroup>
-                    {this.inputOutputColumnEnabled ? <col width="5%"/> : ""}
+                    {this.inputOutputColumnEnabled ? <col width="5%"/> : null}
                     <col width="10%" />
                     <col width="10%" />
                     <col width="0%" />

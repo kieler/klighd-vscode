@@ -34,6 +34,10 @@ export const COMPILE_AND_SIMULATE: Command = {
     label: 'Simulate'
 }
 
+export const externalStepMessageType = new NotificationType<SimulationStepMessage, void>('keith/simulation/didStep');
+export const valuesForNextStepMessageType = new NotificationType<Object, void>('keith/simulation/valuesForNextStep');
+export const externalStopMessageType = new NotificationType<void, void>('simulation/externalStop')
+
 /**
  * Contribution for SimulationWidget to add functionality to it.
  */
@@ -91,7 +95,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      *
      * @param widget created simulation widget
      */
-    private initializeSimulationWidget(widget: Widget | undefined) {
+    private async initializeSimulationWidget(widget: Widget | undefined) {
         if (widget) {
             this.simulationWidget = widget as SimulationWidget
             // whenever the compiler widget got new compilation systems from the LS new systems is invoked.
@@ -135,6 +139,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 await delay(100)
             }
             lClient.onNotification(this.progressMessageType, this.handleProgress.bind(this))
+            lClient.onNotification(externalStepMessageType, this.handleStepMessage.bind(this))
+            lClient.onNotification(valuesForNextStepMessageType, this.handleExternalNewUserValue.bind(this))
+            lClient.onNotification(externalStopMessageType, this.handleExternalStop.bind(this))
         }
     }
 
@@ -242,52 +249,35 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     /**
      * Executes a simulation step on the LS.
      */
-    async executeSimulationStep(): Promise<boolean> {
+    async executeSimulationStep() {
         const lClient = await this.client.languageClient
         // Transform the input map to an object since this is the format the LS supports
         let jsonObject = strMapToObj(this.simulationWidget.valuesForNextStep)
-        const message: SimulationStepMessage = await lClient.sendRequest("keith/simulation/step", [jsonObject, "Manual"]) as SimulationStepMessage
-        // Transform jsonObject back to map
-        const pool: Map<string, any> = new Map(Object.entries(message.values));
-        if (pool) {
-            pool.forEach((value, key) => {
-                // push value in history and set new input value
-                const history = this.simulationWidget.simulationData.get(key)
-                if (history !== undefined) {
-                    history.data.push(value)
-                    this.simulationWidget.simulationData.set(key, history)
-                    // set values for next tick is removed, since a change may overwrite a change initialized by the user
-                } else {
-                    this.stopSimulation()
-                    this.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
-                    this.simulationWidget.update()
-                    return false
-                }
-            });
-        } else {
-            this.message("Simulation data values are undefined", "ERROR")
-        }
-        this.simulationWidget.simulationStep++
+        lClient.sendNotification("keith/simulation/step", [jsonObject, "Manual"])
+        // TODO Update data to indicate that a step is in process
         this.simulationWidget.update()
-        return true
     }
 
     /**
      * Request a simulation stop from the LS.
      */
     public async stopSimulation() {
-        // Stop all simulation, i.e. empty maps and kill simulation process on LS
-        this.simulationWidget.valuesForNextStep.clear()
-        this.simulationWidget.simulationData.clear()
-        this.simulationWidget.play = false
-        this.simulationWidget.controlsEnabled = false
-        this.simulationWidget.simulationRunning = false
+        this.setValuesToStopSimulation()
         const lClient = await this.client.languageClient
         const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
         if (!message.successful) {
             this.message(message.message, "ERROR")
         }
         this.simulationWidget.update()
+    }
+
+    private setValuesToStopSimulation() {
+        // Stop all simulation, i.e. empty maps and kill simulation process on LS
+        this.simulationWidget.valuesForNextStep.clear()
+        this.simulationWidget.simulationData.clear()
+        this.simulationWidget.play = false
+        this.simulationWidget.controlsEnabled = false
+        this.simulationWidget.simulationRunning = false
     }
 
     /**
@@ -307,12 +297,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      */
     async waitForNextStep() {
         while (this.simulationWidget.play) {
-            const success = await this.executeSimulationStep()
-            if (!success) {
-                this.stopSimulation()
-                this.simulationWidget.update()
-                return
-            }
+            this.executeSimulationStep()
             await delay(this.simulationWidget.simulationStepDelay)
         }
     }
@@ -354,5 +339,40 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.outputManager.getChannel("SCTX").appendLine("LOG: " + message)
                 break;
         }
+    }
+
+
+    handleStepMessage(message: SimulationStepMessage) {
+        const pool: Map<string, any> = new Map(Object.entries(message.values));
+        if (pool) {
+            pool.forEach((value, key) => {
+                // push value in history and set new input value
+                const history = this.simulationWidget.simulationData.get(key)
+                if (history !== undefined) {
+                    history.data.push(value)
+                    this.simulationWidget.simulationData.set(key, history)
+                    // set values for next tick is removed, since a change may overwrite a change initialized by the user
+                } else {
+                    this.stopSimulation()
+                    this.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
+                    this.simulationWidget.update()
+                    return false
+                }
+            });
+        } else {
+            this.message("Simulation data values are undefined", "ERROR")
+        }
+        this.simulationWidget.simulationStep++
+        this.simulationWidget.update()
+        return true
+    }
+
+    handleExternalNewUserValue(values: Object) {
+        console.log("external value", values)
+    }
+
+    handleExternalStop() {
+        console.log("stop")
+        this.setValuesToStopSimulation()
     }
 }
