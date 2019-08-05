@@ -204,8 +204,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
             const propertySet: Map<string, any> = new Map(Object.entries(startMessage.propertySet));
             // Inputs and outputs are handled separately
-            const inputs: string[] = propertySet.get("input")
-            const outputs: string[] = propertySet.get("output")
+            let inputs: string[] = propertySet.get("input")
+            inputs = inputs === undefined ? [] : inputs
+            let outputs: string[] = propertySet.get("output")
+            outputs = outputs === undefined ? [] : outputs
             propertySet.delete("input")
             propertySet.delete("output")
             // Construct list of all categories
