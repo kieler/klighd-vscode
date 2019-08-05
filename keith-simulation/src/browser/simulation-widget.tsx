@@ -130,18 +130,18 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         if (!this.commands.kicoolContribution ||
             !this.commands.kicoolContribution.compilerWidget ||
             this.commands.kicoolContribution.compilerWidget.systems.length === 0) {
-            return this.renderSpinner()
+            return this.renderSpinner("Wait for compiler widget to start...")
         } else {
             return <React.Fragment>
                 {this.renderSimulationPanel()}
-                {this.commands.kicoolContribution.compilerWidget.compiling || this.compilingSimulation ? this.renderSpinner() : ""}
+                {this.commands.kicoolContribution.compilerWidget.compiling || this.compilingSimulation ? this.renderSpinner("Compiling for simulation...") : ""}
                 <div key="table" className="simulation-table">{this.renderSimulationData()}</div>
             </React.Fragment>
         }
     }
 
-    renderSpinner() {
-        return <div className='spinnerContainer'>
+    renderSpinner(tooltip: string) {
+        return <div className='spinnerContainer' title={tooltip}>
             <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
         </div>;
     }
