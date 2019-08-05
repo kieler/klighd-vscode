@@ -75,21 +75,22 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
  * @param layerNodes all nodes of the target layer
  */
 function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolean, layerNodes: KNode[]) {
-    if (targetIndex > 0) {
+    let localTargetIndex = targetIndex
+    if (localTargetIndex > 0) {
         // Check whether there is an user defined pos constraint on the upper neighbour that is higher
         // than its position ID
-        let upperIndex = targetIndex - 1
+        let upperIndex = localTargetIndex - 1
         let upperNeighbour = layerNodes[upperIndex]
         let posConsOfUpper = upperNeighbour.posCons
         if (posConsOfUpper > upperIndex) {
-            if (alreadyInLayer && upperNeighbour.posId === targetIndex) {
-                targetIndex = posConsOfUpper
+            if (alreadyInLayer && upperNeighbour.posId === localTargetIndex) {
+                localTargetIndex = posConsOfUpper
             } else {
-                targetIndex = posConsOfUpper + 1
+                localTargetIndex = posConsOfUpper + 1
             }
         }
     }
-    return targetIndex
+    return localTargetIndex
 }
 
 /**
@@ -205,19 +206,20 @@ export function getPosInLayer(layerNs: KNode[], target: KNode): number[] {
     // Find the position of the target
 
     let targetIndex = layerNs.indexOf(target)
-    let alreadyInLayer = true
+     let alreadyInLayer = true
+
     if (targetIndex === -1) {
-        alreadyInLayer = false
+         alreadyInLayer = false
         // target is not in the list
-        let test = false
+        let fittingPosFound = false
         for (let i = 0; i < layerNs.length; i++) {
             if (target.position.y < layerNs[i].position.y) {
-                test = true
+                fittingPosFound = true
                 targetIndex = i
             }
         }
 
-        if (!test) {
+        if (!fittingPosFound) {
             targetIndex = layerNs.length
         }
     }
