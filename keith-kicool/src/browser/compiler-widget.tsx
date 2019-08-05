@@ -156,9 +156,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         if (this.requestedSystems) {
             return <div>
                 <div key="panel" className={"compilation-panel" + (this.selectedStyle)}>
-                    {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems()) : ""}
+                    {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems(), "Cancel get compilation systems") : ""}
                 </div>
-                {this.renderSpinner()}
+                {this.renderSpinner("Request compilation systems...")}
             </div>;
         } else if (!this.systems || this.systems.length === 0) {
             // Case no connection to the LS was established or no compilation systems are present.
@@ -167,7 +167,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 this.requestSystemDescription()
             }
             // If no compilation systems could be requested, show spinner instead.
-            return this.renderSpinner()
+            return this.renderSpinner("No compilation systems could be requested...")
         } else {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
@@ -213,11 +213,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     </select>
                     {this.compiling ? "" : this.renderCompileButton()}
                     {this.compiling && this.cancellingCompilation ?
-                        this.renderSpinnerButton() : this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation()) : ""}
+                        this.renderSpinnerButton("Stop compilation...") :
+                        this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation(), "Cancel compilation") : ""}
                     {searchbox}
                 </div>
                 {this.renderShowButtons()}
-                {this.compiling ? this.renderSpinner() : ""}
+                {this.compiling ? this.renderSpinner("Compiling...") : ""}
             </React.Fragment>
         }
     }
@@ -269,17 +270,17 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.onRequestSystemDescriptionsEmitter.fire(this)
     }
 
-    renderSpinner(): React.ReactNode {
+    renderSpinner(tooltip: string): React.ReactNode {
         return <div className='spinnerContainer'>
-                <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
+                <div className='fa fa-spinner fa-pulse fa-3x fa-fw' title={tooltip}></div>
             </div>;
     }
 
 
-    renderSpinnerButton(): React.ReactNode {
+    renderSpinnerButton(tooltip: string): React.ReactNode {
         return <div className={'preference-button' + (this.selectedStyle)} title="Cancel">
             <div className='spinnerContainer'>
-                <div className='fa fa-spinner fa-pulse fa-fw'></div>
+                <div className='fa fa-spinner fa-pulse fa-fw' title={tooltip}></div>
             </div>
         </div>
     }
@@ -395,8 +396,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
-    renderCancelButton(method: () => Promise<void>): React.ReactNode {
-        return <div className={'preference-button' + (this.selectedStyle)} title="Cancel"
+    renderCancelButton(method: () => Promise<void>, tooltip: string): React.ReactNode {
+        return <div className={'preference-button' + (this.selectedStyle)} title={tooltip}
             onClick={() => method()}>
             <div className='icon fa fa-square'> </div>
         </div>
