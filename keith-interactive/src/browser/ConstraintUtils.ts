@@ -74,7 +74,7 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
  * @param alreadyInLayer signals whether the node already was in the layer before it was moved.
  * @param layerNodes all nodes of the target layer
  */
-function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolean, layerNodes: KNode[]) {
+export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolean, layerNodes: KNode[]) {
     let localTargetIndex = targetIndex
     if (localTargetIndex > 0) {
         // Check whether there is an user defined pos constraint on the upper neighbour that is higher
@@ -200,30 +200,21 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
  * @param layerNs Nodes of the layer the target is in.
  * @param target Node which position should be calculated.
  */
-export function getPosInLayer(layerNs: KNode[], target: KNode): number[] {
-    // Sort the layer array by y coordinate.
-    layerNs.sort((a, b) => a.position.y - b.position.y)
-    // Find the position of the target
+export function getPosInLayer(layerNs: KNode[], target: KNode): number {
+     // Sort the layer array by y coordinate.
+     layerNs.sort((a, b) => a.position.y - b.position.y)
+     // Find the position of the target
+     if (layerNs.indexOf(target) !== -1) {
+         // target is already in the list
+         return layerNs.indexOf(target)
+     }
 
-    let targetIndex = layerNs.indexOf(target)
-     let alreadyInLayer = true
-
-    if (targetIndex === -1) {
-         alreadyInLayer = false
-        // target is not in the list
-        let fittingPosFound = false
-        for (let i = 0; i < layerNs.length; i++) {
-            if (target.position.y < layerNs[i].position.y) {
-                fittingPosFound = true
-                targetIndex = i
-            }
-        }
-
-        if (!fittingPosFound) {
-            targetIndex = layerNs.length
-        }
-    }
-    return [targetIndex, getActualTargetIndex(targetIndex, alreadyInLayer, layerNs)]
+     for (let i = 0; i < layerNs.length; i++) {
+         if (target.position.y < layerNs[i].position.y) {
+             return i
+         }
+     }
+     return layerNs.length
 }
 
 /**
@@ -233,7 +224,7 @@ export function getPosInLayer(layerNs: KNode[], target: KNode): number[] {
 export function filterKNodes(graphElements: any): KNode[] {
     let nodes: KNode[] = []
     let counter = 0
-    for (let elem of graphElements) {
+    for (let elem of graphElements){
         if (elem instanceof SNode) {
             nodes[counter] = elem as KNode
             counter++

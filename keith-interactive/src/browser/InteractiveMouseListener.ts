@@ -13,7 +13,7 @@ import URI from "@theia/core/lib/common/uri";
 import { KNode } from "./ConstraintClasses";
 import { PositionConstraint, StaticConstraint } from './Constraint-types';
 // import { DeleteConstraint } from '@kieler/keith-constraints/lib/DeleteConstraint';
-import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer } from "./ConstraintUtils";
+import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex } from "./ConstraintUtils";
 
 
 export const goodbyeType = new NotificationType<string, void>('keith/constraintsLC/sayGoodbye')
@@ -149,9 +149,8 @@ export class InteractiveMouseListener extends MoveMouseListener {
         // calculate layer and position the target has in the graph at the new position
         let layerOfTarget = getLayerOfNode(targetNode, nodes)
         let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
-        let posAndCons = getPosInLayer(nodesOfLayer, targetNode)
-        let positionOfTarget = posAndCons[0]
-        let newPositionCons = posAndCons[1]
+        let positionOfTarget = getPosInLayer(nodesOfLayer, targetNode)
+        let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.includes(targetNode), nodesOfLayer)
 
         let newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)
 
