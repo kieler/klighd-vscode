@@ -8,15 +8,16 @@ import { VNode } from 'snabbdom/vnode';
  * @param y Top y coordinate of the rectangle.
  * @param width Width of the rectangle.
  * @param height Height of the rectangle.
+ * @param forbidden If the layer represented by the rectangle is forbidden the colour is red.
  */
-export function createRect(x: number, y: number, width: number, height: number): VNode {
+export function createRect(x: number, y: number, width: number, height: number, forbidden: boolean): VNode {
     return  <g> <rect
                     x={x}
                     y={y - 20}
                     width={width}
                     height={height + 40}
                     fill='none'
-                    stroke='grey'
+                    stroke={forbidden ? 'red' : 'grey'}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
                 </rect>
             </g>
@@ -46,14 +47,16 @@ export function createVerticalLine(x: number, topY: number, botY: number): VNode
  * @param fill Determines whether the circle is filled.
  * @param x The x coordinate of the center.
  * @param y The y coordinate of the center.
+ * @param forbidden If the layer the circle is in is forbidden the colour is red.
  */
-export function createCircle(fill: boolean, x: number, y: number): VNode {
+export function createCircle(fill: boolean, x: number, y: number, forbidden: boolean): VNode {
+    let color = forbidden ? 'red' : 'grey'
     return  <g> <circle
                     cx={x}
                     cy={y}
                     r="2"
-                    stroke='grey'
-                    fill={fill ? 'grey' : "none"}
+                    stroke={color}
+                    fill={fill ? color : "none"}
                     style={{ 'stroke-width': "0.5" } as React.CSSProperties}
                 />
             </g>
