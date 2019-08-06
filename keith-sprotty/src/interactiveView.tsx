@@ -1,6 +1,6 @@
 /** @jsx svg */
 import { KNode, Layer } from "@kieler/keith-interactive/lib/ConstraintClasses";
-import { layerOfSelectedNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer } from "@kieler/keith-interactive/lib/ConstraintUtils";
+import { getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer, isLayerForbidden } from "@kieler/keith-interactive/lib/ConstraintUtils";
 import { svg } from 'snabbdom-jsx';
 import { createRect, createVerticalLine, createCircle, lock, arrow } from "./interactiveView-objects";
 import { VNode } from "snabbdom/vnode";
@@ -24,46 +24,51 @@ export function renderInteractiveLayout(root: KNode): VNode {
  * @param root Root of the hierarchical level.
  */
 function renderLayer(nodes: KNode[], root: KNode): VNode {
-    let currentLayer = layerOfSelectedNode(nodes)
-    let layers: Layer[] = getLayers(nodes)
+    let selNode = getSelectedNode(nodes)
+    if (selNode !== undefined) {
+        let currentLayer = getLayerOfNode(selNode, nodes)
+        let forbidden = isLayerForbidden(selNode, currentLayer)
+        let layers = getLayers(nodes)
 
-    // y coordinates of the layers
-    let topY = layers[0].topY
-    let botY = layers[0].botY
+        // y coordinates of the layers
+        let topY = layers[0].topY
+        let botY = layers[0].botY
 
-    // rightmost x coordinate
-    let rightX = layers[layers.length - 1].rightX
+        // rightmost x coordinate
+        let rightX = layers[layers.length - 1].rightX
 
-    // create layers
-    let result = <g></g>
-    for (let i = 0; i < layers.length; i++) {
-        let layer = layers[i]
-        if (i === currentLayer) {
-            result = <g>{result}{createRect(layer.leftX, topY, layer.rightX - layer.leftX, botY - topY)}</g>
-        } else {
-            result  = <g>{result}{createVerticalLine(layer.mid, topY, botY)}</g>
+        // create layers
+        let result = <g></g>
+        for (let i = 0; i < layers.length; i++) {
+            let layer = layers[i]
+            if (i === currentLayer) {
+                result = <g>{result}{createRect(layer.leftX, topY, layer.rightX - layer.leftX, botY - topY, forbidden)}</g>
+            } else {
+                result  = <g>{result}{createVerticalLine(layer.mid, topY, botY)}</g>
+            }
         }
-    }
 
-    // show a new empty last layer the node can be moved to
-    let lastL = layers[layers.length - 1]
-    let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
-    if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
-        // only show the layer if the moved node is not (the only node) in the last layer
-        rightX = lastL.rightX + lastL.rightX - lastL.leftX
-        if (currentLayer === layers.length) {
-            result = <g>{result}{createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY)}</g>
-        } else {
-            result = <g>{result}{createVerticalLine(lastL.mid + (lastL.rightX - lastL.leftX), topY, botY)}</g>
+        // show a new empty last layer the node can be moved to
+        let lastL = layers[layers.length - 1]
+        let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
+        if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
+            // only show the layer if the moved node is not (the only node) in the last layer
+            rightX = lastL.rightX + lastL.rightX - lastL.leftX
+            if (currentLayer === layers.length) {
+                result = <g>{result}{createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY, forbidden)}</g>
+            } else {
+                result = <g>{result}{createVerticalLine(lastL.mid + (lastL.rightX - lastL.leftX), topY, botY)}</g>
+            }
         }
+
+        // set hierarchical bounds for the node
+        root.hierHeight = root.size.height
+        root.hierWidth = rightX - layers[0].leftX + 10
+
+        // add available positions
+        return <g>{result}{renderPositions(currentLayer, nodes, layers, forbidden)}</g>
     }
-
-    // set hierarchical bounds for the node
-    root.hierHeight = root.size.height
-    root.hierWidth = rightX - layers[0].leftX + 10
-
-    // add available positions
-    return <g>{result}{renderPositions(currentLayer, nodes, layers)}</g>
+    return <g></g>
 }
 
 /**
@@ -72,8 +77,9 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
  * @param current Number of the layer the selected node is currently in.
  * @param nodes All nodes in the hierarchical level for which the layers should be visualized.
  * @param layers All layers in the graph at the hierarchival level.
+ * @param forbidden Determines whether the current layer is forbidden.
  */
-function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNode {
+function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbidden: boolean): VNode {
     let layerNodes: KNode[] = getNodesOfLayer(current, nodes)
 
     // get the selected node
@@ -103,7 +109,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNod
                 let topY = node.position.y + node.size.height
                 let botY = layerNodes[i + 1].position.y
                 let midY = topY + (botY - topY) / 2
-                result = <g>{result}{createCircle(curPos === i + shift, x, midY)}</g>
+                result = <g>{result}{createCircle(curPos === i + shift, x, midY, forbidden)}</g>
             } else {
                 shift = 0
             }
@@ -112,12 +118,12 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNod
         // position above the first node is available if the first node is not the selected one
         let first = layerNodes[0]
         if (!first.selected) {
-            result = <g>{result}{createCircle(curPos === 0, x, first.position.y - 10)}</g>
+            result = <g>{result}{createCircle(curPos === 0, x, first.position.y - 10, forbidden)}</g>
         }
         // position below the last node is available if the last node is not the selected one
         let last = layerNodes[layerNodes.length - 1]
         if (!last.selected) {
-            result = <g>{result}{createCircle(curPos === layerNodes.length - 1 + shift, x, last.position.y + last.size.height + 10)}</g>
+            result = <g>{result}{createCircle(curPos === layerNodes.length - 1 + shift, x, last.position.y + last.size.height + 10, forbidden)}</g>
         }
 
         return result
@@ -127,7 +133,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[]): VNod
         let lastL = layers[layers.length - 1]
         let x = lastL.mid + (lastL.rightX - lastL.leftX)
         let y = lastL.topY + (lastL.botY - lastL.topY) / 2
-        return <g>{createCircle(true, x, y)}</g>
+        return <g>{createCircle(true, x, y, forbidden)}</g>
     }
 }
 

@@ -1,5 +1,5 @@
 import { SNode } from "sprotty";
-import { KNode, Layer } from "./ConstraintClasses"
+import { KNode, Layer, KEdge } from "./ConstraintClasses"
 
 /**
  * Calculates the layer the node is in.
@@ -120,11 +120,9 @@ export function getLayers(nodes: KNode[]): Layer[] {
  */
 export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
     let nodesOfLayer: KNode[] = []
-    let counter = 0
     for (let node of nodes) {
         if (node.layerId === layer) {
-            nodesOfLayer[counter] = node
-            counter++
+            nodesOfLayer[nodesOfLayer.length] = node
         }
     }
     return nodesOfLayer
@@ -158,11 +156,9 @@ export function getPosInLayer(layerNs: KNode[], target: KNode): number {
  */
 export function filterKNodes(graphElements: any): KNode[] {
     let nodes: KNode[] = []
-    let counter = 0
     for (let elem of graphElements) {
         if (elem instanceof SNode) {
-            nodes[counter] = elem as KNode
-            counter++
+            nodes[nodes.length] = elem as KNode
         }
     }
     return nodes
@@ -200,15 +196,14 @@ function min(a: number, b: number): number {
  * Returns -1 if no node of the nodes is selected.
  * @param nodes All nodes of one hierarchical level.
  */
-export function layerOfSelectedNode(nodes: KNode[]): number {
+export function getSelectedNode(nodes: KNode[]): KNode | undefined {
     for (let node of nodes) {
         if (node.selected) {
-            return getLayerOfNode(node, nodes)
+            return node
         }
     }
-    return -1
+    return undefined
 }
-
 
 /**
 * determines if one fo the children is selected
@@ -223,5 +218,36 @@ export function isChildSelected(root: SNode): boolean {
             }
         }
     }
+    return false
+}
+
+/**
+ * Determines whether the layer is forbidden for the given node.
+ * The layer is forbidden if another node is in the layer that
+ * is connected to the given node by an edge and has a layer constraint.
+ * @param node The KNode.
+ * @param layer The number indicating the layer.
+ */
+export function isLayerForbidden(node: KNode, layer: number) {
+    // collect the connected nodes
+    let connectedNodes: KNode[] = []
+    let edges = node.outgoingEdges as any as KEdge[]
+    for (let edge of edges) {
+        connectedNodes[connectedNodes.length] = edge.target as KNode
+    }
+    edges = node.incomingEdges as any as KEdge[]
+    for (let edge of edges) {
+        connectedNodes[connectedNodes.length] = edge.source as KNode
+    }
+
+    // check the connected nodes for layer constraints
+    for (let node of connectedNodes) {
+        if (node.layerCons === layer) {
+            // layer is forbidden for the given node
+            return true
+        }
+    }
+
+    // layer is valid for the given node
     return false
 }
