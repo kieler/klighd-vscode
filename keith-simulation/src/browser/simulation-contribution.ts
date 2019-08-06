@@ -13,6 +13,7 @@ import { SimulationKeybindingContext } from "./simulation-keybinding-context";
 import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-contribution"
 import { delay, strMapToObj } from "../common/helper";
 import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler"
+import { WindowService } from "@theia/core/lib/browser/window/window-service";
 
 /**
  * Command to open the simulation widget
@@ -49,18 +50,20 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     progressMessageType = new NotificationType<any, void>('keith/kicool/progress');
 
+    @inject(WindowService) public readonly windowService: WindowService
+    @inject(Workspace) protected readonly workspace: Workspace
+    @inject(MessageService) protected readonly messageService: MessageService
+    @inject(FrontendApplication) public readonly front: FrontendApplication
+    @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution
+    @inject(EditorManager) public readonly editorManager: EditorManager
+    @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
+    @inject(SimulationKeybindingContext) protected readonly simulationKeybindingContext: SimulationKeybindingContext
+    @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher
+    @inject(KiCoolContribution) public readonly kicoolContribution: KiCoolContribution
+    @inject(CommandRegistry) public readonly commandRegistry: CommandRegistry
+
     constructor(
-        @inject(Workspace) protected readonly workspace: Workspace,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
-        @inject(MessageService) protected readonly messageService: MessageService,
-        @inject(FrontendApplication) public readonly front: FrontendApplication,
-        @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution,
-        @inject(EditorManager) public readonly editorManager: EditorManager,
-        @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager,
-        @inject(SimulationKeybindingContext) protected readonly simulationKeybindingContext: SimulationKeybindingContext,
-        @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
-        @inject(KiCoolContribution) public readonly kicoolContribution: KiCoolContribution,
-        @inject(CommandRegistry) public readonly commandRegistry: CommandRegistry
     ) {
         super({
             widgetId: simulationWidgetId,

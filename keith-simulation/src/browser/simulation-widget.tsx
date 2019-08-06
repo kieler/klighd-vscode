@@ -451,7 +451,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     openExternalKVizTab() {
-        window.open('localhost:5010/visualization');
+        this.commands.windowService.openNewWindow('localhost:5010/visualization');
     }
 
     openInternalKVizView() {
