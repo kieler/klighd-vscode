@@ -224,7 +224,7 @@ export function getPosInLayer(layerNs: KNode[], target: KNode): number {
 export function filterKNodes(graphElements: any): KNode[] {
     let nodes: KNode[] = []
     let counter = 0
-    for (let elem of graphElements){
+    for (let elem of graphElements) {
         if (elem instanceof SNode) {
             nodes[counter] = elem as KNode
             counter++
