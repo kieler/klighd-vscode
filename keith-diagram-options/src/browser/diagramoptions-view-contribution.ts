@@ -140,8 +140,8 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.rOptions = this.diagramManager.container.get(RenderOptions)
         }
         this.rOptions.updateRenderOption(option)
-      /*   const lClient = await this.client.languageClient
-        await lClient.sendNotification("updateDiagram", this.editorWidget.editor.uri.toString()) */
+        const lClient = await this.client.languageClient
+        await lClient.sendNotification("keith/constraints/refreshLayout", this.editorWidget.editor.uri.toString())
     }
 
     /**
