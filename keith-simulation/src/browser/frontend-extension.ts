@@ -13,7 +13,7 @@
 
 import { ContainerModule, interfaces } from 'inversify'
 import { SimulationContribution } from './simulation-contribution'
-import { KeybindingContext, WidgetFactory, bindViewContribution, FrontendApplicationContribution} from '@theia/core/lib/browser'
+import { KeybindingContext, WidgetFactory, bindViewContribution, FrontendApplicationContribution } from '@theia/core/lib/browser'
 import '../../src/browser/style/index.css'
 import { SimulationKeybindingContext } from './simulation-keybinding-context'
 import { SimulationWidget } from './simulation-widget'

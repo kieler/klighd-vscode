@@ -12,6 +12,7 @@ import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/brow
 import { SimulationKeybindingContext } from "./simulation-keybinding-context";
 import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-contribution"
 import { delay, strMapToObj } from "../common/helper";
+import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler"
 
 /**
  * Command to open the simulation widget
@@ -378,5 +379,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     handleExternalStop() {
         console.log("stop")
         this.setValuesToStopSimulation()
+    }
+
+    openInternalKVizView() {
+        this.commandRegistry.executeCommand(MiniBrowserCommands.OPEN_URL.id, "localhost:5010/visualization")
     }
 }

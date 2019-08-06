@@ -170,6 +170,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                 && !this.simulationRunning
                 && !this.compilingSimulation ? this.renderRestartButton() : ""}
             {this.simulationRunning ? this.renderStepCounter() : ""}
+            {this.renderOpenInternalKVizButton()}
             {this.renderOpenKVizButton()}
         </div>
     }
@@ -429,14 +430,26 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderOpenKVizButton(): React.ReactNode {
         return <div title={"Open KViz view in external browser"}
-            key="external-kviz-button" className={'preference-button right-aligned-button'}
+            key="external-kviz-button" className={'preference-button'}
             onClick={event => this.openExternalKVizTab()}>
-            <div className={'icon fa fa-external-link'}/>
+            <i className="icon fa fa-external-link"/>
+        </div>
+    }
+
+    renderOpenInternalKVizButton(): React.ReactNode {
+        return <div title={"Open KViz view in external browser"}
+            key="internal-kviz-button" className={'preference-button right-aligned-button'}
+            onClick={event => this.openInternalKVizView()}>
+            <i className="icon fa fa-file-image-o"/>
         </div>
     }
 
     openExternalKVizTab() {
         window.open('localhost:5010/visualization');
+    }
+
+    openInternalKVizView() {
+        this.commands.openInternalKVizView()
     }
 
     setBooleanInput(id: string, key: string,  value: any, data: any) {
