@@ -353,10 +353,13 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 // push value in history and set new input value
                 const history = this.simulationWidget.simulationData.get(key)
                 if (history !== undefined) {
+                    // Push value in history
                     history.data.push(value)
                     this.simulationWidget.simulationData.set(key, history)
-                    // set values for next tick is removed, since a change may overwrite a change initialized by the user
+                    // The simulation may change. for example input output values
+                    this.simulationWidget.valuesForNextStep.set(key, value)
                 } else {
+                    // This should not happen. An unexpected value was send by the server.
                     this.stopSimulation()
                     this.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
                     this.simulationWidget.update()

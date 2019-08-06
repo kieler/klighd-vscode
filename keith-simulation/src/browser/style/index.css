@@ -26,6 +26,7 @@
     border: 1px solid var(--theia-ui-font-color1);
     border-collapse: collapse;
     white-space: nowrap;
+    overflow: auto;
 }
 .simulation-data-inputbox::placeholder {
     font-style: italic;
@@ -182,4 +183,8 @@ th div {
 .step-counter {
     padding-left: 5px;
     padding-right: 5px;
+}
+
+.inactive-input-box {
+    background: var(--theia-layout-color0)
 }

@@ -336,9 +336,15 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                             <td key="input" className="simulation-data-truncate simulation-td">
                                 <div>
                                     <input id={"input-box-" + key}
-                                        className={"simulation-data-inputbox"}
+                                        className={"simulation-data-inputbox" + (!data.input ? " inactive-input-box" : "")}
                                         type='text'
-                                        onClick={() => { this.setContentOfInputbox("input-box-" + key, key, nextStep) }}
+                                        onClick={() => {
+                                            // If the value is not an input. Nothing should happen on clicking the text field
+                                            if (!data.input) {
+                                                return
+                                            }
+                                            this.setContentOfInputbox("input-box-" + key, key, nextStep)
+                                        }}
                                         placeholder={""} readOnly={!data.input} size={1}/>
                                 </div>
                             </td>
@@ -407,7 +413,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         return <td key="history" className="simulation-data-truncate history simulation-td">
             <div>
                 <input id={"input-box-" + key}
-                        className={"simulation-history-inputbox"}
+                        className={"simulation-history-inputbox inactive-input-box"}
                         type='text'
                         value={data.data ? JSON.stringify(reverse(data.data)) : ""}
                         placeholder={""} readOnly size={1}/>
