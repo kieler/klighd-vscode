@@ -164,7 +164,7 @@ export class InteractiveMouseListener extends MoveMouseListener {
             constraintSet = true
 
             // If layer and positional Constraint should be set - send them both in one StaticConstraint
-            let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, newLayerCons, newPositionCons)
+            let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, newLayerCons, positionOfTarget, newPositionCons)
             this.diagramClient.languageClient.then(lClient => {
                 lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
             })
@@ -174,7 +174,7 @@ export class InteractiveMouseListener extends MoveMouseListener {
             if (targetNode.posId !== positionOfTarget) {
                 constraintSet = true
                 // set the position Constraint
-                let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, newPositionCons)
+                let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget, newPositionCons)
                 this.diagramClient.languageClient.then(lClient => {
                     lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
                 })

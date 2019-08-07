@@ -23,11 +23,13 @@ export class LayerConstraint {
     private uri: string
     private id: string
     private layer: number
+    private layerCons: number
 
-    constructor(uri: string, id: string, layer: number) {
+    constructor(uri: string, id: string, layer: number, layerCons: number) {
         this.uri = uri
         this.id = id
         this.layer = layer
+        this.layerCons = layerCons
     }
 
     getUri() {
@@ -41,6 +43,10 @@ export class LayerConstraint {
     getLayer() {
         return this.layer
     }
+
+    getLayerCons() {
+        return this.layerCons
+    }
 }
 
 export class PositionConstraint {
@@ -48,11 +54,14 @@ export class PositionConstraint {
     private uri: string
     private id: string
     private position: number
+    private posCons: number
 
-    constructor(uri: string, id: string, position: number) {
+    constructor(uri: string, id: string, position: number, posCons: number) {
         this.uri = uri
         this.id = id
         this.position = position
+        this.posCons = posCons
+
     }
 
     getUri() {
@@ -66,6 +75,10 @@ export class PositionConstraint {
     getPosition() {
         return this.position
     }
+
+    getPosCons() {
+        return this.posCons
+    }
 }
 
 export class StaticConstraint {
@@ -74,11 +87,15 @@ export class StaticConstraint {
     private id: string
     private layer: number
     private position: number
+    private posCons: number
+    private layerCons: number
 
-    constructor(uri: string, id: string, layer: number, position: number) {
+    constructor(uri: string, id: string, layer: number, layerCons: number, position: number, posCons: number) {
         this.uri = uri
         this.id = id
+        this.posCons = posCons
         this.layer = layer
+        this.layerCons = layerCons
         this.position = position
     }
 
@@ -96,5 +113,12 @@ export class StaticConstraint {
 
     getPos() {
         return this.position
+    }
+
+    getLayerCons() {
+        return this.layerCons
+    }
+    getPosCons() {
+        return this.posCons
     }
 }
