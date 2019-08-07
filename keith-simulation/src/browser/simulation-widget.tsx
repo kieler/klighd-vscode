@@ -443,7 +443,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderOpenInternalKVizButton(): React.ReactNode {
-        return <div title={"Open KViz view in external browser"}
+        return <div title={"Open KViz view in internal browser preview"}
             key="internal-kviz-button" className={'preference-button right-aligned-button'}
             onClick={event => this.openInternalKVizView()}>
             <i className="icon fa fa-file-image-o"/>
@@ -451,7 +451,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     openExternalKVizTab() {
-        this.commands.windowService.openNewWindow('localhost:5010/visualization');
+       this.commands.windowService.openNewWindow('localhost:5010/visualization');
     }
 
     openInternalKVizView() {
