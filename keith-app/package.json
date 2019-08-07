@@ -26,8 +26,8 @@
         "@theia/terminal": "next",
         "@theia/userstorage": "next",
         "@theia/variable-resolver": "next",
-        "@theia/workspace": "next"
-        "@kieler/keith-interactive": "0.1.0",
+        "@theia/workspace": "next",
+        "@kieler/keith-interactive": "0.1.0"
     },
     "scripts": {
         "prepare": "yarn run clean && yarn build",

@@ -274,10 +274,10 @@ export function layerOfSelectedNode(nodes: KNode[]): number {
 
 
 /**
-* determines if one fo the children is selected
+* determines if one of the children is selected
 * @param root node which children should be checked
 */
-export function isChildSelected(root: SNode): boolean {
+export function isChildSelected(root: KNode): boolean {
     let nodes = root.children
     if (nodes !== undefined) {
         for (let node of nodes) {
