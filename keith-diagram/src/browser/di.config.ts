@@ -18,6 +18,7 @@ import {
     TheiaKeyTool, WorkspaceEditCommand
 } from 'sprotty-theia/lib';
 import { configureCommand, KeyTool, TYPES } from 'sprotty/lib';
+import { EditDiagramLocker } from "sprotty-theia/lib"
 import { KeithDiagramServer } from './keith-diagram-server';
 
 /**
@@ -35,6 +36,7 @@ export class KeithDiagramConfiguration implements DiagramConfiguration {
         container.bind(TheiaDiagramServer).toService(KeithDiagramServer)
         container.bind(LSTheiaDiagramServer).toService(KeithDiagramServer)
         container.bind(TYPES.ModelSource).toService(TheiaDiagramServer)
+        container.bind(EditDiagramLocker).toSelf().inSingletonScope()
         container.rebind(KeyTool).to(TheiaKeyTool).inSingletonScope()
 
         container.bind(LSTheiaDiagramServerProvider).toProvider<LSTheiaDiagramServer>((context) => {

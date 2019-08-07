@@ -16,13 +16,16 @@ import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/brow
 import {
     AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager
 } from "@theia/core/lib/browser";
-import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService } from '@theia/core/lib/common';
+import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
-import { Workspace } from "@theia/languages/lib/browser";
+import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
+import { UserStorageUri } from "@theia/userstorage/lib/browser";
 import { inject, injectable } from "inversify";
-import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING } from "../common";
+import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING,
+    CANCEL_COMPILATION,
+    CANCEL_GET_SYSTEMS} from "../common";
 import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystems, Snapshot } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
@@ -66,6 +69,9 @@ export const TOGGLE_ENABLE_CP: Command = {
     label: 'kicool: Toggle command palette enabled'
 }
 
+export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
+export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
+
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
  */
@@ -96,19 +102,26 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      */
     commandPaletteEnabled: boolean = false
 
+    public readonly compilationStartedEmitter = new Emitter<KiCoolContribution | undefined>()
+    public readonly compilationFinishedEmitter = new Emitter<KiCoolContribution | undefined>()
+
+    public readonly compilationStarted: Event<KiCoolContribution | undefined> = this.compilationStartedEmitter.event
+    public readonly compilationFinished: Event<KiCoolContribution | undefined> = this.compilationFinishedEmitter.event
+
+    @inject(Workspace) protected readonly workspace: Workspace
+    @inject(MessageService) protected readonly messageService: MessageService
+    @inject(FrontendApplication) public readonly front: FrontendApplication
+    @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution
+    @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
+    @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext
+    @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
+    @inject(CommandRegistry) protected commandRegistry: CommandRegistry
+    @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
+
     constructor(
-        @inject(Workspace) protected readonly workspace: Workspace,
-        @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
-        @inject(MessageService) protected readonly messageService: MessageService,
-        @inject(FrontendApplication) public readonly front: FrontendApplication,
-        @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution,
         @inject(EditorManager) public readonly editorManager: EditorManager,
-        @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager,
-        @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext,
         @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
-        @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager,
-        @inject(CommandRegistry) protected commandRegistry: CommandRegistry,
-        @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
+        @inject(WidgetManager) protected readonly widgetManager: WidgetManager
     ) {
         super({
             widgetId: compilerWidgetId,
@@ -144,7 +157,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     async initializeLayout(app: FrontendApplication): Promise<void> {
         await this.openView()
     }
-    private initializeCompilerWidget(widget: Widget | undefined) {
+    private async initializeCompilerWidget(widget: Widget | undefined) {
         if (widget) {
             this.compilerWidget = widget as CompilerWidget
             this.compilerWidget.requestSystemDescriptions(this.requestSystemDescriptions.bind(this))
@@ -153,6 +166,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
                 this.requestSystemDescriptions()
             }
+            const lClient = await this.client.languageClient
+            while (!this.client.running) {
+                await delay(100)
+            }
+            lClient.onNotification(snapshotDescriptionMessageType, this.handleNewSnapshotDescriptions.bind(this))
+            lClient.onNotification(cancelCompilationMessageType, this.cancelCompilation.bind(this))
         }
     }
 
@@ -174,9 +193,11 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     onCurrentEditorChanged(editorWidget: EditorWidget | undefined): void {
-        if (editorWidget) {
-            this.editor = editorWidget
+        // Ignore changes to user storage files, as they are have no representation on the server.
+        if (!editorWidget || editorWidget.editor.uri.scheme === UserStorageUri.SCHEME) {
+            return
         }
+        this.editor = editorWidget
         if (!this.compilerWidget || this.compilerWidget.isDisposed) {
             const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
             widgetPromise.then(widget => {
@@ -198,6 +219,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
     async requestSystemDescriptions() {
         if (this.editor) {
+            this.compilerWidget.requestedSystems = true
+            this.compilerWidget.update()
             const lClient = await this.client.languageClient
             const uri = this.editor.editor.uri.toString()
             // Check if language client was already initialized and wait till it is
@@ -208,12 +231,17 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 initializeResult = lClient.initializeResult
             }
             const systems: CompilationSystems[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystems[]
+            // Sort all compilation systems by id
+            systems.sort((a, b) => (a.id > b.id) ? 1 : -1)
             this.compilerWidget.systems = systems
             if (this.commandPaletteEnabled) {
                 this.addCompilationSystemToCommandPalette(systems)
             }
             this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
+            this.compilerWidget.requestedSystems = false
+            this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
             this.compilerWidget.update()
+            this.compilerWidget.onNewSystemsAddedEmitter.fire(this.compilerWidget)
         }
     }
 
@@ -233,7 +261,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.kicoolCommands.push(command)
                 const handler: CommandHandler = {
                     execute: () => {
-                        this.compile(system.id);
+                        this.compile(system.id, this.compilerWidget.compileInplace, true);
                     }
                 }
                 this.commandRegistry.registerCommand(command, handler)
@@ -340,7 +368,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     public message(message: string, type: string) {
-        switch (type) {
+        switch (type.toLowerCase()) {
             case "error":
                 this.messageService.error(message)
                 this.outputManager.getChannel("SCTX").appendLine("ERROR: " + message)
@@ -366,29 +394,40 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * @param index index of snapshot
      */
     public async show(uri: string, index: number) {
-        const lclient = await this.client.languageClient
+        const lClient = await this.client.languageClient
         this.indexMap.set(uri, index)
-        await lclient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
+        await lClient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
     }
 
 
-    public compile(command: string) {
+    public async compile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
         if (!this.compilerWidget.autoCompile) {
             this.message("Compiling with " + command, "info")
         }
-        this.executeCompile(command)
+        this.compilerWidget.compiling = true
+        this.compilerWidget.update()
+        await this.executeCompile(command, inplace, showResultingModel)
+        this.compilerWidget.lastInvokedCompilation = command
+        this.compilerWidget.lastCompiledUri = this.compilerWidget.sourceModelPath
+        this.compilerWidget.update()
     }
 
-    async executeCompile(command: string): Promise<void> {
+    async executeCompile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
         if (!this.editor) {
             this.message(EDITOR_UNDEFINED_MESSAGE, "error")
             return;
         }
 
         const uri = this.compilerWidget.sourceModelPath
-        const lclient = await this.client.languageClient
-        const snapshotsDescriptions: CodeContainer = await lclient.sendRequest(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command,
-            this.compilerWidget.compileInplace]) as CodeContainer
+        const lClient = await this.client.languageClient
+        lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace, showResultingModel])
+        this.compilationStartedEmitter.fire(this)
+    }
+
+    /**
+     * Handles the visualization of new snapshot descriptions send by the LS.
+     */
+    handleNewSnapshotDescriptions(snapshotsDescriptions: CodeContainer, uri: string, finished: boolean) {
         // Show next/previous command and keybinding if not already added
         if (!this.commandRegistry.getCommand(SHOW_NEXT.id)) {
             this.registerShowNext()
@@ -398,12 +437,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         if (this.commandPaletteEnabled) {
             this.addShowSnapshotToCommandPalette(snapshotsDescriptions.files)
         }
-        if (!this.compilerWidget.autoCompile) {
-            this.message("Got compilation result for " + uri, "info")
-        }
-        if (uri.startsWith("\"")) {
-            this.message("Found error in " + uri, "error")
-        }
         this.isCompiled.set(uri as string, true)
         this.resultMap.set(uri as string, snapshotsDescriptions)
         const length = snapshotsDescriptions.files.reduce((previousSum, snapshots) => {
@@ -411,6 +444,44 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }, 0)
         this.lengthMap.set(uri as string, length)
         this.indexMap.set(uri as string, length - 1)
+        if (finished)  {
+            this.compilerWidget.compiling = false
+            this.compilationFinishedEmitter.fire(this)
+        }
+        this.compilerWidget.update()
+    }
+
+    /**
+     * Notifies the LS to cancel the compilation.
+     */
+    public async requestCancelCompilation(): Promise<void> {
+        const lClient = await this.client.languageClient
+        this.compilerWidget.cancellingCompilation = true
+        lClient.sendNotification(CANCEL_COMPILATION)
+        this.compilerWidget.update()
+    }
+
+    /**
+     * Notification from LS that the compilation was cancelled.
+     * @param success wether cancelling the compilation was successful
+     */
+    public async cancelCompilation(success: boolean) {
+        this.compilerWidget.cancellingCompilation = false
+        if (success) {
+            this.compilerWidget.compiling = false
+        }
+    }
+
+    /**
+     * Cancels compilation by stopping the compilation thread on the LS.
+     */
+    public async cancelGetSystems(): Promise<void> {
+        this.message("This is currently not working, but try it anyway", "warn")
+        const lClient = await this.client.languageClient
+        const success = await lClient.sendRequest(CANCEL_GET_SYSTEMS)
+        if (success) {
+            this.compilerWidget.requestedSystems = false
+        }
         this.compilerWidget.update()
     }
 

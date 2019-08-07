@@ -17,10 +17,10 @@ import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
 import { KEdge, KLabel, KPort, KNode} from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
-import { getRendering } from './views-rendering';
-import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
-import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
 import { renderInteractiveLayout, renderConstraints } from './interactiveView';
+import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
+import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
+import { getRendering, getJunctionPointRenderings } from './views-rendering';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -81,9 +81,9 @@ export class KNodeView implements IView {
 
         if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
-            let children = ctx.renderChildren(node)
+            const children = ctx.renderChildren(node)
             // Add all color and shadow definitions put into the context by the child renderings.
-            let defs = <defs></defs>
+            const defs = <defs></defs>
             ctx.renderingDefs.forEach((value: VNode, key: String) => {
                 (defs.children as (string | VNode)[]).push(value)
             })
@@ -121,7 +121,7 @@ export class KNodeView implements IView {
 export class KPortView implements IView {
     render(port: KPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
-        let rendering = getRendering(port.data, port, context as any)
+        const rendering = getRendering(port.data, port, context as any)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
@@ -149,7 +149,7 @@ export class KPortView implements IView {
 export class KLabelView implements IView {
     render(label: KLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
-        let rendering = getRendering(label.data, label, context as any)
+        const rendering = getRendering(label.data, label, context as any)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
@@ -191,21 +191,27 @@ export class KEdgeView implements IView {
         let rendering = getRendering(edge.data, edge, context as any)
         edge.moved = false
 
+        // Also get the renderings for all junction points
+        const junctionPointRenderings = getJunctionPointRenderings(edge, context as any)
+
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
                 {context.renderChildren(edge)}
+                {...junctionPointRenderings}
             </g>
         }
         // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
         if (edge.areChildrenRendered) {
             return <g>
                 {rendering}
+                {...junctionPointRenderings}
             </g>
         } else {
             return <g>
                 {rendering}
                 {context.renderChildren(edge)}
+                {...junctionPointRenderings}
             </g>
         }
     }
