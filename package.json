@@ -17,13 +17,13 @@
     "watch": "tsc -w -p ./tsconfig.json"
   },
   "dependencies": {
-    "sprotty": "0.6.0",
     "@kieler/keith-interactive": "0.1.0"
+    "sprotty": "next"
   },
   "devDependencies": {
     "rimraf": "^2.6.3",
     "tslint": "^5.13.1",
-    "typescript": "3.3.3333"
+    "typescript": "latest"
   },
   "files": [
     "lib",
