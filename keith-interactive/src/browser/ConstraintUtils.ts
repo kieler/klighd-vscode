@@ -307,7 +307,7 @@ export function isLayerForbidden(node: KNode, layer: number) {
 
     // check the connected nodes for layer constraints
     for (let node of connectedNodes) {
-        if (node.layerCons === layer) {
+        if (node.layerId === layer && node.layerCons !== -1) {
             // layer is forbidden for the given node
             return true
         }
