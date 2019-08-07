@@ -38,7 +38,8 @@ export const COMPILE_AND_SIMULATE: Command = {
 
 export const externalStepMessageType = new NotificationType<SimulationStepMessage, void>('keith/simulation/didStep');
 export const valuesForNextStepMessageType = new NotificationType<Object, void>('keith/simulation/valuesForNextStep');
-export const externalStopMessageType = new NotificationType<void, void>('simulation/externalStop')
+export const externalStopMessageType = new NotificationType<void, void>('keith/simulation/externalStop')
+export const startedSimulationMessageType = new NotificationType<SimulationStartedMessage, void>('keith/simulation/started')
 
 /**
  * Contribution for SimulationWidget to add functionality to it.
@@ -147,6 +148,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             lClient.onNotification(externalStepMessageType, this.handleStepMessage.bind(this))
             lClient.onNotification(valuesForNextStepMessageType, this.handleExternalNewUserValue.bind(this))
             lClient.onNotification(externalStopMessageType, this.handleExternalStop.bind(this))
+            lClient.onNotification(startedSimulationMessageType, this.handleSimulationStarted.bind(this))
         }
     }
 
@@ -204,52 +206,51 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 await delay(100)
                 initializeResult = lClient.initializeResult
             }
-            const startMessage: SimulationStartedMessage = await lClient.sendRequest(
-                "keith/simulation/start",
-                [uri, this.simulationWidget.simulationType]) as SimulationStartedMessage
-            if (!startMessage.successful) {
-                this.message(startMessage.error, "error")
-                return
-            }
-
-            // Get the start configuration for the simulation
-            const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
-            const propertySet: Map<string, any> = new Map(Object.entries(startMessage.propertySet));
-            // Inputs and outputs are handled separately
-            let inputs: string[] = propertySet.get("input")
-            inputs = inputs === undefined ? [] : inputs
-            let outputs: string[] = propertySet.get("output")
-            outputs = outputs === undefined ? [] : outputs
-            propertySet.delete("input")
-            propertySet.delete("output")
-            // Construct list of all categories
-            this.simulationWidget.categories = Array.from(propertySet.keys())
-            pool.forEach((value, key) => {
-                // Add list of properties to SimulationData
-                let categoriesList: string[] = []
-                propertySet.forEach((list, propertyKey) => {
-                    if (list.includes(key)) {
-                        categoriesList.push(propertyKey)
-                    }
-                })
-                const newData: SimulationData = {data: [], input: inputs.includes(key), output: outputs.includes(key), categories: categoriesList}
-                this.simulationWidget.simulationData.set(key, newData)
-                // Set the value for which will be set for the next step for inputs
-                if (inputs.includes(key)) {
-                    this.simulationWidget.valuesForNextStep.set(key, value)
-                }
-                this.simulationWidget.controlsEnabled = true
-            })
-            this.simulationWidget.simulationRunning = true
-            this.simulationWidget.simulationStep = 0
-            const widget = this.front.shell.revealWidget(simulationWidgetId)
-            if (widget) {
-                widget.update()
-            }
+            lClient.sendNotification("keith/simulation/start", [uri, this.simulationWidget.simulationType])
         }
     }
 
+    handleSimulationStarted(startMessage: SimulationStartedMessage) {
+        if (!startMessage.successful) {
+            this.message(startMessage.error, "error")
+            return
+        }
 
+        // Get the start configuration for the simulation
+        const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
+        const propertySet: Map<string, any> = new Map(Object.entries(startMessage.propertySet));
+        // Inputs and outputs are handled separately
+        let inputs: string[] = propertySet.get("input")
+        inputs = inputs === undefined ? [] : inputs
+        let outputs: string[] = propertySet.get("output")
+        outputs = outputs === undefined ? [] : outputs
+        propertySet.delete("input")
+        propertySet.delete("output")
+        // Construct list of all categories
+        this.simulationWidget.categories = Array.from(propertySet.keys())
+        pool.forEach((value, key) => {
+            // Add list of properties to SimulationData
+            let categoriesList: string[] = []
+            propertySet.forEach((list, propertyKey) => {
+                if (list.includes(key)) {
+                    categoriesList.push(propertyKey)
+                }
+            })
+            const newData: SimulationData = {data: [], input: inputs.includes(key), output: outputs.includes(key), categories: categoriesList}
+            this.simulationWidget.simulationData.set(key, newData)
+            // Set the value for which will be set for the next step for inputs
+            if (inputs.includes(key)) {
+                this.simulationWidget.valuesForNextStep.set(key, value)
+            }
+            this.simulationWidget.controlsEnabled = true
+        })
+        this.simulationWidget.simulationRunning = true
+        this.simulationWidget.simulationStep = 0
+        const widget = this.front.shell.revealWidget(simulationWidgetId)
+        if (widget) {
+            widget.update()
+        }
+    }
 
     /**
      * Executes a simulation step on the LS.
