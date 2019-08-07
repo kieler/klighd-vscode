@@ -22,11 +22,13 @@ export class InteractiveMouseListener extends MoveMouseListener {
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
         if (target instanceof SNode) {
-            // save the coordinates as shadow coordinates
             let targetNode = target as KNode
-            targetNode.shadowX = targetNode.position.x
-            targetNode.shadowY = targetNode.position.y
-            targetNode.shadow = true
+            if (targetNode.interactiveLayout) {
+                // save the coordinates as shadow coordinates
+                targetNode.shadowX = targetNode.position.x
+                targetNode.shadowY = targetNode.position.y
+                targetNode.shadow = true
+            }
         }
 
         return super.mouseDown(target, event);

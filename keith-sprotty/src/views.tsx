@@ -52,26 +52,32 @@ export class KNodeView implements IView {
 
         let result = <g></g>
 
-        // render shadow of the node
-        let isShadow = node.shadow
-        let shadow = undefined
-        if (this.mListener.hasDragged && isShadow) {
-            shadow = getRendering(node.data, node, context as any)
-            node.shadow = false
-        }
-
         // render node
+        let isShadow = node.shadow
+        node.shadow = false
         let rendering = getRendering(node.data, node, ctx)
         node.shadow = isShadow
 
-        // render the objects indicating the layer and positions in the graph
-        let layer = undefined
-        if (this.mListener.hasDragged && isChildSelected(node)) {
-            layer = <g>{renderInteractiveLayout(node)}</g>
-        }
+        let shadow = undefined
+        let layer = <g></g>
+        let constraints = <g></g>
 
-        // render icons visualizing the set Constraints
-        let constraints = renderConstraints(node)
+        if (node.interactiveLayout) {
+            if (this.mListener.hasDragged) {
+                if (isShadow) {
+                    // render shadow of the node
+                    shadow = getRendering(node.data, node, context as any)
+                }
+
+                if (isChildSelected(node)) {
+                    // render the objects indicating the layer and positions in the graph
+                    layer = <g>{renderInteractiveLayout(node)}</g>
+                }
+            }
+
+            // render icons visualizing the set Constraints
+            constraints = renderConstraints(node)
+        }
 
         if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
@@ -82,12 +88,9 @@ export class KNodeView implements IView {
                 (defs.children as (string | VNode)[]).push(value)
             })
 
-            if (layer !== undefined) {
-                result = <g>{result}{layer}</g>
-            }
-
             return <g>
                         {result}
+                        {layer}
                         {defs}
                         {...children}
                     </g>
@@ -100,12 +103,10 @@ export class KNodeView implements IView {
         if (rendering !== undefined) {
             result = <g>{result}{rendering}</g>
         }
-        if (layer !== undefined) {
-            result = <g>{result}{layer}</g>
-        }
+        result = <g>{result}{layer}{constraints}</g>
         // Default case. If the children are not already rendered within a KChildArea add the children by default.
         if (!node.areChildrenRendered) {
-            result = <g>{result}{constraints}{ctx.renderChildren(node)}</g>
+            result = <g>{result}{ctx.renderChildren(node)}</g>
         }
         return result
     }
