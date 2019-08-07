@@ -159,6 +159,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
             if (e.widget instanceof KeithDiagramWidget) {
                 e.widget.onModelUpdated(this.onModelUpdated.bind(this))
+                e.widget.disposed.connect(() => {
+                    this.onDiagramWidgetsClosed()
+                })
             }
         } else if (e.factoryId === DIAGRAM_OPTIONS_WIDGET_FACTORY_ID) {
             // Initialize the widget and update its content when the widget is created.
@@ -185,9 +188,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     }
 
     /**
-     * Called whenever the diagram widget changed (opened or closed). Clear the diagram options view.
+     * Called whenever the diagram widget is closed. Clear the diagram options view.
      */
-    onDiagramWidgetsChanged(): void {
+    onDiagramWidgetsClosed(): void {
         this.diagramOptionsViewWidget.setSynthesisOptions([])
         this.diagramOptionsViewWidget.setRenderOptions([])
         this.diagramOptionsViewWidget.setLayoutOptions([])

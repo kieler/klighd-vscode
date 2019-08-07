@@ -56,7 +56,7 @@ export class InteractiveMouseListener extends MoveMouseListener {
         let layerOfTarget = getLayerOfNode(targetNode, nodes)
         let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = getPosInLayer(nodesOfLayer, targetNode)
-        let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.includes(targetNode), nodesOfLayer)
+        let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
 
         let newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)
 

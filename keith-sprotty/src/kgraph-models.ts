@@ -88,6 +88,7 @@ export class KLabel extends SLabel implements KGraphElement {
 export class KEdge extends SEdge implements KGraphElement {
     trace?: string
     data: KGraphData[]
+    junctionPoints: Point[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
@@ -665,7 +666,7 @@ export const K_TEXT = 'KTextImpl'
  * instanceof cannot be used, because every rendering received by the server is typed as KGraphData and the real type can only be inferred using the type attribute.
  * @param test The potential KRendering.
  */
-export function isRendering(test: KGraphData): boolean {
+export function isRendering(test: KGraphData): test is KRendering {
     const type = test.type
     return type === K_RENDERING_REF
         || type === K_CHILD_AREA
@@ -681,4 +682,23 @@ export function isRendering(test: KGraphData): boolean {
         || type === K_RECTANGLE
         || type === K_ROUNDED_RECTANGLE
         || type === K_TEXT
+}
+
+/**
+ * Returns if the given parameter is a KContainerRendering.
+ * @param test The potential KContainerRendering.
+ */
+export function isContainerRendering(test: KGraphData): test is KContainerRendering {
+    const type = test.type
+    return type === K_CONTAINER_RENDERING
+        || type === K_ARC
+        || type === K_CUSTOM_RENDERING
+        || type === K_ELLIPSE
+        || type === K_IMAGE
+        || type === K_POLYLINE
+        || type === K_POLYGON
+        || type === K_ROUNDED_BENDS_POLYLINE
+        || type === K_SPLINE
+        || type === K_RECTANGLE
+        || type === K_ROUNDED_RECTANGLE
 }

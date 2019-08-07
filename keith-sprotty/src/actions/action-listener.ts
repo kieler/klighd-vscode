@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { Action, MouseListener, SModelElement } from 'sprotty/lib';
-import { isRendering, KAction, KContainerRendering, KGraphElement, KPolyline, KRendering, K_RENDERING_REF, Trigger } from '../kgraph-models';
+import { isContainerRendering, isRendering, KAction, KGraphElement, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, Trigger } from '../kgraph-models';
 import { PerformActionAction } from './actions';
 
 /**
@@ -119,23 +119,26 @@ export class ActionListener extends MouseListener {
                 return []
             }
         } else {
-            // The rendering id always starts with rendering$R<number>$<something> and the first rendering is already found, so start with index 2 as two $ signs can be skipped.
-            for (let i = 2; i < idPath.length; i++) {
-                if (idPath[i].startsWith('R')) {
-                    // Take the child rendering whose ID is the prefix if the searched ID.
-                    currentElement = (currentElement as KContainerRendering).children.find(childRendering => {
+            // The rendering id is build hierarchically and the first rendering is already found, so start with index 1 as a $ sign can be skipped.
+            for (let i = 1; i < idPath.length; i++) {
+                let nextElement
+                if (isContainerRendering(currentElement)) {
+                    // First, look for the ID in the child renderings.
+                    nextElement = currentElement.children.find(childRendering => {
                         return id.startsWith(childRendering.id)
                     }) as KRendering
-                } else if (idPath[i].startsWith('J')) {
-                    // Take the junction point rendering
-                    currentElement = (currentElement as KPolyline).junctionPointRendering
-                } else {
-                    console.error('Misformed rendering id found: ' + id)
                 }
-                if (currentElement === undefined) {
-                    console.error(id + ' can not be found in the renderings of the element: ' + element)
+                if (nextElement === undefined && currentElement.type === K_POLYLINE) {
+                    // If the rendering was not found yet, take the junction point rendering.
+                    if (id.startsWith((currentElement as KPolyline).junctionPointRendering.id)) {
+                        nextElement = (currentElement as KPolyline).junctionPointRendering
+                    }
+                } if (nextElement === undefined) {
+                    console.error(id + ' can not be found in the renderings of the element:')
+                    console.error(element)
                     return []
                 }
+                currentElement = nextElement
             }
         }
         // Now the currentElement should be the element searched for by the id.

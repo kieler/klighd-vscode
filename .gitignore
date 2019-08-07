@@ -6,6 +6,7 @@ src-gen
 lerna-debug.log
 workspace
 yarn-error.log
+.browser_modules
 **/*.log
 **/package-backup.json
 **/webpack.config.js
