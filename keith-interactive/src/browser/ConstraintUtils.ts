@@ -38,33 +38,31 @@ export function getLayerOfNode(node: KNode, nodes: KNode[]): number {
  */
 export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number) {
 
-    let nodesOfLayerCandidate = getNodesOfLayer(layerCandidate, nodes)
+    // Examine all nodes that have a layer Id left or equal to the layerCandidate and that have a layerCons > their layerId
+    let layerConsLeftofCandidate = nodes.filter(n => n.layerId <= layerCandidate && n.layerCons > n.layerId)
 
-    if (nodesOfLayerCandidate.length !== 0) {
-        // If the layer candidate is not a new layer then check whether their is too high layer constraint set in it
-        // and return it else the layerCandidate.
-        let firstNode = nodesOfLayerCandidate[0]
-        if (firstNode.layerId < firstNode.layerCons) {
-            return firstNode.layerCons
-        } else {
-            return layerCandidate
+    // In case that there are no such nodes return the layerCandidate
+    if (layerConsLeftofCandidate.length === 0) {
+        return layerCandidate
+    }
+
+    // Search the highest layer constraint among those nodes
+    // You can't just look to the left layer or the layer left of the next layer since their could have been an arbitrary numbers
+    // of shifts
+    let nodeWithMaxCons = null
+    let maxCons = -1
+    for (let n of layerConsLeftofCandidate) {
+        if (n.layerCons > maxCons) {
+            nodeWithMaxCons = n
+            maxCons = n.layerCons
         }
     }
 
-    if (layerCandidate > 0) {
-        // In this case the target is introduced in a new last layer. Ergo examine the layer left of it.
-        let leftLayer = getNodesOfLayer(layerCandidate - 1, nodes)
-        if (leftLayer.length === 0) {
-            // If the target was the last node of its layer the left list is empty
-            // Then you have to look in the layer left of the left layer
-            leftLayer = getNodesOfLayer(layerCandidate - 2, nodes)
-        }
-        let firstLeftNode = leftLayer[0]
-        if (firstLeftNode.layerId < firstLeftNode.layerCons) {
-            return firstLeftNode.layerCons + 1
-        }
-
+    if (nodeWithMaxCons !== null) {
+        let idDiff = layerCandidate - nodeWithMaxCons.layerId
+        return maxCons + idDiff
     }
+
     return layerCandidate
 }
 
@@ -199,20 +197,20 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
  * @param target Node which position should be calculated.
  */
 export function getPosInLayer(layerNs: KNode[], target: KNode): number {
-     // Sort the layer array by y coordinate.
-     layerNs.sort((a, b) => a.position.y - b.position.y)
-     // Find the position of the target
-     if (layerNs.indexOf(target) !== -1) {
-         // target is already in the list
-         return layerNs.indexOf(target)
-     }
+    // Sort the layer array by y coordinate.
+    layerNs.sort((a, b) => a.position.y - b.position.y)
+    // Find the position of the target
+    if (layerNs.indexOf(target) !== -1) {
+        // target is already in the list
+        return layerNs.indexOf(target)
+    }
 
-     for (let i = 0; i < layerNs.length; i++) {
-         if (target.position.y < layerNs[i].position.y) {
-             return i
-         }
-     }
-     return layerNs.length
+    for (let i = 0; i < layerNs.length; i++) {
+        if (target.position.y < layerNs[i].position.y) {
+            return i
+        }
+    }
+    return layerNs.length
 }
 
 /**
