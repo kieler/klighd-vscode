@@ -21,8 +21,6 @@ import { renderInteractiveLayout, renderConstraints } from './interactiveView';
 import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
 import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
 import { getRendering, getJunctionPointRenderings } from './views-rendering';
-import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
-import { renderInteractiveLayout, renderConstraints } from './interactiveView';
 import { RenderOptions } from './options';
 
 /**
