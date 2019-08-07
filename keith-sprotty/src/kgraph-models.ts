@@ -39,11 +39,7 @@ export class KNode extends RectangularNode implements KGraphElement {
     data: KGraphData[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        if (this.interactiveLayout) {
-            return feature === selectFeature || feature === moveFeature
-        } else {
-            return feature === selectFeature
-        }
+        return feature === selectFeature || (feature === moveFeature && this.interactiveLayout)
     }
 
     layerId: number

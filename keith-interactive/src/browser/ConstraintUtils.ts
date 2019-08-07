@@ -10,6 +10,7 @@ export function getLayerOfNode(node: KNode, nodes: KNode[]): number {
     // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
     let layers = getLayers(nodes)
     let curX = node.position.x + node.size.width / 2
+
     // check for all layers if the node is in the layer
     for (let i = 0; i < layers.length; i++) {
         let layer = layers[i]
@@ -24,8 +25,72 @@ export function getLayerOfNode(node: KNode, nodes: KNode[]): number {
         // node is in last layer
         return layers.length - 1
     }
+
     // node is in a new last layer
     return layers.length
+}
+
+/**
+ * Adjusts the layer constraint value for a node in case that the target layer's id was boosted by an user defined constraint.
+ * @param node the node that was moved
+ * @param nodes all nodes
+ * @param layerCandidate the current candidate value for the new layer constraint
+ */
+export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number) {
+
+    let nodesOfLayerCandidate = getNodesOfLayer(layerCandidate, nodes)
+
+    if (nodesOfLayerCandidate.length !== 0) {
+        // If the layer candidate is not a new layer then check whether their is too high layer constraint set in it
+        // and return it else the layerCandidate.
+        let firstNode = nodesOfLayerCandidate[0]
+        if (firstNode.layerId < firstNode.layerCons) {
+            return firstNode.layerCons
+        } else {
+            return layerCandidate
+        }
+    }
+
+    if (layerCandidate > 0) {
+        // In this case the target is introduced in a new last layer. Ergo examine the layer left of it.
+        let leftLayer = getNodesOfLayer(layerCandidate - 1, nodes)
+        if (leftLayer.length === 0) {
+            // If the target was the last node of its layer the left list is empty
+            // Then you have to look in the layer left of the left layer
+            leftLayer = getNodesOfLayer(layerCandidate - 2, nodes)
+        }
+        let firstLeftNode = leftLayer[0]
+        if (firstLeftNode.layerId < firstLeftNode.layerCons) {
+            return firstLeftNode.layerCons + 1
+        }
+
+    }
+    return layerCandidate
+}
+
+/**
+ * Adjusts the target index of a node in the case that the node above it has a position constraint > count of nodes in the layer.
+ * @param targetIndex the current candidate target index
+ * @param alreadyInLayer signals whether the node already was in the layer before it was moved.
+ * @param layerNodes all nodes of the target layer
+ */
+export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolean, layerNodes: KNode[]) {
+    let localTargetIndex = targetIndex
+    if (localTargetIndex > 0) {
+        // Check whether there is an user defined pos constraint on the upper neighbour that is higher
+        // than its position ID
+        let upperIndex = localTargetIndex - 1
+        let upperNeighbour = layerNodes[upperIndex]
+        let posConsOfUpper = upperNeighbour.posCons
+        if (posConsOfUpper > upperIndex) {
+            if (alreadyInLayer && upperNeighbour.posId === localTargetIndex) {
+                localTargetIndex = posConsOfUpper
+            } else {
+                localTargetIndex = posConsOfUpper + 1
+            }
+        }
+    }
+    return localTargetIndex
 }
 
 /**
@@ -134,20 +199,20 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
  * @param target Node which position should be calculated.
  */
 export function getPosInLayer(layerNs: KNode[], target: KNode): number {
-    // Sort the layer array by y coordinate.
-    layerNs.sort((a, b) => a.position.y - b.position.y)
-    // Find the position of the target
-    if (layerNs.indexOf(target) !== -1) {
-        // target is already in the list
-        return layerNs.indexOf(target)
-    }
+     // Sort the layer array by y coordinate.
+     layerNs.sort((a, b) => a.position.y - b.position.y)
+     // Find the position of the target
+     if (layerNs.indexOf(target) !== -1) {
+         // target is already in the list
+         return layerNs.indexOf(target)
+     }
 
-    for (let i = 0; i < layerNs.length; i++) {
-        if (target.position.y < layerNs[i].position.y) {
-            return i
-        }
-    }
-    return layerNs.length
+     for (let i = 0; i < layerNs.length; i++) {
+         if (target.position.y < layerNs[i].position.y) {
+             return i
+         }
+     }
+     return layerNs.length
 }
 
 /**
