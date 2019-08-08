@@ -103,11 +103,19 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     commandPaletteEnabled: boolean = false
 
     public readonly compilationStartedEmitter = new Emitter<KiCoolContribution | undefined>()
-    public readonly compilationFinishedEmitter = new Emitter<KiCoolContribution | undefined>()
+    /**
+     * Finish of compilation is recognized by cancel of compilation or by receiving a snapshot that is the last of the compilation system.
+     * Returns whether compilation has successfully finished (the last snapshot was send).
+     */
+    public readonly compilationFinishedEmitter = new Emitter<boolean | undefined>()
     public readonly showedNewSnapshotEmitter = new Emitter<string | undefined>()
 
     public readonly compilationStarted: Event<KiCoolContribution | undefined> = this.compilationStartedEmitter.event
-    public readonly compilationFinished: Event<KiCoolContribution | undefined> = this.compilationFinishedEmitter.event
+    /**
+     * Finish of compilation is recognized by cancel of compilation or by receiving a snapshot that is the last of the compilation system.
+     * Returns whether compilation has successfully finished (the last snapshot was send).
+     */
+    public readonly compilationFinished: Event<boolean | undefined> = this.compilationFinishedEmitter.event
     public readonly showedNewSnapshot: Event<string | undefined> = this.showedNewSnapshotEmitter.event
 
     @inject(Workspace) protected readonly workspace: Workspace
@@ -455,7 +463,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.indexMap.set(uri as string, length - 1)
         if (finished)  {
             this.compilerWidget.compiling = false
-            this.compilationFinishedEmitter.fire(this)
+            this.compilationFinishedEmitter.fire(true)
         }
         this.compilerWidget.update()
     }
@@ -467,6 +475,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         const lClient = await this.client.languageClient
         this.compilerWidget.cancellingCompilation = true
         lClient.sendNotification(CANCEL_COMPILATION)
+        this.compilationFinishedEmitter.fire(false)
         this.compilerWidget.update()
     }
 
