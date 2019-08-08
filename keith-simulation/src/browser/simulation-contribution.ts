@@ -125,11 +125,16 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         this.simulationWidget.update()
     }
 
-    compilationFinished() {
+    /**
+     * Called after compilation finished.
+     */
+    compilationFinished(successful: boolean) {
         if (this.simulationWidget.compilingSimulation) {
             this.simulationWidget.compilingSimulation = false
             this.simulationWidget.update()
-            this.simulate()
+            if (successful) {
+                this.simulate()
+            }
         } else {
             this.simulationWidget.update()
         }
@@ -182,6 +187,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     /**
      * Invoke a simulation. This includes the compilation via a simulation CS.
+     * Simulation is started 
      */
     async compileAndStartSimulation() {
         this.simulationWidget.compilingSimulation = true
