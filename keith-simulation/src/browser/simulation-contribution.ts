@@ -491,10 +491,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     openInternalKVizView() {
-        this.commandRegistry.executeCommand(MiniBrowserCommands.OPEN_URL.id, "https://localhost:5010/visualization")
+        this.commandRegistry.executeCommand(MiniBrowserCommands.OPEN_URL.id, "http://localhost:5010/visualization")
     }
 
     openExternalKVizView() {
-        this.windowService.openNewWindow("https://localhost:5010/visualization")
+        this.windowService.openNewWindow("http://localhost:5010/visualization")
     }
 }
