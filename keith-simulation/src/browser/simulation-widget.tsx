@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -184,8 +184,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                 && !this.simulationRunning
                 && !this.compilingSimulation ? this.renderRestartButton() : ""}
             {this.simulationRunning ? this.renderStepCounter() : ""}
-            {this.renderOpenInternalKVizButton()}
-            {this.renderOpenKVizButton()}
         </div></React.Fragment>
     }
 
@@ -479,30 +477,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         return <div className={'preference-button'} title="Step Counter">
             <div className='icon step-counter'>{this.simulationStep}</div>
         </div>
-    }
-
-    renderOpenKVizButton(): React.ReactNode {
-        return <div title={"Open KViz view in external browser"}
-            key="external-kviz-button" className={'preference-button'}
-            onClick={event => this.openExternalKVizTab()}>
-            <i className="icon fa fa-external-link"/>
-        </div>
-    }
-
-    renderOpenInternalKVizButton(): React.ReactNode {
-        return <div title={"Open KViz view in internal browser preview"}
-            key="internal-kviz-button" className={'preference-button right-aligned-button'}
-            onClick={event => this.openInternalKVizView()}>
-            <i className="icon fa fa-file-image-o"/>
-        </div>
-    }
-
-    openExternalKVizTab() {
-       this.commands.windowService.openNewWindow('http://localhost:5010/visualization');
-    }
-
-    openInternalKVizView() {
-        this.commands.openInternalKVizView()
     }
 
     setBooleanInput(id: string, key: string,  value: any, data: any) {

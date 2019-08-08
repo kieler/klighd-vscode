@@ -1,4 +1,17 @@
-import { SimulationWidget } from "./simulation-widget";
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2019 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
+ import { SimulationWidget } from "./simulation-widget";
 import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
     FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent } from "@theia/core/lib/browser";
@@ -15,7 +28,9 @@ import { delay, strMapToObj } from "../common/helper";
 import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler"
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { KeithDiagramManager } from "@kieler/keith-diagram/lib/keith-diagram-manager";
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
 
+export const SIMULATION_CATEGORY = "Simulation"
 /**
  * Command to open the simulation widget
  */
@@ -37,6 +52,18 @@ export const COMPILE_AND_SIMULATE: Command = {
     label: 'Simulate'
 }
 
+export const OPEN_INTERNAL_KVIZ_VIEW: Command = {
+    id: 'open-kviz-internal',
+    label: 'Open KViz view in internal browser preview',
+    iconClass: 'fa fa-file-image-o'
+}
+
+export const OPEN_EXTERNAL_KVIZ_VIEW: Command = {
+    id: 'open-kviz-external',
+    label: 'Open KViz view in external browser',
+    iconClass: 'fa fa-external-link'
+}
+
 export const externalStepMessageType = new NotificationType<SimulationStepMessage, void>('keith/simulation/didStep');
 export const valuesForNextStepMessageType = new NotificationType<Object, void>('keith/simulation/valuesForNextStep');
 export const externalStopMessageType = new NotificationType<void, void>('keith/simulation/externalStop')
@@ -46,7 +73,7 @@ export const startedSimulationMessageType = new NotificationType<SimulationStart
  * Contribution for SimulationWidget to add functionality to it.
  */
 @injectable()
-export class SimulationContribution extends AbstractViewContribution<SimulationWidget> implements FrontendApplicationContribution {
+export class SimulationContribution extends AbstractViewContribution<SimulationWidget> implements FrontendApplicationContribution, TabBarToolbarContribution {
 
     simulationWidget: SimulationWidget
 
@@ -183,11 +210,48 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.compileAndStartSimulation()
             }
         })
+        commands.registerCommand(OPEN_INTERNAL_KVIZ_VIEW, {
+            isEnabled: widget => {
+                return widget.id === simulationWidgetId
+            },
+            isVisible: widget => {
+                return widget.id === simulationWidgetId
+            },
+            execute: () => {
+                this.openInternalKVizView()
+            }
+        })
+        commands.registerCommand(OPEN_EXTERNAL_KVIZ_VIEW, {
+            isEnabled: widget => {
+                return widget.id === simulationWidgetId
+            },
+            isVisible: widget => {
+                return widget.id === simulationWidgetId
+            },
+            execute: () => {
+                this.openExternalKVizView()
+            }
+        })
+    }
+
+    async registerToolbarItems(registry: TabBarToolbarRegistry): Promise<void> {
+        registry.registerItem({
+            id: OPEN_INTERNAL_KVIZ_VIEW.id,
+            command: OPEN_INTERNAL_KVIZ_VIEW.id,
+            tooltip: OPEN_INTERNAL_KVIZ_VIEW.label,
+            priority: 0
+        });
+        registry.registerItem({
+            id: OPEN_EXTERNAL_KVIZ_VIEW.id,
+            command: OPEN_EXTERNAL_KVIZ_VIEW.id,
+            tooltip: OPEN_EXTERNAL_KVIZ_VIEW.label,
+            priority: 1
+        });
     }
 
     /**
      * Invoke a simulation. This includes the compilation via a simulation CS.
-     * Simulation is started 
+     * Simulation is started via the compilationFinished method.
      */
     async compileAndStartSimulation() {
         this.simulationWidget.compilingSimulation = true
@@ -427,6 +491,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     openInternalKVizView() {
-        this.commandRegistry.executeCommand(MiniBrowserCommands.OPEN_URL.id, "localhost:5010/visualization")
+        this.commandRegistry.executeCommand(MiniBrowserCommands.OPEN_URL.id, "https://localhost:5010/visualization")
+    }
+
+    openExternalKVizView() {
+        this.windowService.openNewWindow("https://localhost:5010/visualization")
     }
 }
