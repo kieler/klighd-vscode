@@ -18,7 +18,7 @@ import { Message,
     ReactWidget} from "@theia/core/lib/browser";
 import { Event } from '@theia/core/lib/common'
 import * as React from "react";
-import { CompilationSystems, Snapshot } from "../common/kicool-models";
+import { CompilationSystem, Snapshot } from "../common/kicool-models";
 import { compilerWidgetId } from "../common";
 import { KiCoolContribution } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
@@ -55,7 +55,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * These are filtered on the client side to display the private or public systems.
      * The compilation systems are updated on selection of a current editor.
      */
-    public systems: CompilationSystems[] = []
+    public systems: CompilationSystem[] = []
+
+    /**
+     * Holds all compilation systems of the currently opened snapshot
+     */
+    public modelSimulationCommands: CompilationSystem[];
 
     /**
      * Is saved as part of the state of the widget.

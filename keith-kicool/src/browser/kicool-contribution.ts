@@ -27,7 +27,7 @@ import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_
     CANCEL_COMPILATION,
     CANCEL_GET_SYSTEMS} from "../common";
 import { delay } from "../common/helper";
-import { CodeContainer, CompilationSystems, Snapshot } from "../common/kicool-models";
+import { CodeContainer, CompilationSystem, Snapshot } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 
@@ -104,9 +104,11 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
     public readonly compilationStartedEmitter = new Emitter<KiCoolContribution | undefined>()
     public readonly compilationFinishedEmitter = new Emitter<KiCoolContribution | undefined>()
+    public readonly showedNewSnapshotEmitter = new Emitter<string | undefined>()
 
     public readonly compilationStarted: Event<KiCoolContribution | undefined> = this.compilationStartedEmitter.event
     public readonly compilationFinished: Event<KiCoolContribution | undefined> = this.compilationFinishedEmitter.event
+    public readonly showedNewSnapshot: Event<string | undefined> = this.showedNewSnapshotEmitter.event
 
     @inject(Workspace) protected readonly workspace: Workspace
     @inject(MessageService) protected readonly messageService: MessageService
@@ -230,7 +232,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 await delay(100)
                 initializeResult = lClient.initializeResult
             }
-            const systems: CompilationSystems[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystems[]
+            const systems: CompilationSystem[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystem[]
             // Sort all compilation systems by id
             systems.sort((a, b) => (a.id > b.id) ? 1 : -1)
             this.compilerWidget.systems = systems
@@ -249,7 +251,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * Removes all old compilation systems from command palette and adds new ones.
      * @param systems compilation systems that should get a compile command
      */
-    addCompilationSystemToCommandPalette(systems: CompilationSystems[]) {
+    addCompilationSystemToCommandPalette(systems: CompilationSystem[]) {
         // remove existing commands
         this.kicoolCommands.forEach(command => {
             this.commandRegistry.unregisterCommand(command)
@@ -397,6 +399,13 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         const lClient = await this.client.languageClient
         this.indexMap.set(uri, index)
         await lClient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
+        // Add new simulation Commands to command palette
+        let compilationSystems: CompilationSystem[] = await lClient.sendRequest("keith/kicool/get-model-systems", [uri, index]) as CompilationSystem[]
+        compilationSystems.sort((a, b) => (a.id > b.id) ? 1 : -1)
+        this.compilerWidget.modelSimulationCommands = compilationSystems
+        if (index >= 0) { // original model must not fire this emitter.
+            this.showedNewSnapshotEmitter.fire(this.resultMap.get(uri)!.files.reduce((acc, val) => acc.concat(val), [])[index].name)
+        }
     }
 
 

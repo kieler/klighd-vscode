@@ -19,7 +19,7 @@ import { SimulationContribution } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData, SimulationDataBlackList } from "../common"
 import { Emitter } from "@theia/core";
 import { isInternal, reverse } from '../common/helper'
-import { CompilationSystems } from "@kieler/keith-kicool/lib/common/kicool-models"
+import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models"
 
 
 /**
@@ -70,7 +70,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     /**
      * Time in milliseconds to wait till next simulation step is requested in play mode.
      */
-    public simulationStepDelay: number = 300
+    public simulationStepDelay: number = 200
 
     /**
      * All simulation types
@@ -115,6 +115,10 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     public compilingSimulation: boolean = false
 
+    public showAdvancedToolbar: boolean
+
+    lastShowedSnapshotName: string;
+
     constructor(
         @inject(new LazyServiceIdentifer(() => SimulationContribution)) protected readonly commands: SimulationContribution
     ) {
@@ -156,7 +160,17 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
      * The step counter is only shown, if the simulation is running.
      */
     renderSimulationPanel() {
-        return <div className="simulation-panel">
+        return <React.Fragment>
+            <div className="simulation-panel">
+            {this.renderShowAdvancedToolbar()}
+            {!this.showAdvancedToolbar || this.commands.kicoolContribution.compilerWidget.compiling || this.simulationRunning || this.compilingSimulation ||
+                !this.commands.kicoolContribution.compilerWidget.modelSimulationCommands ||
+                this.commands.kicoolContribution.compilerWidget.modelSimulationCommands.length === 0 ? "" : this.renderModelSimulationSelectionBox()}
+            {!this.showAdvancedToolbar || this.commands.kicoolContribution.compilerWidget.compiling || this.simulationRunning || this.compilingSimulation ||
+                !this.commands.kicoolContribution.compilerWidget.modelSimulationCommands ||
+                this.commands.kicoolContribution.compilerWidget.modelSimulationCommands.length === 0  ? "" : this.renderModelSimulationButton()}
+        </div>
+        <div className="simulation-panel">
             {this.simulationRunning ? this.renderPlayPauseButton() : ""}
             {this.simulationRunning ? this.renderStepButton() : ""}
             {this.simulationRunning ? this.renderStopButton() : ""}
@@ -172,6 +186,18 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.simulationRunning ? this.renderStepCounter() : ""}
             {this.renderOpenInternalKVizButton()}
             {this.renderOpenKVizButton()}
+        </div></React.Fragment>
+    }
+
+    renderShowAdvancedToolbar(): React.ReactNode {
+        return <div title={this.showAdvancedToolbar ? "Hide advanced toolbar" : "Show advanced toolbar"}
+                    key="show-advanced-toolbar"
+                    className={'preference-button' + (this.showAdvancedToolbar ? '' : ' off')}
+            onClick={event => {
+                this.showAdvancedToolbar = !this.showAdvancedToolbar
+                this.update()
+            }}>
+            <div className={'icon fa ' + (this.showAdvancedToolbar ? 'fa-minus' : 'fa-plus')}/>
         </div>
     }
 
@@ -266,7 +292,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderSimulationSelectionBox(): React.ReactNode {
         const simulationCommands: React.ReactNode[] = [];
-        this.commands.kicoolContribution.compilerWidget.systems.forEach((system: CompilationSystems)  => {
+        this.commands.kicoolContribution.compilerWidget.systems.forEach((system: CompilationSystem)  => {
             if (system.simulation) {
                 simulationCommands.push(<option value={system.id} key={system.id}>{system.label}</option>)
             }
@@ -276,10 +302,31 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </select>
     }
 
+    renderModelSimulationSelectionBox(): React.ReactNode {
+        const simulationCommands: React.ReactNode[] = [];
+        this.commands.kicoolContribution.compilerWidget.modelSimulationCommands.forEach((system: CompilationSystem)  => {
+            simulationCommands.push(<option value={system.id} key={system.id}>{system.label + " for " + this.lastShowedSnapshotName}</option>)
+        })
+        return <select id="model-simulation-list" className={'selection-list simulation-list'}>
+            {simulationCommands}
+        </select>
+    }
+
     renderSimulationButton(): React.ReactNode {
         return <div className={'compile-button'} title="Simulate"
             onClick={event => {
                 this.commands.compileAndStartSimulation()
+            }}>
+            <div className='icon fa fa-play-circle'> </div>
+        </div>
+    }
+
+    renderModelSimulationButton(): React.ReactNode {
+        return <div className={'compile-button'} title="Simulate Current Snapshot"
+            onClick={event => {
+                const selection = document.getElementById("model-simulation-list") as HTMLSelectElement;
+                const option = selection.selectedOptions[0]
+                this.commands.simulateCurrentlyOpenedModel(option.value)
             }}>
             <div className='icon fa fa-play-circle'> </div>
         </div>
@@ -518,7 +565,8 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         return {
             displayInOut: this.displayInOut,
             simulationType: this.simulationType,
-            simulationStepDelay: this.simulationStepDelay
+            simulationStepDelay: this.simulationStepDelay,
+            showAdvancedToolbar : this.showAdvancedToolbar
         }
     }
 
@@ -528,8 +576,9 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         if (oldState.simulationStepDelay) {
             this.simulationStepDelay = oldState.simulationStepDelay
         } else {
-            this.simulationStepDelay = 300
+            this.simulationStepDelay = 200
         }
+        this.showAdvancedToolbar = oldState.showAdvancedToolbar
     }
 
     simulationDataToString(data: any) {
@@ -561,5 +610,6 @@ export namespace SimulationWidget {
         displayInOut: boolean
         simulationType: string
         simulationStepDelay: number
+        showAdvancedToolbar: boolean
     }
 }

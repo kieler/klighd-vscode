@@ -14,6 +14,7 @@ import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-cont
 import { delay, strMapToObj } from "../common/helper";
 import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler"
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
+import { KeithDiagramManager } from "@kieler/keith-diagram/lib/keith-diagram-manager";
 
 /**
  * Command to open the simulation widget
@@ -108,6 +109,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.kicoolContribution.compilerWidget.newSystemsAdded(this.newSystemsAdded.bind(this))
             this.kicoolContribution.compilationFinished(this.compilationFinished.bind(this))
             this.kicoolContribution.compilationStarted(this.compilationStarted.bind(this))
+            this.kicoolContribution.showedNewSnapshot(this.showedNewSnapshot.bind(this))
         }
     }
 
@@ -131,6 +133,11 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         } else {
             this.simulationWidget.update()
         }
+    }
+
+    showedNewSnapshot(lastShowedSnapshotName: string) {
+        this.simulationWidget.lastShowedSnapshotName = lastShowedSnapshotName
+        this.simulationWidget.update()
     }
 
     /**
@@ -210,6 +217,28 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         }
     }
 
+    /**
+     * Simulate currently opened snapshot.
+     */
+    async simulateCurrentlyOpenedModel(command: string) {
+        // A simulation can only be invoked if a current editor widget exists and no simulation is currently running.
+        if (this.kicoolContribution.editor && !this.simulationWidget.simulationRunning) {
+            const lClient = await this.client.languageClient
+            // The uri of the current editor is needed to identify the already compiled snapshot that is used to start the simulation.
+            const uri = this.kicoolContribution.compilerWidget.lastCompiledUri
+            let index = this.kicoolContribution.indexMap.get(uri)
+            if (index === undefined) {
+                console.log("Index of snapshot is undefined, use original model instead")
+                index = -1
+            }
+            lClient.sendNotification("keith/simulation/simulateCurrentlyOpenedModel",
+                [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, this.simulationWidget.simulationType])
+        }
+    }
+
+    /**
+     * Start simulation after server successfully started it.
+     */
     handleSimulationStarted(startMessage: SimulationStartedMessage) {
         if (!startMessage.successful) {
             this.message(startMessage.error, "error")
