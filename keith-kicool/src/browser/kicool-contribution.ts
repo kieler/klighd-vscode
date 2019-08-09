@@ -450,6 +450,16 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         if (finished)  {
             this.compilerWidget.compiling = false
             this.compilationFinishedEmitter.fire(true)
+            snapshotsDescriptions.files.forEach(array => {
+                array.forEach(element => {
+                    element.warnings.forEach(warning => {
+                        this.outputManager.getChannel("SCTX").appendLine("WARNING: " + warning)
+                    })
+                    element.errors.forEach(error => {
+                        this.outputManager.getChannel("SCTX").appendLine("ERROR: " + error)
+                    })
+                })
+            });
         }
         this.compilerWidget.update()
     }
