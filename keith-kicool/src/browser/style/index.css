@@ -50,7 +50,6 @@ button, .show-button {
 }
 .compiler-widget {
 	font-size: var(--theia-ui-font-size1);
-    padding: 6px;
     color: var(--theia-ui-font-color1);
     display: grid;
     grid-auto-rows: min-content;
