@@ -253,12 +253,10 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                 <option value={type} key={type}>{type}</option>
             )
         })
-        return <div>
-            <select id="simulation-type-list" value={this.simulationType} className={'selection-list simulation-type-list'}
-                onChange={() => this.handleSelectionOfSimulationType()}>
-            {selectionList}
-            </select>
-        </div>
+        return <select id="simulation-type-list" value={this.simulationType} className={'selection-list simulation-type-list'}
+            onChange={() => this.handleSelectionOfSimulationType()}>
+        {selectionList}
+        </select>
     }
 
     /**
