@@ -212,10 +212,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         })
         commands.registerCommand(OPEN_INTERNAL_KVIZ_VIEW, {
             isEnabled: widget => {
-                return widget.id === simulationWidgetId
+                return widget !== undefined && widget.id === simulationWidgetId
             },
             isVisible: widget => {
-                return widget.id === simulationWidgetId
+                return widget !== undefined && widget.id === simulationWidgetId
             },
             execute: () => {
                 this.openInternalKVizView()
@@ -223,10 +223,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         })
         commands.registerCommand(OPEN_EXTERNAL_KVIZ_VIEW, {
             isEnabled: widget => {
-                return widget.id === simulationWidgetId
+                return widget !== undefined && widget.id === simulationWidgetId
             },
             isVisible: widget => {
-                return widget.id === simulationWidgetId
+                return widget !== undefined && widget.id === simulationWidgetId
             },
             execute: () => {
                 this.openExternalKVizView()
