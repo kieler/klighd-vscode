@@ -128,7 +128,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
     @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext
     @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
-    @inject(CommandRegistry) protected commandRegistry: CommandRegistry
+    @inject(CommandRegistry) public commandRegistry: CommandRegistry
     @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
 
     constructor(
@@ -334,7 +334,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(TOGGLE_AUTO_COMPILE, {
             execute: () => {
                 if (this.compilerWidget) {
-                    this.message("Set autoCompile from " + this.compilerWidget.autoCompile + " to " + !this.compilerWidget.autoCompile, "INFO")
                     this.compilerWidget.autoCompile = !this.compilerWidget.autoCompile
                     this.compilerWidget.update()
                 }
@@ -343,7 +342,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(TOGGLE_PRIVATE_SYSTEMS, {
             execute: () => {
                 if (this.compilerWidget) {
-                    this.message("Set showPrivateSystems from " + this.compilerWidget.showPrivateSystems + " to " + !this.compilerWidget.showPrivateSystems, "INFO")
                     this.compilerWidget.showPrivateSystems = !this.compilerWidget.showPrivateSystems
                     // Update compile commands accordingly
                     if (this.commandPaletteEnabled) {
@@ -356,7 +354,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(TOGGLE_INPLACE, {
             execute: () => {
                 if (this.compilerWidget) {
-                    this.message("Set compileInplace from " + this.compilerWidget.compileInplace + " to " + !this.compilerWidget.compileInplace, "INFO")
                     this.compilerWidget.compileInplace = !this.compilerWidget.compileInplace
                     this.compilerWidget.update()
                 }

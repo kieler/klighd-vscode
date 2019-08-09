@@ -20,7 +20,7 @@ import { Event } from '@theia/core/lib/common'
 import * as React from "react";
 import { CompilationSystem, Snapshot } from "../common/kicool-models";
 import { compilerWidgetId } from "../common";
-import { KiCoolContribution } from "./kicool-contribution";
+import { KiCoolContribution, TOGGLE_AUTO_COMPILE, TOGGLE_INPLACE, TOGGLE_PRIVATE_SYSTEMS } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
@@ -411,7 +411,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderPrivateButton(): React.ReactNode {
         return <div title="Show private Systems" key="private-button" className={'preference-button' + (this.showPrivateSystems ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
-                this.showPrivateSystems = !this.showPrivateSystems
+                this.commands.commandRegistry.executeCommand(TOGGLE_PRIVATE_SYSTEMS.id)
                 this.update()
             }}>
             <div className='icon fa fa-unlock-alt'/>
@@ -421,7 +421,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderInplaceButton(): React.ReactNode {
         return <div title="Inplace" key="inplace-button" className={'preference-button' + (this.compileInplace ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
-                this.compileInplace = !this.compileInplace
+                this.commands.commandRegistry.executeCommand(TOGGLE_INPLACE.id)
                 this.update()
             }}>
             <div className='icon fa fa-share'/>
@@ -431,7 +431,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderAutoCompileButton(): React.ReactNode {
         return <div title="Auto compile" key="auto-compile-button" className={'preference-button' + (this.autoCompile ? '' : ' off') + (this.selectedStyle)}
             onClick={event => {
-                this.autoCompile = !this.autoCompile
+                this.commands.commandRegistry.executeCommand(TOGGLE_AUTO_COMPILE.id)
                 this.update()
             }}>
             <div className='icon fa fa-cog'/>
@@ -461,7 +461,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         })
         systems = systems.filter(system => system.label.toLowerCase().search(this.compilationSystemFilter.toLowerCase()) > -1)
         if (systems.length > 0) {
-            this.commands.compile(systems[selection.selectedIndex].id, this.compileInplace, true)
+            this.commands.commandRegistry.executeCommand(systems[selection.selectedIndex].id)
         } else {
             this.commands.message("No compilation systems found", "error")
             return
