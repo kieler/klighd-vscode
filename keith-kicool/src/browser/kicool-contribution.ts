@@ -27,7 +27,7 @@ import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_
     CANCEL_COMPILATION,
     CANCEL_GET_SYSTEMS} from "../common";
 import { delay } from "../common/helper";
-import { CodeContainer, CompilationSystem, Snapshot } from "../common/kicool-models";
+import { CodeContainer, CompilationSystem } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 
@@ -37,36 +37,44 @@ export const SAVE: Command = {
 };
 
 export const SHOW_NEXT: Command = {
-    id: 'kicool:show_next',
-    label: 'kicool: Show next'
+    id: 'show_next',
+    label: 'Show next',
+    category: "Kicool"
 }
 export const SHOW_PREVIOUS: Command = {
-    id: 'kicool:show_previous',
-    label: 'kicool: Show previous'
+    id: 'show_previous',
+    label: 'Show previous',
+    category: "Kicool"
 }
 export const COMPILER: Command = {
     id: 'compiler:toggle',
-    label: 'Compiler'
+    label: 'Compiler',
+    category: "Kicool"
 }
 export const REQUEST_CS: Command = {
-    id: 'kicool:request-compilation-systems',
-    label: 'kicool: Request compilation systems'
+    id: 'request-compilation-systems',
+    label: 'Request compilation systems',
+    category: "Kicool"
 }
 export const TOGGLE_INPLACE: Command = {
-    id: 'kicool:toggle-inplace',
-    label: 'kicool: Toggle inplace compilation'
+    id: 'toggle-inplace',
+    label: 'Toggle inplace compilation',
+    category: "Kicool"
 }
 export const TOGGLE_PRIVATE_SYSTEMS: Command = {
-    id: 'kicool:toggle-private-systems',
-    label: 'kicool: Toggle show private systems'
+    id: 'toggle-private-systems',
+    label: 'Toggle show private systems',
+    category: "Kicool"
 }
 export const TOGGLE_AUTO_COMPILE: Command = {
-    id: 'kicool:toggle-auto-compile',
-    label: 'kicool: Toggle auto compile'
+    id: 'toggle-auto-compile',
+    label: 'Toggle auto compile',
+    category: "Kicool"
 }
 export const TOGGLE_ENABLE_CP: Command = {
-    id: 'kicool:toggle-cp',
-    label: 'kicool: Toggle command palette enabled'
+    id: 'toggle-cp',
+    label: 'Toggle command palette enabled',
+    category: "Kicool"
 }
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
@@ -93,14 +101,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     kicoolCommands: Command[] = []
 
     /**
-     * Holds all commands, updates after new compilation systems are requested.
-     */
-    showCommands: Command[] = []
-
-    /**
      * Enables dynamic registration of command palette commands
      */
-    commandPaletteEnabled: boolean = false
+    commandPaletteEnabled: boolean = true
 
     public readonly compilationStartedEmitter = new Emitter<KiCoolContribution | undefined>()
     /**
@@ -218,12 +221,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
         if (this.commandPaletteEnabled) {
             this.kicoolCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
-            this.showCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
             this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
-            const codeContainer = this.resultMap.get(this.compilerWidget.sourceModelPath)
-            if (codeContainer) {
-                this.addShowSnapshotToCommandPalette(codeContainer.files)
-            }
         }
     }
 
@@ -267,7 +265,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         // add new commands
         systems.forEach(system => {
             if (system.isPublic || this.compilerWidget.showPrivateSystems) {
-                const command: Command = {id: "kicool: " + system.id, label: "kicool: " + system.label}
+                const command: Command = {id: system.id, label: "Compile with " + system.label, category: "Kicool"}
                 this.kicoolCommands.push(command)
                 const handler: CommandHandler = {
                     execute: () => {
@@ -311,10 +309,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     this.registerShowNext()
                     this.registerShowPrevious()
                     this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
-                    const codeContainer = this.resultMap.get(this.compilerWidget.sourceModelPath)
-                    if (codeContainer) {
-                        this.addShowSnapshotToCommandPalette(codeContainer.files)
-                    }
                 } else {
                     commands.unregisterCommand(TOGGLE_AUTO_COMPILE)
                     commands.unregisterCommand(TOGGLE_PRIVATE_SYSTEMS)
@@ -323,7 +317,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     commands.unregisterCommand(SHOW_NEXT)
                     commands.unregisterCommand(SHOW_PREVIOUS)
                     this.kicoolCommands.forEach(command => commands.unregisterCommand(command))
-                    this.showCommands.forEach(command => commands.unregisterCommand(command))
                 }
             }
         })
@@ -450,10 +443,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.registerShowNext()
             this.registerShowPrevious()
         }
-        // Add show commands to command palette if needed
-        if (this.commandPaletteEnabled) {
-            this.addShowSnapshotToCommandPalette(snapshotsDescriptions.files)
-        }
         this.isCompiled.set(uri as string, true)
         this.resultMap.set(uri as string, snapshotsDescriptions)
         const length = snapshotsDescriptions.files.reduce((previousSum, snapshots) => {
@@ -501,27 +490,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget.requestedSystems = false
         }
         this.compilerWidget.update()
-    }
-
-    addShowSnapshotToCommandPalette(snapshots: Snapshot[][]) {
-        let resultingMaxIndex = 0
-        this.showCommands.forEach(command => {
-            this.commandRegistry.unregisterCommand(command)
-        })
-        snapshots.forEach(list => {
-            const currentIndex = resultingMaxIndex
-            list.forEach(snapshot => {
-                const command = {id: snapshot.name + snapshot.snapshotIndex, label: "kicool: Show " + snapshot.name + " " + snapshot.snapshotIndex}
-                this.showCommands.push(command)
-                const handler = {
-                    execute: () => {
-                        this.show(this.compilerWidget.sourceModelPath, currentIndex)
-                    }
-                }
-                this.commandRegistry.registerCommand(command, handler)
-                resultingMaxIndex++
-            })
-        })
     }
 
     registerShowNext() {
