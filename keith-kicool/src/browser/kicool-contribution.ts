@@ -14,7 +14,7 @@
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import {
-    AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager
+    AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService
 } from "@theia/core/lib/browser";
 import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
@@ -130,6 +130,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
     @inject(CommandRegistry) public commandRegistry: CommandRegistry
     @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
+    @inject(PrefixQuickOpenService) public readonly quickOpenService: PrefixQuickOpenService
 
     constructor(
         @inject(EditorManager) public readonly editorManager: EditorManager,

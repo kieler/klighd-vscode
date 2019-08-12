@@ -187,40 +187,33 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 stylesToSelect.push(<option value={style} key={style}>{style}</option>)
             });
             let styleSelectbox = <React.Fragment></React.Fragment>
-            let searchbox = this.renderSearchbox("snapshot-filter",
-                "Filter snapshots",
-                this.snapshotFilter,
-                () => this.handleSearchChange())
-            let compilationSystemSearchbox
+            let searchbox
             // Add advanced features to toolbars
             if (this.showAdvancedToolbar) {
                 styleSelectbox = <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)}
                         onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
                     {stylesToSelect}
                 </select>
-                compilationSystemSearchbox = this.renderSearchbox("compilation-system-filter",
-                    "Filter systems by label",
-                    this.compilationSystemFilter,
-                    () => this.handleCSSearchChange())
+                searchbox = this.renderSearchbox("snapshot-filter",
+                "Filter snapshots",
+                this.snapshotFilter,
+                () => this.handleSearchChange())
             }
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
-                {this.renderShowAdvancedToolbar()}
-                {styleSelectbox}
-                {compilationSystemSearchbox}
+                    {this.renderShowAdvancedToolbar()}
+                    {styleSelectbox}
+                    {searchbox}
                 </div>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                     {this.renderPrivateButton()}
                     {this.renderInplaceButton()}
                     {this.renderAutoCompileButton()}
-                    <select id='compilation-list' className={'selection-list' + (this.selectedStyle)}>
-                        {compilationElements}
-                    </select>
+                    {this.renderSearchbox("compilation-system-filter", "Filter systems by label", this.compilationSystemFilter, () => this.handleCSSearchChange())}
                     {this.compiling ? "" : this.renderCompileButton()}
                     {this.compiling && this.cancellingCompilation ?
                         this.renderSpinnerButton("Stop compilation...") :
                         this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation(), "Cancel compilation") : ""}
-                    {searchbox}
                 </div>
                 {this.renderShowButtons()}
                 {this.compiling ? this.renderSpinner("Compiling...") : ""}
@@ -395,7 +388,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderCompileButton(): React.ReactNode {
         return <div className={'compile-button' + (this.selectedStyle)} title="Compile"
             onClick={event => {
-                this.compileSelectedCompilationSystem()
+                this.commands.quickOpenService.open(">KiCool: Compile with " + this.compilationSystemFilter)
+                // this.compileSelectedCompilationSystem()
             }}>
             <div className='icon fa fa-play-circle'> </div>
         </div>
