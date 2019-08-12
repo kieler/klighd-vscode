@@ -172,7 +172,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 this.requestSystemDescription()
             }
             // If no compilation systems could be requested, show spinner instead.
-            return this.renderSpinner("No compilation systems could be requested...")
+            return this.renderSpinner("No compilation systems could be requested... try to focus an editor.")
         } else {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {

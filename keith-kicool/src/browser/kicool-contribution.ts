@@ -149,9 +149,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.fileSystemWatcher.onFilesChanged(this.onFilesChanged.bind(this))
 
         this.editorManager.onCurrentEditorChanged(this.onCurrentEditorChanged.bind(this))
-        if (editorManager.activeEditor) {
-            // if there is already an active editor, use that to initialize
-            this.editor = editorManager.activeEditor
+        if (editorManager.currentEditor) {
+            // if there is already a current editor, use that to initialize, but this should not be the case.
+            this.editor = editorManager.currentEditor
             this.onCurrentEditorChanged(this.editor)
         }
         this.widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
@@ -175,13 +175,22 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget = widget as CompilerWidget
             this.compilerWidget.requestSystemDescriptions(this.requestSystemDescriptions.bind(this))
             this.compilerWidget.onActivateRequest(this.requestSystemDescriptions.bind(this))
-            if (this.editor) {
-                this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
-                this.requestSystemDescriptions()
-            }
             const lClient = await this.client.languageClient
             while (!this.client.running) {
                 await delay(100)
+            }
+            if (!this.editorManager.currentEditor) {
+                this.editorManager.all.forEach(editor => {
+                    if (editor.isVisible) {
+                        this.editor = editor
+                    }
+                })
+            } else {
+                console.log(this.editorManager)
+            }
+            if (this.editor) {
+                this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
+                this.requestSystemDescriptions()
             }
             lClient.onNotification(snapshotDescriptionMessageType, this.handleNewSnapshotDescriptions.bind(this))
             lClient.onNotification(cancelCompilationMessageType, this.cancelCompilation.bind(this))
