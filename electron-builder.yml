@@ -8,6 +8,7 @@ files:
   - "src-gen/**/*"
   - "lib/**/*"
   - "node_modules/**/*"
+  - "icons/*"
   - "package.json"
   - from: "."
     to: ../../
@@ -24,7 +25,7 @@ win:
       filter: ["**/*"]  
   target:
     - zip
-  icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.ico
+  icon: ./icons/foerde-logo.ico
 mac:
   # copy ls
   identity: null
@@ -35,7 +36,7 @@ mac:
       filter: ["**/*"]
   target:
     - zip
-  icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.icns
+  icon: ./icons/foerde-logo.icns
 linux:
   # copy ls
   extraResources:
@@ -47,11 +48,11 @@ linux:
     - tar.gz
     - AppImage
   category: Development
-  icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/
+  icon: ./icons/foerde-logo-512x512.png
 
 dmg:
-  background: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo-512.png
-  icon: ../semantics/plugins/de.cau.cs.kieler.core.product/icons/foerde-logo.icns
+  background: ./icons/foerde-logo-512x512.png
+  icon: ./icons/foerde-logo.icns
   iconSize: 128
   contents:
     -
