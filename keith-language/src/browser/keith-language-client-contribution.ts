@@ -37,7 +37,7 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
     /**
      * Editors with this languageId are supported by the LS.
      */
-    protected get documentSelector(): string[] {
+    public get documentSelector(): string[] {
         return languageDescriptions.map(languageDescription => languageDescription.id)
     }
 
