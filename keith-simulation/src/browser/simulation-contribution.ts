@@ -15,7 +15,7 @@
 import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
     FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent, PrefixQuickOpenService,
-    QuickOpenService, QuickOpenItem, QuickOpenMode } from "@theia/core/lib/browser";
+    QuickOpenService, QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenItemOptions, QuickOpenOptions } from "@theia/core/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { MessageService, Command, CommandRegistry, MenuModelRegistry, CommandHandler } from "@theia/core";
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
@@ -281,7 +281,43 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             }
         })
         commands.registerCommand(SET_SIMULATION_SPEED, {
-            execute: () => true
+            execute: () => {
+                let newValue = this.simulationWidget.simulationStepDelay
+                const item: QuickOpenItem = new QuickOpenItem({
+                    label: 'Set speed to ' + newValue,
+                    description: "Simulation speed",
+                    run: (mode: QuickOpenMode) => {
+                        return true;
+                    }
+                });
+                const quickOpenModel: QuickOpenModel = {
+                    onType: (lookFor: string, acceptor: (items: QuickOpenItem[]) => void): void => {
+                        let dynamicItems = [item]
+                        if (lookFor) {
+                            dynamicItems.push(new QuickOpenItem({
+                                label: `Set speed to ${lookFor}`,
+                                run: () => {
+                                    return true
+                                }
+                            }))
+                            newValue = parseInt(lookFor, 10)
+                        }
+                        acceptor(dynamicItems);
+                    }
+                };
+                const quickOpenOption: QuickOpenOptions = {
+                    placeholder: this.simulationWidget.simulationStepDelay.toString(),
+                    fuzzyMatchLabel: true,
+                    onClose: (cancelled: boolean) => {
+                        if (!cancelled) {
+                            this.simulationWidget.simulationStepDelay = newValue
+                            this.message(`Simulation speed set to ${this.simulationWidget.simulationStepDelay}`, 'INFO')
+                            this.simulationWidget.update()
+                        }
+                    }
+                }
+                this.openService.open(quickOpenModel, quickOpenOption)
+            }
         })
         commands.registerCommand(this.selectSimulationTypeCommand, {
             execute: () => {
@@ -303,7 +339,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                         acceptor(items);
                     }
                 }, {
-                    placeholder: 'Select the simulation type',
+                    placeholder: `Select the simulation type (Currently ${this.simulationWidget.simulationType})`,
                     fuzzyMatchLabel: true,
                     onClose: (cancelled: boolean) => {
                         if (cancelled) {

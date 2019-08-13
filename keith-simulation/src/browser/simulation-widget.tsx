@@ -15,7 +15,7 @@
 import { injectable, LazyServiceIdentifer, inject } from "inversify";
 import { StatefulWidget, ReactWidget, Message } from "@theia/core/lib/browser";
 import * as React from "react";
-import { SimulationContribution, SELECT_SIMULATION_CHAIN } from "./simulation-contribution";
+import { SimulationContribution, SELECT_SIMULATION_CHAIN, SIMULATE } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData, SimulationDataBlackList } from "../common"
 import { Emitter } from "@theia/core";
 import { isInternal, reverse } from '../common/helper'
@@ -162,8 +162,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.simulationRunning ? this.renderStopButton() : ""}
             {this.simulationRunning ? this.renderIOButton() : ""}
             {this.simulationRunning ? this.renderShowInternalButton() : ""}
-            {this.commands.kicoolContribution.compilerWidget.showButtons ? this.renderSimulationTypeSelectbox() : ""}
-            {this.renderSimulationSpeedInputbox()}
             {!this.commands.kicoolContribution.compilerWidget.showButtons ||
                 this.commands.kicoolContribution.compilerWidget.compiling ||
                 this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationButton()}
@@ -221,46 +219,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         this.update()
     }
 
-    renderSimulationTypeSelectbox(): React.ReactNode {
-        let selectionList: React.ReactNode[] = []
-        this.simulationTypes.forEach(type => {
-            selectionList.push(
-                <option value={type} key={type}>{type}</option>
-            )
-        })
-        return <select id="simulation-type-list" value={this.simulationType} className={'selection-list simulation-type-list'}
-            onChange={() => this.handleSelectionOfSimulationType()}>
-        {selectionList}
-        </select>
-    }
-
-    /**
-     * Set the simulation type according to the selection ion the simulation-type-list
-     */
-    handleSelectionOfSimulationType(): void {
-        const options = (document.getElementById('simulation-type-list') as HTMLSelectElement).selectedOptions
-        this.simulationType = options[0].value
-        this.update()
-    }
-
-    /**
-     * Input box for simulation speed.
-     */
-    renderSimulationSpeedInputbox(): React.ReactNode {
-        return <input id={'simulation-speed'}
-            title="Insert simulation speed"
-            className={"simulation-speed-input-box"}
-            type='number'
-            defaultValue={this.simulationStepDelay.toString()}
-            name={'Simulation Speed'}
-            onInput={() => this.changeSimulationSpeed()}/>
-    }
-
-    changeSimulationSpeed() {
-        this.simulationStepDelay = (document.getElementById('simulation-speed') as HTMLInputElement).valueAsNumber
-        this.update()
-    }
-
     renderSimulationButton(): React.ReactNode {
         return <div className={'compile-button'} title="Simulate"
             onClick={event => {
@@ -273,7 +231,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     renderRestartButton(): React.ReactNode {
         return <div className={'compile-button'} title="Restart"
             onClick={event => {
-                this.commands.simulate()
+                this.commands.commandRegistry.executeCommand(SIMULATE.id)
             }}>
             <div className='icon rotate180 fa fa-reply'> </div>
         </div>
