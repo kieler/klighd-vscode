@@ -478,6 +478,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     })
                 })
             });
+            this.front.shell.revealWidget(compilerWidgetId)
         }
         this.compilerWidget.update()
     }
