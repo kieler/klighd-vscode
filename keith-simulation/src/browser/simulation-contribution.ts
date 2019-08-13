@@ -38,7 +38,8 @@ export const SIMULATION_CATEGORY = "Simulation"
  */
 export const SIMULATION: Command = {
     id: 'simulation:toggle',
-    label: 'Simulation View'
+    label: 'Simulation View',
+    category: 'Simulation'
 }
 
 /**
@@ -46,24 +47,28 @@ export const SIMULATION: Command = {
  */
 export const SIMULATE: Command = {
     id: 'simulate',
-    label: 'Restart simulation'
+    label: 'Restart simulation',
+    category: 'Simulation'
 }
 
 export const COMPILE_AND_SIMULATE: Command = {
     id: 'compile-and-simulate',
-    label: 'Simulate'
+    label: 'Simulate',
+    category: 'Simulation'
 }
 
 export const OPEN_INTERNAL_KVIZ_VIEW: Command = {
     id: 'open-kviz-internal',
     label: 'Open KViz view in internal browser preview',
-    iconClass: 'fa fa-file-image-o'
+    iconClass: 'fa fa-file-image-o',
+    category: 'Simulation'
 }
 
 export const OPEN_EXTERNAL_KVIZ_VIEW: Command = {
     id: 'open-kviz-external',
     label: 'Open KViz view in external browser',
-    iconClass: 'fa fa-external-link'
+    iconClass: 'fa fa-external-link',
+    category: 'Simulation'
 }
 
 export const SELECT_SIMULATION_CHAIN: Command = {
