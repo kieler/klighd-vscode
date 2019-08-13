@@ -30,6 +30,7 @@ import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystem } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 
 export const SAVE: Command = {
     id: 'core.save',
@@ -50,6 +51,12 @@ export const COMPILER: Command = {
     id: 'compiler:toggle',
     label: 'Compiler',
     category: "Kicool"
+}
+export const SELECT_COMPILATION_CHAIN: Command = {
+    id: 'select-compiler',
+    label: 'Select compilation chain',
+    category: 'Kicool',
+    iconClass: 'fa fa-play-circle'
 }
 export const REQUEST_CS: Command = {
     id: 'request-compilation-systems',
@@ -72,6 +79,12 @@ export const TOGGLE_AUTO_COMPILE: Command = {
     category: "Kicool"
 }
 
+export const TOGGLE_BUTTON_MODE: Command = {
+    id: 'toggle-button-mode',
+    label: 'Toggle button mode',
+    category: 'Kicool'
+}
+
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
 
@@ -79,7 +92,7 @@ export const cancelCompilationMessageType = new NotificationType<boolean, void>(
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
  */
 @injectable()
-export class KiCoolContribution extends AbstractViewContribution<CompilerWidget> implements FrontendApplicationContribution {
+export class KiCoolContribution extends AbstractViewContribution<CompilerWidget> implements FrontendApplicationContribution, TabBarToolbarContribution {
 
     isCompiled: Map<string, boolean> = new Map
     sourceURI: Map<string, string> = new Map
@@ -94,11 +107,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * Holds all commands, updates after new compilation systems are requested.
      */
     kicoolCommands: Command[] = []
-
-    /**
-     * Enables dynamic registration of command palette commands
-     */
-    commandPaletteEnabled: boolean = true
 
     public readonly compilationStartedEmitter = new Emitter<KiCoolContribution | undefined>()
     /**
@@ -227,10 +235,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         } else {
             this.requestSystemDescriptions()
         }
-        if (this.commandPaletteEnabled) {
-            this.kicoolCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
-            this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
-        }
+        this.kicoolCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
+        this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
     }
 
     async requestSystemDescriptions() {
@@ -250,9 +256,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             // Sort all compilation systems by id
             systems.sort((a, b) => (a.id > b.id) ? 1 : -1)
             this.compilerWidget.systems = systems
-            if (this.commandPaletteEnabled) {
-                this.addCompilationSystemToCommandPalette(systems)
-            }
+            this.addCompilationSystemToCommandPalette(systems)
             this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
             this.compilerWidget.requestedSystems = false
             this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
@@ -308,9 +312,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     registerCommands(commands: CommandRegistry): void {
-        if (this.commandPaletteEnabled) {
-            this.registerGeneralKiCoolCommands()
-        }
         commands.registerCommand(COMPILER, {
             execute: async () => {
                 this.openView({
@@ -319,9 +320,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 })
             }
         })
-    }
-
-    registerGeneralKiCoolCommands() {
         this.commandRegistry.registerCommand(TOGGLE_AUTO_COMPILE, {
             execute: () => {
                 if (this.compilerWidget) {
@@ -335,9 +333,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 if (this.compilerWidget) {
                     this.compilerWidget.showPrivateSystems = !this.compilerWidget.showPrivateSystems
                     // Update compile commands accordingly
-                    if (this.commandPaletteEnabled) {
-                        this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
-                    }
+                    this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
                     this.compilerWidget.update()
                 }
             }
@@ -356,6 +352,31 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.message("Registered compilation systems", "INFO")
             }
         })
+        this.commandRegistry.registerCommand(TOGGLE_BUTTON_MODE, {
+            execute: async () => {
+                this.compilerWidget.showButtons = !this.compilerWidget.showButtons
+                this.compilerWidget.update()
+            }
+        })
+        this.commandRegistry.registerCommand(SELECT_COMPILATION_CHAIN, {
+            isEnabled: widget => {
+                return this.compilerWidget.showButtons || (widget !== undefined && !!this.editor)
+            },
+            execute: () => {
+                this.quickOpenService.open('>Kicool: Compile with ')
+            },
+            isVisible: widget => {
+                return this.editor && (widget !== undefined) && (widget instanceof EditorWidget)
+            }
+        })
+    }
+
+    registerToolbarItems(registry: TabBarToolbarRegistry): void {
+        registry.registerItem({
+            id: SELECT_COMPILATION_CHAIN.id,
+            command: SELECT_COMPILATION_CHAIN.id,
+            tooltip: SELECT_COMPILATION_CHAIN.label
+        });
     }
 
     public message(message: string, type: string) {

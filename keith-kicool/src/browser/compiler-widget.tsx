@@ -20,7 +20,7 @@ import { Event } from '@theia/core/lib/common'
 import * as React from "react";
 import { CompilationSystem, Snapshot } from "../common/kicool-models";
 import { compilerWidgetId } from "../common";
-import { KiCoolContribution, TOGGLE_AUTO_COMPILE, TOGGLE_INPLACE, TOGGLE_PRIVATE_SYSTEMS } from "./kicool-contribution";
+import { KiCoolContribution, TOGGLE_AUTO_COMPILE, TOGGLE_INPLACE, TOGGLE_PRIVATE_SYSTEMS, SELECT_COMPILATION_CHAIN } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
@@ -142,6 +142,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public cancellingCompilation: boolean
 
+    public showButtons: boolean = false
+
     constructor(
         @inject(new LazyServiceIdentifer(() => KiCoolContribution)) protected readonly commands: KiCoolContribution
     ) {
@@ -195,15 +197,15 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             }
             return <React.Fragment>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
-                    {this.renderShowAdvancedToolbar()}
-                    {styleSelectbox}
-                    {searchbox}
+                    {this.showButtons ? this.renderShowAdvancedToolbar() : ""}
+                    {this.showButtons ? styleSelectbox : ""}
+                    {this.showButtons ? searchbox : ""}
                 </div>
                 <div className={"compilation-panel" + (this.selectedStyle)}>
-                    {this.renderPrivateButton()}
-                    {this.renderInplaceButton()}
-                    {this.renderAutoCompileButton()}
-                    {this.compiling ? "" : this.renderCompileButton()}
+                    {this.showButtons ? this.renderPrivateButton() : ""}
+                    {this.showButtons ? this.renderInplaceButton() : ""}
+                    {this.showButtons ? this.renderAutoCompileButton() : ""}
+                    {this.showButtons ? this.compiling ? "" : this.renderCompileButton() : ""}
                     {this.compiling && this.cancellingCompilation ?
                         this.renderSpinnerButton("Stop compilation...") :
                         this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation(), "Cancel compilation") : ""}
@@ -372,8 +374,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderCompileButton(): React.ReactNode {
         return <div className={'compile-button' + (this.selectedStyle)} title="Compile"
             onClick={event => {
-                this.commands.quickOpenService.open(">KiCool: Compile with ")
-                // this.compileSelectedCompilationSystem()
+                this.commands.commandRegistry.executeCommand(SELECT_COMPILATION_CHAIN.id)
             }}>
             <div className='icon fa fa-play-circle'> </div>
         </div>
@@ -439,7 +440,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             selectedStyle : this.selectedStyle,
             selectedIndex : this.selectedIndex,
             showAdvancedToolbar : this.showAdvancedToolbar,
-            snapshotFilter : this.snapshotFilter
+            snapshotFilter : this.snapshotFilter,
+            showButtons : this.showButtons
         }
     }
 
@@ -447,9 +449,10 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * Restore the state of the widget on reload.
      */
     restoreState(oldState: CompilerWidget.Data): void {
-        this.autoCompile = oldState.autoCompile
-        this.compileInplace = oldState.compileInplace
-        this.showPrivateSystems = oldState.showPrivateSystems
+        this.autoCompile = !!oldState.autoCompile
+        this.compileInplace = !!oldState.compileInplace
+        this.showPrivateSystems = !!oldState.showPrivateSystems
+        this.showButtons = !!oldState.showButtons
         if (oldState.selectedIndex === null || oldState.selectedStyle === null) {
             this.selectedIndex = 0
             this.selectedStyle = this.styles[0]
@@ -478,5 +481,6 @@ export namespace CompilerWidget {
         selectedIndex: number,
         showAdvancedToolbar: boolean
         snapshotFilter: string
+        showButtons: boolean
     }
 }

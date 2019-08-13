@@ -19,24 +19,26 @@ import { TextWidget } from './text-widget'
 import '../../src/browser/style/index.css'
 import { KiCoolKeybindingContext } from './kicool-keybinding-context'
 import { CompilerWidget } from './compiler-widget'
-// import { KiCoolViewService } from './kicool-view-service';
+import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import { compilerWidgetId } from '../common';
 
 export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Unbind, isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
 
     // widgets
-    bind(TextWidget).toSelf()
-    bind(BaseWidget).toDynamicValue(ctx => ctx.container.get(TextWidget))
+    bind(TextWidget).toSelf();
+    bind(BaseWidget).toDynamicValue(ctx => ctx.container.get(TextWidget));
 
     // added for keybinding and commands
-    bind(KiCoolKeybindingContext).toSelf()
+    bind(KiCoolKeybindingContext).toSelf();
     bind(KeybindingContext).toDynamicValue(context => context.container.get(KiCoolKeybindingContext));
 
-    bindViewContribution(bind, KiCoolContribution)
-    bind(FrontendApplicationContribution).toService(KiCoolContribution);
-
     bind(WidgetFactory).toDynamicValue(ctx => ({
-        id: "compiler-widget",
+        id: compilerWidgetId,
         createWidget: () => ctx.container.get(CompilerWidget)
-    }))
-    bind(CompilerWidget).toSelf()
+    }));
+    bind(CompilerWidget).toSelf();
+
+    bindViewContribution(bind, KiCoolContribution);
+    bind(FrontendApplicationContribution).toService(KiCoolContribution);
+    bind(TabBarToolbarContribution).toService(KiCoolContribution)
 })
