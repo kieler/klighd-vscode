@@ -191,8 +191,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                         this.editor = editor
                     }
                 })
-            } else {
-                console.log(this.editorManager)
             }
             if (this.editor) {
                 this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
