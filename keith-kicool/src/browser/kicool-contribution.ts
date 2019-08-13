@@ -13,8 +13,8 @@
 
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
-import {
-    AbstractViewContribution, CommonMenus, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService
+import { AbstractViewContribution, CommonMenus, DidCreateWidgetEvent,
+    FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService
 } from "@theia/core/lib/browser";
 import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
@@ -71,11 +71,6 @@ export const TOGGLE_AUTO_COMPILE: Command = {
     label: 'Toggle auto compile',
     category: "Kicool"
 }
-export const TOGGLE_ENABLE_CP: Command = {
-    id: 'toggle-cp',
-    label: 'Toggle command palette enabled',
-    category: "Kicool"
-}
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
@@ -112,6 +107,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      */
     public readonly compilationFinishedEmitter = new Emitter<boolean | undefined>()
     public readonly showedNewSnapshotEmitter = new Emitter<string | undefined>()
+    public readonly newSimulationCommandsEmitter = new Emitter<CompilationSystem[]>()
 
     public readonly compilationStarted: Event<KiCoolContribution | undefined> = this.compilationStartedEmitter.event
     /**
@@ -120,6 +116,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      */
     public readonly compilationFinished: Event<boolean | undefined> = this.compilationFinishedEmitter.event
     public readonly showedNewSnapshot: Event<string | undefined> = this.showedNewSnapshotEmitter.event
+    public readonly newSimulationCommands: Event<CompilationSystem[]> = this.newSimulationCommandsEmitter.event
 
     @inject(Workspace) protected readonly workspace: Workspace
     @inject(MessageService) protected readonly messageService: MessageService
@@ -211,7 +208,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     onFilesChanged(fileChange: FileChange) {
         // TODO receives two event if file is saved
         if (this.compilerWidget && this.compilerWidget.autoCompile) {
-            this.compilerWidget.compileSelectedCompilationSystem()
+            // TODO autocompile does no longer work that way
+            // this.compilerWidget.compileSelectedCompilationSystem()
         }
     }
 
@@ -274,19 +272,21 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
         // add new commands
         systems.forEach(system => {
-            if (system.isPublic || this.compilerWidget.showPrivateSystems) {
-                const command: Command = {id: system.id, label: "Compile with " + system.label, category: "Kicool"}
-                this.kicoolCommands.push(command)
-                const handler: CommandHandler = {
-                    execute: () => {
-                        this.compile(system.id, this.compilerWidget.compileInplace, true);
-                    }
+            const command: Command = {id: system.id, label: "Compile with " + system.label, category: "Kicool"}
+            this.kicoolCommands.push(command)
+            const handler: CommandHandler = {
+                execute: simulationCommand => {
+                    this.compile(system.id, this.compilerWidget.compileInplace, !simulationCommand);
+                },
+                isVisible: () => {
+                    return system.isPublic || this.compilerWidget.showPrivateSystems
                 }
-                this.commandRegistry.registerCommand(command, handler)
-            } else {
-                // Do not register this command, since it is private
             }
+            this.commandRegistry.registerCommand(command, handler)
         })
+        const simulationSystems = systems.filter(system => system.simulation)
+        // Register additional simulation commands
+        this.newSimulationCommandsEmitter.fire(simulationSystems)
     }
 
     registerKeybindings(keybindings: KeybindingRegistry): void {
@@ -311,25 +311,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         if (this.commandPaletteEnabled) {
             this.registerGeneralKiCoolCommands()
         }
-        commands.registerCommand(TOGGLE_ENABLE_CP, {
-            execute: () => {
-                this.commandPaletteEnabled = !this.commandPaletteEnabled
-                if (this.commandPaletteEnabled) {
-                    this.registerGeneralKiCoolCommands()
-                    this.registerShowNext()
-                    this.registerShowPrevious()
-                    this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
-                } else {
-                    commands.unregisterCommand(TOGGLE_AUTO_COMPILE)
-                    commands.unregisterCommand(TOGGLE_PRIVATE_SYSTEMS)
-                    commands.unregisterCommand(TOGGLE_INPLACE)
-                    commands.unregisterCommand(REQUEST_CS)
-                    commands.unregisterCommand(SHOW_NEXT)
-                    commands.unregisterCommand(SHOW_PREVIOUS)
-                    this.kicoolCommands.forEach(command => commands.unregisterCommand(command))
-                }
-            }
-        })
         commands.registerCommand(COMPILER, {
             execute: async () => {
                 this.openView({

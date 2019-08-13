@@ -65,11 +65,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     /**
      * Is saved as part of the state of the widget.
      */
-    protected compilationSystemFilter: string = ""
-
-    /**
-     * Is saved as part of the state of the widget.
-     */
     protected snapshotFilter: string = ""
 
     /**
@@ -176,8 +171,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         } else {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
-                if ((this.showPrivateSystems || system.isPublic) &&
-                    system.label.toLowerCase().search(this.compilationSystemFilter.toLowerCase()) > -1) {
+                if ((this.showPrivateSystems || system.isPublic)) {
                     compilationElements.push(<option value={system.id} key={system.id}>{system.label}</option>)
                 }
             });
@@ -209,7 +203,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     {this.renderPrivateButton()}
                     {this.renderInplaceButton()}
                     {this.renderAutoCompileButton()}
-                    {this.renderSearchbox("compilation-system-filter", "Filter systems by label", this.compilationSystemFilter, () => this.handleCSSearchChange())}
                     {this.compiling ? "" : this.renderCompileButton()}
                     {this.compiling && this.cancellingCompilation ?
                         this.renderSpinnerButton("Stop compilation...") :
@@ -227,15 +220,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     handleSearchChange() {
         this.snapshotFilter = (document.getElementById("snapshot-filter") as HTMLInputElement).value
-        this.update()
-    }
-
-    /**
-     * If something in the compilation system search box is changed, the filter for filtering compilation systems is updated.
-     * The widget is updated, which leads to a redraw.
-     */
-    handleCSSearchChange() {
-        this.compilationSystemFilter = (document.getElementById("compilation-system-filter") as HTMLInputElement).value
         this.update()
     }
 
@@ -388,7 +372,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderCompileButton(): React.ReactNode {
         return <div className={'compile-button' + (this.selectedStyle)} title="Compile"
             onClick={event => {
-                this.commands.quickOpenService.open(">KiCool: Compile with " + this.compilationSystemFilter)
+                this.commands.quickOpenService.open(">KiCool: Compile with ")
                 // this.compileSelectedCompilationSystem()
             }}>
             <div className='icon fa fa-play-circle'> </div>
@@ -445,24 +429,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     /**
-     * Compiles the active model via the currently selected compilation system.
-     * Called by compile button or invoked by the KiCoolContribution if auto compile is enabled.
-     */
-    public compileSelectedCompilationSystem(): void {
-        const selection = document.getElementById("compilation-list") as HTMLSelectElement;
-        let systems = this.systems.filter(system => {
-            return this.showPrivateSystems || system.isPublic
-        })
-        systems = systems.filter(system => system.label.toLowerCase().search(this.compilationSystemFilter.toLowerCase()) > -1)
-        if (systems.length > 0) {
-            this.commands.commandRegistry.executeCommand(systems[selection.selectedIndex].id)
-        } else {
-            this.commands.message("No compilation systems found", "error")
-            return
-        }
-    }
-
-    /**
      * Store the state of the widget.
      */
     storeState(): CompilerWidget.Data {
@@ -473,7 +439,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             selectedStyle : this.selectedStyle,
             selectedIndex : this.selectedIndex,
             showAdvancedToolbar : this.showAdvancedToolbar,
-            compilationSystemFilter : this.compilationSystemFilter,
             snapshotFilter : this.snapshotFilter
         }
     }
@@ -493,11 +458,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             this.selectedIndex = oldState.selectedIndex
         }
         this.showAdvancedToolbar = oldState.showAdvancedToolbar
-        if (oldState.compilationSystemFilter) {
-            this.compilationSystemFilter = oldState.compilationSystemFilter
-        } else {
-            this.compilationSystemFilter = ""
-        }
         if (oldState.snapshotFilter) {
             this.snapshotFilter = oldState.snapshotFilter
         } else {
@@ -517,7 +477,6 @@ export namespace CompilerWidget {
         selectedStyle: string,
         selectedIndex: number,
         showAdvancedToolbar: boolean
-        compilationSystemFilter: string
         snapshotFilter: string
     }
 }
