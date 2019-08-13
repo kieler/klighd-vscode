@@ -108,7 +108,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * Boolean property to enable filtering of compilation systems saved in field systems.
      * Is saved as part of the state of the widget.
      */
-    showPrivateSystems: boolean = false
+    showPrivateSystems: boolean = true
 
     /**
      * Holds the uri of the model in the current editor.
