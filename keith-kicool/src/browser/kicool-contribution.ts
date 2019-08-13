@@ -196,7 +196,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             }
             if (this.editor) {
                 this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
-                this.requestSystemDescriptions()
+                await this.requestSystemDescriptions()
             }
             lClient.onNotification(snapshotDescriptionMessageType, this.handleNewSnapshotDescriptions.bind(this))
             lClient.onNotification(cancelCompilationMessageType, this.cancelCompilation.bind(this))
@@ -221,7 +221,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
     }
 
-    onCurrentEditorChanged(editorWidget: EditorWidget | undefined): void {
+    async onCurrentEditorChanged(editorWidget: EditorWidget | undefined): Promise<void> {
         // Ignore changes to user storage files, as they are have no representation on the server.
         if (!editorWidget || editorWidget.editor.uri.scheme === UserStorageUri.SCHEME) {
             return
@@ -233,14 +233,14 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.initializeCompilerWidget(widget)
             })
         } else {
-            this.requestSystemDescriptions()
+            await this.requestSystemDescriptions()
         }
         this.kicoolCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
         this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
     }
 
     async requestSystemDescriptions() {
-        if (this.editor) {
+        if (this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
             this.compilerWidget.requestedSystems = true
             this.compilerWidget.update()
             const lClient = await this.client.languageClient
@@ -262,6 +262,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
             this.compilerWidget.update()
             this.compilerWidget.onNewSystemsAddedEmitter.fire(this.compilerWidget)
+        } else {
+            this.compilerWidget.systems = []
+            this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
         }
     }
 
@@ -274,6 +277,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.kicoolCommands.forEach(command => {
             this.commandRegistry.unregisterCommand(command)
         })
+        this.kicoolCommands = []
         // add new commands
         systems.forEach(system => {
             const command: Command = {id: system.id, label: "Compile with " + system.label, category: "Kicool"}
@@ -348,7 +352,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
         this.commandRegistry.registerCommand(REQUEST_CS, {
             execute: async () => {
-                this.requestSystemDescriptions()
+                await this.requestSystemDescriptions()
                 this.message("Registered compilation systems", "INFO")
             }
         })
@@ -360,7 +364,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
         this.commandRegistry.registerCommand(SELECT_COMPILATION_CHAIN, {
             isEnabled: widget => {
-                return this.compilerWidget.showButtons || (widget !== undefined && !!this.editor)
+                return this.compilerWidget.showButtons || (widget !== undefined && !!this.editor) &&
+                this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
             },
             execute: () => {
                 this.quickOpenService.open('>Kicool: Compile with ')
@@ -420,9 +425,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
 
     public async compile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
-        if (!this.compilerWidget.autoCompile) {
-            this.message("Compiling with " + command, "info")
-        }
         this.compilerWidget.compiling = true
         this.compilerWidget.update()
         await this.executeCompile(command, inplace, showResultingModel)
@@ -438,6 +440,10 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
 
         const uri = this.compilerWidget.sourceModelPath
+
+        if (!this.compilerWidget.autoCompile) {
+            this.message("Compiling " + uri + " with " + command, "info")
+        }
         const lClient = await this.client.languageClient
         lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace, showResultingModel])
         this.compilationStartedEmitter.fire(this)
