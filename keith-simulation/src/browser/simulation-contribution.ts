@@ -14,10 +14,11 @@
  import { SimulationWidget } from "./simulation-widget";
 import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
-    FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent } from "@theia/core/lib/browser";
+    FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent, PrefixQuickOpenService,
+    QuickOpenService, QuickOpenItem, QuickOpenMode } from "@theia/core/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { MessageService, Command, CommandRegistry, MenuModelRegistry, CommandHandler } from "@theia/core";
-import { EditorManager } from "@theia/editor/lib/browser";
+import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { simulationWidgetId, OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationStartedMessage, SimulationStoppedMessage, SimulationStepMessage, SimulationData } from "../common";
@@ -27,9 +28,9 @@ import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-cont
 import { delay, strMapToObj } from "../common/helper";
 import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler"
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
-import { KeithDiagramManager } from "@kieler/keith-diagram/lib/keith-diagram-manager";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
 import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models";
+import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
 
 export const SIMULATION_CATEGORY = "Simulation"
 /**
@@ -65,6 +66,19 @@ export const OPEN_EXTERNAL_KVIZ_VIEW: Command = {
     iconClass: 'fa fa-external-link'
 }
 
+export const SELECT_SIMULATION_CHAIN: Command = {
+    id: 'select-simulation-chain',
+    label: 'Select simulation chain',
+    category: 'Simulation',
+    iconClass: 'fa fa-table'
+}
+
+export const SET_SIMULATION_SPEED: Command = {
+    id: 'set-simulation-speed',
+    label: 'Set simulation speed',
+    category: 'Simulation'
+}
+
 export const simulationCommandPrefix: string = 'simulation.'
 
 export const externalStepMessageType = new NotificationType<SimulationStepMessage, void>('keith/simulation/didStep');
@@ -92,6 +106,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     @inject(KiCoolContribution) public readonly kicoolContribution: KiCoolContribution
     @inject(MessageService) protected readonly messageService: MessageService
     @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
+    @inject(PrefixQuickOpenService) public readonly quickOpenService: PrefixQuickOpenService
+    @inject(QuickOpenService) protected readonly openService: QuickOpenService
+    @inject(SelectSimulationTypeCommand) protected readonly selectSimulationTypeCommand: SelectSimulationTypeCommand
     @inject(SimulationKeybindingContext) protected readonly simulationKeybindingContext: SimulationKeybindingContext
     @inject(WindowService) public readonly windowService: WindowService
     @inject(Workspace) protected readonly workspace: Workspace
@@ -250,9 +267,55 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.openExternalKVizView()
             }
         })
+        commands.registerCommand(SELECT_SIMULATION_CHAIN, {
+            isEnabled: widget => {
+                return this.kicoolContribution.compilerWidget.showButtons ||
+                (widget !== undefined && !!this.kicoolContribution.editor)
+            },
+            execute: () => {
+                this.quickOpenService.open('>Simulation: Simulate via ')
+            },
+            isVisible: widget => {
+                return this.kicoolContribution.editor && (widget !== undefined) && (widget instanceof EditorWidget)
+            }
+        })
+        commands.registerCommand(SET_SIMULATION_SPEED, {
+            execute: () => true
+        })
+        commands.registerCommand(this.selectSimulationTypeCommand, {
+            execute: () => {
+                this.selectSimulationTypeCommand.resetTo = this.simulationWidget.simulationType
+                this.openService.open({
+                    onType: (lookFor: string, acceptor: (items: QuickOpenItem[]) => void) => {
+                        const items = this.simulationWidget.simulationTypes.map(type =>
+                            new QuickOpenItem({
+                                label: type,
+                                description: type,
+                                run: (mode: QuickOpenMode) => {
+                                    if (mode === QuickOpenMode.OPEN) {
+                                        this.selectSimulationTypeCommand.resetTo = this.simulationWidget.simulationTypes[0];
+                                    }
+                                    this.simulationWidget.simulationType = type
+                                    return true;
+                                }
+                            }));
+                        acceptor(items);
+                    }
+                }, {
+                    placeholder: 'Select the simulation type',
+                    fuzzyMatchLabel: true,
+                    onClose: (cancelled: boolean) => {
+                        if (cancelled) {
+                            this.simulationWidget.simulationType = this.selectSimulationTypeCommand.resetTo
+                        }
+                        this.simulationWidget.update()
+                    }
+                });
+            }
+        })
     }
 
-    async registerToolbarItems(registry: TabBarToolbarRegistry): Promise<void> {
+    registerToolbarItems(registry: TabBarToolbarRegistry): void {
         registry.registerItem({
             id: OPEN_INTERNAL_KVIZ_VIEW.id,
             command: OPEN_INTERNAL_KVIZ_VIEW.id,
@@ -264,6 +327,11 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             command: OPEN_EXTERNAL_KVIZ_VIEW.id,
             tooltip: OPEN_EXTERNAL_KVIZ_VIEW.label,
             priority: 1
+        });
+        registry.registerItem({
+            id: SELECT_SIMULATION_CHAIN.id,
+            command: SELECT_SIMULATION_CHAIN.id,
+            tooltip: SELECT_SIMULATION_CHAIN.label
         });
     }
 
@@ -296,25 +364,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 initializeResult = lClient.initializeResult
             }
             lClient.sendNotification("keith/simulation/start", [uri, this.simulationWidget.simulationType])
-        }
-    }
-
-    /**
-     * Simulate currently opened snapshot.
-     */
-    async simulateCurrentlyOpenedModel(command: string) {
-        // A simulation can only be invoked if a current editor widget exists and no simulation is currently running.
-        if (this.kicoolContribution.editor && !this.simulationWidget.simulationRunning) {
-            const lClient = await this.client.languageClient
-            // The uri of the current editor is needed to identify the already compiled snapshot that is used to start the simulation.
-            const uri = this.kicoolContribution.compilerWidget.lastCompiledUri
-            let index = this.kicoolContribution.indexMap.get(uri)
-            if (index === undefined) {
-                console.log("Index of snapshot is undefined, use original model instead")
-                index = -1
-            }
-            lClient.sendNotification("keith/simulation/simulateCurrentlyOpenedModel",
-                [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, this.simulationWidget.simulationType])
         }
     }
 

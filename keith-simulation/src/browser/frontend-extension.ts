@@ -19,6 +19,7 @@ import { SimulationKeybindingContext } from './simulation-keybinding-context'
 import { SimulationWidget } from './simulation-widget'
 import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { simulationWidgetId } from '../common';
+import { SelectSimulationTypeCommand } from './select-simulation-type-command';
 
 export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Unbind, isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
 
@@ -34,4 +35,6 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
     bindViewContribution(bind, SimulationContribution)
     bind(FrontendApplicationContribution).toService(SimulationContribution);
     bind(TabBarToolbarContribution).toService(SimulationContribution);
+
+    bind(SelectSimulationTypeCommand).toSelf().inSingletonScope()
 })

@@ -13,9 +13,9 @@
 
 // import { ReactWidget } from "@theia/core/lib/browser/widgets/react-widget";
 import { injectable, LazyServiceIdentifer, inject } from "inversify";
-import { StatefulWidget, ReactWidget, Message, PrefixQuickOpenService} from "@theia/core/lib/browser";
+import { StatefulWidget, ReactWidget, Message } from "@theia/core/lib/browser";
 import * as React from "react";
-import { SimulationContribution } from "./simulation-contribution";
+import { SimulationContribution, SELECT_SIMULATION_CHAIN } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData, SimulationDataBlackList } from "../common"
 import { Emitter } from "@theia/core";
 import { isInternal, reverse } from '../common/helper'
@@ -26,8 +26,6 @@ import { isInternal, reverse } from '../common/helper'
  */
 @injectable()
 export class SimulationWidget extends ReactWidget implements StatefulWidget {
-
-    @inject(PrefixQuickOpenService) public readonly quickOpenService: PrefixQuickOpenService
 
     /**
      * Id of widget. Can be used to get an instance of this widget via the WidgetManager.
@@ -76,7 +74,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     /**
      * All simulation types
      */
-    protected simulationTypes: string[] = ["Periodic", "Manual", "Dynamic"]
+    public simulationTypes: string[] = ["Periodic", "Manual", "Dynamic"]
 
     /**
      * The currently selected simulation type.
@@ -115,8 +113,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     public simulationStep: number = -1
 
     public compilingSimulation: boolean = false
-
-    public showAdvancedToolbar: boolean
 
     constructor(
         @inject(new LazyServiceIdentifer(() => SimulationContribution)) protected readonly commands: SimulationContribution
@@ -160,35 +156,22 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
      */
     renderSimulationPanel() {
         return <React.Fragment>
-            <div className="simulation-panel">
-            {this.renderShowAdvancedToolbar()}
-        </div>
         <div className="simulation-panel">
             {this.simulationRunning ? this.renderPlayPauseButton() : ""}
             {this.simulationRunning ? this.renderStepButton() : ""}
             {this.simulationRunning ? this.renderStopButton() : ""}
             {this.simulationRunning ? this.renderIOButton() : ""}
             {this.simulationRunning ? this.renderShowInternalButton() : ""}
-            {this.renderSimulationTypeSelectbox()}
+            {this.commands.kicoolContribution.compilerWidget.showButtons ? this.renderSimulationTypeSelectbox() : ""}
             {this.renderSimulationSpeedInputbox()}
-            {this.commands.kicoolContribution.compilerWidget.compiling || this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationButton()}
-            {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation")
-                && !this.simulationRunning
-                && !this.compilingSimulation ? this.renderRestartButton() : ""}
+            {!this.commands.kicoolContribution.compilerWidget.showButtons ||
+                this.commands.kicoolContribution.compilerWidget.compiling ||
+                this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationButton()}
+            {this.commands.kicoolContribution.compilerWidget.showButtons &&
+                this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") &&
+                !this.simulationRunning && !this.compilingSimulation ? this.renderRestartButton() : ""}
             {this.simulationRunning ? this.renderStepCounter() : ""}
         </div></React.Fragment>
-    }
-
-    renderShowAdvancedToolbar(): React.ReactNode {
-        return <div title={this.showAdvancedToolbar ? "Hide advanced toolbar" : "Show advanced toolbar"}
-                    key="show-advanced-toolbar"
-                    className={'preference-button' + (this.showAdvancedToolbar ? '' : ' off')}
-            onClick={event => {
-                this.showAdvancedToolbar = !this.showAdvancedToolbar
-                this.update()
-            }}>
-            <div className={'icon fa ' + (this.showAdvancedToolbar ? 'fa-minus' : 'fa-plus')}/>
-        </div>
     }
 
     renderPlayPauseButton(): React.ReactNode {
@@ -281,7 +264,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     renderSimulationButton(): React.ReactNode {
         return <div className={'compile-button'} title="Simulate"
             onClick={event => {
-                this.quickOpenService.open(">Simulation: Simulate via ")
+                this.commands.commandRegistry.executeCommand(SELECT_SIMULATION_CHAIN.id)
             }}>
             <div className='icon fa fa-play-circle'> </div>
         </div>
@@ -496,8 +479,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         return {
             displayInOut: this.displayInOut,
             simulationType: this.simulationType,
-            simulationStepDelay: this.simulationStepDelay,
-            showAdvancedToolbar : this.showAdvancedToolbar
+            simulationStepDelay: this.simulationStepDelay
         }
     }
 
@@ -509,7 +491,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         } else {
             this.simulationStepDelay = 200
         }
-        this.showAdvancedToolbar = oldState.showAdvancedToolbar
     }
 
     simulationDataToString(data: any) {
@@ -541,6 +522,5 @@ export namespace SimulationWidget {
         displayInOut: boolean
         simulationType: string
         simulationStepDelay: number
-        showAdvancedToolbar: boolean
     }
 }
