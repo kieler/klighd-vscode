@@ -13,13 +13,12 @@
 
 // import { ReactWidget } from "@theia/core/lib/browser/widgets/react-widget";
 import { injectable, LazyServiceIdentifer, inject } from "inversify";
-import { StatefulWidget, ReactWidget, Message} from "@theia/core/lib/browser";
+import { StatefulWidget, ReactWidget, Message, PrefixQuickOpenService} from "@theia/core/lib/browser";
 import * as React from "react";
 import { SimulationContribution } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData, SimulationDataBlackList } from "../common"
 import { Emitter } from "@theia/core";
 import { isInternal, reverse } from '../common/helper'
-import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models"
 
 
 /**
@@ -27,6 +26,8 @@ import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models
  */
 @injectable()
 export class SimulationWidget extends ReactWidget implements StatefulWidget {
+
+    @inject(PrefixQuickOpenService) public readonly quickOpenService: PrefixQuickOpenService
 
     /**
      * Id of widget. Can be used to get an instance of this widget via the WidgetManager.
@@ -117,8 +118,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     public showAdvancedToolbar: boolean
 
-    lastShowedSnapshotName: string;
-
     constructor(
         @inject(new LazyServiceIdentifer(() => SimulationContribution)) protected readonly commands: SimulationContribution
     ) {
@@ -163,12 +162,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         return <React.Fragment>
             <div className="simulation-panel">
             {this.renderShowAdvancedToolbar()}
-            {!this.showAdvancedToolbar || this.commands.kicoolContribution.compilerWidget.compiling || this.simulationRunning || this.compilingSimulation ||
-                !this.commands.kicoolContribution.compilerWidget.modelSimulationCommands ||
-                this.commands.kicoolContribution.compilerWidget.modelSimulationCommands.length === 0 ? "" : this.renderModelSimulationSelectionBox()}
-            {!this.showAdvancedToolbar || this.commands.kicoolContribution.compilerWidget.compiling || this.simulationRunning || this.compilingSimulation ||
-                !this.commands.kicoolContribution.compilerWidget.modelSimulationCommands ||
-                this.commands.kicoolContribution.compilerWidget.modelSimulationCommands.length === 0  ? "" : this.renderModelSimulationButton()}
         </div>
         <div className="simulation-panel">
             {this.simulationRunning ? this.renderPlayPauseButton() : ""}
@@ -178,7 +171,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {this.simulationRunning ? this.renderShowInternalButton() : ""}
             {this.renderSimulationTypeSelectbox()}
             {this.renderSimulationSpeedInputbox()}
-            {this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationSelectionBox()}
             {this.commands.kicoolContribution.compilerWidget.compiling || this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationButton()}
             {this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation")
                 && !this.simulationRunning
@@ -286,43 +278,10 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         this.update()
     }
 
-    renderSimulationSelectionBox(): React.ReactNode {
-        const simulationCommands: React.ReactNode[] = [];
-        this.commands.kicoolContribution.compilerWidget.systems.forEach((system: CompilationSystem)  => {
-            if (system.simulation) {
-                simulationCommands.push(<option value={system.id} key={system.id}>{system.label}</option>)
-            }
-        })
-        return <select id="simulation-list" className={'selection-list simulation-list'}>
-            {simulationCommands}
-        </select>
-    }
-
-    renderModelSimulationSelectionBox(): React.ReactNode {
-        const simulationCommands: React.ReactNode[] = [];
-        this.commands.kicoolContribution.compilerWidget.modelSimulationCommands.forEach((system: CompilationSystem)  => {
-            simulationCommands.push(<option value={system.id} key={system.id}>{system.label + " for " + this.lastShowedSnapshotName}</option>)
-        })
-        return <select id="model-simulation-list" className={'selection-list simulation-list'}>
-            {simulationCommands}
-        </select>
-    }
-
     renderSimulationButton(): React.ReactNode {
         return <div className={'compile-button'} title="Simulate"
             onClick={event => {
-                this.commands.compileAndStartSimulation()
-            }}>
-            <div className='icon fa fa-play-circle'> </div>
-        </div>
-    }
-
-    renderModelSimulationButton(): React.ReactNode {
-        return <div className={'compile-button'} title="Simulate Current Snapshot"
-            onClick={event => {
-                const selection = document.getElementById("model-simulation-list") as HTMLSelectElement;
-                const option = selection.selectedOptions[0]
-                this.commands.simulateCurrentlyOpenedModel(option.value)
+                this.quickOpenService.open(">Simulation: Simulate via ")
             }}>
             <div className='icon fa fa-play-circle'> </div>
         </div>

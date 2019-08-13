@@ -16,7 +16,7 @@ import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
     FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent } from "@theia/core/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
-import { MessageService, Command, CommandRegistry, MenuModelRegistry } from "@theia/core";
+import { MessageService, Command, CommandRegistry, MenuModelRegistry, CommandHandler } from "@theia/core";
 import { EditorManager } from "@theia/editor/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
@@ -29,6 +29,7 @@ import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browse
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { KeithDiagramManager } from "@kieler/keith-diagram/lib/keith-diagram-manager";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
+import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models";
 
 export const SIMULATION_CATEGORY = "Simulation"
 /**
@@ -64,6 +65,8 @@ export const OPEN_EXTERNAL_KVIZ_VIEW: Command = {
     iconClass: 'fa fa-external-link'
 }
 
+export const simulationCommandPrefix: string = 'simulation.'
+
 export const externalStepMessageType = new NotificationType<SimulationStepMessage, void>('keith/simulation/didStep');
 export const valuesForNextStepMessageType = new NotificationType<Object, void>('keith/simulation/valuesForNextStep');
 export const externalStopMessageType = new NotificationType<void, void>('keith/simulation/externalStop')
@@ -78,6 +81,8 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     simulationWidget: SimulationWidget
 
     progressMessageType = new NotificationType<any, void>('keith/kicool/progress');
+
+    simulationCommands: Command[] = []
 
     @inject(CommandRegistry) public readonly commandRegistry: CommandRegistry
     @inject(EditorManager) public readonly editorManager: EditorManager
@@ -137,7 +142,26 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.kicoolContribution.compilationFinished(this.compilationFinished.bind(this))
             this.kicoolContribution.compilationStarted(this.compilationStarted.bind(this))
             this.kicoolContribution.showedNewSnapshot(this.showedNewSnapshot.bind(this))
+            this.kicoolContribution.newSimulationCommands(this.registerSimulationCommands.bind(this))
         }
+    }
+
+    registerSimulationCommands(systems: CompilationSystem[]) {
+        // remove existing commands
+        this.simulationCommands.forEach(command => {
+            this.commandRegistry.unregisterCommand(command)
+        })
+        // add new commands
+        systems.forEach(system => {
+            const command: Command = {id: simulationCommandPrefix + system.id, label: "Simulate via " + system.label, category: "Simulation"}
+            this.simulationCommands.push(command)
+            const handler: CommandHandler = {
+                execute: () => {
+                    this.compileAndStartSimulation(system)
+                }
+            }
+            this.commandRegistry.registerCommand(command, handler)
+        })
     }
 
     /**
@@ -160,7 +184,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.simulationWidget.compilingSimulation = false
             this.simulationWidget.update()
             if (successful) {
-                this.simulate()
+                this.commandRegistry.executeCommand(SIMULATE.id)
             }
         } else {
             this.simulationWidget.update()
@@ -168,8 +192,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     showedNewSnapshot(lastShowedSnapshotName: string) {
-        this.simulationWidget.lastShowedSnapshotName = lastShowedSnapshotName
-        this.simulationWidget.update()
+        // TODO not in use anymore use this to register command in command palette.
     }
 
     /**
@@ -203,11 +226,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         commands.registerCommand(SIMULATE, {
             execute: async () => {
                 this.simulate()
-            }
-        })
-        commands.registerCommand(COMPILE_AND_SIMULATE, {
-            execute: async () => {
-                this.compileAndStartSimulation()
             }
         })
         commands.registerCommand(OPEN_INTERNAL_KVIZ_VIEW, {
@@ -253,17 +271,11 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      * Invoke a simulation. This includes the compilation via a simulation CS.
      * Simulation is started via the compilationFinished method.
      */
-    async compileAndStartSimulation() {
+    async compileAndStartSimulation(simulationCommand: Command) {
         this.simulationWidget.compilingSimulation = true
         this.simulationWidget.update()
-        const selection = document.getElementById("simulation-list") as HTMLSelectElement;
-        const option = selection.selectedOptions[0]
-        if (option !== undefined) {
-            // when simulating it should always compile inplace
-            await this.kicoolContribution.compile(option.value, true, false)
-        } else {
-            this.message("Option is undefined, did not simulate", "ERROR")
-        }
+        // Execute compilation command
+        await this.commandRegistry.executeCommand(simulationCommand.id, true)
     }
 
     /**
