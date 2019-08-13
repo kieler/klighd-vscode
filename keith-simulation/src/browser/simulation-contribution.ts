@@ -270,7 +270,8 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         commands.registerCommand(SELECT_SIMULATION_CHAIN, {
             isEnabled: widget => {
                 return this.kicoolContribution.compilerWidget.showButtons ||
-                (widget !== undefined && !!this.kicoolContribution.editor)
+                (widget !== undefined && !!this.kicoolContribution.editor) &&
+                this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
             },
             execute: () => {
                 this.quickOpenService.open('>Simulation: Simulate via ')
