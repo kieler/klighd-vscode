@@ -15,7 +15,7 @@
 import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
     FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent, PrefixQuickOpenService,
-    QuickOpenService, QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenItemOptions, QuickOpenOptions } from "@theia/core/lib/browser";
+    QuickOpenService, QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenOptions } from "@theia/core/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { MessageService, Command, CommandRegistry, MenuModelRegistry, CommandHandler } from "@theia/core";
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
