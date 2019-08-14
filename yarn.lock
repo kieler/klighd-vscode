@@ -854,7 +854,7 @@
     webpack-cli "2.0.12"
     worker-loader "^1.1.1"
 
-"@theia/application-package@0.9.0-next.7fe439a3":
+"@theia/application-package@0.9.0-next.7fe439a3", "@theia/application-package@next":
   version "0.9.0-next.7fe439a3"
   resolved "https://registry.yarnpkg.com/@theia/application-package/-/application-package-0.9.0-next.7fe439a3.tgz#5cc5c447fc2b6d1b3f09f570592caff18b82dc50"
   integrity sha512-xGjxDEAazcc/XnyNy061HaSgMvw3wUr2y+3QcJJL/YWoBrV3Gt69OC3JD5IKShypEmvTHgz/nT62rMcmQZhJjA==
@@ -11372,6 +11372,11 @@ timers-browserify@^2.0.4:
   integrity sha512-YvC1SV1XdOUaL6gx5CoGroT3Gu49pK9+TZ38ErPldOWW4j49GI1HKs9DV+KGq/w6y+LZ72W1c8cKz2vzY+qpzg==
   dependencies:
     setimmediate "^1.0.4"
+
+tls@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/tls/-/tls-0.0.1.tgz#0ab2bf5968d71df2f8c0e1515d24a2240b98aac8"
+  integrity sha1-CrK/WWjXHfL4wOFRXSSiJAuYqsg=
 
 tmp@^0.0.33:
   version "0.0.33"

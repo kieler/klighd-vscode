@@ -43,6 +43,7 @@
     "@kieler/keith-language": "0.1.0",
     "@kieler/keith-simulation": "0.1.0",
     "@kieler/keith-sprotty": "0.1.0",
+    "@theia/application-package": "next",
     "@theia/core": "next",
     "@theia/editor": "next",
     "@theia/editorconfig": "next",
@@ -73,7 +74,8 @@
     "sprotty-theia": "next",
     "vscode-jsonrpc": "^3.6.2",
     "xterm": "^3.11.0",
-    "yargs": "^13.2.2"
+    "yargs": "^13.2.2",
+    "tls": "^0.0.1"
   },
   "devDependencies": {
     "@theia/cli": "next",
