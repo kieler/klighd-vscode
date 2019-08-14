@@ -50,6 +50,8 @@
     "@theia/file-search": "next",
     "@theia/filesystem": "next",
     "@theia/languages": "next",
+    "@theia/getting-started": "next",
+    "@theia/keymaps": "next",
     "@theia/markers": "next",
     "@theia/messages": "next",
     "@theia/metrics": "next",

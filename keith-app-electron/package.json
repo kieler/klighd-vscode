@@ -21,6 +21,8 @@
         "@theia/editorconfig": "next",
         "@theia/file-search": "next",
         "@theia/filesystem": "next",
+        "@theia/getting-started": "next",
+        "@theia/keymaps": "next",
         "@theia/languages": "next",
         "@theia/markers": "next",
         "@theia/messages": "next",

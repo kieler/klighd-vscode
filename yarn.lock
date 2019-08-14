@@ -997,6 +997,16 @@
     uuid "^3.2.1"
     zip-dir "^1.0.2"
 
+"@theia/getting-started@next":
+  version "0.9.0-next.7fe439a3"
+  resolved "https://registry.yarnpkg.com/@theia/getting-started/-/getting-started-0.9.0-next.7fe439a3.tgz#77daab91dac58c5b94eb051382fcd81067abe66c"
+  integrity sha512-ytiT/YtyWgjsPUP+ozattE1NzAgaE92s2iAdpWmyNaOQ4kAxRntUQh48TrWiGmJ0/jld3LHec0VfYnZBNTJ+FQ==
+  dependencies:
+    "@theia/core" "0.9.0-next.7fe439a3"
+    "@theia/filesystem" "0.9.0-next.7fe439a3"
+    "@theia/keymaps" "0.9.0-next.7fe439a3"
+    "@theia/workspace" "0.9.0-next.7fe439a3"
+
 "@theia/json@0.9.0-next.7fe439a3":
   version "0.9.0-next.7fe439a3"
   resolved "https://registry.yarnpkg.com/@theia/json/-/json-0.9.0-next.7fe439a3.tgz#bfa746f35c3409ae4ea437cb5c44d2a12dd7fc99"
@@ -1006,6 +1016,21 @@
     "@theia/languages" "0.9.0-next.7fe439a3"
     "@theia/monaco" "0.9.0-next.7fe439a3"
     vscode-json-languageserver "^1.0.1"
+
+"@theia/keymaps@0.9.0-next.7fe439a3", "@theia/keymaps@next":
+  version "0.9.0-next.7fe439a3"
+  resolved "https://registry.yarnpkg.com/@theia/keymaps/-/keymaps-0.9.0-next.7fe439a3.tgz#12f9f47f9d83a06d392bdbab5c76eb4bb6edf493"
+  integrity sha512-GJ1tppWRPbEU93IAw47cEZvLwIvVlbAySm/xzEDDrQXGHNnLTwUnoRuB0VMP/lMj20PyCkSZoygJFEINB80nCw==
+  dependencies:
+    "@theia/core" "0.9.0-next.7fe439a3"
+    "@theia/monaco" "0.9.0-next.7fe439a3"
+    "@theia/userstorage" "0.9.0-next.7fe439a3"
+    "@theia/workspace" "0.9.0-next.7fe439a3"
+    "@types/lodash.debounce" "4.0.3"
+    ajv "^6.5.3"
+    fuzzy "^0.1.3"
+    jsonc-parser "^2.0.2"
+    lodash.debounce "^4.0.8"
 
 "@theia/languages@0.9.0-next.7fe439a3", "@theia/languages@next":
   version "0.9.0-next.7fe439a3"
