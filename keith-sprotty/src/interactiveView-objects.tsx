@@ -11,13 +11,14 @@ import { VNode } from 'snabbdom/vnode';
  * @param forbidden If the layer represented by the rectangle is forbidden the colour is red.
  */
 export function createRect(x: number, y: number, width: number, height: number, forbidden: boolean): VNode {
+    let forbiddenColor = 'indianred'
     return  <g> <rect
                     x={x}
                     y={y - 20}
                     width={width}
                     height={height + 40}
-                    fill='none'
-                    stroke={forbidden ? 'red' : 'grey'}
+                    fill={forbidden ? forbiddenColor : 'lightgrey'}
+                    stroke={forbidden ? forbiddenColor : 'grey'}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
                 </rect>
             </g>
@@ -50,7 +51,8 @@ export function createVerticalLine(x: number, topY: number, botY: number): VNode
  * @param forbidden If the layer the circle is in is forbidden the colour is red.
  */
 export function createCircle(fill: boolean, x: number, y: number, forbidden: boolean): VNode {
-    let color = forbidden ? 'red' : 'grey'
+    let forbiddenColor = 'indianred'
+    let color = forbidden ? forbiddenColor : 'grey'
     return  <g> <circle
                     cx={x}
                     cy={y}
