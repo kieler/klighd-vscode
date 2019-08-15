@@ -404,19 +404,20 @@ export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingCont
 export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext, parent: KGraphElement | KEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
+    const color = 'grey'
 
     if (parent instanceof KEdge && parent.moved) {
         // edge should be greyed out
         return {
-            foreground: 'darkgrey',
-            background: background === undefined ? DEFAULT_FILL : 'darkgrey'
+            foreground: color,
+            background: background === undefined ? DEFAULT_FILL : color
         }
     }
 
     if (parent instanceof KNode && parent.shadow) {
         // colors of the shadow node
         return {
-            foreground: 'darkgrey',
+            foreground: color,
             background: background === undefined ? DEFAULT_FILL : 'gainsboro'
         }
     }
