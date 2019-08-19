@@ -168,14 +168,6 @@ simulation-td {
     display:block;
 }
 
-th div {
-    border: 0;
-    min-height: 20px;
-    min-width: 20px;
-    display: inline-block;
-    width: 120px;
-}
-
 .simulation-speed-input-box {
     width: 50px;
 }

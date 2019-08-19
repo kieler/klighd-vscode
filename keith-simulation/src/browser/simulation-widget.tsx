@@ -300,12 +300,20 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             })
             return <table className={"simulation-data-table"}>
                 <colgroup>
-                    {this.inputOutputColumnEnabled ? <col width="5%"/> : null}
-                    <col width="10%" />
-                    <col width="10%" />
-                    <col width="0%" />
-                    <col width="10%" />
-                    <col width="70%" />
+                    {this.inputOutputColumnEnabled ? <React.Fragment>
+                        <col width="5%"/>
+                        <col width="10%" />
+                        <col width="5%" />
+                        <col width="0%" />
+                        <col width="10%" />
+                        <col width="70%" />
+                    </React.Fragment> : <React.Fragment>
+                        <col width="10%" />
+                        <col width="5%" />
+                        <col width="0%" />
+                        <col width="10%" />
+                        <col width="75%" />
+                    </React.Fragment>}
                 </colgroup>
                 <thead>
                     <tr key="headings" className="simulation-data-row">
