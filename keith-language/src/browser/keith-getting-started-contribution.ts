@@ -37,7 +37,7 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
     @inject(KeithPreferences) protected readonly keithPreferences: KeithPreferences
 
     async onStart(app: FrontendApplication): Promise<void> {
-        if (this.keithPreferences.get('keith.open-welcome-page') || !this.workspaceService.opened) {
+        if ((this.keithPreferences.get('keith.open-welcome-page') && !this.workspaceService.opened) || this.keithPreferences.get('keith.open-welcome-page')) {
             this.stateService.reachedState('ready').then(
                 a => this.openView({ reveal: true })
             );
