@@ -16,7 +16,7 @@ import { interfaces } from "inversify";
 
 export const KeithPreferenceSchema: PreferenceSchema = {
     properties: {
-        'keith.open-welcome-page': {
+        'keith.openWelcomePage': {
             type: 'boolean',
             description: 'Whether the welcome page should be opened on start.',
             default: true,
@@ -26,7 +26,7 @@ export const KeithPreferenceSchema: PreferenceSchema = {
 }
 
 export interface KeithConfiguration {
-    'keith.open-welcome-page': boolean
+    'keith.openWelcomePage': boolean
 }
 
 export const KeithPreferences = Symbol('KeithPreferences')

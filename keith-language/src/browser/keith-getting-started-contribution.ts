@@ -11,14 +11,14 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { GettingStartedContribution } from '@theia/getting-started/lib/browser/getting-started-contribution'
+import { GettingStartedContribution } from '@theia/getting-started/lib/browser/getting-started-contribution';
 import { injectable, inject } from 'inversify';
 import { Command, CommandRegistry, MessageService } from '@theia/core';
 import { Workspace } from '@theia/languages/lib/browser';
 import { FileSystem, FileSystemUtils, FileStat } from '@theia/filesystem/lib/common';
 import URI from '@theia/core/lib/common/uri';
 import { OpenerService, FrontendApplication } from '@theia/core/lib/browser';
-import { open } from '@theia/core/lib/browser/opener-service'
+import { open } from '@theia/core/lib/browser/opener-service';
 import { KeithPreferences } from './keith-preferences';
 
 export const OPEN_EXAMPLE_SCCHART: Command = {
@@ -37,11 +37,13 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
     @inject(KeithPreferences) protected readonly keithPreferences: KeithPreferences
 
     async onStart(app: FrontendApplication): Promise<void> {
-        if ((this.keithPreferences.get('keith.open-welcome-page') && !this.workspaceService.opened) || this.keithPreferences.get('keith.open-welcome-page')) {
-            this.stateService.reachedState('ready').then(
-                a => this.openView({ reveal: true })
-            );
-        }
+        this.keithPreferences.ready.then(() => {
+            if ((this.keithPreferences.get('keith.openWelcomePage') && !this.workspaceService.opened) || this.keithPreferences.get('keith.openWelcomePage')) {
+                this.stateService.reachedState('ready').then(
+                    a => this.openView({ reveal: true })
+                );
+            }
+        })
     }
 
     registerCommands(registry: CommandRegistry): void {
