@@ -17,14 +17,15 @@ import { Command, CommandRegistry, MessageService } from '@theia/core';
 import { Workspace } from '@theia/languages/lib/browser';
 import { FileSystem, FileSystemUtils, FileStat } from '@theia/filesystem/lib/common';
 import URI from '@theia/core/lib/common/uri';
-import { OpenerService, WidgetManager } from '@theia/core/lib/browser';
+import { OpenerService, WidgetManager, FrontendApplication, PreferenceServiceImpl } from '@theia/core/lib/browser';
 import { open } from '@theia/core/lib/browser/opener-service'
 import { EditorManager } from '@theia/editor/lib/browser';
+import { KeithPreferences } from './keith-preferences';
 
 export const OPEN_EXAMPLE_SCCHART: Command = {
     id: 'open-example-scchart',
     label: 'Open example SCChart',
-    category: 'KEITH'
+    category: 'Keith'
 }
 
 @injectable()
@@ -32,12 +33,22 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
 
     @inject(Workspace) protected readonly workspace: Workspace
     @inject(FileSystem) protected readonly fileSystem: FileSystem
-    @inject(OpenerService) protected readonly openerService: OpenerService;
+    @inject(OpenerService) protected readonly openerService: OpenerService
     @inject(EditorManager) protected readonly editorManager: EditorManager
     @inject(WidgetManager) protected readonly widgetManager: WidgetManager
     @inject(MessageService) protected readonly messageService: MessageService
+    @inject(PreferenceServiceImpl) protected readonly preferencesService: PreferenceServiceImpl
+    @inject(KeithPreferences) protected readonly keithPreferences: KeithPreferences
 
     fileUri = ""
+
+    async onStart(app: FrontendApplication): Promise<void> {
+        if (this.preferencesService.get('keith.open-welcome-page') || !this.workspaceService.opened) {
+            this.stateService.reachedState('ready').then(
+                a => this.openView({ reveal: true })
+            );
+        }
+    }
 
     registerCommands(registry: CommandRegistry): void {
         registry.registerCommand(OPEN_EXAMPLE_SCCHART, {
@@ -58,20 +69,14 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
                         this.messageService.error("There seems to be a problem with the created workspace.")
                     }
                 } else {
-
-                    await this.messageService.info("No workspace was open. Open workspace on home of current user.")
-                    const fileStat = await this.fileSystem.getCurrentUserHome()
-                    if (fileStat) {
-                        const uri = fileStat.uri
-                        console.log(uri)
-                        await this.workspaceService.open(new URI(uri))
-                    }
+                    this.messageService.error("No workspace was opened. Aborting")
                 }
-            }
+            },
+            isVisible: () => false
         })
     }
 
-    // TODO complete this docu.
+    // TODO complete the documentation.
     abroText = `// ABRO Tutorial
 // This is the declaration of an SCChart
 scchart ABRO {

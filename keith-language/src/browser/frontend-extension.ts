@@ -24,6 +24,7 @@ import { GettingStartedWidget } from '@theia/getting-started/lib/browser/getting
 import "../../src/browser/style/index.css"
 import { KeithGettingStartedWidget } from './keith-getting-started-widget';
 import { KeithGettingStartedContribution } from './keith-getting-started-contribution';
+import { bindKeithPreferences } from './keith-preferences';
 
 // Language register, holds all languages that are supported by KEITH
 export const languageDescriptions: LanguageDescription[] = [
@@ -87,4 +88,6 @@ export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.U
         id: GettingStartedWidget.ID,
         createWidget: () => context.container.get<KeithGettingStartedWidget>(KeithGettingStartedWidget),
     })).inSingletonScope();
+
+    bindKeithPreferences(bind)
 })
