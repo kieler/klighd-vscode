@@ -17,7 +17,7 @@ import { Command, CommandRegistry, MessageService } from '@theia/core';
 import { Workspace } from '@theia/languages/lib/browser';
 import { FileSystem, FileSystemUtils, FileStat } from '@theia/filesystem/lib/common';
 import URI from '@theia/core/lib/common/uri';
-import { OpenerService, WidgetManager, FrontendApplication, PreferenceServiceImpl } from '@theia/core/lib/browser';
+import { OpenerService, WidgetManager, FrontendApplication } from '@theia/core/lib/browser';
 import { open } from '@theia/core/lib/browser/opener-service'
 import { EditorManager } from '@theia/editor/lib/browser';
 import { KeithPreferences } from './keith-preferences';
@@ -37,13 +37,12 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
     @inject(EditorManager) protected readonly editorManager: EditorManager
     @inject(WidgetManager) protected readonly widgetManager: WidgetManager
     @inject(MessageService) protected readonly messageService: MessageService
-    @inject(PreferenceServiceImpl) protected readonly preferencesService: PreferenceServiceImpl
     @inject(KeithPreferences) protected readonly keithPreferences: KeithPreferences
 
     fileUri = ""
 
     async onStart(app: FrontendApplication): Promise<void> {
-        if (this.preferencesService.get('keith.open-welcome-page') || !this.workspaceService.opened) {
+        if (this.keithPreferences.get('keith.open-welcome-page') || !this.workspaceService.opened) {
             this.stateService.reachedState('ready').then(
                 a => this.openView({ reveal: true })
             );
