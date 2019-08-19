@@ -88,7 +88,7 @@ export const simulationCommandPrefix: string = 'simulation.'
 
 export const externalStepMessageType = new NotificationType<SimulationStepMessage, void>('keith/simulation/didStep');
 export const valuesForNextStepMessageType = new NotificationType<Object, void>('keith/simulation/valuesForNextStep');
-export const externalStopMessageType = new NotificationType<void, void>('keith/simulation/externalStop')
+export const externalStopMessageType = new NotificationType<string, void>('keith/simulation/externalStop')
 export const startedSimulationMessageType = new NotificationType<SimulationStartedMessage, void>('keith/simulation/started')
 
 /**
@@ -588,8 +588,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         console.log("external value", values)
     }
 
-    handleExternalStop() {
-        console.log("stop")
+    handleExternalStop(message: string) {
+        this.message('Stopped simulation because of exception on LS. You might want to reload the window.', 'ERROR')
+        this.messageService.error(message)
         this.setValuesToStopSimulation()
     }
 
