@@ -17,9 +17,8 @@ import { Command, CommandRegistry, MessageService } from '@theia/core';
 import { Workspace } from '@theia/languages/lib/browser';
 import { FileSystem, FileSystemUtils, FileStat } from '@theia/filesystem/lib/common';
 import URI from '@theia/core/lib/common/uri';
-import { OpenerService, WidgetManager, FrontendApplication } from '@theia/core/lib/browser';
+import { OpenerService, FrontendApplication } from '@theia/core/lib/browser';
 import { open } from '@theia/core/lib/browser/opener-service'
-import { EditorManager } from '@theia/editor/lib/browser';
 import { KeithPreferences } from './keith-preferences';
 
 export const OPEN_EXAMPLE_SCCHART: Command = {
@@ -34,12 +33,8 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
     @inject(Workspace) protected readonly workspace: Workspace
     @inject(FileSystem) protected readonly fileSystem: FileSystem
     @inject(OpenerService) protected readonly openerService: OpenerService
-    @inject(EditorManager) protected readonly editorManager: EditorManager
-    @inject(WidgetManager) protected readonly widgetManager: WidgetManager
     @inject(MessageService) protected readonly messageService: MessageService
     @inject(KeithPreferences) protected readonly keithPreferences: KeithPreferences
-
-    fileUri = ""
 
     async onStart(app: FrontendApplication): Promise<void> {
         if (this.keithPreferences.get('keith.open-welcome-page') || !this.workspaceService.opened) {
