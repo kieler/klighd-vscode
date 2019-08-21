@@ -73,47 +73,34 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
     }
 
     // TODO complete the documentation.
-    abroText = `// ABRO Tutorial
-// This is the declaration of an SCChart
-scchart ABRO {
-    // Variable declaration:
-    // A variable declaration consist of the optional input/output keywords,
-    // a type (int, bool, string or an array declaration e.g. int array[5] = {1,1,1,1,1}),
-    // a variable name (here A, B, and R)
-    input bool A, B, R
-    output bool O
+    abroText = `scchart ABRO {
+	input bool A, B, R
+	output bool O
+	region {
+		initial state ABO {
+			entry do O = false
 
-    // An anonymous region containing the logic of the SCChart.
-    // Regions are concurrently executed.
-    // A region can be declared via the region keyword and an options name.
-    // A region declaration looks like this: region A {<content>}
-    region {
-        // The initial state of this region.
-        // It is also an hierarchical state.
-        initial state ABO {
-            entry do O = false
+			initial state WaitAB {
+				region handleA {
+					initial state wA
+					if A go to dA
 
-            initial state WaitAB {
-                region handleA {
-                    initial state wA
-                    if A go to dA
+					final state dA
+				}
 
-                    final state dA
-                }
+				region handleB {
+					initial state wB
+					if B go to dB
 
-                region handleB {
-                    initial state wB
-                    if B go to dB
+					final state dB
+				}
+			}
+			do O = true join to done
 
-                    final state dB
-                }
-            }
-            do O = true join to done
-
-            state done
-        }
-        if R abort to ABO
-    }
+		state done
+		}
+		if R abort to ABO
+	}
 }`
 
 }
