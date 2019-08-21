@@ -380,8 +380,8 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderStepCounter(): React.ReactNode {
-        return <div className={'preference-button'} title="Step Counter">
-            <div className='icon step-counter'>{this.simulationStep}</div>
+        return <div title="Step Counter">
+            <div className='step-counter'>{this.simulationStep}</div>
         </div>
     }
 
