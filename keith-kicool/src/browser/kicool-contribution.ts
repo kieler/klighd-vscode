@@ -56,7 +56,7 @@ export const SELECT_COMPILATION_CHAIN: Command = {
     id: 'select-compiler',
     label: 'Select compilation chain',
     category: 'Kicool',
-    iconClass: 'fa fa-play-circle'
+    iconClass: 'fa fa-cogs'
 }
 export const REQUEST_CS: Command = {
     id: 'request-compilation-systems',

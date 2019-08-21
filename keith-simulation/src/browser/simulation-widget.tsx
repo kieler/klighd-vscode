@@ -120,7 +120,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         super();
         this.id = simulationWidgetId
         this.title.label = 'Simulation'
-        this.title.iconClass = 'fa fa-table ';
+        this.title.iconClass = 'fa fa-play-circle ';
         this.addClass(simulationWidgetId) // class for index.css
         this.update()
     }

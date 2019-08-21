@@ -150,7 +150,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         super();
         this.id = compilerWidgetId
         this.title.label = 'KIELER Compiler'
-        this.title.iconClass = 'fa fa-play-circle';
+        this.title.iconClass = 'fa fa-cogs';
         this.addClass(compilerWidgetId) // class for index.css
     }
 
