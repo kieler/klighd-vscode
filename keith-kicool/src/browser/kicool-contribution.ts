@@ -281,8 +281,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             const command: Command = {id: system.id, label: "Compile with " + system.label, category: "Kicool"}
             this.kicoolCommands.push(command)
             const handler: CommandHandler = {
-                execute: simulationCommand => {
-                    this.compile(system.id, this.compilerWidget.compileInplace, !simulationCommand);
+                execute: (inplace, doNotShowResultingModel) => { // on compile these options are undefined
+                    this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel);
                 },
                 isVisible: () => {
                     return system.isPublic || this.compilerWidget.showPrivateSystems

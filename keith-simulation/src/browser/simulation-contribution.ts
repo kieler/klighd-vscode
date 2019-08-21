@@ -385,7 +385,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         this.simulationWidget.compilingSimulation = true
         this.simulationWidget.update()
         // Execute compilation command
-        await this.commandRegistry.executeCommand(simulationCommand.id, true)
+        await this.commandRegistry.executeCommand(simulationCommand.id, true, true)
     }
 
     /**
