@@ -11,11 +11,11 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
- import { SimulationWidget } from "./simulation-widget";
+import { SimulationWidget } from "./simulation-widget";
 import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
     FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent, PrefixQuickOpenService,
-    QuickOpenService, QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenOptions } from "@theia/core/lib/browser";
+    QuickOpenService, QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenOptions, StatusBar, StatusBarAlignment } from "@theia/core/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
 import { MessageService, Command, CommandRegistry, MenuModelRegistry, CommandHandler } from "@theia/core";
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
@@ -31,58 +31,9 @@ import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
 import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models";
 import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
+import { SIMULATION, SIMULATE, OPEN_INTERNAL_KVIZ_VIEW, OPEN_EXTERNAL_KVIZ_VIEW, SELECT_SIMULATION_CHAIN, SET_SIMULATION_SPEED } from "../common/commands";
 
 export const SIMULATION_CATEGORY = "Simulation"
-/**
- * Command to open the simulation widget
- */
-export const SIMULATION: Command = {
-    id: 'simulation:toggle',
-    label: 'Simulation View',
-    category: 'Simulation'
-}
-
-/**
- * Command to restart a simulation.
- */
-export const SIMULATE: Command = {
-    id: 'simulate',
-    label: 'Restart simulation',
-    category: 'Simulation'
-}
-
-export const COMPILE_AND_SIMULATE: Command = {
-    id: 'compile-and-simulate',
-    label: 'Simulate',
-    category: 'Simulation'
-}
-
-export const OPEN_INTERNAL_KVIZ_VIEW: Command = {
-    id: 'open-kviz-internal',
-    label: 'Open KViz view in internal browser preview',
-    iconClass: 'fa fa-file-image-o',
-    category: 'Simulation'
-}
-
-export const OPEN_EXTERNAL_KVIZ_VIEW: Command = {
-    id: 'open-kviz-external',
-    label: 'Open KViz view in external browser',
-    iconClass: 'fa fa-external-link',
-    category: 'Simulation'
-}
-
-export const SELECT_SIMULATION_CHAIN: Command = {
-    id: 'select-simulation-chain',
-    label: 'Select simulation chain',
-    category: 'Simulation',
-    iconClass: 'fa fa-play-circle'
-}
-
-export const SET_SIMULATION_SPEED: Command = {
-    id: 'set-simulation-speed',
-    label: 'Set simulation speed',
-    category: 'Simulation'
-}
 
 export const simulationCommandPrefix: string = 'simulation.'
 
@@ -90,6 +41,8 @@ export const externalStepMessageType = new NotificationType<SimulationStepMessag
 export const valuesForNextStepMessageType = new NotificationType<Object, void>('keith/simulation/valuesForNextStep');
 export const externalStopMessageType = new NotificationType<string, void>('keith/simulation/externalStop')
 export const startedSimulationMessageType = new NotificationType<SimulationStartedMessage, void>('keith/simulation/started')
+
+export const simulationStatusPriority: number = 3
 
 /**
  * Contribution for SimulationWidget to add functionality to it.
@@ -117,6 +70,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     @inject(SimulationKeybindingContext) protected readonly simulationKeybindingContext: SimulationKeybindingContext
     @inject(WindowService) public readonly windowService: WindowService
     @inject(Workspace) protected readonly workspace: Workspace
+    @inject(StatusBar) protected readonly statusbar: StatusBar
 
 
     constructor(
@@ -145,8 +99,14 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         await this.openView()
     }
 
-    async handleProgress(message: any) {
-        console.log("Real Progress!!!!!" + message)
+    onStart(): void {
+        this.statusbar.setElement('simulation-status', {
+            alignment: StatusBarAlignment.LEFT,
+            priority: simulationStatusPriority,
+            text: `$(spinner fa-pulse fa-fw) Waiting for simulation systems...`,
+            tooltip: 'Waiting for simulation systems...',
+            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+        })
     }
 
     /**
@@ -169,6 +129,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     registerSimulationCommands(systems: CompilationSystem[]) {
+        this.statusbar.removeElement('simulation-status')
         // remove existing commands
         this.simulationCommands.forEach(command => {
             this.commandRegistry.unregisterCommand(command)
@@ -228,7 +189,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             while (!this.client.running) {
                 await delay(100)
             }
-            lClient.onNotification(this.progressMessageType, this.handleProgress.bind(this))
             lClient.onNotification(externalStepMessageType, this.handleStepMessage.bind(this))
             lClient.onNotification(valuesForNextStepMessageType, this.handleExternalNewUserValue.bind(this))
             lClient.onNotification(externalStopMessageType, this.handleExternalStop.bind(this))
@@ -384,6 +344,13 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     async compileAndStartSimulation(simulationCommand: Command) {
         this.simulationWidget.compilingSimulation = true
         this.simulationWidget.update()
+        this.statusbar.setElement('simulation-status', {
+            alignment: StatusBarAlignment.LEFT,
+            priority: simulationStatusPriority,
+            text: `$(spinner fa-pulse fa-fw) Compiling for simulation...`,
+            tooltip: 'Compiling for simulation...',
+            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+        })
         // Execute compilation command
         await this.commandRegistry.executeCommand(simulationCommand.id, true, true)
     }
@@ -405,7 +372,22 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 await delay(100)
                 initializeResult = lClient.initializeResult
             }
+            this.statusbar.setElement('simulation-status', {
+                alignment: StatusBarAlignment.LEFT,
+                priority: simulationStatusPriority,
+                text: `$(spinner fa-pulse fa-fw) Starting simulation...`,
+                tooltip: 'Starting simulation...',
+                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            })
             lClient.sendNotification("keith/simulation/start", [uri, this.simulationWidget.simulationType])
+        } else {
+            this.statusbar.setElement('simulation-status', {
+                alignment: StatusBarAlignment.LEFT,
+                priority: simulationStatusPriority,
+                text: `$(times) ${this.kicoolContribution.editor ? 'No editor defined' : 'Simulation already running'}`,
+                tooltip: 'Did not simulate.',
+                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            })
         }
     }
 
@@ -415,7 +397,22 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     handleSimulationStarted(startMessage: SimulationStartedMessage) {
         if (!startMessage.successful) {
             this.message(startMessage.error, "error")
+            this.statusbar.setElement('simulation-status', {
+                alignment: StatusBarAlignment.LEFT,
+                priority: simulationStatusPriority,
+                text: `$(cross) Simulation could not be started`,
+                tooltip: 'Simulation could not be started',
+                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            })
             return
+        } else {
+            this.statusbar.setElement('simulation-status', {
+                alignment: StatusBarAlignment.LEFT,
+                priority: simulationStatusPriority,
+                text: `$(check) Simulating...`,
+                tooltip: 'Simulation could be started and is running',
+                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            })
         }
 
         // Get the start configuration for the simulation
@@ -471,12 +468,25 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      */
     public async stopSimulation() {
         this.setValuesToStopSimulation()
+        this.statusbar.setElement('simulation-status', {
+            alignment: StatusBarAlignment.LEFT,
+            priority: simulationStatusPriority,
+            text: `$(spinner fa-pulse fa-fw) Stopping simulation...`,
+            tooltip: 'Request to stop the simulation is about to be send',
+            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+        })
         const lClient = await this.client.languageClient
         const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
         if (!message.successful) {
             this.message(message.message, "ERROR")
         }
         this.simulationWidget.update()
+        this.statusbar.setElement('simulation-status', {
+            alignment: StatusBarAlignment.LEFT,
+            priority: simulationStatusPriority,
+            text: `Stopped simulation`,
+            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+        })
     }
 
     private setValuesToStopSimulation() {

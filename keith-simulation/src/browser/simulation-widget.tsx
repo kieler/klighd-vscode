@@ -15,10 +15,11 @@
 import { injectable, LazyServiceIdentifer, inject } from "inversify";
 import { StatefulWidget, ReactWidget, Message } from "@theia/core/lib/browser";
 import * as React from "react";
-import { SimulationContribution, SELECT_SIMULATION_CHAIN, SIMULATE } from "./simulation-contribution";
+import { SimulationContribution } from "./simulation-contribution";
 import { simulationWidgetId, SimulationData, SimulationDataBlackList } from "../common"
 import { Emitter } from "@theia/core";
 import { isInternal, reverse } from '../common/helper'
+import { SELECT_SIMULATION_CHAIN, SIMULATE } from "../common/commands";
 
 
 /**
@@ -129,20 +130,13 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         if (!this.commands.kicoolContribution ||
             !this.commands.kicoolContribution.compilerWidget ||
             this.commands.kicoolContribution.compilerWidget.systems.length === 0) {
-            return this.renderSpinner("Wait for compiler widget to start...")
+            return
         } else {
             return <React.Fragment>
                 {this.renderSimulationPanel()}
-                {this.commands.kicoolContribution.compilerWidget.compiling || this.compilingSimulation ? this.renderSpinner("Compiling for simulation...") : ""}
                 <div key="table" className="simulation-table">{this.renderSimulationData()}</div>
             </React.Fragment>
         }
-    }
-
-    renderSpinner(tooltip: string) {
-        return <div className='spinnerContainer' title={tooltip}>
-            <div className='fa fa-spinner fa-pulse fa-3x fa-fw'></div>
-        </div>;
     }
 
     /**

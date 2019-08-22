@@ -37,6 +37,8 @@ import { COMPILER, TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
 
+export const compilationStatusPriority: number = 4
+
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
  */
@@ -130,7 +132,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     onStart(): void {
         this.statusbar.setElement('request-systems', {
             alignment: StatusBarAlignment.LEFT,
-            priority: 1,
+            priority: compilationStatusPriority,
             text: `$(spinner fa-pulse fa-fw) No editor focused... waiting`,
             tooltip: 'No editor focused... waiting'
         })
@@ -202,7 +204,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             // when systems are requested request systems status bar entry is updated
             this.statusbar.setElement('request-systems', {
                 alignment: StatusBarAlignment.LEFT,
-                priority: 1,
+                priority: compilationStatusPriority,
                 text: `$(spinner fa-pulse fa-fw) Request compilation systems`,
                 tooltip: 'Requesting compilation systems...'
             })
@@ -448,7 +450,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             // Set finished bar if the currentIndex of the processor is the maxIndex the compilation was not canceled
             this.statusbar.setElement('compile-status', {
                 alignment: StatusBarAlignment.LEFT,
-                priority: 1,
+                priority: compilationStatusPriority,
                 text: currentIndex === maxIndex ? `$(check)` : `$(times)`,
                 tooltip: currentIndex === maxIndex ? 'Compilation finished' : 'Compilation stopped',
                 onclick: () => this.front.shell.revealWidget(compilerWidgetId)
@@ -459,7 +461,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
             this.statusbar.setElement('compile-status', {
                 alignment: StatusBarAlignment.LEFT,
-                priority: 1,
+                priority: compilationStatusPriority,
                 text: `$(spinner fa-pulse fa-fw) ${progress}`,
                 tooltip: 'Compiling...',
                 onclick: () => this.front.shell.revealWidget(compilerWidgetId)
