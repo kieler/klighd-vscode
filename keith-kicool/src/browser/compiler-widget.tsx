@@ -20,13 +20,14 @@ import { Event } from '@theia/core/lib/common'
 import * as React from "react";
 import { CompilationSystem, Snapshot } from "../common/kicool-models";
 import { compilerWidgetId } from "../common";
-import { KiCoolContribution, TOGGLE_AUTO_COMPILE, TOGGLE_INPLACE, TOGGLE_PRIVATE_SYSTEMS, SELECT_COMPILATION_CHAIN } from "./kicool-contribution";
+import { KiCoolContribution } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
 import '../../src/browser/style/reverse-toolbar.css'
 import '../../src/browser/style/tree.css'
 import '../../src/browser/style/inline-block.css'
+import { SELECT_COMPILATION_CHAIN, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, TOGGLE_AUTO_COMPILE } from "../common/commands";
 
 /**
  * Widget to compile and navigate compilation results. Should be linked to editor.
@@ -160,7 +161,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 <div key="panel" className={"compilation-panel" + (this.selectedStyle)}>
                     {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems(), "Cancel get compilation systems") : ""}
                 </div>
-                {this.renderSpinner("Request compilation systems...")}
             </div>;
         } else if (!this.systems || this.systems.length === 0) {
             // Case no connection to the LS was established or no compilation systems are present.
@@ -211,7 +211,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                         this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation(), "Cancel compilation") : ""}
                 </div>
                 {this.renderShowButtons()}
-                {this.compiling ? this.renderSpinner("Compiling...") : ""}
             </React.Fragment>
         }
     }

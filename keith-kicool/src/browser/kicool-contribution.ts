@@ -14,7 +14,7 @@
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import { AbstractViewContribution, CommonMenus, DidCreateWidgetEvent,
-    FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService
+    FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService, StatusBar, StatusBarAlignment
 } from "@theia/core/lib/browser";
 import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
@@ -31,59 +31,8 @@ import { CodeContainer, CompilationSystem } from "../common/kicool-models";
 import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-
-export const SAVE: Command = {
-    id: 'core.save',
-    label: 'Save'
-};
-
-export const SHOW_NEXT: Command = {
-    id: 'show_next',
-    label: 'Show next',
-    category: "Kicool"
-}
-export const SHOW_PREVIOUS: Command = {
-    id: 'show_previous',
-    label: 'Show previous',
-    category: "Kicool"
-}
-export const COMPILER: Command = {
-    id: 'compiler:toggle',
-    label: 'Compiler',
-    category: "Kicool"
-}
-export const SELECT_COMPILATION_CHAIN: Command = {
-    id: 'select-compiler',
-    label: 'Select compilation chain',
-    category: 'Kicool',
-    iconClass: 'fa fa-cogs'
-}
-export const REQUEST_CS: Command = {
-    id: 'request-compilation-systems',
-    label: 'Request compilation systems',
-    category: "Kicool"
-}
-export const TOGGLE_INPLACE: Command = {
-    id: 'toggle-inplace',
-    label: 'Toggle inplace compilation',
-    category: "Kicool"
-}
-export const TOGGLE_PRIVATE_SYSTEMS: Command = {
-    id: 'toggle-private-systems',
-    label: 'Toggle show private systems',
-    category: "Kicool"
-}
-export const TOGGLE_AUTO_COMPILE: Command = {
-    id: 'toggle-auto-compile',
-    label: 'Toggle auto compile',
-    category: "Kicool"
-}
-
-export const TOGGLE_BUTTON_MODE: Command = {
-    id: 'toggle-button-mode',
-    label: 'Toggle button mode',
-    category: 'Kicool'
-}
+import { COMPILER, TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
+    SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS } from '../common/commands';
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
@@ -136,6 +85,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     @inject(CommandRegistry) public commandRegistry: CommandRegistry
     @inject(KeybindingRegistry) protected keybindingRegistry: KeybindingRegistry
     @inject(PrefixQuickOpenService) public readonly quickOpenService: PrefixQuickOpenService
+    @inject(StatusBar) protected readonly statusbar: StatusBar
 
     constructor(
         @inject(EditorManager) public readonly editorManager: EditorManager,
@@ -176,6 +126,16 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     async initializeLayout(app: FrontendApplication): Promise<void> {
         await this.openView()
     }
+
+    onStart(): void {
+        this.statusbar.setElement('request-systems', {
+            alignment: StatusBarAlignment.LEFT,
+            priority: 1,
+            text: `$(spinner fa-pulse fa-fw) No editor focused... waiting`,
+            tooltip: 'No editor focused... waiting'
+        })
+    }
+
     private async initializeCompilerWidget(widget: Widget | undefined) {
         if (widget) {
             this.compilerWidget = widget as CompilerWidget
@@ -239,6 +199,13 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
     async requestSystemDescriptions() {
         if (this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
+            // when systems are requested request systems status bar entry is updated
+            this.statusbar.setElement('request-systems', {
+                alignment: StatusBarAlignment.LEFT,
+                priority: 1,
+                text: `$(spinner fa-pulse fa-fw) Request compilation systems`,
+                tooltip: 'Requesting compilation systems...'
+            })
             this.compilerWidget.requestedSystems = true
             this.compilerWidget.update()
             const lClient = await this.client.languageClient
@@ -251,6 +218,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 initializeResult = lClient.initializeResult
             }
             const systems: CompilationSystem[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystem[]
+            // Remove status bar element after successfully requesting systems
+            this.statusbar.removeElement('request-systems')
             // Sort all compilation systems by id
             systems.sort((a, b) => (a.id > b.id) ? 1 : -1)
             this.compilerWidget.systems = systems
@@ -450,7 +419,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     /**
      * Handles the visualization of new snapshot descriptions send by the LS.
      */
-    handleNewSnapshotDescriptions(snapshotsDescriptions: CodeContainer, uri: string, finished: boolean) {
+    handleNewSnapshotDescriptions(snapshotsDescriptions: CodeContainer, uri: string, finished: boolean, currentIndex: number, maxIndex: number) {
         // Show next/previous command and keybinding if not already added
         if (!this.commandRegistry.getCommand(SHOW_NEXT.id)) {
             this.registerShowNext()
@@ -476,7 +445,25 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     })
                 })
             });
-            this.front.shell.revealWidget(compilerWidgetId)
+            // Set finished bar if the currentIndex of the processor is the maxIndex the compilation was not canceled
+            this.statusbar.setElement('compile-status', {
+                alignment: StatusBarAlignment.LEFT,
+                priority: 1,
+                text: currentIndex === maxIndex ? `$(check)` : `$(times)`,
+                tooltip: currentIndex === maxIndex ? 'Compilation finished' : 'Compilation stopped',
+                onclick: () => this.front.shell.revealWidget(compilerWidgetId)
+            })
+        } else {
+            // Set progress bar for compilation
+            let progress: string = '█'.repeat(currentIndex) + '░'.repeat(maxIndex - currentIndex)
+
+            this.statusbar.setElement('compile-status', {
+                alignment: StatusBarAlignment.LEFT,
+                priority: 1,
+                text: `$(spinner fa-pulse fa-fw) ${progress}`,
+                tooltip: 'Compiling...',
+                onclick: () => this.front.shell.revealWidget(compilerWidgetId)
+            })
         }
         this.compilerWidget.update()
     }
