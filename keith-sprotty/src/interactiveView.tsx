@@ -26,9 +26,9 @@ export function renderInteractiveLayout(root: KNode): VNode {
 function renderLayer(nodes: KNode[], root: KNode): VNode {
     let selNode = getSelectedNode(nodes)
     if (selNode !== undefined) {
-        let currentLayer = getLayerOfNode(selNode, nodes)
-        let forbidden = isLayerForbidden(selNode, currentLayer)
         let layers = getLayers(nodes)
+        let currentLayer = getLayerOfNode(selNode, nodes, layers)
+        let forbidden = isLayerForbidden(selNode, currentLayer)
 
         // y coordinates of the layers
         let topY = layers[0].topY

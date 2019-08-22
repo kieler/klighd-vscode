@@ -5,10 +5,9 @@ import { KNode, Layer, KEdge } from "./ConstraintClasses"
  * Calculates the layer the node is in.
  * @param node Node which layer should be calculated.
  * @param nodes All nodes in the same hierarchical level as the node which layer should be calculated.
+ * @param layers All layers at the hierarchical level.
  */
-export function getLayerOfNode(node: KNode, nodes: KNode[]): number {
-    // TODO: doesn't work properly when the layerCons of some nodes are greater than their layerId
-    let layers = getLayers(nodes)
+export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[]): number {
     let curX = node.position.x + node.size.width / 2
 
     // check for all layers if the node is in the layer

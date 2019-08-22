@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "sprotty-theia/lib/"
 import { KNode } from "./ConstraintClasses";
 import { PositionConstraint, StaticConstraint } from './Constraint-types';
-import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex } from "./ConstraintUtils";
+import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex, getLayers } from "./ConstraintUtils";
 
 @injectable()
 export class InteractiveMouseListener extends MoveMouseListener {
@@ -53,7 +53,8 @@ export class InteractiveMouseListener extends MoveMouseListener {
         let targetNode: KNode = target as KNode
         let nodes = filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
-        let layerOfTarget = getLayerOfNode(targetNode, nodes)
+        let layers = getLayers(nodes)
+        let layerOfTarget = getLayerOfNode(targetNode, nodes, layers)
         let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = getPosInLayer(nodesOfLayer, targetNode)
         let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
