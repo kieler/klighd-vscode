@@ -11,7 +11,6 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-// import { ReactWidget } from "@theia/core/lib/browser/widgets/react-widget";
 import { injectable, LazyServiceIdentifer, inject } from "inversify";
 import { StatefulWidget, ReactWidget, Message } from "@theia/core/lib/browser";
 import * as React from "react";
