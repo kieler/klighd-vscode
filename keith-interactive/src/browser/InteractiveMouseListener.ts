@@ -5,8 +5,8 @@ import {
 import { inject, injectable } from 'inversify';
 import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "sprotty-theia/lib/"
 import { KNode } from "./ConstraintClasses";
-import { PositionConstraint, StaticConstraint } from './Constraint-types';
-import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex, getLayers } from "./ConstraintUtils";
+import { PositionConstraint, StaticConstraint, LayerConstraint } from './Constraint-types';
+import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet } from "./ConstraintUtils";
 
 @injectable()
 export class InteractiveMouseListener extends MoveMouseListener {
@@ -69,11 +69,19 @@ export class InteractiveMouseListener extends MoveMouseListener {
         if (targetNode.layerId !== layerOfTarget) {
             constraintSet = true
 
-            // If layer and positional Constraint should be set - send them both in one StaticConstraint
-            let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, newLayerCons, positionOfTarget, newPositionCons)
-            this.diagramClient.languageClient.then(lClient => {
-                lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
-            })
+            if (shouldOnlyLCBeSet(targetNode, layers)) {
+                // only the layer constraint should be set
+                let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget, newLayerCons)
+                this.diagramClient.languageClient.then(lClient => {
+                    lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
+                })
+            } else {
+                // If layer and position constraint should be set - send them both in one StaticConstraint
+                let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, newLayerCons, positionOfTarget, newPositionCons)
+                this.diagramClient.languageClient.then(lClient => {
+                    lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
+                })
+            }
         } else {
 
             // position constraint should only be set if the position of the node changed

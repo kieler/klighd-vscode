@@ -128,6 +128,10 @@ export function getLayers(nodes: KNode[]): Layer[] {
     // add last layer
     layers[layer] = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
 
+    // offset above & below the layers
+    topY = topY - 20
+    botY = botY + 20
+
     // update left and right bounds of the layers and set y bounds
     for (let i = 0; i < layers.length - 1; i++) {
         // calculate the mid between two layers
@@ -268,8 +272,8 @@ export function getSelectedNode(nodes: KNode[]): KNode | undefined {
 }
 
 /**
-* determines if one of the children is selected
-* @param root node which children should be checked
+* Determines whether one of the children is selected.
+* @param root Node which children should be checked.
 */
 export function isChildSelected(root: KNode): boolean {
     let nodes = root.children
@@ -290,7 +294,7 @@ export function isChildSelected(root: KNode): boolean {
  * @param node The KNode.
  * @param layer The number indicating the layer.
  */
-export function isLayerForbidden(node: KNode, layer: number) {
+export function isLayerForbidden(node: KNode, layer: number): boolean {
     // collect the connected nodes
     let connectedNodes: KNode[] = []
     let edges = node.outgoingEdges as any as KEdge[]
@@ -311,5 +315,21 @@ export function isLayerForbidden(node: KNode, layer: number) {
     }
 
     // layer is valid for the given node
+    return false
+}
+
+/**
+ * Determines whether only the layer constraint should be set.
+ * @param node The node that is moved.
+ * @param layers The layers in the graph.
+ */
+export function shouldOnlyLCBeSet(node: KNode, layers: Layer[]): boolean {
+    let nodeY = node.position.y
+    if (layers.length !== 0) {
+        let layerTopY = layers[0].topY
+        let layerBotY = layers[0].botY
+        // if the node is below or above the layer only the layer constraint should be set
+        return nodeY < layerTopY || nodeY > layerBotY
+    }
     return false
 }

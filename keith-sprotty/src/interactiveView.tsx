@@ -1,6 +1,7 @@
 /** @jsx svg */
 import { KNode, Layer } from "@kieler/keith-interactive/lib/ConstraintClasses";
-import { getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer, isLayerForbidden } from "@kieler/keith-interactive/lib/ConstraintUtils";
+import { getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer, isLayerForbidden,
+    shouldOnlyLCBeSet } from "@kieler/keith-interactive/lib/ConstraintUtils";
 import { svg } from 'snabbdom-jsx';
 import { createRect, createVerticalLine, createCircle, lock, arrow } from "./interactiveView-objects";
 import { VNode } from "snabbdom/vnode";
@@ -37,12 +38,15 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
         // rightmost x coordinate
         let rightX = layers[layers.length - 1].rightX
 
+        // determines whether only the layer constraint will be set when the node is released
+        let onlyLC = shouldOnlyLCBeSet(selNode, layers) && selNode.layerId !== currentLayer
+
         // create layers
         let result = <g></g>
         for (let i = 0; i < layers.length; i++) {
             let layer = layers[i]
             if (i === currentLayer) {
-                result = <g>{result}{createRect(layer.leftX, topY, layer.rightX - layer.leftX, botY - topY, forbidden)}</g>
+                result = <g>{result}{createRect(layer.leftX, topY, layer.rightX - layer.leftX, botY - topY, forbidden, onlyLC)}</g>
             } else {
                 result  = <g>{result}{createVerticalLine(layer.mid, topY, botY)}</g>
             }
@@ -55,7 +59,7 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
             // only show the layer if the moved node is not (the only node) in the last layer
             rightX = lastL.rightX + lastL.rightX - lastL.leftX
             if (currentLayer === layers.length) {
-                result = <g>{result}{createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY, forbidden)}</g>
+                result = <g>{result}{createRect(lastL.rightX, topY, lastL.rightX - lastL.leftX, botY - topY, forbidden, onlyLC)}</g>
             } else {
                 result = <g>{result}{createVerticalLine(lastL.mid + (lastL.rightX - lastL.leftX), topY, botY)}</g>
             }
@@ -65,8 +69,13 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
         root.hierHeight = root.size.height
         root.hierWidth = rightX - layers[0].leftX + 10
 
-        // add available positions
-        return <g>{result}{renderPositions(currentLayer, nodes, layers, forbidden)}</g>
+        // positions should only be rendered if a position constraint will be set
+        if (!onlyLC) {
+            return <g>{result}{renderPositions(currentLayer, nodes, layers, forbidden)}</g>
+        } else {
+            // add available positions
+            return result
+        }
     }
     return <g></g>
 }
@@ -118,12 +127,14 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
         // position above the first node is available if the first node is not the selected one
         let first = layerNodes[0]
         if (!first.selected) {
-            result = <g>{result}{createCircle(curPos === 0, x, first.position.y - 10, forbidden)}</g>
+            let y = layers[current].topY + (first.position.y - layers[current].topY) / 2
+            result = <g>{result}{createCircle(curPos === 0, x, y, forbidden)}</g>
         }
         // position below the last node is available if the last node is not the selected one
         let last = layerNodes[layerNodes.length - 1]
         if (!last.selected) {
-            result = <g>{result}{createCircle(curPos === layerNodes.length - 1 + shift, x, last.position.y + last.size.height + 10, forbidden)}</g>
+            let y = layers[current].botY - (layers[current].botY - (last.position.y + last.size.height)) / 2
+            result = <g>{result}{createCircle(curPos === layerNodes.length - 1 + shift, x, y, forbidden)}</g>
         }
 
         return result

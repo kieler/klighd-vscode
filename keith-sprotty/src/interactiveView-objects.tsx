@@ -9,15 +9,17 @@ import { VNode } from 'snabbdom/vnode';
  * @param width Width of the rectangle.
  * @param height Height of the rectangle.
  * @param forbidden If the layer represented by the rectangle is forbidden the colour is red.
+ * @param selected Determines whether the layer represented by the rectangle is selected instead of a certain position.
  */
-export function createRect(x: number, y: number, width: number, height: number, forbidden: boolean): VNode {
+export function createRect(x: number, y: number, width: number, height: number, forbidden: boolean, selected: boolean): VNode {
     let forbiddenColor = 'indianred'
+    let backgroundColor = selected ? 'grey' : 'lightgrey'
     return  <g> <rect
                     x={x}
-                    y={y - 20}
+                    y={y}
                     width={width}
-                    height={height + 40}
-                    fill={forbidden ? forbiddenColor : 'lightgrey'}
+                    height={height}
+                    fill={forbidden ? forbiddenColor : backgroundColor}
                     stroke={forbidden ? forbiddenColor : 'grey'}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
                 </rect>
@@ -33,9 +35,9 @@ export function createRect(x: number, y: number, width: number, height: number, 
 export function createVerticalLine(x: number, topY: number, botY: number): VNode {
     return  <g> <line
                     x1={x}
-                    y1={topY - 20}
+                    y1={topY}
                     x2={x}
-                    y2={botY + 20}
+                    y2={botY}
                     fill='none'
                     stroke='grey'
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}
