@@ -158,9 +158,18 @@ export class KPortView implements IView {
  */
 @injectable()
 export class KLabelView implements IView {
+
+    @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
+
     render(label: KLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
-        const rendering = getRendering(label.data, label, context as any)
+
+        let parent = label.parent
+        let rendering = undefined
+        // labels should not be visible if the nodes are hidden
+        if (!(parent instanceof KNode) || isChildSelected(parent) || isChildSelected(parent.parent as KNode) || !this.mListener.hasDragged) {
+            rendering = getRendering(label.data, label, context as any)
+        }
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
