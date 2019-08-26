@@ -19,6 +19,7 @@ export class CompilationSystem {
     id: string
     isPublic: boolean
     simulation: boolean
+    snapshotSystem: boolean
 }
 
 /**

@@ -127,8 +127,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     protected render(): React.ReactNode {
         if (!this.commands.kicoolContribution ||
-            !this.commands.kicoolContribution.compilerWidget ||
-            this.commands.kicoolContribution.compilerWidget.systems.length === 0) {
+            !this.commands.kicoolContribution.compilerWidget) {
             return
         } else {
             return <React.Fragment>

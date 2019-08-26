@@ -36,6 +36,7 @@ import { COMPILER, TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, 
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
+export const compilationSystemsMessageType = new NotificationType<CompilationSystem[], void>('keith/kicool/compilation-systems');
 
 export const compilationStatusPriority: number = 5
 export const requestSystemStatusPriority: number = 6
@@ -118,15 +119,15 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
         this.widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
         // TODO: when the diagram closes, also update the view to the default one
-        const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
-        widgetPromise.then(widget => {
-            if (this.compilerWidget === undefined || this.compilerWidget === null) {
-                // widget has to be created
-                this.initializeCompilerWidget(new CompilerWidget(this))
-            } else {
-                this.initializeCompilerWidget(widget)
-            }
-        })
+        // const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
+        // widgetPromise.then(widget => {
+        //     if (this.compilerWidget === undefined || this.compilerWidget === null) {
+        //         // widget has to be created
+        //         this.initializeCompilerWidget(new CompilerWidget(this))
+        //     } else {
+        //         this.initializeCompilerWidget(widget)
+        //     }
+        // })
     }
 
     async initializeLayout(app: FrontendApplication): Promise<void> {
@@ -164,7 +165,13 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             }
             lClient.onNotification(snapshotDescriptionMessageType, this.handleNewSnapshotDescriptions.bind(this))
             lClient.onNotification(cancelCompilationMessageType, this.cancelCompilation.bind(this))
+            lClient.onNotification(compilationSystemsMessageType, this.handleReceiveSystemDescriptions.bind(this))
+            this.showedNewSnapshot(this.handleNewShapshotShown.bind(this))
         }
+    }
+    handleNewShapshotShown(message: string) {
+        console.log("Got message", message)
+        this.requestSystemDescriptions()
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
@@ -172,7 +179,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         // if (e.widget instanceof EditorWidget) {
         //     e.widget.activate()
         // }
-        if (e.factoryId === CompilerWidget.widgetId) {
+        if (e.factoryId === CompilerWidget.widgetId && !this.compilerWidget) {
             this.initializeCompilerWidget(e.widget)
         }
     }
@@ -199,8 +206,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         } else {
             await this.requestSystemDescriptions()
         }
-        this.kicoolCommands.forEach(command => this.commandRegistry.unregisterCommand(command))
-        this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
     }
 
     async requestSystemDescriptions() {
@@ -223,22 +228,26 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 await delay(100)
                 initializeResult = lClient.initializeResult
             }
-            const systems: CompilationSystem[] = await lClient.sendRequest(GET_SYSTEMS, [uri, true]) as CompilationSystem[]
-            // Remove status bar element after successfully requesting systems
-            this.statusbar.removeElement('request-systems')
-            // Sort all compilation systems by id
-            systems.sort((a, b) => (a.id > b.id) ? 1 : -1)
-            this.compilerWidget.systems = systems
-            this.addCompilationSystemToCommandPalette(systems)
-            this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
-            this.compilerWidget.requestedSystems = false
-            this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
-            this.compilerWidget.update()
-            this.compilerWidget.onNewSystemsAddedEmitter.fire(this.compilerWidget)
+            await lClient.sendNotification(GET_SYSTEMS, [uri, true])
         } else {
             this.compilerWidget.systems = []
             this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
         }
+    }
+
+    handleReceiveSystemDescriptions(systems: CompilationSystem[], snapshotSystems: CompilationSystem[]) {
+        console.log("Systems", systems)
+        // Remove status bar element after successfully requesting systems
+        this.statusbar.removeElement('request-systems')
+        // Sort all compilation systems by id
+        systems.sort((a, b) => (a.id > b.id) ? 1 : -1)
+        this.compilerWidget.systems = systems
+        this.addCompilationSystemToCommandPalette(systems.concat(snapshotSystems))
+        this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
+        this.compilerWidget.requestedSystems = false
+        this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
+        this.compilerWidget.update()
+
     }
 
     /**
@@ -251,12 +260,14 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.commandRegistry.unregisterCommand(command)
         })
         this.kicoolCommands = []
-        // add new commands
+        // add new commands for original model
         systems.forEach(system => {
-            const command: Command = {id: system.id, label: "Compile with " + system.label, category: "Kicool"}
+            const command: Command = {
+                id: system.id + (system.snapshotSystem ? '.snapshot' : ''),
+                label: `Compile ${system.snapshotSystem ? 'snapshot' : 'model'} with ${system.label}`, category: "Kicool"}
             this.kicoolCommands.push(command)
             const handler: CommandHandler = {
-                execute: (inplace, doNotShowResultingModel) => { // on compile these options are undefined
+                execute: (widget, inplace, doNotShowResultingModel) => { // on compile these options are undefined
                     this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel);
                 },
                 isVisible: () => {
@@ -341,7 +352,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
             },
             execute: () => {
-                this.quickOpenService.open('>Kicool: Compile with ')
+                this.quickOpenService.open('>Kicool: Compile model with ')
             },
             isVisible: widget => {
                 return this.editor && (widget !== undefined) && (widget instanceof EditorWidget)
@@ -393,16 +404,18 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         const lClient = await this.client.languageClient
         this.indexMap.set(uri, index)
         await lClient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
-        // Add new simulation Commands to command palette
-        let compilationSystems: CompilationSystem[] = await lClient.sendRequest("keith/kicool/get-model-systems", [uri, index]) as CompilationSystem[]
-        compilationSystems.sort((a, b) => (a.id > b.id) ? 1 : -1)
-        this.compilerWidget.modelSimulationCommands = compilationSystems
         if (index >= 0) { // original model must not fire this emitter.
-            this.showedNewSnapshotEmitter.fire(this.resultMap.get(uri)!.files.reduce((acc, val) => acc.concat(val), [])[index].name)
+            console.log("Fire stuff")
+            this.showedNewSnapshotEmitter.fire("Hi")
         }
     }
 
-
+    /**
+     * Invoke compilation and update status in widget
+     * @param command compilation system
+     * @param inplace whether inplace compilation is on or off
+     * @param showResultingModel whether the resulting model should be shown in the diagram. Simulation does not do this.
+     */
     public async compile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
         this.startTime = performance.now()
         this.compilerWidget.compiling = true

@@ -42,12 +42,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
 
     protected readonly onRequestSystemDescriptionsEmitter = new Emitter<CompilerWidget | undefined>()
-    public readonly onNewSystemsAddedEmitter = new Emitter<CompilerWidget | undefined>()
-
-    /**
-     * Emit when compilation systems are requested.
-     */
-    public readonly newSystemsAdded: Event<CompilerWidget | undefined> = this.onNewSystemsAddedEmitter.event
     readonly requestSystemDescriptions: Event<CompilerWidget | undefined> = this.onRequestSystemDescriptionsEmitter.event
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 
@@ -56,12 +50,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      * These are filtered on the client side to display the private or public systems.
      * The compilation systems are updated on selection of a current editor.
      */
-    public systems: CompilationSystem[] = []
-
-    /**
-     * Holds all compilation systems of the currently opened snapshot
-     */
-    public modelSimulationCommands: CompilationSystem[];
+    public systems: CompilationSystem[]
+    public snapshotSystems: CompilationSystem[]
 
     /**
      * Is saved as part of the state of the widget.
@@ -162,7 +152,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems(), "Cancel get compilation systems") : ""}
                 </div>
             </div>;
-        } else if (!this.systems || this.systems.length === 0) {
+        } else if (!this.systems) {
             // Case no connection to the LS was established or no compilation systems are present.
             if (this.commands && this.commands.editor) {
                 // Try to request compilation systems.

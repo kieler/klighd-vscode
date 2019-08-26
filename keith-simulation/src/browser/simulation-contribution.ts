@@ -124,7 +124,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         if (widget) {
             this.simulationWidget = widget as SimulationWidget
             // whenever the compiler widget got new compilation systems from the LS new systems is invoked.
-            this.kicoolContribution.compilerWidget.newSystemsAdded(this.newSystemsAdded.bind(this))
             this.kicoolContribution.compilationFinished(this.compilationFinished.bind(this))
             this.kicoolContribution.compilationStarted(this.compilationStarted.bind(this))
             this.kicoolContribution.showedNewSnapshot(this.showedNewSnapshot.bind(this))
@@ -139,8 +138,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.commandRegistry.unregisterCommand(command)
         })
         // add new commands
-        systems.forEach(system => {
-            const command: Command = {id: simulationCommandPrefix + system.id, label: "Simulate via " + system.label, category: "Simulation"}
+        systems.forEach((system: CompilationSystem) => {
+            const command: Command = {
+                id: simulationCommandPrefix + system.id + (system.snapshotSystem ? '.snapshot' : ''),
+                label: `Simulate ${system.snapshotSystem ? 'snapshot' : 'model'} via ${system.label}`, category: "Simulation"}
             this.simulationCommands.push(command)
             const handler: CommandHandler = {
                 execute: () => {
@@ -149,14 +150,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             }
             this.commandRegistry.registerCommand(command, handler)
         })
-    }
-
-    /**
-     * Is executed whenever the compiler widget got new compilation systems from the LS.
-     * Updates simulation widget, since these new compilation systems may contain simulation compilation systems.
-     */
-    newSystemsAdded() {
-        this.simulationWidget.update()
     }
 
     compilationStarted() {
@@ -243,7 +236,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
             },
             execute: () => {
-                this.quickOpenService.open('>Simulation: Simulate via ')
+                this.quickOpenService.open('>Simulation: Simulate model via ')
             },
             isVisible: widget => {
                 return this.kicoolContribution.editor && (widget !== undefined) && (widget instanceof EditorWidget)
