@@ -65,3 +65,9 @@ export const TOGGLE_BUTTON_MODE: Command = {
     label: 'Toggle button mode',
     category: 'Kicool'
 }
+
+export const REVEAL_COMPILATION_WIDGET: Command = {
+    id: 'reveal-compilation-widget',
+    label: 'Reveal compilation widget',
+    category: 'Kicool'
+}

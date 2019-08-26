@@ -32,12 +32,13 @@ import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { COMPILER, TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
-    SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS } from '../common/commands';
+    SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, REVEAL_COMPILATION_WIDGET } from '../common/commands';
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
 
-export const compilationStatusPriority: number = 4
+export const compilationStatusPriority: number = 5
+export const requestSystemStatusPriority: number = 6
 
 /**
  * Contribution for CompilerWidget to add functionality to it and link with the current editor.
@@ -53,6 +54,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
     editor: EditorWidget
     compilerWidget: CompilerWidget
+
+    startTime: number
+    endTime: number
 
     /**
      * Holds all commands, updates after new compilation systems are requested.
@@ -132,8 +136,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     onStart(): void {
         this.statusbar.setElement('request-systems', {
             alignment: StatusBarAlignment.LEFT,
-            priority: compilationStatusPriority,
-            text: `$(spinner fa-pulse fa-fw) No editor focused... waiting`,
+            priority: requestSystemStatusPriority,
+            text: '$(spinner fa-pulse fa-fw) No editor focused... waiting',
             tooltip: 'No editor focused... waiting'
         })
     }
@@ -204,8 +208,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             // when systems are requested request systems status bar entry is updated
             this.statusbar.setElement('request-systems', {
                 alignment: StatusBarAlignment.LEFT,
-                priority: compilationStatusPriority,
-                text: `$(spinner fa-pulse fa-fw) Request compilation systems`,
+                priority: requestSystemStatusPriority,
+                text: '$(spinner fa-pulse fa-fw) Request compilation systems',
                 tooltip: 'Requesting compilation systems...'
             })
             this.compilerWidget.requestedSystems = true
@@ -293,7 +297,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 })
             }
         })
-        this.commandRegistry.registerCommand(TOGGLE_AUTO_COMPILE, {
+        commands.registerCommand(TOGGLE_AUTO_COMPILE, {
             execute: () => {
                 if (this.compilerWidget) {
                     this.compilerWidget.autoCompile = !this.compilerWidget.autoCompile
@@ -301,7 +305,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 }
             }
         })
-        this.commandRegistry.registerCommand(TOGGLE_PRIVATE_SYSTEMS, {
+        commands.registerCommand(TOGGLE_PRIVATE_SYSTEMS, {
             execute: () => {
                 if (this.compilerWidget) {
                     this.compilerWidget.showPrivateSystems = !this.compilerWidget.showPrivateSystems
@@ -311,7 +315,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 }
             }
         })
-        this.commandRegistry.registerCommand(TOGGLE_INPLACE, {
+        commands.registerCommand(TOGGLE_INPLACE, {
             execute: () => {
                 if (this.compilerWidget) {
                     this.compilerWidget.compileInplace = !this.compilerWidget.compileInplace
@@ -319,19 +323,19 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 }
             }
         })
-        this.commandRegistry.registerCommand(REQUEST_CS, {
+        commands.registerCommand(REQUEST_CS, {
             execute: async () => {
                 await this.requestSystemDescriptions()
                 this.message("Registered compilation systems", "INFO")
             }
         })
-        this.commandRegistry.registerCommand(TOGGLE_BUTTON_MODE, {
+        commands.registerCommand(TOGGLE_BUTTON_MODE, {
             execute: async () => {
                 this.compilerWidget.showButtons = !this.compilerWidget.showButtons
                 this.compilerWidget.update()
             }
         })
-        this.commandRegistry.registerCommand(SELECT_COMPILATION_CHAIN, {
+        commands.registerCommand(SELECT_COMPILATION_CHAIN, {
             isEnabled: widget => {
                 return this.compilerWidget.showButtons || (widget !== undefined && !!this.editor) &&
                 this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
@@ -341,6 +345,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             },
             isVisible: widget => {
                 return this.editor && (widget !== undefined) && (widget instanceof EditorWidget)
+            }
+        })
+        commands.registerCommand(REVEAL_COMPILATION_WIDGET, {
+            isVisible: () => false,
+            execute: () => {
+                this.front.shell.revealWidget(compilerWidgetId)
             }
         })
     }
@@ -394,6 +404,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
 
     public async compile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
+        this.startTime = performance.now()
         this.compilerWidget.compiling = true
         this.compilerWidget.update()
         await this.executeCompile(command, inplace, showResultingModel)
@@ -447,13 +458,16 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     })
                 })
             });
+            this.endTime = performance.now()
             // Set finished bar if the currentIndex of the processor is the maxIndex the compilation was not canceled
             this.statusbar.setElement('compile-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: compilationStatusPriority,
-                text: currentIndex === maxIndex ? `$(check)` : `$(times)`,
+                text: currentIndex === maxIndex ?
+                    `$(check) (${(this.endTime - this.startTime).toPrecision(3)}ms)` :
+                    `$(times) (${(this.endTime - this.startTime).toPrecision(3)}ms)`,
                 tooltip: currentIndex === maxIndex ? 'Compilation finished' : 'Compilation stopped',
-                onclick: () => this.front.shell.revealWidget(compilerWidgetId)
+                command: REVEAL_COMPILATION_WIDGET.id
             })
         } else {
             // Set progress bar for compilation
@@ -464,7 +478,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 priority: compilationStatusPriority,
                 text: `$(spinner fa-pulse fa-fw) ${progress}`,
                 tooltip: 'Compiling...',
-                onclick: () => this.front.shell.revealWidget(compilerWidgetId)
+                command: REVEAL_COMPILATION_WIDGET.id
             })
         }
         this.compilerWidget.update()

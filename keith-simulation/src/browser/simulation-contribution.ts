@@ -42,7 +42,7 @@ export const valuesForNextStepMessageType = new NotificationType<Object, void>('
 export const externalStopMessageType = new NotificationType<string, void>('keith/simulation/externalStop')
 export const startedSimulationMessageType = new NotificationType<SimulationStartedMessage, void>('keith/simulation/started')
 
-export const simulationStatusPriority: number = 3
+export const simulationStatusPriority: number = 4
 
 /**
  * Contribution for SimulationWidget to add functionality to it.
@@ -55,6 +55,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     progressMessageType = new NotificationType<any, void>('keith/kicool/progress');
 
     simulationCommands: Command[] = []
+
+    startTime: number
+    endTime: number
 
     @inject(CommandRegistry) public readonly commandRegistry: CommandRegistry
     @inject(EditorManager) public readonly editorManager: EditorManager
@@ -103,7 +106,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         this.statusbar.setElement('simulation-status', {
             alignment: StatusBarAlignment.LEFT,
             priority: simulationStatusPriority,
-            text: `$(spinner fa-pulse fa-fw) Waiting for simulation systems...`,
+            text: '$(spinner fa-pulse fa-fw) Waiting for simulation systems...',
             tooltip: 'Waiting for simulation systems...',
             onclick: () => this.front.shell.revealWidget(simulationWidgetId)
         })
@@ -342,12 +345,13 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      * Simulation is started via the compilationFinished method.
      */
     async compileAndStartSimulation(simulationCommand: Command) {
+        this.startTime = performance.now()
         this.simulationWidget.compilingSimulation = true
         this.simulationWidget.update()
         this.statusbar.setElement('simulation-status', {
             alignment: StatusBarAlignment.LEFT,
             priority: simulationStatusPriority,
-            text: `$(spinner fa-pulse fa-fw) Compiling for simulation...`,
+            text: '$(spinner fa-pulse fa-fw) Compiling for simulation...',
             tooltip: 'Compiling for simulation...',
             onclick: () => this.front.shell.revealWidget(simulationWidgetId)
         })
@@ -375,7 +379,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.statusbar.setElement('simulation-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: simulationStatusPriority,
-                text: `$(spinner fa-pulse fa-fw) Starting simulation...`,
+                text: '$(spinner fa-pulse fa-fw) Starting simulation...',
                 tooltip: 'Starting simulation...',
                 onclick: () => this.front.shell.revealWidget(simulationWidgetId)
             })
@@ -395,13 +399,14 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      * Start simulation after server successfully started it.
      */
     handleSimulationStarted(startMessage: SimulationStartedMessage) {
+        this.endTime = performance.now()
         if (!startMessage.successful) {
+            this.startTime = performance.now()
             this.message(startMessage.error, "error")
             this.statusbar.setElement('simulation-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: simulationStatusPriority,
-                text: `$(cross) Simulation could not be started`,
-                tooltip: 'Simulation could not be started',
+                text: `$(cross) (${(this.endTime - this.startTime).toPrecision(3)}ms) Simulation could not be started`,
                 onclick: () => this.front.shell.revealWidget(simulationWidgetId)
             })
             return
@@ -409,8 +414,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.statusbar.setElement('simulation-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: simulationStatusPriority,
-                text: `$(check) Simulating...`,
-                tooltip: 'Simulation could be started and is running',
+                text: `$(check) (${(this.endTime - this.startTime).toPrecision(3)}ms) Simulating...`,
                 onclick: () => this.front.shell.revealWidget(simulationWidgetId)
             })
         }
@@ -471,7 +475,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         this.statusbar.setElement('simulation-status', {
             alignment: StatusBarAlignment.LEFT,
             priority: simulationStatusPriority,
-            text: `$(spinner fa-pulse fa-fw) Stopping simulation...`,
+            text: '$(spinner fa-pulse fa-fw) Stopping simulation...',
             tooltip: 'Request to stop the simulation is about to be send',
             onclick: () => this.front.shell.revealWidget(simulationWidgetId)
         })
@@ -484,7 +488,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         this.statusbar.setElement('simulation-status', {
             alignment: StatusBarAlignment.LEFT,
             priority: simulationStatusPriority,
-            text: `Stopped simulation`,
+            text: 'Stopped simulation',
             onclick: () => this.front.shell.revealWidget(simulationWidgetId)
         })
     }
