@@ -31,7 +31,8 @@ import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
 import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models";
 import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
-import { SIMULATION, SIMULATE, OPEN_INTERNAL_KVIZ_VIEW, OPEN_EXTERNAL_KVIZ_VIEW, SELECT_SIMULATION_CHAIN, SET_SIMULATION_SPEED } from "../common/commands";
+import { SIMULATION, SIMULATE, OPEN_INTERNAL_KVIZ_VIEW, OPEN_EXTERNAL_KVIZ_VIEW, SELECT_SIMULATION_CHAIN,
+    SET_SIMULATION_SPEED, REVEAL_SIMULATION_WIDGET } from "../common/commands";
 
 export const SIMULATION_CATEGORY = "Simulation"
 
@@ -108,7 +109,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             priority: simulationStatusPriority,
             text: '$(spinner fa-pulse fa-fw) Waiting for simulation systems...',
             tooltip: 'Waiting for simulation systems...',
-            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            command: REVEAL_SIMULATION_WIDGET.id
         })
     }
 
@@ -318,6 +319,13 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 });
             }
         })
+        commands.registerCommand(REVEAL_SIMULATION_WIDGET, {
+            isEnabled: () => true,
+            isVisible: () => false,
+            execute: () => {
+                this.front.shell.revealWidget(simulationWidgetId)
+            }
+        })
     }
 
     registerToolbarItems(registry: TabBarToolbarRegistry): void {
@@ -353,7 +361,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             priority: simulationStatusPriority,
             text: '$(spinner fa-pulse fa-fw) Compiling for simulation...',
             tooltip: 'Compiling for simulation...',
-            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            command: REVEAL_SIMULATION_WIDGET.id
         })
         // Execute compilation command
         await this.commandRegistry.executeCommand(simulationCommand.id, true, true)
@@ -381,7 +389,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 priority: simulationStatusPriority,
                 text: '$(spinner fa-pulse fa-fw) Starting simulation...',
                 tooltip: 'Starting simulation...',
-                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+                command: REVEAL_SIMULATION_WIDGET.id
             })
             lClient.sendNotification("keith/simulation/start", [uri, this.simulationWidget.simulationType])
         } else {
@@ -390,7 +398,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 priority: simulationStatusPriority,
                 text: `$(times) ${this.kicoolContribution.editor ? 'No editor defined' : 'Simulation already running'}`,
                 tooltip: 'Did not simulate.',
-                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+                command: REVEAL_SIMULATION_WIDGET.id
             })
         }
     }
@@ -407,7 +415,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 alignment: StatusBarAlignment.LEFT,
                 priority: simulationStatusPriority,
                 text: `$(cross) (${(this.endTime - this.startTime).toPrecision(3)}ms) Simulation could not be started`,
-                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+                command: REVEAL_SIMULATION_WIDGET.id
             })
             return
         } else {
@@ -415,7 +423,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 alignment: StatusBarAlignment.LEFT,
                 priority: simulationStatusPriority,
                 text: `$(check) (${(this.endTime - this.startTime).toPrecision(3)}ms) Simulating...`,
-                onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+                command: REVEAL_SIMULATION_WIDGET.id
             })
         }
 
@@ -477,7 +485,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             priority: simulationStatusPriority,
             text: '$(spinner fa-pulse fa-fw) Stopping simulation...',
             tooltip: 'Request to stop the simulation is about to be send',
-            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            command: REVEAL_SIMULATION_WIDGET.id
         })
         const lClient = await this.client.languageClient
         const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
@@ -489,7 +497,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             alignment: StatusBarAlignment.LEFT,
             priority: simulationStatusPriority,
             text: 'Stopped simulation',
-            onclick: () => this.front.shell.revealWidget(simulationWidgetId)
+            command: REVEAL_SIMULATION_WIDGET.id
         })
     }
 

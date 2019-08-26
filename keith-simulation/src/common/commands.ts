@@ -63,3 +63,9 @@ export const SET_SIMULATION_SPEED: Command = {
     label: 'Set simulation speed',
     category: 'Simulation'
 }
+
+export const REVEAL_SIMULATION_WIDGET: Command = {
+    id: 'reveal-simulation-widget',
+    label: 'Reveal simulation widget',
+    category: 'Simulation'
+}
