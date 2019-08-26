@@ -25,6 +25,8 @@ import { OPEN_EXAMPLE_SCCHART } from './keith-getting-started-contribution';
 
     protected developingForKeithUrl = 'https://rtsys.informatik.uni-kiel.de/confluence/display/KIELER/Developing+for+KEITH+or+LS'
 
+    protected scchartsSyntaxPageUrl = 'https://rtsys.informatik.uni-kiel.de/confluence/display/KIELER/Syntax'
+
     render() {
         return <div className='gs-container'>
             {this.renderHeader()}
@@ -84,16 +86,10 @@ import { OPEN_EXAMPLE_SCCHART } from './keith-getting-started-contribution';
                 Help
             </h3>
             <div className='gs-action-container'>
-                <a href={this.documentationUrl} target='_blank'>Theia Documentation</a>
+                <a href={this.scchartsSyntaxPageUrl} target='_blank'>SCCharts Documentation</a>
             </div>
             <div className='gs-action-container'>
                 <a href={this.keithDocumentationUrl} target='_blank'>KEITH Documentation</a>
-            </div>
-            <div className='gs-action-container'>
-                <a href={this.extensionUrl} target='_blank'>Building a New Extension</a>
-            </div>
-            <div className='gs-action-container'>
-                <a href={this.pluginUrl} target='_blank'>Building a New Plugin</a>
             </div>
             <div className='gs-action-container'>
                 <a href={this.runningKeithUrl} target='_blank'>Running KEITH (as a Developer)</a>
