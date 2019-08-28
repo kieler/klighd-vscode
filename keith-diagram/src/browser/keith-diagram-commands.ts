@@ -15,7 +15,7 @@ import { SetSynthesisAction } from '@kieler/keith-sprotty/lib/actions/actions';
 import { SetSynthesesActionData } from '@kieler/keith-sprotty/lib/syntheses/synthesis-message-data';
 import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
 import { Command, CommandContribution, CommandHandler, CommandRegistry, MenuContribution, MenuModelRegistry, MenuPath } from '@theia/core';
-import { QuickPickItem } from '@theia/core/lib/browser';
+import { QuickPickItem, StatusBar, StatusBarAlignment } from '@theia/core/lib/browser';
 import { QuickPickService } from '@theia/core/lib/common/quick-pick-service';
 import { inject, injectable } from 'inversify';
 import { DiagramMenus } from 'sprotty-theia';
@@ -28,6 +28,8 @@ export namespace SynthesisMenu {
     export const SYNTHESIS: MenuPath = DiagramMenus.DIAGRAM.concat('synthesis')
 }
 
+export const synthesisStatus: string = 'synthesis-status'
+
 /**
  * The command- and menu contribution and other related methods for the commands for the synthesis picker.
  */
@@ -38,11 +40,30 @@ export class SynthesisCommandContribution implements CommandContribution, MenuCo
     category = 'Diagram'
     label = 'Change Synthesis'
 
-    @inject(SynthesisRegistry)
-    protected readonly synthesisRegistry: SynthesisRegistry
 
     @inject(QuickPickService)
     protected readonly quickPick: QuickPickService
+
+    @inject(StatusBar)
+    protected readonly statusBar: StatusBar
+
+    constructor(
+        @inject(SynthesisRegistry) protected readonly synthesisRegistry: SynthesisRegistry) {
+            synthesisRegistry.newSyntheses(this.onNewSynthesis.bind(this))
+    }
+
+    onNewSynthesis(syntheses: SetSynthesesActionData[]) {
+        if (syntheses && syntheses.length > 0) {
+            this.statusBar.setElement(synthesisStatus, {
+                text: syntheses[0].displayName,
+                alignment: StatusBarAlignment.RIGHT,
+                priority: 4,
+                command: this.id
+            })
+        } else {
+            this.statusBar.removeElement(synthesisStatus)
+        }
+    }
 
     registerCommands(commands: CommandRegistry): void {
         commands.registerCommand(this, this);
@@ -67,6 +88,12 @@ export class SynthesisCommandContribution implements CommandContribution, MenuCo
             const server = this.synthesisRegistry.getProvidingDiagramServer()
             if (server instanceof KeithDiagramServer) {
                 (server as KeithDiagramServer).actionDispatcher.dispatch(new SetSynthesisAction(selectedId))
+                this.statusBar.setElement(synthesisStatus, {
+                    text: this.synthesisRegistry.getAvailableSyntheses().filter(synthesis => synthesis.id === selectedId)[0].displayName,
+                    alignment: StatusBarAlignment.RIGHT,
+                    priority: 4,
+                    command: this.id
+                })
             }
         }
     }
