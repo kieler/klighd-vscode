@@ -419,9 +419,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         const lClient = await this.client.languageClient
         this.indexMap.set(uri, index)
         await lClient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
-        if (index >= 0) { // original model must not fire this emitter.
-            this.showedNewSnapshotEmitter.fire("Hi")
-        }
+        // original model must not fire this emitter.
+        this.showedNewSnapshotEmitter.fire("Success")
     }
 
     /**

@@ -127,7 +127,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             // whenever the compiler widget got new compilation systems from the LS new systems is invoked.
             this.kicoolContribution.compilationFinished(this.compilationFinished.bind(this))
             this.kicoolContribution.compilationStarted(this.compilationStarted.bind(this))
-            this.kicoolContribution.showedNewSnapshot(this.showedNewSnapshot.bind(this))
             this.kicoolContribution.newSimulationCommands(this.registerSimulationCommands.bind(this))
         }
     }
@@ -170,10 +169,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         } else {
             this.simulationWidget.update()
         }
-    }
-
-    showedNewSnapshot(lastShowedSnapshotName: string) {
-        // TODO not in use anymore use this to register command in command palette.
     }
 
     /**
