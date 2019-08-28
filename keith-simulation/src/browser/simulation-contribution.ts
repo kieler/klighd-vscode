@@ -32,7 +32,8 @@ import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/li
 import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models";
 import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
 import { SIMULATION, SIMULATE, OPEN_INTERNAL_KVIZ_VIEW, OPEN_EXTERNAL_KVIZ_VIEW, SELECT_SIMULATION_CHAIN,
-    SET_SIMULATION_SPEED, REVEAL_SIMULATION_WIDGET } from "../common/commands";
+    SET_SIMULATION_SPEED, REVEAL_SIMULATION_WIDGET, SELECT_SNAPSHOT_SIMULATION_CHAIN } from "../common/commands";
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget'
 
 export const SIMULATION_CATEGORY = "Simulation"
 
@@ -242,6 +243,17 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 return this.kicoolContribution.editor && (widget !== undefined) && (widget instanceof EditorWidget)
             }
         })
+        commands.registerCommand(SELECT_SNAPSHOT_SIMULATION_CHAIN, {
+            isEnabled: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
+            },
+            execute: () => {
+                this.quickOpenService.open('>Simulation: Simulate snapshot via ')
+            },
+            isVisible: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
+            }
+        })
         commands.registerCommand(SET_SIMULATION_SPEED, {
             execute: () => {
                 let newValue = this.simulationWidget.simulationStepDelay
@@ -338,6 +350,11 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             id: SELECT_SIMULATION_CHAIN.id,
             command: SELECT_SIMULATION_CHAIN.id,
             tooltip: SELECT_SIMULATION_CHAIN.label
+        });
+        registry.registerItem({
+            id: SELECT_SNAPSHOT_SIMULATION_CHAIN.id,
+            command: SELECT_SNAPSHOT_SIMULATION_CHAIN.id,
+            tooltip: SELECT_SNAPSHOT_SIMULATION_CHAIN.label
         });
     }
 

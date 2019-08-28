@@ -12,6 +12,7 @@
  */
 
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import { AbstractViewContribution, CommonMenus, DidCreateWidgetEvent,
     FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService, StatusBar, StatusBarAlignment
@@ -32,7 +33,7 @@ import { CompilerWidget } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { COMPILER, TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
-    SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, REVEAL_COMPILATION_WIDGET } from '../common/commands';
+    SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, REVEAL_COMPILATION_WIDGET, SELECT_SNAPSHOT_COMPILATION_CHAIN } from '../common/commands';
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
@@ -170,7 +171,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
     }
     handleNewShapshotShown(message: string) {
-        console.log("Got message", message)
         this.requestSystemDescriptions()
     }
 
@@ -228,7 +228,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 await delay(100)
                 initializeResult = lClient.initializeResult
             }
-            await lClient.sendNotification(GET_SYSTEMS, [uri, true])
+            await lClient.sendNotification(GET_SYSTEMS, uri)
         } else {
             this.compilerWidget.systems = []
             this.addCompilationSystemToCommandPalette(this.compilerWidget.systems)
@@ -236,7 +236,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     handleReceiveSystemDescriptions(systems: CompilationSystem[], snapshotSystems: CompilationSystem[]) {
-        console.log("Systems", systems)
         // Remove status bar element after successfully requesting systems
         this.statusbar.removeElement('request-systems')
         // Sort all compilation systems by id
@@ -267,8 +266,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 label: `Compile ${system.snapshotSystem ? 'snapshot' : 'model'} with ${system.label}`, category: "Kicool"}
             this.kicoolCommands.push(command)
             const handler: CommandHandler = {
-                execute: (widget, inplace, doNotShowResultingModel) => { // on compile these options are undefined
-                    this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel);
+                execute: (inplace, doNotShowResultingModel) => { // on compile these options are undefined
+                    this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel, system.snapshotSystem);
                 },
                 isVisible: () => {
                     return system.isPublic || this.compilerWidget.showPrivateSystems
@@ -358,6 +357,17 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 return this.editor && (widget !== undefined) && (widget instanceof EditorWidget)
             }
         })
+        commands.registerCommand(SELECT_SNAPSHOT_COMPILATION_CHAIN, {
+            isEnabled: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
+            },
+            execute: () => {
+                this.quickOpenService.open('>Kicool: Compile snapshot with ')
+            },
+            isVisible: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
+            }
+        })
         commands.registerCommand(REVEAL_COMPILATION_WIDGET, {
             isVisible: () => false,
             execute: () => {
@@ -372,6 +382,11 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             command: SELECT_COMPILATION_CHAIN.id,
             tooltip: SELECT_COMPILATION_CHAIN.label
         });
+        registry.registerItem({
+            id: SELECT_SNAPSHOT_COMPILATION_CHAIN.id,
+            command: SELECT_SNAPSHOT_COMPILATION_CHAIN.id,
+            tooltip: SELECT_SNAPSHOT_COMPILATION_CHAIN.label
+        })
     }
 
     public message(message: string, type: string) {
@@ -405,7 +420,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.indexMap.set(uri, index)
         await lClient.sendRequest(SHOW, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', index])
         if (index >= 0) { // original model must not fire this emitter.
-            console.log("Fire stuff")
             this.showedNewSnapshotEmitter.fire("Hi")
         }
     }
@@ -416,17 +430,17 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
      * @param inplace whether inplace compilation is on or off
      * @param showResultingModel whether the resulting model should be shown in the diagram. Simulation does not do this.
      */
-    public async compile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
+    public async compile(command: string, inplace: boolean, showResultingModel: boolean, snapshot: boolean): Promise<void> {
         this.startTime = performance.now()
         this.compilerWidget.compiling = true
         this.compilerWidget.update()
-        await this.executeCompile(command, inplace, showResultingModel)
+        await this.executeCompile(command, inplace, showResultingModel, snapshot)
         this.compilerWidget.lastInvokedCompilation = command
         this.compilerWidget.lastCompiledUri = this.compilerWidget.sourceModelPath
         this.compilerWidget.update()
     }
 
-    async executeCompile(command: string, inplace: boolean, showResultingModel: boolean): Promise<void> {
+    async executeCompile(command: string, inplace: boolean, showResultingModel: boolean, snapshot: boolean): Promise<void> {
         if (!this.editor) {
             this.message(EDITOR_UNDEFINED_MESSAGE, "error")
             return;
@@ -438,7 +452,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.message("Compiling " + uri + " with " + command, "info")
         }
         const lClient = await this.client.languageClient
-        lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace, showResultingModel])
+        lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace, showResultingModel, snapshot])
         this.compilationStartedEmitter.fire(this)
     }
 

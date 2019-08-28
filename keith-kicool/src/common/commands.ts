@@ -39,6 +39,12 @@ export const SELECT_COMPILATION_CHAIN: Command = {
     category: 'Kicool',
     iconClass: 'fa fa-cogs'
 }
+export const SELECT_SNAPSHOT_COMPILATION_CHAIN: Command = {
+    id: 'select-snapshot-compiler',
+    label: 'Select snapshot compilation chain',
+    category: 'Kicool',
+    iconClass: 'fa fa-cogs'
+}
 export const REQUEST_CS: Command = {
     id: 'request-compilation-systems',
     label: 'Request compilation systems',

@@ -58,6 +58,13 @@ export const SELECT_SIMULATION_CHAIN: Command = {
     iconClass: 'fa fa-play-circle'
 }
 
+export const SELECT_SNAPSHOT_SIMULATION_CHAIN: Command = {
+    id: 'select-snapshot-simulation-chain',
+    label: 'Select snapshot simulation chain',
+    category: 'Simulation',
+    iconClass: 'fa fa-play-circle'
+}
+
 export const SET_SIMULATION_SPEED: Command = {
     id: 'set-simulation-speed',
     label: 'Set simulation speed',
