@@ -17,7 +17,8 @@
     "watch": "tsc -w -p ./tsconfig.json"
   },
   "dependencies": {
-    "sprotty": "next"
+    "sprotty": "next",
+    "@theia/core": "next"
   },
   "devDependencies": {
     "rimraf": "^2.6.3",
