@@ -16,7 +16,7 @@ import { CommandContribution, MenuContribution } from '@theia/core';
 import { FrontendApplicationContribution, OpenHandler, WidgetFactory, WidgetManager } from '@theia/core/lib/browser';
 import { ContainerModule } from 'inversify';
 import 'sprotty-theia/css/theia-sprotty.css';
-import { DiagramConfiguration, DiagramManager, DiagramManagerProvider } from 'sprotty-theia/lib';
+import { DiagramConfiguration, DiagramManager, DiagramManagerProvider, DiagramCommandContribution } from 'sprotty-theia/lib';
 import 'sprotty/css/sprotty.css';
 import { KeithDiagramConfiguration } from './di.config';
 import { bindDiagramPreferences, KeithDiagramPreferenceService } from './diagram-preferences';
@@ -24,6 +24,7 @@ import { SynthesisCommandContribution } from './keith-diagram-commands';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithDiagramManager } from './keith-diagram-manager';
 import { KeithWidgetManager } from './keith-widget-manager';
+import { KeithDiagramCommandContribution } from './keith-diagram-command-contribution';
 
 /**
  * Dependency injection container for the KEITH frontend part of diagram functionality.
@@ -47,10 +48,14 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     rebind(WidgetManager).to(KeithWidgetManager).inSingletonScope()
 
     bind(SynthesisRegistry).toSelf().inSingletonScope()
-    bind(MenuContribution).to(SynthesisCommandContribution).inSingletonScope()
-    bind(CommandContribution).to(SynthesisCommandContribution).inSingletonScope()
+    bind(SynthesisCommandContribution).toSelf().inSingletonScope()
+    bind(MenuContribution).toService(SynthesisCommandContribution)
+    bind(CommandContribution).toService(SynthesisCommandContribution)
     bindDiagramPreferences(bind)
     bind(KeithDiagramLanguageClient).toSelf().inSingletonScope()
 
     bind(KeithDiagramPreferenceService).toSelf().inSingletonScope()
+    bind(KeithDiagramCommandContribution).toSelf().inSingletonScope()
+    bind(CommandContribution).toService(KeithDiagramCommandContribution)
+    bind(DiagramCommandContribution).to(KeithDiagramCommandContribution).inSingletonScope()
 })
