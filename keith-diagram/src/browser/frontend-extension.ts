@@ -16,7 +16,7 @@ import { CommandContribution, MenuContribution } from '@theia/core';
 import { FrontendApplicationContribution, OpenHandler, WidgetFactory, WidgetManager } from '@theia/core/lib/browser';
 import { ContainerModule } from 'inversify';
 import 'sprotty-theia/css/theia-sprotty.css';
-import { DiagramConfiguration, DiagramManager, DiagramManagerProvider, DiagramCommandContribution } from 'sprotty-theia/lib';
+import { DiagramConfiguration, DiagramManager, DiagramManagerProvider } from 'sprotty-theia/lib';
 import 'sprotty/css/sprotty.css';
 import { KeithDiagramConfiguration } from './di.config';
 import { bindDiagramPreferences, KeithDiagramPreferenceService } from './diagram-preferences';
@@ -25,6 +25,7 @@ import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithDiagramManager } from './keith-diagram-manager';
 import { KeithWidgetManager } from './keith-widget-manager';
 import { KeithDiagramCommandContribution } from './keith-diagram-command-contribution';
+import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 
 /**
  * Dependency injection container for the KEITH frontend part of diagram functionality.
@@ -57,5 +58,5 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     bind(KeithDiagramPreferenceService).toSelf().inSingletonScope()
     bind(KeithDiagramCommandContribution).toSelf().inSingletonScope()
     bind(CommandContribution).toService(KeithDiagramCommandContribution)
-    bind(DiagramCommandContribution).to(KeithDiagramCommandContribution).inSingletonScope()
+    bind(TabBarToolbarContribution).toService(KeithDiagramCommandContribution)
 })

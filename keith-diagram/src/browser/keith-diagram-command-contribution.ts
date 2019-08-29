@@ -12,71 +12,69 @@
  */
 
 import { injectable, inject } from "inversify";
-import { DiagramCommandContribution, DiagramCommands } from "sprotty-theia";
-import { CommandRegistry, CommandContribution } from "@theia/core";
-import { CenterAction, FitToScreenAction, RequestExportSvgAction, LayoutAction } from "sprotty";
+import { CommandRegistry, CommandContribution, Command } from "@theia/core/lib/common";
+import { CenterAction, FitToScreenAction } from "sprotty";
 import { SynthesisRegistry } from "@kieler/keith-sprotty/lib/syntheses/synthesis-registry";
 import { KeithDiagramServer } from "./keith-diagram-server";
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
+import { KeithDiagramWidget } from "./keith-diagram-widget";
+
+export const centerCommand: Command = {
+    id: 'keith:diagram:center',
+    label: 'Center',
+    iconClass: 'fa fa-arrows-alt',
+    category: 'Diagram'
+}
+
+export const fitCommand: Command = {
+    id: 'keith:diagram:fit',
+    label: 'Fit to screen',
+    iconClass: 'fa fa-expand',
+    category: 'Diagram'
+}
 
 @injectable()
-export class KeithDiagramCommandContribution extends DiagramCommandContribution implements CommandContribution {
+export class KeithDiagramCommandContribution implements CommandContribution, TabBarToolbarContribution {
 
     @inject(SynthesisRegistry) protected readonly synthesisRegistry: SynthesisRegistry
 
-    constructor() {
-        super()
-    }
-
     registerCommands(registry: CommandRegistry): void {
-        registry.unregisterCommand(DiagramCommands.CENTER)
-        registry.unregisterCommand(DiagramCommands.FIT)
-        registry.unregisterCommand(DiagramCommands.EXPORT)
-        registry.unregisterCommand(DiagramCommands.LAYOUT)
-        registry.registerCommand({
-            id: DiagramCommands.CENTER,
-            label: 'Center',
-            iconClass: 'fa fa-arrows-alt'
-        }, {
+        registry.registerCommand(centerCommand, {
+            isEnabled: () => true,
             execute: () => {
                 const widget = (this.synthesisRegistry.getProvidingDiagramServer() as KeithDiagramServer).getWidget()
                 if (widget) {
                     widget.actionDispatcher.dispatch(new CenterAction([]))
                 }
+            },
+            isVisible: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
             }
-        });
-        registry.registerCommand({
-            id: DiagramCommands.FIT,
-            label: 'Fit to screen',
-            iconClass: 'fa fa-expand'
-        }, {
+        })
+        registry.registerCommand(fitCommand, {
+            isEnabled: () => true,
             execute: () => {
                 const widget = (this.synthesisRegistry.getProvidingDiagramServer() as KeithDiagramServer).getWidget()
                 if (widget) {
                     widget.actionDispatcher.dispatch(new FitToScreenAction([]))
                 }
+            },
+            isVisible: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
             }
         });
-        registry.registerCommand({
-            id: DiagramCommands.EXPORT,
-            label: 'Export'
-        }, {
-            execute: () => {
-                const widget = (this.synthesisRegistry.getProvidingDiagramServer() as KeithDiagramServer).getWidget()
-                if (widget) {
-                    widget.actionDispatcher.dispatch(new RequestExportSvgAction())
-                }
-            }
+    }
+
+    registerToolbarItems(registry: TabBarToolbarRegistry): void {
+        registry.registerItem({
+            id: centerCommand.id,
+            command: centerCommand.id,
+            tooltip: centerCommand.label
         });
-        registry.registerCommand({
-            id: DiagramCommands.LAYOUT,
-            label: 'Layout'
-        }, {
-            execute: () => {
-                const widget = (this.synthesisRegistry.getProvidingDiagramServer() as KeithDiagramServer).getWidget()
-                if (widget) {
-                    widget.actionDispatcher.dispatch(new LayoutAction())
-                }
-            }
+        registry.registerItem({
+            id: fitCommand.id,
+            command: fitCommand.id,
+            tooltip: fitCommand.label
         });
     }
 }
