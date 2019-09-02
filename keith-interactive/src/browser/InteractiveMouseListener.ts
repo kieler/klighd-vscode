@@ -1,5 +1,5 @@
 import {
-    MoveMouseListener, SModelElement, Action, SNode
+    MoveMouseListener, SModelElement, Action, SNode, SLabel, SEdge
 } from "sprotty";
 
 import { inject, injectable } from 'inversify';
@@ -20,8 +20,28 @@ export class InteractiveMouseListener extends MoveMouseListener {
         this.widget = dserver.connector.diagramManager.all[0]
     }
 
+    mouseMove(target: SModelElement, event: MouseEvent): Action[] {
+        if (target instanceof SLabel && target.parent instanceof SNode) {
+            // nodes should be movable when the user clicks on the label
+            target = target.parent
+        }
+
+        let result = super.mouseMove(target, event);
+        // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
+        if (target instanceof SEdge) {
+            this.hasDragged = false
+        }
+        return result
+    }
+
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
+        if (target instanceof SLabel && target.parent instanceof SNode) {
+            // nodes should be movable when the user clicks on the label
+            target = target.parent
+        }
+
         if (target instanceof SNode) {
+            target.selected = true
             let targetNode = target as KNode
             if (targetNode.interactiveLayout) {
                 // save the coordinates as shadow coordinates
@@ -35,11 +55,20 @@ export class InteractiveMouseListener extends MoveMouseListener {
     }
 
     mouseUp(target: SModelElement, event: MouseEvent): Action[] {
+        if (target instanceof SLabel && target.parent instanceof SNode) {
+            // nodes should be movable when the user clicks on the label
+            target = target.parent
+        }
+
         if (this.hasDragged && target instanceof SNode) {
             // if a node is moved set properties
             this.setProperty(target);
             (target as KNode).shadow = false
 
+        }
+
+        if (target instanceof SNode) {
+            target.selected = false
         }
 
         return super.mouseUp(target, event);
