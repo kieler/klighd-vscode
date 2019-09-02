@@ -79,7 +79,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                     onClick={event => {
                         this.getOptions()
                     }}>
-                    {'Update View'}
+                    Update View
                 </div>
             </div>
         } else {
