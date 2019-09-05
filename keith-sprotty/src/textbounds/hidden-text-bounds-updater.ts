@@ -12,7 +12,7 @@
  */
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom/vnode';
-import { almostEquals, Bounds, BoundsAware, ElementAndBounds, IActionDispatcher, isExportable, isSizeable, IVNodeDecorator, SModelElement, SModelRoot, TYPES } from 'sprotty/lib';
+import { almostEquals, Bounds, BoundsAware, ElementAndBounds, IActionDispatcher, isSizeable, IVNodeDecorator, SModelElement, SModelRoot, TYPES, Action } from 'sprotty/lib';
 import { ComputedTextBoundsAction } from '../actions/actions';
 
 export class TextBoundsData {
@@ -55,9 +55,7 @@ export class HiddenTextBoundsUpdater implements IVNodeDecorator {
         return vnode
     }
 
-    postUpdate() {
-        if (this.root !== undefined && isExportable(this.root) && this.root.export)
-            return;
+    postUpdate(cause?: Action) {
         this.getBoundsFromDOM()
         const resizes: ElementAndBounds[] = []
         this.element2boundsData.forEach(

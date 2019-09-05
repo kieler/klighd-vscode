@@ -11,7 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { inject, injectable } from 'inversify';
-import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot, SModelRootSchema, TYPES } from 'sprotty/lib';
+import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot,
+    SModelRootSchema, TYPES, RequestAction, ResponseAction, generateRequestId } from 'sprotty/lib';
 import { SetSynthesesActionData } from '../syntheses/synthesis-message-data';
 
 /**
@@ -40,12 +41,13 @@ export class SetSynthesisAction implements Action {
  * Sent from the client to the model source (e.g. a DiagramServer) to transmit the result of text bounds
  * computation as a response to a RequestTextBoundsAction.
  */
-export class ComputedTextBoundsAction implements Action {
+export class ComputedTextBoundsAction implements ResponseAction {
     static readonly KIND = 'computedTextBounds'
 
     readonly kind = ComputedTextBoundsAction.KIND
 
-    constructor(public readonly bounds: ElementAndBounds[]) {
+    constructor(public readonly bounds: ElementAndBounds[],
+        public readonly responseId = '') {
     }
 }
 
@@ -73,10 +75,16 @@ export class RequestTextBoundsCommand extends HiddenCommand {
  * Sent from the model source to the client to request bounds for the given texts. The texts are
  * rendered invisibly so the bounds can derived from the DOM. The response is a ComputedTextBoundsAction.
  */
-export class RequestTextBoundsAction implements Action {
+export class RequestTextBoundsAction implements RequestAction<ComputedTextBoundsAction> {
     readonly kind = RequestTextBoundsCommand.KIND
 
-    constructor(public readonly textDiagram: SModelRootSchema) {
+    constructor(public readonly textDiagram: SModelRootSchema,
+        public readonly requestId = '') {
+    }
+
+    /** Factory function to dispatch a request with the `IActionDispatcher` */
+    static create(newRoot: SModelRootSchema): RequestAction<ComputedTextBoundsAction> {
+        return new RequestTextBoundsAction(newRoot, generateRequestId());
     }
 }
 
