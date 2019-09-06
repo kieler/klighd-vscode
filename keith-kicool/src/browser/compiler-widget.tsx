@@ -67,15 +67,15 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     /**
      * Selectable css styles. Their names have to correspond to the names used in the dedicated css style file.
      */
-    readonly styles: string[] = [" default", " black-white", " reverse-toolbar",
-        " black-white reverse-toolbar", " tree", " black-white tree", " inline-block"]
+    readonly styles: string[] = ["default", "black-white", "reverse-toolbar",
+        "black-white reverse-toolbar", "tree", "black-white tree", "inline-block"]
 
     /**
      * Currently selected css style. See styles for a list of available css styles.
      * This should correspond to the selectedIndex property.
      * Is saved as part of the state of the widget.
      */
-    selectedStyle: string = " default"
+    selectedStyle: string = "default"
 
     /**
      * Index of selected css style file. Should always correspond to the selectedStyle property.
@@ -148,7 +148,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     render(): React.ReactNode {
         if (this.requestedSystems) {
             return <div>
-                <div key="panel" className={"compilation-panel" + (this.selectedStyle)}>
+                <div key="panel" className={"compilation-panel " + (this.selectedStyle)}>
                     {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems(), "Cancel get compilation systems") : ""}
                 </div>
             </div>;
@@ -176,7 +176,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             let searchbox
             // Add advanced features to toolbars
             if (this.showAdvancedToolbar) {
-                styleSelectbox = <select id="style-list" className={'selection-list style-list' + (this.selectedStyle)}
+                styleSelectbox = <select id="style-list" className={'selection-list style-list ' + (this.selectedStyle)}
                         onChange={() => this.handleSelectionOfStyle()} defaultValue={this.styles[this.selectedIndex]}>
                     {stylesToSelect}
                 </select>
@@ -186,12 +186,12 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 () => this.handleSearchChange())
             }
             return <React.Fragment>
-                {this.showButtons ? <div className={"compilation-panel" + (this.selectedStyle)}>
+                {this.showButtons ? <div className={`compilation-panel ${this.selectedStyle}`}>
                     {this.renderShowAdvancedToolbar()}
                     {styleSelectbox}
                     {searchbox}
                 </div> : ''}
-                <div className={"compilation-panel" + (this.selectedStyle)}>
+                <div className={`compilation-panel ${this.selectedStyle}`}>
                     {this.showButtons ? this.renderPrivateButton() : ""}
                     {this.showButtons ? this.renderInplaceButton() : ""}
                     {this.showButtons ? this.renderAutoCompileButton() : ""}
@@ -251,7 +251,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
 
     renderSpinnerButton(tooltip: string): React.ReactNode {
-        return <div className={'preference-button' + (this.selectedStyle)} title="Cancel">
+        return <div className={`preference-button ${this.selectedStyle}`} title="Cancel">
             <div className='spinnerContainer'>
                 <div className='fa fa-spinner fa-pulse fa-fw' title={tooltip}></div>
             </div>
@@ -269,7 +269,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderSearchbox(id: string, placeholder: string, value: string, onInput: () => void) {
         return <input id={id}
         title=". is the wildcard; * and + are supported"
-        className={"kicool-input" + (this.selectedStyle)}
+        className={`kicool-input ${this.selectedStyle}`}
         type='search'
         defaultValue={value}
         name={value}
@@ -292,8 +292,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         }
         // Add show original model button
         showButtons.push(
-            <ul key="original" className={"snapshot-list" + (this.selectedStyle)}>
-                <li key={"original"} id={"showButtonOriginal"} className={'show-button' + (this.selectedStyle)}
+            <ul key="original" className={`snapshot-list ${this.selectedStyle}`}>
+                <li key={"original"} id={"showButtonOriginal"} className={`show-button ${this.selectedStyle}`}
                         title={"Original"}
                         onClick={event => {
                             // Draw diagram of original model
@@ -321,8 +321,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     list.push(
                         <li key={resultingMaxIndex}
                             id={"showButton" + (resultingMaxIndex < 10 ? "0" + resultingMaxIndex : resultingMaxIndex)}
-                            className={'show-button'.concat((snapshot.errors.length > 0) ? ' error' :
-                            (snapshot.warnings.length > 0) ? ' warn' : (snapshot.infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}
+                            className={'show-button '.concat((snapshot.errors.length > 0) ? 'error ' :
+                            (snapshot.warnings.length > 0) ? 'warn ' : (snapshot.infos.length > 0 ) ? 'info ' : '') + (this.selectedStyle)}
                             title={snapshot.name}
                             onClick={event => {
                                 if (!uri) {
@@ -331,21 +331,21 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                                 this.commands.show(uri.toString(), currentIndex)
                             }}>
                             {(snapshot.snapshotIndex === 0 && // draw the name of the snapshot if it is the first snapshot with a style that needs this
-                                (!this.selectedStyle.includes("tree") ||
+                                (this.selectedStyle && !this.selectedStyle.includes("tree") ||
                                 snapshots.length === 1)) ? snapshot.name : ""}
                         </li>
                     )
                     resultingMaxIndex++
                 })
                 // construct default ReactNode
-                const node = <ul key={snapshots[0].name} className={"snapshot-list" + (this.selectedStyle)}>{list}</ul>
+                const node = <ul key={snapshots[0].name} className={`snapshot-list ${this.selectedStyle}`}>{list}</ul>
                 // if a tree style is selected draw snapshots for processors with more than one output as detail element
-                if (this.selectedStyle.includes("tree") && snapshots.length > 1) {
+                if (this.selectedStyle && this.selectedStyle.includes("tree") && snapshots.length > 1) {
                     // case a tree style is selected
                     showButtons.push(
-                        <details key={index} className={"showButtonDetail" + (this.selectedStyle)}>
-                            <summary className={'show-button'.concat((snapshots[0].errors.length > 0) ? ' error' :
-                        (snapshots[0].warnings.length > 0) ? ' warn' : (snapshots[0].infos.length > 0 ) ? ' info' : '') + (this.selectedStyle)}>{snapshots[0].name}</summary>
+                        <details key={index} className={`showButtonDetail ${this.selectedStyle}`}>
+                            <summary className={'show-button '.concat((snapshots[0].errors.length > 0) ? 'error ' :
+                        (snapshots[0].warnings.length > 0) ? 'warn ' : (snapshots[0].infos.length > 0 ) ? 'info ' : '') + (this.selectedStyle)}>{snapshots[0].name}</summary>
                             {node}
                         </details>
                     )
@@ -355,13 +355,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 }
             }
         })
-        return <div id="showButtonContainer0" className={"buttonContainer" + (this.selectedStyle)}>
+        return <div id="showButtonContainer0" className={`buttonContainer ${this.selectedStyle}`}>
             {showButtons}
         </div>
     }
 
     renderCompileButton(): React.ReactNode {
-        return <div className={'compile-button' + (this.selectedStyle)} title="Compile"
+        return <div className={`compile-button ${this.selectedStyle}`} title="Compile"
             onClick={event => {
                 this.commands.commandRegistry.executeCommand(SELECT_COMPILATION_CHAIN.id)
             }}>
@@ -370,14 +370,14 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderCancelButton(method: () => Promise<void>, tooltip: string): React.ReactNode {
-        return <div className={'preference-button' + (this.selectedStyle)} title={tooltip}
+        return <div className={`preference-button ${this.selectedStyle}`} title={tooltip}
             onClick={() => method()}>
             <div className='icon fa fa-square'> </div>
         </div>
     }
 
     renderPrivateButton(): React.ReactNode {
-        return <div title="Show private Systems" key="private-button" className={'preference-button' + (this.showPrivateSystems ? '' : ' off') + (this.selectedStyle)}
+        return <div title="Show private Systems" key="private-button" className={`preference-button ${this.showPrivateSystems ? '' : 'off'} ${this.selectedStyle}`}
             onClick={event => {
                 this.commands.commandRegistry.executeCommand(TOGGLE_PRIVATE_SYSTEMS.id)
                 this.update()
@@ -387,7 +387,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderInplaceButton(): React.ReactNode {
-        return <div title="Inplace" key="inplace-button" className={'preference-button' + (this.compileInplace ? '' : ' off') + (this.selectedStyle)}
+        return <div title="Inplace" key="inplace-button" className={`preference-button ${this.compileInplace ? '' : 'off'} ${this.selectedStyle}`}
             onClick={event => {
                 this.commands.commandRegistry.executeCommand(TOGGLE_INPLACE.id)
                 this.update()
@@ -397,7 +397,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderAutoCompileButton(): React.ReactNode {
-        return <div title="Auto compile" key="auto-compile-button" className={'preference-button' + (this.autoCompile ? '' : ' off') + (this.selectedStyle)}
+        return <div title="Auto compile" key="auto-compile-button" className={`preference-button ${this.autoCompile ? '' : 'off'} ${this.selectedStyle}`}
             onClick={event => {
                 this.commands.commandRegistry.executeCommand(TOGGLE_AUTO_COMPILE.id)
                 this.update()
@@ -409,7 +409,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderShowAdvancedToolbar(): React.ReactNode {
         return <div title={this.showAdvancedToolbar ? "Hide advanced toolbar" : "Show advanced toolbar"}
                     key="show-advanced-toolbar"
-                    className={'preference-button' + (this.showAdvancedToolbar ? '' : ' off') + (this.selectedStyle)}
+                    className={`preference-button ${this.showAdvancedToolbar ? '' : 'off'} ${this.selectedStyle}`}
             onClick={event => {
                 this.showAdvancedToolbar = !this.showAdvancedToolbar
                 this.update()
@@ -442,7 +442,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.compileInplace = !!oldState.compileInplace
         this.showPrivateSystems = !!oldState.showPrivateSystems
         this.showButtons = !!oldState.showButtons
-        if (oldState.selectedIndex === null || oldState.selectedStyle === null) {
+        if (oldState.selectedIndex === undefined || oldState.selectedStyle === undefined) {
             this.selectedIndex = 0
             this.selectedStyle = this.styles[0]
         } else {
