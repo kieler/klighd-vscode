@@ -186,11 +186,11 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 () => this.handleSearchChange())
             }
             return <React.Fragment>
-                <div className={"compilation-panel" + (this.selectedStyle)}>
-                    {this.showButtons ? this.renderShowAdvancedToolbar() : ""}
-                    {this.showButtons ? styleSelectbox : ""}
-                    {this.showButtons ? searchbox : ""}
-                </div>
+                {this.showButtons ? <div className={"compilation-panel" + (this.selectedStyle)}>
+                    {this.renderShowAdvancedToolbar()}
+                    {styleSelectbox}
+                    {searchbox}
+                </div> : ''}
                 <div className={"compilation-panel" + (this.selectedStyle)}>
                     {this.showButtons ? this.renderPrivateButton() : ""}
                     {this.showButtons ? this.renderInplaceButton() : ""}

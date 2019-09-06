@@ -1,7 +1,30 @@
+.diagram-option-widget {
+    margin-left: 5px;
+    display: inline-block;
+}
+
 .diagram-option {
     color: var(--theia-ui-font-color1);
     font-size: var(--theia-ui-font-size1);
-    margin-top: 5px
+    margin-top: 5px;
+}
+
+.diagram-option-actions {
+    color: var(--theia-ui-font-color1);
+    font-size: var(--theia-ui-font-size1);
+    display: inherit;
+}
+
+.diagram-option-choice {
+    padding-left: 15px;
+}
+
+.diagram-option-range {
+    color: var(--theia-ui-font-color1);
+    display: grid;
+    font-size: var(--theia-ui-font-size1);
+    margin-top: 5px;
+    padding-left: 15px;
 }
 
 .category {
@@ -28,44 +51,17 @@ label {
     text-indent: -15px;
 }
 input[type="checkbox"] {
-    width: 13px;
-    height: 13px;
-    padding: 0;
-    margin:0;
+    margin-top: auto;
+    margin-bottom: auto;
     vertical-align: bottom;
-    position: relative;
-    top: -1px;
-    *overflow: hidden;
 }
 input[type="radio"] {
-    width: 13px;
-    height: 13px;
-    padding: 0;
-    margin:0;
+    margin-top: auto;
+    margin-bottom: auto;
     vertical-align: bottom;
-    position: relative;
-    top: -1px;
-    *overflow: hidden;
 }
 input[type="range"] {
     width: 90%;
-}
-.update-button {
-    width: fit-content;
-    color: var(--theia-ui-button-font-color);
-    background-color: var(--theia-ui-button-color);
-    block-size: var(--theia-content-line-height);
-    line-height: var(--theia-content-line-height);
-    margin-left: 1px;
-    margin-right: 1px;
-    margin-top: 1px;
-    border: none;
-    border-radius: 0;
-    outline: none;
-    cursor: pointer;
-    box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.2), 0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 1px -2px rgba(0, 0, 0, 0.12);
-    transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-    padding-left: 4px;
-    padding-right: 4px;
-    align-items: center;
+    max-width: 200px;
+    padding-left: unset;
 }
