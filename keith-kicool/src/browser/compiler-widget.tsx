@@ -12,15 +12,14 @@
  */
 
 // import { ReactWidget } from "@theia/core/lib/browser/widgets/react-widget";
-import { injectable, LazyServiceIdentifer, inject } from "inversify";
+import { injectable, inject } from "inversify";
 import { Message,
     StatefulWidget,
     ReactWidget} from "@theia/core/lib/browser";
-import { Event } from '@theia/core/lib/common'
+import { Event, CommandRegistry } from '@theia/core/lib/common'
 import * as React from "react";
-import { CompilationSystem, Snapshot } from "../common/kicool-models";
+import { CompilationSystem, Snapshot, CodeContainer } from "../common/kicool-models";
 import { compilerWidgetId } from "../common";
-import { KiCoolContribution } from "./kicool-contribution";
 import { Emitter } from "@theia/core";
 import '../../src/browser/style/index.css'
 import '../../src/browser/style/black-white.css'
@@ -29,11 +28,18 @@ import '../../src/browser/style/tree.css'
 import '../../src/browser/style/inline-block.css'
 import { SELECT_COMPILATION_CHAIN, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, TOGGLE_AUTO_COMPILE } from "../common/commands";
 
+export class ShowSnapshotEvent {
+    uri: string
+    index: number
+}
+
 /**
  * Widget to compile and navigate compilation results. Should be linked to editor.
  */
 @injectable()
 export class CompilerWidget extends ReactWidget implements StatefulWidget {
+
+    @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry
 
     /**
      * Id of widget. Can be used to get an instance of this widget via the WidgetManager.
@@ -43,6 +49,16 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     protected readonly onRequestSystemDescriptionsEmitter = new Emitter<CompilerWidget | undefined>()
     readonly requestSystemDescriptions: Event<CompilerWidget | undefined> = this.onRequestSystemDescriptionsEmitter.event
+
+    protected readonly onCancelCompilationEmitter = new Emitter<void | undefined>()
+    readonly cancelCompilation: Event<void | undefined> = this.onCancelCompilationEmitter.event
+
+    protected readonly onCancelGetSystemsEmitter = new Emitter<void | undefined>()
+    readonly cancelGetSystems: Event<void | undefined> = this.onCancelGetSystemsEmitter.event
+
+    protected readonly onShowSnapshotEmitter = new Emitter<ShowSnapshotEvent | undefined>()
+    readonly showSnapshot: Event<ShowSnapshotEvent | undefined> = this.onShowSnapshotEmitter.event
+
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
 
     /**
@@ -135,9 +151,9 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     public showButtons: boolean = false
 
-    constructor(
-        @inject(new LazyServiceIdentifer(() => KiCoolContribution)) protected readonly commands: KiCoolContribution
-    ) {
+    public snapshots: CodeContainer
+
+    constructor() {
         super();
         this.id = compilerWidgetId
         this.title.label = 'KIELER Compiler'
@@ -149,17 +165,13 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         if (this.requestedSystems) {
             return <div>
                 <div key="panel" className={"compilation-panel " + (this.selectedStyle)}>
-                    {this.requestedSystems ? this.renderCancelButton(() => this.commands.cancelGetSystems(), "Cancel get compilation systems") : ""}
+                    {this.requestedSystems ? this.renderCancelButton(() => this.onCancelGetSystems(), "Cancel get compilation systems") : ""}
                 </div>
             </div>;
         } else if (!this.systems) {
-            // Case no connection to the LS was established or no compilation systems are present.
-            if (this.commands && this.commands.editor) {
-                // Try to request compilation systems.
-                this.requestSystemDescription()
-            }
-            // If no compilation systems could be requested, show spinner instead.
-            return this.renderSpinner("No compilation systems could be requested... try to focus an editor.")
+            // Try to request compilation systems.
+            this.requestSystemDescription()
+            return
         } else {
             const compilationElements: React.ReactNode[] = [];
             this.systems.forEach(system => {
@@ -198,11 +210,19 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     {this.showButtons ? this.compiling ? "" : this.renderCompileButton() : ""}
                     {this.compiling && this.cancellingCompilation ?
                         this.renderSpinnerButton("Stop compilation...") :
-                        this.compiling ? this.renderCancelButton(() => this.commands.requestCancelCompilation(), "Cancel compilation") : ""}
+                        this.compiling ? this.renderCancelButton(() => this.requestCancelCompilation(), "Cancel compilation") : ""}
                 </div>
                 {this.renderShowButtons()}
             </React.Fragment>
         }
+    }
+
+    async onCancelGetSystems() {
+        this.onCancelGetSystemsEmitter.fire()
+    }
+
+    async requestCancelCompilation() {
+        this.onCancelCompilationEmitter.fire()
     }
 
     /**
@@ -243,13 +263,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.onRequestSystemDescriptionsEmitter.fire(this)
     }
 
-    renderSpinner(tooltip: string): React.ReactNode {
-        return <div className='spinnerContainer'>
-                <div className='fa fa-spinner fa-pulse fa-3x fa-fw' title={tooltip}></div>
-            </div>;
-    }
-
-
     renderSpinnerButton(tooltip: string): React.ReactNode {
         return <div className={`preference-button ${this.selectedStyle}`} title="Cancel">
             <div className='spinnerContainer'>
@@ -286,8 +299,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         if (!uri) {
             return
         }
-        const snapshots = this.commands.resultMap.get(uri)
-        if (!snapshots) {
+        if (!this.snapshots) {
             return
         }
         // Add show original model button
@@ -297,14 +309,14 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                         title={"Original"}
                         onClick={event => {
                             // Draw diagram of original model
-                            this.commands.show(uri.toString(), -1)
+                            this.onShowSnapshot(uri.toString(), -1)
                         }
                     }>
                     Original
                 </li >
             </ul>
         )
-        let snapshotsListOfLists: Snapshot[][] = snapshots.files
+        let snapshotsListOfLists: Snapshot[][] = this.snapshots.files
         let resultingMaxIndex = 0
         snapshotsListOfLists.forEach((snapshots: Snapshot[], index: number) => {
             let filter
@@ -328,7 +340,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                                 if (!uri) {
                                     return
                                 }
-                                this.commands.show(uri.toString(), currentIndex)
+                                this.onShowSnapshot(uri.toString(), currentIndex)
                             }}>
                             {(snapshot.snapshotIndex === 0 && // draw the name of the snapshot if it is the first snapshot with a style that needs this
                                 (this.selectedStyle && !this.selectedStyle.includes("tree") ||
@@ -360,10 +372,14 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
+    onShowSnapshot(uri: string, index: number) {
+        this.onShowSnapshotEmitter.fire({uri: uri, index: index})
+    }
+
     renderCompileButton(): React.ReactNode {
         return <div className={`compile-button ${this.selectedStyle}`} title="Compile"
             onClick={event => {
-                this.commands.commandRegistry.executeCommand(SELECT_COMPILATION_CHAIN.id)
+                this.commandRegistry.executeCommand(SELECT_COMPILATION_CHAIN.id)
             }}>
             <div className='icon fa fa-play-circle'> </div>
         </div>
@@ -379,7 +395,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderPrivateButton(): React.ReactNode {
         return <div title="Show private Systems" key="private-button" className={`preference-button ${this.showPrivateSystems ? '' : 'off'} ${this.selectedStyle}`}
             onClick={event => {
-                this.commands.commandRegistry.executeCommand(TOGGLE_PRIVATE_SYSTEMS.id)
+                this.commandRegistry.executeCommand(TOGGLE_PRIVATE_SYSTEMS.id)
                 this.update()
             }}>
             <div className='icon fa fa-unlock-alt'/>
@@ -389,7 +405,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderInplaceButton(): React.ReactNode {
         return <div title="Inplace" key="inplace-button" className={`preference-button ${this.compileInplace ? '' : 'off'} ${this.selectedStyle}`}
             onClick={event => {
-                this.commands.commandRegistry.executeCommand(TOGGLE_INPLACE.id)
+                this.commandRegistry.executeCommand(TOGGLE_INPLACE.id)
                 this.update()
             }}>
             <div className='icon fa fa-share'/>
@@ -399,7 +415,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     renderAutoCompileButton(): React.ReactNode {
         return <div title="Auto compile" key="auto-compile-button" className={`preference-button ${this.autoCompile ? '' : 'off'} ${this.selectedStyle}`}
             onClick={event => {
-                this.commands.commandRegistry.executeCommand(TOGGLE_AUTO_COMPILE.id)
+                this.commandRegistry.executeCommand(TOGGLE_AUTO_COMPILE.id)
                 this.update()
             }}>
             <div className='icon fa fa-cog'/>

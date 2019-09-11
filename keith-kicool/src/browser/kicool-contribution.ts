@@ -29,7 +29,7 @@ import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_
     CANCEL_GET_SYSTEMS} from "../common";
 import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystem } from "../common/kicool-models";
-import { CompilerWidget } from "./compiler-widget";
+import { CompilerWidget, ShowSnapshotEvent } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { COMPILER, TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
@@ -168,8 +168,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             lClient.onNotification(cancelCompilationMessageType, this.cancelCompilation.bind(this))
             lClient.onNotification(compilationSystemsMessageType, this.handleReceiveSystemDescriptions.bind(this))
             this.showedNewSnapshot(this.handleNewShapshotShown.bind(this))
+            this.compilerWidget.cancelGetSystems(this.cancelGetSystems.bind(this))
+            this.compilerWidget.cancelCompilation(this.cancelCompilation.bind(this))
+            this.compilerWidget.showSnapshot(((event: ShowSnapshotEvent) => this.show(event.uri, event.index)).bind(this))
         }
     }
+    
     handleNewShapshotShown(message: string) {
         this.requestSystemDescriptions()
     }
@@ -466,6 +470,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
         this.isCompiled.set(uri as string, true)
         this.resultMap.set(uri as string, snapshotsDescriptions)
+        this.compilerWidget.snapshots = snapshotsDescriptions
         const length = snapshotsDescriptions.files.reduce((previousSum, snapshots) => {
             return previousSum + snapshots.length
         }, 0)
