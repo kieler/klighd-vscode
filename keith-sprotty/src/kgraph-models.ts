@@ -258,9 +258,18 @@ export interface KRenderingLibrary extends KGraphData {
 export interface KAction {
     actionId: string
     trigger: Trigger
-    altPressed: boolean
-    ctrlCmdPressed: boolean
-    shiftPressed: boolean
+    altPressed: ModifierState
+    ctrlCmdPressed: ModifierState
+    shiftPressed: ModifierState
+}
+
+/**
+ * The state of a modifier that it has to be in in order for some action to be performed.
+ */
+export enum ModifierState {
+    DONT_CARE = 0,
+    PRESSED = 1,
+    NOT_PRESSED = 2
 }
 
 /**

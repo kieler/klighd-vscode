@@ -57,8 +57,9 @@ export enum TransformationOptionType {
     CHECK = 0,
     CHOICE = 1,
     RANGE = 2,
-    SEPARATOR = 3,
-    CATEGORY = 4
+    TEXT = 3,
+    SEPARATOR = 4,
+    CATEGORY = 5
 }
 
 /**
