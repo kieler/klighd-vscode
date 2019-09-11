@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { Action, MouseListener, SModelElement } from 'sprotty/lib';
-import { isContainerRendering, isRendering, KAction, KGraphElement, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, Trigger } from '../kgraph-models';
+import { isContainerRendering, isRendering, KAction, KGraphElement, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, ModifierState, Trigger } from '../kgraph-models';
 import { PerformActionAction } from './actions';
 
 /**
@@ -71,9 +71,9 @@ export class ActionListener extends MouseListener {
             }
             // For each kAction, return an ActionAction if the event matches the event in the kAction.
             kActions.forEach(action => {
-                if (event.altKey === action.altPressed
-                    && event.ctrlKey === action.ctrlCmdPressed
-                    && event.shiftKey === action.shiftPressed
+                if (this.modifierStateMatches(action.altPressed, event.altKey)
+                    && this.modifierStateMatches(action.ctrlCmdPressed, event.ctrlKey)
+                    && this.modifierStateMatches(action.shiftPressed, event.shiftKey)
                     && this.eventsMatch(event, eventType, action.trigger)) {
                     actions.push(new PerformActionAction(action.actionId, target.id, semanticElementId))
                 }
@@ -147,6 +147,25 @@ export class ActionListener extends MouseListener {
             return []
         }
         return currentElement.actions
+    }
+
+    /**
+     * Returns if the acutal pressed state of a key matches the expected modifier state of any action.
+     * @param state The modifier state to match against.
+     * @param pressed The actual key pressed value.
+     */
+    private modifierStateMatches(state: ModifierState, pressed: boolean) {
+        switch (state) {
+            case ModifierState.DONT_CARE: {
+                return true
+            }
+            case ModifierState.NOT_PRESSED: {
+                return !pressed
+            }
+            case ModifierState.PRESSED: {
+                return pressed
+            }
+        }
     }
 
     /**
