@@ -157,7 +157,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
             {!this.commands.kicoolContribution.compilerWidget.showButtons ||
                 this.commands.kicoolContribution.compilerWidget.compiling ||
                 this.simulationRunning || this.compilingSimulation ? "" : this.renderSimulationButton()}
-            {this.commands.kicoolContribution.compilerWidget.showButtons &&
+            {!!this.commands.kicoolContribution.compilerWidget.showButtons &&
                 this.commands.kicoolContribution.compilerWidget.lastInvokedCompilation.includes("simulation") &&
                 !this.simulationRunning && !this.compilingSimulation ? this.renderRestartButton() : ""}
             {this.simulationRunning ? this.renderStepCounter() : ""}
