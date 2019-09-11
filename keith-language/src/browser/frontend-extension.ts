@@ -18,8 +18,7 @@ import { ContainerModule, interfaces } from 'inversify';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
 import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
 import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
-import { LabelProviderContribution, WidgetFactory, FrontendApplicationContribution } from '@theia/core/lib/browser';
-import { SCChartsIconProvider } from './sccharts-icon-provider';
+import { WidgetFactory, FrontendApplicationContribution } from '@theia/core/lib/browser';
 import { GettingStartedWidget } from '@theia/getting-started/lib/browser/getting-started-widget'
 import "../../src/browser/style/index.css"
 import { KeithGettingStartedWidget } from './keith-getting-started-widget';
@@ -79,7 +78,6 @@ export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.U
 
     bind(RegistrationContribution).toSelf().inSingletonScope()
     rebind(MonacoEditorProvider).to(KeithMonacoEditorProvider).inSingletonScope()
-    bind(LabelProviderContribution).to(SCChartsIconProvider).inSingletonScope()
     bind(KeithGettingStartedContribution).toSelf().inSingletonScope()
     bind(CommandContribution).toService(KeithGettingStartedContribution);
     bind(FrontendApplicationContribution).toService(KeithGettingStartedContribution);
