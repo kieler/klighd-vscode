@@ -13,7 +13,7 @@
 
 import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } from "@theia/core/lib/browser";
 import { ContainerModule, interfaces } from "inversify";
-import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution";
+import { DiagramOptionsViewContribution, DIAGRAM_OPTIONS_WIDGET_FACTORY_ID } from "./diagramoptions-view-contribution";
 import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget";
 
 /**
@@ -24,7 +24,7 @@ export default new ContainerModule((bind: interfaces.Bind) => {
     bind(FrontendApplicationContribution).toService(DiagramOptionsViewContribution);
 
     bind(WidgetFactory).toDynamicValue(ctx => ({
-        id: "diagramoptions-view",
+        id: DIAGRAM_OPTIONS_WIDGET_FACTORY_ID,
         createWidget: () => ctx.container.get(DiagramOptionsViewWidget)
     }))
     bind(DiagramOptionsViewWidget).toSelf()

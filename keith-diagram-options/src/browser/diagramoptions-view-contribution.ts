@@ -77,7 +77,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
 
         // Create and initialize a new widget.
-        const widgetPromise = this.widgetManager.getWidget(DiagramOptionsViewWidget.widgetId)
+        const widgetPromise = this.widgetManager.getWidget(DIAGRAM_OPTIONS_WIDGET_FACTORY_ID)
         widgetPromise.then(widget => {
             this.initializeDiagramOptionsViewWidget(widget)
         })

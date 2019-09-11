@@ -19,13 +19,13 @@ import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
 import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, TransformationOptionType, Type } from '../common/option-models';
+import { DIAGRAM_OPTIONS_WIDGET_FACTORY_ID } from './diagramoptions-view-contribution';
 
 /**
  * The widget displaying the diagram options.
  */
 @injectable()
 export class DiagramOptionsViewWidget extends ReactWidget {
-    public static widgetId = 'diagramoptions-view'
 
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
     private synthesisOptions: SynthesisOption[]
@@ -36,7 +36,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     constructor() {
         super()
 
-        this.id = DiagramOptionsViewWidget.widgetId
+        this.id = DIAGRAM_OPTIONS_WIDGET_FACTORY_ID
         this.title.label = 'Diagram Options'
         this.title.iconClass = 'fa fa-cogs'
         this.addClass('theia-diagramoptions-view')
