@@ -19,7 +19,6 @@ import { FileSystem, FileSystemUtils, FileStat } from '@theia/filesystem/lib/com
 import URI from '@theia/core/lib/common/uri';
 import { OpenerService, FrontendApplication } from '@theia/core/lib/browser';
 import { open } from '@theia/core/lib/browser/opener-service';
-import { KeithPreferences } from './keith-preferences';
 
 export const OPEN_EXAMPLE_SCCHART: Command = {
     id: 'open-example-scchart',
@@ -34,16 +33,13 @@ export class KeithGettingStartedContribution extends GettingStartedContribution 
     @inject(FileSystem) protected readonly fileSystem: FileSystem
     @inject(OpenerService) protected readonly openerService: OpenerService
     @inject(MessageService) protected readonly messageService: MessageService
-    @inject(KeithPreferences) protected readonly keithPreferences: KeithPreferences
 
     async onStart(app: FrontendApplication): Promise<void> {
-        this.keithPreferences.ready.then(() => {
-            if ((this.keithPreferences.get('keith.openWelcomePage') && !this.workspaceService.opened) || this.keithPreferences.get('keith.openWelcomePage')) {
-                this.stateService.reachedState('ready').then(
-                    a => this.openView({ reveal: true })
-                );
-            }
-        })
+        if (!this.workspaceService.opened) {
+            this.stateService.reachedState('ready').then(
+                () => this.openView({ reveal: true })
+            );
+        }
     }
 
     registerCommands(registry: CommandRegistry): void {
