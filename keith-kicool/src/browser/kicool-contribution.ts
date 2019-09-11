@@ -86,7 +86,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     @inject(Workspace) protected readonly workspace: Workspace
     @inject(MessageService) protected readonly messageService: MessageService
     @inject(FrontendApplication) public readonly front: FrontendApplication
-    @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution
     @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
     @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext
     @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
@@ -98,17 +97,16 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     constructor(
         @inject(EditorManager) public readonly editorManager: EditorManager,
         @inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
+        @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution, // has to be injected for the view command to work
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager
     ) {
         super({
             widgetId: compilerWidgetId,
-            widgetName: 'Compiler',
+            widgetName: 'KIELER Compiler',
             defaultWidgetOptions: {
                 area: 'bottom',
-                rank: 500
-            },
-            toggleCommandId: COMPILER.id,
-            toggleKeybinding: OPEN_COMPILER_WIDGET_KEYBINDING
+                rank: 512
+            }
         });
         this.fileSystemWatcher.onFilesChanged(this.onFilesChanged.bind(this))
 
@@ -120,15 +118,10 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
         this.widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
         // TODO: when the diagram closes, also update the view to the default one
-        // const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
-        // widgetPromise.then(widget => {
-        //     if (this.compilerWidget === undefined || this.compilerWidget === null) {
-        //         // widget has to be created
-        //         this.initializeCompilerWidget(new CompilerWidget(this))
-        //     } else {
-        //         this.initializeCompilerWidget(widget)
-        //     }
-        // })
+        const widgetPromise = this.widgetManager.getWidget(CompilerWidget.widgetId)
+        widgetPromise.then(widget => {
+            this.initializeCompilerWidget(widget)
+        })
     }
 
     async initializeLayout(app: FrontendApplication): Promise<void> {
@@ -149,6 +142,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget = widget as CompilerWidget
             this.compilerWidget.requestSystemDescriptions(this.requestSystemDescriptions.bind(this))
             this.compilerWidget.onActivateRequest(this.requestSystemDescriptions.bind(this))
+            this.compilerWidget.cancelGetSystems(this.cancelGetSystems.bind(this))
+            this.compilerWidget.cancelCompilation(this.cancelCompilation.bind(this))
+            this.compilerWidget.showSnapshot(((event: ShowSnapshotEvent) => this.show(event.uri, event.index)).bind(this))
             const lClient = await this.client.languageClient
             while (!this.client.running) {
                 await delay(100)
@@ -168,12 +164,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             lClient.onNotification(cancelCompilationMessageType, this.cancelCompilation.bind(this))
             lClient.onNotification(compilationSystemsMessageType, this.handleReceiveSystemDescriptions.bind(this))
             this.showedNewSnapshot(this.handleNewShapshotShown.bind(this))
-            this.compilerWidget.cancelGetSystems(this.cancelGetSystems.bind(this))
-            this.compilerWidget.cancelCompilation(this.cancelCompilation.bind(this))
-            this.compilerWidget.showSnapshot(((event: ShowSnapshotEvent) => this.show(event.uri, event.index)).bind(this))
         }
     }
-    
+
     handleNewShapshotShown(message: string) {
         this.requestSystemDescriptions()
     }
@@ -183,7 +176,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         // if (e.widget instanceof EditorWidget) {
         //     e.widget.activate()
         // }
-        if (e.factoryId === CompilerWidget.widgetId && !this.compilerWidget) {
+        if (e.factoryId === compilerWidgetId) {
             this.initializeCompilerWidget(e.widget)
         }
     }
@@ -351,7 +344,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
         commands.registerCommand(SELECT_COMPILATION_CHAIN, {
             isEnabled: widget => {
-                return this.compilerWidget.showButtons || (widget !== undefined && !!this.editor) &&
+                return (widget !== undefined && !!this.editor) &&
                 this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
             },
             execute: () => {

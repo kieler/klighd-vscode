@@ -32,13 +32,13 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
     bind(KiCoolKeybindingContext).toSelf();
     bind(KeybindingContext).toDynamicValue(context => context.container.get(KiCoolKeybindingContext));
 
+    bindViewContribution(bind, KiCoolContribution);
+    bind(FrontendApplicationContribution).toService(KiCoolContribution);
+    bind(TabBarToolbarContribution).toService(KiCoolContribution)
+
     bind(WidgetFactory).toDynamicValue(ctx => ({
         id: compilerWidgetId,
         createWidget: () => ctx.container.get(CompilerWidget)
     }));
     bind(CompilerWidget).toSelf();
-
-    bindViewContribution(bind, KiCoolContribution);
-    bind(FrontendApplicationContribution).toService(KiCoolContribution);
-    bind(TabBarToolbarContribution).toService(KiCoolContribution)
 })
