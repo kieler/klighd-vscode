@@ -40,7 +40,7 @@ export class ActionListener extends MouseListener {
 
     mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         // counts as a click if the mouse has not moved since the last mouseDown event.
-        if (!this.mouseMoved && target.type !== 'graph') {
+        if (!this.mouseMoved && target.type !== 'graph' && target.type !== 'NONE') {
             return this.actions(target as KGraphElement, event, 'click')
         }
         return [];
