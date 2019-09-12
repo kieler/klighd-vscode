@@ -14,10 +14,10 @@
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
-import { AbstractViewContribution, CommonMenus, DidCreateWidgetEvent,
+import { AbstractViewContribution, DidCreateWidgetEvent,
     FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService, StatusBar, StatusBarAlignment
 } from "@theia/core/lib/browser";
-import { Command, CommandHandler, CommandRegistry, MenuModelRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
+import { Command, CommandHandler, CommandRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
@@ -32,7 +32,7 @@ import { CodeContainer, CompilationSystem } from "../common/kicool-models";
 import { CompilerWidget, ShowSnapshotEvent } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import { COMPILER, TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
+import { TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
     SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, REVEAL_COMPILATION_WIDGET, SELECT_SNAPSHOT_COMPILATION_CHAIN } from '../common/commands';
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
@@ -106,7 +106,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             defaultWidgetOptions: {
                 area: 'bottom',
                 rank: 512
-            }
+            },
+            toggleCommandId: 'compiler-widget:toggle',
+            toggleKeybinding: OPEN_COMPILER_WIDGET_KEYBINDING
         });
         this.fileSystemWatcher.onFilesChanged(this.onFilesChanged.bind(this))
 
@@ -277,33 +279,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.newSimulationCommandsEmitter.fire(simulationSystems)
     }
 
-    registerKeybindings(keybindings: KeybindingRegistry): void {
-        [
-            {
-                command: COMPILER.id,
-                keybinding: OPEN_COMPILER_WIDGET_KEYBINDING
-            }
-        ].forEach(binding => {
-            keybindings.registerKeybinding(binding);
-        });
-    }
-
-    registerMenus(menus: MenuModelRegistry): void {
-        menus.registerMenuAction(CommonMenus.VIEW_VIEWS, {
-            commandId: COMPILER.id,
-            label: this.options.widgetName
-        });
-    }
-
     registerCommands(commands: CommandRegistry): void {
-        commands.registerCommand(COMPILER, {
-            execute: async () => {
-                this.openView({
-                    toggle: true,
-                    reveal: true
-                })
-            }
-        })
+        super.registerCommands(commands)
         commands.registerCommand(TOGGLE_AUTO_COMPILE, {
             execute: () => {
                 if (this.compilerWidget) {
