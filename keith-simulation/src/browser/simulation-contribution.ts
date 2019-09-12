@@ -92,8 +92,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             toggleKeybinding: OPEN_SIMULATION_WIDGET_KEYBINDING
         });
         this.widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
-        // TODO: when the diagram closes, also update the view to the default one
-
     }
 
     /**
@@ -105,6 +103,8 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     onStart(): void {
+        // Add an entry to the status bar that no simulation systems where requested
+        // This entry is removed after simulation systems are added in registerSimulationCommands
         this.statusbar.setElement('simulation-status', {
             alignment: StatusBarAlignment.LEFT,
             priority: simulationStatusPriority,
@@ -131,6 +131,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         }
     }
 
+    /**
+     * Registers send systems as simulation systems in the command palette
+     * @param systems systems that are assumed to be simulation systems
+     */
     registerSimulationCommands(systems: CompilationSystem[]) {
         this.statusbar.removeElement('simulation-status')
         // remove existing commands
@@ -152,6 +156,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         })
     }
 
+    /**
+     * Called after a compilation process was started
+     */
     compilationStarted() {
         this.simulationWidget.update()
     }
@@ -161,6 +168,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      */
     compilationFinished(successful: boolean) {
         if (this.simulationWidget.compilingSimulation) {
+            // If a simulation systems is currently compiling one has to simulate it afterwards
             this.simulationWidget.compilingSimulation = false
             this.simulationWidget.update()
             if (successful) {
@@ -176,7 +184,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      * If a simulation widget is created this simulation contribution is initialized using this widget.
      */
     async onDidCreateWidget(e: DidCreateWidgetEvent): Promise<void> {
-        if (e.factoryId === SimulationWidget.widgetId) {
+        if (e.factoryId === simulationWidgetId) {
             await this.initializeSimulationWidget(e.widget)
             const lClient = await this.client.languageClient
             while (!this.client.running) {
@@ -587,6 +595,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     handleExternalNewUserValue(values: Object) {
         console.log("external value", values)
+        this.messageService.warn('External new user values are not implemented')
     }
 
     handleExternalStop(message: string) {

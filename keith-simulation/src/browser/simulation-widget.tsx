@@ -27,12 +27,6 @@ import { SELECT_SIMULATION_CHAIN, SIMULATE } from "../common/commands";
 @injectable()
 export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
-    /**
-     * Id of widget. Can be used to get an instance of this widget via the WidgetManager.
-     */
-    public static widgetId = simulationWidgetId
-
-
     protected readonly onRequestSimulationSystemsEmitter = new Emitter<SimulationWidget | undefined>()
 
     /**
