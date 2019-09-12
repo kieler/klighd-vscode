@@ -14,10 +14,10 @@
 import { SimulationWidget } from "./simulation-widget";
 import { injectable, inject } from "inversify";
 import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
-    FrontendApplication, KeybindingRegistry, CommonMenus, Widget, DidCreateWidgetEvent, PrefixQuickOpenService,
+    FrontendApplication, Widget, DidCreateWidgetEvent, PrefixQuickOpenService,
     QuickOpenService, QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenOptions, StatusBar, StatusBarAlignment } from "@theia/core/lib/browser";
 import { Workspace, NotificationType } from "@theia/languages/lib/browser";
-import { MessageService, Command, CommandRegistry, MenuModelRegistry, CommandHandler } from "@theia/core";
+import { MessageService, Command, CommandRegistry, CommandHandler } from "@theia/core";
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
 import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
@@ -190,14 +190,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     registerCommands(commands: CommandRegistry) {
-        commands.registerCommand(SIMULATION, {
-            execute: async () => {
-                this.openView({
-                    toggle: true,
-                    reveal: true
-                })
-            }
-        })
+        super.registerCommands(commands)
         commands.registerCommand(SIMULATE, {
             execute: async () => {
                 this.simulate()
@@ -534,24 +527,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.executeSimulationStep()
             await delay(this.simulationWidget.simulationStepDelay)
         }
-    }
-
-    registerKeybindings(keybindings: KeybindingRegistry): void {
-        [
-            {
-                command: SIMULATION.id,
-                keybinding: OPEN_SIMULATION_WIDGET_KEYBINDING
-            }
-        ].forEach(binding => {
-            keybindings.registerKeybinding(binding);
-        });
-    }
-
-    registerMenus(menus: MenuModelRegistry): void {
-        menus.registerMenuAction(CommonMenus.VIEW_VIEWS, {
-            commandId: SIMULATION.id,
-            label: this.options.widgetName
-        });
     }
 
     public message(message: string, type: string) {
