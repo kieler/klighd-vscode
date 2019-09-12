@@ -229,16 +229,18 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                 this.commandRegistry.unregisterCommand(command)
             });
             this.registeredCommands = []
-            result.actions.forEach( action => {
-                const command: Command = {id: "Diagram: " + action.actionId, label: "Diagram: " + action.displayedName}
-                this.registeredCommands.push(command)
-                const handler: CommandHandler = {
-                    execute: () => {
-                        this.sendNewAction(action.actionId);
+            if (result.actions) {
+                result.actions.forEach( action => {
+                    const command: Command = {id: "Diagram: " + action.actionId, label: "Diagram: " + action.displayedName}
+                    this.registeredCommands.push(command)
+                    const handler: CommandHandler = {
+                        execute: () => {
+                            this.sendNewAction(action.actionId);
+                        }
                     }
-                }
-                this.commandRegistry.registerCommand(command, handler)
-            })
+                    this.commandRegistry.registerCommand(command, handler)
+                })
+            }
 
             // Update the widget.
             this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
