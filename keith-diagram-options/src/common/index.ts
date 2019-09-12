@@ -30,3 +30,8 @@ export const SET_LAYOUT_OPTIONS = 'keith/diagramOptions/setLayoutOptions'
  * The message type of the language server protocol extension to perform an action.
  */
 export const PERFORM_ACTION = 'keith/diagramOptions/performAction'
+
+/**
+ * The ID of the diagram options view widget
+ */
+export const diagramOptionsWidgetId = 'diagramoptions-view'

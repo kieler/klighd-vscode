@@ -19,7 +19,7 @@ import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
 import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, TransformationOptionType, Type } from '../common/option-models';
-import { DIAGRAM_OPTIONS_WIDGET_FACTORY_ID } from './diagramoptions-view-contribution';
+import { diagramOptionsWidgetId } from '../common';
 
 /**
  * The widget displaying the diagram options.
@@ -36,7 +36,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     constructor() {
         super()
 
-        this.id = DIAGRAM_OPTIONS_WIDGET_FACTORY_ID
+        this.id = diagramOptionsWidgetId
         this.title.label = 'Diagram Options'
         this.title.iconClass = 'fa fa-cogs'
         this.addClass('theia-diagramoptions-view')

@@ -13,8 +13,9 @@
 
 import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } from "@theia/core/lib/browser";
 import { ContainerModule, interfaces } from "inversify";
-import { DiagramOptionsViewContribution, DIAGRAM_OPTIONS_WIDGET_FACTORY_ID } from "./diagramoptions-view-contribution";
+import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution";
 import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget";
+import { diagramOptionsWidgetId } from "../common";
 
 /**
  * Dependency injection container for the KEITH diagram options functionality.
@@ -24,7 +25,7 @@ export default new ContainerModule((bind: interfaces.Bind) => {
     bind(FrontendApplicationContribution).toService(DiagramOptionsViewContribution);
 
     bind(WidgetFactory).toDynamicValue(ctx => ({
-        id: DIAGRAM_OPTIONS_WIDGET_FACTORY_ID,
+        id: diagramOptionsWidgetId,
         createWidget: () => ctx.container.get(DiagramOptionsViewWidget)
     }))
     bind(DiagramOptionsViewWidget).toSelf()

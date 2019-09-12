@@ -21,14 +21,10 @@ import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-con
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
-import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS } from '../common';
+import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
 
-/**
- * The ID of the diagram options view widget.
- */
-export const DIAGRAM_OPTIONS_WIDGET_FACTORY_ID = 'diagramoptions-view'
 /**
  * The keybinding to toggle the diagram options view widget.
  */
@@ -55,7 +51,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry
     ) {
         super({
-            widgetId: DIAGRAM_OPTIONS_WIDGET_FACTORY_ID,
+            widgetId: diagramOptionsWidgetId,
             widgetName: 'Diagram Options',
             defaultWidgetOptions: {
                 area: 'right',
@@ -77,7 +73,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
 
         // Create and initialize a new widget.
-        const widgetPromise = this.widgetManager.getWidget(DIAGRAM_OPTIONS_WIDGET_FACTORY_ID)
+        const widgetPromise = this.widgetManager.getWidget(diagramOptionsWidgetId)
         widgetPromise.then(widget => {
             this.initializeDiagramOptionsViewWidget(widget)
         })
@@ -146,7 +142,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                     this.onDiagramWidgetsClosed()
                 })
             }
-        } else if (e.factoryId === DIAGRAM_OPTIONS_WIDGET_FACTORY_ID) {
+        } else if (e.factoryId === diagramOptionsWidgetId) {
             // Initialize the widget and update its content when the widget is created.
             this.initializeDiagramOptionsViewWidget(e.widget)
             this.updateContent()
