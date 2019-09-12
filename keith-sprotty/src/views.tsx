@@ -17,7 +17,8 @@ import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
 import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
 import { KGraphRenderingContext } from './views-common';
-import { getRendering, getJunctionPointRenderings } from './views-rendering';
+import { getJunctionPointRenderings, getRendering } from './views-rendering';
+import { KStyles } from './views-styles';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -43,7 +44,7 @@ export class KNodeView implements IView {
         const ctx = context as any as KGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
-        const rendering = getRendering(node.data, node, ctx)
+        const rendering = getRendering(node.data, node, new KStyles, ctx)
         if (node.id === '$root') {
             // the root node should not be rendered, only its children should.
             const children = ctx.renderChildren(node)
@@ -84,7 +85,7 @@ export class KNodeView implements IView {
 export class KPortView implements IView {
     render(port: KPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
-        const rendering = getRendering(port.data, port, context as any)
+        const rendering = getRendering(port.data, port, new KStyles, context as any)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
@@ -112,7 +113,7 @@ export class KPortView implements IView {
 export class KLabelView implements IView {
     render(label: KLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
-        const rendering = getRendering(label.data, label, context as any)
+        const rendering = getRendering(label.data, label, new KStyles, context as any)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
@@ -140,7 +141,7 @@ export class KLabelView implements IView {
 export class KEdgeView implements IView {
     render(edge: KEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
-        const rendering = getRendering(edge.data, edge, context as any)
+        const rendering = getRendering(edge.data, edge, new KStyles, context as any)
 
         // Also get the renderings for all junction points
         const junctionPointRenderings = getJunctionPointRenderings(edge, context as any)

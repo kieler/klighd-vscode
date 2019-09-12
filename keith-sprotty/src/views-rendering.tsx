@@ -20,7 +20,7 @@ import {
     K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
 } from './kgraph-models';
 import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, KGraphRenderingContext } from './views-common';
-import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible } from './views-styles';
+import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles } from './views-styles';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -28,9 +28,10 @@ import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getS
  * Translates a KChildArea rendering into an SVG rendering.
  * @param rendering The rendering.
  * @param parent The parent element.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildArea(rendering: KChildArea, parent: KGraphElement, context: KGraphRenderingContext) {
+export function renderChildArea(rendering: KChildArea, parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext) {
     if (parent.areChildrenRendered) {
         console.error('This element contains multiple child areas, skipping this one.')
         return <g />
@@ -39,7 +40,7 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
     parent.areChildrenRendered = true
 
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, propagatedStyles)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
@@ -64,11 +65,15 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, co
  * This includes KEllipse, KRectangle and KRoundedRectangle.
  * @param rendering The rendering.
  * @param parent The parent element.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderRectangularShape(rendering: KContainerRendering, parent: KGraphElement, context: KGraphRenderingContext): VNode {
+export function renderRectangularShape(rendering: KContainerRendering, parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+    // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
+    const stylesToPropagate = new KStyles
+
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, propagatedStyles, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
@@ -85,7 +90,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, context)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
         </g>
     }
 
@@ -163,7 +168,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                         fill={colorStyles.background}
                         filter={shadowStyles}
                     />
-                    {renderChildRenderings(rendering, parent, context)}
+                    {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
                 </g>
                 break
             } else {
@@ -188,7 +193,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                     fill={colorStyles.background}
                     filter={shadowStyles}
                 />
-                {renderChildRenderings(rendering, parent, context)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
             </g>
             break
         }
@@ -218,7 +223,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                     fill={colorStyles.background}
                     filter={shadowStyles}
                 />
-                {renderChildRenderings(rendering, parent, context)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
             </g>
             break
         }
@@ -236,13 +241,15 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
  * This includes all subclasses of and the KPolyline rendering itself.
  * @param rendering The rendering.
  * @param parent The parent element.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, context: KGraphRenderingContext): VNode {
-    // TODO: implement junction point rendering
+export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+    // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
+    const stylesToPropagate = new KStyles
 
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, propagatedStyles, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     // TODO: KPolylines are a special case of container renderings: their bounds should not be given down to their child renderings.
@@ -260,7 +267,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, context)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
         </g>
     }
 
@@ -272,7 +279,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     const points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
         return <g>
-            {renderChildRenderings(rendering, parent, context)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
         </g>
     }
 
@@ -375,7 +382,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
             fill={colorStyles.background}
             filter={shadowStyles}
         />
-        {renderChildRenderings(rendering, parent, context)}
+        {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
     </g>
     return element
 }
@@ -384,9 +391,10 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
  * Translates a text rendering into an SVG text rendering.
  * @param rendering The rendering.
  * @param parent The parent element.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderKText(rendering: KText, parent: KGraphElement | KLabel, context: KGraphRenderingContext): VNode {
+export function renderKText(rendering: KText, parent: KGraphElement | KLabel, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -402,7 +410,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
     let lines = text.split('\n')
 
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, (parent as KGraphElement).id + rendering.id)
+    const styles = getKStyles(rendering.styles, propagatedStyles)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findTextBoundsAndTransformationData(rendering, styles, parent, context, lines.length)
@@ -496,12 +504,14 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, co
  * Renders all child renderings of the given container rendering.
  * @param parentRendering The parent rendering.
  * @param parent The parent element containing this rendering.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, context: KGraphRenderingContext): (VNode | undefined)[] {
+export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, propagatedStyles: KStyles,
+    context: KGraphRenderingContext): (VNode | undefined)[] {
     let renderings: (VNode | undefined)[] = []
     for (let childRendering of parentRendering.children) {
-        let rendering = getRendering([childRendering], parentElement, context)
+        let rendering = getRendering([childRendering], parentElement, propagatedStyles, context)
         renderings.push(rendering)
     }
     return renderings
@@ -519,9 +529,10 @@ export function renderError(rendering: KRendering) {
  * Looks up the KRendering in the given data pool and generates a SVG rendering from that.
  * @param datas The list of possible KRenderings and additional data.
  * @param parent The parent element containing this rendering.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this rendering.
  */
-export function getRendering(datas: KGraphData[], parent: KGraphElement, context: KGraphRenderingContext): VNode | undefined {
+export function getRendering(datas: KGraphData[], parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -535,23 +546,25 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, context
         return undefined
     }
 
-    return renderKRendering(kRendering, parent, context)
+    return renderKRendering(kRendering, parent, propagatedStyles, context)
 }
 
 /**
  * Translates any KRendering into an SVG rendering.
  * @param kRendering The rendering.
  * @param parent The parent element.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderKRendering(kRendering: KRendering, parent: KGraphElement, context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
+export function renderKRendering(kRendering: KRendering, parent: KGraphElement, propagatedStyles: KStyles,
+    context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
             return undefined
         }
         case K_CHILD_AREA: {
-            return renderChildArea(kRendering as KChildArea, parent, context)
+            return renderChildArea(kRendering as KChildArea, parent, propagatedStyles, context)
         }
         case K_CUSTOM_RENDERING: {
             console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
@@ -562,7 +575,7 @@ export function renderKRendering(kRendering: KRendering, parent: KGraphElement, 
         case K_ELLIPSE:
         case K_RECTANGLE:
         case K_ROUNDED_RECTANGLE: {
-            return renderRectangularShape(kRendering as KContainerRendering, parent, context)
+            return renderRectangularShape(kRendering as KContainerRendering, parent, propagatedStyles, context)
         }
         case K_IMAGE: {
             console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
@@ -573,10 +586,10 @@ export function renderKRendering(kRendering: KRendering, parent: KGraphElement, 
         case K_POLYGON:
         case K_ROUNDED_BENDS_POLYLINE:
         case K_SPLINE: {
-            return renderLine(kRendering as KPolyline, parent, context)
+            return renderLine(kRendering as KPolyline, parent, propagatedStyles, context)
         }
         case K_TEXT: {
-            return renderKText(kRendering as KText, parent, context)
+            return renderKText(kRendering as KText, parent, propagatedStyles, context)
         }
         default: {
             console.error('The rendering is of an unknown type:' + kRendering.type)
@@ -656,7 +669,7 @@ export function getJunctionPointRenderings(edge: KEdge, context: KGraphRendering
         return []
     }
     // Render each junction point.
-    const vNode = renderKRendering(junctionPointRendering, edge, context)
+    const vNode = renderKRendering(junctionPointRendering, edge, new KStyles, context)
     if (vNode === undefined) {
         return []
     }
