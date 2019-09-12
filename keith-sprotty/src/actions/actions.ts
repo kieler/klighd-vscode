@@ -12,7 +12,7 @@
  */
 import { inject, injectable } from 'inversify';
 import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot,
-    SModelRootSchema, TYPES, RequestAction, ResponseAction, generateRequestId } from 'sprotty/lib';
+    SModelRootSchema, TYPES } from 'sprotty/lib';
 import { SetSynthesesActionData } from '../syntheses/synthesis-message-data';
 
 /**
@@ -41,13 +41,12 @@ export class SetSynthesisAction implements Action {
  * Sent from the client to the model source (e.g. a DiagramServer) to transmit the result of text bounds
  * computation as a response to a RequestTextBoundsAction.
  */
-export class ComputedTextBoundsAction implements ResponseAction {
+export class ComputedTextBoundsAction implements Action {
     static readonly KIND = 'computedTextBounds'
 
     readonly kind = ComputedTextBoundsAction.KIND
 
-    constructor(public readonly bounds: ElementAndBounds[],
-        public readonly responseId = '') {
+    constructor(public readonly bounds: ElementAndBounds[]) {
     }
 }
 
@@ -75,16 +74,15 @@ export class RequestTextBoundsCommand extends HiddenCommand {
  * Sent from the model source to the client to request bounds for the given texts. The texts are
  * rendered invisibly so the bounds can derived from the DOM. The response is a ComputedTextBoundsAction.
  */
-export class RequestTextBoundsAction implements RequestAction<ComputedTextBoundsAction> {
+export class RequestTextBoundsAction implements Action {
     readonly kind = RequestTextBoundsCommand.KIND
 
-    constructor(public readonly textDiagram: SModelRootSchema,
-        public readonly requestId = '') {
+    constructor(public readonly textDiagram: SModelRootSchema) {
     }
 
     /** Factory function to dispatch a request with the `IActionDispatcher` */
-    static create(newRoot: SModelRootSchema): RequestAction<ComputedTextBoundsAction> {
-        return new RequestTextBoundsAction(newRoot, generateRequestId());
+    static create(newRoot: SModelRootSchema): Action {
+        return new RequestTextBoundsAction(newRoot);
     }
 }
 
