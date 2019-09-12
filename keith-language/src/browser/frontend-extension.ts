@@ -23,20 +23,7 @@ import { GettingStartedWidget } from '@theia/getting-started/lib/browser/getting
 import "../../src/browser/style/index.css"
 import { KeithGettingStartedWidget } from './keith-getting-started-widget';
 import { KeithGettingStartedContribution } from './keith-getting-started-contribution';
-
-// Language register, holds all languages that are supported by KEITH
-export const languageDescriptions: LanguageDescription[] = [
-    {id: "sctx", name: "SCCharts"},
-    {id: "scl", name: "SCL"},
-    {id: "kgt", name: "KGraph"},
-    {id: "strl", name: "Estrel"},
-    {id: "lus", name: "Lustre"},
-    {id: "kext", name: "KExt"},
-    {id: "anno", name: "Annotations"},
-    {id: "sctx", name: "SCCharts"},
-    {id: "elkt", name: "Elk Graph"},
-    {id: "kviz", name: "Kieler Visualization"},
-]
+import { languageDescriptions } from '../common';
 
 export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.Unbind, _isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
     // register languages
