@@ -40,7 +40,7 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, pr
     parent.areChildrenRendered = true
 
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, propagatedStyles)
+    const styles = getKStyles(parent, rendering.styles, propagatedStyles)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
@@ -73,7 +73,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     const stylesToPropagate = new KStyles
 
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, propagatedStyles, stylesToPropagate)
+    const styles = getKStyles(parent, rendering.styles, propagatedStyles, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
@@ -249,7 +249,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     const stylesToPropagate = new KStyles
 
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, propagatedStyles, stylesToPropagate)
+    const styles = getKStyles(parent, rendering.styles, propagatedStyles, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     // TODO: KPolylines are a special case of container renderings: their bounds should not be given down to their child renderings.
@@ -410,7 +410,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, pr
     let lines = text.split('\n')
 
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(rendering.styles, propagatedStyles)
+    const styles = getKStyles(parent, rendering.styles, propagatedStyles)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findTextBoundsAndTransformationData(rendering, styles, parent, context, lines.length)

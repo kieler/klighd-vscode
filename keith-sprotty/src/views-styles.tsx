@@ -13,9 +13,10 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
+import { isSelectable } from 'sprotty';
 import {
-    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin,
-    KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment
+    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KGraphElement, KHorizontalAlignment, KInvisibility, KLineCap,
+    KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment
 } from './kgraph-models';
 import {
     camelToKebab, fillSingleColor, isSingleColor, KGraphRenderingContext, lineCapText, lineJoinText, lineStyleText, textDecorationStyleText, verticalAlignmentText
@@ -156,7 +157,8 @@ export class KStyles {
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param stylesToPropagage The optional styles object that should be propagated further to childern. It is modified in this method.
  */
-export function getKStyles(styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles { // TODO: not all of these are implemented yet
+export function getKStyles(parent: KGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
+    // TODO: not all of these are implemented yet
     let styles = new KStyles(false)
     // Include all propagated styles.
     copyStyles(propagatedStyles, styles)
@@ -167,147 +169,165 @@ export function getKStyles(styleList: KStyle[], propagatedStyles: KStyles, style
     if (styleList === undefined) {
         return styles
     }
+
+    // First, apply all non-selection styles.
     for (let style of styleList) {
-        if (style.selection === false) { // TODO: check if element is selected and decide from there
-            switch (style.type) {
-                case K_COLORING: {
-                    console.error('A style can not be a ' + style.type + ' by itself, it needs to be a subclass of it.')
-                    break
-                }
-                case K_BACKGROUND: {
-                    styles.kBackground = style as KBackground
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kBackground = styles.kBackground
-                    }
-                    break
-                }
-                case K_FOREGROUND: {
-                    styles.kForeground = style as KForeground
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kForeground = styles.kForeground
-                    }
-                    break
-                }
-                case K_FONT_BOLD: {
-                    styles.kFontBold = style as KFontBold
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kFontBold = styles.kFontBold
-                    }
-                    break
-                }
-                case K_FONT_ITALIC: {
-                    styles.kFontItalic = style as KFontItalic
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kFontItalic = styles.kFontItalic
-                    }
-                    break
-                }
-                case K_FONT_NAME: {
-                    styles.kFontName = style as KFontName // TODO: have a deeper look at svg fonts
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kFontName = styles.kFontName
-                    }
-                    break
-                }
-                case K_FONT_SIZE: {
-                    styles.kFontSize = style as KFontSize
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kFontSize = styles.kFontSize
-                    }
-                    break
-                }
-                case K_HORIZONTAL_ALIGNMENT: {
-                    styles.kHorizontalAlignment = style as KHorizontalAlignment
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kHorizontalAlignment = styles.kHorizontalAlignment
-                    }
-                    break
-                }
-                case K_INVISIBILITY: {
-                    styles.kInvisibility = style as KInvisibility
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kInvisibility = styles.kInvisibility
-                    }
-                    break
-                }
-                case K_LINE_CAP: {
-                    styles.kLineCap = style as KLineCap
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kLineCap = styles.kLineCap
-                    }
-                    break
-                }
-                case K_LINE_JOIN: {
-                    styles.kLineJoin = style as KLineJoin
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kLineJoin = styles.kLineJoin
-                    }
-                    break
-                }
-                case K_LINE_STYLE: {
-                    styles.kLineStyle = style as KLineStyle
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kLineStyle = styles.kLineStyle
-                    }
-                    break
-                }
-                case K_LINE_WIDTH: {
-                    styles.kLineWidth = style as KLineWidth
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kLineWidth = styles.kLineWidth
-                    }
-                    break
-                }
-                case K_ROTATION: {
-                    styles.kRotation = style as KRotation
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kRotation = styles.kRotation
-                    }
-                    break
-                }
-                case K_SHADOW: {
-                    styles.kShadow = style as KShadow
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kShadow = styles.kShadow
-                    }
-                    break
-                }
-                case K_STYLE_REF: {
-                    console.error('The style ' + style.type + ' is not implemented yet.')
-                    // style as KStyleRef
-                    // special case! TODO: how to handle this? Never seen this in any rendering
-                    break
-                }
-                case K_TEXT_STRIKEOUT: {
-                    console.error('The style ' + style.type + ' is not implemented yet.')
-                    styles.kTextStrikeout = style as KTextStrikeout
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kTextStrikeout = styles.kTextStrikeout
-                    }
-                    break
-                }
-                case K_TEXT_UNDERLINE: {
-                    styles.kTextUnderline = style as KTextUnderline
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kTextUnderline = styles.kTextUnderline
-                    }
-                    break
-                }
-                case K_VERTICAL_ALIGNMENT: {
-                    styles.kVerticalAlignment = style as KVerticalAlignment
-                    if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
-                        stylesToPropagage.kVerticalAlignment = styles.kVerticalAlignment
-                    }
-                    break
-                }
-                default: {
-                    console.error('Unexpected Style found while rendering: ' + style.type)
-                    break
-                }
-            }
+        if (style.selection === false) {
+            applyKStyle(style, styles, stylesToPropagage)
+        }
+    }
+    // Then, override with selection styles, if any are available.
+    for (let style of styleList) {
+        if (isSelectable(parent) && parent.selected && style.selection === true) {
+            applyKStyle(style, styles, stylesToPropagage)
         }
     }
     return styles
+}
+
+/**
+ * Apply the given style to the given styles object. If it should be propagated, also apply it to the stylesToPropagage object.
+ * @param style The style to apply.
+ * @param styles The styles object the style should be applied to.
+ * @param stylesToPropagage The styles object that gets propagated.
+ */
+export function applyKStyle(style: KStyle, styles: KStyles, stylesToPropagage?: KStyles): void {
+    switch (style.type) {
+        case K_COLORING: {
+            console.error('A style can not be a ' + style.type + ' by itself, it needs to be a subclass of it.')
+            break
+        }
+        case K_BACKGROUND: {
+            styles.kBackground = style as KBackground
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kBackground = styles.kBackground
+            }
+            break
+        }
+        case K_FOREGROUND: {
+            styles.kForeground = style as KForeground
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kForeground = styles.kForeground
+            }
+            break
+        }
+        case K_FONT_BOLD: {
+            styles.kFontBold = style as KFontBold
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontBold = styles.kFontBold
+            }
+            break
+        }
+        case K_FONT_ITALIC: {
+            styles.kFontItalic = style as KFontItalic
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontItalic = styles.kFontItalic
+            }
+            break
+        }
+        case K_FONT_NAME: {
+            styles.kFontName = style as KFontName // TODO: have a deeper look at svg fonts
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontName = styles.kFontName
+            }
+            break
+        }
+        case K_FONT_SIZE: {
+            styles.kFontSize = style as KFontSize
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontSize = styles.kFontSize
+            }
+            break
+        }
+        case K_HORIZONTAL_ALIGNMENT: {
+            styles.kHorizontalAlignment = style as KHorizontalAlignment
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kHorizontalAlignment = styles.kHorizontalAlignment
+            }
+            break
+        }
+        case K_INVISIBILITY: {
+            styles.kInvisibility = style as KInvisibility
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kInvisibility = styles.kInvisibility
+            }
+            break
+        }
+        case K_LINE_CAP: {
+            styles.kLineCap = style as KLineCap
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineCap = styles.kLineCap
+            }
+            break
+        }
+        case K_LINE_JOIN: {
+            styles.kLineJoin = style as KLineJoin
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineJoin = styles.kLineJoin
+            }
+            break
+        }
+        case K_LINE_STYLE: {
+            styles.kLineStyle = style as KLineStyle
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineStyle = styles.kLineStyle
+            }
+            break
+        }
+        case K_LINE_WIDTH: {
+            styles.kLineWidth = style as KLineWidth
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineWidth = styles.kLineWidth
+            }
+            break
+        }
+        case K_ROTATION: {
+            styles.kRotation = style as KRotation
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kRotation = styles.kRotation
+            }
+            break
+        }
+        case K_SHADOW: {
+            styles.kShadow = style as KShadow
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kShadow = styles.kShadow
+            }
+            break
+        }
+        case K_STYLE_REF: {
+            console.error('The style ' + style.type + ' is not implemented yet.')
+            // style as KStyleRef
+            // special case! TODO: how to handle this? Never seen this in any rendering
+            break
+        }
+        case K_TEXT_STRIKEOUT: {
+            console.error('The style ' + style.type + ' is not implemented yet.')
+            styles.kTextStrikeout = style as KTextStrikeout
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kTextStrikeout = styles.kTextStrikeout
+            }
+            break
+        }
+        case K_TEXT_UNDERLINE: {
+            styles.kTextUnderline = style as KTextUnderline
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kTextUnderline = styles.kTextUnderline
+            }
+            break
+        }
+        case K_VERTICAL_ALIGNMENT: {
+            styles.kVerticalAlignment = style as KVerticalAlignment
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kVerticalAlignment = styles.kVerticalAlignment
+            }
+            break
+        }
+        default: {
+            console.error('Unexpected Style found while rendering: ' + style.type)
+            break
+        }
+    }
 }
 
 /**
