@@ -15,11 +15,11 @@ import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import {
-    Arc, isRendering, KArc, KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef,
-    KRoundedBendsPolyline, KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
-    K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
-} from './kgraph-models';
-import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, KGraphRenderingContext } from './views-common';
+    Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KGraphData, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
+    K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel
+} from './skgraph-models';
+import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, SKGraphRenderingContext } from './views-common';
 import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles } from './views-styles';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
@@ -31,7 +31,7 @@ import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getS
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildArea(rendering: KChildArea, parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext) {
+export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, propagatedStyles: KStyles, context: SKGraphRenderingContext) {
     if (parent.areChildrenRendered) {
         console.error('This element contains multiple child areas, skipping this one.')
         return <g />
@@ -68,7 +68,7 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, pr
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderRectangularShape(rendering: KContainerRendering, parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+export function renderRectangularShape(rendering: KContainerRendering, parent: SKGraphElement, propagatedStyles: KStyles, context: SKGraphRenderingContext): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -244,7 +244,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge, propagatedStyles: KStyles, context: SKGraphRenderingContext): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -394,7 +394,7 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderKText(rendering: KText, parent: KGraphElement | KLabel, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles, context: SKGraphRenderingContext): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -507,8 +507,8 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, pr
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, propagatedStyles: KStyles,
-    context: KGraphRenderingContext): (VNode | undefined)[] {
+export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
+    context: SKGraphRenderingContext): (VNode | undefined)[] {
     let renderings: (VNode | undefined)[] = []
     for (let childRendering of parentRendering.children) {
         let rendering = getRendering([childRendering], parentElement, propagatedStyles, context)
@@ -532,7 +532,7 @@ export function renderError(rendering: KRendering) {
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this rendering.
  */
-export function getRendering(datas: KGraphData[], parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode | undefined {
+export function getRendering(datas: KGraphData[], parent: SKGraphElement, propagatedStyles: KStyles, context: SKGraphRenderingContext): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -556,8 +556,8 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, propaga
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderKRendering(kRendering: KRendering, parent: KGraphElement, propagatedStyles: KStyles,
-    context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
+export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
+    context: SKGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
@@ -603,7 +603,7 @@ export function renderKRendering(kRendering: KRendering, parent: KGraphElement, 
  * @param datas The list of possible renderings.
  * @param context The rendering context for this rendering.
  */
-export function getKRendering(datas: KGraphData[], context: KGraphRenderingContext): KRendering | undefined {
+export function getKRendering(datas: KGraphData[], context: SKGraphRenderingContext): KRendering | undefined {
     for (let data of datas) {
         if (data === null)
             continue
@@ -629,7 +629,7 @@ export function getKRendering(datas: KGraphData[], context: KGraphRenderingConte
  * @param edge The edge the junction points should be rendered for.
  * @param context The rendering context for this rendering.
  */
-export function getJunctionPointRenderings(edge: KEdge, context: KGraphRenderingContext): VNode[] {
+export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphRenderingContext): VNode[] {
     const kRenderingLibrary = edge.data.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {

@@ -17,9 +17,9 @@ import { Bounds, boundsFeature, Point, RectangularNode, RectangularPort, RGBColo
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
  * and labels. A graph element may contain an arbitrary number of additional
  * data instances.
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export interface KGraphElement extends SParentElement {
+export interface SKGraphElement extends SParentElement {
     /**
      * May contain a trace that points back to the server instance where this element was created.
      */
@@ -32,9 +32,9 @@ export interface KGraphElement extends SParentElement {
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KNode extends RectangularNode implements KGraphElement {
+export class SKNode extends RectangularNode implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     areChildrenRendered = false
@@ -44,9 +44,9 @@ export class KNode extends RectangularNode implements KGraphElement {
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KPort extends RectangularPort implements KGraphElement {
+export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     areChildrenRendered = false
@@ -56,9 +56,9 @@ export class KPort extends RectangularPort implements KGraphElement {
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KLabel extends SLabel implements KGraphElement {
+export class SKLabel extends SLabel implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     areChildrenRendered = false
@@ -70,9 +70,9 @@ export class KLabel extends SLabel implements KGraphElement {
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KEdge extends SEdge implements KGraphElement {
+export class SKEdge extends SEdge implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     junctionPoints: Point[]

@@ -15,8 +15,8 @@ import { injectable } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
-import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
-import { KGraphRenderingContext } from './views-common';
+import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
+import { SKGraphRenderingContext } from './views-common';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 
@@ -27,8 +27,8 @@ import { KStyles } from './views-styles';
 @injectable()
 export class SKGraphView extends SGraphView {
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
-        // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
-        const ctx = context as any as KGraphRenderingContext
+        // TODO: 'as any' is not very nice, but SKGraphRenderingContext cannot be used here (two undefined members)
+        const ctx = context as any as SKGraphRenderingContext
         ctx.renderingDefs = new Map
         return super.render(model, context)
     }
@@ -39,9 +39,9 @@ export class SKGraphView extends SGraphView {
  */
 @injectable()
 export class KNodeView implements IView {
-    render(node: KNode, context: RenderingContext): VNode {
-        // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
-        const ctx = context as any as KGraphRenderingContext
+    render(node: SKNode, context: RenderingContext): VNode {
+        // TODO: 'as any' is not very nice, but SKGraphRenderingContext cannot be used here (two undefined members)
+        const ctx = context as any as SKGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
         const rendering = getRendering(node.data, node, new KStyles, ctx)
@@ -83,7 +83,7 @@ export class KNodeView implements IView {
  */
 @injectable()
 export class KPortView implements IView {
-    render(port: KPort, context: RenderingContext): VNode {
+    render(port: SKPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
         const rendering = getRendering(port.data, port, new KStyles, context as any)
         // If no rendering could be found, just render its children.
@@ -111,7 +111,7 @@ export class KPortView implements IView {
  */
 @injectable()
 export class KLabelView implements IView {
-    render(label: KLabel, context: RenderingContext): VNode {
+    render(label: SKLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
         const rendering = getRendering(label.data, label, new KStyles, context as any)
         // If no rendering could be found, just render its children.
@@ -139,7 +139,7 @@ export class KLabelView implements IView {
  */
 @injectable()
 export class KEdgeView implements IView {
-    render(edge: KEdge, context: RenderingContext): VNode {
+    render(edge: SKEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
         const rendering = getRendering(edge.data, edge, new KStyles, context as any)
 

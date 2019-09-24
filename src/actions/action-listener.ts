@@ -11,19 +11,19 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { Action, MouseListener, SModelElement } from 'sprotty/lib';
-import { isContainerRendering, isRendering, KAction, KGraphElement, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, ModifierState, Trigger } from '../kgraph-models';
+import { isContainerRendering, isRendering, KAction, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
 import { PerformActionAction } from './actions';
 
 /**
- * Mouse listener handling KLighD actions that can be defined on KGraphElements in the model.
+ * Mouse listener handling KLighD actions that can be defined on SKGraphElements in the model.
  */
 export class ActionListener extends MouseListener {
     mouseMoved: boolean = false
 
     doubleClick(target: SModelElement, event: WheelEvent): (Action | Promise<Action>)[] {
-        // Ignore the event if the top level graph element is clicked, as that is not a KGraphElement.
+        // Ignore the event if the top level graph element is clicked, as that is not a SKGraphElement.
         if (target.type !== 'graph') {
-            return this.actions(target as KGraphElement, event, event.type)
+            return this.actions(target as SKGraphElement, event, event.type)
         }
         return [];
     }
@@ -41,18 +41,18 @@ export class ActionListener extends MouseListener {
     mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         // counts as a click if the mouse has not moved since the last mouseDown event.
         if (!this.mouseMoved && target.type !== 'graph' && target.type !== 'NONE') {
-            return this.actions(target as KGraphElement, event, 'click')
+            return this.actions(target as SKGraphElement, event, 'click')
         }
         return [];
     }
 
     /**
-     * Returns the actions defined on the target KGraphElement that should be performed with the given event.
-     * @param target The KGraphElement under the mouse when this event is issued.
+     * Returns the actions defined on the target SKGraphElement that should be performed with the given event.
+     * @param target The SKGraphElement under the mouse when this event is issued.
      * @param event The MouseEvent that triggered this listener.
      * @param eventType The event type of the event (e.g. 'dblclk', 'clk', etc.).
      */
-    protected actions(target: KGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
+    protected actions(target: SKGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
         let actions: Action[] = []
         // Look up the ID of the semantic element that was clicked.
         const targetSvg = event.target
@@ -100,12 +100,12 @@ export class ActionListener extends MouseListener {
     }
 
     /**
-     * Finds the actions defined in the KGraphElement in its rendering with the given ID.
-     * @param element The KGraphElement to look in.
-     * @param id The ID of the KRendering within that KGraphElement.
+     * Finds the actions defined in the SKGraphElement in its rendering with the given ID.
+     * @param element The SKGraphElement to look in.
+     * @param id The ID of the KRendering within that SKGraphElement.
      */
-    protected findActions(element: KGraphElement, id: string): KAction[] {
-        // The first rendering has to be extracted from the KGraphElement. It is the first data object that is a KRendering.
+    protected findActions(element: SKGraphElement, id: string): KAction[] {
+        // The first rendering has to be extracted from the SKGraphElement. It is the first data object that is a KRendering.
         let currentElement: KRendering = element.data.find(possibleRendering => {
             return isRendering(possibleRendering)
         }) as KRendering
