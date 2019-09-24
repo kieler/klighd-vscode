@@ -467,7 +467,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             const readableValue = readableValues[index]
             children.push(this.renderEnumValue(value, readableValue, initialValue === readableValue, option))
         });
-        return <div key={option.optionId} itle={option.description} className='diagram-option-choice'>
+        return <div key={option.optionId} title={option.description} className='diagram-option-choice'>
             <legend>{option.name}</legend>
             {...children}
         </div>
