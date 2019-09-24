@@ -163,11 +163,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
 
     render(): React.ReactNode {
         if (this.requestedSystems) {
-            return <div>
-                <div key="panel" className={"compilation-panel " + (this.selectedStyle)}>
-                    {this.requestedSystems ? this.renderCancelButton(() => this.onCancelGetSystems(), "Cancel get compilation systems") : ""}
-                </div>
-            </div>;
+            return
         } else if (!this.systems) {
             // Try to request compilation systems.
             this.requestSystemDescription()
