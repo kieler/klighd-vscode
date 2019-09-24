@@ -15,11 +15,11 @@ import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { isSelectable } from 'sprotty';
 import {
-    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KGraphElement, KHorizontalAlignment, KInvisibility, KLineCap,
-    KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment
-} from './kgraph-models';
+    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle,
+    KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKGraphElement, VerticalAlignment
+} from './skgraph-models';
 import {
-    camelToKebab, fillSingleColor, isSingleColor, KGraphRenderingContext, lineCapText, lineJoinText, lineStyleText, textDecorationStyleText, verticalAlignmentText
+    camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText, SKGraphRenderingContext, textDecorationStyleText, verticalAlignmentText
 } from './views-common';
 
 
@@ -157,7 +157,7 @@ export class KStyles {
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param stylesToPropagage The optional styles object that should be propagated further to childern. It is modified in this method.
  */
-export function getKStyles(parent: KGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
+export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
     // TODO: not all of these are implemented yet
     let styles = new KStyles(false)
     // Include all propagated styles.
@@ -456,7 +456,7 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingContext): string | undefined {
+export function getSvgShadowStyles(styles: KStyles, context: SKGraphRenderingContext): string | undefined {
     const shadow = styles.kShadow
     if (shadow === undefined) {
         return undefined
@@ -506,7 +506,7 @@ export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingCont
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext): ColorStyles {
+export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingContext): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
     return {
@@ -522,7 +522,7 @@ export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingConte
  * @param context The rendering context.
  * @see getSvgColorStyles
  */
-export function getSvgColorStyle(coloring: KColoring | undefined, context: KGraphRenderingContext): string | undefined {
+export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): string | undefined {
     if (coloring === undefined) {
         return undefined
     }

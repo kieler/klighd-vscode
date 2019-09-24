@@ -16,7 +16,7 @@ import {
     updateModule, viewportModule
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
-import { KEdge, KLabel, KNode, KPort } from './kgraph-models';
+import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
@@ -34,10 +34,10 @@ const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) 
     });
     const context = { bind, unbind, isBound, rebind };
     configureModelElement(context, 'graph', SGraph, SKGraphView);
-    configureModelElement(context, 'node', KNode, KNodeView)
-    configureModelElement(context, 'edge', KEdge, KEdgeView)
-    configureModelElement(context, 'port', KPort, KPortView)
-    configureModelElement(context, 'label', KLabel, KLabelView)
+    configureModelElement(context, 'node', SKNode, KNodeView)
+    configureModelElement(context, 'edge', SKEdge, KEdgeView)
+    configureModelElement(context, 'port', SKPort, KPortView)
+    configureModelElement(context, 'label', SKLabel, KLabelView)
 })
 
 /**
