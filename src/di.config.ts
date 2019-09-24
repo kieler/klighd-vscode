@@ -27,6 +27,11 @@ const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) 
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
     rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
+    rebind(TYPES.CommandStackOptions).toConstantValue({
+        // Override the default animation speed to be 500 ms, as the default value is too quick.
+        defaultDuration: 500,
+        undoHistoryLimit: 50
+    });
     const context = { bind, unbind, isBound, rebind };
     configureModelElement(context, 'graph', SGraph, SKGraphView);
     configureModelElement(context, 'node', KNode, KNodeView)
