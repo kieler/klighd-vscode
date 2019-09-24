@@ -217,7 +217,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 tooltip: 'Requesting compilation systems...'
             })
             this.compilerWidget.requestedSystems = true
-            this.compilerWidget.update()
             const lClient = await this.client.languageClient
             const uri = this.editor.editor.uri.toString()
             // Check if language client was already initialized and wait till it is
@@ -234,6 +233,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
     }
 
+    /**
+     * Message of the server to notify the client what compilation systems are available
+     * to compile the original model and the currently opened snapshot.
+     * @param systems compilation systems for original model
+     * @param snapshotSystems compilation systems for currently opened snapshot
+     */
     handleReceiveSystemDescriptions(systems: CompilationSystem[], snapshotSystems: CompilationSystem[]) {
         // Remove status bar element after successfully requesting systems
         this.statusbar.removeElement('request-systems')
@@ -244,8 +249,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
         this.compilerWidget.requestedSystems = false
         this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
-        this.compilerWidget.update()
-
     }
 
     /**
