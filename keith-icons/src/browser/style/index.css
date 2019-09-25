@@ -5,14 +5,6 @@
     background-size: contain;
 }
 
-.diagram-options-icon {
-    background-image: var(--diagram-options-icon);
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: contain;
-    background-color: unset !important;
-}
-
 #theia-main-content-panel {
     background-image: var(--theia-brand-logo);
     background-position: center;

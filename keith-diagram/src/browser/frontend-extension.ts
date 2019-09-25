@@ -26,6 +26,8 @@ import { KeithDiagramManager } from './keith-diagram-manager';
 import { KeithWidgetManager } from './keith-widget-manager';
 import { KeithDiagramCommandContribution } from './keith-diagram-command-contribution';
 import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import './keith-diagram-icons'
+import '../src/browser/style/index.css';
 
 /**
  * Dependency injection container for the KEITH frontend part of diagram functionality.
