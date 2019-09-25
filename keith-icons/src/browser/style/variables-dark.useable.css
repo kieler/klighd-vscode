@@ -2,4 +2,5 @@
     --theia-brand-logo-size: 20%;
     --theia-brand-logo: url('../../../src/browser/icons/logo-dark.svg');
     --theia-menu-logo: url('../../../src/browser/icons/logo-light.svg');
+    --diagram-options-icon: url('../../../src/browser/icons/diagramoptions-dark.svg');
 }

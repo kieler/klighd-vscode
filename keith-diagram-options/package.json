@@ -19,7 +19,8 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@kieler/keith-diagram": "0.1.0"
+    "@kieler/keith-diagram": "0.1.0",
+    "@kieler/keith-icons": "0.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
