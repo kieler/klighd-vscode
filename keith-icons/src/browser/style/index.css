@@ -1,0 +1,20 @@
+.theia-icon {
+    background-image: var(--theia-menu-logo);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.keith-compiler-logo {
+    background-image: var(--keith-compiler-logo);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+#theia-main-content-panel {
+    background-image: var(--theia-brand-logo);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: var(--theia-brand-logo-size);
+}
