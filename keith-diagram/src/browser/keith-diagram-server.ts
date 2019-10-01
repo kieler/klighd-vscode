@@ -61,6 +61,10 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         if (action.kind === SetSynthesesAction.KIND) {
             this.connector.synthesisRegistry.setAvailableSyntheses((action as SetSynthesesAction).syntheses)
             this.connector.synthesisRegistry.setProvidingDiagramServer(this)
+        } else if (action.kind === PerformActionAction.KIND &&
+            (action as PerformActionAction).actionId === 'de.cau.cs.kieler.kicool.ui.klighd.internal.model.action.OpenCodeInEditorAction') {
+            // Currently not implemented
+            // Send to server in KiCoolLSExtension or notify kicool
         } else {
             super.handle(action)
         }
