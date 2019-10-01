@@ -134,8 +134,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.statusbar.setElement('request-systems', {
             alignment: StatusBarAlignment.LEFT,
             priority: requestSystemStatusPriority,
-            text: '$(spinner fa-pulse fa-fw) No editor focused... waiting',
-            tooltip: 'No editor focused... waiting'
+            text: '$(spinner fa-pulse fa-fw) No editor focused or no compilation widget opened',
+            tooltip: 'No editor focused or no compilation widget opened',
+            command: 'compiler-widget:toggle'
         })
     }
 
@@ -208,7 +209,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     async requestSystemDescriptions() {
-        if (this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
+        if (this.compilerWidget && this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
             // when systems are requested request systems status bar entry is updated
             this.statusbar.setElement('request-systems', {
                 alignment: StatusBarAlignment.LEFT,
