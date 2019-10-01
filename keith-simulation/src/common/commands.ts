@@ -76,3 +76,9 @@ export const REVEAL_SIMULATION_WIDGET: Command = {
     label: 'Reveal simulation widget',
     category: 'Simulation'
 }
+
+export const OPEN_SIMULATION_WIDGET_AND_REQUEST_CS: Command = {
+    id: 'open-sim-request-cs',
+    label: 'Open and ready simulation widget',
+    category: 'Simulation'
+}
