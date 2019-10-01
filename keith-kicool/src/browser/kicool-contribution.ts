@@ -451,6 +451,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.lengthMap.set(uri as string, length)
         this.indexMap.set(uri as string, length - 1)
         if (finished)  {
+            let errorOccured = false
             this.compilerWidget.compiling = false
             this.compilationFinishedEmitter.fire(true)
             snapshotsDescriptions.files.forEach(array => {
@@ -460,6 +461,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     })
                     element.errors.forEach(error => {
                         this.outputManager.getChannel("SCTX").appendLine("ERROR: " + error)
+                        errorOccured = true
                     })
                 })
             });
@@ -468,12 +470,15 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.statusbar.setElement('compile-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: compilationStatusPriority,
-                text: currentIndex === maxIndex ?
+                text: currentIndex === maxIndex && !errorOccured ?
                     `$(check) (${(this.endTime - this.startTime).toPrecision(3)}ms)` :
                     `$(times) (${(this.endTime - this.startTime).toPrecision(3)}ms)`,
                 tooltip: currentIndex === maxIndex ? 'Compilation finished' : 'Compilation stopped',
                 command: REVEAL_COMPILATION_WIDGET.id
             })
+            if (errorOccured) {
+                this.message('An error occured during compilation. Check the Compiler Widget for details.', 'error')
+            }
         } else {
             // Set progress bar for compilation
             let progress: string = '█'.repeat(currentIndex) + '░'.repeat(maxIndex - currentIndex)
