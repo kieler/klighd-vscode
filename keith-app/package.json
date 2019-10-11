@@ -6,6 +6,7 @@
     "license": "EPL-1.0",
     "dependencies": {
         "@kieler/keith-diagram-options": "0.1.0",
+        "@kieler/keith-icons": "0.1.0",
         "@kieler/keith-kicool": "0.1.0",
         "@kieler/keith-simulation": "0.1.0",
         "@theia/application-package": "next",
@@ -14,9 +15,9 @@
         "@theia/editorconfig": "next",
         "@theia/file-search": "next",
         "@theia/filesystem": "next",
-        "@theia/languages": "next",
         "@theia/getting-started": "next",
         "@theia/keymaps": "next",
+        "@theia/languages": "next",
         "@theia/markers": "next",
         "@theia/messages": "next",
         "@theia/metrics": "next",

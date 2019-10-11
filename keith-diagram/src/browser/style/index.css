@@ -1,0 +1,7 @@
+.diagram-icon {
+    background-image: var(--diagram-icon);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-color: unset !important;
+}

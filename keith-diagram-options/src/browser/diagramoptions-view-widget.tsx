@@ -38,7 +38,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
         this.id = diagramOptionsWidgetId
         this.title.label = 'Diagram Options'
-        this.title.iconClass = 'fa fa-cogs'
+        this.title.iconClass = 'diagram-options-icon'
         this.addClass('theia-diagramoptions-view')
     }
 
@@ -467,10 +467,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             const readableValue = readableValues[index]
             children.push(this.renderEnumValue(value, readableValue, initialValue === readableValue, option))
         });
-        return <fieldset key={option.optionId} title={option.description} className='diagram-option'>
+        return <div key={option.optionId} title={option.description} className='diagram-option-choice'>
             <legend>{option.name}</legend>
             {...children}
-        </fieldset>
+        </div>
     }
 
     /**

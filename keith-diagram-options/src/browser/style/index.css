@@ -1,6 +1,15 @@
+.diagram-options-icon {
+    background-image: var(--diagram-options-icon);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-color: unset !important;
+}
+
 .diagram-option-widget {
-    margin-left: 5px;
     display: inline-block;
+    margin-left: 5px;
+    margin-bottom: 10px;
 }
 
 .diagram-option {

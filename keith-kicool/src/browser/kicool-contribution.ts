@@ -134,8 +134,9 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.statusbar.setElement('request-systems', {
             alignment: StatusBarAlignment.LEFT,
             priority: requestSystemStatusPriority,
-            text: '$(spinner fa-pulse fa-fw) No editor focused... waiting',
-            tooltip: 'No editor focused... waiting'
+            text: '$(spinner fa-pulse fa-fw) No editor focused or no compilation widget opened',
+            tooltip: 'No editor focused or no compilation widget opened',
+            command: 'compiler-widget:toggle'
         })
     }
 
@@ -208,7 +209,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     async requestSystemDescriptions() {
-        if (this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
+        if (this.compilerWidget && this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
             // when systems are requested request systems status bar entry is updated
             this.statusbar.setElement('request-systems', {
                 alignment: StatusBarAlignment.LEFT,
@@ -217,7 +218,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 tooltip: 'Requesting compilation systems...'
             })
             this.compilerWidget.requestedSystems = true
-            this.compilerWidget.update()
             const lClient = await this.client.languageClient
             const uri = this.editor.editor.uri.toString()
             // Check if language client was already initialized and wait till it is
@@ -234,6 +234,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         }
     }
 
+    /**
+     * Message of the server to notify the client what compilation systems are available
+     * to compile the original model and the currently opened snapshot.
+     * @param systems compilation systems for original model
+     * @param snapshotSystems compilation systems for currently opened snapshot
+     */
     handleReceiveSystemDescriptions(systems: CompilationSystem[], snapshotSystems: CompilationSystem[]) {
         // Remove status bar element after successfully requesting systems
         this.statusbar.removeElement('request-systems')
@@ -244,8 +250,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.compilerWidget.sourceModelPath = this.editor.editor.uri.toString()
         this.compilerWidget.requestedSystems = false
         this.compilerWidget.lastRequestedUriExtension = this.editor.editor.uri.path.ext
-        this.compilerWidget.update()
-
     }
 
     /**
@@ -447,6 +451,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.lengthMap.set(uri as string, length)
         this.indexMap.set(uri as string, length - 1)
         if (finished)  {
+            let errorOccurred = false
             this.compilerWidget.compiling = false
             this.compilationFinishedEmitter.fire(true)
             snapshotsDescriptions.files.forEach(array => {
@@ -456,6 +461,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     })
                     element.errors.forEach(error => {
                         this.outputManager.getChannel("SCTX").appendLine("ERROR: " + error)
+                        errorOccurred = true
                     })
                 })
             });
@@ -464,12 +470,15 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.statusbar.setElement('compile-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: compilationStatusPriority,
-                text: currentIndex === maxIndex ?
+                text: currentIndex === maxIndex && !errorOccurred ?
                     `$(check) (${(this.endTime - this.startTime).toPrecision(3)}ms)` :
                     `$(times) (${(this.endTime - this.startTime).toPrecision(3)}ms)`,
                 tooltip: currentIndex === maxIndex ? 'Compilation finished' : 'Compilation stopped',
                 command: REVEAL_COMPILATION_WIDGET.id
             })
+            if (errorOccurred) {
+                this.message('An error occurred during compilation. Check the Compiler Widget for details.', 'error')
+            }
         } else {
             // Set progress bar for compilation
             let progress: string = '█'.repeat(currentIndex) + '░'.repeat(maxIndex - currentIndex)

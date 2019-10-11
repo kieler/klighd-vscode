@@ -16,6 +16,8 @@ import { ContainerModule, interfaces } from "inversify";
 import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution";
 import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget";
 import { diagramOptionsWidgetId } from "../common";
+import './keith-diagramoptions-icons'
+import '../../src/browser/style/index.css'
 
 /**
  * Dependency injection container for the KEITH diagram options functionality.

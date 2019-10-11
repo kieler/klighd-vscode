@@ -24,16 +24,17 @@ import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
 import { simulationWidgetId, OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationStartedMessage, SimulationStoppedMessage, SimulationStepMessage, SimulationData } from "../common";
 import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
 import { SimulationKeybindingContext } from "./simulation-keybinding-context";
-import { KiCoolContribution } from "@kieler/keith-kicool/lib/browser/kicool-contribution"
+import { KiCoolContribution } from '@kieler/keith-kicool/lib/browser/kicool-contribution';
 import { delay, strMapToObj } from "../common/helper";
-import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler"
+import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler";
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
-import { CompilationSystem } from "@kieler/keith-kicool/lib/common/kicool-models";
+import { CompilationSystem } from '@kieler/keith-kicool/lib/common/kicool-models';
 import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
 import { SIMULATION, SIMULATE, OPEN_INTERNAL_KVIZ_VIEW, OPEN_EXTERNAL_KVIZ_VIEW, SELECT_SIMULATION_CHAIN,
-    SET_SIMULATION_SPEED, REVEAL_SIMULATION_WIDGET, SELECT_SNAPSHOT_SIMULATION_CHAIN } from "../common/commands";
-import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget'
+    SET_SIMULATION_SPEED, REVEAL_SIMULATION_WIDGET, SELECT_SNAPSHOT_SIMULATION_CHAIN, OPEN_SIMULATION_WIDGET_AND_REQUEST_CS } from "../common/commands";
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
+import { REQUEST_CS } from '@kieler/keith-kicool/lib/common/commands'
 
 export const SIMULATION_CATEGORY = "Simulation"
 
@@ -45,7 +46,6 @@ export const externalStopMessageType = new NotificationType<string, void>('keith
 export const startedSimulationMessageType = new NotificationType<SimulationStartedMessage, void>('keith/simulation/started')
 
 export const simulationStatusPriority: number = 4
-
 /**
  * Contribution for SimulationWidget to add functionality to it.
  */
@@ -110,7 +110,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             priority: simulationStatusPriority,
             text: '$(spinner fa-pulse fa-fw) Waiting for simulation systems...',
             tooltip: 'Waiting for simulation systems...',
-            command: REVEAL_SIMULATION_WIDGET.id
+            // The command should open the simulation view if none was already opened
+            // If one is already opened it should request compilation systems
+            command: OPEN_SIMULATION_WIDGET_AND_REQUEST_CS.id
         })
     }
 
@@ -199,6 +201,12 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     registerCommands(commands: CommandRegistry) {
         super.registerCommands(commands)
+        commands.registerCommand(OPEN_SIMULATION_WIDGET_AND_REQUEST_CS, {
+            execute: async () => {
+                await this.commandRegistry.executeCommand(SIMULATION.id)
+                await this.commandRegistry.executeCommand(REQUEST_CS.id)
+            }
+        })
         commands.registerCommand(SIMULATE, {
             execute: async () => {
                 this.simulate()
