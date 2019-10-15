@@ -11,12 +11,15 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand, SetSynthesesAction, SetSynthesisAction } from '@kieler/keith-sprotty/lib/actions/actions';
+import {
+    CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand, SetSynthesesAction, SetSynthesisAction, StoreImagesAction
+} from '@kieler/keith-sprotty/lib/actions/actions';
 import { injectable } from 'inversify';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
 import { Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, FitToScreenAction, ICommand, SetModelCommand } from 'sprotty/lib';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
+import { isNullOrUndefined } from 'util';
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
@@ -61,6 +64,23 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         if (action.kind === SetSynthesesAction.KIND) {
             this.connector.synthesisRegistry.setAvailableSyntheses((action as SetSynthesesAction).syntheses)
             this.connector.synthesisRegistry.setProvidingDiagramServer(this)
+        } else if (action.kind === CheckImagesAction.KIND) {
+            // check in local storage, if these images are already stored. If not, send back a request for those images.
+            const notCached: string[] = []
+            for (let image of (action as CheckImagesAction).images) {
+                const id = image.bundleName + ':' + image.imagePath
+                if (isNullOrUndefined(sessionStorage.getItem(id))) {
+                    notCached.push(id)
+                }
+            }
+            this.actionDispatcher.dispatch(new CheckedImagesAction(notCached))
+        } else if (action.kind === StoreImagesAction.KIND) {
+            // Put the new images in session storage.
+            for (let imagePair of (action as StoreImagesAction).images) {
+                const key = imagePair.k
+                const image = imagePair.v
+                sessionStorage.setItem(key, image)
+            }
         } else {
             super.handle(action)
         }
@@ -76,11 +96,14 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         super.initialize(registry)
 
         // Register the KEITH specific new actions.
-        registry.register(RequestTextBoundsCommand.KIND, this)
+        registry.register(CheckImagesAction.KIND, this)
+        registry.register(CheckedImagesAction.KIND, this)
         registry.register(ComputedTextBoundsAction.KIND, this)
         registry.register(PerformActionAction.KIND, this)
+        registry.register(RequestTextBoundsCommand.KIND, this)
         registry.register(SetSynthesesAction.KIND, this)
         registry.register(SetSynthesisAction.KIND, this)
+        registry.register(StoreImagesAction.KIND, this)
     }
 
     handleComputedBounds(_action: ComputedBoundsAction): boolean {

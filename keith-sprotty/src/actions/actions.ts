@@ -11,8 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { inject, injectable } from 'inversify';
-import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot,
-    SModelRootSchema, TYPES } from 'sprotty/lib';
+import { Action, CommandExecutionContext, ElementAndBounds, HiddenCommand, SModelRoot, SModelRootSchema, TYPES } from 'sprotty/lib';
+import { KImage } from '../skgraph-models';
 import { SetSynthesesActionData } from '../syntheses/synthesis-message-data';
 
 /**
@@ -23,6 +23,50 @@ export class SetSynthesesAction implements Action {
     readonly kind = SetSynthesesAction.KIND
 
     constructor(public readonly syntheses: SetSynthesesActionData[]) {
+    }
+}
+
+/**
+ * Sent from the server to the client to store images in base64 format needed for rendering on the client.
+ *
+ * @author nre
+ */
+export class StoreImagesAction implements Action {
+    static readonly KIND: string = 'storeImages'
+    readonly kind = StoreImagesAction.KIND
+
+    constructor(public readonly images: Pair<string, string>[]) {
+    }
+}
+
+/**
+ * A key-value pair matching the interface of org.eclipse.xtext.xbase.lib.Pair
+ */
+export interface Pair<K, V> {
+    k: K
+    v: V
+}
+
+/**
+ * Sent from the server to the client to check if the {@link KImage}s provided in the message are cached or if they need
+ * to be sent to the client again.
+ */
+export class CheckImagesAction implements Action {
+    static readonly KIND: string = 'checkImages'
+    readonly kind = CheckImagesAction.KIND
+
+    constructor(public readonly images: KImage[]) {
+    }
+}
+
+/**
+ * Sent from the client to the server to inform it whether images need to be sent to the client before accepting the next diagram.
+ */
+export class CheckedImagesAction implements Action {
+    static readonly KIND: string = 'checkedImages'
+    readonly kind = CheckedImagesAction.KIND
+
+    constructor(public readonly notCached: string[]) {
     }
 }
 

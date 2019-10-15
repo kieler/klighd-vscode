@@ -15,7 +15,7 @@ import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import {
-    Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KGraphData, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KGraphData, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
     KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
     K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel
 } from './skgraph-models';
@@ -227,9 +227,23 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             </g>
             break
         }
+        case K_IMAGE: {
+            // TODO: clipShape is not used yet.
+            const id = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
+            const extension = id.slice(id.lastIndexOf('.') + 1)
+            const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(id)
+            element = <g id={rendering.id} {...gAttrs}>
+                <image
+                    width={boundsAndTransformation.bounds.width}
+                    height={boundsAndTransformation.bounds.height}
+                    href={image}
+                />
+            </g>
+            break
+        }
         default: {
             // This case can never happen. If it still does, happy debugging!
-            throw new Error('Rendering is neither an KEllipse, nor a KRectangle or KRoundedRectangle!')
+            throw new Error('Rendering is neither an KArc, KEllipse, KImage, nor a KRectangle or KRoundedRectangle!')
         }
     }
 
@@ -573,14 +587,10 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement,
         }
         case K_ARC:
         case K_ELLIPSE:
+        case K_IMAGE:
         case K_RECTANGLE:
         case K_ROUNDED_RECTANGLE: {
             return renderRectangularShape(kRendering as KContainerRendering, parent, propagatedStyles, context)
-        }
-        case K_IMAGE: {
-            console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
-            // data as KImage
-            return undefined
         }
         case K_POLYLINE:
         case K_POLYGON:
