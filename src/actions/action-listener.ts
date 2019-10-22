@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018-2019 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,7 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { Action, MouseListener, SModelElement } from 'sprotty/lib';
-import { isContainerRendering, isRendering, KAction, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
+import { KAction, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
+import { findRendering, getSemanticElement } from '../skgraph-utils';
 import { PerformActionAction } from './actions';
 
 /**
@@ -55,48 +56,28 @@ export class ActionListener extends MouseListener {
     protected actions(target: SKGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
         let actions: Action[] = []
         // Look up the ID of the semantic element that was clicked.
-        const targetSvg = event.target
-        if (targetSvg instanceof SVGElement) {
-            const semanticElement = this.getSemanticElement(targetSvg)
-            if (semanticElement === undefined) {
-                return actions
-            }
-            const semanticElementId = semanticElement.id
-
-            // Search the actions in the target element.
-            const kActions = this.findActions(target, semanticElementId)
-
-            if (kActions === undefined) {
-                return actions
-            }
-            // For each kAction, return an ActionAction if the event matches the event in the kAction.
-            kActions.forEach(action => {
-                if (this.modifierStateMatches(action.altPressed, event.altKey)
-                    && this.modifierStateMatches(action.ctrlCmdPressed, event.ctrlKey)
-                    && this.modifierStateMatches(action.shiftPressed, event.shiftKey)
-                    && this.eventsMatch(event, eventType, action.trigger)) {
-                    actions.push(new PerformActionAction(action.actionId, target.id, semanticElementId))
-                }
-            })
+        const semanticElement = getSemanticElement(event.target)
+        if (semanticElement === undefined) {
+            return actions
         }
+        const semanticElementId = semanticElement.id
+
+        // Search the actions in the target element.
+        const kActions = this.findActions(target, semanticElementId)
+
+        if (kActions === undefined) {
+            return actions
+        }
+        // For each kAction, return an ActionAction if the event matches the event in the kAction.
+        kActions.forEach(action => {
+            if (this.modifierStateMatches(action.altPressed, event.altKey)
+                && this.modifierStateMatches(action.ctrlCmdPressed, event.ctrlKey)
+                && this.modifierStateMatches(action.shiftPressed, event.shiftKey)
+                && this.eventsMatch(event, eventType, action.trigger)) {
+                actions.push(new PerformActionAction(action.actionId, target.id, semanticElementId))
+            }
+        })
         return actions
-    }
-
-    /**
-     * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
-     * @param element The topmost SVG element clicked.
-     */
-    protected getSemanticElement(element: SVGElement): SVGElement | undefined {
-        let currentElement: Element | null = element
-        let semanticElement = undefined
-        while (semanticElement === undefined && currentElement instanceof SVGElement) {
-            if (currentElement.id !== '') {
-                semanticElement = currentElement
-            } else {
-                currentElement = currentElement.parentElement
-            }
-        }
-        return semanticElement
     }
 
     /**
@@ -105,48 +86,12 @@ export class ActionListener extends MouseListener {
      * @param id The ID of the KRendering within that SKGraphElement.
      */
     protected findActions(element: SKGraphElement, id: string): KAction[] {
-        // The first rendering has to be extracted from the SKGraphElement. It is the first data object that is a KRendering.
-        let currentElement: KRendering = element.data.find(possibleRendering => {
-            return isRendering(possibleRendering)
-        }) as KRendering
-        const idPath = id.split('$')
-        if (currentElement.type === K_RENDERING_REF) {
-            // KRenderingRefs' ids always start with the identifying name of the reference and may continue with $<something> to refer to renderings within that reference.
-            // Start with index 1 since the currentElement already contains the rendering with the identifying name.
-            // for (let i = 1; i < idPath.length; i++) {
-            if (idPath.length > 1) {
-                console.error('Actions in rendering references hierarchies are not supported yet.')
-                return []
-            }
+        const rendering = findRendering(element, id)
+        if (rendering) {
+            return rendering.actions
         } else {
-            // The rendering id is build hierarchically and the first rendering is already found, so start with index 1 as a $ sign can be skipped.
-            for (let i = 1; i < idPath.length; i++) {
-                let nextElement
-                if (isContainerRendering(currentElement)) {
-                    // First, look for the ID in the child renderings.
-                    nextElement = currentElement.children.find(childRendering => {
-                        return id.startsWith(childRendering.id)
-                    }) as KRendering
-                }
-                if (nextElement === undefined && currentElement.type === K_POLYLINE) {
-                    // If the rendering was not found yet, take the junction point rendering.
-                    if (id.startsWith((currentElement as KPolyline).junctionPointRendering.id)) {
-                        nextElement = (currentElement as KPolyline).junctionPointRendering
-                    }
-                } if (nextElement === undefined) {
-                    console.error(id + ' can not be found in the renderings of the element:')
-                    console.error(element)
-                    return []
-                }
-                currentElement = nextElement
-            }
-        }
-        // Now the currentElement should be the element searched for by the id.
-        if (currentElement.id !== id) {
-            console.error('The found element does not match the searched id! id: ' + id + ', found element: ' + currentElement)
             return []
         }
-        return currentElement.actions
     }
 
     /**

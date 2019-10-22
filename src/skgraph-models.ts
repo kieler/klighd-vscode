@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Bounds, boundsFeature, Point, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SParentElement } from 'sprotty/lib';
+import { Bounds, boundsFeature, Point, popupFeature, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SModelElement, SParentElement } from 'sprotty/lib';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -25,6 +25,7 @@ export interface SKGraphElement extends SParentElement {
      */
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     /**
      * Additional field to remember, if this element's children have already been rendered.
      */
@@ -37,9 +38,10 @@ export interface SKGraphElement extends SParentElement {
 export class SKNode extends RectangularNode implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === popupFeature
     }
 }
 
@@ -49,9 +51,10 @@ export class SKNode extends RectangularNode implements SKGraphElement {
 export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === popupFeature
     }
 }
 
@@ -61,11 +64,12 @@ export class SKPort extends RectangularPort implements SKGraphElement {
 export class SKLabel extends SLabel implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         // The boundsFeature here is additionally needed because bounds of labels need to be
         // estimated during the estimateTextBounds action.
-        return feature === selectFeature || feature === boundsFeature
+        return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
 }
 
@@ -75,10 +79,11 @@ export class SKLabel extends SLabel implements SKGraphElement {
 export class SKEdge extends SEdge implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     junctionPoints: Point[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === popupFeature
     }
 }
 
@@ -116,6 +121,10 @@ export interface KRendering extends KGraphData, KStyleHolder {
      * The server pre-calculated decoration for this rendering.
      */
     calculatedDecoration?: Decoration
+    /**
+     * A possible tooltip that can be shown for this rendering.
+     */
+    tooltip?: string
 }
 
 /**
@@ -695,4 +704,14 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
         || type === K_SPLINE
         || type === K_RECTANGLE
         || type === K_ROUNDED_RECTANGLE
+}
+
+/**
+ * Returns if the given parameter is a SKGraphRendering.
+ * @param test The potential SKGraphElement.
+ */
+export function isSKGraphElement(test: any): test is SKGraphElement {
+    return test instanceof SModelElement
+        && (test as any)['areChildrenRendered'] !== undefined
+        && (test as any)['data'] !== undefined
 }
