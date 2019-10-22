@@ -14,12 +14,15 @@
 import {
     CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, PerformActionAction, RequestTextBoundsCommand, SetSynthesesAction, SetSynthesisAction, StoreImagesAction
 } from '@kieler/keith-sprotty/lib/actions/actions';
+import { RequestKeithPopupModelAction } from '@kieler/keith-sprotty/lib/hover/hover';
 import { injectable } from 'inversify';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
-import { Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, FitToScreenAction, ICommand, SetModelCommand } from 'sprotty/lib';
+import {
+    Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, findElement, FitToScreenAction, ICommand, RequestPopupModelAction, SetModelCommand, SetPopupModelAction
+} from 'sprotty/lib';
+import { isNullOrUndefined } from 'util';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
-import { isNullOrUndefined } from 'util';
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
@@ -56,34 +59,64 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
                 return true
             case SetSynthesisAction.KIND:
                 return true
+            case RequestPopupModelAction.KIND:
+                return false
         }
         return super.handleLocally(action)
     }
 
     handle(action: Action): void | ICommand | Action {
         if (action.kind === SetSynthesesAction.KIND) {
-            this.connector.synthesisRegistry.setAvailableSyntheses((action as SetSynthesesAction).syntheses)
-            this.connector.synthesisRegistry.setProvidingDiagramServer(this)
+            this.handleSetSyntheses(action as SetSynthesesAction)
         } else if (action.kind === CheckImagesAction.KIND) {
-            // check in local storage, if these images are already stored. If not, send back a request for those images.
-            const notCached: string[] = []
-            for (let image of (action as CheckImagesAction).images) {
-                const id = image.bundleName + ':' + image.imagePath
-                if (isNullOrUndefined(sessionStorage.getItem(id))) {
-                    notCached.push(id)
-                }
-            }
-            this.actionDispatcher.dispatch(new CheckedImagesAction(notCached))
+            this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === StoreImagesAction.KIND) {
-            // Put the new images in session storage.
-            for (let imagePair of (action as StoreImagesAction).images) {
-                const key = imagePair.k
-                const image = imagePair.v
-                sessionStorage.setItem(key, image)
-            }
+            this.handleStoreImages(action as StoreImagesAction)
+        } else if (action.kind === RequestPopupModelAction.KIND) {
+            // Ignore this one, we use an own, slightly altered version
+        } else if (action.kind === RequestKeithPopupModelAction.KIND) {
+            this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction)
         } else {
             super.handle(action)
         }
+    }
+
+    handleSetSyntheses(action: SetSynthesesAction) {
+        this.connector.synthesisRegistry.setAvailableSyntheses(action.syntheses)
+        this.connector.synthesisRegistry.setProvidingDiagramServer(this)
+    }
+
+    handleCheckImages(action: CheckImagesAction) {
+        // check in local storage, if these images are already stored. If not, send back a request for those images.
+        const notCached: string[] = []
+        for (let image of (action as CheckImagesAction).images) {
+            const id = image.bundleName + ':' + image.imagePath
+            if (isNullOrUndefined(sessionStorage.getItem(id))) {
+                notCached.push(id)
+            }
+        }
+        this.actionDispatcher.dispatch(new CheckedImagesAction(notCached))
+    }
+
+    handleStoreImages(action: StoreImagesAction) {
+        // Put the new images in session storage.
+        for (let imagePair of (action as StoreImagesAction).images) {
+            const key = imagePair.k
+            const image = imagePair.v
+            sessionStorage.setItem(key, image)
+        }
+    }
+
+    handleRequestKeithPopupModel(action: RequestKeithPopupModelAction) {
+        const element = findElement(this.currentRoot, action.elementId)
+        if (element) {
+            this.rootPopupModelProvider.getPopupModel(action, element).then(model => {
+                if (model) {
+                    this.actionDispatcher.dispatch(new SetPopupModelAction(model))
+                }
+            })
+        }
+        return false
     }
 
     disconnect() {
@@ -100,6 +133,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(CheckedImagesAction.KIND, this)
         registry.register(ComputedTextBoundsAction.KIND, this)
         registry.register(PerformActionAction.KIND, this)
+        registry.register(RequestKeithPopupModelAction.KIND, this)
         registry.register(RequestTextBoundsCommand.KIND, this)
         registry.register(SetSynthesesAction.KIND, this)
         registry.register(SetSynthesisAction.KIND, this)

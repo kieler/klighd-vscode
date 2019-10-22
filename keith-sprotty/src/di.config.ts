@@ -12,16 +12,17 @@
  */
 import { Container, ContainerModule } from 'inversify';
 import {
-    configureModelElement, ConsoleLogger, defaultModule, exportModule, LogLevel, modelSourceModule, moveModule, overrideViewerOptions, selectModule, SGraph, SGraphFactory, TYPES,
-    updateModule, viewportModule
+    configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, LogLevel, modelSourceModule, moveModule,
+    overrideViewerOptions, PreRenderedElement, PreRenderedView, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
+import { KeithHoverMouseListener } from './hover/hover';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
 /**
- * Dependency injection module that adds functionality for diagrams and configures the views for KGraphElements.
+ * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
  */
 const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
@@ -31,8 +32,17 @@ const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) 
         // Override the default animation speed to be 500 ms, as the default value is too quick.
         defaultDuration: 500,
         undoHistoryLimit: 50
-    });
-    const context = { bind, unbind, isBound, rebind };
+    })
+    bind(TYPES.MouseListener).to(KeithHoverMouseListener)
+    rebind<HoverState>(TYPES.HoverState).toDynamicValue(ctx => ({
+        mouseOverTimer: undefined,
+        mouseOutTimer: undefined,
+        popupOpen: false,
+        previousPopupElement: undefined
+    }));
+    const context = { bind, unbind, isBound, rebind }
+    configureModelElement(context, 'html', HtmlRoot, HtmlRootView)
+    configureModelElement(context, 'pre-rendered', PreRenderedElement, PreRenderedView)
     configureModelElement(context, 'graph', SGraph, SKGraphView);
     configureModelElement(context, 'node', SKNode, KNodeView)
     configureModelElement(context, 'edge', SKEdge, KEdgeView)
@@ -41,11 +51,13 @@ const kGraphDiagramModule = new ContainerModule((bind, unbind, isBound, rebind) 
 })
 
 /**
- * Dependency injection container that bundles all needed sprotty and custom modules to allow KGraphs to be drawn with sprotty.
+ * Dependency injection container that bundles all needed sprotty and custom modules to allow SKGraphs to be drawn with sprotty.
  */
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
-    container.load(defaultModule, selectModule, moveModule, viewportModule, exportModule, modelSourceModule, updateModule, kGraphDiagramModule, textBoundsModule, actionModule)
+    container.load(defaultModule, selectModule, moveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
+        // keep the keith-specific modules at the last positions because of possible binding overrides.
+        textBoundsModule, actionModule, kGraphDiagramModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
