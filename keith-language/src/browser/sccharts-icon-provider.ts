@@ -16,6 +16,9 @@ import URI from '@theia/core/lib/common/uri';
 import { MaybePromise } from '@theia/core/lib/common';
 import { injectable } from 'inversify';
 
+/**
+ * This class is currently not in use, since some options need to be configured to not overlap with decorators (warnings, errors, etc).
+ */
 @injectable()
 export class SCChartsIconProvider implements LabelProviderContribution {
 

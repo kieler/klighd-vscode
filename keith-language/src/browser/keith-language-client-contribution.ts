@@ -14,8 +14,7 @@
 import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
 import { BaseLanguageClientContribution } from '@theia/languages/lib/browser';
 import { injectable, multiInject, optional } from 'inversify';
-import { LS_ID, LS_NAME } from '../common';
-import { languageDescriptions } from './frontend-extension';
+import { LS_ID, LS_NAME, languageDescriptions } from '../common';
 import { InitializationService } from './initialization-service';
 
 @injectable()
@@ -37,7 +36,7 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
     /**
      * Editors with this languageId are supported by the LS.
      */
-    protected get documentSelector(): string[] {
+    public get documentSelector(): string[] {
         return languageDescriptions.map(languageDescription => languageDescription.id)
     }
 

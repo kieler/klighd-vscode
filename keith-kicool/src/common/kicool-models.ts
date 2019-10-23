@@ -14,11 +14,12 @@
 /**
  * Description of a compilation system for selectbox in compiler widget
  */
-export class CompilationSystems {
+export class CompilationSystem {
     label: string
     id: string
     isPublic: boolean
     simulation: boolean
+    snapshotSystem: boolean
 }
 
 /**

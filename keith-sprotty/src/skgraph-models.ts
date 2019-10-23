@@ -11,20 +11,23 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Bounds, boundsFeature, Point, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SParentElement, moveFeature } from 'sprotty/lib';
+import {
+    Bounds, boundsFeature, Point, popupFeature, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SModelElement, SParentElement, moveFeature
+} from 'sprotty/lib';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
  * and labels. A graph element may contain an arbitrary number of additional
  * data instances.
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export interface KGraphElement extends SParentElement {
+export interface SKGraphElement extends SParentElement {
     /**
      * May contain a trace that points back to the server instance where this element was created.
      */
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     /**
      * Additional field to remember, if this element's children have already been rendered.
      */
@@ -32,14 +35,15 @@ export interface KGraphElement extends SParentElement {
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KNode extends RectangularNode implements KGraphElement {
+export class SKNode extends RectangularNode implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || (feature === moveFeature && this.interactiveLayout)
+        return feature === selectFeature || (feature === moveFeature && this.interactiveLayout) || feature === popupFeature
     }
 
     layerId: number
@@ -57,41 +61,44 @@ export class KNode extends RectangularNode implements KGraphElement {
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KPort extends RectangularPort implements KGraphElement {
+export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === popupFeature
     }
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KLabel extends SLabel implements KGraphElement {
+export class SKLabel extends SLabel implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         // The boundsFeature here is additionally needed because bounds of labels need to be
         // estimated during the estimateTextBounds action.
-        return feature === selectFeature || feature === boundsFeature
+        return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KEdge extends SEdge implements KGraphElement {
+export class SKEdge extends SEdge implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     junctionPoints: Point[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === popupFeature
     }
 
     moved: boolean
@@ -131,6 +138,10 @@ export interface KRendering extends KGraphData, KStyleHolder {
      * The server pre-calculated decoration for this rendering.
      */
     calculatedDecoration?: Decoration
+    /**
+     * A possible tooltip that can be shown for this rendering.
+     */
+    tooltip?: string
 }
 
 /**
@@ -273,9 +284,18 @@ export interface KRenderingLibrary extends KGraphData {
 export interface KAction {
     actionId: string
     trigger: Trigger
-    altPressed: boolean
-    ctrlCmdPressed: boolean
-    shiftPressed: boolean
+    altPressed: ModifierState
+    ctrlCmdPressed: ModifierState
+    shiftPressed: ModifierState
+}
+
+/**
+ * The state of a modifier that it has to be in in order for some action to be performed.
+ */
+export enum ModifierState {
+    DONT_CARE = 0,
+    PRESSED = 1,
+    NOT_PRESSED = 2
 }
 
 /**
@@ -701,4 +721,14 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
         || type === K_SPLINE
         || type === K_RECTANGLE
         || type === K_ROUNDED_RECTANGLE
+}
+
+/**
+ * Returns if the given parameter is a SKGraphRendering.
+ * @param test The potential SKGraphElement.
+ */
+export function isSKGraphElement(test: any): test is SKGraphElement {
+    return test instanceof SModelElement
+        && (test as any)['areChildrenRendered'] !== undefined
+        && (test as any)['data'] !== undefined
 }

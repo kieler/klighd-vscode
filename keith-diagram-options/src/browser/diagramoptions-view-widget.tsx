@@ -18,15 +18,16 @@ import { injectable } from 'inversify';
 import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
-import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, TransformationOptionType, Type } from '../common/option-models';
-import { RenderOption } from '@kieler/keith-sprotty/lib/options'
+import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, Type } from '../common/option-models';
+import { RenderOption } from '@kieler/keith-sprotty/lib/options';
+import { diagramOptionsWidgetId } from '../common';
+import { TransformationOptionType } from '@kieler/keith-sprotty/lib/options';
 
 /**
  * The widget displaying the diagram options.
  */
 @injectable()
 export class DiagramOptionsViewWidget extends ReactWidget {
-    public static widgetId = 'diagramoptions-view'
 
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
     private synthesisOptions: SynthesisOption[]
@@ -38,9 +39,9 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     constructor() {
         super()
 
-        this.id = DiagramOptionsViewWidget.widgetId
+        this.id = diagramOptionsWidgetId
         this.title.label = 'Diagram Options'
-        this.title.iconClass = 'fa fa-cogs'
+        this.title.iconClass = 'diagram-options-icon'
         this.addClass('theia-diagramoptions-view')
     }
 
@@ -75,21 +76,21 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     protected render(): JSX.Element {
         if (isNullOrUndefined(this.synthesisOptions)) {
             // Default view if no diagram has been opened yet.
-            return <div>
+            return <div className='diagram-option-widget'>
                 <div className='diagram-option'>
                     {'No open diagram found.'}
                 </div>
                 <div
-                    className='update-button'
+                    className='theia-button'
                     title='Update'
                     onClick={event => {
                         this.getOptions()
                     }}>
-                    {'Update View'}
+                    Update View
                 </div>
             </div>
         } else {
-            return <div>
+            return <div className='diagram-option-widget'>
                 {this.renderActions(this.actions)}
                 {this.renderSynthesisOptions(this.synthesisOptions)}
                 {this.renderRenderOptions(this.renderOptions)}
@@ -110,7 +111,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         if (children.length === 0) {
             return undefined
         } else {
-            return <div key='actions'>
+            return <div key='actions' className='diagram-option-actions'>
                 <p className='diagram-option seperator'>{'Actions'}</p>
                 {...children}
             </div>
@@ -124,7 +125,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     private renderAction(action: DisplayedActionData): JSX.Element {
         return <div
             key={action.actionId}
-            className='update-button'
+            className='theia-button'
             title={action.tooltipText}
             onClick={event => {
                 this.sendNewAction(action.actionId)
@@ -310,10 +311,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The choice option to render.
      */
     private renderChoice(option: SynthesisOption): JSX.Element {
-        return <fieldset key={option.sourceHash} className='diagram-option'>
-            <legend>{option.name}</legend>
-            {option.values.map(value => this.renderChoiceValue(value, option))}
-        </fieldset>
+        return <div key={option.sourceHash} className='diagram-option-choice'>
+            <legend className='diagram-option'>{option.name}</legend>
+            {option.values.map((value) => this.renderChoiceValue(value, option))}
+        </div>
     }
 
     /**
@@ -323,7 +324,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The option this radio button belongs to.
      */
     private renderChoiceValue(value: any, option: SynthesisOption): JSX.Element {
-        return <div key={'' + option.sourceHash + value}>
+        return <div key={'' + option.sourceHash + value} className='diagram-option'>
             <label htmlFor={value}>
                 <input
                     type='radio'
@@ -353,7 +354,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The range option to render.
      */
     private renderRange(option: RangeOption): JSX.Element {
-        return <div key={option.sourceHash} className='diagram-option'>
+        return <div key={option.sourceHash} className='diagram-option-range'>
             <label htmlFor={option.name}>{option.name}: {option.currentValue}</label>
             <input
                 type='range'
@@ -543,10 +544,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             const readableValue = readableValues[index]
             children.push(this.renderEnumValue(value, readableValue, initialValue === readableValue, option))
         });
-        return <fieldset key={option.optionId} title={option.description} className='diagram-option'>
+        return <div key={option.optionId} title={option.description} className='diagram-option-choice'>
             <legend>{option.name}</legend>
             {...children}
-        </fieldset>
+        </div>
     }
 
     /**

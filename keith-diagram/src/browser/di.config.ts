@@ -14,12 +14,12 @@
 import { createKeithDiagramContainer } from '@kieler/keith-sprotty/lib';
 import { Container, injectable } from 'inversify';
 import {
-    CompletionLabelEditor, DeleteWithWorkspaceEditCommand, DiagramConfiguration, LSTheiaDiagramServer, LSTheiaDiagramServerProvider, RenameLabelEditor, TheiaDiagramServer,
-    TheiaKeyTool, WorkspaceEditCommand
+    CompletionLabelEditor, DeleteWithWorkspaceEditCommand, DiagramConfiguration, EditDiagramLocker, IRootPopupModelProvider, LSTheiaDiagramServer, LSTheiaDiagramServerProvider,
+    RenameLabelEditor, TheiaDiagramServer, TheiaKeyTool, WorkspaceEditCommand
 } from 'sprotty-theia/lib';
 import { configureCommand, KeyTool, TYPES } from 'sprotty/lib';
-import { EditDiagramLocker } from "sprotty-theia/lib"
 import { KeithDiagramServer } from './keith-diagram-server';
+import { PopupModelProvider } from './popup';
 
 /**
  * Dependency injection container for KEITH diagram configuration.
@@ -38,6 +38,7 @@ export class KeithDiagramConfiguration implements DiagramConfiguration {
         container.bind(TYPES.ModelSource).toService(TheiaDiagramServer)
         container.bind(EditDiagramLocker).toSelf().inSingletonScope()
         container.rebind(KeyTool).to(TheiaKeyTool).inSingletonScope()
+        container.bind(IRootPopupModelProvider).to(PopupModelProvider)
 
         container.bind(LSTheiaDiagramServerProvider).toProvider<LSTheiaDiagramServer>((context) => {
             return () => {

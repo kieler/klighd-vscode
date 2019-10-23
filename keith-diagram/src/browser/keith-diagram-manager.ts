@@ -34,7 +34,7 @@ export class KeithDiagramManager extends DiagramManager {
 
     public static DIAGRAM_TYPE = 'keith-diagram'
     readonly diagramType = KeithDiagramManager.DIAGRAM_TYPE
-    readonly iconClass = 'fa fa-square-o'
+    readonly iconClass = 'diagram-icon'
 
     _diagramConnector: LSTheiaSprottyConnector
 

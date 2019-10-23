@@ -8,11 +8,16 @@ export interface RenderOption {
     sourceHash: number
 }
 
+/**
+ * The different types a SynthesisOption can have.
+ */
 export enum TransformationOptionType {
     CHECK = 0,
     CHOICE = 1,
     RANGE = 2,
-    SEPARATOR = 3
+    TEXT = 3,
+    SEPARATOR = 4,
+    CATEGORY = 5
 }
 
 @injectable()

@@ -13,12 +13,14 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
+import { isSelectable } from 'sprotty';
 import {
-    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin,
-    KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment, KGraphElement, KEdge, KNode
-} from './kgraph-models';
+    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle,
+    KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, SKNode,
+    VerticalAlignment
+} from './skgraph-models';
 import {
-    camelToKebab, fillSingleColor, isSingleColor, KGraphRenderingContext, lineCapText, lineJoinText, lineStyleText, textDecorationStyleText, verticalAlignmentText
+    camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText, SKGraphRenderingContext, textDecorationStyleText, verticalAlignmentText
 } from './views-common';
 
 
@@ -55,108 +57,6 @@ const RGBA_END = ')'
 const URL_START = 'url(#'
 const URL_END = ')'
 
-/**
- * Calculates the renderings for all styles contained in styleList into an object.
- * @param styleList The list of all styles that should have their rendering calculated.
- * @param parent The containing node of these styles.
- */
-export function getKStyles(styleList: KStyle[], id: string): KStyles { // TODO: not all of these are implemented yet
-    let styles = new KStyles
-    if (styleList === undefined) {
-        return styles
-    }
-    for (let style of styleList) {
-        if (style.selection === false) { // TODO: check if element is selected and decide from there
-            switch (style.type) {
-                case K_COLORING: {
-                    console.error('A style can not be a ' + style.type + ' by itself, it needs to be a subclass of it.')
-                    break
-                }
-                case K_BACKGROUND: {
-                    styles.kBackground = style as KBackground
-                    break
-                }
-                case K_FOREGROUND: {
-                    styles.kForeground = style as KForeground
-                    break
-                }
-                case K_FONT_BOLD: {
-                    styles.kFontBold = style as KFontBold
-                    break
-                }
-                case K_FONT_ITALIC: {
-                    styles.kFontItalic = style as KFontItalic
-                    break
-                }
-                case K_FONT_NAME: {
-                    styles.kFontName = style as KFontName // TODO: have a deeper look at svg fonts
-                    break
-                }
-                case K_FONT_SIZE: {
-                    styles.kFontSize = style as KFontSize
-                    break
-                }
-                case K_HORIZONTAL_ALIGNMENT: {
-                    styles.kHorizontalAlignment = style as KHorizontalAlignment
-                    break
-                }
-                case K_INVISIBILITY: {
-                    styles.kInvisibility = style as KInvisibility
-                    break
-                }
-                case K_LINE_CAP: {
-                    styles.kLineCap = style as KLineCap
-                    break
-                }
-                case K_LINE_JOIN: {
-                    styles.kLineJoin = style as KLineJoin
-                    break
-                }
-                case K_LINE_STYLE: {
-                    styles.kLineStyle = style as KLineStyle
-                    break
-                }
-                case K_LINE_WIDTH: {
-                    styles.kLineWidth = style as KLineWidth
-                    break
-                }
-                case K_ROTATION: {
-                    styles.kRotation = style as KRotation
-                    break
-                }
-                case K_SHADOW: {
-                    styles.kShadow = style as KShadow
-                    break
-                }
-                case K_STYLE_REF: {
-                    console.error('The style ' + style.type + ' is not implemented yet.')
-                    // style as KStyleRef
-                    // special case! TODO: how to handle this? Never seen this in any rendering
-                    break
-                }
-                case K_TEXT_STRIKEOUT: {
-                    console.error('The style ' + style.type + ' is not implemented yet.')
-                    styles.kTextStrikeout = style as KTextStrikeout
-                    break
-                }
-                case K_TEXT_UNDERLINE: {
-                    styles.kTextUnderline = style as KTextUnderline
-                    break
-                }
-                case K_VERTICAL_ALIGNMENT: {
-                    styles.kVerticalAlignment = style as KVerticalAlignment
-                    break
-                }
-                default: {
-                    console.error('Unexpected Style found while rendering: ' + style.type)
-                    break
-                }
-            }
-        }
-    }
-    return styles
-}
-
 
 // Default values for most Styles, that are used if no style is given Default values taken from PNodeController.java
 export const DEFAULT_FONT_BOLD = false
@@ -180,7 +80,6 @@ export const DEFAULT_CORNER_HEIGHT = 0
 export const DEFAULT_LINE_CAP_SVG = 'butt'
 export const DEFAULT_LINE_JOIN_SVG = 'miter'
 export const DEFAULT_MITER_LIMIT_SVG = 4
-
 /**
  * Data class to hold each possible KStyle of any rendering. Defaults each style to undefined or its default value from PNodeController.java
  */
@@ -203,52 +102,259 @@ export class KStyles {
     kTextStrikeout: KTextStrikeout | undefined
     kTextUnderline: KTextUnderline | undefined
     kVerticalAlignment: KVerticalAlignment
-    constructor() {
-        this.kBackground = undefined
-        this.kForeground = undefined
-        this.kFontBold = {
-            bold: DEFAULT_FONT_BOLD
-        } as KFontBold
-        this.kFontItalic = {
-            italic: DEFAULT_FONT_ITALIC
-        } as KFontItalic
-        this.kFontName = {
-            name: DEFAULT_FONT_NAME
-        } as KFontName
-        this.kFontSize = {
-            size: DEFAULT_FONT_SIZE,
-            scaleWithZoom: false // TODO: implement this
-        } as KFontSize
-        this.kHorizontalAlignment = {
-            horizontalAlignment: DEFAULT_HORIZONTAL_ALIGNMENT
-        } as KHorizontalAlignment
-        this.kInvisibility = {
-            invisible: DEFAULT_INVISIBILITY
-        } as KInvisibility
-        this.kLineCap = {
-            lineCap: DEFAULT_LINE_CAP
-        } as KLineCap
-        this.kLineJoin = {
-            lineJoin: DEFAULT_LINE_JOIN,
-            miterLimit: DEFAULT_MITER_LIMIT
-        } as KLineJoin
-        this.kLineStyle = {
-            lineStyle: DEFAULT_LINE_STYLE,
-            dashOffset: 0,
-            dashPattern: [0]
-        } as KLineStyle
-        this.kLineWidth = {
-            lineWidth: DEFAULT_LINE_WIDTH
-        } as KLineWidth
-        this.kRotation = undefined
-        this.kShadow = DEFAULT_SHADOW
-        this.kStyleRef = undefined
-        this.kTextStrikeout = undefined
-        this.kTextUnderline = undefined
-        this.kVerticalAlignment = {
-            verticalAlignment: DEFAULT_VERTICAL_ALIGNMENT
-        } as KVerticalAlignment
+    constructor(initialize?: boolean) {
+        if (initialize !== false) {
+            this.kBackground = undefined
+            this.kForeground = undefined
+            this.kFontBold = {
+                bold: DEFAULT_FONT_BOLD
+            } as KFontBold
+            this.kFontItalic = {
+                italic: DEFAULT_FONT_ITALIC
+            } as KFontItalic
+            this.kFontName = {
+                name: DEFAULT_FONT_NAME
+            } as KFontName
+            this.kFontSize = {
+                size: DEFAULT_FONT_SIZE,
+                scaleWithZoom: false // TODO: implement this
+            } as KFontSize
+            this.kHorizontalAlignment = {
+                horizontalAlignment: DEFAULT_HORIZONTAL_ALIGNMENT
+            } as KHorizontalAlignment
+            this.kInvisibility = {
+                invisible: DEFAULT_INVISIBILITY
+            } as KInvisibility
+            this.kLineCap = {
+                lineCap: DEFAULT_LINE_CAP
+            } as KLineCap
+            this.kLineJoin = {
+                lineJoin: DEFAULT_LINE_JOIN,
+                miterLimit: DEFAULT_MITER_LIMIT
+            } as KLineJoin
+            this.kLineStyle = {
+                lineStyle: DEFAULT_LINE_STYLE,
+                dashOffset: 0,
+                dashPattern: [0]
+            } as KLineStyle
+            this.kLineWidth = {
+                lineWidth: DEFAULT_LINE_WIDTH
+            } as KLineWidth
+            this.kRotation = undefined
+            this.kShadow = DEFAULT_SHADOW
+            this.kStyleRef = undefined
+            this.kTextStrikeout = undefined
+            this.kTextUnderline = undefined
+            this.kVerticalAlignment = {
+                verticalAlignment: DEFAULT_VERTICAL_ALIGNMENT
+            } as KVerticalAlignment
+        }
     }
+}
+
+/**
+ * Calculates the renderings for all styles contained in styleList into an object.
+ * @param styleList The list of all styles that should have their rendering calculated.
+ * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
+ * @param stylesToPropagage The optional styles object that should be propagated further to childern. It is modified in this method.
+ */
+export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
+    // TODO: not all of these are implemented yet
+    let styles = new KStyles(false)
+    // Include all propagated styles.
+    copyStyles(propagatedStyles, styles)
+    if (stylesToPropagage !== undefined) {
+        copyStyles(propagatedStyles, stylesToPropagage)
+    }
+
+    if (styleList === undefined) {
+        return styles
+    }
+
+    // First, apply all non-selection styles.
+    for (let style of styleList) {
+        if (style.selection === false) {
+            applyKStyle(style, styles, stylesToPropagage)
+        }
+    }
+    // Then, override with selection styles, if any are available.
+    for (let style of styleList) {
+        if (isSelectable(parent) && parent.selected && style.selection === true) {
+            applyKStyle(style, styles, stylesToPropagage)
+        }
+    }
+    return styles
+}
+
+/**
+ * Apply the given style to the given styles object. If it should be propagated, also apply it to the stylesToPropagage object.
+ * @param style The style to apply.
+ * @param styles The styles object the style should be applied to.
+ * @param stylesToPropagage The styles object that gets propagated.
+ */
+export function applyKStyle(style: KStyle, styles: KStyles, stylesToPropagage?: KStyles): void {
+    switch (style.type) {
+        case K_COLORING: {
+            console.error('A style can not be a ' + style.type + ' by itself, it needs to be a subclass of it.')
+            break
+        }
+        case K_BACKGROUND: {
+            styles.kBackground = style as KBackground
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kBackground = styles.kBackground
+            }
+            break
+        }
+        case K_FOREGROUND: {
+            styles.kForeground = style as KForeground
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kForeground = styles.kForeground
+            }
+            break
+        }
+        case K_FONT_BOLD: {
+            styles.kFontBold = style as KFontBold
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontBold = styles.kFontBold
+            }
+            break
+        }
+        case K_FONT_ITALIC: {
+            styles.kFontItalic = style as KFontItalic
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontItalic = styles.kFontItalic
+            }
+            break
+        }
+        case K_FONT_NAME: {
+            styles.kFontName = style as KFontName // TODO: have a deeper look at svg fonts
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontName = styles.kFontName
+            }
+            break
+        }
+        case K_FONT_SIZE: {
+            styles.kFontSize = style as KFontSize
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kFontSize = styles.kFontSize
+            }
+            break
+        }
+        case K_HORIZONTAL_ALIGNMENT: {
+            styles.kHorizontalAlignment = style as KHorizontalAlignment
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kHorizontalAlignment = styles.kHorizontalAlignment
+            }
+            break
+        }
+        case K_INVISIBILITY: {
+            styles.kInvisibility = style as KInvisibility
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kInvisibility = styles.kInvisibility
+            }
+            break
+        }
+        case K_LINE_CAP: {
+            styles.kLineCap = style as KLineCap
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineCap = styles.kLineCap
+            }
+            break
+        }
+        case K_LINE_JOIN: {
+            styles.kLineJoin = style as KLineJoin
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineJoin = styles.kLineJoin
+            }
+            break
+        }
+        case K_LINE_STYLE: {
+            styles.kLineStyle = style as KLineStyle
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineStyle = styles.kLineStyle
+            }
+            break
+        }
+        case K_LINE_WIDTH: {
+            styles.kLineWidth = style as KLineWidth
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kLineWidth = styles.kLineWidth
+            }
+            break
+        }
+        case K_ROTATION: {
+            styles.kRotation = style as KRotation
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kRotation = styles.kRotation
+            }
+            break
+        }
+        case K_SHADOW: {
+            styles.kShadow = style as KShadow
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kShadow = styles.kShadow
+            }
+            break
+        }
+        case K_STYLE_REF: {
+            console.error('The style ' + style.type + ' is not implemented yet.')
+            // style as KStyleRef
+            // special case! TODO: how to handle this? Never seen this in any rendering
+            break
+        }
+        case K_TEXT_STRIKEOUT: {
+            console.error('The style ' + style.type + ' is not implemented yet.')
+            styles.kTextStrikeout = style as KTextStrikeout
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kTextStrikeout = styles.kTextStrikeout
+            }
+            break
+        }
+        case K_TEXT_UNDERLINE: {
+            styles.kTextUnderline = style as KTextUnderline
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kTextUnderline = styles.kTextUnderline
+            }
+            break
+        }
+        case K_VERTICAL_ALIGNMENT: {
+            styles.kVerticalAlignment = style as KVerticalAlignment
+            if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
+                stylesToPropagage.kVerticalAlignment = styles.kVerticalAlignment
+            }
+            break
+        }
+        default: {
+            console.error('Unexpected Style found while rendering: ' + style.type)
+            break
+        }
+    }
+}
+
+/**
+ * Copies the content from one to the other KStyles object.
+ * @param from The KStyles to copy from.
+ * @param to The KStyles to copy to.
+ */
+export function copyStyles(from: KStyles, to: KStyles) {
+    to.kBackground = from.kBackground
+    to.kForeground = from.kForeground
+    to.kFontBold = from.kFontBold
+    to.kFontItalic = from.kFontItalic
+    to.kFontName = from.kFontName
+    to.kFontSize = from.kFontSize
+    to.kHorizontalAlignment = from.kHorizontalAlignment
+    to.kInvisibility = from.kInvisibility
+    to.kLineCap = from.kLineCap
+    to.kLineJoin = from.kLineJoin
+    to.kLineStyle = from.kLineStyle
+    to.kLineWidth = from.kLineWidth
+    to.kRotation = from.kRotation
+    to.kShadow = from.kShadow
+    to.kStyleRef = from.kStyleRef
+    to.kTextStrikeout = from.kTextStrikeout
+    to.kTextUnderline = from.kTextUnderline
+    to.kVerticalAlignment = from.kVerticalAlignment
 }
 
 // ----------------------------- Functions for rendering different KStyles as VNodes in svg --------------------------------------------
@@ -351,7 +457,7 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingContext): string | undefined {
+export function getSvgShadowStyles(styles: KStyles, context: SKGraphRenderingContext): string | undefined {
     const shadow = styles.kShadow
     if (shadow === undefined) {
         return undefined
@@ -401,12 +507,12 @@ export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingCont
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext, parent: KGraphElement | KEdge): ColorStyles {
+export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingContext, parent: SKGraphElement | SKEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
     const color = 'grey'
 
-    if (parent instanceof KEdge && parent.moved) {
+    if (parent instanceof SKEdge && parent.moved) {
         // edge should be greyed out
         return {
             foreground: color,
@@ -414,7 +520,7 @@ export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingConte
         }
     }
 
-    if (parent instanceof KNode && parent.shadow) {
+    if (parent instanceof SKNode && parent.shadow) {
         // colors of the shadow node
         return {
             foreground: color,
@@ -435,7 +541,7 @@ export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingConte
  * @param context The rendering context.
  * @see getSvgColorStyles
  */
-export function getSvgColorStyle(coloring: KColoring | undefined, context: KGraphRenderingContext): string | undefined {
+export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): string | undefined {
     if (coloring === undefined) {
         return undefined
     }

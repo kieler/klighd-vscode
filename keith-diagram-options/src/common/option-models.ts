@@ -11,6 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { TransformationOptionType } from '@kieler/keith-sprotty/lib/options';
  /**
   * Holds an option defined by the diagram synthesis.
   * This is the counterpart to the KLighD's java implementation of the SynthesisOption.
@@ -48,17 +49,6 @@ export interface RangeOption extends SynthesisOption {
 export interface Range {
     first: number
     second: number
-}
-
-/**
- * The different types a SynthesisOption can have.
- */
-export enum TransformationOptionType {
-    CHECK = 0,
-    CHOICE = 1,
-    RANGE = 2,
-    SEPARATOR = 3,
-    CATEGORY = 4
 }
 
 /**

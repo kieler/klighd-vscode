@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@kieler/keith-interactive": "0.1.0",
+    "@theia/core": "next",
     "sprotty": "next"
   },
   "devDependencies": {

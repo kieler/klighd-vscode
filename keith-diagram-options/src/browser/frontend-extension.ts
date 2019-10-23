@@ -15,6 +15,9 @@ import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } 
 import { ContainerModule, interfaces } from "inversify";
 import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution";
 import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget";
+import { diagramOptionsWidgetId } from "../common";
+import './keith-diagramoptions-icons'
+import '../../src/browser/style/index.css'
 
 /**
  * Dependency injection container for the KEITH diagram options functionality.
@@ -24,7 +27,7 @@ export default new ContainerModule((bind: interfaces.Bind) => {
     bind(FrontendApplicationContribution).toService(DiagramOptionsViewContribution);
 
     bind(WidgetFactory).toDynamicValue(ctx => ({
-        id: "diagramoptions-view",
+        id: diagramOptionsWidgetId,
         createWidget: () => ctx.container.get(DiagramOptionsViewWidget)
     }))
     bind(DiagramOptionsViewWidget).toSelf()

@@ -39,16 +39,21 @@
     "@fortawesome/fontawesome-free": "^5.7.2",
     "@kieler/keith-diagram": "0.1.0",
     "@kieler/keith-diagram-options": "0.1.0",
+    "@kieler/keith-icons": "0.1.0",
+    "@kieler/keith-interactive": "0.1.0",
     "@kieler/keith-kicool": "0.1.0",
     "@kieler/keith-language": "0.1.0",
+    "@kieler/keith-simulation": "0.1.0",
     "@kieler/keith-sprotty": "0.1.0",
-    "@kieler/keith-interactive": "0.1.0",
+    "@theia/application-package": "next",
     "@theia/core": "next",
     "@theia/editor": "next",
     "@theia/editorconfig": "next",
     "@theia/electron": "next",
     "@theia/file-search": "next",
     "@theia/filesystem": "next",
+    "@theia/getting-started": "next",
+    "@theia/keymaps": "next",
     "@theia/languages": "next",
     "@theia/markers": "next",
     "@theia/messages": "next",
@@ -71,7 +76,8 @@
     "sprotty-theia": "next",
     "vscode-jsonrpc": "^3.6.2",
     "xterm": "^3.11.0",
-    "yargs": "^13.2.2"
+    "yargs": "^13.2.2",
+    "tls": "^0.0.1"
   },
   "devDependencies": {
     "@theia/cli": "next",
@@ -103,8 +109,10 @@
     "keith-app",
     "keith-language",
     "keith-sprotty",
+    "keith-icons",
     "keith-kicool",
     "keith-app-electron",
-    "keith-interactive"
+    "keith-interactive",
+    "keith-simulation"
   ]
 }
