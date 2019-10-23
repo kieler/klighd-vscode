@@ -15,13 +15,14 @@ import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
-import { KEdge, KLabel, KPort, KNode } from './kgraph-models';
-import { KGraphRenderingContext } from './views-common';
 import { renderInteractiveLayout, renderConstraints } from './interactiveView';
 import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
 import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
-import { getRendering, getJunctionPointRenderings } from './views-rendering';
 import { RenderOptions } from './options';
+import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
+import { SKGraphRenderingContext } from './views-common';
+import { getJunctionPointRenderings, getRendering } from './views-rendering';
+import { KStyles } from './views-styles';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -30,8 +31,8 @@ import { RenderOptions } from './options';
 @injectable()
 export class SKGraphView extends SGraphView {
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
-        // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
-        const ctx = context as any as KGraphRenderingContext
+        // TODO: 'as any' is not very nice, but SKGraphRenderingContext cannot be used here (two undefined members)
+        const ctx = context as any as SKGraphRenderingContext
         ctx.renderingDefs = new Map
         return super.render(model, context)
     }
@@ -46,9 +47,9 @@ export class KNodeView implements IView {
     @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
     @inject(RenderOptions) protected rOptions: RenderOptions
 
-    render(node: KNode, context: RenderingContext): VNode {
+    render(node: SKNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
-        const ctx = context as any as KGraphRenderingContext
+        const ctx = context as any as SKGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false
 
@@ -66,7 +67,7 @@ export class KNodeView implements IView {
         if (node.interactiveLayout && this.mListener.hasDragged) {
             if (isShadow) {
                 // render shadow of the node
-                shadow = getRendering(node.data, node, context as any)
+                shadow = getRendering(node.data, node, new KStyles, context as any)
             }
 
             if (isChildSelected(node)) {
@@ -78,10 +79,10 @@ export class KNodeView implements IView {
         // render node & icon
         node.shadow = false
         let rendering = undefined
-        if (!this.mListener.hasDragged || isChildSelected(node) || isChildSelected(node.parent as KNode)) {
+        if (!this.mListener.hasDragged || isChildSelected(node) || isChildSelected(node.parent as SKNode)) {
             // node should only be visible if the node is in the same hierarchical level as the moved node or it is the
             // root of the moved node or no node is moved at all
-            rendering = getRendering(node.data, node, ctx)
+            rendering = getRendering(node.data, node, new KStyles, ctx)
 
             if (this.rOptions.getShowConstraint() && node.interactiveLayout) {
                 // render icon visualizing the set Constraints
@@ -130,9 +131,9 @@ export class KNodeView implements IView {
  */
 @injectable()
 export class KPortView implements IView {
-    render(port: KPort, context: RenderingContext): VNode {
+    render(port: SKPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
-        const rendering = getRendering(port.data, port, context as any)
+        const rendering = getRendering(port.data, port, new KStyles, context as any)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
@@ -158,17 +159,16 @@ export class KPortView implements IView {
  */
 @injectable()
 export class KLabelView implements IView {
-
     @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
 
-    render(label: KLabel, context: RenderingContext): VNode {
+    render(label: SKLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
 
         let parent = label.parent
         let rendering = undefined
         // labels should not be visible if the nodes are hidden
-        if (!(parent instanceof KNode) || isChildSelected(parent) || isChildSelected(parent.parent as KNode) || !this.mListener.hasDragged) {
-            rendering = getRendering(label.data, label, context as any)
+        if (!(parent instanceof SKNode) || isChildSelected(parent) || isChildSelected(parent.parent as SKNode) || !this.mListener.hasDragged) {
+            rendering = getRendering(label.data, label, new KStyles, context as any)
         }
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
@@ -198,21 +198,21 @@ export class KEdgeView implements IView {
 
     @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
 
-    render(edge: KEdge, context: RenderingContext): VNode {
+    render(edge: SKEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
 
         // edge should be greyed out if the source or target is moved
         let s = edge.source
         let t = edge.target
-        if (s !== undefined && t !== undefined && s instanceof KNode && t instanceof KNode) {
+        if (s !== undefined && t !== undefined && s instanceof SKNode && t instanceof SKNode) {
             edge.moved = (s.selected || t.selected) && this.mListener.hasDragged
         }
 
         let rendering = undefined
-        if (!this.mListener.hasDragged || isChildSelected(edge.parent as KNode)) {
+        if (!this.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {
             // edge should only be visible if it is in the same hierarchical level as
             // the moved node or no node is moved at all
-            rendering = getRendering(edge.data, edge, context as any)
+            rendering = getRendering(edge.data, edge, new KStyles, context as any)
         }
         edge.moved = false
 
