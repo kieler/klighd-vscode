@@ -17,6 +17,7 @@
     "watch": "tsc -w -p ./tsconfig.json"
   },
   "dependencies": {
+    "inversify": "5.0.1",
     "sprotty": "next",
     "@theia/core": "next"
   },

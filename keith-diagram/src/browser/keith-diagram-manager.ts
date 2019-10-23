@@ -13,7 +13,7 @@
 
 import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
 import { Emitter, Event } from '@theia/core';
-import { OpenerOptions, Widget, WidgetManager, WidgetOpenerOptions } from '@theia/core/lib/browser';
+import { OpenerOptions, WidgetManager, WidgetOpenerOptions } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { MonacoWorkspace } from "@theia/monaco/lib/browser/monaco-workspace";
@@ -108,12 +108,12 @@ export class KeithDiagramManager extends DiagramManager {
         }
     }
 
-    async createWidget(options?: any): Promise<Widget> {
+    async createWidget(options?: any): Promise<DiagramWidget> {
         if (DiagramWidgetOptions.is(options)) {
             const clientId = this.createClientId();
             const config = this.diagramConfigurationRegistry.get(options.diagramType);
             const diContainer = config.createContainer(clientId + '_sprotty');
-            const diagramWidget = new KeithDiagramWidget(options, clientId, diContainer, this.diagramConnector);
+            const diagramWidget = new KeithDiagramWidget(options, clientId + '_widget', diContainer, this.diagramConnector);
             return diagramWidget;
         }
         throw Error('DiagramWidgetFactory needs DiagramWidgetOptions but got ' + JSON.stringify(options));
