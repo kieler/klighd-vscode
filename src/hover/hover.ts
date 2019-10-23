@@ -20,8 +20,6 @@ import { getSemanticElement } from '../skgraph-utils';
  * The response is a SetPopupModelAction.
  */
 export class RequestKeithPopupModelAction extends RequestPopupModelAction {
-    static readonly KIND = 'requestKeithPopupModel';
-    readonly kind = RequestKeithPopupModelAction.KIND;
 
     constructor(public readonly element: SVGElement,
                 public readonly parent: SModelElement,
