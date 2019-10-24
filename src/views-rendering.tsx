@@ -20,7 +20,9 @@ import {
     K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel
 } from './skgraph-models';
 import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, SKGraphRenderingContext } from './views-common';
-import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles } from './views-styles';
+import {
+    DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
+} from './views-styles';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -96,6 +98,10 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context)
+    // objects rendered here that have no background should get a invisible, but clickable background so that users do not click through the non-available background.
+    if (colorStyles.background === DEFAULT_FILL) {
+        colorStyles.background = DEFAULT_CLICKABLE_FILL
+    }
     const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles)
 
