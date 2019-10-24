@@ -70,6 +70,7 @@ export const DEFAULT_MITER_LIMIT = 10
 export const DEFAULT_LINE_STYLE = LineStyle.SOLID
 export const DEFAULT_LINE_WIDTH = 1
 export const DEFAULT_FILL = 'none'
+export const DEFAULT_CLICKABLE_FILL = RGBA_START + '0,0,0,0' + RGBA_END
 export const DEFAULT_FOREGROUND = 'black'
 export const DEFAULT_VERTICAL_ALIGNMENT = VerticalAlignment.CENTER
 export const DEFAULT_SHADOW = undefined
