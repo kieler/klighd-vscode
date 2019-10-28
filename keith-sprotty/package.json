@@ -18,8 +18,7 @@
   },
   "dependencies": {
     "inversify": "5.0.1",
-    "sprotty": "next",
-    "@theia/core": "next"
+    "sprotty": "next"
   },
   "devDependencies": {
     "rimraf": "^2.6.3",
