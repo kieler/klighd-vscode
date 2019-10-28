@@ -20,6 +20,7 @@ import { MonacoWorkspace } from "@theia/monaco/lib/browser/monaco-workspace";
 import { UserStorageUri } from "@theia/userstorage/lib/browser";
 import { inject, injectable } from 'inversify';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
+import { SynthesisCommandContribution } from './keith-diagram-commands';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
@@ -51,12 +52,13 @@ export class KeithDiagramManager extends DiagramManager {
         @inject(EditorManager) editorManager: EditorManager,
         @inject(WidgetManager) widgetManager: WidgetManager,
         @inject(MonacoWorkspace) workspace: MonacoWorkspace,
-        @inject(SynthesisRegistry) synthesisRegistry: SynthesisRegistry
+        @inject(SynthesisRegistry) synthesisRegistry: SynthesisRegistry,
+        @inject(SynthesisCommandContribution) synthesisCommandContribution: SynthesisCommandContribution
         ) {
         super()
         this._diagramConnector = new KeithTheiaSprottyConnector({
             diagramLanguageClient, fileSaver, editorManager, widgetManager, workspace, diagramManager: this,
-            synthesisRegistry
+            synthesisRegistry, synthesisCommandContribution
         })
         editorManager.onCurrentEditorChanged(this.onCurrentEditorChanged.bind(this))
     }

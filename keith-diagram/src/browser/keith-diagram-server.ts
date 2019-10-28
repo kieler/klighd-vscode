@@ -84,6 +84,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
 
     handleSetSyntheses(action: SetSynthesesAction) {
         this.connector.synthesisRegistry.setAvailableSyntheses(action.syntheses)
+        this.connector.synthesisCommandContribution.onNewSyntheses(action.syntheses)
         this.connector.synthesisRegistry.setProvidingDiagramServer(this)
     }
 
@@ -124,6 +125,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         super.disconnect()
         // Unregister all commands for this server on disconnect.
         this.connector.synthesisRegistry.clearAvailableSyntheses()
+        this.connector.synthesisCommandContribution.onNewSyntheses([])
     }
 
     initialize(registry: ActionHandlerRegistry): void {

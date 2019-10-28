@@ -47,12 +47,10 @@ export class SynthesisCommandContribution implements CommandContribution, MenuCo
     @inject(StatusBar)
     protected readonly statusBar: StatusBar
 
-    constructor(
-        @inject(SynthesisRegistry) protected readonly synthesisRegistry: SynthesisRegistry) {
-            synthesisRegistry.newSyntheses(this.onNewSynthesis.bind(this))
-    }
+    @inject(SynthesisRegistry)
+    protected readonly synthesisRegistry: SynthesisRegistry
 
-    onNewSynthesis(syntheses: SetSynthesesActionData[]) {
+    onNewSyntheses(syntheses: SetSynthesesActionData[]) {
         if (syntheses && syntheses.length > 0) {
             this.statusBar.setElement(synthesisStatus, {
                 text: syntheses[0].displayName,

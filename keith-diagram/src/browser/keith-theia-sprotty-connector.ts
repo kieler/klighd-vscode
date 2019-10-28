@@ -13,6 +13,7 @@
 import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
 import { ActionMessage } from 'sprotty';
 import { LSTheiaSprottyConnector, TheiaSprottyConnectorServices } from 'sprotty-theia';
+import { SynthesisCommandContribution } from './keith-diagram-commands';
 import { KeithDiagramServer } from './keith-diagram-server';
 
 /**
@@ -20,6 +21,7 @@ import { KeithDiagramServer } from './keith-diagram-server';
  */
 export interface KeithTheiaSprottyConnectorServices extends TheiaSprottyConnectorServices {
     readonly synthesisRegistry: SynthesisRegistry
+    readonly synthesisCommandContribution: SynthesisCommandContribution
 }
 
 /**
@@ -31,6 +33,7 @@ export class KeithTheiaSprottyConnector extends LSTheiaSprottyConnector implemen
     protected servers_: KeithDiagramServer[] = []
 
     readonly synthesisRegistry: SynthesisRegistry
+    readonly synthesisCommandContribution: SynthesisCommandContribution
 
     constructor(services: KeithTheiaSprottyConnectorServices) {
         super(services)
