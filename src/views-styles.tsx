@@ -524,7 +524,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingCont
  * @see getSvgColorStyles
  */
 export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): string | undefined {
-    if (coloring === undefined) {
+    if (coloring === undefined || coloring.color === undefined) {
         return undefined
     }
     // If the color is a single color, just return its corresponding rgb resp. rgba color.
