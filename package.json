@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@kieler/keith-interactive": "0.1.0",
-    "@theia/core": "next",
+    "inversify": "5.0.1",
     "sprotty": "next"
   },
   "devDependencies": {

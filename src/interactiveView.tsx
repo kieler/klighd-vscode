@@ -1,7 +1,7 @@
 /** @jsx svg */
-import { KNode, Layer } from "@kieler/keith-interactive/lib/ConstraintClasses";
+import { KNode, Layer } from "@kieler/keith-interactive/lib/constraint-classes";
 import { getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer, isLayerForbidden,
-    shouldOnlyLCBeSet } from "@kieler/keith-interactive/lib/ConstraintUtils";
+    shouldOnlyLCBeSet } from "@kieler/keith-interactive/lib/constraint-utils";
 import { svg } from 'snabbdom-jsx';
 import { createRect, createVerticalLine, createCircle, lock, arrow } from "./interactiveView-objects";
 import { VNode } from "snabbdom/vnode";

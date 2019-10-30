@@ -13,7 +13,6 @@
 import { injectable } from 'inversify';
 import { DiagramServer } from 'sprotty';
 import { SetSynthesesActionData } from './synthesis-message-data';
-import { Emitter, Event } from '@theia/core/lib/common';
 
 /**
  * A simple injectable registry that holds the action data of the last SetSynthesesAction and the diagram server that data was for
@@ -21,9 +20,7 @@ import { Emitter, Event } from '@theia/core/lib/common';
  */
 @injectable()
 export class SynthesisRegistry {
-    public readonly newSynthesesEmitter = new Emitter<SetSynthesesActionData[]>()
 
-    public readonly newSyntheses: Event<SetSynthesesActionData[] | undefined> = this.newSynthesesEmitter.event
     /**
      * The data of all currently available syntheses.
      */
@@ -39,7 +36,6 @@ export class SynthesisRegistry {
      */
     setAvailableSyntheses(syntheses: SetSynthesesActionData[]): void {
         this.syntheses = syntheses
-        this.newSynthesesEmitter.fire(this.syntheses)
     }
 
     /**
@@ -48,7 +44,6 @@ export class SynthesisRegistry {
      */
     addAvailableSynthesis(synthesis: SetSynthesesActionData): void {
         this.syntheses.push(synthesis)
-        this.newSynthesesEmitter.fire(this.syntheses)
     }
 
     /**
@@ -56,7 +51,6 @@ export class SynthesisRegistry {
      */
     clearAvailableSyntheses(): void {
         this.syntheses = []
-        this.newSynthesesEmitter.fire(this.syntheses)
     }
 
     /**
