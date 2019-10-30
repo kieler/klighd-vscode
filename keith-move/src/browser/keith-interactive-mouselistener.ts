@@ -1,15 +1,29 @@
-import {
-    MoveMouseListener, SModelElement, Action, SNode, SLabel, SEdge
-} from "sprotty";
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2019 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
+import { SModelElement, Action, SNode, SLabel, SEdge } from 'sprotty';
 
 import { inject, injectable } from 'inversify';
-import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from "sprotty-theia/lib/"
-import { KNode } from "./ConstraintClasses";
-import { PositionConstraint, StaticConstraint, LayerConstraint } from './Constraint-types';
-import { filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet } from "./ConstraintUtils";
+import { LSTheiaDiagramServer, DiagramLanguageClient, DiagramWidget } from 'sprotty-theia/lib/';
+import { KNode } from '@kieler/keith-interactive/lib/constraint-classes';
+import { PositionConstraint, StaticConstraint, LayerConstraint } from '@kieler/keith-interactive/lib/constraint-types';
+import {
+    filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet
+} from '@kieler/keith-interactive/lib/constraint-utils';
+import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/interactive-mouselistener';
 
 @injectable()
-export class InteractiveMouseListener extends MoveMouseListener {
+export class KeithInteractiveMouseListener extends InteractiveMouseListener {
     private diagramClient: DiagramLanguageClient
     private widget: DiagramWidget
 
@@ -78,7 +92,7 @@ export class InteractiveMouseListener extends MoveMouseListener {
      * Sets properties of the target accordingly to the position the target is moved to
      * @param target SModelElement that is moved
      */
-    private setProperty(target: SModelElement): void {
+    setProperty(target: SModelElement): void {
         let targetNode: KNode = target as KNode
         let nodes = filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
@@ -102,13 +116,13 @@ export class InteractiveMouseListener extends MoveMouseListener {
                 // only the layer constraint should be set
                 let lc: LayerConstraint = new LayerConstraint(uriStr, targetNode.id, layerOfTarget, newLayerCons)
                 this.diagramClient.languageClient.then(lClient => {
-                    lClient.sendNotification("keith/constraints/setLayerConstraint", lc)
+                    lClient.sendNotification('keith/constraints/setLayerConstraint', lc)
                 })
             } else {
                 // If layer and position constraint should be set - send them both in one StaticConstraint
                 let sc: StaticConstraint = new StaticConstraint(uriStr, targetNode.id, layerOfTarget, newLayerCons, positionOfTarget, newPositionCons)
                 this.diagramClient.languageClient.then(lClient => {
-                    lClient.sendNotification("keith/constraints/setStaticConstraint", sc)
+                    lClient.sendNotification('keith/constraints/setStaticConstraint', sc)
                 })
             }
         } else {
@@ -119,15 +133,15 @@ export class InteractiveMouseListener extends MoveMouseListener {
                 // set the position Constraint
                 let pc: PositionConstraint = new PositionConstraint(uriStr, targetNode.id, positionOfTarget, newPositionCons)
                 this.diagramClient.languageClient.then(lClient => {
-                    lClient.sendNotification("keith/constraints/setPositionConstraint", pc)
+                    lClient.sendNotification('keith/constraints/setPositionConstraint', pc)
                 })
             }
         }
         // If the node was moved without setting a constraint - let it snap back
         if (!constraintSet) {
             /*let dc: DeleteConstraint = new DeleteConstraint(uriStr, targetNode.id)
-            this.diagramClient.languageClient.then(lClient => { lClient.sendNotification("keith/constraints/deleteStaticConstraint", dc) })*/
-            this.diagramClient.languageClient.then(lClient => { lClient.sendNotification("keith/constraints/refreshLayout", uriStr) })
+            this.diagramClient.languageClient.then(lClient => { lClient.sendNotification('keith/constraints/deleteStaticConstraint', dc) })*/
+            this.diagramClient.languageClient.then(lClient => { lClient.sendNotification('keith/constraints/refreshLayout', uriStr) })
         }
     }
 

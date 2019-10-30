@@ -71,6 +71,7 @@ export const DEFAULT_MITER_LIMIT = 10
 export const DEFAULT_LINE_STYLE = LineStyle.SOLID
 export const DEFAULT_LINE_WIDTH = 1
 export const DEFAULT_FILL = 'none'
+export const DEFAULT_CLICKABLE_FILL = RGBA_START + '0,0,0,0' + RGBA_END
 export const DEFAULT_FOREGROUND = 'black'
 export const DEFAULT_VERTICAL_ALIGNMENT = VerticalAlignment.CENTER
 export const DEFAULT_SHADOW = undefined
@@ -542,7 +543,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingCont
  * @see getSvgColorStyles
  */
 export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): string | undefined {
-    if (coloring === undefined) {
+    if (coloring === undefined || coloring.color === undefined) {
         return undefined
     }
     // If the color is a single color, just return its corresponding rgb resp. rgba color.

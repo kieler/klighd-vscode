@@ -18,7 +18,8 @@ import { RequestKeithPopupModelAction } from '@kieler/keith-sprotty/lib/hover/ho
 import { injectable } from 'inversify';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
 import {
-    Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, findElement, FitToScreenAction, ICommand, RequestPopupModelAction, SetModelCommand, SetPopupModelAction
+    Action, ActionHandlerRegistry, ActionMessage, BringToFrontAction, ComputedBoundsAction, findElement, FitToScreenAction, ICommand, RequestPopupModelAction, SetModelCommand,
+    SetPopupModelAction, SwitchEditModeAction
 } from 'sprotty/lib';
 import { isNullOrUndefined } from 'util';
 import { KeithDiagramWidget } from './keith-diagram-widget';
@@ -49,18 +50,16 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
 
     handleLocally(action: Action): boolean {
         switch (action.kind) {
+            case ComputedBoundsAction.KIND: // TODO: remove sending of a computedBoundsAction as well (not possible until https://github.com/inversify/InversifyJS/issues/1035).
+                return false
             case ComputedTextBoundsAction.KIND:
+                return true
+            case PerformActionAction.KIND:
                 return true
             case RequestTextBoundsCommand.KIND:
                 return false
-            case ComputedBoundsAction.KIND: // TODO: remove sending of a computedBoundsAction as well (not possible until https://github.com/inversify/InversifyJS/issues/1035).
-                return false
-            case PerformActionAction.KIND:
-                return true
             case SetSynthesisAction.KIND:
                 return true
-            case RequestPopupModelAction.KIND:
-                return false
         }
         return super.handleLocally(action)
     }
@@ -72,10 +71,12 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
             this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === StoreImagesAction.KIND) {
             this.handleStoreImages(action as StoreImagesAction)
-        } else if (action.kind === RequestPopupModelAction.KIND) {
-            // Ignore this one, we use an own, slightly altered version
-        } else if (action.kind === RequestKeithPopupModelAction.KIND) {
+        } else if (action.kind === RequestKeithPopupModelAction.KIND && action instanceof RequestKeithPopupModelAction) {
             this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction)
+        } else if (action.kind === RequestPopupModelAction.KIND
+            || action.kind === SwitchEditModeAction.KIND
+            || action.kind === BringToFrontAction.KIND) {
+            // Ignore these ones
         } else {
             super.handle(action)
         }
@@ -83,6 +84,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
 
     handleSetSyntheses(action: SetSynthesesAction) {
         this.connector.synthesisRegistry.setAvailableSyntheses(action.syntheses)
+        this.connector.synthesisCommandContribution.onNewSyntheses(action.syntheses)
         this.connector.synthesisRegistry.setProvidingDiagramServer(this)
     }
 
@@ -123,12 +125,14 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         super.disconnect()
         // Unregister all commands for this server on disconnect.
         this.connector.synthesisRegistry.clearAvailableSyntheses()
+        this.connector.synthesisCommandContribution.onNewSyntheses([])
     }
 
     initialize(registry: ActionHandlerRegistry): void {
         super.initialize(registry)
 
         // Register the KEITH specific new actions.
+        registry.register(BringToFrontAction.KIND, this)
         registry.register(CheckImagesAction.KIND, this)
         registry.register(CheckedImagesAction.KIND, this)
         registry.register(ComputedTextBoundsAction.KIND, this)
@@ -138,6 +142,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(SetSynthesesAction.KIND, this)
         registry.register(SetSynthesisAction.KIND, this)
         registry.register(StoreImagesAction.KIND, this)
+        registry.register(SwitchEditModeAction.KIND, this)
     }
 
     handleComputedBounds(_action: ComputedBoundsAction): boolean {

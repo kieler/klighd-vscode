@@ -16,8 +16,8 @@ import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
 import { renderInteractiveLayout, renderConstraints } from './interactiveView';
-import { isChildSelected } from '@kieler/keith-interactive/lib/ConstraintUtils'
-import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/InteractiveMouseListener'
+import { isChildSelected } from '@kieler/keith-interactive/lib/constraint-utils'
+import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/interactive-mouselistener'
 import { RenderOptions } from './options';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { SKGraphRenderingContext } from './views-common';

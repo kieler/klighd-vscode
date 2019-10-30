@@ -1,7 +1,7 @@
 {
-  "name": "@kieler/keith-interactive",
+  "name": "@kieler/keith-move",
   "version": "0.1.0",
-  "description": "An extension for Theia connection language support for KEITH to compile models",
+  "description": "Theia specific implemntation of the interactive package.",
   "author": "Kiel University https://rtsys.informatik.uni-kiel.de/kieler",
   "license": "EPL-1.0",
   "keywords": [
@@ -17,7 +17,9 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "sprotty": "next"
+    "@kieler/keith-interactive": "0.1.0",
+    "sprotty": "next",
+    "sprotty-theia": "next"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
