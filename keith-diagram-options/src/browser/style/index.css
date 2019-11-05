@@ -36,6 +36,11 @@
     padding-left: 15px;
 }
 
+.diagram-option-text {
+    padding-left: 15px;
+    font-size: var(--theia-ui-font-size1);
+}
+
 .category {
     font-size: var(--theia-ui-font-size2);
     padding: 5px;
@@ -70,6 +75,11 @@ input[type="radio"] {
     vertical-align: bottom;
 }
 input[type="range"] {
+    width: 90%;
+    max-width: 200px;
+    padding-left: unset;
+}
+input[type="text"] {
     width: 90%;
     max-width: 200px;
     padding-left: unset;
