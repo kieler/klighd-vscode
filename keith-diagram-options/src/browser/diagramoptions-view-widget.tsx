@@ -431,7 +431,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                 return this.renderNumber(layoutOptionUIData)
             }
             case Type.BOOLEAN: {
-                return <p>{'Unimplemented layout option type!'}</p>
+                return this.renderBoolean(layoutOptionUIData)
             }
             case Type.ENUM: {
                 return this.renderEnum(layoutOptionUIData)
@@ -473,6 +473,32 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     }
 
     /**
+     * Renders a layout option for BOOLEAN type as an HTML checkbox.
+     * @param option The layout option to render.
+     */
+    private renderBoolean(option: LayoutOptionUIData): JSX.Element {
+        if (option.currentValue === undefined) {
+            option.currentValue = option.defaultValue.k
+        }
+        return <div key={option.optionId} title={option.description} className='diagram-option'>
+            <label htmlFor={option.name}>
+                <input
+                    className='diagram-inputbox'
+                    type='checkbox'
+                    id={option.optionId}
+                    name={option.name}
+                    defaultChecked={option.currentValue}
+                    onClick={(event: React.MouseEvent<HTMLInputElement>) => {
+                        option.currentValue = event.currentTarget.checked
+                        this.onLayoutOption(option.optionId, option.currentValue)
+                    }}
+                />
+                {option.name}
+            </label>
+        </div>
+    }
+
+    /**
      * Renders an enum layout option as an HTML fieldset with multiple radio buttons.
      * @param option The enum layout option to render.
      */
@@ -486,7 +512,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             children.push(this.renderEnumValue(value, readableValue, initialValue === readableValue, option))
         });
         return <div key={option.optionId} title={option.description} className='diagram-option-choice'>
-            <legend>{option.name}</legend>
+            <legend className='diagram-option'>{option.name}</legend>
             {...children}
         </div>
     }
@@ -499,7 +525,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The option this radio button belongs to.
      */
     private renderEnumValue(value: number, readableValue: string, initialValue: boolean, option: LayoutOptionUIData): JSX.Element {
-        return <div key={option.optionId + value}>
+        return <div key={option.optionId + value} className='diagram-option'>
             <label htmlFor={readableValue}>
                 <input
                     type='radio'
