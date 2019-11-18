@@ -15,9 +15,9 @@ import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
-import { renderInteractiveLayout, renderConstraints } from './interactiveView';
+import { renderInteractiveLayout, renderConstraints } from '@kieler/keith-interactive/lib/interactiveView';
 import { isChildSelected } from '@kieler/keith-interactive/lib/constraint-utils'
-import { InteractiveMouseListener } from '@kieler/keith-interactive/lib/interactive-mouselistener'
+import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener'
 import { RenderOptions } from './options';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { SKGraphRenderingContext } from './views-common';
@@ -44,7 +44,7 @@ export class SKGraphView extends SGraphView {
 @injectable()
 export class KNodeView implements IView {
 
-    @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
+    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
     @inject(RenderOptions) protected rOptions: RenderOptions
 
     render(node: SKNode, context: RenderingContext): VNode {
@@ -159,7 +159,7 @@ export class KPortView implements IView {
  */
 @injectable()
 export class KLabelView implements IView {
-    @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
+    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
 
     render(label: SKLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
@@ -196,7 +196,7 @@ export class KLabelView implements IView {
 @injectable()
 export class KEdgeView implements IView {
 
-    @inject(InteractiveMouseListener) mListener: InteractiveMouseListener
+    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
 
     render(edge: SKEdge, context: RenderingContext): VNode {
         edge.areChildrenRendered = false
