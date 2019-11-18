@@ -43,7 +43,6 @@
     "@kieler/keith-interactive": "0.1.0",
     "@kieler/keith-kicool": "0.1.0",
     "@kieler/keith-language": "0.1.0",
-    "@kieler/keith-move": "0.1.0",
     "@kieler/keith-simulation": "0.1.0",
     "@kieler/keith-sprotty": "0.1.0",
     "@theia/application-package": "next",
@@ -114,7 +113,6 @@
     "keith-kicool",
     "keith-app-electron",
     "keith-interactive",
-    "keith-simulation",
-    "keith-move"
+    "keith-simulation"
   ]
 }

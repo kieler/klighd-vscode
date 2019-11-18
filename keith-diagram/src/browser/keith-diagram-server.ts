@@ -24,6 +24,9 @@ import {
 import { isNullOrUndefined } from 'util';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
+import {
+    SetPositionConstraintAction, SetLayerConstraintAction, DeleteConstraintAction, SetStaticConstraintAction, RefreshLayoutAction
+} from '@kieler/keith-interactive/lib/actions'
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
@@ -143,6 +146,11 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(SetSynthesisAction.KIND, this)
         registry.register(StoreImagesAction.KIND, this)
         registry.register(SwitchEditModeAction.KIND, this)
+        registry.register(SetPositionConstraintAction.KIND, this)
+        registry.register(SetLayerConstraintAction.KIND, this)
+        registry.register(SetStaticConstraintAction.KIND, this)
+        registry.register(DeleteConstraintAction.KIND, this)
+        registry.register(RefreshLayoutAction.KIND, this)
     }
 
     handleComputedBounds(_action: ComputedBoundsAction): boolean {
