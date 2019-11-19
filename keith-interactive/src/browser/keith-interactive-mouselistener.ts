@@ -29,7 +29,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             target = target.parent
         }
 
-        let result = super.mouseMove(target, event);
+        const result = super.mouseMove(target, event);
         // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
         if (target instanceof SEdge) {
             this.hasDragged = false
@@ -65,17 +65,16 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
 
         if (this.hasDragged && target instanceof SNode) {
             // if a node is moved set properties
+            (target as KNode).shadow = false
             return [this.setProperty(target)];
-            // (target as KNode).shadow = false
 
         }
-        return []
 
-        // if (target instanceof SNode) {
-        //     target.selected = false
-        // }
+        if (target instanceof SNode) {
+            target.selected = false
+        }
 
-        // return super.mouseUp(target, event);
+        return super.mouseUp(target, event);
     }
 
     /**
