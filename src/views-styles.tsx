@@ -623,11 +623,11 @@ export function getSvgLineStyles(styles: KStyles): LineStyles {
  * Returns the SVG strings for text styles that can be applied to the following SVG attributes:
  * 'dominant-baseline' has to be set to the dominantBaseline style,
  * 'font-family' has to be set to the fontFamily style,
- * 'font-size' has to be set to the dominantBaseline style,
- * 'font-style' has to be set to the dominantBaseline style,
- * 'font-weight' has to be set to the dominantBaseline style,
- * 'text-decoration-line' has to be set to the dominantBaseline style,
- * 'text-decoration-style' has to be set to the dominantBaseline style.
+ * 'font-size' has to be set to the fontSize style,
+ * 'font-style' has to be set to the fontStyle style,
+ * 'font-weight' has to be set to the fontWeight style,
+ * 'text-decoration-line' has to be set to the textDecorationLine style,
+ * 'text-decoration-style' has to be set to the textDecorationStyle style.
  * @param styles The KStyles of the rendering.
  */
 export function getSvgTextStyles(styles: KStyles): TextStyles {
@@ -635,7 +635,8 @@ export function getSvgTextStyles(styles: KStyles): TextStyles {
         dominantBaseline: verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === undefined ?
             DEFAULT_VERTICAL_ALIGNMENT : styles.kVerticalAlignment.verticalAlignment),
         fontFamily: styles.kFontName === undefined ? undefined : camelToKebab(styles.kFontName.name),
-        fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size + 'pt',
+        // Convert pt to px here with a default value of 96 dpi(px/in) and 72pt/in, making this a conversion from in to px.
+        fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size * 96 / 72 + 'px',
         fontStyle: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
         fontWeight: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
         textDecorationLine: styles.kTextUnderline === undefined ? undefined : 'underline',
