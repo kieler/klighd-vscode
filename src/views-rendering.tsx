@@ -482,8 +482,32 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         // If the text has only one line, just put the text in the text node directly.
         attrs.x = boundsAndTransformation.bounds.x;
         children = [lines[0]]
+        // Force any SVG renderer rendering this text to use the exact width calculated by this renderer.
+        // This avoids overlapping texts or too big gaps at the cost of slightly bigger/tighter glyph spacings
+        // when viewed in a different SVG viewer after exporting.
+        if (boundsAndTransformation.bounds.width) {
+            attrs.textLength = boundsAndTransformation.bounds.width
+            // This is default and can therefore be omitted.
+            // attrs.lengthAdjust = 'spacing'
+        }
     } else {
         // Otherwise, put each line of text in a separate <tspan> element.
+
+        // TODO: The text size estimation has to happen per line. This then has to adjust the length to the calculated length of that specific line.
+        // Otherwise this approximation will only work well for monospace fonts.
+        // Have the width adjusted to what was estimated before. For multiline text, approximate it by assuming an equal width per character.
+        let longestLineCharacters = 0
+        lines.forEach(line => {
+            const length = line.length
+            if (length > longestLineCharacters) {
+                longestLineCharacters = length
+            }
+        });
+        let widthPerCharacter: number | undefined = undefined
+        if (boundsAndTransformation.bounds.width && longestLineCharacters) {
+            widthPerCharacter = boundsAndTransformation.bounds.width / longestLineCharacters
+        }
+
         let dy: string | undefined = undefined
         children = []
         lines.forEach(line => {
@@ -497,6 +521,9 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 <tspan
                     x={boundsAndTransformation.bounds.x}
                     {...(dy ? { dy: dy } : {})}
+                    {...(widthPerCharacter ? { textLength: widthPerCharacter * line.length } : {})}
+                    // This is default and can therefore be omitted.
+                    // {...(widthPerCharacter ? { lengthAdjust: 'spacing' } : {})}
                 >{line}</tspan>
             )
             dy = '1.1em' // Have a distance of 1.1em for every new line after the first one.
