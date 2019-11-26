@@ -481,36 +481,29 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     if (lines.length === 1) {
         // If the text has only one line, just put the text in the text node directly.
         attrs.x = boundsAndTransformation.bounds.x;
-        children = [lines[0]]
+        // Render a space character for size estimation if the string is empty
+        let line = lines[0]
+        if (line === '') {
+            line = ' '
+        }
+
+        children = [line]
         // Force any SVG renderer rendering this text to use the exact width calculated by this renderer.
         // This avoids overlapping texts or too big gaps at the cost of slightly bigger/tighter glyph spacings
         // when viewed in a different SVG viewer after exporting.
-        if (boundsAndTransformation.bounds.width) {
-            attrs.textLength = boundsAndTransformation.bounds.width
+        if (rendering.calculatedTextLineWidths) {
+            attrs.textLength = rendering.calculatedTextLineWidths[0]
             // This is default and can therefore be omitted.
             // attrs.lengthAdjust = 'spacing'
         }
     } else {
         // Otherwise, put each line of text in a separate <tspan> element.
-
-        // TODO: The text size estimation has to happen per line. This then has to adjust the length to the calculated length of that specific line.
-        // Otherwise this approximation will only work well for monospace fonts.
-        // Have the width adjusted to what was estimated before. For multiline text, approximate it by assuming an equal width per character.
-        let longestLineCharacters = 0
-        lines.forEach(line => {
-            const length = line.length
-            if (length > longestLineCharacters) {
-                longestLineCharacters = length
-            }
-        });
-        let widthPerCharacter: number | undefined = undefined
-        if (boundsAndTransformation.bounds.width && longestLineCharacters) {
-            widthPerCharacter = boundsAndTransformation.bounds.width / longestLineCharacters
-        }
+        const calculatedTextLineWidths = rendering.calculatedTextLineWidths
+        const calculatedTextLineHeights = rendering.calculatedTextLineHeights
 
         let dy: string | undefined = undefined
         children = []
-        lines.forEach(line => {
+        lines.forEach((line, index) => {
             // If the line is just a blank line, add a dummy space character so the size estimation will
             // include this character without rendering anything further visible to the screen.
             // Also, the <tspan> attribute dy needs at least one character per text so the offset is correctly applied.
@@ -521,12 +514,12 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 <tspan
                     x={boundsAndTransformation.bounds.x}
                     {...(dy ? { dy: dy } : {})}
-                    {...(widthPerCharacter ? { textLength: widthPerCharacter * line.length } : {})}
+                    {...(calculatedTextLineWidths ? { textLength: calculatedTextLineWidths[index] } : {})}
                     // This is default and can therefore be omitted.
                     // {...(widthPerCharacter ? { lengthAdjust: 'spacing' } : {})}
                 >{line}</tspan>
             )
-            dy = '1.1em' // Have a distance of 1.1em for every new line after the first one.
+            dy = calculatedTextLineHeights ? calculatedTextLineHeights[index].toString() : '1.1em'
         });
     }
 
