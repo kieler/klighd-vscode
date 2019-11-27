@@ -16,7 +16,7 @@ import {
     Decoration, HorizontalAlignment, KColoring, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering, KRenderingLibrary, KRotation, KText,
     KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, Underline, VerticalAlignment
 } from './skgraph-models';
-import { KStyles } from './views-styles';
+import { KStyles, ColorStyle } from './views-styles';
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -27,8 +27,6 @@ const K_BOTTOM_POSITION = 'KBottomPositionImpl'
 // ------------- constants for string building --------------- //
 const RGB_START = 'rgb('
 const RGB_END = ')'
-const RGBA_START = 'rgba('
-const RGBA_END = ')'
 
 /**
  * Contains additional data needed for the rendering of SKGraphs.
@@ -290,18 +288,13 @@ export function isSingleColor(coloring: KColoring) {
  * Returns the SVG fill string representing the given coloring, if it is a single color. Check that with isSingleColor(KColoring) beforehand.
  * @param coloring The coloring.
  */
-export function fillSingleColor(coloring: KColoring) {
-    if (coloring.alpha === undefined || coloring.alpha === 255) {
-        return RGB_START + coloring.color.red + ','
+export function fillSingleColor(coloring: KColoring): ColorStyle {
+    return {
+        color: RGB_START + coloring.color.red + ','
             + coloring.color.green + ','
             + coloring.color.blue
-            + RGB_END
-    } else {
-        return RGBA_START + coloring.color.red + ','
-            + coloring.color.green + ','
-            + coloring.color.blue + ','
-            + coloring.alpha / 255
-            + RGBA_END
+            + RGB_END,
+        opacity: coloring.alpha === undefined || coloring.alpha === 255 ? undefined : (coloring.alpha / 255).toString()
     }
 }
 
