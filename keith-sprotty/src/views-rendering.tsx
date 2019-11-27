@@ -168,10 +168,12 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                             'stroke-linejoin': lineStyles.lineJoin,
                             'stroke-width': lineStyles.lineWidth,
                             'stroke-dasharray': lineStyles.dashArray,
-                            'stroke-miterlimit': lineStyles.miterLimit
+                            'stroke-miterlimit': lineStyles.miterLimit,
+                            'stroke-opacity': colorStyles.foreground.opacity,
+                            'fill-opacity': colorStyles.background.opacity
                         } as React.CSSProperties}
-                        stroke={colorStyles.foreground}
-                        fill={colorStyles.background}
+                        stroke={colorStyles.foreground.color}
+                        fill={colorStyles.background.color}
                         filter={shadowStyles}
                     />
                     {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
@@ -193,10 +195,12 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit
+                        'stroke-miterlimit': lineStyles.miterLimit,
+                        'stroke-opacity': colorStyles.foreground.opacity,
+                        'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
-                    stroke={colorStyles.foreground}
-                    fill={colorStyles.background}
+                    stroke={colorStyles.foreground.color}
+                    fill={colorStyles.background.color}
                     filter={shadowStyles}
                 />
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
@@ -223,10 +227,12 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit
+                        'stroke-miterlimit': lineStyles.miterLimit,
+                        'stroke-opacity': colorStyles.foreground.opacity,
+                        'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
-                    stroke={colorStyles.foreground}
-                    fill={colorStyles.background}
+                    stroke={colorStyles.foreground.color}
+                    fill={colorStyles.background.color}
                     filter={shadowStyles}
                 />
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
@@ -396,10 +402,12 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
                 'stroke-linejoin': lineStyles.lineJoin,
                 'stroke-width': lineStyles.lineWidth,
                 'stroke-dasharray': lineStyles.dashArray,
-                'stroke-miterlimit': lineStyles.miterLimit
+                'stroke-miterlimit': lineStyles.miterLimit,
+                'stroke-opacity': colorStyles.foreground.opacity,
+                'fill-opacity': colorStyles.background.opacity
             } as React.CSSProperties}
-            stroke={colorStyles.foreground}
-            fill={colorStyles.background}
+            stroke={colorStyles.foreground.color}
+            fill={colorStyles.background.color}
             filter={shadowStyles}
         />
         {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
@@ -463,7 +471,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         ...{ 'font-style': textStyles.fontStyle },
         ...{ 'font-weight': textStyles.fontWeight },
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
-        ...{ 'text-decoration-style': textStyles.textDecorationStyle }
+        ...{ 'text-decoration-style': textStyles.textDecorationStyle },
+        ...(colorStyle ? {'fill-opacity': colorStyle.opacity } : {})
     }
 
     // The children to be contained in the returned text node.
@@ -473,7 +482,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     let attrs = {
         style: style,
         ...(boundsAndTransformation.bounds.y ? { y: boundsAndTransformation.bounds.y } : {}),
-        fill: colorStyle,
+        ...(colorStyle ? {fill: colorStyle.color} : {}),
         filter: shadowStyles,
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size estimation include any trailing white spaces.
     } as any
@@ -493,8 +502,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         // when viewed in a different SVG viewer after exporting.
         if (rendering.calculatedTextLineWidths) {
             attrs.textLength = rendering.calculatedTextLineWidths[0]
-            // This is default and can therefore be omitted.
-            // attrs.lengthAdjust = 'spacing'
+            attrs.lengthAdjust = 'spacingAndGlyphs'
         }
     } else {
         // Otherwise, put each line of text in a separate <tspan> element.
@@ -515,8 +523,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                     x={boundsAndTransformation.bounds.x}
                     {...(dy ? { dy: dy } : {})}
                     {...(calculatedTextLineWidths ? { textLength: calculatedTextLineWidths[index] } : {})}
-                    // This is default and can therefore be omitted.
-                    // {...(widthPerCharacter ? { lengthAdjust: 'spacing' } : {})}
+                    {...(calculatedTextLineWidths ? { lengthAdjust: 'spacingAndGlyphs' } : {})}
                 >{line}</tspan>
             )
             dy = calculatedTextLineHeights ? calculatedTextLineHeights[index].toString() : '1.1em'

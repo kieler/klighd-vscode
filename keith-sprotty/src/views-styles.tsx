@@ -51,8 +51,6 @@ const GRADIENT_TRANSFORM_ROTATE_END = ')'
 
 const RGB_START = 'rgb('
 const RGB_END = ')'
-const RGBA_START = 'rgba('
-const RGBA_END = ')'
 const URL_START = 'url(#'
 const URL_END = ')'
 
@@ -69,9 +67,16 @@ export const DEFAULT_LINE_JOIN = LineJoin.JOIN_MITER
 export const DEFAULT_MITER_LIMIT = 10
 export const DEFAULT_LINE_STYLE = LineStyle.SOLID
 export const DEFAULT_LINE_WIDTH = 1
-export const DEFAULT_FILL = 'none'
-export const DEFAULT_CLICKABLE_FILL = RGBA_START + '0,0,0,0' + RGBA_END
-export const DEFAULT_FOREGROUND = 'black'
+export const DEFAULT_FILL = {
+    color: 'none'
+} as ColorStyle
+export const DEFAULT_CLICKABLE_FILL = {
+    color: RGB_START + '0,0,0' + RGB_END,
+    opacity: '0'
+} as ColorStyle
+export const DEFAULT_FOREGROUND = {
+    color: 'black'
+} as ColorStyle
 export const DEFAULT_VERTICAL_ALIGNMENT = VerticalAlignment.CENTER
 export const DEFAULT_SHADOW = undefined
 export const DEFAULT_SHADOW_DEF = undefined
@@ -362,21 +367,23 @@ export function copyStyles(from: KStyles, to: KStyles) {
 /**
  * SVG element for color gradient definition.
  * @param colorId The unique identifying string for this color.
- * @param start The SVG string for the start color of the gradient.
- * @param end The SVG string for the end color of the gradient.
+ * @param start The SVG data for the start color of the gradient.
+ * @param end The SVG data for the end color of the gradient.
  * @param angle The angle at which the gradient should flow.
  */
-export function colorDefinition(colorId: string, start: string, end: string, angle: number | undefined): VNode {
+export function colorDefinition(colorId: string, start: ColorStyle, end: ColorStyle, angle: number | undefined): VNode {
     const startColorStop = <stop
         offset={0}
         style={{
-            'stop-color': start
+            'stop-color': start.color,
+            'stop-opacity': start.opacity
         } as React.CSSProperties}
     />
     const endColorStop = <stop
         offset={1}
         style={{
-            'stop-color': end
+            'stop-color': end.color,
+            'stop-opacity': end.opacity
         } as React.CSSProperties}
     />
     let angleFloat = angle === undefined ? 0 : angle
@@ -523,7 +530,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingCont
  * @param context The rendering context.
  * @see getSvgColorStyles
  */
-export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): string | undefined {
+export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): ColorStyle | undefined {
     if (coloring === undefined || coloring.color === undefined) {
         return undefined
     }
@@ -534,42 +541,30 @@ export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGra
     // Otherwise, build an ID for the gradient color to refer to the definition described below.
     // Every color ID should start with a 'c'.
     let colorId = 'c'
-    let start
-    let end
+    let start = {} as ColorStyle
+    let end = {} as ColorStyle
     let angle
-    if (coloring.alpha === undefined || coloring.alpha === 255) {
-        // If the start color has no alpha or the alpha is full opaque, set it to an rgb color.
-        let startColor = coloring.color.red + ','
-            + coloring.color.green + ','
-            + coloring.color.blue
-        colorId += startColor
-        start = RGB_START + startColor + RGB_END
-    } else {
-        // Otherwise, set the start color to an rgba color.
-        let startColor = coloring.color.red + ','
-            + coloring.color.green + ','
-            + coloring.color.blue + ','
-            + coloring.alpha / 255
-        colorId += startColor
-        start = RGBA_START + startColor + RGBA_END
+    if (coloring.alpha !== undefined && coloring.alpha !== 255) {
+        start.opacity = (coloring.alpha / 255).toString()
     }
+    let startColor = coloring.color.red + ','
+        + coloring.color.green + ','
+        + coloring.color.blue
+    colorId += startColor
+    start.color = RGB_START + startColor + RGB_END
+
     // Separate the individual parts in the ID to guarantee uniqueness.
     colorId += '$'
     // Do the same for the end color.
-    if (coloring.targetAlpha === undefined || coloring.targetAlpha === 255) {
-        let endColor = coloring.targetColor.red + ','
-            + coloring.targetColor.green + ','
-            + coloring.targetColor.blue
-        colorId += endColor
-        end = RGB_START + endColor + RGB_END
-    } else {
-        let endColor = coloring.targetColor.red + ','
-            + coloring.targetColor.green + ','
-            + coloring.targetColor.blue + ','
-            + coloring.targetAlpha / 255
-        colorId += endColor
-        end = RGBA_START + endColor + RGBA_END
+    if (coloring.targetAlpha !== undefined && coloring.targetAlpha !== 255) {
+        end.opacity = (coloring.targetAlpha / 255).toString()
     }
+    let endColor = coloring.targetColor.red + ','
+        + coloring.targetColor.green + ','
+        + coloring.targetColor.blue
+    colorId += endColor
+    end.color = RGB_START + endColor + RGB_END
+
     // Add the angle of the gradient to the ID.
     if (coloring.gradientAngle !== 0) {
         angle = coloring.gradientAngle
@@ -581,7 +576,10 @@ export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGra
         context.renderingDefs.set(colorId, colorDefinition(colorId, start, end, angle))
     }
     // Return the reference of the above defined ID to be put in the fill or stroke attribute of any SVG element.
-    return URL_START + colorId + URL_END
+    return {
+        color: URL_START + colorId + URL_END
+        // no opacity needed here as it is already in the gradient color definition.
+    } as ColorStyle
 }
 
 /**
@@ -647,11 +645,19 @@ export function getSvgTextStyles(styles: KStyles): TextStyles {
 }
 
 /**
+ * Data class holding the SVG attributes for a single color
+ */
+export interface ColorStyle {
+    color: string,
+    opacity: string | undefined
+}
+
+/**
  * Data class holding the different SVG attributes for color related styles.
  */
 export interface ColorStyles {
-    foreground: string | undefined,
-    background: string | undefined
+    foreground: ColorStyle,
+    background: ColorStyle
 }
 
 /**
