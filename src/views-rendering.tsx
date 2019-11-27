@@ -480,16 +480,17 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
 
     // The attributes to be contained in the returned text node.
     let attrs = {
+        x: boundsAndTransformation.bounds.x,
         style: style,
-        ...(boundsAndTransformation.bounds.y ? { y: boundsAndTransformation.bounds.y } : {}),
         ...(colorStyle ? {fill: colorStyle.color} : {}),
         filter: shadowStyles,
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size estimation include any trailing white spaces.
     } as any
 
+    let elements: VNode[]
     if (lines.length === 1) {
         // If the text has only one line, just put the text in the text node directly.
-        attrs.x = boundsAndTransformation.bounds.x;
+        attrs.y = boundsAndTransformation.bounds.y;
         // Render a space character for size estimation if the string is empty
         let line = lines[0]
         if (line === '') {
@@ -504,13 +505,21 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
+        elements = [
+            <text {...attrs}>
+                {...children}
+            </text>
+        ]
     } else {
-        // Otherwise, put each line of text in a separate <tspan> element.
+        // Otherwise, put each line of text in a separate <text> element.
         const calculatedTextLineWidths = rendering.calculatedTextLineWidths
         const calculatedTextLineHeights = rendering.calculatedTextLineHeights
+        let currentY = boundsAndTransformation.bounds.y ? boundsAndTransformation.bounds.y : 0
+        if (rendering.calculatedTextLineWidths) {
+            attrs.lengthAdjust = 'spacingAndGlyphs'
+        }
 
-        let dy: string | undefined = undefined
-        children = []
+        elements = []
         lines.forEach((line, index) => {
             // If the line is just a blank line, add a dummy space character so the size estimation will
             // include this character without rendering anything further visible to the screen.
@@ -518,33 +527,21 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             if (line === '') {
                 line = ' '
             }
-            children.push(
-                <tspan
-                    x={boundsAndTransformation.bounds.x}
-                    {...(dy ? { dy: dy } : {})}
-                    {...(calculatedTextLineWidths ? { textLength: calculatedTextLineWidths[index] } : {})}
-                    {...(calculatedTextLineWidths ? { lengthAdjust: 'spacingAndGlyphs' } : {})}
-                >{line}</tspan>
-            )
-            dy = calculatedTextLineHeights ? calculatedTextLineHeights[index].toString() : '1.1em'
+            const currentElement = <text
+                {...attrs}
+                y = {currentY}
+                {...(calculatedTextLineWidths ? { textLength: calculatedTextLineWidths[index] } : {})}
+            >{line}</text>
+
+            elements.push(currentElement)
+            currentY = calculatedTextLineHeights ? currentY + calculatedTextLineHeights[index] : currentY
         });
     }
 
     // build the element from the above defined attributes and children
-    let element
-    if (gAttrs.transform === undefined) {
-        element = <text id={rendering.id} {...attrs}>
-            {...children}
-        </text>
-    } else {
-        element = <g id={rendering.id} {...gAttrs}>
-            <text {...attrs}>
-                {...children}
-            </text>
-        </g>
-    }
-
-    return element
+    return <g id={rendering.id} {...gAttrs}>
+        {...elements}
+    </g>
 }
 
 /**
