@@ -121,8 +121,8 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         }
         // Try to get the computed text length attribute, as it may be more accurate than the bounding box.
         let textWidth: number | undefined
-        if (elm.children && elm.children[0] && typeof elm.children[0].getComputedTextLength === 'function') {
-            textWidth = elm.children[0].getComputedTextLength()
+        if (elm.children && elm.children[0] && elm.children[0].children[0] && typeof elm.children[0].children[0].getComputedTextLength === 'function') {
+            textWidth = elm.children[0].children[0].getComputedTextLength()
         }
         const bounds = elm.getBBox();
         return {
