@@ -34,6 +34,8 @@ import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
     SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, REVEAL_COMPILATION_WIDGET, SELECT_SNAPSHOT_COMPILATION_CHAIN } from '../common/commands';
+import { Action } from 'sprotty/lib';
+import { displayInputModel } from '@kieler/keith-diagram/lib/keith-diagram-server'
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
@@ -148,6 +150,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget.cancelGetSystems(this.cancelGetSystems.bind(this))
             this.compilerWidget.cancelCompilation(this.cancelCompilation.bind(this))
             this.compilerWidget.showSnapshot(((event: ShowSnapshotEvent) => this.show(event.uri, event.index)).bind(this))
+            displayInputModel(this.displayInputModel.bind(this))
             const lClient = await this.client.languageClient
             while (!this.client.running) {
                 await delay(100)
@@ -527,6 +530,15 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget.requestedSystems = false
         }
         this.compilerWidget.update()
+    }
+
+    /**
+     * Sends request to LS to get text to open new code editor with
+     */
+    async displayInputModel(action: Action) {
+        const lClient = await this.client.languageClient
+        const code = await lClient.sendRequest('keith/kicool/get-code-of-model', [action, 'keith-diagram_sprotty'])
+        console.log("Stuff", code)
     }
 
     registerShowNext() {

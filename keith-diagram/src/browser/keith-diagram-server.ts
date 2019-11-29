@@ -17,10 +17,16 @@ import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
 import { Action, ActionHandlerRegistry, ActionMessage, ComputedBoundsAction, FitToScreenAction, ICommand, SetModelCommand } from 'sprotty/lib';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
+import { Emitter, Event } from '@theia/core/lib/common';
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
 export type KeithDiagramServerProvider = () => Promise<KeithDiagramServer>;
+
+
+export const onDisplayInputModelEmitter = new Emitter<Action | undefined>()
+export const displayInputModel: Event<Action | undefined> = onDisplayInputModelEmitter.event
+
 
 /**
  * This class extends the Theia diagram Server to also handle the Request- and ComputedTextBoundsAction
@@ -65,6 +71,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
             (action as PerformActionAction).actionId === 'de.cau.cs.kieler.kicool.ui.klighd.internal.model.action.OpenCodeInEditorAction') {
             // Currently not implemented
             // Send to server in KiCoolLSExtension or notify kicool
+            onDisplayInputModelEmitter.fire(action)
         } else {
             super.handle(action)
         }

@@ -19,7 +19,8 @@
   "dependencies": {
     "@kieler/keith-diagram": "0.1.0",
     "@kieler/keith-language": "0.1.0",
-    "@theia/filesystem": "next"
+    "@theia/filesystem": "next",
+    "sprotty": "next"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
