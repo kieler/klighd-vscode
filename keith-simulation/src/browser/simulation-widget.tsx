@@ -223,9 +223,6 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
         </div>
     }
 
-    /**
-     * The history column should be an input box, to truncate the string better.
-     */
     renderSimulationData(): React.ReactNode {
         let list: React.ReactElement[] = []
         if (this.simulationData.size === 0) {
