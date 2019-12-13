@@ -21,12 +21,12 @@ import { KNode, Layer, KEdge } from './constraint-classes';
  * @param layers All layers at the hierarchical level.
  */
 export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], direction: number): number {
-    let coordinateInLayoutDirection =  direction === 1 || direction === 2 ? node.position.x + node.size.width / 2 : node.position.y + node.size.height / 2
+    let coordinateInLayoutDirection =  (direction === 0 || direction === 1 || direction === 2) ? node.position.x + node.size.width / 2 : node.position.y + node.size.height / 2
 
     // check for all layers if the node is in the layer
     for (let i = 0; i < layers.length; i++) {
         let layer = layers[i]
-        if (coordinateInLayoutDirection < layer.end && (direction === 1 || direction === 3) ||
+        if (coordinateInLayoutDirection < layer.end && (direction === 0 || direction === 1 || direction === 3) ||
         coordinateInLayoutDirection > layer.end && (direction === 2 || direction === 4)) {
             return i
         }
@@ -115,9 +115,9 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
     let layers = []
     let layer = 0
     // Begin coordinate of layer, depending of on the layout direction this might be a x or y coordinate
-    let beginCoordinate = (direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
+    let beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
     // End coordinate of layer, depending of on the layout direction this might be a x or y coordinate
-    let endCoordinate = (direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
+    let endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
     let topBorder = Number.MAX_VALUE // naming fits to the RIGHT direction (1)
     let bottomBorder = Number.MIN_VALUE
     // calculate bounds of the layers
@@ -127,8 +127,8 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
             // node is in the next layer
             // TODO if the direction changes the y coordinate might be significant
             layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
-            beginCoordinate = (direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
-            endCoordinate = (direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
+            beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
+            endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
             layer++
         }
 
@@ -138,7 +138,7 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
         let currentTopBorder = 0
         let currentBottomBorder = 0
         switch (direction) {
-            case 1: {
+            case 0: case 1: {
                 currentBegin = node.shadow ? node.shadowX : node.position.x
                 currentEnd = currentBegin + node.size.width
                 currentTopBorder = node.shadow ? node.shadowY : node.position.y
@@ -168,14 +168,11 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
                 break;
 
             }
-            default: {
-                console.error("UNDEFINED direction is currently not supported")
-            }
         }
 
         // update coordinates of the current layer
-        beginCoordinate = (direction === 1 || direction === 3) ? min(currentBegin, beginCoordinate) : max(currentBegin, beginCoordinate)
-        endCoordinate = (direction === 1 || direction === 3) ? max(currentEnd, endCoordinate) : min(currentEnd, endCoordinate)
+        beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? min(currentBegin, beginCoordinate) : max(currentBegin, beginCoordinate)
+        endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? max(currentEnd, endCoordinate) : min(currentEnd, endCoordinate)
         topBorder = min(currentTopBorder, topBorder)
         bottomBorder = max(currentBottomBorder, bottomBorder)
     }
@@ -372,7 +369,7 @@ export function isLayerForbidden(node: KNode, layer: number): boolean {
  * @param layers The layers in the graph.
  */
 export function shouldOnlyLCBeSet(node: KNode, layers: Layer[], direction: number): boolean {
-    let coordinateToCheck = direction === 1 || direction === 2 ? node.position.y : node.position.x
+    let coordinateToCheck = (direction === 0 || direction === 1 || direction === 2) ? node.position.y : node.position.x
     if (layers.length !== 0) {
         let layerTop = layers[0].topBorder
         let layerBot = layers[0].bottomBorder

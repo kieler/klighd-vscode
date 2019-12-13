@@ -51,7 +51,6 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 targetNode.shadowX = targetNode.position.x
                 targetNode.shadowY = targetNode.position.y
                 targetNode.shadow = true
-                console.log("Position", targetNode.position)
             }
         }
 

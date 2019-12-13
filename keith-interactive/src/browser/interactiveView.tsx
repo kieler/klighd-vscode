@@ -13,8 +13,10 @@
 
 /** @jsx svg */
 import { KNode, Layer } from './constraint-classes';
-import { getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer, isLayerForbidden,
-    shouldOnlyLCBeSet } from './constraint-utils';
+import {
+    getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer, isLayerForbidden,
+    shouldOnlyLCBeSet
+} from './constraint-utils';
 import { svg } from 'snabbdom-jsx';
 import { createRect, createVerticalLine, renderCircle, renderLock, renderArrow } from "./interactiveView-objects";
 import { VNode } from "snabbdom/vnode";
@@ -26,9 +28,9 @@ import { VNode } from "snabbdom/vnode";
 export function renderInteractiveLayout(root: KNode): VNode {
     // filter KNodes
     let nodes = filterKNodes(root.children)
-    return  <g>
-                {renderLayer(nodes, root)}
-            </g>
+    return <g>
+        {renderLayer(nodes, root)}
+    </g>
 }
 
 /**
@@ -39,7 +41,6 @@ export function renderInteractiveLayout(root: KNode): VNode {
  */
 function renderLayer(nodes: KNode[], root: KNode): VNode {
     const direction = nodes[0].direction
-    console.log("DIRECTION", direction)
     let selNode = getSelectedNode(nodes)
     if (selNode !== undefined) {
         let layers = getLayers(nodes, direction)
@@ -83,11 +84,9 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
 
         // positions should only be rendered if a position constraint will be set
         if (!onlyLC) {
-            console.log("Render position")
             return <g>{result}{renderPositions(currentLayer, nodes, layers, forbidden, direction)}</g>
         } else {
             // add available positions
-            console.log("Render no position")
             return result
         }
     }
@@ -116,7 +115,6 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
     let curPos = getPosInLayer(layerNodes, target)
 
     layerNodes.sort((a, b) => a.posId - b.posId)
-    console.log("Go here")
     if (layerNodes.length > 0) {
         let result = <g></g>
         // mid of the current layer
@@ -129,14 +127,12 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
             // at the old position of the selected node should not be a circle
             if (!node.selected && !layerNodes[i + 1].selected) {
                 // calculate y coordinate of the mid between the two nodes
-                console.log("Direction", direction)
                 switch (direction) {
-                    case 1: {
+                    case 0: case 1: {
                         x = layers[current].mid
                         let topY = node.position.y + node.size.height
                         let botY = layerNodes[i + 1].position.y
                         y = topY + (botY - topY) / 2
-                        console.log("Layer is at", layers[current], "Position is at ", x, y)
                         break;
                     }
                     case 2: {
@@ -160,9 +156,6 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
                         x = topX + (botX - topX) / 2
                         break;
                     }
-                    default: {
-                        console.error("UNDEFINED is not supported as an direction")
-                    }
                 }
                 result = <g>{result}{renderCircle(curPos === i + shift, x, y, forbidden)}</g>
             } else {
@@ -173,9 +166,8 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
         // position above the first node is available if the first node is not the selected one
         let first = layerNodes[0]
         if (!first.selected) {
-            // TODO switch
             switch (direction) {
-                case 1: {
+                case 0: case 1: {
                     x = layers[current].mid
                     y = layers[current].topBorder + (first.position.y - layers[current].topBorder) / 2
                     break;
@@ -194,9 +186,6 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
                     y = layers[current].mid
                     x = layers[current].topBorder + (first.position.x - layers[current].topBorder) / 2
                     break;
-                }
-                default: {
-                    console.error("UNDEFINED is not supported as an direction")
                 }
             }
             result = <g>{result}{renderCircle(curPos === 0, x, y, forbidden)}</g>
@@ -224,9 +213,6 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
                     y = layers[current].mid
                     x = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
                     break;
-                }
-                default: {
-                    console.error("UNDEFINED is not supported as an direction")
                 }
             }
             result = <g>{result}{renderCircle(curPos === layerNodes.length - 1 + shift, x, y, forbidden)}</g>
@@ -262,9 +248,6 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
                 x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
             }
-            default: {
-                console.error("UNDEFINED is not supported as an direction")
-            }
         }
         return <g>{renderCircle(true, x, y, forbidden)}</g>
     }
@@ -297,9 +280,9 @@ export function renderConstraints(node: KNode): VNode {
  * @param y
  */
 function renderLayerConstraint(x: number, y: number): VNode {
-    return  <g> {renderLock(x, y)}
-                {renderArrow(x - 2.15, y + 2.6, false)}
-            </g>
+    return <g> {renderLock(x, y)}
+        {renderArrow(x - 2.15, y + 2.6, false)}
+    </g>
 }
 
 /**
@@ -308,7 +291,7 @@ function renderLayerConstraint(x: number, y: number): VNode {
  * @param y
  */
 function renderPositionConstraint(x: number, y: number): VNode {
-    return  <g> {renderLock(x, y)}
-                {renderArrow(x + 0.1, y + 2.5, true)}
-            </g>
+    return <g> {renderLock(x, y)}
+        {renderArrow(x + 0.1, y + 2.5, true)}
+    </g>
 }

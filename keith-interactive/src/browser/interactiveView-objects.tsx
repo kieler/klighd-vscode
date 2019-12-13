@@ -28,14 +28,11 @@ import { VNode } from 'snabbdom/vnode';
 export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: number): VNode {
     let forbiddenColor = 'indianred'
     let backgroundColor = selected ? 'grey' : 'lightgrey'
-    if (direction === 0) {
-        console.error("UNDEFINED direction ot allowed")
-    }
     return  <g> <rect
-                    x={direction === 1 ? begin : direction === 2 ? end : top}
-                    y={direction === 1 || direction === 2 ? top : direction === 4 ? end : begin}
-                    width={direction === 1 || direction === 2 ? Math.abs(begin - end) : bottom - top}
-                    height={direction === 1 || direction === 2 ? bottom - top : Math.abs(begin - end)}
+                    x={(direction === 1 || direction === 0) ? begin : direction === 2 ? end : top}
+                    y={(direction === 1 || direction === 0 || direction === 2) ? top : direction === 4 ? end : begin}
+                    width={(direction === 1 || direction === 0 || direction === 2) ? Math.abs(begin - end) : bottom - top}
+                    height={(direction === 1 || direction === 0 || direction === 2) ? bottom - top : Math.abs(begin - end)}
                     fill={forbidden ? forbiddenColor : backgroundColor}
                     stroke={forbidden ? forbiddenColor : 'grey'}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
@@ -51,10 +48,10 @@ export function createRect(begin: number, end: number, top: number, bottom: numb
  */
 export function createVerticalLine(mid: number, top: number, bot: number, direction: number): VNode {
     return  <g> <line
-                    x1={direction === 1 || direction === 2 ? mid : top}
-                    y1={direction === 1 || direction === 2 ? top : mid}
-                    x2={direction === 1 || direction === 2 ? mid : bot}
-                    y2={direction === 1 || direction === 2 ? bot : mid}
+                    x1={(direction === 1 || direction === 2 || direction === 0) ? mid : top}
+                    y1={(direction === 1 || direction === 2 || direction === 0) ? top : mid}
+                    x2={(direction === 1 || direction === 2 || direction === 0) ? mid : bot}
+                    y2={(direction === 1 || direction === 2 || direction === 0) ? bot : mid}
                     fill='none'
                     stroke='grey'
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}
