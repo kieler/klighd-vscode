@@ -51,6 +51,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 targetNode.shadowX = targetNode.position.x
                 targetNode.shadowY = targetNode.position.y
                 targetNode.shadow = true
+                console.log("Position", targetNode.position)
             }
         }
 
@@ -83,10 +84,11 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
      */
     setProperty(target: SModelElement): Action {
         let targetNode: KNode = target as KNode
+        const direction = targetNode.direction
         let nodes = filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
-        let layers = getLayers(nodes)
-        let layerOfTarget = getLayerOfNode(targetNode, nodes, layers)
+        let layers = getLayers(nodes, direction)
+        let layerOfTarget = getLayerOfNode(targetNode, nodes, layers, direction)
         let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
         let positionOfTarget = getPosInLayer(nodesOfLayer, targetNode)
         let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
@@ -96,7 +98,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         // layer constraint should only be set if the layer index changed
         if (targetNode.layerId !== layerOfTarget) {
 
-            if (shouldOnlyLCBeSet(targetNode, layers)) {
+            if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
                 // only the layer constraint should be set
                 return new SetLayerConstraintAction({
                     id: targetNode.id,

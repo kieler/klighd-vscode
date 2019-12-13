@@ -20,13 +20,14 @@ import { KNode, Layer, KEdge } from './constraint-classes';
  * @param nodes All nodes in the same hierarchical level as the node which layer should be calculated.
  * @param layers All layers at the hierarchical level.
  */
-export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[]): number {
-    let curX = node.position.x + node.size.width / 2
+export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], direction: number): number {
+    let coordinateInLayoutDirection =  direction === 1 || direction === 2 ? node.position.x + node.size.width / 2 : node.position.y + node.size.height / 2
 
     // check for all layers if the node is in the layer
     for (let i = 0; i < layers.length; i++) {
         let layer = layers[i]
-        if (curX < layer.rightX) {
+        if (coordinateInLayoutDirection < layer.end && (direction === 1 || direction === 3) ||
+        coordinateInLayoutDirection > layer.end && (direction === 2 || direction === 4)) {
             return i
         }
     }
@@ -51,10 +52,10 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[]): nu
 export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number) {
 
     // Examine all nodes that have a layer Id left or equal to the layerCandidate and that have a layerCons > their layerId
-    let layerConsLeftofCandidate = nodes.filter(n => n.layerId <= layerCandidate && n.layerCons > n.layerId)
+    let layerConstraintLeftOfCandidate = nodes.filter(n => n.layerId <= layerCandidate && n.layerCons > n.layerId)
 
     // In case that there are no such nodes return the layerCandidate
-    if (layerConsLeftofCandidate.length === 0) {
+    if (layerConstraintLeftOfCandidate.length === 0) {
         return layerCandidate
     }
 
@@ -63,7 +64,7 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
     // of shifts
     let nodeWithMaxCons = null
     let maxCons = -1
-    for (let n of layerConsLeftofCandidate) {
+    for (let n of layerConstraintLeftOfCandidate) {
         if (n.layerCons > maxCons) {
             nodeWithMaxCons = n
             maxCons = n.layerCons
@@ -90,10 +91,10 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
         // Check whether there is an user defined pos constraint on the upper neighbour that is higher
         // than its position ID
         let upperIndex = localTargetIndex - 1
-        let upperNeighbour = layerNodes[upperIndex]
-        let posConsOfUpper = upperNeighbour.posCons
+        let upperNeighbor = layerNodes[upperIndex]
+        let posConsOfUpper = upperNeighbor.posCons
         if (posConsOfUpper > upperIndex) {
-            if (alreadyInLayer && upperNeighbour.posId === localTargetIndex) {
+            if (alreadyInLayer && upperNeighbor.posId === localTargetIndex) {
                 localTargetIndex = posConsOfUpper
             } else {
                 localTargetIndex = posConsOfUpper + 1
@@ -106,89 +107,123 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
 /**
  * Calculates the layers in a graph based on the layer IDs and positions of the nodes.
  * @param nodes All nodes of the graph which layers should be calculated.
+ * TODO maybe add the root node which holds necessary properties
  */
-export function getLayers(nodes: KNode[]): Layer[] {
+export function getLayers(nodes: KNode[], direction: number): Layer[] {
+    // All nodes within one hierarchy level have the same direction
     nodes.sort((a, b) => a.layerId - b.layerId)
     let layers = []
     let layer = 0
-    let leftX = Number.MAX_VALUE
-    let rightX = Number.MIN_VALUE
-    let topY = Number.MAX_VALUE
-    let botY = Number.MIN_VALUE
+    // Begin coordinate of layer, depending of on the layout direction this might be a x or y coordinate
+    let beginCoordinate = (direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
+    // End coordinate of layer, depending of on the layout direction this might be a x or y coordinate
+    let endCoordinate = (direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
+    let topBorder = Number.MAX_VALUE // naming fits to the RIGHT direction (1)
+    let bottomBorder = Number.MIN_VALUE
     // calculate bounds of the layers
     for (let i = 0; i < nodes.length; i++) {
         let node = nodes[i]
         if (node.layerId !== layer) {
             // node is in the next layer
-            layers[layer] = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
-            leftX = Number.MAX_VALUE
-            rightX = Number.MIN_VALUE
+            // TODO if the direction changes the y coordinate might be significant
+            layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
+            beginCoordinate = (direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
+            endCoordinate = (direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
             layer++
         }
 
-        // coordinates of the current node
-        let curLX = node.shadow ? node.shadowX : node.position.x
-        let curRX = curLX + node.size.width
-        let curTY = node.shadow ? node.shadowY : node.position.y
-        let curBY = curTY + node.size.height
+        // coordinates of the current node for case 1
+        let currentBegin = 0
+        let currentEnd = 0
+        let currentTopBorder = 0
+        let currentBottomBorder = 0
+        switch (direction) {
+            case 1: {
+                currentBegin = node.shadow ? node.shadowX : node.position.x
+                currentEnd = currentBegin + node.size.width
+                currentTopBorder = node.shadow ? node.shadowY : node.position.y
+                currentBottomBorder = currentTopBorder + node.size.height
+                break;
+            }
+            case 2: {
+                currentEnd = node.shadow ? node.shadowX : node.position.x
+                currentBegin = currentEnd + node.size.width
+                currentTopBorder = node.shadow ? node.shadowY : node.position.y
+                currentBottomBorder = currentTopBorder + node.size.height
+                break;
+            }
+            case 3: {
+                currentBegin = node.shadow ? node.shadowY : node.position.y
+                currentEnd = currentBegin + node.size.height
+                currentTopBorder = node.shadow ? node.shadowX : node.position.x
+                currentBottomBorder = currentTopBorder + node.size.width
+                break;
+
+            }
+            case 4: {
+                currentEnd = node.shadow ? node.shadowY : node.position.y
+                currentBegin = currentEnd + node.size.height
+                currentTopBorder = node.shadow ? node.shadowX : node.position.x
+                currentBottomBorder = currentTopBorder + node.size.width
+                break;
+
+            }
+            default: {
+                console.error("UNDEFINED direction is currently not supported")
+            }
+        }
 
         // update coordinates of the current layer
-        leftX = min(curLX, leftX)
-        rightX = max(curRX, rightX)
-        topY = min(curTY, topY)
-        botY = max(curBY, botY)
+        beginCoordinate = (direction === 1 || direction === 3) ? min(currentBegin, beginCoordinate) : max(currentBegin, beginCoordinate)
+        endCoordinate = (direction === 1 || direction === 3) ? max(currentEnd, endCoordinate) : min(currentEnd, endCoordinate)
+        topBorder = min(currentTopBorder, topBorder)
+        bottomBorder = max(currentBottomBorder, bottomBorder)
     }
     // add last layer
-    layers[layer] = new Layer(leftX, rightX, leftX + (rightX - leftX) / 2)
-
+    layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + ((endCoordinate - beginCoordinate) / 2), direction)
     // offset above & below the layers
-    topY = topY - 20
-    botY = botY + 20
-
+    // TODO no magic numbers
+    topBorder = topBorder - 20
+    bottomBorder = bottomBorder + 20
     // update left and right bounds of the layers and set y bounds
     for (let i = 0; i < layers.length - 1; i++) {
         // calculate the mid between two layers
-        let leftL = layers[i]
-        let rightL = layers[i + 1]
-        let mid = leftL.rightX + (rightL.leftX - leftL.rightX) / 2
-
+        let currentLayer = layers[i]
+        let precedingLayer = layers[i + 1]
+        let mid = currentLayer.end + (precedingLayer.begin - currentLayer.end) / 2
         // set right bound of the first and left bound of the second layer to the calculated mid
-        leftL.rightX = mid
-        rightL.leftX = mid
-
+        currentLayer.end = mid
+        precedingLayer.begin = mid
         // set y coordinates
-        leftL.topY = topY
-        leftL.botY = botY
-        rightL.topY = topY
-        leftL.botY = botY
+        currentLayer.topBorder = topBorder
+        currentLayer.bottomBorder = bottomBorder
     }
 
     // special case: only one layer exists
     if (layers.length === 1) {
-        let firstL = layers[0]
+        let firstLayer = layers[0]
         // add padding to x bounds
-        firstL.leftX = firstL.leftX - 10
-        firstL.rightX = firstL.rightX + 10
-        firstL.topY = topY
-        firstL.botY = botY
+        firstLayer.begin = firstLayer.begin - 10 // TODO remove magic constants
+        firstLayer.end = firstLayer.end + 10
+        firstLayer.topBorder = topBorder
+        firstLayer.bottomBorder = bottomBorder
     } else {
         // update left bound of the first layer
         // add padding
-        let firstL = layers[0]
-        firstL.leftX = firstL.mid - (firstL.rightX - firstL.mid)
+        let firstLayer = layers[0]
+        firstLayer.begin = firstLayer.mid - (firstLayer.end - firstLayer.mid)
 
         // update bounds of the last layer
         // left bound of the layer is the right bound of the layer left of it
-        let lastL = layers[layers.length - 1]
-        lastL.leftX = layers[layers.length - 2].rightX
+        let lastLayer = layers[layers.length - 1]
+        lastLayer.begin = layers[layers.length - 2].end
         // distance from mid of the last layer to the right bound should be the same as to the left bound
-        let dist = lastL.mid - lastL.leftX
-        lastL.rightX = lastL.mid + dist
+        let distance = lastLayer.mid - lastLayer.begin
+        lastLayer.end = lastLayer.mid + distance
         // set y coordinates
-        lastL.topY = topY
-        lastL.botY = botY
+        lastLayer.topBorder = topBorder
+        lastLayer.bottomBorder = bottomBorder
     }
-
     return layers
 }
 
@@ -336,13 +371,13 @@ export function isLayerForbidden(node: KNode, layer: number): boolean {
  * @param node The node that is moved.
  * @param layers The layers in the graph.
  */
-export function shouldOnlyLCBeSet(node: KNode, layers: Layer[]): boolean {
-    let nodeY = node.position.y
+export function shouldOnlyLCBeSet(node: KNode, layers: Layer[], direction: number): boolean {
+    let coordinateToCheck = direction === 1 || direction === 2 ? node.position.y : node.position.x
     if (layers.length !== 0) {
-        let layerTopY = layers[0].topY
-        let layerBotY = layers[0].botY
+        let layerTop = layers[0].topBorder
+        let layerBot = layers[0].bottomBorder
         // if the node is below or above the layer only the layer constraint should be set
-        return nodeY < layerTopY || nodeY > layerBotY
+        return coordinateToCheck < layerTop || coordinateToCheck > layerBot
     }
     return false
 }

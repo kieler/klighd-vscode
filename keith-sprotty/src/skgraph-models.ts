@@ -51,6 +51,7 @@ export class SKNode extends RectangularNode implements SKGraphElement {
     layerCons: number
     posCons: number
     interactiveLayout: boolean
+    direction: number
 
     shadow: boolean
     shadowX: number

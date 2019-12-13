@@ -1,8 +1,22 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2019 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 
 /**
+ * TODO check this
  * Creates a rectangle.
  * @param x Left x coordinate of the rectangle.
  * @param y Top y coordinate of the rectangle.
@@ -11,14 +25,17 @@ import { VNode } from 'snabbdom/vnode';
  * @param forbidden If the layer represented by the rectangle is forbidden the colour is red.
  * @param selected Determines whether the layer represented by the rectangle is selected instead of a certain position.
  */
-export function createRect(x: number, y: number, width: number, height: number, forbidden: boolean, selected: boolean): VNode {
+export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: number): VNode {
     let forbiddenColor = 'indianred'
     let backgroundColor = selected ? 'grey' : 'lightgrey'
+    if (direction === 0) {
+        console.error("UNDEFINED direction ot allowed")
+    }
     return  <g> <rect
-                    x={x}
-                    y={y}
-                    width={width}
-                    height={height}
+                    x={direction === 1 ? begin : direction === 2 ? end : top}
+                    y={direction === 1 || direction === 2 ? top : direction === 4 ? end : begin}
+                    width={direction === 1 || direction === 2 ? Math.abs(begin - end) : bottom - top}
+                    height={direction === 1 || direction === 2 ? bottom - top : Math.abs(begin - end)}
                     fill={forbidden ? forbiddenColor : backgroundColor}
                     stroke={forbidden ? forbiddenColor : 'grey'}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
@@ -28,16 +45,16 @@ export function createRect(x: number, y: number, width: number, height: number, 
 
 /**
  * Creates a vertical line.
- * @param x x coordinate of the line.
- * @param topY Start of the line on the y-axis.
- * @param botY End of the line on the y-axis.
+ * @param mid x coordinate of the line.
+ * @param top Start of the line on the y-axis.
+ * @param bot End of the line on the y-axis.
  */
-export function createVerticalLine(x: number, topY: number, botY: number): VNode {
+export function createVerticalLine(mid: number, top: number, bot: number, direction: number): VNode {
     return  <g> <line
-                    x1={x}
-                    y1={topY}
-                    x2={x}
-                    y2={botY}
+                    x1={direction === 1 || direction === 2 ? mid : top}
+                    y1={direction === 1 || direction === 2 ? top : mid}
+                    x2={direction === 1 || direction === 2 ? mid : bot}
+                    y2={direction === 1 || direction === 2 ? bot : mid}
                     fill='none'
                     stroke='grey'
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}
@@ -52,7 +69,7 @@ export function createVerticalLine(x: number, topY: number, botY: number): VNode
  * @param y The y coordinate of the center.
  * @param forbidden If the layer the circle is in is forbidden the colour is red.
  */
-export function createCircle(fill: boolean, x: number, y: number, forbidden: boolean): VNode {
+export function renderCircle(fill: boolean, x: number, y: number, forbidden: boolean): VNode {
     let forbiddenColor = 'indianred'
     let color = forbidden ? forbiddenColor : 'grey'
     return  <g> <circle
@@ -71,7 +88,7 @@ export function createCircle(fill: boolean, x: number, y: number, forbidden: boo
  * @param xTranslate
  * @param yTranslate
  */
-export function lock(xTranslate: number, yTranslate: number): VNode {
+export function renderLock(xTranslate: number, yTranslate: number): VNode {
     let s = "translate(" + xTranslate + ","
             + yTranslate + ") scale(0.0004,-0.00036)"
     return  <g transform={s}
@@ -95,7 +112,7 @@ export function lock(xTranslate: number, yTranslate: number): VNode {
  * @param yTranslate
  * @param vertical Determines whether the arrow should be vertical or horizontal.
  */
-export function arrow(xTranslate: number, yTranslate: number, vertical: boolean): VNode {
+export function renderArrow(xTranslate: number, yTranslate: number, vertical: boolean): VNode {
     let s = "translate(" + xTranslate + ","
             + yTranslate + ")"
     if (vertical) {

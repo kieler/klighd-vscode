@@ -14,16 +14,28 @@
 import { RectangularNode, selectFeature, moveFeature, SParentElement, SEdge, Point } from 'sprotty/lib';
 
 export class Layer {
-    leftX: number
-    rightX: number
+    begin: number
+    end: number
     mid: number
-    topY: number
-    botY: number
+    /**
+     * Where up is, is determined by the direction
+     */
+    topBorder: number
 
-    constructor(leftX: number, rightX: number, mid: number) {
-        this.leftX = leftX
-        this.rightX = rightX
+    /**
+     * Where low is, is determined by the direction
+     */
+    bottomBorder: number
+    /**
+     * 0: UNDEFINED, 1: RIGHT, 2: LEFT, 3: DOWN, 4: UP
+     */
+    direction: number
+
+    constructor(leftX: number, rightX: number, mid: number, direction: number) {
+        this.begin = leftX
+        this.end = rightX
         this.mid = mid
+        this.direction = direction
     }
 
 }
@@ -62,6 +74,7 @@ export class KNode extends RectangularNode implements KGraphElement {
     layerCons: number
     posCons: number
     interactiveLayout: boolean
+    direction: number
 
     shadow: boolean
     shadowX: number
