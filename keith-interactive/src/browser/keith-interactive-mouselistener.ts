@@ -18,7 +18,7 @@ import { KNode } from './constraint-classes';
 import {
     filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet
 } from './constraint-utils';
-import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction, RefreshLayoutAction } from './actions';
+import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction, RefreshLayoutAction, DeleteStaticConstraintAction } from './actions';
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
@@ -29,25 +29,28 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
      * @param event target event
      */
     mouseMove(target: SModelElement, event: MouseEvent): Action[] {
-        if (target instanceof SLabel && target.parent instanceof SNode) {
-            // nodes should be movable when the user clicks on the label
-            target = target.parent
-        }
-        let result = []
-        if (this.startDragPosition) {
-            if (this.elementId2startPos.size === 0) {
-                this.collectStartPositions(target.root);
+        if (!event.ctrlKey) {
+            if (target instanceof SLabel && target.parent instanceof SNode) {
+                // nodes should be movable when the user clicks on the label
+                target = target.parent
             }
-            this.hasDragged = true;
-            const moveAction = this.getElementMoves(target, event, false);
-            if (moveAction)
-                result.push(moveAction);
+            let result = []
+            if (this.startDragPosition) {
+                if (this.elementId2startPos.size === 0) {
+                    this.collectStartPositions(target.root);
+                }
+                this.hasDragged = true;
+                const moveAction = this.getElementMoves(target, event, false);
+                if (moveAction)
+                    result.push(moveAction);
+            }
+            // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
+            if (target instanceof SEdge) {
+                this.hasDragged = false
+            }
+            return result
         }
-        // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
-        if (target instanceof SEdge) {
-            this.hasDragged = false
-        }
-        return result
+        return []
     }
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
@@ -65,8 +68,12 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 targetNode.shadowY = targetNode.position.y
                 targetNode.shadow = true
             }
+            if (event.ctrlKey) {
+                return [new DeleteStaticConstraintAction({
+                    id: targetNode.id
+                })]
+            }
         }
-
         return super.mouseDown(target, event);
     }
 

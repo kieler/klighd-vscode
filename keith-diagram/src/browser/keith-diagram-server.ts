@@ -25,7 +25,8 @@ import { isNullOrUndefined } from 'util';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
 import {
-    SetPositionConstraintAction, SetLayerConstraintAction, DeleteConstraintAction, SetStaticConstraintAction, RefreshLayoutAction
+    SetPositionConstraintAction, SetLayerConstraintAction, DeleteStaticConstraintAction, SetStaticConstraintAction, RefreshLayoutAction,
+    DeletePositionConstraintAction, DeleteLayerConstraintAction
 } from '@kieler/keith-interactive/lib/actions'
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
@@ -149,7 +150,9 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(SetPositionConstraintAction.KIND, this)
         registry.register(SetLayerConstraintAction.KIND, this)
         registry.register(SetStaticConstraintAction.KIND, this)
-        registry.register(DeleteConstraintAction.KIND, this)
+        registry.register(DeleteStaticConstraintAction.KIND, this)
+        registry.register(DeletePositionConstraintAction.KIND, this)
+        registry.register(DeleteLayerConstraintAction.KIND, this)
         registry.register(RefreshLayoutAction.KIND, this)
     }
 

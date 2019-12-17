@@ -27,9 +27,25 @@ export class SetStaticConstraintAction implements Action {
     }
 }
 
-export class DeleteConstraintAction implements Action {
-    static readonly KIND: string = 'deleteConstraint'
-    readonly kind = DeleteConstraintAction.KIND
+export class DeleteStaticConstraintAction implements Action {
+    static readonly KIND: string = 'deleteStaticConstraint'
+    readonly kind = DeleteStaticConstraintAction.KIND
+
+    constructor(public readonly constraint: DeleteConstraint) {
+    }
+}
+
+export class DeletePositionConstraintAction implements Action {
+    static readonly KIND: string = 'deletePositionConstraint'
+    readonly kind = DeletePositionConstraintAction.KIND
+
+    constructor(public readonly constraint: DeleteConstraint) {
+    }
+}
+
+export class DeleteLayerConstraintAction implements Action {
+    static readonly KIND: string = 'deleteLayerConstraint'
+    readonly kind = DeleteLayerConstraintAction.KIND
 
     constructor(public readonly constraint: DeleteConstraint) {
     }
