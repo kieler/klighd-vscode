@@ -23,13 +23,26 @@ import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstra
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
 
+    /**
+     * Does not use super implementation, since it calls mouseUp
+     * @param target target node
+     * @param event target event
+     */
     mouseMove(target: SModelElement, event: MouseEvent): Action[] {
         if (target instanceof SLabel && target.parent instanceof SNode) {
             // nodes should be movable when the user clicks on the label
             target = target.parent
         }
-
-        const result = super.mouseMove(target, event);
+        let result = []
+        if (this.startDragPosition) {
+            if (this.elementId2startPos.size === 0) {
+                this.collectStartPositions(target.root);
+            }
+            this.hasDragged = true;
+            const moveAction = this.getElementMoves(target, event, false);
+            if (moveAction)
+                result.push(moveAction);
+        }
         // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
         if (target instanceof SEdge) {
             this.hasDragged = false
@@ -57,6 +70,15 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         return super.mouseDown(target, event);
     }
 
+    /**
+     * Override size mouseEnter should not call mouseUp.
+     * @param target target
+     * @param event event
+     */
+    mouseEnter(target: SModelElement, event: MouseEvent): Action[] {
+        return [];
+    }
+
     mouseUp(target: SModelElement, event: MouseEvent): Action[] {
         if (target instanceof SLabel && target.parent instanceof SNode) {
             // nodes should be movable when the user clicks on the label
@@ -66,8 +88,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         if (this.hasDragged && target instanceof SNode) {
             // if a node is moved set properties
             (target as KNode).shadow = false
-            return [this.setProperty(target)];
-
+            return [this.setProperty(target)].concat(super.mouseUp(target, event));
         }
 
         if (target instanceof SNode) {
@@ -96,7 +117,6 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
 
         // layer constraint should only be set if the layer index changed
         if (targetNode.layerId !== layerOfTarget) {
-
             if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
                 // only the layer constraint should be set
                 return new SetLayerConstraintAction({
