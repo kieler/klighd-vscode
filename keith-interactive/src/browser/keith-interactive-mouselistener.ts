@@ -29,7 +29,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
      * @param event target event
      */
     mouseMove(target: SModelElement, event: MouseEvent): Action[] {
-        if (!event.ctrlKey) {
+        if (!event.altKey) {
             if (target instanceof SLabel && target.parent instanceof SNode) {
                 // nodes should be movable when the user clicks on the label
                 target = target.parent
@@ -68,7 +68,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 targetNode.shadowY = targetNode.position.y
                 targetNode.shadow = true
             }
-            if (event.ctrlKey) {
+            if (event.altKey) {
                 return [new DeleteStaticConstraintAction({
                     id: targetNode.id
                 })]
