@@ -16,7 +16,7 @@ import { SModelElement, Action, SNode, SLabel, SEdge, MoveMouseListener } from '
 import { injectable } from 'inversify';
 import { KNode } from './constraint-classes';
 import {
-    filterKNodes, getLayerOfNode, getNodesOfLayer, getPosInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet
+    filterKNodes, getLayerOfNode, getNodesOfLayer, getPositionInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet
 } from './constraint-utils';
 import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction, RefreshLayoutAction, DeleteStaticConstraintAction } from './actions';
 
@@ -117,7 +117,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         let layers = getLayers(nodes, direction)
         let layerOfTarget = getLayerOfNode(targetNode, nodes, layers, direction)
         let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
-        let positionOfTarget = getPosInLayer(nodesOfLayer, targetNode)
+        let positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode)
         let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
 
         let newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)

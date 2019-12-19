@@ -14,7 +14,7 @@
 /** @jsx svg */
 import { KNode, Layer } from './constraint-classes';
 import {
-    getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPosInLayer, isLayerForbidden,
+    getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPositionInLayer, isLayerForbidden,
     shouldOnlyLCBeSet
 } from './constraint-utils';
 import { svg } from 'snabbdom-jsx';
@@ -112,7 +112,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
         }
     }
     // position of selected node
-    let curPos = getPosInLayer(layerNodes, target)
+    let curPos = getPositionInLayer(layerNodes, target)
 
     layerNodes.sort((a, b) => a.posId - b.posId)
     if (layerNodes.length > 0) {

@@ -171,10 +171,10 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
         }
 
         // update coordinates of the current layer
-        beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? max(currentBegin, beginCoordinate) : min(currentBegin, beginCoordinate)
-        endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? min(currentEnd, endCoordinate) : max(currentEnd, endCoordinate)
-        topBorder = min(currentTopBorder, topBorder)
-        bottomBorder = max(currentBottomBorder, bottomBorder)
+        beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Math.max(currentBegin, beginCoordinate) : Math.min(currentBegin, beginCoordinate)
+        endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Math.min(currentEnd, endCoordinate) : Math.max(currentEnd, endCoordinate)
+        topBorder = Math.min(currentTopBorder, topBorder)
+        bottomBorder = Math.max(currentBottomBorder, bottomBorder)
     }
     // add last layer
     layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + ((endCoordinate - beginCoordinate) / 2), direction)
@@ -240,25 +240,25 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
 }
 
 /**
- * Calculates the position of the target node in relation to the nodes in layerNs based on their y coordinates.
- * @param layerNs Nodes of the layer the target is in.
+ * Calculates the position of the target node in relation to the nodes in the layer based on their y coordinates.
+ * @param nodes Nodes of the layer the target is in.
  * @param target Node which position should be calculated.
  */
-export function getPosInLayer(layerNs: KNode[], target: KNode): number {
+export function getPositionInLayer(nodes: KNode[], target: KNode): number {
     // Sort the layer array by y coordinate.
-    layerNs.sort((a, b) => a.position.y - b.position.y)
+    nodes.sort((a, b) => a.position.y - b.position.y)
     // Find the position of the target
-    if (layerNs.indexOf(target) !== -1) {
+    if (nodes.indexOf(target) !== -1) {
         // target is already in the list
-        return layerNs.indexOf(target)
+        return nodes.indexOf(target)
     }
 
-    for (let i = 0; i < layerNs.length; i++) {
-        if (target.position.y < layerNs[i].position.y) {
+    for (let i = 0; i < nodes.length; i++) {
+        if (target.position.y < nodes[i].position.y) {
             return i
         }
     }
-    return layerNs.length
+    return nodes.length
 }
 
 /**
@@ -274,33 +274,6 @@ export function filterKNodes(graphElements: any): KNode[] {
     }
     return nodes
 }
-
-/**
- * Calculates the maximum of two numbers.
- * @param a First number.
- * @param b Second nummber.
- */
-function max(a: number, b: number): number {
-    if (a < b) {
-        return b
-    } else {
-        return a
-    }
-}
-
-/**
- * Calculates the minimum of two numbers.
- * @param a First number.
- * @param b Second nummber.
- */
-function min(a: number, b: number): number {
-    if (a < b) {
-        return a
-    } else {
-        return b
-    }
-}
-
 
 /**
  * Calculates the layer the selected node is in.
