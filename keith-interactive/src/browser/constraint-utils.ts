@@ -158,7 +158,6 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
                 currentTopBorder = node.shadow ? node.shadowX : node.position.x
                 currentBottomBorder = currentTopBorder + node.size.width
                 break;
-
             }
             case 4: {
                 currentEnd = node.shadow ? node.shadowY : node.position.y
@@ -166,7 +165,6 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
                 currentTopBorder = node.shadow ? node.shadowX : node.position.x
                 currentBottomBorder = currentTopBorder + node.size.width
                 break;
-
             }
         }
 
@@ -200,10 +198,36 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
     if (layers.length === 1) {
         let firstLayer = layers[0]
         // add padding to x bounds
-        firstLayer.begin = firstLayer.begin - 10 // TODO remove magic constants
-        firstLayer.end = firstLayer.end + 10
-        firstLayer.topBorder = topBorder
-        firstLayer.bottomBorder = bottomBorder
+        switch (direction) {
+            case 0: case 1: {
+                firstLayer.begin = firstLayer.begin - 10 // TODO remove magic constants
+                firstLayer.end = firstLayer.end + 10
+                firstLayer.topBorder = topBorder
+                firstLayer.bottomBorder = bottomBorder
+                break;
+            }
+            case 2: {
+                firstLayer.begin = firstLayer.begin + 10 // TODO remove magic constants
+                firstLayer.end = firstLayer.end - 10
+                firstLayer.topBorder = topBorder
+                firstLayer.bottomBorder = bottomBorder
+                break;
+            }
+            case 3: {
+                firstLayer.begin = firstLayer.begin - 10 // TODO remove magic constants
+                firstLayer.end = firstLayer.end + 10
+                firstLayer.topBorder = topBorder
+                firstLayer.bottomBorder = bottomBorder
+                break;
+            }
+            case 4: {
+                firstLayer.begin = firstLayer.begin + 10 // TODO remove magic constants
+                firstLayer.end = firstLayer.end - 10
+                firstLayer.topBorder = topBorder
+                firstLayer.bottomBorder = bottomBorder
+                break;
+            }
+        }
     } else {
         // update left bound of the first layer
         // add padding
