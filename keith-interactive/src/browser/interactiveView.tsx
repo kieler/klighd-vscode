@@ -26,7 +26,7 @@ import { VNode } from "snabbdom/vnode";
  * @param root Root of the hierarchical level for which the layers and positions should be visualized.
  */
 export function renderInteractiveLayout(root: KNode): VNode {
-    // filter KNodes
+    // Filter KNodes
     let nodes = filterKNodes(root.children)
     return <g>
         {renderLayer(nodes, root)}
@@ -51,7 +51,7 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
         let topBorder = layers[0].topBorder
         let bottomBorder = layers[0].bottomBorder
 
-        let globalEndCoordinate = layers[layers.length - 1].end
+        // let globalEndCoordinate = layers[layers.length - 1].end
 
         // determines whether only the layer constraint will be set when the node is released
         let onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.layerId !== currentLayer
@@ -65,12 +65,12 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
             }
         }
 
-        // show a new empty last layer the node can be moved to
+        // Show a new empty last layer the node can be moved to
         let lastLayer = layers[layers.length - 1]
         let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
         if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
-            // only show the layer if the moved node is not (the only node) in the last layer
-            globalEndCoordinate = lastLayer.end + lastLayer.end - lastLayer.begin
+            // Only show the layer if the moved node is not (the only node) in the last layer
+            // globalEndCoordinate = lastLayer.end + lastLayer.end - lastLayer.begin
             if (currentLayer === layers.length) {
                 result = <g>{result}{createRect(lastLayer.end, lastLayer.end + (lastLayer.end - lastLayer.begin), topBorder, bottomBorder, forbidden, onlyLC, direction)}</g>
             } else {
@@ -78,15 +78,39 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
             }
         }
 
-        // set hierarchical bounds for the node
-        root.hierHeight = root.size.height
-        root.hierWidth = globalEndCoordinate - layers[0].begin + 10
+        // Set hierarchical bounds for the node to include a potential new layer.
+        // This of course depends on the direction.
+        // This features is deactivated, since it is not as easy for LEFT and UP, since also the position of the node has to be changed.
+        // This could be tackled via an offset in x and y direction for nodes.
+        // switch (direction) {
+        //     case 0: case 1: {
+        //         root.hierHeight = root.size.height
+        //         root.hierWidth = globalEndCoordinate - layers[0].begin + 10
+        //         break;
+        //     }
+        //     case 2: {
+        //         root.hierHeight = root.size.height
+        //         root.hierWidth = - globalEndCoordinate + layers[0].begin + 10
+        //         console.log("I am called")
+        //         break;
+        //     }
+        //     case 3: {
+        //         root.hierHeight = globalEndCoordinate - layers[0].begin + 10
+        //         root.hierWidth = root.size.width
+        //         break;
+        //     }
+        //     case 4: {
+        //         root.hierHeight = - globalEndCoordinate + layers[0].begin - 10
+        //         root.hierWidth = root.size.width
+        //         break;
+        //     }
+        // }
 
-        // positions should only be rendered if a position constraint will be set
+        // Positions should only be rendered if a position constraint will be set
         if (!onlyLC) {
             return <g>{result}{renderPositions(currentLayer, nodes, layers, forbidden, direction)}</g>
         } else {
-            // add available positions
+            // Add available positions
             return result
         }
     }
