@@ -115,9 +115,9 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
     let layers = []
     let layer = 0
     // Begin coordinate of layer, depending of on the layout direction this might be a x or y coordinate
-    let beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
+    let beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
     // End coordinate of layer, depending of on the layout direction this might be a x or y coordinate
-    let endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
+    let endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
     let topBorder = Number.MAX_VALUE // naming fits to the RIGHT direction (1)
     let bottomBorder = Number.MIN_VALUE
     // calculate bounds of the layers
@@ -127,8 +127,8 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
             // node is in the next layer
             // TODO if the direction changes the y coordinate might be significant
             layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
-            beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
-            endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
+            beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
+            endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
             layer++
         }
 
@@ -169,8 +169,8 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
         }
 
         // update coordinates of the current layer
-        beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Math.max(currentBegin, beginCoordinate) : Math.min(currentBegin, beginCoordinate)
-        endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Math.min(currentEnd, endCoordinate) : Math.max(currentEnd, endCoordinate)
+        beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Math.min(currentBegin, beginCoordinate) : Math.max(currentBegin, beginCoordinate)
+        endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Math.max(currentEnd, endCoordinate) : Math.min(currentEnd, endCoordinate)
         topBorder = Math.min(currentTopBorder, topBorder)
         bottomBorder = Math.max(currentBottomBorder, bottomBorder)
     }

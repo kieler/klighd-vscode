@@ -14,7 +14,7 @@
 import { SModelElement, Action, SNode, SLabel, SEdge, MoveMouseListener } from 'sprotty';
 
 import { injectable } from 'inversify';
-import { KNode } from './constraint-classes';
+import { KNode, Layer } from './constraint-classes';
 import {
     filterKNodes, getLayerOfNode, getNodesOfLayer, getPositionInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet
 } from './constraint-utils';
@@ -22,6 +22,9 @@ import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstra
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
+
+    private layers: Layer[] = []
+    private nodes: KNode[] = []
 
     /**
      * Does not use super implementation, since it calls mouseUp
@@ -60,6 +63,11 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         }
 
         if (target instanceof SNode) {
+
+            // Set layer bounds
+            this.nodes = filterKNodes(target.parent.children)
+            this.layers = getLayers(this.nodes, (target as KNode).direction)
+
             target.selected = true
             let targetNode = target as KNode
             if (targetNode.interactiveLayout) {
@@ -112,19 +120,17 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     setProperty(target: SModelElement): Action {
         let targetNode: KNode = target as KNode
         const direction = targetNode.direction
-        let nodes = filterKNodes(targetNode.parent.children)
         // calculate layer and position the target has in the graph at the new position
-        let layers = getLayers(nodes, direction)
-        let layerOfTarget = getLayerOfNode(targetNode, nodes, layers, direction)
-        let nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
+        let layerOfTarget = getLayerOfNode(targetNode, this.nodes, this.layers, direction)
+        let nodesOfLayer = getNodesOfLayer(layerOfTarget, this.nodes)
         let positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode)
         let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
 
-        let newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)
+        let newLayerCons = getActualLayer(targetNode, this.nodes, layerOfTarget)
 
         // layer constraint should only be set if the layer index changed
         if (targetNode.layerId !== layerOfTarget) {
-            if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
+            if (shouldOnlyLCBeSet(targetNode, this.layers, direction)) {
                 // only the layer constraint should be set
                 return new SetLayerConstraintAction({
                     id: targetNode.id,
