@@ -290,10 +290,10 @@ export function renderConstraints(node: KNode): VNode {
         result = <g>{result}{renderLock(x, y)}</g>
     } else if (node.layerCons !== -1) {
         // only layer Constraint is set
-        result = <g>{result}{renderLayerConstraint(x + 2, y - 2)}</g>
+        result = <g>{result}{renderLayerConstraint(x + 2, y - 2, node.direction)}</g>
     } else if (node.posCons !== -1) {
         // only position Constraint is set
-        result = <g>{result}{renderPositionConstraint(x + 2, y - 2)}</g>
+        result = <g>{result}{renderPositionConstraint(x + 2, y - 2, node.direction)}</g>
     }
     return result
 }
@@ -303,9 +303,9 @@ export function renderConstraints(node: KNode): VNode {
  * @param x
  * @param y
  */
-function renderLayerConstraint(x: number, y: number): VNode {
+function renderLayerConstraint(x: number, y: number, direction: number): VNode {
     return <g> {renderLock(x, y)}
-        {renderArrow(x - 2.15, y + 2.6, false)}
+        {renderArrow(x - 2.15, y + 2.6, !(direction === 0 || direction === 1 || direction === 2))}
     </g>
 }
 
@@ -314,8 +314,8 @@ function renderLayerConstraint(x: number, y: number): VNode {
  * @param x
  * @param y
  */
-function renderPositionConstraint(x: number, y: number): VNode {
+function renderPositionConstraint(x: number, y: number, direction: number): VNode {
     return <g> {renderLock(x, y)}
-        {renderArrow(x + 0.1, y + 2.5, true)}
+        {renderArrow(x + 0.1, y + 2.5, (direction === 0 || direction === 1 || direction === 2))}
     </g>
 }
