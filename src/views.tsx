@@ -79,7 +79,7 @@ export class KNodeView implements IView {
         // render node & icon
         node.shadow = false
         let rendering = undefined
-        if (!this.mListener.hasDragged || isChildSelected(node) || isChildSelected(node.parent as SKNode)) {
+        if (!this.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
             // node should only be visible if the node is in the same hierarchical level as the moved node or it is the
             // root of the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx)
