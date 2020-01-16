@@ -82,7 +82,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                     })]
                 }
             }
-        return super.mouseDown(this.target as SModelElement, event)
+        return super.mouseDown(target as SModelElement, event)
     }
 
     /**
