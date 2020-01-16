@@ -61,7 +61,6 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
         if (this.dserver.connector.editorManager.currentEditor && this.dserver.connector.editorManager.currentEditor.saveable.dirty) {
-            console.log("Save stuffg")
             this.dserver.connector.editorManager.currentEditor.saveable.save();
         }
         if (target instanceof SLabel && target.parent instanceof SNode) {
