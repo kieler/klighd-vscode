@@ -25,6 +25,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
 
     private layers: Layer[] = []
     private nodes: KNode[] = []
+    private target: KNode | undefined
 
     /**
      * Does not use super implementation, since it calls mouseUp
@@ -32,7 +33,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
      * @param event target event
      */
     mouseMove(target: SModelElement, event: MouseEvent): Action[] {
-        if (!event.altKey) {
+        if (!event.altKey && this.target) {
             if (target instanceof SLabel && target.parent instanceof SNode) {
                 // nodes should be movable when the user clicks on the label
                 target = target.parent
@@ -40,10 +41,10 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             let result = []
             if (this.startDragPosition) {
                 if (this.elementId2startPos.size === 0) {
-                    this.collectStartPositions(target.root);
+                    this.collectStartPositions(this.target.root);
                 }
                 this.hasDragged = true;
-                const moveAction = this.getElementMoves(target, event, false);
+                const moveAction = this.getElementMoves(this.target, event, false)
                 if (moveAction)
                     result.push(moveAction);
             }
@@ -57,32 +58,31 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     }
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
-        if (target instanceof SLabel && target.parent instanceof SNode) {
-            // nodes should be movable when the user clicks on the label
-            target = target.parent
-        }
-
-        if (target instanceof SNode) {
-
-            // Set layer bounds
-            this.nodes = filterKNodes(target.parent.children)
-            this.layers = getLayers(this.nodes, (target as KNode).direction)
-
-            target.selected = true
-            let targetNode = target as KNode
-            if (targetNode.interactiveLayout) {
-                // save the coordinates as shadow coordinates
-                targetNode.shadowX = targetNode.position.x
-                targetNode.shadowY = targetNode.position.y
-                targetNode.shadow = true
+            if (target instanceof SLabel && target.parent instanceof SNode) {
+                // nodes should be movable when the user clicks on the label
+                target = target.parent
             }
-            if (event.altKey) {
-                return [new DeleteStaticConstraintAction({
-                    id: targetNode.id
-                })]
+
+            if (target instanceof SNode) {
+                this.target = target as KNode
+                // Set layer bounds
+                this.nodes = filterKNodes(this.target.parent.children)
+                this.layers = getLayers(this.nodes, this.target.direction)
+
+                this.target.selected = true
+                if (this.target.interactiveLayout) {
+                    // save the coordinates as shadow coordinates
+                    this.target.shadowX = this.target.position.x
+                    this.target.shadowY = this.target.position.y
+                    this.target.shadow = true
+                }
+                if (event.altKey) {
+                    return [new DeleteStaticConstraintAction({
+                        id: this.target.id
+                    })]
+                }
             }
-        }
-        return super.mouseDown(target, event);
+        return super.mouseDown(this.target as SModelElement, event)
     }
 
     /**
@@ -95,22 +95,15 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     }
 
     mouseUp(target: SModelElement, event: MouseEvent): Action[] {
-        if (target instanceof SLabel && target.parent instanceof SNode) {
-            // nodes should be movable when the user clicks on the label
-            target = target.parent
-        }
-
-        if (this.hasDragged && target instanceof SNode) {
+        if (this.hasDragged && this.target) {
             // if a node is moved set properties
-            (target as KNode).shadow = false
-            return [this.setProperty(target)].concat(super.mouseUp(target, event));
+            this.target.shadow = false
+            return [this.setProperty(this.target)].concat(super.mouseUp(this.target, event));
+        } else if (this.target) {
+            this.target.selected = false
+            return super.mouseUp(this.target, event).concat([new RefreshLayoutAction()]);
         }
-
-        if (target instanceof SNode) {
-            target.selected = false
-        }
-
-        return super.mouseUp(target, event);
+        return super.mouseUp(target, event)
     }
 
     /**
