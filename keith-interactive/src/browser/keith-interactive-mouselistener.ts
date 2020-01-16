@@ -13,12 +13,13 @@
 
 import { SModelElement, Action, SNode, SLabel, SEdge, MoveMouseListener } from 'sprotty';
 
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { KNode, Layer } from './constraint-classes';
 import {
     filterKNodes, getLayerOfNode, getNodesOfLayer, getPositionInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet, isLayerForbidden
 } from './constraint-utils';
 import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction, RefreshLayoutAction, DeleteStaticConstraintAction } from './actions';
+import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
@@ -26,6 +27,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     private layers: Layer[] = []
     private nodes: KNode[] = []
     private target: KNode | undefined
+    @inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
 
     /**
      * Does not use super implementation, since it calls mouseUp
@@ -58,30 +60,34 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     }
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
-            if (target instanceof SLabel && target.parent instanceof SNode) {
-                // nodes should be movable when the user clicks on the label
-                target = target.parent
-            }
+        if (this.dserver.connector.editorManager.currentEditor && this.dserver.connector.editorManager.currentEditor.saveable.dirty) {
+            console.log("Save stuffg")
+            this.dserver.connector.editorManager.currentEditor.saveable.save();
+        }
+        if (target instanceof SLabel && target.parent instanceof SNode) {
+            // nodes should be movable when the user clicks on the label
+            target = target.parent
+        }
 
-            if (target instanceof SNode) {
-                this.target = target as KNode
-                // Set layer bounds
-                this.nodes = filterKNodes(this.target.parent.children)
-                this.layers = getLayers(this.nodes, this.target.direction)
+        if (target instanceof SNode) {
+            this.target = target as KNode
+            // Set layer bounds
+            this.nodes = filterKNodes(this.target.parent.children)
+            this.layers = getLayers(this.nodes, this.target.direction)
 
-                this.target.selected = true
-                if (this.target.interactiveLayout) {
-                    // save the coordinates as shadow coordinates
-                    this.target.shadowX = this.target.position.x
-                    this.target.shadowY = this.target.position.y
-                    this.target.shadow = true
-                }
-                if (event.altKey) {
-                    return [new DeleteStaticConstraintAction({
-                        id: this.target.id
-                    })]
-                }
+            this.target.selected = true
+            if (this.target.interactiveLayout) {
+                // save the coordinates as shadow coordinates
+                this.target.shadowX = this.target.position.x
+                this.target.shadowY = this.target.position.y
+                this.target.shadow = true
             }
+            if (event.altKey) {
+                return [new DeleteStaticConstraintAction({
+                    id: this.target.id
+                })]
+            }
+        }
         return super.mouseDown(target as SModelElement, event)
     }
 
