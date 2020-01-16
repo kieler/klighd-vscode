@@ -62,6 +62,10 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
             let layer = layers[i]
             if (i === currentLayer) {
                 result = <g>{result}{createRect(layer.begin, layer.end, topBorder, bottomBorder, forbidden, onlyLC, direction)}</g>
+            } else {
+                if (!isLayerForbidden(selNode, i)) {
+                    result = <g>{result}{createVerticalLine(layer.mid, topBorder, bottomBorder, direction)}</g>
+                }
             }
         }
 

@@ -42,9 +42,9 @@ export function createRect(begin: number, end: number, top: number, bottom: numb
 
 /**
  * Creates a vertical line.
- * @param mid x coordinate of the line.
- * @param top Start of the line on the y-axis.
- * @param bot End of the line on the y-axis.
+ * @param mid x/y coordinate of the line.
+ * @param top Start of the line on the y/x-axis.
+ * @param bot End of the line on the y/x-axis.
  */
 export function createVerticalLine(mid: number, top: number, bot: number, direction: number): VNode {
     return  <g> <line
