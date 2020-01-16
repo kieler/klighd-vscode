@@ -15,11 +15,6 @@ import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import {
-// <<<<<<< HEAD
-//     Arc, isRendering, KArc, KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef,
-//     KRoundedBendsPolyline, KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
-//     K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, KNode
-// } from './kgraph-models';
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KGraphData, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
     KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
     K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKNode, SKLabel
