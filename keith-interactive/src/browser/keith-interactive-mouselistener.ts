@@ -16,7 +16,7 @@ import { SModelElement, Action, SNode, SLabel, SEdge, MoveMouseListener } from '
 import { injectable } from 'inversify';
 import { KNode, Layer } from './constraint-classes';
 import {
-    filterKNodes, getLayerOfNode, getNodesOfLayer, getPositionInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet
+    filterKNodes, getLayerOfNode, getNodesOfLayer, getPositionInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet, isLayerForbidden
 } from './constraint-utils';
 import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction, RefreshLayoutAction, DeleteStaticConstraintAction } from './actions';
 
@@ -111,18 +111,21 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
      * @param target SModelElement that is moved
      */
     setProperty(target: SModelElement): Action {
-        let targetNode: KNode = target as KNode
+        const targetNode: KNode = target as KNode
         const direction = targetNode.direction
         // calculate layer and position the target has in the graph at the new position
-        let layerOfTarget = getLayerOfNode(targetNode, this.nodes, this.layers, direction)
-        let nodesOfLayer = getNodesOfLayer(layerOfTarget, this.nodes)
-        let positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode)
-        let newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
+        const layerOfTarget = getLayerOfNode(targetNode, this.nodes, this.layers, direction)
+        const nodesOfLayer = getNodesOfLayer(layerOfTarget, this.nodes)
+        const positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode)
+        const newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
+        const newLayerCons = getActualLayer(targetNode, this.nodes, layerOfTarget)
+        const forbidden = isLayerForbidden(targetNode, newLayerCons)
 
-        let newLayerCons = getActualLayer(targetNode, this.nodes, layerOfTarget)
-
-        // layer constraint should only be set if the layer index changed
-        if (targetNode.layerId !== layerOfTarget) {
+        if (forbidden) {
+            // If layer is forbidden just refresh
+            return new RefreshLayoutAction()
+        } else if (targetNode.layerId !== layerOfTarget) {
+            // layer constraint should only be set if the layer index changed
             if (shouldOnlyLCBeSet(targetNode, this.layers, direction)) {
                 // only the layer constraint should be set
                 return new SetLayerConstraintAction({
