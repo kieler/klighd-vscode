@@ -10,7 +10,6 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
@@ -28,7 +27,8 @@ import { VNode } from 'snabbdom/vnode';
 export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: number): VNode {
     let forbiddenColor = 'indianred'
     let backgroundColor = selected ? 'grey' : 'lightgrey'
-    return  <g> <rect
+    // @ts-ignore
+    return <g> <rect
                     x={(direction === 1 || direction === 0) ? begin : direction === 2 ? end : top}
                     y={(direction === 1 || direction === 0 || direction === 2) ? top : direction === 4 ? end : begin}
                     width={(direction === 1 || direction === 0 || direction === 2) ? Math.abs(begin - end) : bottom - top}
@@ -47,7 +47,8 @@ export function createRect(begin: number, end: number, top: number, bottom: numb
  * @param bot End of the line on the y/x-axis.
  */
 export function createVerticalLine(mid: number, top: number, bot: number, direction: number): VNode {
-    return  <g> <line
+    // @ts-ignore
+    return <g> <line
                     x1={(direction === 1 || direction === 2 || direction === 0) ? mid : top}
                     y1={(direction === 1 || direction === 2 || direction === 0) ? top : mid}
                     x2={(direction === 1 || direction === 2 || direction === 0) ? mid : bot}
@@ -69,6 +70,7 @@ export function createVerticalLine(mid: number, top: number, bot: number, direct
 export function renderCircle(fill: boolean, x: number, y: number, forbidden: boolean): VNode {
     let forbiddenColor = 'indianred'
     let color = forbidden ? forbiddenColor : 'grey'
+    // @ts-ignore
     return  <g> <circle
                     cx={x}
                     cy={y}
@@ -88,6 +90,7 @@ export function renderCircle(fill: boolean, x: number, y: number, forbidden: boo
 export function renderLock(xTranslate: number, yTranslate: number): VNode {
     let s = "translate(" + xTranslate + ","
             + yTranslate + ") scale(0.0004,-0.00036)"
+            // @ts-ignore
     return  <g transform={s}
                 fill="grey" stroke="none">
                 <path d="M4265 12794 c-22 -2 -92 -9 -155 -15 -1278 -120 -2434 -919 -3018
@@ -117,6 +120,7 @@ export function renderArrow(xTranslate: number, yTranslate: number, vertical: bo
     } else {
         s += " scale(0.0006,-0.0004)"
     }
+    // @ts-ignore
     return <g transform={s}
                 fill="grey" stroke="none">
                 <path d="M3583 6153 c-44 -34 -632 -506 -2778 -2233 -845 -681 -824 -662 -794

@@ -19,7 +19,7 @@ import {
     filterKNodes, getLayerOfNode, getNodesOfLayer, getPositionInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet, isLayerForbidden
 } from './constraint-utils';
 import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction, RefreshLayoutAction, DeleteStaticConstraintAction } from './actions';
-import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
+import { LSTheiaDiagramServer } from 'sprotty-theia/lib/sprotty/languageserver/ls-theia-diagram-server';
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
@@ -27,7 +27,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     private layers: Layer[] = []
     private nodes: KNode[] = []
     private target: KNode | undefined
-    @inject(LSTheiaDiagramServer) dserver: LSTheiaDiagramServer
+    @inject(LSTheiaDiagramServer) protected readonly dserver: LSTheiaDiagramServer
 
     /**
      * Does not use super implementation, since it calls mouseUp

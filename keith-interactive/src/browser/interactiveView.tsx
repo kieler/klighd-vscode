@@ -10,7 +10,6 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-
 /** @jsx svg */
 import { KNode, Layer } from './constraint-classes';
 import {
@@ -28,6 +27,7 @@ import { VNode } from "snabbdom/vnode";
 export function renderInteractiveLayout(root: KNode): VNode {
     // Filter KNodes
     let nodes = filterKNodes(root.children)
+    // @ts-ignore
     return <g>
         {renderLayer(nodes, root)}
     </g>
@@ -112,12 +112,15 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
 
         // Positions should only be rendered if a position constraint will be set
         if (!onlyLC) {
+            // @ts-ignore
             return <g>{result}{renderPositions(currentLayer, nodes, layers, forbidden, direction)}</g>
         } else {
             // Add available positions
+    // @ts-ignore
             return result
         }
     }
+    // @ts-ignore
     return <g></g>
 }
 
@@ -246,6 +249,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
             result = <g>{result}{renderCircle(curPos === layerNodes.length - 1 + shift, x, y, forbidden)}</g>
         }
 
+        // @ts-ignore
         return result
     } else {
         // there are no nodes in the layer
@@ -277,6 +281,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
                 break;
             }
         }
+        // @ts-ignore
         return <g>{renderCircle(true, x, y, forbidden)}</g>
     }
 }
@@ -299,6 +304,7 @@ export function renderConstraints(node: KNode): VNode {
         // only position Constraint is set
         result = <g>{result}{renderPositionConstraint(x + 2, y - 2, node.direction)}</g>
     }
+    // @ts-ignore
     return result
 }
 
@@ -308,6 +314,7 @@ export function renderConstraints(node: KNode): VNode {
  * @param y
  */
 function renderLayerConstraint(x: number, y: number, direction: number): VNode {
+    // @ts-ignore
     return <g> {renderLock(x, y)}
         {renderArrow(x - 2.15, y + 2.6, !(direction === 0 || direction === 1 || direction === 2))}
     </g>
@@ -319,6 +326,7 @@ function renderLayerConstraint(x: number, y: number, direction: number): VNode {
  * @param y
  */
 function renderPositionConstraint(x: number, y: number, direction: number): VNode {
+    // @ts-ignore
     return <g> {renderLock(x, y)}
         {renderArrow(x + 0.1, y + 2.5, (direction === 0 || direction === 1 || direction === 2))}
     </g>
