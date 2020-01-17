@@ -25,6 +25,7 @@ import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS,
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
 import { RenderOption, RenderOptions } from '@kieler/keith-sprotty/lib/options';
+import { RefreshLayoutAction } from '@kieler/keith-interactive/lib/actions';
 
 /**
  * The keybinding to toggle the diagram options view widget.
@@ -136,8 +137,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.rOptions = this.diagramManager.container.get(RenderOptions)
         }
         this.rOptions.updateRenderOption(option)
+        // Update the diagram to draw according to the changed render option.
         const lClient = await this.client.languageClient
-        await lClient.sendNotification("keith/constraints/refreshLayout", this.editorWidget.editor.uri.toString())
+        await lClient.sendNotification('diagram/accept', {clientId: 'keith-diagram_sprotty', action: new RefreshLayoutAction()})
     }
 
     /**
