@@ -64,15 +64,15 @@ export class KNodeView implements IView {
         let layer = <g></g>
         let constraints = <g></g>
 
-        if (node.interactiveLayout && this.mListener.hasDragged) {
+        if (((node as SKNode).interactiveLayout) && this.mListener.hasDragged) {
             if (isShadow) {
                 // render shadow of the node
                 shadow = getRendering(node.data, node, new KStyles, context as any)
             }
 
-            if (isChildSelected(node)) {
+            if (isChildSelected(node as SKNode)) {
                 // render the objects indicating the layer and positions in the graph
-                layer = <g>{renderInteractiveLayout(node)}</g>
+                layer = <g>{renderInteractiveLayout(node as SKNode)}</g>
             }
         }
 
@@ -80,11 +80,10 @@ export class KNodeView implements IView {
         node.shadow = false
         let rendering = undefined
         if (!this.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
-            // node should only be visible if the node is in the same hierarchical level as the moved node or it is the
-            // root of the moved node or no node is moved at all
+            // node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx)
 
-            if (this.rOptions.getShowConstraint() && node.interactiveLayout) {
+            if (this.rOptions.getShowConstraint() && (node.parent as SKNode).interactiveLayout) {
                 // render icon visualizing the set Constraints
                 constraints = renderConstraints(node)
             }

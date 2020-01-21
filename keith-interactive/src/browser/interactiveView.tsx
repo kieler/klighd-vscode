@@ -82,34 +82,6 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
             }
         }
 
-        // Set hierarchical bounds for the node to include a potential new layer.
-        // This of course depends on the direction.
-        // This features is deactivated, since it is not as easy for LEFT and UP, since also the position of the node has to be changed.
-        // This could be tackled via an offset in x and y direction for nodes.
-        // switch (direction) {
-        //     case 0: case 1: {
-        //         root.hierHeight = root.size.height
-        //         root.hierWidth = globalEndCoordinate - layers[0].begin + 10
-        //         break;
-        //     }
-        //     case 2: {
-        //         root.hierHeight = root.size.height
-        //         root.hierWidth = - globalEndCoordinate + layers[0].begin + 10
-        //         console.log("I am called")
-        //         break;
-        //     }
-        //     case 3: {
-        //         root.hierHeight = globalEndCoordinate - layers[0].begin + 10
-        //         root.hierWidth = root.size.width
-        //         break;
-        //     }
-        //     case 4: {
-        //         root.hierHeight = - globalEndCoordinate + layers[0].begin - 10
-        //         root.hierWidth = root.size.width
-        //         break;
-        //     }
-        // }
-
         // Positions should only be rendered if a position constraint will be set
         if (!onlyLC) {
             // @ts-ignore

@@ -63,28 +63,28 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         if (this.dserver.connector.editorManager.currentEditor && this.dserver.connector.editorManager.currentEditor.saveable.dirty) {
             this.dserver.connector.editorManager.currentEditor.saveable.save();
         }
+        let targetNode = target
         if (target instanceof SLabel && target.parent instanceof SNode) {
             // nodes should be movable when the user clicks on the label
-            target = target.parent
+            targetNode = target.parent
         }
+        if (targetNode && targetNode instanceof SNode) {
+            if (((target as KNode).parent as KNode).interactiveLayout) {
+                this.target = targetNode as KNode
+                // Set layer bounds
+                this.nodes = filterKNodes(this.target.parent.children)
+                this.layers = getLayers(this.nodes, this.target.direction)
 
-        if (target instanceof SNode) {
-            this.target = target as KNode
-            // Set layer bounds
-            this.nodes = filterKNodes(this.target.parent.children)
-            this.layers = getLayers(this.nodes, this.target.direction)
-
-            this.target.selected = true
-            if (this.target.interactiveLayout) {
+                this.target.selected = true
                 // save the coordinates as shadow coordinates
                 this.target.shadowX = this.target.position.x
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
-            }
-            if (event.altKey) {
-                return [new DeleteStaticConstraintAction({
-                    id: this.target.id
-                })]
+                if (event.altKey) {
+                    return [new DeleteStaticConstraintAction({
+                        id: this.target.id
+                    })]
+                }
             }
         }
         return super.mouseDown(target as SModelElement, event)
