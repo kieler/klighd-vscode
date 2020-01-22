@@ -69,7 +69,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             targetNode = target.parent
         }
         if (targetNode && targetNode instanceof SNode) {
-            if (((target as KNode).parent as KNode).interactiveLayout) {
+            if (((targetNode as KNode).parent as KNode).interactiveLayout) {
                 this.target = targetNode as KNode
                 // Set layer bounds
                 this.nodes = filterKNodes(this.target.parent.children)
@@ -86,6 +86,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                     })]
                 }
             }
+            return super.mouseDown(this.target as SModelElement, event)
         }
         return super.mouseDown(target as SModelElement, event)
     }
@@ -103,10 +104,14 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         if (this.hasDragged && this.target) {
             // if a node is moved set properties
             this.target.shadow = false
-            return [this.setProperty(this.target)].concat(super.mouseUp(this.target, event));
+            const result = [this.setProperty(this.target)].concat(super.mouseUp(this.target, event));
+            this.target = undefined
+            return result
         } else if (this.target) {
             this.target.selected = false
-            return super.mouseUp(this.target, event).concat([new RefreshLayoutAction()]);
+            const result = super.mouseUp(this.target, event).concat([new RefreshLayoutAction()]);
+            this.target = undefined
+            return result
         }
         return super.mouseUp(target, event)
     }
