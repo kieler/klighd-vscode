@@ -66,14 +66,11 @@ export class KNode extends RectangularNode implements KGraphElement {
     data: KGraphData[]
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).interactiveLayout)
+        return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).properties.interactiveLayout)
     }
 
-    layerId: number
-    posId: number
-    layerCons: number
-    posCons: number
-    interactiveLayout: boolean
+    properties: NodeProperties
+
     direction: number
 
     shadow: boolean
@@ -82,6 +79,15 @@ export class KNode extends RectangularNode implements KGraphElement {
 
     hierWidth: number
     hierHeight: number
+}
+
+export class NodeProperties {
+    algorithm: string
+    interactiveLayout: boolean
+    layerConstraint: number
+    layerId: number
+    positionConstraint: number
+    positionId: number
 }
 
 /**

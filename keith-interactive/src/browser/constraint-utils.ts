@@ -52,7 +52,7 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
 export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number) {
 
     // Examine all nodes that have a layer Id left or equal to the layerCandidate and that have a layerCons > their layerId
-    let layerConstraintLeftOfCandidate = nodes.filter(n => n.layerId <= layerCandidate && n.layerCons > n.layerId)
+    let layerConstraintLeftOfCandidate = nodes.filter(n => n.properties.layerId <= layerCandidate && n.properties.layerConstraint > n.properties.layerId)
 
     // In case that there are no such nodes return the layerCandidate
     if (layerConstraintLeftOfCandidate.length === 0) {
@@ -65,14 +65,15 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
     let nodeWithMaxCons = null
     let maxCons = -1
     for (let n of layerConstraintLeftOfCandidate) {
-        if (n.layerCons > maxCons) {
+        const layerConstraint = n.properties.layerConstraint
+        if (layerConstraint > maxCons) {
             nodeWithMaxCons = n
-            maxCons = n.layerCons
+            maxCons = layerConstraint
         }
     }
 
     if (nodeWithMaxCons !== null) {
-        let idDiff = layerCandidate - nodeWithMaxCons.layerId
+        let idDiff = layerCandidate - nodeWithMaxCons.properties.layerId
         return maxCons + idDiff
     }
 
@@ -92,9 +93,9 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
         // than its position ID
         let upperIndex = localTargetIndex - 1
         let upperNeighbor = layerNodes[upperIndex]
-        let posConsOfUpper = upperNeighbor.posCons
+        let posConsOfUpper = upperNeighbor.properties.positionConstraint
         if (posConsOfUpper > upperIndex) {
-            if (alreadyInLayer && upperNeighbor.posId === localTargetIndex) {
+            if (alreadyInLayer && upperNeighbor.properties.positionId === localTargetIndex) {
                 localTargetIndex = posConsOfUpper
             } else {
                 localTargetIndex = posConsOfUpper + 1
@@ -111,7 +112,7 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
  */
 export function getLayers(nodes: KNode[], direction: number): Layer[] {
     // All nodes within one hierarchy level have the same direction
-    nodes.sort((a, b) => a.layerId - b.layerId)
+    nodes.sort((a, b) => a.properties.layerId - b.properties.layerId)
     let layers = []
     let layer = 0
     // Begin coordinate of layer, depending of on the layout direction this might be a x or y coordinate
@@ -123,7 +124,7 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
     // calculate bounds of the layers
     for (let i = 0; i < nodes.length; i++) {
         let node = nodes[i]
-        if (node.layerId !== layer) {
+        if (node.properties.layerId !== layer) {
             // node is in the next layer
             // TODO if the direction changes the y coordinate might be significant
             layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
@@ -256,7 +257,7 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
 export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
     let nodesOfLayer: KNode[] = []
     for (let node of nodes) {
-        if (node.layerId === layer) {
+        if (node.properties.layerId === layer) {
             nodesOfLayer[nodesOfLayer.length] = node
         }
     }
@@ -350,7 +351,7 @@ export function isLayerForbidden(node: KNode, layer: number): boolean {
 
     // check the connected nodes for layer constraints
     for (let node of connectedNodes) {
-        if (node.layerId === layer && node.layerCons !== -1) {
+        if (node.properties.layerId === layer && node.properties.layerConstraint !== -1) {
             // layer is forbidden for the given node
             return true
         }

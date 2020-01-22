@@ -69,7 +69,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             targetNode = target.parent
         }
         if (targetNode && targetNode instanceof SNode) {
-            if (((targetNode as KNode).parent as KNode).interactiveLayout) {
+            if (((targetNode as KNode).parent as KNode).properties.interactiveLayout) {
                 this.target = targetNode as KNode
                 // Set layer bounds
                 this.nodes = filterKNodes(this.target.parent.children)
@@ -85,8 +85,8 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                         id: this.target.id
                     })]
                 }
+                return super.mouseDown(this.target as SModelElement, event)
             }
-            return super.mouseDown(this.target as SModelElement, event)
         }
         return super.mouseDown(target as SModelElement, event)
     }
@@ -134,7 +134,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         if (forbidden) {
             // If layer is forbidden just refresh
             return new RefreshLayoutAction()
-        } else if (targetNode.layerId !== layerOfTarget) {
+        } else if (targetNode.properties.layerId !== layerOfTarget) {
             // layer constraint should only be set if the layer index changed
             if (shouldOnlyLCBeSet(targetNode, this.layers, direction)) {
                 // only the layer constraint should be set
@@ -156,7 +156,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         } else {
 
             // position constraint should only be set if the position of the node changed
-            if (targetNode.posId !== positionOfTarget) {
+            if (targetNode.properties.positionId !== positionOfTarget) {
                 // set the position Constraint
                 return new SetPositionConstraintAction({
                     id: targetNode.id,

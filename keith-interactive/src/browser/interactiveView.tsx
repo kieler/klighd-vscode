@@ -54,7 +54,7 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
         // let globalEndCoordinate = layers[layers.length - 1].end
 
         // determines whether only the layer constraint will be set when the node is released
-        let onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.layerId !== currentLayer
+        let onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.properties.layerId !== currentLayer
 
         // create layers
         let result = <g></g>
@@ -117,7 +117,7 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
     // position of selected node
     let curPos = getPositionInLayer(layerNodes, target)
 
-    layerNodes.sort((a, b) => a.posId - b.posId)
+    layerNodes.sort((a, b) => a.properties.positionId - b.properties.positionId)
     if (layerNodes.length > 0) {
         let result = <g></g>
         // mid of the current layer
@@ -266,13 +266,15 @@ export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
     let x = node.hierWidth !== 0 ? node.hierWidth : node.size.width
     let y = 0
-    if (node.layerCons !== -1 && node.posCons !== -1) {
+    const positionConstraint = node.properties.positionConstraint
+    const layerConstraint = node.properties.layerConstraint
+    if (layerConstraint !== -1 && positionConstraint !== -1) {
         // layer and position COnstraint are set
         result = <g>{result}{renderLock(x, y)}</g>
-    } else if (node.layerCons !== -1) {
+    } else if (layerConstraint !== -1) {
         // only layer Constraint is set
         result = <g>{result}{renderLayerConstraint(x + 2, y - 2, node.direction)}</g>
-    } else if (node.posCons !== -1) {
+    } else if (positionConstraint !== -1) {
         // only position Constraint is set
         result = <g>{result}{renderPositionConstraint(x + 2, y - 2, node.direction)}</g>
     }
