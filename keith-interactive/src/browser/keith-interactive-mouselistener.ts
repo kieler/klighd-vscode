@@ -16,10 +16,13 @@ import { SModelElement, Action, SNode, SLabel, SEdge, MoveMouseListener } from '
 import { injectable, inject } from 'inversify';
 import { KNode, Layer } from './constraint-classes';
 import {
-    filterKNodes, getLayerOfNode, getNodesOfLayer, getPositionInLayer, getActualLayer, getActualTargetIndex, getLayers, shouldOnlyLCBeSet, isLayerForbidden
-} from './constraint-utils';
-import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction, RefreshLayoutAction, DeleteStaticConstraintAction } from './actions';
+    filterKNodes } from './helper-methods';
+import { DeleteStaticConstraintAction } from './layered/actions';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib/sprotty/languageserver/ls-theia-diagram-server';
+import { isUndefined } from 'util';
+import { setProperty, getLayers } from './layered/constraint-utils';
+import { RefreshLayoutAction } from './actions';
+import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
@@ -81,9 +84,16 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
                 if (event.altKey) {
-                    return [new DeleteStaticConstraintAction({
-                        id: this.target.id
-                    })]
+                    const algorithm = ((targetNode as KNode).parent as KNode).properties.algorithm
+                    if (isUndefined(algorithm) || algorithm === 'layered') {
+                        return [new DeleteStaticConstraintAction({
+                            id: this.target.id
+                        })]
+                    } else if (algorithm === 'rectPacking') {
+                        return [new RectPackDeletePositionConstraintAction({
+                            id: this.target.id
+                        })]
+                    }
                 }
                 return super.mouseDown(this.target as SModelElement, event)
             }
@@ -104,7 +114,15 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         if (this.hasDragged && this.target) {
             // if a node is moved set properties
             this.target.shadow = false
-            const result = [this.setProperty(this.target)].concat(super.mouseUp(this.target, event));
+            let result = super.mouseUp(this.target, event)
+            const algorithm = (this.target.parent as KNode).properties.algorithm
+            if (algorithm === 'layered' || isUndefined(algorithm)) {
+                result = [setProperty(this.nodes, this.layers, this.target)].concat(super.mouseUp(this.target, event));
+            } else if (algorithm === 'rectPacking') {
+                // New algorithms
+            } else {
+
+            }
             this.target = undefined
             return result
         } else if (this.target) {
@@ -115,58 +133,4 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
         }
         return super.mouseUp(target, event)
     }
-
-    /**
-     * Sets properties of the target accordingly to the position the target is moved to
-     * @param target SModelElement that is moved
-     */
-    setProperty(target: SModelElement): Action {
-        const targetNode: KNode = target as KNode
-        const direction = targetNode.direction
-        // calculate layer and position the target has in the graph at the new position
-        const layerOfTarget = getLayerOfNode(targetNode, this.nodes, this.layers, direction)
-        const nodesOfLayer = getNodesOfLayer(layerOfTarget, this.nodes)
-        const positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode)
-        const newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
-        const newLayerCons = getActualLayer(targetNode, this.nodes, layerOfTarget)
-        const forbidden = isLayerForbidden(targetNode, newLayerCons)
-
-        if (forbidden) {
-            // If layer is forbidden just refresh
-            return new RefreshLayoutAction()
-        } else if (targetNode.properties.layerId !== layerOfTarget) {
-            // layer constraint should only be set if the layer index changed
-            if (shouldOnlyLCBeSet(targetNode, this.layers, direction)) {
-                // only the layer constraint should be set
-                return new SetLayerConstraintAction({
-                    id: targetNode.id,
-                    layer: layerOfTarget,
-                    layerCons: newLayerCons
-                })
-            } else {
-                // If layer and position constraint should be set - send them both in one StaticConstraint
-                return new SetStaticConstraintAction({
-                    id: targetNode.id,
-                    layer: layerOfTarget,
-                    layerCons: newLayerCons,
-                    position: positionOfTarget,
-                    posCons: newPositionCons
-                })
-            }
-        } else {
-
-            // position constraint should only be set if the position of the node changed
-            if (targetNode.properties.positionId !== positionOfTarget) {
-                // set the position Constraint
-                return new SetPositionConstraintAction({
-                    id: targetNode.id,
-                    position: positionOfTarget,
-                    posCons: newPositionCons
-                })
-            }
-        }
-        // If the node was moved without setting a constraint - let it snap back
-        return new RefreshLayoutAction()
-    }
-
 }

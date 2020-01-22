@@ -11,8 +11,10 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SNode } from 'sprotty';
-import { KNode, Layer, KEdge } from './constraint-classes';
+import { SModelElement, Action } from 'sprotty';
+import { KNode, Layer, KEdge } from '../constraint-classes';
+import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction } from './actions';
+import { RefreshLayoutAction } from '../actions';
 
 /**
  * Calculates the layer the node is in.
@@ -287,50 +289,6 @@ export function getPositionInLayer(nodes: KNode[], target: KNode): number {
 }
 
 /**
- * Filters the KNodes out of graphElements.
- * @param graphElements Elements which should be filtered.
- */
-export function filterKNodes(graphElements: any): KNode[] {
-    let nodes: KNode[] = []
-    for (let elem of graphElements) {
-        if (elem instanceof SNode) {
-            nodes[nodes.length] = elem as KNode
-        }
-    }
-    return nodes
-}
-
-/**
- * Calculates the layer the selected node is in.
- * Returns -1 if no node of the nodes is selected.
- * @param nodes All nodes of one hierarchical level.
- */
-export function getSelectedNode(nodes: KNode[]): KNode | undefined {
-    for (let node of nodes) {
-        if (node.selected) {
-            return node
-        }
-    }
-    return undefined
-}
-
-/**
-* Determines whether one of the children is selected.
-* @param root Node which children should be checked.
-*/
-export function isChildSelected(root: KNode): boolean {
-    let nodes = root.children
-    if (nodes !== undefined) {
-        for (let node of nodes) {
-            if (node instanceof SNode && node.selected) {
-                return true
-            }
-        }
-    }
-    return false
-}
-
-/**
  * Determines whether the layer is forbidden for the given node.
  * The layer is forbidden if another node is in the layer that
  * is connected to the given node by an edge and has a layer constraint.
@@ -375,4 +333,56 @@ export function shouldOnlyLCBeSet(node: KNode, layers: Layer[], direction: numbe
         return coordinateToCheck < layerTop || coordinateToCheck > layerBot
     }
     return false
+}
+/**
+ * Sets properties of the target accordingly to the position the target is moved to
+ * @param target SModelElement that is moved
+ */
+export function setProperty(nodes: KNode[], layers: Layer[], target: SModelElement): Action {
+    const targetNode: KNode = target as KNode
+    const direction = targetNode.direction
+    // calculate layer and position the target has in the graph at the new position
+    const layerOfTarget = getLayerOfNode(targetNode, nodes, layers, direction)
+    const nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
+    const positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode)
+    const newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
+    const newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)
+    const forbidden = isLayerForbidden(targetNode, newLayerCons)
+
+    if (forbidden) {
+        // If layer is forbidden just refresh
+        return new RefreshLayoutAction()
+    } else if (targetNode.properties.layerId !== layerOfTarget) {
+        // layer constraint should only be set if the layer index changed
+        if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
+            // only the layer constraint should be set
+            return new SetLayerConstraintAction({
+                id: targetNode.id,
+                layer: layerOfTarget,
+                layerCons: newLayerCons
+            })
+        } else {
+            // If layer and position constraint should be set - send them both in one StaticConstraint
+            return new SetStaticConstraintAction({
+                id: targetNode.id,
+                layer: layerOfTarget,
+                layerCons: newLayerCons,
+                position: positionOfTarget,
+                posCons: newPositionCons
+            })
+        }
+    } else {
+
+        // position constraint should only be set if the position of the node changed
+        if (targetNode.properties.positionId !== positionOfTarget) {
+            // set the position Constraint
+            return new SetPositionConstraintAction({
+                id: targetNode.id,
+                position: positionOfTarget,
+                posCons: newPositionCons
+            })
+        }
+    }
+    // If the node was moved without setting a constraint - let it snap back
+    return new RefreshLayoutAction()
 }

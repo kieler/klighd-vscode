@@ -15,8 +15,8 @@ import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
-import { renderInteractiveLayout, renderConstraints } from '@kieler/keith-interactive/lib/interactiveView';
-import { isChildSelected } from '@kieler/keith-interactive/lib/constraint-utils'
+import { renderInteractiveLayout, renderConstraints } from '@kieler/keith-interactive/lib/interactive-view';
+import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods'
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener'
 import { RenderOptions } from './options';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';

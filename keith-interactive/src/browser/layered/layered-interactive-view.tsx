@@ -11,27 +11,13 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { KNode, Layer } from './constraint-classes';
-import {
-    getSelectedNode, getLayerOfNode, filterKNodes, getLayers, getNodesOfLayer, getPositionInLayer, isLayerForbidden,
-    shouldOnlyLCBeSet
-} from './constraint-utils';
+import { KNode, Layer } from '../constraint-classes';
+import { getLayers, getLayerOfNode, isLayerForbidden, shouldOnlyLCBeSet, getNodesOfLayer, getPositionInLayer } from './constraint-utils';
 import { svg } from 'snabbdom-jsx';
-import { createRect, createVerticalLine, renderCircle, renderLock, renderArrow } from "./interactiveView-objects";
 import { VNode } from "snabbdom/vnode";
+import { renderLock, createRect, createVerticalLine, renderCircle, renderArrow } from '../interactive-view-objects';
+import { getSelectedNode } from '../helper-methods';
 
-/**
- * Visualize the layers and available positions in the graph
- * @param root Root of the hierarchical level for which the layers and positions should be visualized.
- */
-export function renderInteractiveLayout(root: KNode): VNode {
-    // Filter KNodes
-    let nodes = filterKNodes(root.children)
-    // @ts-ignore
-    return <g>
-        {renderLayer(nodes, root)}
-    </g>
-}
 
 /**
  * Visualize the layer the selected node is in as a rectangle and all other layers as a vertical line.
@@ -39,7 +25,7 @@ export function renderInteractiveLayout(root: KNode): VNode {
  * @param node All nodes in the hierarchical level for which the layers should be visualized.
  * @param root Root of the hierarchical level.
  */
-function renderLayer(nodes: KNode[], root: KNode): VNode {
+export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
     const direction = nodes[0].direction
     let selNode = getSelectedNode(nodes)
     if (selNode !== undefined) {
@@ -104,7 +90,7 @@ function renderLayer(nodes: KNode[], root: KNode): VNode {
  * @param layers All layers in the graph at the hierarchical level.
  * @param forbidden Determines whether the current layer is forbidden.
  */
-function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: number): VNode {
+export function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: number): VNode {
     let layerNodes: KNode[] = getNodesOfLayer(current, nodes)
 
     // get the selected node
@@ -258,25 +244,21 @@ function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbi
     }
 }
 
-/**
- * Generates an icon to visualize the set Constraints of the node.
- * @param node KNode which Constraints should be rendered.
- */
-export function renderConstraints(node: KNode): VNode {
+export function renderLayeredConstraint(node: KNode) {
     let result = <g></g>
     let x = node.hierWidth !== 0 ? node.hierWidth : node.size.width
     let y = 0
     const positionConstraint = node.properties.positionConstraint
     const layerConstraint = node.properties.layerConstraint
     if (layerConstraint !== -1 && positionConstraint !== -1) {
-        // layer and position COnstraint are set
-        result = <g>{result}{renderLock(x, y)}</g>
+        // layer and position Constraint are set
+        result = <g>{renderLock(x, y)}</g>
     } else if (layerConstraint !== -1) {
         // only layer Constraint is set
-        result = <g>{result}{renderLayerConstraint(x + 2, y - 2, node.direction)}</g>
+        result = <g>{renderLayerConstraint(x + 2, y - 2, node.direction)}</g>
     } else if (positionConstraint !== -1) {
         // only position Constraint is set
-        result = <g>{result}{renderPositionConstraint(x + 2, y - 2, node.direction)}</g>
+        result = <g>{renderPositionConstraint(x + 2, y - 2, node.direction)}</g>
     }
     // @ts-ignore
     return result
