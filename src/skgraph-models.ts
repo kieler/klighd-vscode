@@ -43,14 +43,10 @@ export class SKNode extends RectangularNode implements SKGraphElement {
     tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || (feature === moveFeature && (this.parent as SKNode).interactiveLayout) || feature === popupFeature
+        return feature === selectFeature || (feature === moveFeature && (this.parent as SKNode).properties.interactiveLayout) || feature === popupFeature
     }
 
-    layerId: number
-    posId: number
-    layerCons: number
-    posCons: number
-    interactiveLayout: boolean
+    properties: NodeProperties
     direction: number
 
     shadow: boolean
@@ -59,6 +55,15 @@ export class SKNode extends RectangularNode implements SKGraphElement {
 
     hierWidth: number
     hierHeight: number
+}
+
+export class NodeProperties {
+    algorithm: string
+    interactiveLayout: boolean
+    layerConstraint: number
+    layerId: number
+    positionConstraint: number
+    positionId: number
 }
 
 /**
@@ -241,7 +246,7 @@ export interface KRoundedRectangle extends KContainerRendering {
 }
 
 /**
- * References an already defined rendering to make redefining unneccessary.
+ * References an already defined rendering to make redefining unnecessary.
  * Represents its java counterpart in KLighD.
  */
 export interface KRenderingRef extends KRendering {
@@ -462,19 +467,19 @@ export interface KColoring extends KStyle {
 }
 
 /**
- * Defines the Backgroundcolor and its alphaChannel of a rendering.
+ * Defines the BackgroundColor and its alphaChannel of a rendering.
  * Represents its java counterpart in KLighD.
  */
 export interface KBackground extends KColoring { }
 
 /**
- * Defines the Foregroundcolor and its alphaChannel of a rendering.
+ * Defines the ForegroundColor and its alphaChannel of a rendering.
  * Represents its java counterpart in KLighD.
  */
 export interface KForeground extends KColoring { }
 
 /**
- * FontStyle to dertermine whether to draw it bold or not.
+ * FontStyle to determine whether to draw it bold or not.
  * Represents its java counterpart in KLighD.
  */
 export interface KFontBold extends KStyle {
@@ -482,7 +487,7 @@ export interface KFontBold extends KStyle {
 }
 
 /**
- * FontStyle to dertermine whether to draw it italic or not.
+ * FontStyle to determine whether to draw it italic or not.
  * Represents its java counterpart in KLighD.
  */
 export interface KFontItalic extends KStyle {
@@ -594,7 +599,7 @@ export interface KTextStrikeout extends KStyle {
 }
 
 /**
- * FontStyle to add an unterline to an text element.
+ * FontStyle to add an underline to an text element.
  * Represents its java counterpart in KLighD.
  */
 export interface KTextUnderline extends KStyle {
