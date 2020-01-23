@@ -14,6 +14,7 @@
 import {
     Bounds, boundsFeature, Point, popupFeature, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SModelElement, SParentElement, moveFeature
 } from 'sprotty/lib';
+import { NodeProperties } from '@kieler/keith-interactive/lib/constraint-classes';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -55,15 +56,6 @@ export class SKNode extends RectangularNode implements SKGraphElement {
 
     hierWidth: number
     hierHeight: number
-}
-
-export class NodeProperties {
-    algorithm: string
-    interactiveLayout: boolean
-    layerConstraint: number
-    layerId: number
-    positionConstraint: number
-    positionId: number
 }
 
 /**

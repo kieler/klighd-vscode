@@ -88,6 +88,8 @@ export class NodeProperties {
     layerId: number
     positionConstraint: number
     positionId: number
+    desiredPosition: number
+    currentPosition: number
 }
 
 /**

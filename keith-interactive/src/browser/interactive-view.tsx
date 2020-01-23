@@ -16,6 +16,7 @@ import { filterKNodes } from './helper-methods';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
 import { renderHierarchyLevel, renderLayeredConstraint } from './layered/layered-interactive-view';
+import { renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
 import { isUndefined } from 'util';
 
 /**
@@ -49,7 +50,9 @@ export function renderConstraints(node: KNode): VNode {
     if (isUndefined(algorithm) || algorithm === 'layered') {
         result = renderLayeredConstraint(node)
     } else if (algorithm === 'rectPacking') {
-        // TODO
+        if (node.properties.desiredPosition !== -1) {
+            result = renderRectPackConstraint(node)
+        }
     } else {
         // Not supported
     }

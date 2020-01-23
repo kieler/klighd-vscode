@@ -15,6 +15,7 @@ import { KNode } from '../constraint-classes';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
 import React = require("react")
+import { renderLock } from '../interactive-view-objects';
 
  /**
  * Visualize the layer the selected node is in as a rectangle and all other layers as a vertical line.
@@ -39,4 +40,8 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
     });
     // @ts-ignore
     return <g>{rects}</g>
+}
+
+export function renderRectPackConstraint(node: KNode) {
+    return <g>{renderLock(node.size.width - 7, 7)}</g>
 }

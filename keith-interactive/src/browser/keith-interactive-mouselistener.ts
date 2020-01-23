@@ -23,6 +23,7 @@ import { isUndefined } from 'util';
 import { setProperty, getLayers } from './layered/constraint-utils';
 import { RefreshLayoutAction } from './actions';
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
+import { setGenerateRectPackAction } from './rect-packing/constraint-util';
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
@@ -119,9 +120,9 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             if (algorithm === 'layered' || isUndefined(algorithm)) {
                 result = [setProperty(this.nodes, this.layers, this.target)].concat(super.mouseUp(this.target, event));
             } else if (algorithm === 'rectPacking') {
-                // New algorithms
+                result = [setGenerateRectPackAction(this.nodes, this.target, event)].concat(super.mouseUp(this.target, event));
             } else {
-
+                // Algorithm not supported
             }
             this.target = undefined
             return result
