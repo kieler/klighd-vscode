@@ -17,11 +17,6 @@ import { RectPackSetPositionConstraintAction } from './actions';
 import { getAbsoluteBounds, translate } from 'sprotty';
 
 export function setGenerateRectPackAction(nodes: KNode[], target: KNode, event: MouseEvent) {
-    // Check containment of event.x, event,y in each node that is not the targetNode
-    // const targetBounds = getAbsoluteBounds(target)
-    // const canvasBounds = target.root.canvasBounds;
-    // const boundsInWindow = translate(targetBounds, canvasBounds);
-    let index = 0
     let result = new RefreshLayoutAction()
     nodes.forEach(node => {
         if (node.id !== target.id) {
@@ -34,16 +29,15 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, event: 
             const highY = boundsInWindow.y + boundsInWindow.height
             if (event.pageX > lowX && event.pageX < highX
                 && event.pageY > lowY && event.pageY < highY) {
-                    // FIXME determine actual position
-                    const actualPosition = index
-                    if (actualPosition !== target.properties.desiredPosition) {
+                    // How the position should be calculated FIXME currentPosition is -1
+                    const actualPosition = node.properties.currentPosition
+                    if (actualPosition !== target.properties.currentPosition && actualPosition !== -1) {
                         result = new RectPackSetPositionConstraintAction(
                             {id: target.id, order: actualPosition}
                         )
                     }
                 }
         }
-        index++
     });
     return result
 }

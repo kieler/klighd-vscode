@@ -44,7 +44,9 @@ export class SKNode extends RectangularNode implements SKGraphElement {
     tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || (feature === moveFeature && (this.parent as SKNode).properties.interactiveLayout) || feature === popupFeature
+        return feature === selectFeature
+        || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
+        || feature === popupFeature
     }
 
     properties: NodeProperties
