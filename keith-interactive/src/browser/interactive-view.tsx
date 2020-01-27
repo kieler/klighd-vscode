@@ -15,8 +15,8 @@ import { KNode } from './constraint-classes';
 import { filterKNodes } from './helper-methods';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
-import { renderHierarchyLevel, renderLayeredConstraint } from './layered/layered-interactive-view';
-import { renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
+import { renderHierarchyLevel as renderHierarchyLevelLayered, renderLayeredConstraint } from './layered/layered-interactive-view';
+import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
 import { isUndefined } from 'util';
 
 /**
@@ -28,9 +28,9 @@ export function renderInteractiveLayout(root: KNode): VNode {
     let nodes = filterKNodes(root.children)
     let result = undefined
     if (isUndefined(root.properties.algorithm) || root.properties.algorithm === 'layered') {
-        result = renderHierarchyLevel(nodes, root)
+        result = renderHierarchyLevelLayered(nodes, root)
     } else if (root.properties.algorithm === 'rectPacking') {
-        // TODO
+        result = renderHierarchyLevelRectPacking(nodes, root)
     } else {
         // Not supported
     }

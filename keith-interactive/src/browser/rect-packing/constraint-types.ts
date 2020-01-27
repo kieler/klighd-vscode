@@ -19,3 +19,8 @@ export class RectPackSetPositionConstraint {
 export class RectPackDeletePositionConstraint {
     id: string
 }
+
+export class AspectRatio {
+    id: string
+    aspectRatio: number
+}

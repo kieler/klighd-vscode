@@ -120,7 +120,8 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             if (algorithm === 'layered' || isUndefined(algorithm)) {
                 result = [setProperty(this.nodes, this.layers, this.target)].concat(super.mouseUp(this.target, event));
             } else if (algorithm === 'rectPacking') {
-                result = [setGenerateRectPackAction(this.nodes, this.target, event)].concat(super.mouseUp(this.target, event));
+                const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
+                result = [setGenerateRectPackAction(this.nodes, this.target, parent, event)].concat(super.mouseUp(this.target, event));
             } else {
                 // Algorithm not supported
             }

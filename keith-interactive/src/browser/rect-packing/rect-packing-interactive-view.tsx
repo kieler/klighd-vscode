@@ -14,7 +14,6 @@
 import { KNode } from '../constraint-classes';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
-import React = require("react")
 import { renderLock } from '../interactive-view-objects';
 
  /**
@@ -24,22 +23,22 @@ import { renderLock } from '../interactive-view-objects';
  * @param root Root of the hierarchical level.
  */
 export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
-    let backgroundColor = 'lightgrey'
-    const rects: VNode[] = []
-    nodes.forEach(node => {
-        // @ts-ignore
-        rects.push(<rect
-            x={node.position.x}
-            y={node.position.y}
-            width={node.size.width}
-            height={node.size.width}
-            fill={backgroundColor}
-            stroke={'grey'}
-            style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
-        </rect>)
-    });
+    // let backgroundColor = 'lightgrey'
+    // const rects: VNode[] = []
+    // nodes.forEach(node => {
+    //     // @ts-ignore
+    //     rects.push(<rect
+    //         x={node.position.x}
+    //         y={node.position.y}
+    //         width={node.size.width}
+    //         height={node.size.width}
+    //         fill={backgroundColor}
+    //         stroke={'grey'}
+    //         style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
+    //     </rect>)
+    // });
     // @ts-ignore
-    return <g>{rects}</g>
+    return <g></g>
 }
 
 export function renderRectPackConstraint(node: KNode) {

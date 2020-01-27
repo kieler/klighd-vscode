@@ -83,13 +83,14 @@ export class KNode extends RectangularNode implements KGraphElement {
 
 export class NodeProperties {
     algorithm: string
+    aspectRatio: number
+    currentPosition: number
+    desiredPosition: number
     interactiveLayout: boolean
     layerConstraint: number
     layerId: number
     positionConstraint: number
     positionId: number
-    desiredPosition: number
-    currentPosition: number
 }
 
 /**

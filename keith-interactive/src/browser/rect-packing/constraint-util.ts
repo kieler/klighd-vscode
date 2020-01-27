@@ -16,7 +16,7 @@ import { RefreshLayoutAction } from '../actions';
 import { RectPackSetPositionConstraintAction } from './actions';
 import { getAbsoluteBounds, translate } from 'sprotty';
 
-export function setGenerateRectPackAction(nodes: KNode[], target: KNode, event: MouseEvent) {
+export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent: KNode | undefined, event: MouseEvent) {
     let result = new RefreshLayoutAction()
     nodes.forEach(node => {
         if (node.id !== target.id) {

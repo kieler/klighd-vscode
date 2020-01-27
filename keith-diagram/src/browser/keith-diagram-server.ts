@@ -28,7 +28,7 @@ import { RefreshLayoutAction } from '@kieler/keith-interactive/lib/actions';
 import {
     SetPositionConstraintAction, SetLayerConstraintAction, SetStaticConstraintAction, DeleteStaticConstraintAction, DeletePositionConstraintAction, DeleteLayerConstraintAction
 } from '@kieler/keith-interactive/lib/layered/actions';
-import { RectPackSetPositionConstraintAction, RectPackDeletePositionConstraintAction } from '@kieler/keith-interactive/lib/rect-packing/actions';
+import { RectPackSetPositionConstraintAction, RectPackDeletePositionConstraintAction, SetAspectRatioAction } from '@kieler/keith-interactive/lib/rect-packing/actions';
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
@@ -156,6 +156,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(DeleteLayerConstraintAction.KIND, this)
         registry.register(RectPackSetPositionConstraintAction.KIND, this)
         registry.register(RectPackDeletePositionConstraintAction.KIND, this)
+        registry.register(SetAspectRatioAction.KIND, this)
         registry.register(RefreshLayoutAction.KIND, this)
     }
 

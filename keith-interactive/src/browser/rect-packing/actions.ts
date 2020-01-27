@@ -14,7 +14,7 @@
 import {
     Action
 } from 'sprotty/lib';
-import { RectPackSetPositionConstraint, RectPackDeletePositionConstraint } from './constraint-types';
+import { RectPackSetPositionConstraint, RectPackDeletePositionConstraint, AspectRatio } from './constraint-types';
 
 export class RectPackSetPositionConstraintAction implements Action {
     static readonly KIND: string = 'rectPackSetPositionConstraint'
@@ -32,5 +32,16 @@ export class RectPackDeletePositionConstraintAction implements Action {
     readonly kind = RectPackDeletePositionConstraintAction.KIND
 
     constructor(public readonly constraint: RectPackDeletePositionConstraint) {
+    }
+}
+
+/**
+ * Send form client to server to set the aspect ratio.
+ */
+export class SetAspectRatioAction implements Action {
+    static readonly KIND: string = 'setAspectRatio'
+    readonly kind = SetAspectRatioAction.KIND
+
+    constructor(public readonly constraint: AspectRatio) {
     }
 }
