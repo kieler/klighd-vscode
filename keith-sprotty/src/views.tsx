@@ -64,13 +64,13 @@ export class KNodeView implements IView {
         let layer = <g></g>
         let constraints = <g></g>
 
-        if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
-            if (isShadow) {
-                // render shadow of the node
-                shadow = getRendering(node.data, node, new KStyles, context as any)
-            }
-
-            if (isChildSelected(node as SKNode)) {
+        if (isShadow) {
+            // Render shadow of the node
+            shadow = getRendering(node.data, node, new KStyles, ctx)
+            console.log("Rendered shadow of ", node)
+        }
+        if (isChildSelected(node as SKNode)) {
+            if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
                 // render the objects indicating the layer and positions in the graph
                 layer = <g>{renderInteractiveLayout(node as SKNode)}</g>
             }
@@ -87,11 +87,13 @@ export class KNodeView implements IView {
                 // render icon visualizing the set Constraints
                 constraints = renderConstraints(node)
             }
+        } else {
+            rendering = getRendering(node.data, node, new KStyles, ctx)
         }
         node.shadow = isShadow
 
         if (node.id === '$root') {
-            // the root node should not be rendered, only its children should.
+            // The root node should not be rendered, only its children should.
             const children = ctx.renderChildren(node)
             // Add all color and shadow definitions put into the context by the child renderings.
             const defs = <defs></defs>
@@ -107,7 +109,7 @@ export class KNodeView implements IView {
                     </g>
         }
 
-        // add renderings that are not undefined
+        // Add renderings that are not undefined
         if (shadow !== undefined) {
             result = <g>{result}{shadow}</g>
         }
@@ -163,12 +165,9 @@ export class KLabelView implements IView {
     render(label: SKLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
 
-        let parent = label.parent
         let rendering = undefined
         // labels should not be visible if the nodes are hidden
-        if (!(parent instanceof SKNode) || isChildSelected(parent) || isChildSelected(parent.parent as SKNode) || !this.mListener.hasDragged) {
             rendering = getRendering(label.data, label, new KStyles, context as any)
-        }
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
