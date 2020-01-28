@@ -59,7 +59,7 @@ export class KNodeView implements IView {
         node.hierHeight = 0
         node.hierWidth = 0
 
-        let isShadow = node.shadow
+        const isShadow = node.shadow
         let shadow = undefined
         let layer = <g></g>
         let constraints = <g></g>
@@ -67,16 +67,15 @@ export class KNodeView implements IView {
         if (isShadow) {
             // Render shadow of the node
             shadow = getRendering(node.data, node, new KStyles, ctx)
-            console.log("Rendered shadow of ", node)
         }
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
-                // render the objects indicating the layer and positions in the graph
+                // Render the objects indicating the layer and positions in the graph
                 layer = <g>{renderInteractiveLayout(node as SKNode)}</g>
             }
         }
 
-        // render node & icon
+        // Render nodes and constraint icon. All nodes that are not moved do not have a shadow and have their opacity set to 0.1.
         node.shadow = false
         let rendering = undefined
         if (!this.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
@@ -88,6 +87,7 @@ export class KNodeView implements IView {
                 constraints = renderConstraints(node)
             }
         } else {
+            node.opacity = 0.1
             rendering = getRendering(node.data, node, new KStyles, ctx)
         }
         node.shadow = isShadow
@@ -165,9 +165,16 @@ export class KLabelView implements IView {
     render(label: SKLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
 
-        let rendering = undefined
-        // labels should not be visible if the nodes are hidden
-            rendering = getRendering(label.data, label, new KStyles, context as any)
+        let parent = label.parent
+
+        if (!(parent instanceof SKNode) || isChildSelected(parent) || isChildSelected(parent.parent as SKNode) || !this.mListener.hasDragged) {
+            // The label is on the same hierarchy level as the moved node
+        } else {
+            // Nodes that are not on the same hierarchy are less visible.
+            label.opacity = 0.1
+        }
+        let rendering = getRendering(label.data, label, new KStyles, context as any)
+
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>

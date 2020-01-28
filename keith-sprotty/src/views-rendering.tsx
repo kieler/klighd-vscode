@@ -23,6 +23,7 @@ import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, g
 import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
+import { SNode, SLabel } from 'sprotty';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -168,7 +169,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                             'stroke-linejoin': lineStyles.lineJoin,
                             'stroke-width': lineStyles.lineWidth,
                             'stroke-dasharray': lineStyles.dashArray,
-                            'stroke-miterlimit': lineStyles.miterLimit
+                            'stroke-miterlimit': lineStyles.miterLimit,
+                            'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1
                         } as React.CSSProperties}
                         stroke={colorStyles.foreground}
                         fill={colorStyles.background}
@@ -193,7 +195,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit
+                        'stroke-miterlimit': lineStyles.miterLimit,
+                        'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1
                     } as React.CSSProperties}
                     stroke={colorStyles.foreground}
                     fill={colorStyles.background}
@@ -223,7 +226,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit
+                        'stroke-miterlimit': lineStyles.miterLimit,
+                        'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1
                     } as React.CSSProperties}
                     stroke={colorStyles.foreground}
                     fill={colorStyles.background}
@@ -396,7 +400,8 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
                 'stroke-linejoin': lineStyles.lineJoin,
                 'stroke-width': lineStyles.lineWidth,
                 'stroke-dasharray': lineStyles.dashArray,
-                'stroke-miterlimit': lineStyles.miterLimit
+                'stroke-miterlimit': lineStyles.miterLimit,
+                'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1
             } as React.CSSProperties}
             stroke={colorStyles.foreground}
             fill={colorStyles.background}
@@ -463,7 +468,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         ...{ 'font-style': textStyles.fontStyle },
         ...{ 'font-weight': textStyles.fontWeight },
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
-        ...{ 'text-decoration-style': textStyles.textDecorationStyle }
+        ...{ 'text-decoration-style': textStyles.textDecorationStyle },
+        ...{ 'opacity': (parent instanceof SLabel ? parent.opacity : 1)}
     }
 
     // The children to be contained in the returned text node.
