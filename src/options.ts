@@ -1,13 +1,12 @@
 import { injectable } from "inversify";
 
 export interface RenderOption {
+    id: string
     name: string
     type: TransformationOptionType
     initialValue: any
     currentValue: any
-    sourceHash: number
 }
-
 /**
  * The different types a SynthesisOption can have.
  */
@@ -20,30 +19,43 @@ export enum TransformationOptionType {
     CATEGORY = 5
 }
 
+export class ShowConstraintOption implements RenderOption {
+    static readonly ID: string = 'show-constraints'
+    static readonly NAME: string = 'Show Constraint'
+    readonly id: string = ShowConstraintOption.ID
+    readonly name: string = ShowConstraintOption.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = false;
+    currentValue: boolean = false
+}
+
+
 @injectable()
 export class RenderOptions {
     renderOptions: RenderOption[]
 
     constructor() {
-        let option: RenderOption = {name: "Show Constraint", type: TransformationOptionType.CHECK, initialValue: false,
-                    currentValue: false, sourceHash: 0o101}
-        this.renderOptions = [option]
+        this.renderOptions = [new ShowConstraintOption()]
     }
 
     public getRenderOptions(): RenderOption[] {
         return this.renderOptions
     }
 
-    public updateRenderOption(option: RenderOption) {
-        this.renderOptions[0] = option
-    }
-
-    public getShowConstraint(): boolean {
-        for (let option of this.renderOptions) {
-            if (option.name === "Show Constraint") {
-                return option.currentValue
+    public get(option: string): boolean {
+        for (let renderOption of this.renderOptions) {
+            if (renderOption.id === option) {
+                return renderOption.currentValue
             }
         }
         return false
+    }
+
+    public set(option: string, value: any) {
+        for (let renderOption of this.renderOptions) {
+            if (renderOption.id === option) {
+                renderOption.currentValue = value
+            }
+        }
     }
 }
