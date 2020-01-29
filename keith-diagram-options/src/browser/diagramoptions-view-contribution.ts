@@ -136,7 +136,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         if (this.rOptions === undefined) {
             this.rOptions = this.diagramManager.container.get(RenderOptions)
         }
-        this.rOptions.updateRenderOption(option)
+        this.rOptions.set(option.id, option.currentValue)
         // Update the diagram to draw according to the changed render option.
         const lClient = await this.client.languageClient
         await lClient.sendNotification('diagram/accept', {clientId: 'keith-diagram_sprotty', action: new RefreshLayoutAction()})

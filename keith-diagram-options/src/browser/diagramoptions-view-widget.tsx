@@ -185,7 +185,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheckROption(e, option)
         }
 
-        return <div key={option.sourceHash} className='render-option'>
+        return <div key={option.id} className='diagram-option'>
             <label htmlFor={option.name}>
                 <input className='diagrams-inputbox' {...inputAttrs} />
                 {option.name}

@@ -20,7 +20,7 @@ import {
 import { renderInteractiveLayout, renderConstraints } from '@kieler/keith-interactive/lib/interactive-view';
 import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods'
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener'
-import { RenderOptions } from './options';
+import { RenderOptions, ShowConstraintOption } from './options';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { SKGraphRenderingContext } from './views-common';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
@@ -64,7 +64,7 @@ export class KNodeView implements IView {
 
         const isShadow = node.shadow
         let shadow = undefined
-        let layer = <g></g>
+        let nodes = <g></g>
         let constraints = <g></g>
 
         if (isShadow) {
@@ -74,7 +74,7 @@ export class KNodeView implements IView {
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
-                layer = <g>{renderInteractiveLayout(node as SKNode)}</g>
+                nodes = renderInteractiveLayout(node as SKNode)
             }
         }
 
@@ -85,7 +85,7 @@ export class KNodeView implements IView {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx)
 
-            if (this.rOptions.getShowConstraint() && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
+            if (this.rOptions.get(ShowConstraintOption.ID) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
                 constraints = renderConstraints(node)
             }
@@ -124,11 +124,11 @@ export class KNodeView implements IView {
             })
 
             return <g>
-                        {result}
-                        {layer}
-                        {defs}
-                        {...children}
-                    </g>
+                {result}
+                {nodes}
+                {defs}
+                {...children}
+            </g>
         }
 
         // Add renderings that are not undefined
@@ -138,15 +138,14 @@ export class KNodeView implements IView {
         if (rendering !== undefined) {
             result = <g>{result}{rendering}</g>
         }
-        result = <g>{result}{layer}{constraints}</g>
+        result = <g>{result}{nodes}{constraints}</g>
         // Default case. If the children are not already rendered within a KChildArea add the children by default.
         if (!node.areChildrenRendered) {
             result = <g>{result}{ctx.renderChildren(node)}</g>
         }
         return result
     }
-
- }
+}
 
 
 /**
