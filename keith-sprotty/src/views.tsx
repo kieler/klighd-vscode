@@ -14,7 +14,9 @@
 import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { IView, RenderingContext, SGraph, SGraphView } from 'sprotty/lib';
+import {
+    IView, RenderingContext, SGraph, SGraphView, TYPES, SGraphFactory
+} from 'sprotty/lib';
 import { renderInteractiveLayout, renderConstraints } from '@kieler/keith-interactive/lib/interactive-view';
 import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods'
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener'
@@ -46,6 +48,7 @@ export class KNodeView implements IView {
 
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
     @inject(RenderOptions) protected rOptions: RenderOptions
+    @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
     render(node: SKNode, context: RenderingContext): VNode {
         // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
@@ -86,6 +89,25 @@ export class KNodeView implements IView {
                 // render icon visualizing the set Constraints
                 constraints = renderConstraints(node)
             }
+
+            // Currently does not work, since it changes the order of teh nodes in the dom.
+            // After setting a constraint and deleting it afterwards this leads to the problem that one node is there twice and one is gone
+            // until the diagram is again updated.
+            // if (node.selected) {
+            //     let root = node.parent
+            //     while ((root as SKNode).parent) {
+            //         root = (root as SKNode).parent
+            //     }
+            //     new BringToFrontCommand(new BringToFrontAction([node.id])).execute({
+            //         root: root as SModelRoot,
+            //         modelFactory: this.graphFactory,
+            //         duration: 100,
+            //         modelChanged: undefined!,
+            //         logger: new ConsoleLogger(),
+            //         syncer: new AnimationFrameSyncer()
+
+            //     })
+            // }
         } else {
             node.opacity = 0.1
             rendering = getRendering(node.data, node, new KStyles, ctx)
