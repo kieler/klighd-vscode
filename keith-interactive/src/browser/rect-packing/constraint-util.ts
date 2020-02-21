@@ -39,30 +39,33 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
                 }
         }
     });
-    let x: number = Number.MAX_VALUE
-    let y: number = Number.MAX_VALUE
-    let maxX: number = Number.MIN_VALUE
-    let maxY: number = Number.MIN_VALUE
-    nodes.forEach(node => {
-        if (node.position.x < x) {
-            x = node.position.x
-        }
-        if (node.position.y < y) {
-            y = node.position.y
-        }
-        if (node.position.x + node.size.width > maxX) {
-            maxX = node.position.x + node.size.width
-        }
-        if (node.position.y + node.size.height > maxY) {
-            maxY = node.position.y + node.size.height
-        }
-    })
-    const aspectRatio = (maxX - x) / (maxY - y)
-    if (parent && parent.properties.aspectRatio !== aspectRatio) {
-        return new SetAspectRatioAction({
-            id: parent.id,
-            aspectRatio: aspectRatio
+    if (result instanceof RefreshLayoutAction) {
+
+        let x: number = Number.MAX_VALUE
+        let y: number = Number.MAX_VALUE
+        let maxX: number = Number.MIN_VALUE
+        let maxY: number = Number.MIN_VALUE
+        nodes.forEach(node => {
+            if (node.position.x < x) {
+                x = node.position.x
+            }
+            if (node.position.y < y) {
+                y = node.position.y
+            }
+            if (node.position.x + node.size.width > maxX) {
+                maxX = node.position.x + node.size.width
+            }
+            if (node.position.y + node.size.height > maxY) {
+                maxY = node.position.y + node.size.height
+            }
         })
+        const aspectRatio = (maxX - x) / (maxY - y)
+        if (parent && parent.properties.aspectRatio !== aspectRatio) {
+            return new SetAspectRatioAction({
+                id: parent.id,
+                aspectRatio: aspectRatio
+            })
+        }
     }
     return result
 }
