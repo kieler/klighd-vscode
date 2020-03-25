@@ -49,7 +49,7 @@ export function renderConstraints(node: KNode): VNode {
     const algorithm = (node.parent as KNode).properties.algorithm
     if (isUndefined(algorithm) || algorithm === 'layered') {
         result = renderLayeredConstraint(node)
-    } else if (algorithm === 'rectPacking') {
+    } else if (algorithm === 'rectpacking') {
         if (node.properties.desiredPosition !== -1) {
             result = renderRectPackConstraint(node)
         }
