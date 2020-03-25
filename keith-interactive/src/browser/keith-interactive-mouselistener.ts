@@ -90,7 +90,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                         return [new DeleteStaticConstraintAction({
                             id: this.target.id
                         })]
-                    } else if (algorithm === 'rectPacking') {
+                    } else if (algorithm === 'rectpacking') {
                         return [new RectPackDeletePositionConstraintAction({
                             id: this.target.id
                         })]
@@ -119,7 +119,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             const algorithm = (this.target.parent as KNode).properties.algorithm
             if (algorithm === 'layered' || isUndefined(algorithm)) {
                 result = [setProperty(this.nodes, this.layers, this.target)].concat(super.mouseUp(this.target, event));
-            } else if (algorithm === 'rectPacking') {
+            } else if (algorithm === 'rectpacking') {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
                 result = [setGenerateRectPackAction(this.nodes, this.target, parent, event)].concat(super.mouseUp(this.target, event));
             } else {

@@ -29,7 +29,7 @@ export function renderInteractiveLayout(root: KNode): VNode {
     let result = undefined
     if (isUndefined(root.properties.algorithm) || root.properties.algorithm === 'layered') {
         result = renderHierarchyLevelLayered(nodes, root)
-    } else if (root.properties.algorithm === 'rectPacking') {
+    } else if (root.properties.algorithm === 'rectpacking') {
         result = renderHierarchyLevelRectPacking(nodes, root)
     } else {
         // Not supported
