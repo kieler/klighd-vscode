@@ -269,7 +269,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                                             if (!data.input) {
                                                 return
                                             }
-                                            this.setContentOfInputbox("input-box-" + key, key, nextStep)
+                                            this.setContentOfInputbox("input-box-content" + key, key, nextStep)
                                         }}
                                         placeholder={""} readOnly={!data.input} size={1}/>
                                 </div>
@@ -346,7 +346,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     renderHistoryColumn(data: SimulationData, key: string) {
         return <td key="history" className="simulation-data-truncate history simulation-td">
             <div>
-                <input id={"input-box-" + key}
+                <input id={"input-box-history" + key}
                         className={"simulation-history-inputbox inactive-input-box"}
                         type='text'
                         value={data.data ? JSON.stringify(reverse(data.data)) : ""}
