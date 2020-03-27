@@ -63,10 +63,10 @@
             "outputCapture": "std"
         },
         {
-            "name": "Launch in Chrome2",
+            "name": "Launch in Chrome",
             "type": "chrome",
             "request": "launch",
-            "url": "http://localhost:3000/#/home/sdo/.theia/Untitled.theia-workspace",
+            "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}",
             "sourceMapPathOverrides": {
                 "webpack:///../*": "${webRoot}/*"
