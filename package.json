@@ -40,8 +40,10 @@
     "@kieler/keith-diagram": "0.1.0",
     "@kieler/keith-diagram-options": "0.1.0",
     "@kieler/keith-icons": "0.1.0",
+    "@kieler/keith-kicool": "0.1.0",
     "@kieler/keith-interactive": "0.1.0",
     "@kieler/keith-language": "0.1.0",
+    "@kieler/keith-simulation": "0.1.0",
     "@kieler/keith-sprotty": "0.1.0",
     "@theia/application-package": "next",
     "@theia/core": "next",
@@ -108,6 +110,9 @@
     "keith-language",
     "keith-sprotty",
     "keith-icons",
+    "keith-kicool",
+    "keith-app-electron",
+    "keith-simulation",
     "keith-interactive"
   ]
 }

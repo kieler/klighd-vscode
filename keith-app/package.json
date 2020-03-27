@@ -7,6 +7,8 @@
     "dependencies": {
         "@kieler/keith-diagram-options": "0.1.0",
         "@kieler/keith-icons": "0.1.0",
+        "@kieler/keith-kicool": "0.1.0",
+        "@kieler/keith-simulation": "0.1.0",
         "@theia/application-package": "next",
         "@theia/core": "next",
         "@theia/editor": "next",
