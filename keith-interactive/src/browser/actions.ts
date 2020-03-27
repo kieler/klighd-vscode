@@ -14,9 +14,9 @@
 import { Action } from 'sprotty/lib/base/actions/action';
 import { DeleteConstraint } from './layered/constraint-types';
 
-export class RefreshLayoutAction implements Action {
-    static readonly KIND: string = 'refreshLayout'
-    readonly kind = RefreshLayoutAction.KIND
+export class RefreshDiagramAction implements Action {
+    static readonly KIND: string = 'refreshDiagram'
+    readonly kind = RefreshDiagramAction.KIND
     constructor() {}
 }
 export class DeleteConstraintAction implements Action {

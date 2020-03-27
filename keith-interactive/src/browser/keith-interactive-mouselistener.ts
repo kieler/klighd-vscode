@@ -21,7 +21,7 @@ import { DeleteStaticConstraintAction } from './layered/actions';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib/sprotty/languageserver/ls-theia-diagram-server';
 import { isUndefined } from 'util';
 import { setProperty, getLayers } from './layered/constraint-utils';
-import { RefreshLayoutAction } from './actions';
+import { RefreshDiagramAction } from './actions';
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 import { setGenerateRectPackAction } from './rect-packing/constraint-util';
 
@@ -129,7 +129,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             return result
         } else if (this.target) {
             this.target.selected = false
-            const result = super.mouseUp(this.target, event).concat([new RefreshLayoutAction()]);
+            const result = super.mouseUp(this.target, event).concat([new RefreshDiagramAction()]);
             this.target = undefined
             return result
         }

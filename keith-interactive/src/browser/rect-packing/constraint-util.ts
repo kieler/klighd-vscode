@@ -12,12 +12,12 @@
  */
 
 import { KNode } from '../constraint-classes';
-import { RefreshLayoutAction } from '../actions';
+import { RefreshDiagramAction } from '../actions';
 import { RectPackSetPositionConstraintAction, SetAspectRatioAction } from './actions';
 import { getAbsoluteBounds, translate } from 'sprotty';
 
 export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent: KNode | undefined, event: MouseEvent) {
-    let result = new RefreshLayoutAction()
+    let result = new RefreshDiagramAction()
     nodes.forEach(node => {
         if (node.id !== target.id) {
             const targetBounds = getAbsoluteBounds(node)
@@ -39,7 +39,7 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
                 }
         }
     });
-    if (result instanceof RefreshLayoutAction) {
+    if (result instanceof RefreshDiagramAction) {
 
         let x: number = Number.MAX_VALUE
         let y: number = Number.MAX_VALUE

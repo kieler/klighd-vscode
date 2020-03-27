@@ -14,7 +14,7 @@
 import { SModelElement, Action } from 'sprotty';
 import { KNode, Layer, KEdge } from '../constraint-classes';
 import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction } from './actions';
-import { RefreshLayoutAction } from '../actions';
+import { RefreshDiagramAction } from '../actions';
 
 /**
  * Calculates the layer the node is in.
@@ -351,7 +351,7 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
 
     if (forbidden) {
         // If layer is forbidden just refresh
-        return new RefreshLayoutAction()
+        return new RefreshDiagramAction()
     } else if (targetNode.properties.layerId !== layerOfTarget) {
         // layer constraint should only be set if the layer index changed
         if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
@@ -384,5 +384,5 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
         }
     }
     // If the node was moved without setting a constraint - let it snap back
-    return new RefreshLayoutAction()
+    return new RefreshDiagramAction()
 }
