@@ -264,6 +264,16 @@ export interface KText extends KRendering {
      * The server pre-calculated bounds for this text.
      */
     calculatedTextBounds?: Bounds
+
+    /**
+     * The server pre-calculated line widths for each individual line.
+     */
+    calculatedTextLineWidths?: number[]
+
+    /**
+     * The server pre-calculated line heights for each individual line.
+     */
+    calculatedTextLineHeights?: number[]
 }
 
 /**
