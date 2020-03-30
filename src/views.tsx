@@ -11,15 +11,15 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { injectable, inject } from 'inversify';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
+import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods';
+import { renderConstraints, renderInteractiveLayout } from '@kieler/keith-interactive/lib/interactive-view';
+import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
+import { injectable, inject } from 'inversify';
 import {
     IView, RenderingContext, SGraph, SGraphView, TYPES, SGraphFactory
 } from 'sprotty/lib';
-import { renderInteractiveLayout, renderConstraints } from '@kieler/keith-interactive/lib/interactive-view';
-import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods'
-import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener'
 import { RenderOptions, ShowConstraintOption } from './options';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { SKGraphRenderingContext } from './views-common';
@@ -51,7 +51,6 @@ export class KNodeView implements IView {
     @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
     render(node: SKNode, context: RenderingContext): VNode {
-        // TODO: 'as any' is not very nice, but KGraphRenderingContext cannot be used here (two undefined members)
         const ctx = context as any as SKGraphRenderingContext
         // reset this property, if the diagram is drawn a second time
         node.areChildrenRendered = false

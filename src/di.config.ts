@@ -10,6 +10,8 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
+
+import { interactiveModule } from '@kieler/keith-interactive/lib/interactive-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, LogLevel, modelSourceModule,
@@ -17,11 +19,10 @@ import {
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { KeithHoverMouseListener } from './hover/hover';
+import { RenderOptions } from './options';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
-import { interactiveModule } from '@kieler/keith-interactive/lib/interactive-module'
-import { RenderOptions } from './options'
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
