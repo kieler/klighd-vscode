@@ -240,7 +240,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                             {this.renderInputOutputColumn(data)}
                             {this.renderLabelColumn(key)}
                             {this.renderLastValueColumn(data)}
-                            <td key="input" className="simulation-data-fix-size simulation-td">
+                            <td key="input" className="simulation-data-truncate simulation-td">
                                 <div>
                                     <input id={"input-box-" + key}
                                         title={JSON.stringify(nextStep)}
@@ -282,30 +282,18 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                 }
             })
             return <table className={"simulation-data-table"}>
-                <colgroup>
-                    {this.inputOutputColumnEnabled ? <React.Fragment>
-                        <col width="5%"/>
-                        <col width="10%" />
-                        <col width="5%" />
-                        <col width="0%" />
-                        <col width="10%" />
-                        <col width="70%" />
-                    </React.Fragment> : <React.Fragment>
-                        <col width="10%" />
-                        <col width="5%" />
-                        <col width="0%" />
-                        <col width="10%" />
-                        <col width="75%" />
-                    </React.Fragment>}
-                </colgroup>
                 <thead>
                     <tr key="headings" className="simulation-data-row">
                         {this.renderInputOutputColumnHeader()}
-                        <th key="label" className="simulation-data-fix-size" align="left"><div className="simulation-div">Symbol</div></th>
-                        <th key="value" className="simulation-data-truncate" align="left"><div className="simulation-div">Last Value</div></th>
-                        <th key="input" className="simulation-data-fix-size" align="left"><div>Input</div></th>
-                        <th key="next-step" className="simulation-data-truncate" align="left"><div className="simulation-div">Input for Next Tick</div></th>
-                        <th key="history" className="simulation-data-truncate history" align="left"><div className="simulation-div">History</div></th>
+                        <th key="label" className="simulation-data-truncate setwidth" align="left" ><div className="simulation-div">Symbol</div></th>
+
+                        <th key="value" className="simulation-data-truncate setwidth" align="left"><div className="simulation-div">Last</div></th>
+
+                        <th key="input" className="simulation-data-truncate setwidth" align="left"><div>Input</div></th>
+
+                        <th key="next-step" className="simulation-data-truncate setwidth" align="left"><div className="simulation-div">Next</div></th>
+
+                        <th key="history" className="simulation-data-truncate history setwidth-h" align="left"><div className="simulation-div">History</div></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -317,7 +305,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderInputOutputColumn(data: SimulationData): React.ReactNode {
         if (this.inputOutputColumnEnabled) {
-            return <td key="input-output" className="simulation-data-fix-size simulation-td" align="left">
+            return <td key="input-output" className="simulation-data-truncate simulation-td" align="left">
                     <div>
                         {data.input ? <div className='icon fa fa-sign-in'></div> : ""}
                         {data.output ? <div className='icon fa fa-sign-out'></div> : ""}
@@ -330,7 +318,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
     }
 
     renderLabelColumn(key: string): React.ReactNode {
-        return <th key="label" className="simulation-data-fix-size" align="left"><div>{key}</div></th>
+        return <th key="label" className="simulation-data-truncate" align="left"><div>{key}</div></th>
     }
 
     renderLastValueColumn(data: SimulationData) {
@@ -356,7 +344,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
 
     renderInputOutputColumnHeader(): React.ReactNode {
         if (this.inputOutputColumnEnabled) {
-            return <th key="input-output" className="simulation-data-fix-size" align="left"><div className="simulation-div">Input/Output</div></th>
+            return <th key="input-output" className="simulation-data-truncate setwidth" align="left"><div className="simulation-div">I/O</div></th>
         } else {
             return
         }
