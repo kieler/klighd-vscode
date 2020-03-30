@@ -261,7 +261,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                             {this.renderLastValueColumn(data)}
                             <td key="input" className="simulation-data-truncate simulation-td">
                                 <div>
-                                    <input id={"input-box-" + key}
+                                    <input id={"input-box-content" + key}
                                         className={"simulation-data-inputbox" + (!data.input ? " inactive-input-box" : "")}
                                         type='text'
                                         onClick={() => {
