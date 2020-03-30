@@ -371,19 +371,20 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         switch (type.toLowerCase()) {
             case "error":
                 this.messageService.error(message)
-                this.outputManager.getChannel("SCTX").appendLine("ERROR: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('ERROR: ' + message)
+                this.outputManager.selectedChannel = this.outputManager.getChannel('SCTX')
                 break;
             case "warn":
                 this.messageService.warn(message)
-                this.outputManager.getChannel("SCTX").appendLine("WARN: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('WARN: ' + message)
                 break;
             case "info":
                 this.messageService.info(message)
-                this.outputManager.getChannel("SCTX").appendLine("INFO: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('INFO: ' + message)
                 break;
             default:
                 this.messageService.log(message)
-                this.outputManager.getChannel("SCTX").appendLine("LOG: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('LOG: ' + message)
                 break;
         }
     }
@@ -453,7 +454,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         if (finished)  {
             let errorOccurred = false
             this.compilerWidget.compiling = false
-            this.compilationFinishedEmitter.fire(true)
+            let errorString = '';
             snapshotsDescriptions.files.forEach(array => {
                 array.forEach(element => {
                     element.warnings.forEach(warning => {
@@ -462,9 +463,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     element.errors.forEach(error => {
                         this.outputManager.getChannel("SCTX").appendLine("ERROR: " + error)
                         errorOccurred = true
+                        errorString = errorString + '\n' + error
                     })
                 })
             });
+            this.compilationFinishedEmitter.fire(!errorOccurred)
+
             this.endTime = performance.now()
             // Set finished bar if the currentIndex of the processor is the maxIndex the compilation was not canceled
             this.statusbar.setElement('compile-status', {
@@ -477,7 +481,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 command: REVEAL_COMPILATION_WIDGET.id
             })
             if (errorOccurred) {
-                this.message('An error occurred during compilation. Check the Compiler Widget for details.', 'error')
+                this.message('An error occurred during compilation. Check the Compiler Widget for details.' + errorString, 'error')
             }
         } else {
             // Set progress bar for compilation
