@@ -13,7 +13,9 @@
 
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
+import { RefreshDiagramAction } from '@kieler/keith-interactive/lib/actions';
 import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
+import { RenderOption, RenderOptions } from '@kieler/keith-sprotty/lib/options';
 import { Command, CommandHandler, CommandRegistry } from '@theia/core';
 import { DidCreateWidgetEvent, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { FrontendApplication, FrontendApplicationContribution } from '@theia/core/lib/browser/frontend-application';
@@ -24,8 +26,6 @@ import { inject, injectable } from 'inversify';
 import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
-import { RenderOption, RenderOptions } from '@kieler/keith-sprotty/lib/options';
-import { RefreshDiagramAction } from '@kieler/keith-interactive/lib/actions';
 
 /**
  * The keybinding to toggle the diagram options view widget.
@@ -40,6 +40,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     editorWidget: EditorWidget
     diagramOptionsViewWidget: DiagramOptionsViewWidget
 
+    /**
+     * Client side render options.
+     */
     private rOptions: RenderOptions
 
     /**
@@ -136,7 +139,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         if (this.rOptions === undefined) {
             this.rOptions = this.diagramManager.container.get(RenderOptions)
         }
-        this.rOptions.set(option.id, option.currentValue)
+        this.rOptions.set(option.sourceHash, option.currentValue)
         // Update the diagram to draw according to the changed render option.
         const lClient = await this.client.languageClient
         await lClient.sendNotification('diagram/accept', {clientId: 'keith-diagram_sprotty', action: new RefreshDiagramAction()})

@@ -1,11 +1,11 @@
 import { injectable } from "inversify";
 
 export interface RenderOption {
-    id: string
     name: string
     type: TransformationOptionType
     initialValue: any
     currentValue: any
+    sourceHash: string
 }
 /**
  * The different types a SynthesisOption can have.
@@ -22,7 +22,7 @@ export enum TransformationOptionType {
 export class ShowConstraintOption implements RenderOption {
     static readonly ID: string = 'show-constraints'
     static readonly NAME: string = 'Show Constraint'
-    readonly id: string = ShowConstraintOption.ID
+    readonly sourceHash: string = ShowConstraintOption.ID
     readonly name: string = ShowConstraintOption.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = false;
@@ -44,7 +44,7 @@ export class RenderOptions {
 
     public get(option: string): boolean {
         for (let renderOption of this.renderOptions) {
-            if (renderOption.id === option) {
+            if (renderOption.sourceHash === option) {
                 return renderOption.currentValue
             }
         }
@@ -53,7 +53,7 @@ export class RenderOptions {
 
     public set(option: string, value: any) {
         for (let renderOption of this.renderOptions) {
-            if (renderOption.id === option) {
+            if (renderOption.sourceHash === option) {
                 renderOption.currentValue = value
             }
         }

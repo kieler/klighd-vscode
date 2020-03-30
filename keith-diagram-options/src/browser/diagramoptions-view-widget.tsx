@@ -11,6 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { RenderOption } from '@kieler/keith-sprotty/lib/options';
+import { TransformationOptionType } from '@kieler/keith-sprotty/lib/options';
 import { Emitter } from '@theia/core';
 import { Message, ReactWidget } from '@theia/core/lib/browser';
 import { Event } from '@theia/core/lib/common';
@@ -18,10 +20,8 @@ import { injectable } from 'inversify';
 import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
-import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, Type } from '../common/option-models';
-import { RenderOption } from '@kieler/keith-sprotty/lib/options';
 import { diagramOptionsWidgetId } from '../common';
-import { TransformationOptionType } from '@kieler/keith-sprotty/lib/options';
+import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, Type } from '../common/option-models';
 
 /**
  * The widget displaying the diagram options.
@@ -69,6 +69,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         this.actions = actions
     }
 
+    /**
+     * Sets the client side render options.
+     * @param renderOptions A list client side options.
+     */
     public setRenderOptions(renderOptions: RenderOption[]) {
         this.renderingOptions = renderOptions
     }
@@ -172,25 +176,33 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     }
 
     /**
-     * Renders a check RenderOption as an HTML checkbox.
-     * @param option The ckeck option to render.
+     * Renders a check SynthesisOption as an HTML checkbox.
+     * @param option The check option to render.
      */
-    private renderCheckROption(option: RenderOption): JSX.Element {
+    private renderCheckOption(option: SynthesisOption, onClick: any): JSX.Element {
         const currentValue = option.currentValue
         let inputAttrs = {
             type: 'checkbox',
             id: option.name,
             name: option.name,
             defaultChecked: currentValue,
-            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheckROption(e, option)
+            onClick: (e: React.MouseEvent<HTMLInputElement>) => onClick(e, option)
         }
 
-        return <div key={option.id} className='diagram-option'>
+        return <div key={option.sourceHash} className='diagram-option'>
             <label htmlFor={option.name}>
-                <input className='diagrams-inputbox' {...inputAttrs} />
+                <input className='diagram-inputbox' {...inputAttrs} />
                 {option.name}
             </label>
         </div>
+    }
+
+    /**
+     * Renders a check RenderOption as an HTML checkbox.
+     * @param option The check option to render.
+     */
+    private renderCheckROption(option: RenderOption): JSX.Element {
+        return this.renderCheckOption(option as SynthesisOption, this.onCheckROption)
     }
 
     /**
@@ -290,24 +302,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
     /**
      * Renders a check SynthesisOption as an HTML checkbox.
-     * @param option The ckeck option to render.
+     * @param option The check option to render.
      */
     private renderCheck(option: SynthesisOption): JSX.Element {
-        const currentValue = option.currentValue
-        let inputAttrs = {
-            type: 'checkbox',
-            id: option.name,
-            name: option.name,
-            defaultChecked: currentValue,
-            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheck(e, option)
-        }
-
-        return <div key={option.sourceHash} className='diagram-option'>
-            <label htmlFor={option.name}>
-                <input className='diagram-inputbox' {...inputAttrs} />
-                {option.name}
-            </label>
-        </div>
+        return this.renderCheckOption(option, this.onCheck)
     }
 
     /**

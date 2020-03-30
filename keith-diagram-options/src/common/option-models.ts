@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,20 +11,16 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { TransformationOptionType } from '@kieler/keith-sprotty/lib/options';
+import { RenderOption } from '@kieler/keith-sprotty/lib/options';
+
  /**
   * Holds an option defined by the diagram synthesis.
   * This is the counterpart to the KLighD's java implementation of the SynthesisOption.
   * Also adds a sourceHash that contains the hash code of the corresponding java instance for this option.
   */
-export interface SynthesisOption {
-    name: string
-    type: TransformationOptionType
-    initialValue: any
+export interface SynthesisOption extends RenderOption {
     values: any[]
-    currentValue: any
     category?: SynthesisOption
-    sourceHash: number
 }
 
 /**
