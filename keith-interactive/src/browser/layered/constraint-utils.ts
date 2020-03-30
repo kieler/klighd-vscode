@@ -11,10 +11,19 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SModelElement, Action } from 'sprotty';
-import { KNode, Layer, KEdge } from '../constraint-classes';
-import { SetLayerConstraintAction, SetStaticConstraintAction, SetPositionConstraintAction } from './actions';
+import { Action, SModelElement } from 'sprotty';
+import { SetLayerConstraintAction, SetPositionConstraintAction, SetStaticConstraintAction } from './actions';
 import { RefreshDiagramAction } from '../actions';
+import { KNode, KEdge, Layer } from '../constraint-classes';
+
+/**
+ * Offset for placement on below or above the first/last node in the layer.
+ */
+export const PLACEMENT_TOP_BOTTOM_OFFSET = 20;
+/**
+ * Layer padding for one layer case.
+ */
+export const ONE_LAYER_PADDING = 10;
 
 /**
  * Calculates the layer the node is in.
@@ -110,7 +119,6 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
 /**
  * Calculates the layers in a graph based on the layer IDs and positions of the nodes.
  * @param nodes All nodes of the graph which layers should be calculated.
- * TODO maybe add the root node which holds necessary properties
  */
 export function getLayers(nodes: KNode[], direction: number): Layer[] {
     // All nodes within one hierarchy level have the same direction
@@ -128,7 +136,6 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
         let node = nodes[i]
         if (node.properties.layerId !== layer) {
             // node is in the next layer
-            // TODO if the direction changes the y coordinate might be significant
             layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
             beginCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MAX_VALUE : Number.MIN_VALUE
             endCoordinate = (direction === 0 || direction === 1 || direction === 3) ? Number.MIN_VALUE : Number.MAX_VALUE
@@ -180,9 +187,8 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
     // add last layer
     layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + ((endCoordinate - beginCoordinate) / 2), direction)
     // offset above & below the layers
-    // TODO no magic numbers
-    topBorder = topBorder - 20
-    bottomBorder = bottomBorder + 20
+    topBorder = topBorder - PLACEMENT_TOP_BOTTOM_OFFSET
+    bottomBorder = bottomBorder + PLACEMENT_TOP_BOTTOM_OFFSET
     // update left and right bounds of the layers and set y bounds
     for (let i = 0; i < layers.length - 1; i++) {
         // calculate the mid between two layers
@@ -200,32 +206,32 @@ export function getLayers(nodes: KNode[], direction: number): Layer[] {
     // special case: only one layer exists
     if (layers.length === 1) {
         let firstLayer = layers[0]
-        // add padding to x bounds
+        // add padding
         switch (direction) {
             case 0: case 1: {
-                firstLayer.begin = firstLayer.begin - 10 // TODO remove magic constants
-                firstLayer.end = firstLayer.end + 10
+                firstLayer.begin = firstLayer.begin - ONE_LAYER_PADDING
+                firstLayer.end = firstLayer.end + ONE_LAYER_PADDING
                 firstLayer.topBorder = topBorder
                 firstLayer.bottomBorder = bottomBorder
                 break;
             }
             case 2: {
-                firstLayer.begin = firstLayer.begin + 10 // TODO remove magic constants
-                firstLayer.end = firstLayer.end - 10
+                firstLayer.begin = firstLayer.begin + ONE_LAYER_PADDING
+                firstLayer.end = firstLayer.end - ONE_LAYER_PADDING
                 firstLayer.topBorder = topBorder
                 firstLayer.bottomBorder = bottomBorder
                 break;
             }
             case 3: {
-                firstLayer.begin = firstLayer.begin - 10 // TODO remove magic constants
-                firstLayer.end = firstLayer.end + 10
+                firstLayer.begin = firstLayer.begin - ONE_LAYER_PADDING
+                firstLayer.end = firstLayer.end + ONE_LAYER_PADDING
                 firstLayer.topBorder = topBorder
                 firstLayer.bottomBorder = bottomBorder
                 break;
             }
             case 4: {
-                firstLayer.begin = firstLayer.begin + 10 // TODO remove magic constants
-                firstLayer.end = firstLayer.end - 10
+                firstLayer.begin = firstLayer.begin + ONE_LAYER_PADDING
+                firstLayer.end = firstLayer.end - ONE_LAYER_PADDING
                 firstLayer.topBorder = topBorder
                 firstLayer.bottomBorder = bottomBorder
                 break;

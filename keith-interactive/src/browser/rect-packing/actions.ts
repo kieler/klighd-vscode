@@ -14,18 +14,21 @@
 import {
     Action
 } from 'sprotty/lib';
-import { RectPackSetPositionConstraint, RectPackDeletePositionConstraint, AspectRatio } from './constraint-types';
+import { AspectRatio, RectPackDeletePositionConstraint, RectPackSetPositionConstraint } from './constraint-types';
 
-export class RectPackSetPositionConstraintAction implements Action {
-    static readonly KIND: string = 'rectPackSetPositionConstraint'
-    readonly kind = RectPackSetPositionConstraintAction.KIND
+/**
+ * Send from client to server to set the aspect ratio.
+ */
+export class SetAspectRatioAction implements Action {
+    static readonly KIND: string = 'setAspectRatio'
+    readonly kind = SetAspectRatioAction.KIND
 
-    constructor(public readonly constraint: RectPackSetPositionConstraint) {
+    constructor(public readonly constraint: AspectRatio) {
     }
 }
 
 /**
- * Send form client to server to delete an position constraint on a node.
+ * Send from client to server to delete an position constraint on a node.
  */
 export class RectPackDeletePositionConstraintAction implements Action {
     static readonly KIND: string = 'rectPackDeletePositionConstraint'
@@ -36,12 +39,12 @@ export class RectPackDeletePositionConstraintAction implements Action {
 }
 
 /**
- * Send form client to server to set the aspect ratio.
+ * Send from client to server to set a position to force a node on a specific position.
  */
-export class SetAspectRatioAction implements Action {
-    static readonly KIND: string = 'setAspectRatio'
-    readonly kind = SetAspectRatioAction.KIND
+export class RectPackSetPositionConstraintAction implements Action {
+    static readonly KIND: string = 'rectPackSetPositionConstraint'
+    readonly kind = RectPackSetPositionConstraintAction.KIND
 
-    constructor(public readonly constraint: AspectRatio) {
+    constructor(public readonly constraint: RectPackSetPositionConstraint) {
     }
 }

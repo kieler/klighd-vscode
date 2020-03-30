@@ -11,16 +11,25 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-export class RectPackSetPositionConstraint {
+ /**
+  * An aspect ratio constraint data class.
+  */
+export class AspectRatio {
     id: string
-    order: number
+    aspectRatio: number
 }
 
+/**
+ * A deletion constraint data class.
+ */
 export class RectPackDeletePositionConstraint {
     id: string
 }
 
-export class AspectRatio {
+/**
+ * A set position constraint data class.
+ */
+export class RectPackSetPositionConstraint {
     id: string
-    aspectRatio: number
+    order: number
 }

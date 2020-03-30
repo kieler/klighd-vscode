@@ -11,8 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KNode } from "./constraint-classes"
 import { SNode } from "sprotty/lib/graph/sgraph"
+import { KNode } from "./constraint-classes"
 
 /**
  * Filters the KNodes out of graphElements.

@@ -11,8 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { KNode } from '../constraint-classes';
 import { svg } from 'snabbdom-jsx';
+import { KNode } from '../constraint-classes';
 import { renderLock } from '../interactive-view-objects';
 
  /**
@@ -54,6 +54,10 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode) {
     </rect></g>
 }
 
+/**
+ * Renders a lock inside the node.
+ * @param node The node with the constraint set.
+ */
 export function renderRectPackConstraint(node: KNode) {
     return <g>{renderLock(node.size.width - 7, 7)}</g>
 }

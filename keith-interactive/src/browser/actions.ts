@@ -14,11 +14,18 @@
 import { Action } from 'sprotty/lib/base/actions/action';
 import { DeleteConstraint } from './layered/constraint-types';
 
+/**
+ * A sprotty action to refresh the diagram. Send from client to server.
+ */
 export class RefreshDiagramAction implements Action {
     static readonly KIND: string = 'refreshDiagram'
     readonly kind = RefreshDiagramAction.KIND
     constructor() {}
 }
+
+/**
+ * A sprotty action to delete a constraint on a specific node.
+ */
 export class DeleteConstraintAction implements Action {
     static readonly KIND: string = 'deleteStaticConstraint'
     readonly kind = DeleteConstraintAction.KIND

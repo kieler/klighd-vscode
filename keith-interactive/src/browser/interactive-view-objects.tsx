@@ -15,7 +15,6 @@ import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 
 /**
- * TODO check this
  * Creates a rectangle.
  * @param x Left x coordinate of the rectangle.
  * @param y Top y coordinate of the rectangle.

@@ -11,13 +11,22 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KNode } from '../constraint-classes';
-import { RefreshDiagramAction } from '../actions';
-import { RectPackSetPositionConstraintAction, SetAspectRatioAction } from './actions';
 import { getAbsoluteBounds, translate } from 'sprotty';
+import { RectPackSetPositionConstraintAction, SetAspectRatioAction } from './actions';
+import { RefreshDiagramAction } from '../actions';
+import { KNode } from '../constraint-classes';
 
+/**
+ * Generate the correct action for the target node released at the specific position.
+ * @param nodes The nodes of the graph in that hierarchy level.
+ * @param target The moved node.
+ * @param parent The parent node.
+ * @param event The mouse released event.
+ */
 export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent: KNode | undefined, event: MouseEvent) {
+    // If node is not put to a valid position the diagram will be refreshed.
     let result = new RefreshDiagramAction()
+    // If the node is moved on top of another node it takes its place.
     nodes.forEach(node => {
         if (node.id !== target.id) {
             const targetBounds = getAbsoluteBounds(node)
@@ -29,7 +38,6 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
             const highY = boundsInWindow.y + boundsInWindow.height
             if (event.pageX > lowX && event.pageX < highX
                 && event.pageY > lowY && event.pageY < highY) {
-                    // How the position should be calculated FIXME currentPosition is -1
                     const actualPosition = node.properties.currentPosition
                     if (actualPosition !== target.properties.currentPosition && actualPosition !== -1) {
                         result = new RectPackSetPositionConstraintAction(
@@ -40,7 +48,9 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
         }
     });
     if (result instanceof RefreshDiagramAction) {
+        // Case node should not be swapped.
 
+        // Calculate aspect ratio.
         let x: number = Number.MAX_VALUE
         let y: number = Number.MAX_VALUE
         let maxX: number = Number.MIN_VALUE
@@ -60,6 +70,8 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
             }
         })
         const aspectRatio = (maxX - x) / (maxY - y)
+
+        // If changed update aspect ratio.
         if (parent && parent.properties.aspectRatio !== aspectRatio) {
             return new SetAspectRatioAction({
                 id: parent.id,

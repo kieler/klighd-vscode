@@ -11,8 +11,11 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { RectangularNode, selectFeature, moveFeature, SParentElement, SEdge, Point } from 'sprotty/lib';
+import { moveFeature, Point, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty/lib';
 
+/**
+ * A layer visualization data class for the interactive layered approach.
+ */
 export class Layer {
     begin: number
     end: number
@@ -81,6 +84,11 @@ export class KNode extends RectangularNode implements KGraphElement {
     hierHeight: number
 }
 
+/**
+ * Properties needed for client side layout or visualization.
+ * Send together with the nodes from server to client.
+ * They correspond to properties on the server.
+ */
 export class NodeProperties {
     algorithm: string
     aspectRatio: number

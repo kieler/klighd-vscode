@@ -11,26 +11,41 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SModelElement, Action, SNode, SLabel, SEdge, MoveMouseListener } from 'sprotty';
-
 import { injectable, inject } from 'inversify';
+import { Action, MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
+import { LSTheiaDiagramServer } from 'sprotty-theia/lib/sprotty/languageserver/ls-theia-diagram-server';
+
+import { RefreshDiagramAction } from './actions';
 import { KNode, Layer } from './constraint-classes';
 import {
     filterKNodes } from './helper-methods';
 import { DeleteStaticConstraintAction } from './layered/actions';
-import { LSTheiaDiagramServer } from 'sprotty-theia/lib/sprotty/languageserver/ls-theia-diagram-server';
-import { isUndefined } from 'util';
-import { setProperty, getLayers } from './layered/constraint-utils';
-import { RefreshDiagramAction } from './actions';
+import { getLayers, setProperty } from './layered/constraint-utils';
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 import { setGenerateRectPackAction } from './rect-packing/constraint-util';
+import { isUndefined } from 'util';
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
 
+    /**
+     * The layers.
+     * Only used for the layered algorithm.
+     */
     private layers: Layer[] = []
+    /**
+     * The nodes.
+     */
     private nodes: KNode[] = []
+
+    /**
+     * The currently moved node.
+     */
     private target: KNode | undefined
+
+    /**
+     * The diagram server.
+     */
     @inject(LSTheiaDiagramServer) protected readonly dserver: LSTheiaDiagramServer
 
     /**
@@ -103,7 +118,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     }
 
     /**
-     * Override size mouseEnter should not call mouseUp.
+     * Override size mouseEnter to not call mouseUp.
      * @param target target
      * @param event event
      */

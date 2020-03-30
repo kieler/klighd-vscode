@@ -11,10 +11,10 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import {
-    Bounds, boundsFeature, Point, popupFeature, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SModelElement, SParentElement, moveFeature
-} from 'sprotty/lib';
 import { NodeProperties } from '@kieler/keith-interactive/lib/constraint-classes';
+import {
+    Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SModelElement, SParentElement
+} from 'sprotty/lib';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,

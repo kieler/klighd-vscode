@@ -11,12 +11,12 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { KNode, Layer } from '../constraint-classes';
-import { getLayers, getLayerOfNode, isLayerForbidden, shouldOnlyLCBeSet, getNodesOfLayer, getPositionInLayer } from './constraint-utils';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
-import { renderLock, createRect, createVerticalLine, renderCircle, renderArrow } from '../interactive-view-objects';
+import { KNode, Layer } from '../constraint-classes';
+import { getLayerOfNode, getLayers, getNodesOfLayer, getPositionInLayer , isLayerForbidden, shouldOnlyLCBeSet } from './constraint-utils';
 import { getSelectedNode } from '../helper-methods';
+import { createRect, createVerticalLine, renderArrow, renderCircle, renderLock } from '../interactive-view-objects';
 
 
 /**
@@ -244,6 +244,10 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
     }
 }
 
+/**
+ * Render something to indicate the constraint set on a node.
+ * @param node Node with a constraint
+ */
 export function renderLayeredConstraint(node: KNode) {
     let result = <g></g>
     let x = node.hierWidth !== 0 ? node.hierWidth : node.size.width

@@ -11,10 +11,10 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { KNode } from './constraint-classes';
-import { filterKNodes } from './helper-methods';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
+import { KNode } from './constraint-classes';
+import { filterKNodes } from './helper-methods';
 import { renderHierarchyLevel as renderHierarchyLevelLayered, renderLayeredConstraint } from './layered/layered-interactive-view';
 import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
 import { isUndefined } from 'util';

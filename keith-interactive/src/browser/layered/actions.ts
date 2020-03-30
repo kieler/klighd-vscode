@@ -14,7 +14,7 @@
 import {
     Action
 } from 'sprotty/lib';
-import { StaticConstraint, DeleteConstraint, LayerConstraint, PositionConstraint } from './constraint-types';
+import { DeleteConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types';
 
 /**
  * Sent from client to server to set a static constraint

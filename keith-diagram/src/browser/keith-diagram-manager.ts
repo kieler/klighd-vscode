@@ -18,7 +18,7 @@ import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { MonacoWorkspace } from "@theia/monaco/lib/browser/monaco-workspace";
 import { UserStorageUri } from "@theia/userstorage/lib/browser";
-import { inject, injectable, Container } from 'inversify';
+import { Container, inject, injectable } from 'inversify';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
 import { SynthesisCommandContribution } from './keith-diagram-commands';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
