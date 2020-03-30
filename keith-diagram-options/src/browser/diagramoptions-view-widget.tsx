@@ -163,6 +163,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                     console.error('The rendering for ' + option.type + ' is not implemented yet.')
                     break
                 }
+                default: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
             }
         })
         if (children.length === 0) {
@@ -210,7 +214,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param event The mouseEvent that clicked the checkbox.
      * @param option The render option connected to the clicked checkbox.
      */
-    private onCheckROption(event: React.MouseEvent<HTMLInputElement>, option: RenderOption) {
+    private onCheckROption = (event: React.MouseEvent<HTMLInputElement>, option: RenderOption): void => {
         option.currentValue = event.currentTarget.checked
         this.sendNewRenderOption(option)
     }
@@ -313,7 +317,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param event The mouseEvent that clicked the checkbox.
      * @param option The synthesis option connected to the clicked checkbox.
      */
-    private onCheck(event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption) {
+    private onCheck = (event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption): void => {
         option.currentValue = event.currentTarget.checked
         this.sendNewSynthesisOption(option)
     }
