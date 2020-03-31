@@ -372,16 +372,6 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
         }
     }
 
-    if (parent instanceof SKNode && parent.hierHeight !== 0) {
-        // parent of a moved node should be big enough for the visualization of layers
-        bounds = {
-            x: bounds.x,
-            y: bounds.y,
-            width: parent.hierWidth,
-            height: parent.hierHeight
-        }
-    }
-
     // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
     const transformation = getTransformation(bounds, decoration, kRotation, isEdge)
 
