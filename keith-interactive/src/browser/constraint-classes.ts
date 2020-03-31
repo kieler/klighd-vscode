@@ -14,36 +14,6 @@
 import { moveFeature, Point, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty/lib';
 
 /**
- * A layer visualization data class for the interactive layered approach.
- */
-export class Layer {
-    begin: number
-    end: number
-    mid: number
-    /**
-     * Where up is, is determined by the direction
-     */
-    topBorder: number
-
-    /**
-     * Where low is, is determined by the direction
-     */
-    bottomBorder: number
-    /**
-     * 0: UNDEFINED, 1: RIGHT, 2: LEFT, 3: DOWN, 4: UP
-     */
-    direction: number
-
-    constructor(leftX: number, rightX: number, mid: number, direction: number) {
-        this.begin = leftX
-        this.end = rightX
-        this.mid = mid
-        this.direction = direction
-    }
-
-}
-
-/**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
  * and labels. A graph element may contain an arbitrary number of additional
  * data instances.
@@ -79,9 +49,6 @@ export class KNode extends RectangularNode implements KGraphElement {
     shadow: boolean
     shadowX: number
     shadowY: number
-
-    hierWidth: number
-    hierHeight: number
 }
 
 /**

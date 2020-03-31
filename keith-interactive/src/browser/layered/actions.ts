@@ -11,13 +11,11 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import {
-    Action
-} from 'sprotty/lib';
+import { Action } from 'sprotty/lib';
 import { DeleteConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types';
 
 /**
- * Sent from client to server to set a static constraint
+ * Sent from client to server to set a position and layer constraint.
  */
 export class SetStaticConstraintAction implements Action {
     static readonly KIND: string = 'setStaticConstraint'
@@ -27,6 +25,9 @@ export class SetStaticConstraintAction implements Action {
     }
 }
 
+/**
+ * Sent from client to server to delete position and layer constraint on a node.
+ */
 export class DeleteStaticConstraintAction implements Action {
     static readonly KIND: string = 'deleteStaticConstraint'
     readonly kind = DeleteStaticConstraintAction.KIND
@@ -35,6 +36,10 @@ export class DeleteStaticConstraintAction implements Action {
     }
 }
 
+/**
+ * Sent from client to server to delete position constraint on a node.
+ * Currently unused.
+ */
 export class DeletePositionConstraintAction implements Action {
     static readonly KIND: string = 'deletePositionConstraint'
     readonly kind = DeletePositionConstraintAction.KIND
@@ -43,6 +48,10 @@ export class DeletePositionConstraintAction implements Action {
     }
 }
 
+/**
+ * Sent from client to server to delete layer constraint on a node.
+ * Currently unused.
+ */
 export class DeleteLayerConstraintAction implements Action {
     static readonly KIND: string = 'deleteLayerConstraint'
     readonly kind = DeleteLayerConstraintAction.KIND
@@ -51,6 +60,9 @@ export class DeleteLayerConstraintAction implements Action {
     }
 }
 
+/**
+ * Sent from client to server to set a layer constraint on a node.
+ */
 export class SetLayerConstraintAction implements Action {
     static readonly KIND: string = 'setLayerConstraint'
     readonly kind = SetLayerConstraintAction.KIND
@@ -59,6 +71,9 @@ export class SetLayerConstraintAction implements Action {
     }
 }
 
+/**
+ * Sent from client to server to set a position constraint on a node.
+ */
 export class SetPositionConstraintAction implements Action {
     static readonly KIND: string = 'setPositionConstraint'
     readonly kind = SetPositionConstraintAction.KIND

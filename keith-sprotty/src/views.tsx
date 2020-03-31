@@ -13,13 +13,12 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
+
 import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from '@kieler/keith-interactive/lib/interactive-view';
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
-import { injectable, inject } from 'inversify';
-import {
-    IView, RenderingContext, SGraph, SGraphView, TYPES, SGraphFactory
-} from 'sprotty/lib';
+import { inject, injectable } from 'inversify';
+import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
 import { RenderOptions, ShowConstraintOption } from './options';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { SKGraphRenderingContext } from './views-common';
@@ -56,10 +55,6 @@ export class KNodeView implements IView {
         node.areChildrenRendered = false
 
         let result = <g></g>
-
-        // reset hierarchical bounds
-        node.hierHeight = 0
-        node.hierWidth = 0
 
         const isShadow = node.shadow
         let shadow = undefined
@@ -136,6 +131,10 @@ export class KNodeView implements IView {
         }
         if (rendering !== undefined) {
             result = <g>{result}{rendering}</g>
+        } else {
+            return <g>
+                {ctx.renderChildren(node)}
+            </g>
         }
         result = <g>{result}{nodes}{constraints}</g>
         // Default case. If the children are not already rendered within a KChildArea add the children by default.

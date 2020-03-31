@@ -16,12 +16,13 @@ import { VNode } from 'snabbdom/vnode';
 
 /**
  * Creates a rectangle.
- * @param x Left x coordinate of the rectangle.
- * @param y Top y coordinate of the rectangle.
- * @param width Width of the rectangle.
- * @param height Height of the rectangle.
+ * @param begin The begin coordinate in the layer direction.
+ * @param end The end coordinate in the layer direction.
+ * @param top The top coordinate in the secondary direction.
+ * @param bottom The bottom of the layer in the secondary direction.
  * @param forbidden If the layer represented by the rectangle is forbidden the colour is red.
  * @param selected Determines whether the layer represented by the rectangle is selected instead of a certain position.
+ * @param direction The direction of the layer.
  */
 export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: number): VNode {
     let forbiddenColor = 'indianred'

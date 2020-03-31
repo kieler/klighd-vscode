@@ -14,7 +14,7 @@
 import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { SNode, SLabel } from 'sprotty';
+import { SLabel } from 'sprotty';
 import {
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KGraphData, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
     KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
@@ -170,7 +170,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                             'stroke-width': lineStyles.lineWidth,
                             'stroke-dasharray': lineStyles.dashArray,
                             'stroke-miterlimit': lineStyles.miterLimit,
-                            'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1,
+                            'opacity': colorStyles.opacity,
                             'stroke-opacity': colorStyles.foreground.opacity,
                             'fill-opacity': colorStyles.background.opacity
                         } as React.CSSProperties}
@@ -198,7 +198,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
                         'stroke-miterlimit': lineStyles.miterLimit,
-                        'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1,
+                        'opacity': colorStyles.opacity,
                         'stroke-opacity': colorStyles.foreground.opacity,
                         'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
@@ -231,7 +231,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
                         'stroke-miterlimit': lineStyles.miterLimit,
-                        'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1,
+                        'opacity': colorStyles.opacity,
                         'stroke-opacity': colorStyles.foreground.opacity,
                         'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
@@ -407,7 +407,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
                 'stroke-width': lineStyles.lineWidth,
                 'stroke-dasharray': lineStyles.dashArray,
                 'stroke-miterlimit': lineStyles.miterLimit,
-                'opacity': parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1,
+                'opacity': colorStyles.opacity,
                 'stroke-opacity': colorStyles.foreground.opacity,
                 'fill-opacity': colorStyles.background.opacity
             } as React.CSSProperties}

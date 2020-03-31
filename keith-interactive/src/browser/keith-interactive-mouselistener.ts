@@ -11,28 +11,26 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { injectable, inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Action, MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib/sprotty/languageserver/ls-theia-diagram-server';
-
+import { isUndefined } from 'util';
 import { RefreshDiagramAction } from './actions';
-import { KNode, Layer } from './constraint-classes';
-import {
-    filterKNodes } from './helper-methods';
+import { KNode } from './constraint-classes';
+import { filterKNodes } from './helper-methods';
 import { DeleteStaticConstraintAction } from './layered/actions';
 import { getLayers, setProperty } from './layered/constraint-utils';
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 import { setGenerateRectPackAction } from './rect-packing/constraint-util';
-import { isUndefined } from 'util';
 
 @injectable()
 export class KeithInteractiveMouseListener extends MoveMouseListener {
 
     /**
-     * The layers.
-     * Only used for the layered algorithm.
+     * Map to holds algorithm specific data generated on mouse down.
      */
-    private layers: Layer[] = []
+    private data: Map<string, any> = new Map
+
     /**
      * The nodes.
      */
@@ -92,7 +90,14 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 this.target = targetNode as KNode
                 // Set layer bounds
                 this.nodes = filterKNodes(this.target.parent.children)
-                this.layers = getLayers(this.nodes, this.target.direction)
+
+                const algorithm = ((targetNode as KNode).parent as KNode).properties.algorithm
+                // Set algorithm specific data
+                if (isUndefined(algorithm) || algorithm === 'layered') {
+                    this.data.set('layered', getLayers(this.nodes, this.target.direction))
+                } else if (algorithm === 'rectpacking') {
+                    // Do nothing
+                }
 
                 this.target.selected = true
                 // save the coordinates as shadow coordinates
@@ -100,7 +105,6 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
                 if (event.altKey) {
-                    const algorithm = ((targetNode as KNode).parent as KNode).properties.algorithm
                     if (isUndefined(algorithm) || algorithm === 'layered') {
                         return [new DeleteStaticConstraintAction({
                             id: this.target.id
@@ -133,7 +137,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             let result = super.mouseUp(this.target, event)
             const algorithm = (this.target.parent as KNode).properties.algorithm
             if (algorithm === 'layered' || isUndefined(algorithm)) {
-                result = [setProperty(this.nodes, this.layers, this.target)].concat(super.mouseUp(this.target, event));
+                result = [setProperty(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
             } else if (algorithm === 'rectpacking') {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
                 result = [setGenerateRectPackAction(this.nodes, this.target, parent, event)].concat(super.mouseUp(this.target, event));

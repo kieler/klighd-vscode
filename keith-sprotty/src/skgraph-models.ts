@@ -55,9 +55,6 @@ export class SKNode extends RectangularNode implements SKGraphElement {
     shadow: boolean
     shadowX: number
     shadowY: number
-
-    hierWidth: number
-    hierHeight: number
 }
 
 /**

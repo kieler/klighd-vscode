@@ -12,9 +12,10 @@
  */
 
 import { Action, SModelElement } from 'sprotty';
-import { SetLayerConstraintAction, SetPositionConstraintAction, SetStaticConstraintAction } from './actions';
 import { RefreshDiagramAction } from '../actions';
-import { KNode, KEdge, Layer } from '../constraint-classes';
+import { KEdge, KNode } from '../constraint-classes';
+import { SetLayerConstraintAction, SetPositionConstraintAction, SetStaticConstraintAction } from './actions';
+import { Layer } from './constraint-types';
 
 /**
  * Offset for placement on below or above the first/last node in the layer.

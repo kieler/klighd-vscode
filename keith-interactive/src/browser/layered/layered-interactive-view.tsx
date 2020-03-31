@@ -13,10 +13,11 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
-import { KNode, Layer } from '../constraint-classes';
-import { getLayerOfNode, getLayers, getNodesOfLayer, getPositionInLayer , isLayerForbidden, shouldOnlyLCBeSet } from './constraint-utils';
+import { KNode } from '../constraint-classes';
 import { getSelectedNode } from '../helper-methods';
 import { createRect, createVerticalLine, renderArrow, renderCircle, renderLock } from '../interactive-view-objects';
+import { Layer } from './constraint-types';
+import { getLayerOfNode, getLayers, getNodesOfLayer, getPositionInLayer, isLayerForbidden, shouldOnlyLCBeSet } from './constraint-utils';
 
 
 /**
@@ -250,7 +251,7 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
  */
 export function renderLayeredConstraint(node: KNode) {
     let result = <g></g>
-    let x = node.hierWidth !== 0 ? node.hierWidth : node.size.width
+    let x = node.size.width
     let y = 0
     const positionConstraint = node.properties.positionConstraint
     const layerConstraint = node.properties.layerConstraint
