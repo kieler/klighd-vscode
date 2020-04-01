@@ -159,7 +159,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                 const renderOptions = e.widget.diContainer.get(RenderOptions)
                 if (renderOptions) {
                     this.rOptions = renderOptions
-                    this.diagramOptionsViewWidget.setRenderOptions(renderOptions.getRenderOptions())
+                    if (this.diagramOptionsViewWidget) {
+                        this.diagramOptionsViewWidget.setRenderOptions(renderOptions.getRenderOptions())
+                    }
                 }
                 e.widget.onModelUpdated(this.onModelUpdated.bind(this))
                 e.widget.disposed.connect(() => {
@@ -169,6 +171,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         } else if (e.factoryId === diagramOptionsWidgetId) {
             // Initialize the widget and update its content when the widget is created.
             this.initializeDiagramOptionsViewWidget(e.widget)
+            if (this.rOptions) {
+                (e.widget as DiagramOptionsViewWidget).setRenderOptions(this.rOptions.getRenderOptions())
+            }
             this.updateContent()
         }
     }
