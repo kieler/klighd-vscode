@@ -470,6 +470,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilationFinishedEmitter.fire(!errorOccurred)
 
             this.endTime = performance.now()
+            console.log((this.endTime - this.startTime) * 1000000)
             // Set finished bar if the currentIndex of the processor is the maxIndex the compilation was not canceled
             this.statusbar.setElement('compile-status', {
                 alignment: StatusBarAlignment.LEFT,
