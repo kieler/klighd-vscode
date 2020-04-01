@@ -23,7 +23,7 @@ import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-con
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
-import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId } from '../common';
+import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId, SPROTTY_ACTION } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
 
@@ -136,13 +136,10 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param option The newly configured render option.
      */
     async sendNewRenderOption(option: RenderOption) {
-        if (this.rOptions === undefined) {
-            this.rOptions = this.diagramManager.container.get(RenderOptions)
-        }
         this.rOptions.set(option.sourceHash, option.currentValue)
         // Update the diagram to draw according to the changed render option.
         const lClient = await this.client.languageClient
-        await lClient.sendNotification('diagram/accept', {clientId: 'keith-diagram_sprotty', action: new RefreshDiagramAction()})
+        await lClient.sendNotification(SPROTTY_ACTION, {clientId: 'keith-diagram_sprotty', action: new RefreshDiagramAction()})
     }
 
     /**
@@ -159,6 +156,11 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         if (e.factoryId === this.diagramManager.id) {
             // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
             if (e.widget instanceof KeithDiagramWidget) {
+                const renderOptions = e.widget.diContainer.get(RenderOptions)
+                if (renderOptions) {
+                    this.rOptions = renderOptions
+                    this.diagramOptionsViewWidget.setRenderOptions(renderOptions.getRenderOptions())
+                }
                 e.widget.onModelUpdated(this.onModelUpdated.bind(this))
                 e.widget.disposed.connect(() => {
                     this.onDiagramWidgetsClosed()
@@ -210,7 +212,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         }
         // If the view is not initialized yet, do that now.
         if (!this.diagramOptionsViewWidget || this.diagramOptionsViewWidget.isDisposed) {
-            const widgetPromise = this.widgetManager.getWidget('diagramoptions-view')
+            const widgetPromise = this.widgetManager.getWidget(diagramOptionsWidgetId)
             widgetPromise.then(widget => {
                 this.initializeDiagramOptionsViewWidget(widget)
             })
@@ -267,20 +269,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
 
             // Update the widget.
             this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
-            this.diagramOptionsViewWidget.setRenderOptions(this.getRenderOptions())
             this.diagramOptionsViewWidget.setLayoutOptions(result.layoutOptions)
             this.diagramOptionsViewWidget.setActions(result.actions)
             this.diagramOptionsViewWidget.update()
         }
-    }
-
-    /**
-     * Returns the current render options.
-     */
-    private getRenderOptions(): RenderOption[] {
-        if (this.rOptions === undefined) {
-            this.rOptions = this.diagramManager.container.get(RenderOptions)
-        }
-        return this.rOptions.getRenderOptions()
     }
 }

@@ -32,9 +32,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
     private synthesisOptions: SynthesisOption[]
     private layoutOptions: LayoutOptionUIData[]
-    private renderingOptions: RenderOption[]
+    private renderingOptions: RenderOption[] = []
     private actions: DisplayedActionData[]
     private categoryMap: Map<string, SynthesisOption[]> = new Map
+    public diagramWidgetId: string = ''
 
     constructor() {
         super()
