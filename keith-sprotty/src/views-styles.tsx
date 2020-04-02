@@ -13,7 +13,7 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { isSelectable, SLabel, SNode } from 'sprotty';
+import { isSelectable } from 'sprotty';
 import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
     KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
@@ -527,7 +527,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingCont
         return {
             foreground: grayedOutColor,
             background: background === undefined ? DEFAULT_FILL : grayedOutColor,
-            opacity: parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1
+            opacity: parent.opacity
         }
     }
 
@@ -536,14 +536,14 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingCont
         return {
             foreground: grayedOutColor,
             background: background === undefined ? DEFAULT_FILL : {color: 'gainsboro', opacity: '255'},
-            opacity: parent instanceof SNode ? parent.opacity : 1
+            opacity: parent.opacity
         }
     }
 
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
         background: background === undefined ? DEFAULT_FILL : background,
-        opacity: parent instanceof SNode || parent instanceof SLabel ? parent.opacity : 1
+        opacity: parent.opacity
     }
 }
 

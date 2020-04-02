@@ -29,6 +29,7 @@ export interface KGraphElement extends SParentElement {
      * Additional field to remember, if this element's children have already been rendered.
      */
     areChildrenRendered: boolean
+    opacity: number
 }
 
 /**
