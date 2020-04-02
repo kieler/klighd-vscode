@@ -3,13 +3,15 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
+
+import { Direction } from "../constraint-classes"
 
 /**
  * A layer visualization data class for the interactive layered approach.
@@ -30,9 +32,9 @@ export class Layer {
     /**
      * 0: UNDEFINED, 1: RIGHT, 2: LEFT, 3: DOWN, 4: UP
      */
-    direction: number
+    direction: Direction
 
-    constructor(leftX: number, rightX: number, mid: number, direction: number) {
+    constructor(leftX: number, rightX: number, mid: number, direction: Direction) {
         this.begin = leftX
         this.end = rightX
         this.mid = mid

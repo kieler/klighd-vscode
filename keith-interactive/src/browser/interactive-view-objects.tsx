@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -13,7 +13,8 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { lockPath, arrowVertical, arrowHorizontal } from '../svg-path';
+import { Direction } from './constraint-classes';
+import { lockPath, arrowVertical, arrowHorizontal } from './svg-path';
 
 /**
  * Creates a rectangle.
@@ -25,15 +26,15 @@ import { lockPath, arrowVertical, arrowHorizontal } from '../svg-path';
  * @param selected Determines whether the layer represented by the rectangle is selected instead of a certain position.
  * @param direction The direction of the layer.
  */
-export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: number): VNode {
+export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: Direction): VNode {
     let forbiddenColor = 'indianred'
     let backgroundColor = selected ? 'grey' : 'lightgrey'
     // @ts-ignore
     return <g> <rect
-                    x={(direction === 1 || direction === 0) ? begin : direction === 2 ? end : top}
-                    y={(direction === 1 || direction === 0 || direction === 2) ? top : direction === 4 ? end : begin}
-                    width={(direction === 1 || direction === 0 || direction === 2) ? Math.abs(begin - end) : bottom - top}
-                    height={(direction === 1 || direction === 0 || direction === 2) ? bottom - top : Math.abs(begin - end)}
+                    x={(direction === Direction.RIGHT || direction === Direction.UNDEFINED) ? begin : direction === Direction.LEFT ? end : top}
+                    y={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? top : direction === Direction.UP ? end : begin}
+                    width={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? Math.abs(begin - end) : bottom - top}
+                    height={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? bottom - top : Math.abs(begin - end)}
                     fill={forbidden ? forbiddenColor : backgroundColor}
                     stroke={forbidden ? forbiddenColor : 'grey'}
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
@@ -46,14 +47,15 @@ export function createRect(begin: number, end: number, top: number, bottom: numb
  * @param mid x/y coordinate of the line.
  * @param top Start of the line on the y/x-axis.
  * @param bot End of the line on the y/x-axis.
+ * @param direction The layout direction.
  */
-export function createVerticalLine(mid: number, top: number, bot: number, direction: number): VNode {
+export function createVerticalLine(mid: number, top: number, bot: number, direction: Direction): VNode {
     // @ts-ignore
     return <g> <line
-                    x1={(direction === 1 || direction === 2 || direction === 0) ? mid : top}
-                    y1={(direction === 1 || direction === 2 || direction === 0) ? top : mid}
-                    x2={(direction === 1 || direction === 2 || direction === 0) ? mid : bot}
-                    y2={(direction === 1 || direction === 2 || direction === 0) ? bot : mid}
+                    x1={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? mid : top}
+                    y1={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? top : mid}
+                    x2={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? mid : bot}
+                    y2={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? bot : mid}
                     fill='none'
                     stroke='grey'
                     style={{ 'stroke-dasharray': "4" } as React.CSSProperties}

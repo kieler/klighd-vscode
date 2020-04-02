@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -13,7 +13,7 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from "snabbdom/vnode";
-import { KNode } from '../constraint-classes';
+import { Direction, KNode } from '../constraint-classes';
 import { getSelectedNode } from '../helper-methods';
 import { createRect, createVerticalLine, renderArrow, renderCircle, renderLock } from '../interactive-view-objects';
 import { Layer } from './constraint-types';
@@ -91,7 +91,7 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
  * @param layers All layers in the graph at the hierarchical level.
  * @param forbidden Determines whether the current layer is forbidden.
  */
-export function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: number): VNode {
+export function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: Direction): VNode {
     let layerNodes: KNode[] = getNodesOfLayer(current, nodes)
 
     // get the selected node
@@ -118,28 +118,28 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
             if (!node.selected && !layerNodes[i + 1].selected) {
                 // calculate y coordinate of the mid between the two nodes
                 switch (direction) {
-                    case 0: case 1: {
+                    case Direction.UNDEFINED: case Direction.RIGHT: {
                         x = layers[current].mid
                         let topY = node.position.y + node.size.height
                         let botY = layerNodes[i + 1].position.y
                         y = topY + (botY - topY) / 2
                         break;
                     }
-                    case 2: {
+                    case Direction.LEFT: {
                         x = layers[current].mid
                         let topY = node.position.y + node.size.height
                         let botY = layerNodes[i + 1].position.y
                         y = topY + (botY - topY) / 2
                         break;
                     }
-                    case 3: {
+                    case Direction.DOWN: {
                         y = layers[current].mid
                         let topX = node.position.x + node.size.width
                         let botX = layerNodes[i + 1].position.x
                         x = topX + (botX - topX) / 2
                         break;
                     }
-                    case 4: {
+                    case Direction.UP: {
                         y = layers[current].mid
                         let topX = node.position.x + node.size.width
                         let botX = layerNodes[i + 1].position.x
@@ -157,22 +157,22 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
         let first = layerNodes[0]
         if (!first.selected) {
             switch (direction) {
-                case 0: case 1: {
+                case Direction.UNDEFINED: case Direction.RIGHT: {
                     x = layers[current].mid
                     y = layers[current].topBorder + (first.position.y - layers[current].topBorder) / 2
                     break;
                 }
-                case 2: {
+                case Direction.LEFT: {
                     x = layers[current].mid
                     y = layers[current].topBorder + (first.position.y - layers[current].topBorder) / 2
                     break;
                 }
-                case 3: {
+                case Direction.DOWN: {
                     y = layers[current].mid
                     x = layers[current].topBorder + (first.position.x - layers[current].topBorder) / 2
                     break;
                 }
-                case 4: {
+                case Direction.UP: {
                     y = layers[current].mid
                     x = layers[current].topBorder + (first.position.x - layers[current].topBorder) / 2
                     break;
@@ -184,22 +184,22 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
         let last = layerNodes[layerNodes.length - 1]
         if (!last.selected) {
             switch (direction) {
-                case 0: case 1: {
+                case Direction.UNDEFINED: case Direction.RIGHT: {
                     x = layers[current].mid
                     y = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
                     break;
                 }
-                case 2: {
+                case Direction.LEFT: {
                     x = layers[current].mid
                     y = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
                     break;
                 }
-                case 3: {
+                case Direction.DOWN: {
                     y = layers[current].mid
                     x = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
                     break;
                 }
-                case 4: {
+                case Direction.UP: {
                     y = layers[current].mid
                     x = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
                     break;
@@ -215,25 +215,25 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
         // show a circle in the middle of the layer
         let x = 0, y = 0
         switch (direction) {
-            case 0: case 1: {
+            case Direction.UNDEFINED: case Direction.RIGHT: {
                 let lastLayer = layers[layers.length - 1]
                 x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
             }
-            case 2: {
+            case Direction.LEFT: {
                 let lastLayer = layers[layers.length - 1]
                 x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
             }
-            case 3: {
+            case Direction.DOWN: {
                 let lastLayer = layers[layers.length - 1]
                 y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
             }
-            case 4: {
+            case Direction.UP: {
                 let lastLayer = layers[layers.length - 1]
                 y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
@@ -274,10 +274,10 @@ export function renderLayeredConstraint(node: KNode) {
  * @param x
  * @param y
  */
-function renderLayerConstraint(x: number, y: number, direction: number): VNode {
+function renderLayerConstraint(x: number, y: number, direction: Direction): VNode {
     // @ts-ignore
     return <g> {renderLock(x, y)}
-        {renderArrow(x - 2.15, y + 2.6, !(direction === 0 || direction === 1 || direction === 2))}
+        {renderArrow(x - 2.15, y + 2.6, !(direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT))}
     </g>
 }
 
@@ -286,9 +286,9 @@ function renderLayerConstraint(x: number, y: number, direction: number): VNode {
  * @param x
  * @param y
  */
-function renderPositionConstraint(x: number, y: number, direction: number): VNode {
+function renderPositionConstraint(x: number, y: number, direction: Direction): VNode {
     // @ts-ignore
     return <g> {renderLock(x, y)}
-        {renderArrow(x + 0.1, y + 2.5, (direction === 0 || direction === 1 || direction === 2))}
+        {renderArrow(x + 0.1, y + 2.5, (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT))}
     </g>
 }

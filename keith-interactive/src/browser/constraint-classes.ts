@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -44,11 +44,19 @@ export class KNode extends RectangularNode implements KGraphElement {
 
     properties: NodeProperties
 
-    direction: number
+    direction: Direction
 
     shadow: boolean
     shadowX: number
     shadowY: number
+}
+
+export enum Direction {
+    UNDEFINED,
+    RIGHT,
+    LEFT,
+    DOWN,
+    UP
 }
 
 /**

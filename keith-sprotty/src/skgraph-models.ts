@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { NodeProperties } from '@kieler/keith-interactive/lib/constraint-classes';
+import { Direction, NodeProperties } from '@kieler/keith-interactive/lib/constraint-classes';
 import {
     Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SModelElement, SParentElement
 } from 'sprotty/lib';
@@ -33,6 +33,7 @@ export interface SKGraphElement extends SParentElement {
      * Additional field to remember, if this element's children have already been rendered.
      */
     areChildrenRendered: boolean
+    opacity: number
 }
 
 /**
@@ -50,7 +51,7 @@ export class SKNode extends RectangularNode implements SKGraphElement {
     }
 
     properties: NodeProperties
-    direction: number
+    direction: Direction
 
     shadow: boolean
     shadowX: number
