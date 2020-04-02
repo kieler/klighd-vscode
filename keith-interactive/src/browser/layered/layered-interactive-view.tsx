@@ -253,6 +253,7 @@ export function renderLayeredConstraint(node: KNode) {
     let result = <g></g>
     let x = node.size.width
     let y = 0
+    const constraintOffset = 2
     const positionConstraint = node.properties.positionConstraint
     const layerConstraint = node.properties.layerConstraint
     if (layerConstraint !== -1 && positionConstraint !== -1) {
@@ -260,14 +261,19 @@ export function renderLayeredConstraint(node: KNode) {
         result = <g>{renderLock(x, y)}</g>
     } else if (layerConstraint !== -1) {
         // only layer Constraint is set
-        result = <g>{renderLayerConstraint(x + 2, y - 2, node.direction)}</g>
+        result = <g>{renderLayerConstraint(x + constraintOffset, y - constraintOffset, node.direction)}</g>
     } else if (positionConstraint !== -1) {
         // only position Constraint is set
-        result = <g>{renderPositionConstraint(x + 2, y - 2, node.direction)}</g>
+        result = <g>{renderPositionConstraint(x + constraintOffset, y - constraintOffset, node.direction)}</g>
     }
     // @ts-ignore
     return result
 }
+
+const verticalArrowXOffset = -2.5
+const verticalArrowYOffset = -5
+const horizontalArrowXOffset = -0.3
+const horizontalArrowYOffset = -0.7
 
 /**
  * Creates an icon that visualizes a layer constraint.
@@ -275,9 +281,12 @@ export function renderLayeredConstraint(node: KNode) {
  * @param y
  */
 function renderLayerConstraint(x: number, y: number, direction: Direction): VNode {
+    const vertical = !(direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
+    const xOffset = vertical ? verticalArrowXOffset : horizontalArrowXOffset
+    const yOffset = vertical ? verticalArrowYOffset : horizontalArrowYOffset
     // @ts-ignore
     return <g> {renderLock(x, y)}
-        {renderArrow(x - 2.15, y + 2.6, !(direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT))}
+        {renderArrow(x + xOffset, y + yOffset, vertical)}
     </g>
 }
 
@@ -287,8 +296,11 @@ function renderLayerConstraint(x: number, y: number, direction: Direction): VNod
  * @param y
  */
 function renderPositionConstraint(x: number, y: number, direction: Direction): VNode {
+    const vertical = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
+    const xOffset = vertical ? verticalArrowXOffset : horizontalArrowXOffset
+    const yOffset = vertical ? verticalArrowYOffset : horizontalArrowYOffset
     // @ts-ignore
     return <g> {renderLock(x, y)}
-        {renderArrow(x + 0.1, y + 2.5, (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT))}
+        {renderArrow(x + xOffset, y + yOffset, vertical)}
     </g>
 }

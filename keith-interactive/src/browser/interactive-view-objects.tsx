@@ -16,6 +16,8 @@ import { VNode } from 'snabbdom/vnode';
 import { Direction } from './constraint-classes';
 import { lockPath, arrowVertical, arrowHorizontal } from './svg-path';
 
+const iconScale = 0.01
+
 /**
  * Creates a rectangle.
  * @param begin The begin coordinate in the layer direction.
@@ -58,7 +60,7 @@ export function createVerticalLine(mid: number, top: number, bot: number, direct
                     y2={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? bot : mid}
                     fill='none'
                     stroke='grey'
-                    style={{ 'stroke-dasharray': "4" } as React.CSSProperties}
+                    style={{ 'stroke-dasharray': 4 } as React.CSSProperties}
                 />
             </g>
 }
@@ -80,7 +82,7 @@ export function renderCircle(fill: boolean, x: number, y: number, forbidden: boo
                     r="2"
                     stroke={color}
                     fill={fill ? color : "none"}
-                    style={{ 'stroke-width': "0.5" } as React.CSSProperties}
+                    style={{ 'stroke-width': 0.5 } as React.CSSProperties}
                 />
             </g>
 }
@@ -91,8 +93,9 @@ export function renderCircle(fill: boolean, x: number, y: number, forbidden: boo
  * @param yTranslate
  */
 export function renderLock(xTranslate: number, yTranslate: number): VNode {
+    const generalYOffset = 5
     let s = "translate(" + xTranslate + ","
-            + (yTranslate - 5) + ") scale(0.01, 0.01)"
+            + (yTranslate - generalYOffset) + ") scale(" + iconScale + ", " + iconScale + ")"
             // @ts-ignore
     return  <g transform={s}
                 fill="grey" stroke="none">
@@ -110,7 +113,7 @@ export function renderLock(xTranslate: number, yTranslate: number): VNode {
 export function renderArrow(xTranslate: number, yTranslate: number, vertical: boolean): VNode {
     let s = "translate(" + xTranslate + ","
             + yTranslate + ")"
-    s += " scale(0.01, 0.01)"
+    s += " scale(" + iconScale + ", " + iconScale + ")"
     if (vertical) {
         // @ts-ignore
         return <g transform={s}

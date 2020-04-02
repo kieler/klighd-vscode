@@ -15,6 +15,9 @@ import { svg } from 'snabbdom-jsx';
 import { KNode } from '../constraint-classes';
 import { renderLock } from '../interactive-view-objects';
 
+const boundingBoxMargin = 5
+const lockOffset = 7
+
  /**
  * Visualize the layer the selected node is in as a rectangle and all other layers as a vertical line.
  * The rectangle contains circles indicating the available positions.
@@ -43,14 +46,14 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode) {
         }
     })
     return <g><rect
-        x={x - 5}
-        y={y - 5}
-        width={maxX - x + 10}
-        height={maxY - y + 10}
+        x={x - boundingBoxMargin}
+        y={y - boundingBoxMargin}
+        width={maxX - x + 2 * boundingBoxMargin}
+        height={maxY - y + 2 * boundingBoxMargin}
         stroke={color}
         fill= 'rgba(0,0,0,0)'
-        strokeWidth={10}
-        style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
+        strokeWidth={2 * boundingBoxMargin}
+        style={{ 'stroke-dasharray': 4 } as React.CSSProperties}>
     </rect></g>
 }
 
@@ -59,5 +62,5 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode) {
  * @param node The node with the constraint set.
  */
 export function renderRectPackConstraint(node: KNode) {
-    return <g>{renderLock(node.size.width - 7, 7)}</g>
+    return <g>{renderLock(node.size.width - lockOffset, lockOffset)}</g>
 }
