@@ -11,9 +11,9 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Direction, NodeProperties } from '@kieler/keith-interactive/lib/constraint-classes';
+import { KNode, KGraphData, KEdge } from '@kieler/keith-interactive/lib/constraint-classes';
 import {
-    Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SModelElement, SParentElement
+    Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement, SParentElement
 } from 'sprotty/lib';
 
 /**
@@ -39,23 +39,13 @@ export interface SKGraphElement extends SParentElement {
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKNode extends RectangularNode implements SKGraphElement {
-    trace?: string
-    data: KGraphData[]
+export class SKNode extends KNode {
     tooltip?: string
-    areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
         || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
         || feature === popupFeature
     }
-
-    properties: NodeProperties
-    direction: Direction
-
-    shadow: boolean
-    shadowX: number
-    shadowY: number
 }
 
 /**
@@ -89,26 +79,11 @@ export class SKLabel extends SLabel implements SKGraphElement {
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKEdge extends SEdge implements SKGraphElement {
-    trace?: string
-    data: KGraphData[]
+export class SKEdge extends KEdge {
     tooltip?: string
-    junctionPoints: Point[]
-    areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
-
-    moved: boolean
-}
-
-/**
- * This class can be extended to hold arbitrary additional data for
- * graph elements, such as layout or rendering information.
- * Represents its java counterpart in KLighD.
- */
-export interface KGraphData {
-    type: string
 }
 
 /**
