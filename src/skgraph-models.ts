@@ -11,10 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KNode, KGraphData, KEdge } from '@kieler/keith-interactive/lib/constraint-classes';
-import {
-    Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement, SParentElement
-} from 'sprotty/lib';
+import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/keith-interactive/lib/constraint-classes';
+import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty/lib';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -22,18 +20,8 @@ import {
  * data instances.
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export interface SKGraphElement extends SParentElement {
-    /**
-     * May contain a trace that points back to the server instance where this element was created.
-     */
-    trace?: string
-    data: KGraphData[]
+export interface SKGraphElement extends KGraphElement {
     tooltip?: string
-    /**
-     * Additional field to remember, if this element's children have already been rendered.
-     */
-    areChildrenRendered: boolean
-    opacity: number
 }
 
 /**
