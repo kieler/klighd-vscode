@@ -1,15 +1,13 @@
 {
-  "name": "@kieler/keith-diagram-options",
+  "name": "@kieler/keith-interactive",
   "version": "0.1.0",
-  "description": "An extension for Theia with diagram support for KEITH to set diagram options",
+  "description": "An extension for Theia to interctively apply constraints to the diagram",
   "author": "Kiel University https://rtsys.informatik.uni-kiel.de/kieler",
   "license": "EPL-1.0",
   "keywords": [
     "keith-extension",
     "theia",
-    "sprotty",
-    "diagram",
-    "diagram-options"
+    "interactive"
   ],
   "scripts": {
     "prepare": "yarn run clean && yarn run build",
@@ -19,8 +17,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@kieler/keith-diagram": "0.1.0",
-    "@kieler/keith-sprotty": "0.1.0"
+    "sprotty": "next"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
@@ -34,10 +31,5 @@
     "lib",
     "src",
     "build"
-  ],
-  "theiaExtensions": [
-    {
-      "frontend": "lib/browser/frontend-extension"
-    }
   ]
 }

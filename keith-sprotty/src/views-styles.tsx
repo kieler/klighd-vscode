@@ -15,11 +15,14 @@ import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { isSelectable } from 'sprotty';
 import {
-    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle,
-    KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKGraphElement, VerticalAlignment
+    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
+    KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
+    KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge,
+    SKGraphElement, SKNode, VerticalAlignment
 } from './skgraph-models';
 import {
-    camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText, SKGraphRenderingContext, textDecorationStyleText, verticalAlignmentText
+    camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText,
+    SKGraphRenderingContext, textDecorationStyleText, verticalAlignmentText
 } from './views-common';
 
 
@@ -514,12 +517,33 @@ export function getSvgShadowStyles(styles: KStyles, context: SKGraphRenderingCon
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingContext): ColorStyles {
+export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingContext, parent: SKGraphElement | SKEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
+    const grayedOutColor = {color: 'grey', opacity: '255'}
+
+    if (parent instanceof SKEdge && parent.moved) {
+        // edge should be greyed out
+        return {
+            foreground: grayedOutColor,
+            background: background === undefined ? DEFAULT_FILL : grayedOutColor,
+            opacity: parent.opacity
+        }
+    }
+
+    if (parent instanceof SKNode && parent.shadow) {
+        // colors of the shadow node
+        return {
+            foreground: grayedOutColor,
+            background: background === undefined ? DEFAULT_FILL : {color: 'gainsboro', opacity: '255'},
+            opacity: parent.opacity
+        }
+    }
+
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
-        background: background === undefined ? DEFAULT_FILL : background
+        background: background === undefined ? DEFAULT_FILL : background,
+        opacity: parent.opacity
     }
 }
 
@@ -657,7 +681,8 @@ export interface ColorStyle {
  */
 export interface ColorStyles {
     foreground: ColorStyle,
-    background: ColorStyle
+    background: ColorStyle,
+    opacity: number
 }
 
 /**

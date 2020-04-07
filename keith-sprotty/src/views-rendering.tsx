@@ -14,10 +14,12 @@
 import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
+import { SLabel } from 'sprotty';
+import { KGraphData } from '@kieler/keith-interactive/lib/constraint-classes';
 import {
-    Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KGraphData, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
     KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
-    K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel
+    K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode
 } from './skgraph-models';
 import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, SKGraphRenderingContext } from './views-common';
 import {
@@ -97,7 +99,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
     // objects rendered here that have no background should get a invisible, but clickable background so that users do not click through the non-available background.
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
@@ -169,6 +171,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                             'stroke-width': lineStyles.lineWidth,
                             'stroke-dasharray': lineStyles.dashArray,
                             'stroke-miterlimit': lineStyles.miterLimit,
+                            'opacity': colorStyles.opacity,
                             'stroke-opacity': colorStyles.foreground.opacity,
                             'fill-opacity': colorStyles.background.opacity
                         } as React.CSSProperties}
@@ -196,6 +199,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
                         'stroke-miterlimit': lineStyles.miterLimit,
+                        'opacity': colorStyles.opacity,
                         'stroke-opacity': colorStyles.foreground.opacity,
                         'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
@@ -228,6 +232,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
                         'stroke-miterlimit': lineStyles.miterLimit,
+                        'opacity': colorStyles.opacity,
                         'stroke-opacity': colorStyles.foreground.opacity,
                         'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
@@ -298,7 +303,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
     const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles)
 
@@ -403,6 +408,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
                 'stroke-width': lineStyles.lineWidth,
                 'stroke-dasharray': lineStyles.dashArray,
                 'stroke-miterlimit': lineStyles.miterLimit,
+                'opacity': colorStyles.opacity,
                 'stroke-opacity': colorStyles.foreground.opacity,
                 'fill-opacity': colorStyles.background.opacity
             } as React.CSSProperties}
@@ -472,6 +478,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         ...{ 'font-weight': textStyles.fontWeight },
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
         ...{ 'text-decoration-style': textStyles.textDecorationStyle },
+        ...{ 'opacity': (parent instanceof SLabel ? parent.opacity : 1)},
         ...(colorStyle ? {'fill-opacity': colorStyle.opacity } : {})
     }
 
@@ -553,12 +560,16 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
  */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphRenderingContext): (VNode | undefined)[] {
-    let renderings: (VNode | undefined)[] = []
-    for (let childRendering of parentRendering.children) {
-        let rendering = getRendering([childRendering], parentElement, propagatedStyles, context)
-        renderings.push(rendering)
+    // children only should be rendered if the parentElement is not a shadow
+    if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
+        let renderings: (VNode | undefined)[] = []
+        for (let childRendering of parentRendering.children) {
+            let rendering = getRendering([childRendering], parentElement, propagatedStyles, context)
+            renderings.push(rendering)
+        }
+        return renderings
     }
-    return renderings
+    return []
 }
 
 export function renderError(rendering: KRendering) {

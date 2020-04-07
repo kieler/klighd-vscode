@@ -11,6 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { RenderOption } from '@kieler/keith-sprotty/lib/options';
+import { TransformationOptionType } from '@kieler/keith-sprotty/lib/options';
 import { Emitter } from '@theia/core';
 import { Message, ReactWidget } from '@theia/core/lib/browser';
 import { Event } from '@theia/core/lib/common';
@@ -18,8 +20,8 @@ import { injectable } from 'inversify';
 import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
-import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, TransformationOptionType, Type } from '../common/option-models';
 import { diagramOptionsWidgetId } from '../common';
+import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, Type } from '../common/option-models';
 
 /**
  * The widget displaying the diagram options.
@@ -30,8 +32,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     readonly onDidChangeOpenStateEmitter = new Emitter<boolean>()
     private synthesisOptions: SynthesisOption[]
     private layoutOptions: LayoutOptionUIData[]
+    private renderingOptions: RenderOption[] = []
     private actions: DisplayedActionData[]
     private categoryMap: Map<string, SynthesisOption[]> = new Map
+    public diagramWidgetId: string = ''
 
     constructor() {
         super()
@@ -66,6 +70,14 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         this.actions = actions
     }
 
+    /**
+     * Sets the client side render options.
+     * @param renderOptions A list client side options.
+     */
+    public setRenderOptions(renderOptions: RenderOption[]) {
+        this.renderingOptions = renderOptions
+    }
+
     protected render(): JSX.Element {
         if (isNullOrUndefined(this.synthesisOptions)) {
             // Default view if no diagram has been opened yet.
@@ -86,6 +98,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             return <div className='diagram-option-widget'>
                 {this.renderActions(this.actions)}
                 {this.renderSynthesisOptions(this.synthesisOptions)}
+                {this.renderRenderOptions(this.renderingOptions)}
                 {this.renderLayoutOptions(this.layoutOptions)}
             </div>
         }
@@ -124,6 +137,87 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             }}>
             {action.displayedName}
         </div>
+    }
+
+    /**
+     * Renders the render options.
+     * @param renderOptions The render options for the diagram.
+     */
+    private renderRenderOptions(renderOptions: RenderOption[]): JSX.Element | undefined {
+        let children: JSX.Element[] = []
+        // Render all top level options.
+        renderOptions.forEach(option => {
+            switch (option.type) {
+                case TransformationOptionType.CHECK: {
+                    children.push(this.renderCheckROption(option))
+                    break
+                }
+                case TransformationOptionType.CHOICE: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
+                case TransformationOptionType.RANGE: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
+                case TransformationOptionType.SEPARATOR: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
+                default: {
+                    console.error('The rendering for ' + option.type + ' is not implemented yet.')
+                    break
+                }
+            }
+        })
+        if (children.length === 0) {
+            return undefined
+        } else {
+            return <div key='renderOptions'>
+                <p className='render-option seperator'>{'Render Options'}</p>
+                {...children}
+            </div>
+        }
+    }
+
+    /**
+     * Renders a check SynthesisOption as an HTML checkbox.
+     * @param option The check option to render.
+     */
+    private renderCheckOption(option: SynthesisOption, onClick: any): JSX.Element {
+        const currentValue = option.currentValue
+        let inputAttrs = {
+            type: 'checkbox',
+            id: option.name,
+            name: option.name,
+            defaultChecked: currentValue,
+            onClick: (e: React.MouseEvent<HTMLInputElement>) => onClick(e, option)
+        }
+
+        return <div key={option.sourceHash} className='diagram-option'>
+            <label htmlFor={option.name}>
+                <input className='diagram-inputbox' {...inputAttrs} />
+                {option.name}
+            </label>
+        </div>
+    }
+
+    /**
+     * Renders a check RenderOption as an HTML checkbox.
+     * @param option The check option to render.
+     */
+    private renderCheckROption(option: RenderOption): JSX.Element {
+        return this.renderCheckOption(option as SynthesisOption, this.onCheckROption)
+    }
+
+    /**
+     * Called whenever a checkbox has been clicked. Updates the option that belongs to this checkbox.
+     * @param event The mouseEvent that clicked the checkbox.
+     * @param option The render option connected to the clicked checkbox.
+     */
+    private onCheckROption = (event: React.MouseEvent<HTMLInputElement>, option: RenderOption): void => {
+        option.currentValue = event.currentTarget.checked
+        this.sendNewRenderOption(option)
     }
 
     /**
@@ -213,24 +307,10 @@ export class DiagramOptionsViewWidget extends ReactWidget {
 
     /**
      * Renders a check SynthesisOption as an HTML checkbox.
-     * @param option The ckeck option to render.
+     * @param option The check option to render.
      */
     private renderCheck(option: SynthesisOption): JSX.Element {
-        const currentValue = option.currentValue
-        let inputAttrs = {
-            type: 'checkbox',
-            id: option.name,
-            name: option.name,
-            defaultChecked: currentValue,
-            onClick: (e: React.MouseEvent<HTMLInputElement>) => this.onCheck(e, option)
-        }
-
-        return <div key={option.sourceHash} className='diagram-option'>
-            <label htmlFor={option.name}>
-                <input className='diagram-inputbox' {...inputAttrs} />
-                {option.name}
-            </label>
-        </div>
+        return this.renderCheckOption(option, this.onCheck)
     }
 
     /**
@@ -238,7 +318,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param event The mouseEvent that clicked the checkbox.
      * @param option The synthesis option connected to the clicked checkbox.
      */
-    private onCheck(event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption) {
+    private onCheck = (event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption): void => {
         option.currentValue = event.currentTarget.checked
         this.sendNewSynthesisOption(option)
     }
@@ -569,6 +649,20 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         this.onSendNewSynthesisOptionEmitter.fire(option)
     }
 
+    protected readonly onSendNewRenderOptionEmitter = new Emitter<RenderOption>()
+
+    /**
+     * Emit when a render option has been changed.
+     */
+    readonly onSendNewRenderOption: Event<RenderOption> = this.onSendNewRenderOptionEmitter.event
+
+    /**
+     * Call this when a render option changed and that should be communicated to other listening methods.
+     * @param option The render option that has changed.
+     */
+    public sendNewRenderOption(option: RenderOption): void {
+        this.onSendNewRenderOptionEmitter.fire(option)
+    }
 
     protected readonly onSendNewLayoutOptionEmitter = new Emitter<LayoutOptionValue>()
 
