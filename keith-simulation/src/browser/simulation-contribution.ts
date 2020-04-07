@@ -365,7 +365,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
      * Invoke a simulation. This includes the compilation via a simulation CS.
      * Simulation is started via the compilationFinished method.
      */
-    async compileAndStartSimulation(simulationCommand: Command) {
+    async compileAndStartSimulation(compilationSystem: CompilationSystem) {
         this.startTime = performance.now()
         this.simulationWidget.compilingSimulation = true
         this.simulationWidget.update()
@@ -377,7 +377,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             command: REVEAL_SIMULATION_WIDGET.id
         })
         // Execute compilation command
-        await this.commandRegistry.executeCommand(simulationCommand.id, true, true)
+        await this.commandRegistry.executeCommand(compilationSystem.id + (compilationSystem.snapshotSystem ? '.snapshot' : ''), true, true)
     }
 
     /**
