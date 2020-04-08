@@ -136,7 +136,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param option The newly configured render option.
      */
     async sendNewRenderOption(option: RenderOption) {
-        this.rOptions.set(option.sourceHash, option.currentValue)
+        this.rOptions.set(option.id, option.currentValue)
         // Update the diagram to draw according to the changed render option.
         const lClient = await this.client.languageClient
         await lClient.sendNotification(SPROTTY_ACTION, {clientId: 'keith-diagram_sprotty', action: new RefreshDiagramAction()})
@@ -156,14 +156,27 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         if (e.factoryId === this.diagramManager.id) {
             // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
             if (e.widget instanceof KeithDiagramWidget) {
-                const renderOptions = e.widget.diContainer.get(RenderOptions)
+                const renderOptions = (e.widget as KeithDiagramWidget).diContainer.get(RenderOptions)
                 if (renderOptions) {
                     this.rOptions = renderOptions
+
+                    // Get option from local storage if it exists.
+                    let localRenderOptions: RenderOption[] = []
+                    this.rOptions.getRenderOptions().forEach(option => {
+                        const localStorageString = window.localStorage.getItem(option.id);
+                        if (localStorageString) {
+                            const localStorageValue: RenderOption = JSON.parse(localStorageString)
+                            localRenderOptions.push(localStorageValue)
+                        } else {
+                            localRenderOptions.push(option)
+                        }
+                    });
+                    this.rOptions.renderOptions = localRenderOptions
                     if (this.diagramOptionsViewWidget) {
-                        this.diagramOptionsViewWidget.setRenderOptions(renderOptions.getRenderOptions())
+                        this.diagramOptionsViewWidget.setRenderOptions(localRenderOptions)
                     }
                 }
-                e.widget.onModelUpdated(this.onModelUpdated.bind(this))
+                (e.widget as KeithDiagramWidget).onModelUpdated(this.onModelUpdated.bind(this))
                 e.widget.disposed.connect(() => {
                     this.onDiagramWidgetsClosed()
                 })
@@ -238,21 +251,34 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             if (!result) {
                 return
             }
+
             const valuedOptions: ValuedSynthesisOption[] = result.valuedSynthesisOptions
             const synthesisOptions: SynthesisOption[] = []
+            const predefinedOptions: SynthesisOption[] = []
 
             // Set up the current value of all options.
             if (valuedOptions) {
                 valuedOptions.forEach(valuedOption => {
                     const option = valuedOption.synthesisOption
-                    if (valuedOption.currentValue === undefined) {
-                        option.currentValue = option.initialValue
+                    // Get option values from local storage.
+                    const localStorageString = window.localStorage.getItem(option.id)
+                    if (localStorageString !== null) {
+                        const localStorageValue: SynthesisOption = JSON.parse(localStorageString)
+                        option.currentValue = localStorageValue.currentValue
+                        predefinedOptions.push(option)
                     } else {
-                        option.currentValue = valuedOption.currentValue
+                        if (valuedOption.currentValue === undefined) {
+                            option.currentValue = option.initialValue
+                        } else {
+                            option.currentValue = valuedOption.currentValue
+                        }
                     }
                     synthesisOptions.push(option)
                 })
             }
+
+            // Send predefined actions to server.
+            await lClient.sendRequest(SET_SYNTHESIS_OPTIONS, { uri: this.editorWidget.editor.uri.toString(), synthesisOptions: predefinedOptions })
 
             // Register commands in the command palette.
             this.registeredCommands.forEach(command => {

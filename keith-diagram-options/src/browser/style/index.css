@@ -55,7 +55,7 @@
     align-content: center;
 }
 
-.seperator {
+.separator {
     font-size: var(--theia-ui-font-size2);
     margin-top: 20px
 }
