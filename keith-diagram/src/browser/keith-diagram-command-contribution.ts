@@ -18,6 +18,7 @@ import { SynthesisRegistry } from "@kieler/keith-sprotty/lib/syntheses/synthesis
 import { KeithDiagramServer } from "./keith-diagram-server";
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
 import { KeithDiagramWidget } from "./keith-diagram-widget";
+import { RefreshDiagramAction } from "@kieler/keith-interactive/lib/actions";
 
 export const centerCommand: Command = {
     id: 'keith:diagram:center',
@@ -30,6 +31,13 @@ export const fitCommand: Command = {
     id: 'keith:diagram:fit',
     label: 'Fit to screen',
     iconClass: 'fa fa-expand',
+    category: 'Diagram'
+}
+
+export const refreshDiagramCommand: Command = {
+    id: 'keith:diagram:refresh',
+    label: 'Refresh diagram',
+    iconClass: 'fa fa-refresh',
     category: 'Diagram'
 }
 
@@ -63,6 +71,18 @@ export class KeithDiagramCommandContribution implements CommandContribution, Tab
                 return widget !== undefined && widget instanceof KeithDiagramWidget
             }
         });
+        registry.registerCommand(refreshDiagramCommand, {
+            isEnabled: () => true,
+            execute: () => {
+                const widget = (this.synthesisRegistry.getProvidingDiagramServer() as KeithDiagramServer).getWidget()
+                if (widget) {
+                    widget.actionDispatcher.dispatch(new RefreshDiagramAction())
+                }
+            },
+            isVisible: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
+            }
+        });
     }
 
     registerToolbarItems(registry: TabBarToolbarRegistry): void {
@@ -75,6 +95,11 @@ export class KeithDiagramCommandContribution implements CommandContribution, Tab
             id: fitCommand.id,
             command: fitCommand.id,
             tooltip: fitCommand.label
+        });
+        registry.registerItem({
+            id: refreshDiagramCommand.id,
+            command: refreshDiagramCommand.id,
+            tooltip: refreshDiagramCommand.label
         });
     }
 }
