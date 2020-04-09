@@ -148,3 +148,12 @@ export class PerformActionAction implements Action {
     constructor(protected actionId: string, protected kGraphElementId: string, protected kRenderingId: string) {
     }
 }
+
+/**
+ * A sprotty action to refresh the layout. Send from client to server.
+ */
+export class RefreshLayoutAction implements Action {
+    static readonly KIND: string = 'refreshLayout'
+    readonly kind = RefreshLayoutAction.KIND
+    constructor() {}
+}
