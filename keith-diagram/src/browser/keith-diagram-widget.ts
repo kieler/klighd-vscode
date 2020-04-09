@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2019 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -13,8 +13,8 @@
 import { Widget } from '@phosphor/widgets';
 import { Emitter, Event } from '@theia/core';
 import URI from '@theia/core/lib/common/uri';
-import { InitializeCanvasBoundsAction, RequestModelAction } from 'sprotty';
-import { DiagramWidget } from 'sprotty-theia';
+import { InitializeCanvasBoundsAction, RequestModelAction, ModelSource, TYPES } from 'sprotty';
+import { DiagramWidget, DiagramWidgetOptions, TheiaDiagramServer } from 'sprotty-theia';
 
 /**
  * The single diagram widget that is openable for KEITH diagrams.
@@ -37,6 +37,8 @@ export class KeithDiagramWidget extends DiagramWidget {
         this.onModelUpdatedEmitter.fire(this.options.uri)
     }
 
+    syncWithEditor: boolean = true
+
     /**
      * Re-initializes this widget for a new source URI.
      * @param uri The URI that should be listened to now.
@@ -46,6 +48,25 @@ export class KeithDiagramWidget extends DiagramWidget {
         // If the uri is already set as this one in the uri, the re-initialization is not necessary.
         if (this.options.uri !== uriString) {
             this.options.uri = uriString
+            if (this.syncWithEditor) {
+                this.actionDispatcher.dispatch(new RequestModelAction({
+                    sourceUri: this.options.uri,
+                    diagramType: this.options.diagramType
+                }));
+            }
+        }
+    }
+
+    protected initializeSprotty(): void {
+        const modelSource = this.diContainer.get<ModelSource>(TYPES.ModelSource);
+        this._modelSource = modelSource;
+        if (modelSource instanceof TheiaDiagramServer && this.connector)
+            this.connector.connect(modelSource);
+        this.disposed.connect(() => {
+            if (modelSource instanceof TheiaDiagramServer && this.connector)
+                this.connector.disconnect(modelSource);
+        });
+        if (this.syncWithEditor) {
             this.actionDispatcher.dispatch(new RequestModelAction({
                 sourceUri: this.options.uri,
                 diagramType: this.options.diagramType
@@ -56,5 +77,22 @@ export class KeithDiagramWidget extends DiagramWidget {
     onResize(_msg: Widget.ResizeMessage): void {
         const newBounds = this.getBoundsInPage(this.node as Element)
         this.actionDispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds))
+    }
+
+    storeState():  KeithDiagramWidget.Data {
+        let options: KeithDiagramWidget.Data = super.storeState() as KeithDiagramWidget.Data
+        options.syncWithEditor = this.syncWithEditor
+        return options
+    }
+
+    restoreState(oldState: KeithDiagramWidget.Data): void {
+        super.restoreState(oldState)
+        this.syncWithEditor = oldState.syncWithEditor
+    }
+}
+
+export namespace KeithDiagramWidget {
+    export interface Data extends DiagramWidgetOptions {
+        syncWithEditor: boolean
     }
 }
