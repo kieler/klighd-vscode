@@ -468,7 +468,6 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         }
         // This is called before the target opened or closed, so the inverted current open value is the correct value to use here.
         option.currentValue = !clickedDetailsElement.open
-        this.sendNewSynthesisOption(option)
     }
 
     /**
