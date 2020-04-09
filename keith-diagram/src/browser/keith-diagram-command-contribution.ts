@@ -54,6 +54,12 @@ export const syncWithEditor: Command = {
     category: 'Diagram'
 }
 
+export const resizeToFit: Command = {
+    id: 'keith:diagram:resize-to-fit',
+    label: 'Resize to fit',
+    category: 'Diagram'
+}
+
 export const diagramConfigurationGroup = '1_diagram-configuration'
 
 
@@ -129,6 +135,23 @@ export class KeithDiagramCommandContribution implements CommandContribution, Tab
                 return widget.syncWithEditor
             }
         });
+        registry.registerCommand(resizeToFit, {
+            isEnabled: () => true,
+            execute: (widget: KeithDiagramWidget) => {
+                if (widget) {
+                    widget.resizeToFit = !widget.resizeToFit
+                    if (widget.resizeToFit) {
+                        registry.executeCommand(fitCommand.id, widget)
+                    }
+                }
+            },
+            isVisible: widget => {
+                return widget !== undefined && widget instanceof KeithDiagramWidget
+            },
+            isToggled: widget => {
+                return widget.resizeToFit
+            }
+        });
     }
 
     registerToolbarItems(registry: TabBarToolbarRegistry): void {
@@ -151,6 +174,12 @@ export class KeithDiagramCommandContribution implements CommandContribution, Tab
             id: syncWithEditor.id,
             command: syncWithEditor.id,
             tooltip: syncWithEditor.label,
+            group: diagramConfigurationGroup
+        });
+        this.registerMoreToolbarItem({
+            id: resizeToFit.id,
+            command: resizeToFit.id,
+            tooltip: resizeToFit.label,
             group: diagramConfigurationGroup
         });
     }

@@ -10,10 +10,11 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { Widget } from '@phosphor/widgets';
-import { Emitter, Event } from '@theia/core';
+import { CommandRegistry, Emitter, Event } from '@theia/core';
+import { Widget } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
-import { InitializeCanvasBoundsAction, RequestModelAction, ModelSource, TYPES } from 'sprotty';
+import { inject } from 'inversify';
+import { InitializeCanvasBoundsAction, ModelSource, RequestModelAction, TYPES, FitToScreenAction } from 'sprotty';
 import { DiagramWidget, DiagramWidgetOptions, TheiaDiagramServer } from 'sprotty-theia';
 
 /**
@@ -37,7 +38,18 @@ export class KeithDiagramWidget extends DiagramWidget {
         this.onModelUpdatedEmitter.fire(this.options.uri)
     }
 
+    @inject(CommandRegistry) protected readonly commands: CommandRegistry
+
+    /**
+     * Synchronize the diagram with the current editor.
+     * This means a RequestModelAction is invoked on current editor change.
+     */
     syncWithEditor: boolean = true
+
+    /**
+     * The diagram is always resized to fit if it is redrawn.
+     */
+    resizeToFit: boolean = true
 
     /**
      * Re-initializes this widget for a new source URI.
@@ -77,22 +89,28 @@ export class KeithDiagramWidget extends DiagramWidget {
     onResize(_msg: Widget.ResizeMessage): void {
         const newBounds = this.getBoundsInPage(this.node as Element)
         this.actionDispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds))
+        if (this.resizeToFit) {
+            this.actionDispatcher.dispatch(new FitToScreenAction([], undefined, undefined, false))
+        }
     }
 
     storeState():  KeithDiagramWidget.Data {
         let options: KeithDiagramWidget.Data = super.storeState() as KeithDiagramWidget.Data
         options.syncWithEditor = this.syncWithEditor
+        options.resizeToFit = this.resizeToFit
         return options
     }
 
     restoreState(oldState: KeithDiagramWidget.Data): void {
         super.restoreState(oldState)
-        this.syncWithEditor = oldState.syncWithEditor
+        this.syncWithEditor = oldState.resizeToFit === undefined || oldState.syncWithEditor
+        this.resizeToFit = oldState.resizeToFit === undefined || oldState.resizeToFit
     }
 }
 
 export namespace KeithDiagramWidget {
     export interface Data extends DiagramWidgetOptions {
         syncWithEditor: boolean
+        resizeToFit: boolean
     }
 }
