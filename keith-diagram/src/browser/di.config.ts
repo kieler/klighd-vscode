@@ -21,6 +21,8 @@ import { configureCommand, KeyTool, TYPES } from 'sprotty/lib';
 import { KeithDiagramServer } from './keith-diagram-server';
 import { PopupModelProvider } from './popup';
 
+export const diagramType: string = 'keith-diagram'
+
 /**
  * Dependency injection container for KEITH diagram configuration.
  * Based on the theia-yang-extension implementation by TypeFox.
@@ -28,7 +30,7 @@ import { PopupModelProvider } from './popup';
  */
 @injectable()
 export class KeithDiagramConfiguration implements DiagramConfiguration {
-    diagramType: string = 'keith-diagram'
+    diagramType: string = diagramType
 
     createContainer(widgetId: string): Container {
         const container = createKeithDiagramContainer(widgetId)

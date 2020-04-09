@@ -13,27 +13,31 @@
 
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
-import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
-import { AbstractViewContribution, DidCreateWidgetEvent,
-    FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService, StatusBar, StatusBarAlignment
-} from "@theia/core/lib/browser";
-import { Command, CommandHandler, CommandRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
-import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
-import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
-import { Workspace, NotificationType } from "@theia/languages/lib/browser";
-import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
-import { UserStorageUri } from "@theia/userstorage/lib/browser";
-import { inject, injectable } from "inversify";
-import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING,
-    CANCEL_COMPILATION,
-    CANCEL_GET_SYSTEMS} from "../common";
+import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
+import {
+    AbstractViewContribution, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, PrefixQuickOpenService,
+    StatusBar, StatusBarAlignment, Widget, WidgetManager
+} from '@theia/core/lib/browser';
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import { Command, CommandHandler, CommandRegistry, Emitter, Event, MessageService } from '@theia/core/lib/common';
+import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
+import { FileChange, FileSystemWatcher } from '@theia/filesystem/lib/browser';
+import { NotificationType, Workspace } from '@theia/languages/lib/browser';
+import { OutputChannelManager } from '@theia/output/lib/common/output-channel';
+import { UserStorageUri } from '@theia/userstorage/lib/browser';
+import { inject, injectable } from 'inversify';
+import {
+    CANCEL_COMPILATION, CANCEL_GET_SYSTEMS, COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING,
+    SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING
+} from "../common";
+import {
+    REQUEST_CS, REVEAL_COMPILATION_WIDGET, SELECT_COMPILATION_CHAIN, SELECT_SNAPSHOT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, TOGGLE_AUTO_COMPILE,
+    TOGGLE_BUTTON_MODE, TOGGLE_INPLACE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_SHOW_RESULTING_MODEL
+} from '../common/commands';
 import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystem } from "../common/kicool-models";
 import { CompilerWidget, ShowSnapshotEvent } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
-import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import { TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
-    SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, REVEAL_COMPILATION_WIDGET, SELECT_SNAPSHOT_COMPILATION_CHAIN } from '../common/commands';
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
@@ -270,7 +274,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.kicoolCommands.push(command)
             const handler: CommandHandler = {
                 execute: (inplace, doNotShowResultingModel) => { // on compile these options are undefined
-                    this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel, system.snapshotSystem);
+                    this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel && this.compilerWidget.showResultingModel
+                        , system.snapshotSystem);
                 },
                 isVisible: () => {
                     return system.isPublic || this.compilerWidget.showPrivateSystems
@@ -307,6 +312,14 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             execute: () => {
                 if (this.compilerWidget) {
                     this.compilerWidget.compileInplace = !this.compilerWidget.compileInplace
+                    this.compilerWidget.update()
+                }
+            }
+        })
+        commands.registerCommand(TOGGLE_SHOW_RESULTING_MODEL, {
+            execute: () => {
+                if (this.compilerWidget) {
+                    this.compilerWidget.showResultingModel = !this.compilerWidget.showResultingModel
                     this.compilerWidget.update()
                 }
             }
