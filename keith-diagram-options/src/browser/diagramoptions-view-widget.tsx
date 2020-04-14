@@ -117,7 +117,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             return undefined
         } else {
             return <div key='actions' className='diagram-option-actions'>
-                <p className='diagram-option seperator'>{'Actions'}</p>
+                <p className='diagram-option separator'>{'Actions'}</p>
                 {...children}
             </div>
         }
@@ -174,7 +174,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             return undefined
         } else {
             return <div key='renderOptions'>
-                <p className='render-option seperator'>{'Render Options'}</p>
+                <p className='render-option separator'>{'Render Options'}</p>
                 {...children}
             </div>
         }
@@ -194,7 +194,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             onClick: (e: React.MouseEvent<HTMLInputElement>) => onClick(e, option)
         }
 
-        return <div key={option.sourceHash} className='diagram-option'>
+        return <div key={option.id} className='diagram-option'>
             <label htmlFor={option.name}>
                 <input className='diagram-inputbox' {...inputAttrs} />
                 {option.name}
@@ -217,6 +217,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onCheckROption = (event: React.MouseEvent<HTMLInputElement>, option: RenderOption): void => {
         option.currentValue = event.currentTarget.checked
+        window.localStorage.setItem(option.id, JSON.stringify(option))
         this.sendNewRenderOption(option)
     }
 
@@ -258,7 +259,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             return undefined
         } else {
             return <div key='synthesisOptions'>
-                <p className='diagram-option seperator'>{'Diagram Options'}</p>
+                <p className='diagram-option separator'>{'Diagram Options'}</p>
                 {...children}
             </div>
         }
@@ -290,7 +291,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                     break
                 }
                 case TransformationOptionType.SEPARATOR: {
-                    children.push(this.renderSeperator(option))
+                    children.push(this.renderSeparator(option))
                     break
                 }
                 case TransformationOptionType.CATEGORY: {
@@ -320,6 +321,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onCheck = (event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption): void => {
         option.currentValue = event.currentTarget.checked
+        window.localStorage.setItem(option.id, JSON.stringify(option))
         this.sendNewSynthesisOption(option)
     }
 
@@ -329,7 +331,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The choice option to render.
      */
     private renderChoice(option: SynthesisOption): JSX.Element {
-        return <div key={option.sourceHash} className='diagram-option-choice'>
+        return <div key={option.id} className='diagram-option-choice'>
             <legend className='diagram-option'>{option.name}</legend>
             {option.values.map((value) => this.renderChoiceValue(value, option))}
         </div>
@@ -342,7 +344,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The option this radio button belongs to.
      */
     private renderChoiceValue(value: any, option: SynthesisOption): JSX.Element {
-        return <div key={'' + option.sourceHash + value} className='diagram-option'>
+        return <div key={'' + option.id + value} className='diagram-option'>
             <label htmlFor={value}>
                 <input
                     type='radio'
@@ -363,6 +365,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onChoice(value: any, option: SynthesisOption) {
         option.currentValue = value
+        window.localStorage.setItem(option.id, JSON.stringify(option))
         this.sendNewSynthesisOption(option)
     }
 
@@ -372,7 +375,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The range option to render.
      */
     private renderRange(option: RangeOption): JSX.Element {
-        return <div key={option.sourceHash} className='diagram-option-range'>
+        return <div key={option.id} className='diagram-option-range'>
             <label htmlFor={option.name}>{option.name}: {option.currentValue}</label>
             <input
                 type='range'
@@ -394,6 +397,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onRange(event: React.ChangeEvent<HTMLInputElement>, option: SynthesisOption) {
         option.currentValue = event.currentTarget.value
+        window.localStorage.setItem(option.id, JSON.stringify(option))
         this.update()
         this.sendNewSynthesisOption(option)
     }
@@ -404,7 +408,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The text option to render.
      */
     private renderText(option: SynthesisOption): JSX.Element {
-        return <div key={option.sourceHash} className='diagram-option-text'>
+        return <div key={option.id} className='diagram-option-text'>
             <label htmlFor={option.name}>{option.name}:</label>
             <input
                 type='text'
@@ -432,8 +436,8 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      *
      * @param option The separator option to render.
      */
-    private renderSeperator(option: SynthesisOption) {
-        return <div key={option.sourceHash} className='diagram-option seperator'>
+    private renderSeparator(option: SynthesisOption) {
+        return <div key={option.id} className='diagram-option separator'>
             <label htmlFor={option.name}>{option.name}</label>
         </div>
     }
@@ -445,7 +449,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param option The category option to render.
      */
     private renderCategory(option: SynthesisOption, synthesisOptions: SynthesisOption[]): JSX.Element {
-        return <div key={option.sourceHash} className='diagram-option category'>
+        return <div key={option.id} className='diagram-option category'>
             <details open={option.currentValue}>
                 <summary
                     onClick={(e: React.MouseEvent) => this.onCategory(e, option)}
@@ -468,6 +472,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         }
         // This is called before the target opened or closed, so the inverted current open value is the correct value to use here.
         option.currentValue = !clickedDetailsElement.open
+        window.localStorage.setItem(option.id, JSON.stringify(option))
     }
 
     /**
@@ -493,7 +498,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             return undefined
         } else {
             return <div key='layoutOptions'>
-                <p className='diagram-option seperator'>{'Layout Options'}</p>
+                <p className='diagram-option separator'>{'Layout Options'}</p>
                 {...children}
             </div>
         }
