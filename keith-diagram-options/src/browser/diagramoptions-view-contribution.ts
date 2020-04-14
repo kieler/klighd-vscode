@@ -277,7 +277,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                 })
             }
 
-            // Send predefined actions to server.
+            // Send predefined options to server.
             await lClient.sendRequest(SET_SYNTHESIS_OPTIONS, { uri: this.editorWidget.editor.uri.toString(), synthesisOptions: predefinedOptions })
 
             // Register commands in the command palette.
