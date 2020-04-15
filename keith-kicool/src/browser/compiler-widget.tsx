@@ -363,7 +363,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     resultingMaxIndex++
                 })
                 // construct default ReactNode
-                const node = <ul key={snapshots[0].name} className={`snapshot-list ${this.selectedStyle}`}>{list}</ul>
+                const node = <ul key={snapshots[0].name + index} className={`snapshot-list ${this.selectedStyle}`}>{list}</ul>
                 // if a tree style is selected draw snapshots for processors with more than one output as detail element
                 if (this.selectedStyle && this.selectedStyle.includes("tree") && snapshots.length > 1) {
                     // case a tree style is selected
