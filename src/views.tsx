@@ -184,11 +184,8 @@ export class KLabelView implements IView {
     render(label: SKLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
 
-        let parent = label.parent
-
-        if (!(parent instanceof SKNode) || isChildSelected(parent) || isChildSelected(parent.parent as SKNode) || !this.mListener.hasDragged) {
-            // The label is on the same hierarchy level as the moved node
-        } else {
+        // let parent = label.parent
+        if (this.mListener.hasDragged) {
             // Nodes that are not on the same hierarchy are less visible.
             label.opacity = 0.1
         }
