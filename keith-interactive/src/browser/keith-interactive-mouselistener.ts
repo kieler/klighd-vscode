@@ -136,7 +136,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             this.target.shadow = false
             let result = super.mouseUp(this.target, event)
             const algorithm = (this.target.parent as KNode).properties.algorithm
-            if (algorithm.endsWith('layered') || isUndefined(algorithm)) {
+            if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
                 result = [setProperty(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
             } else if (algorithm.endsWith('rectpacking')) {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
