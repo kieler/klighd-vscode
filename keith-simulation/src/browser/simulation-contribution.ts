@@ -409,7 +409,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             this.statusbar.setElement('simulation-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: simulationStatusPriority,
-                text: `$(times) ${this.kicoolContribution.editor ? 'No editor defined' : 'Simulation already running'}`,
+                text: `$(times) ${this.kicoolContribution.editor ? 'Simulation already running' : 'No editor defined'}`,
                 tooltip: 'Did not simulate.',
                 command: REVEAL_SIMULATION_WIDGET.id
             })
