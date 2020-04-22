@@ -51,7 +51,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
                 diagramWidget.modelUpdated()
                 if (diagramWidget.resizeToFit) {
                     // Fit the received model to the widget size.
-                    this.actionDispatcher.dispatch(new FitToScreenAction([], undefined, undefined, false))
+                    this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], undefined, undefined, false))
                 }
             }
         }

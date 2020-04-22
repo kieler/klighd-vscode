@@ -90,7 +90,7 @@ export class KeithDiagramWidget extends DiagramWidget {
         const newBounds = this.getBoundsInPage(this.node as Element)
         this.actionDispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds))
         if (this.resizeToFit) {
-            this.actionDispatcher.dispatch(new FitToScreenAction([], undefined, undefined, false))
+            this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], undefined, undefined, false))
         }
     }
 

@@ -86,7 +86,7 @@ export class KeithDiagramCommandContribution implements CommandContribution, Tab
             isEnabled: () => true,
             execute: (widget: KeithDiagramWidget) => {
                 if (widget) {
-                    widget.actionDispatcher.dispatch(new FitToScreenAction([]))
+                    widget.actionDispatcher.dispatch(new FitToScreenAction(['$root']))
                 }
             },
             isVisible: widget => {
