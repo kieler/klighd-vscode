@@ -29,6 +29,7 @@ import {
     SetPopupModelAction, SwitchEditModeAction
 } from 'sprotty/lib';
 import { isNullOrUndefined } from 'util';
+import { diagramPadding } from '../common/constants';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
 
@@ -51,7 +52,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
                 diagramWidget.modelUpdated()
                 if (diagramWidget.resizeToFit) {
                     // Fit the received model to the widget size.
-                    this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], undefined, undefined, false))
+                    this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], diagramPadding, undefined, false))
                 }
             }
         }

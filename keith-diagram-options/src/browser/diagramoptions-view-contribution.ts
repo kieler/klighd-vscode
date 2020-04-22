@@ -11,8 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
-import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
+import { KeithDiagramManager } from '@kieler/keith-diagram/lib/browser/keith-diagram-manager';
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
 import { RefreshDiagramAction } from '@kieler/keith-interactive/lib/actions';
 import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
 import { RenderOption, RenderOptions } from '@kieler/keith-sprotty/lib/options';

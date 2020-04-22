@@ -11,30 +11,33 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SimulationWidget } from "./simulation-widget";
-import { injectable, inject } from "inversify";
-import { AbstractViewContribution, FrontendApplicationContribution, WidgetManager,
-    FrontendApplication, Widget, DidCreateWidgetEvent, PrefixQuickOpenService,
-    QuickOpenService, QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenOptions, StatusBar, StatusBarAlignment } from "@theia/core/lib/browser";
-import { Workspace, NotificationType } from "@theia/languages/lib/browser";
-import { MessageService, Command, CommandRegistry, CommandHandler } from "@theia/core";
-import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
-import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
-import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
-import { simulationWidgetId, OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationStartedMessage, SimulationStoppedMessage, SimulationStepMessage, SimulationData } from "../common";
-import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
-import { SimulationKeybindingContext } from "./simulation-keybinding-context";
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
 import { KiCoolContribution } from '@kieler/keith-kicool/lib/browser/kicool-contribution';
-import { delay, strMapToObj } from "../common/helper";
-import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler";
-import { WindowService } from "@theia/core/lib/browser/window/window-service";
-import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
+import { REQUEST_CS } from '@kieler/keith-kicool/lib/common/commands';
 import { CompilationSystem } from '@kieler/keith-kicool/lib/common/kicool-models';
+import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
+import { Command, CommandHandler, CommandRegistry, MessageService } from "@theia/core";
+import {
+    AbstractViewContribution, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, PrefixQuickOpenService,
+    QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenOptions, QuickOpenService, StatusBar, StatusBarAlignment, Widget, WidgetManager
+} from "@theia/core/lib/browser";
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
+import { WindowService } from "@theia/core/lib/browser/window/window-service";
+import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
+import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
+import { NotificationType, Workspace } from "@theia/languages/lib/browser";
+import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler";
+import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
+import { inject, injectable } from "inversify";
+import { OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationData, SimulationStartedMessage, SimulationStepMessage, SimulationStoppedMessage, simulationWidgetId } from "../common";
+import {
+    OPEN_EXTERNAL_KVIZ_VIEW, OPEN_INTERNAL_KVIZ_VIEW, OPEN_SIMULATION_WIDGET_AND_REQUEST_CS, REVEAL_SIMULATION_WIDGET,
+    SELECT_SIMULATION_CHAIN, SELECT_SNAPSHOT_SIMULATION_CHAIN, SET_SIMULATION_SPEED, SIMULATE, SIMULATION
+} from "../common/commands";
+import { delay, strMapToObj } from "../common/helper";
 import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
-import { SIMULATION, SIMULATE, OPEN_INTERNAL_KVIZ_VIEW, OPEN_EXTERNAL_KVIZ_VIEW, SELECT_SIMULATION_CHAIN,
-    SET_SIMULATION_SPEED, REVEAL_SIMULATION_WIDGET, SELECT_SNAPSHOT_SIMULATION_CHAIN, OPEN_SIMULATION_WIDGET_AND_REQUEST_CS } from "../common/commands";
-import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
-import { REQUEST_CS } from '@kieler/keith-kicool/lib/common/commands'
+import { SimulationKeybindingContext } from "./simulation-keybinding-context";
+import { SimulationWidget } from "./simulation-widget";
 
 export const SIMULATION_CATEGORY = "Simulation"
 

@@ -16,6 +16,7 @@ import URI from '@theia/core/lib/common/uri';
 import { inject } from 'inversify';
 import { InitializeCanvasBoundsAction, ModelSource, RequestModelAction, TYPES, FitToScreenAction } from 'sprotty';
 import { DiagramWidget, DiagramWidgetOptions, TheiaDiagramServer } from 'sprotty-theia';
+import { diagramPadding } from '../common/constants';
 
 /**
  * The single diagram widget that is openable for KEITH diagrams.
@@ -90,7 +91,7 @@ export class KeithDiagramWidget extends DiagramWidget {
         const newBounds = this.getBoundsInPage(this.node as Element)
         this.actionDispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds))
         if (this.resizeToFit) {
-            this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], undefined, undefined, false))
+            this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], diagramPadding, undefined, false))
         }
     }
 

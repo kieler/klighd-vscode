@@ -16,6 +16,7 @@ import { TabBarToolbarContribution, TabBarToolbarItem, TabBarToolbarRegistry } f
 import { Command, CommandContribution, CommandRegistry, MessageService, Mutable } from '@theia/core/lib/common';
 import { inject, injectable } from 'inversify';
 import { CenterAction, FitToScreenAction, RequestModelAction } from 'sprotty';
+import { diagramPadding } from '../common/constants';
 import { diagramType } from './di.config';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 
@@ -86,7 +87,7 @@ export class KeithDiagramCommandContribution implements CommandContribution, Tab
             isEnabled: () => true,
             execute: (widget: KeithDiagramWidget) => {
                 if (widget) {
-                    widget.actionDispatcher.dispatch(new FitToScreenAction(['$root']))
+                    widget.actionDispatcher.dispatch(new FitToScreenAction(['$root'], diagramPadding))
                 }
             },
             isVisible: widget => {

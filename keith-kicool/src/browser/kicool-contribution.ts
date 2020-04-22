@@ -11,8 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
-import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
+import { KeithDiagramManager } from '@kieler/keith-diagram/lib/browser/keith-diagram-manager';
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
 import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
 import {
     AbstractViewContribution, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, PrefixQuickOpenService,
