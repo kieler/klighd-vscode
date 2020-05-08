@@ -17,6 +17,7 @@ import { inject, injectable, multiInject, optional } from 'inversify';
 import { LS_ID, LS_NAME, languageDescriptions } from '../common';
 import { InitializationService } from './initialization-service';
 import { MessageService } from '@theia/core';
+import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
 
 export const sendMessageType = new NotificationType<string, void>('general/sendMessage');
 
@@ -28,6 +29,8 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
     @multiInject(InitializationService)@optional() protected readonly initializationServices: InitializationService[]
 
     @inject(MessageService) protected readonly messageService: MessageService
+
+    @inject(FileNavigatorContribution) protected readonly fileNavigator: FileNavigatorContribution
 
     /**
      * Define pattern of supported languages from language server registered in backend with id and name of class.
@@ -54,6 +57,7 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
      */
     // tslint:disable-next-line:no-any
     waitForActivation(app: FrontendApplication): Promise<void> {
+        this.fileNavigator.openView()
         return this.workspace.ready;
     }
 
