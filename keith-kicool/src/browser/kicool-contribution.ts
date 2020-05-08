@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -130,8 +130,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
     }
 
-    async initializeLayout(app: FrontendApplication): Promise<void> {
-        await this.openView()
+    /**
+     * This opens the widget on startup.
+     * @param app The app.
+     */
+    onDidInitializeLayout(app: FrontendApplication) {
+        this.openView()
     }
 
     onStart(): void {

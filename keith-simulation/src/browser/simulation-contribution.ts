@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019,2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -98,11 +98,11 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     /**
-     * TODO This is never called ?!
-     * @param app
+     * This opens the widget on startup.
+     * @param app The app.
      */
-    async initializeLayout(app: FrontendApplication): Promise<void> {
-        await this.openView()
+    onDidInitializeLayout(app: FrontendApplication) {
+        this.openView()
     }
 
     onStart(): void {

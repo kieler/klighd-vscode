@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,14 +11,14 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { injectable, LazyServiceIdentifer, inject } from "inversify";
-import { StatefulWidget, ReactWidget, Message } from "@theia/core/lib/browser";
-import * as React from "react";
-import { SimulationContribution } from "./simulation-contribution";
-import { simulationWidgetId, SimulationData, SimulationDataBlackList } from "../common"
 import { Emitter } from "@theia/core";
-import { isInternal, reverse } from '../common/helper'
+import { Message, ReactWidget, StatefulWidget } from "@theia/core/lib/browser";
+import { inject, injectable, LazyServiceIdentifer } from "inversify";
+import * as React from "react";
+import { SimulationData, SimulationDataBlackList, simulationWidgetId } from "../common";
 import { SELECT_SIMULATION_CHAIN, SIMULATE } from "../common/commands";
+import { isInternal, reverse } from '../common/helper';
+import { SimulationContribution } from "./simulation-contribution";
 
 
 /**
