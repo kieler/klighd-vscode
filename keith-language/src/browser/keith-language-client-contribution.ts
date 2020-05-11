@@ -12,10 +12,14 @@
  */
 
 import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
-import { BaseLanguageClientContribution } from '@theia/languages/lib/browser';
-import { injectable, multiInject, optional } from 'inversify';
+import { BaseLanguageClientContribution, NotificationType } from '@theia/languages/lib/browser';
+import { inject, injectable, multiInject, optional } from 'inversify';
 import { LS_ID, LS_NAME, languageDescriptions } from '../common';
 import { InitializationService } from './initialization-service';
+import { MessageService } from '@theia/core';
+import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
+
+export const sendMessageType = new NotificationType<string, void>('general/sendMessage');
 
 @injectable()
 export class KeithLanguageClientContribution extends BaseLanguageClientContribution {
@@ -23,6 +27,10 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
     readonly id = LS_ID
     readonly name = LS_NAME
     @multiInject(InitializationService)@optional() protected readonly initializationServices: InitializationService[]
+
+    @inject(MessageService) protected readonly messageService: MessageService
+
+    @inject(FileNavigatorContribution) protected readonly fileNavigator: FileNavigatorContribution
 
     /**
      * Define pattern of supported languages from language server registered in backend with id and name of class.
@@ -49,6 +57,7 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
      */
     // tslint:disable-next-line:no-any
     waitForActivation(app: FrontendApplication): Promise<void> {
+        this.fileNavigator.openView()
         return this.workspace.ready;
     }
 
@@ -59,6 +68,31 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
         for (let initializationService of this.initializationServices) {
             initializationOptions = {...initializationOptions, ...initializationService.getOptions()}
         }
+        this.languageClient.then(lClient => {
+            lClient.onNotification(sendMessageType, this.handleSendMessageType.bind(this))
+        })
         return initializationOptions
+    }
+
+    /**
+     * Called by the server to display a message.
+     * @param message The message from the client.
+     * @param type The message type
+     */
+    private handleSendMessageType(message: string, type: string) {
+        switch (type.toLocaleLowerCase()) {
+            case 'error': {
+                this.messageService.error(message)
+                break;
+            }
+            case 'warn': {
+                this.messageService.warn(message)
+                break;
+            }
+            case 'info': {
+                this.messageService.info(message)
+                break;
+            }
+        }
     }
 }

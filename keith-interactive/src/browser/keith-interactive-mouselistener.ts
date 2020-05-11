@@ -93,9 +93,9 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
 
                 const algorithm = ((targetNode as KNode).parent as KNode).properties.algorithm
                 // Set algorithm specific data
-                if (isUndefined(algorithm) || algorithm === 'layered') {
+                if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
                     this.data.set('layered', getLayers(this.nodes, this.target.direction))
-                } else if (algorithm === 'rectpacking') {
+                } else if (algorithm.endsWith('rectpacking')) {
                     // Do nothing
                 }
 
@@ -105,11 +105,11 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
                 if (event.altKey) {
-                    if (isUndefined(algorithm) || algorithm === 'layered') {
+                    if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
                         return [new DeleteStaticConstraintAction({
                             id: this.target.id
                         })]
-                    } else if (algorithm === 'rectpacking') {
+                    } else if (algorithm.endsWith('rectpacking')) {
                         return [new RectPackDeletePositionConstraintAction({
                             id: this.target.id
                         })]
@@ -136,9 +136,9 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
             this.target.shadow = false
             let result = super.mouseUp(this.target, event)
             const algorithm = (this.target.parent as KNode).properties.algorithm
-            if (algorithm === 'layered' || isUndefined(algorithm)) {
+            if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
                 result = [setProperty(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
-            } else if (algorithm === 'rectpacking') {
+            } else if (algorithm.endsWith('rectpacking')) {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
                 result = [setGenerateRectPackAction(this.nodes, this.target, parent, event)].concat(super.mouseUp(this.target, event));
             } else {

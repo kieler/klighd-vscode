@@ -27,9 +27,9 @@ export function renderInteractiveLayout(root: KNode): VNode {
     // Filter KNodes
     let nodes = filterKNodes(root.children)
     let result = undefined
-    if (isUndefined(root.properties.algorithm) || root.properties.algorithm === 'layered') {
+    if (isUndefined(root.properties.algorithm) || root.properties.algorithm.endsWith('layered')) {
         result = renderHierarchyLevelLayered(nodes, root)
-    } else if (root.properties.algorithm === 'rectpacking') {
+    } else if (root.properties.algorithm.endsWith('rectpacking')) {
         result = renderHierarchyLevelRectPacking(nodes, root)
     } else {
         // Not supported
@@ -47,9 +47,9 @@ export function renderInteractiveLayout(root: KNode): VNode {
 export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
     const algorithm = (node.parent as KNode).properties.algorithm
-    if (isUndefined(algorithm) || algorithm === 'layered') {
+    if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
         result = renderLayeredConstraint(node)
-    } else if (algorithm === 'rectpacking') {
+    } else if (algorithm.endsWith( 'rectpacking')) {
         if (node.properties.desiredPosition !== -1) {
             result = renderRectPackConstraint(node)
         }

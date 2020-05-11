@@ -140,8 +140,14 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public compiling: boolean = false
 
+    /**
+     * Whether compilation systems where requested.
+     */
     public requestedSystems: boolean
 
+    /**
+     * The file extension of the last file for which compilation systems where requested.
+     */
     public lastRequestedUriExtension: string
 
     /**
@@ -149,9 +155,20 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
      */
     public cancellingCompilation: boolean
 
+    /**
+     * Show some option toggle buttons
+     */
     public showButtons: boolean = false
 
+    /**
+     * Snapshots that are currently shown in the view, created during compilation.
+     */
     public snapshots: CodeContainer
+
+    /**
+     * Show the resulting model after compile.
+     */
+    showResultingModel: boolean = true;
 
     constructor() {
         super();
@@ -346,7 +363,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                     resultingMaxIndex++
                 })
                 // construct default ReactNode
-                const node = <ul key={snapshots[0].name} className={`snapshot-list ${this.selectedStyle}`}>{list}</ul>
+                const node = <ul key={snapshots[0].name + index} className={`snapshot-list ${this.selectedStyle}`}>{list}</ul>
                 // if a tree style is selected draw snapshots for processors with more than one output as detail element
                 if (this.selectedStyle && this.selectedStyle.includes("tree") && snapshots.length > 1) {
                     // case a tree style is selected
@@ -442,7 +459,8 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
             selectedIndex : this.selectedIndex,
             showAdvancedToolbar : this.showAdvancedToolbar,
             snapshotFilter : this.snapshotFilter,
-            showButtons : this.showButtons
+            showButtons : this.showButtons,
+            showResultingModel : this.showResultingModel
         }
     }
 
@@ -453,6 +471,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
         this.autoCompile = !!oldState.autoCompile
         this.compileInplace = !!oldState.compileInplace
         this.showPrivateSystems = !!oldState.showPrivateSystems
+        this.showResultingModel = !!oldState.showResultingModel
         this.showButtons = !!oldState.showButtons
         if (oldState.selectedIndex === undefined || oldState.selectedStyle === undefined) {
             this.selectedIndex = 0
@@ -483,5 +502,6 @@ export namespace CompilerWidget {
         showAdvancedToolbar: boolean
         snapshotFilter: string
         showButtons: boolean
+        showResultingModel: boolean
     }
 }

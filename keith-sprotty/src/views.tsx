@@ -63,7 +63,7 @@ export class KNodeView implements IView {
 
         if (isShadow) {
             // Render shadow of the node
-            shadow = getRendering(node.data, node, new KStyles, ctx)
+            shadow = getRendering(node.data, node, new KStyles, ctx, this.mListener)
         }
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
@@ -77,7 +77,7 @@ export class KNodeView implements IView {
         let rendering = undefined
         if (!this.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
-            rendering = getRendering(node.data, node, new KStyles, ctx)
+            rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
 
             if (this.rOptions.get(ShowConstraintOption.ID) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
@@ -104,7 +104,7 @@ export class KNodeView implements IView {
             // }
         } else {
             node.opacity = 0.1
-            rendering = getRendering(node.data, node, new KStyles, ctx)
+            rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
         }
         node.shadow = isShadow
 
@@ -151,9 +151,11 @@ export class KNodeView implements IView {
  */
 @injectable()
 export class KPortView implements IView {
+
+    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode {
         port.areChildrenRendered = false
-        const rendering = getRendering(port.data, port, new KStyles, context as any)
+        const rendering = getRendering(port.data, port, new KStyles, context as any, this.mListener)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
@@ -184,15 +186,12 @@ export class KLabelView implements IView {
     render(label: SKLabel, context: RenderingContext): VNode {
         label.areChildrenRendered = false
 
-        let parent = label.parent
-
-        if (!(parent instanceof SKNode) || isChildSelected(parent) || isChildSelected(parent.parent as SKNode) || !this.mListener.hasDragged) {
-            // The label is on the same hierarchy level as the moved node
-        } else {
+        // let parent = label.parent
+        if (this.mListener.hasDragged) {
             // Nodes that are not on the same hierarchy are less visible.
             label.opacity = 0.1
         }
-        let rendering = getRendering(label.data, label, new KStyles, context as any)
+        let rendering = getRendering(label.data, label, new KStyles, context as any, this.mListener)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
@@ -236,12 +235,12 @@ export class KEdgeView implements IView {
         if (!this.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {
             // edge should only be visible if it is in the same hierarchical level as
             // the moved node or no node is moved at all
-            rendering = getRendering(edge.data, edge, new KStyles, context as any)
+            rendering = getRendering(edge.data, edge, new KStyles, context as any, this.mListener)
         }
         edge.moved = false
 
         // Also get the renderings for all junction points
-        const junctionPointRenderings = getJunctionPointRenderings(edge, context as any)
+        const junctionPointRenderings = getJunctionPointRenderings(edge, context as any, this.mListener)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
