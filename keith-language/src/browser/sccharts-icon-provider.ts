@@ -11,31 +11,32 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { LabelProviderContribution } from '@theia/core/lib/browser/label-provider';
 import URI from '@theia/core/lib/common/uri';
-import { MaybePromise } from '@theia/core/lib/common';
+import { FileStat } from '@theia/filesystem/lib/common';
+import { WorkspaceUriLabelProviderContribution } from '@theia/workspace/lib/browser/workspace-uri-contribution';
 import { injectable } from 'inversify';
 
 /**
  * This class is currently not in use, since some options need to be configured to not overlap with decorators (warnings, errors, etc).
  */
 @injectable()
-export class SCChartsIconProvider implements LabelProviderContribution {
+export class SCChartsIconProvider extends WorkspaceUriLabelProviderContribution {
 
-    canHandle(uri: object): number {
-
-        if (uri instanceof URI && uri.scheme === "file" && uri.path.ext === ".sctx") {
-            return 30;
-        } else {
-            return -1;
+    canHandle(element: object): number {
+        if ((element instanceof URI && element.scheme === 'file' && element.path.ext === '.sctx') || (FileStat.is(element) && element.uri.endsWith(".sctx"))) {
+            return Number.MAX_SAFE_INTEGER; // Or a higher number than the default one.
         }
+        return super.canHandle(element);
     }
 
     /**
      * returns an icon class for the given element.
      */
-    getIcon(uri: URI): MaybePromise<string> {
-        return 'fa sctx-icon';
+    async getIcon(element: URI | FileStat): Promise<string> {
+        if ((element instanceof URI && element.path.ext === ".sctx") || (FileStat.is(element) && element.uri.endsWith(".sctx"))) {
+            return 'fa sctx-icon'
+        }
+        return super.getIcon(element);
     }
 
     /**
@@ -51,5 +52,4 @@ export class SCChartsIconProvider implements LabelProviderContribution {
     getLongName(uri: URI): string {
         return uri.path.toString();
     }
-
 }
