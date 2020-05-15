@@ -36,6 +36,4 @@ export const languageDescriptions: LanguageDescription[] = [
     {id: "sctx", name: "SCCharts"},
     {id: "elkt", name: "Elk Graph"},
     {id: "kviz", name: "Kieler Visualization"},
-    {id: "c", name: "C"},
-    {id: "cpp", name: "C++"},
 ]

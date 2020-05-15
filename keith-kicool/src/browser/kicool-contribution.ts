@@ -217,7 +217,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     async requestSystemDescriptions() {
-        if (this.compilerWidget && this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
+        if (this.compilerWidget && this.editor) {
             // when systems are requested request systems status bar entry is updated
             this.statusbar.setElement('request-systems', {
                 alignment: StatusBarAlignment.LEFT,
@@ -342,8 +342,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
         commands.registerCommand(SELECT_COMPILATION_CHAIN, {
             isEnabled: widget => {
-                return (widget !== undefined && !!this.editor) &&
-                this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
+                return (widget !== undefined && !!this.editor)
             },
             execute: () => {
                 this.quickOpenService.open('>Kicool: Compile model with ')
