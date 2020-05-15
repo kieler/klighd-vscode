@@ -8,7 +8,8 @@
         "target": "electron",
         "frontend": {
             "config": {
-                "applicationName": "Keith Electron App"
+                "applicationName": "Keith Electron App",
+                "defaultTheme": "light"
             }
         }
     },

@@ -43,6 +43,11 @@
         "watch": "theia build --watch --mode development"
     },
     "theia": {
-        "target": "browser"
+        "target": "browser",
+        "frontend": {
+            "config": {
+                "defaultTheme": "light"
+            }
+        }
     }
 }
