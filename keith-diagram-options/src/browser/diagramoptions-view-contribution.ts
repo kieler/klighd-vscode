@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2019 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,9 +11,11 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
-import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
+import { KeithDiagramManager } from '@kieler/keith-diagram/lib/browser/keith-diagram-manager';
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
+import { RefreshDiagramAction } from '@kieler/keith-interactive/lib/actions';
 import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
+import { RenderOption, RenderOptions } from '@kieler/keith-sprotty/lib/options';
 import { Command, CommandHandler, CommandRegistry } from '@theia/core';
 import { DidCreateWidgetEvent, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { FrontendApplication, FrontendApplicationContribution } from '@theia/core/lib/browser/frontend-application';
@@ -21,7 +23,7 @@ import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-con
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
-import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId } from '../common';
+import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId, SPROTTY_ACTION } from '../common';
 import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
 
@@ -37,6 +39,11 @@ export const OPEN_DIAGRAM_OPTIONS_WIDGET_KEYBINDING = 'ctrlcmd+shift+h'
 export class DiagramOptionsViewContribution extends AbstractViewContribution<DiagramOptionsViewWidget> implements FrontendApplicationContribution {
     editorWidget: EditorWidget
     diagramOptionsViewWidget: DiagramOptionsViewWidget
+
+    /**
+     * Client side render options.
+     */
+    private rOptions: RenderOptions
 
     /**
      * The dynamically registered commands for the current diagram options.
@@ -79,8 +86,12 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         })
     }
 
-    async initializeLayout(app: FrontendApplication): Promise<void> {
-        await this.openView()
+    /**
+     * This opens the widget on startup.
+     * @param app The app.
+     */
+    onDidInitializeLayout(app: FrontendApplication) {
+        this.openView()
     }
 
     /**
@@ -95,6 +106,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.diagramOptionsViewWidget.onSendNewAction(this.sendNewAction.bind(this))
             this.diagramOptionsViewWidget.onActivateRequest(this.updateContent.bind(this))
             this.diagramOptionsViewWidget.onGetOptions(this.updateContent.bind(this))
+            this.diagramOptionsViewWidget.onSendNewRenderOption(this.sendNewRenderOption.bind(this))
         }
     }
 
@@ -124,6 +136,17 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     }
 
     /**
+     * Updates the render option and the diagram.
+     * @param option The newly configured render option.
+     */
+    async sendNewRenderOption(option: RenderOption) {
+        this.rOptions.set(option.id, option.currentValue)
+        // Update the diagram to draw according to the changed render option.
+        const lClient = await this.client.languageClient
+        await lClient.sendNotification(SPROTTY_ACTION, {clientId: 'keith-diagram_sprotty', action: new RefreshDiagramAction()})
+    }
+
+    /**
      * Sends any message with any parameter as a request to the language server.
      * @param messageType The message type as a complete string, such as 'module/specificRequest'
      * @param param The parameter to be sent with the message. There is nothing checking if the parameter fits the message type.
@@ -137,7 +160,27 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         if (e.factoryId === this.diagramManager.id) {
             // Bind the onModelUpdated method here to the modelUpdated event of the diagram widget.
             if (e.widget instanceof KeithDiagramWidget) {
-                e.widget.onModelUpdated(this.onModelUpdated.bind(this))
+                const renderOptions = (e.widget as KeithDiagramWidget).diContainer.get(RenderOptions)
+                if (renderOptions) {
+                    this.rOptions = renderOptions
+
+                    // Get option from local storage if it exists.
+                    let localRenderOptions: RenderOption[] = []
+                    this.rOptions.getRenderOptions().forEach(option => {
+                        const localStorageString = window.localStorage.getItem(option.id);
+                        if (localStorageString) {
+                            const localStorageValue: RenderOption = JSON.parse(localStorageString)
+                            localRenderOptions.push(localStorageValue)
+                        } else {
+                            localRenderOptions.push(option)
+                        }
+                    });
+                    this.rOptions.renderOptions = localRenderOptions
+                    if (this.diagramOptionsViewWidget) {
+                        this.diagramOptionsViewWidget.setRenderOptions(localRenderOptions)
+                    }
+                }
+                (e.widget as KeithDiagramWidget).onModelUpdated(this.onModelUpdated.bind(this))
                 e.widget.disposed.connect(() => {
                     this.onDiagramWidgetsClosed()
                 })
@@ -145,6 +188,9 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         } else if (e.factoryId === diagramOptionsWidgetId) {
             // Initialize the widget and update its content when the widget is created.
             this.initializeDiagramOptionsViewWidget(e.widget)
+            if (this.rOptions) {
+                (e.widget as DiagramOptionsViewWidget).setRenderOptions(this.rOptions.getRenderOptions())
+            }
             this.updateContent()
         }
     }
@@ -171,6 +217,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      */
     onDiagramWidgetsClosed(): void {
         this.diagramOptionsViewWidget.setSynthesisOptions([])
+        this.diagramOptionsViewWidget.setRenderOptions([])
         this.diagramOptionsViewWidget.setLayoutOptions([])
         this.diagramOptionsViewWidget.setActions([])
         this.diagramOptionsViewWidget.update()
@@ -187,7 +234,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         }
         // If the view is not initialized yet, do that now.
         if (!this.diagramOptionsViewWidget || this.diagramOptionsViewWidget.isDisposed) {
-            const widgetPromise = this.widgetManager.getWidget('diagramoptions-view')
+            const widgetPromise = this.widgetManager.getWidget(diagramOptionsWidgetId)
             widgetPromise.then(widget => {
                 this.initializeDiagramOptionsViewWidget(widget)
             })
@@ -208,21 +255,34 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             if (!result) {
                 return
             }
+
             const valuedOptions: ValuedSynthesisOption[] = result.valuedSynthesisOptions
             const synthesisOptions: SynthesisOption[] = []
+            const predefinedOptions: SynthesisOption[] = []
 
             // Set up the current value of all options.
             if (valuedOptions) {
                 valuedOptions.forEach(valuedOption => {
                     const option = valuedOption.synthesisOption
-                    if (valuedOption.currentValue === undefined) {
-                        option.currentValue = option.initialValue
+                    // Get option values from local storage.
+                    const localStorageString = window.localStorage.getItem(option.id)
+                    if (localStorageString !== null) {
+                        const localStorageValue: SynthesisOption = JSON.parse(localStorageString)
+                        option.currentValue = localStorageValue.currentValue
+                        predefinedOptions.push(option)
                     } else {
-                        option.currentValue = valuedOption.currentValue
+                        if (valuedOption.currentValue === undefined) {
+                            option.currentValue = option.initialValue
+                        } else {
+                            option.currentValue = valuedOption.currentValue
+                        }
                     }
                     synthesisOptions.push(option)
                 })
             }
+
+            // Send predefined options to server.
+            await lClient.sendRequest(SET_SYNTHESIS_OPTIONS, { uri: this.editorWidget.editor.uri.toString(), synthesisOptions: predefinedOptions })
 
             // Register commands in the command palette.
             this.registeredCommands.forEach(command => {

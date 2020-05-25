@@ -12,8 +12,11 @@
  */
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom/vnode';
-import { almostEquals, Bounds, BoundsAware, ElementAndBounds, IActionDispatcher, isSizeable, IVNodeDecorator, SModelElement, SModelRoot, TYPES, Action } from 'sprotty/lib';
-import { ComputedTextBoundsAction } from '../actions/actions';
+import {
+    Action, almostEquals, Bounds, BoundsAware, ElementAndBounds, EMPTY_BOUNDS, IActionDispatcher, ILogger, isLayoutContainer, isSizeable, IVNodePostprocessor, SChildElement,
+    SModelElement, SModelRoot, TYPES
+} from 'sprotty/lib';
+import { ComputedTextBoundsAction, RequestTextBoundsAction } from '../actions/actions';
 
 export class TextBoundsData {
     vnode?: VNode
@@ -31,12 +34,12 @@ export class TextBoundsData {
  * @see HiddenBoundsUpdater
  */
 @injectable()
-export class HiddenTextBoundsUpdater implements IVNodeDecorator {
+export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
     // This class differs from the HiddenBoundsUpdater that it only calculates and returns the bounds and not the position of the elements
     // and that it dispatches a ComputedTextBoundsAction instead of a ComputedBoundsAction.
 
-    constructor(@inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher) {
-    }
+    @inject(TYPES.ILogger) protected logger: ILogger;
+    @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher
 
     private readonly element2boundsData: Map<SModelElement, TextBoundsData> = new Map
 
@@ -56,17 +59,32 @@ export class HiddenTextBoundsUpdater implements IVNodeDecorator {
     }
 
     postUpdate(cause?: Action) {
+        if (cause === undefined || cause.kind !== RequestTextBoundsAction.KIND) {
+            return;
+        }
+        const request = cause as RequestTextBoundsAction
         this.getBoundsFromDOM()
         const resizes: ElementAndBounds[] = []
         this.element2boundsData.forEach(
             (boundsData, element) => {
-                if (boundsData.boundsChanged && boundsData.bounds !== undefined)
-                    resizes.push({
+                if (boundsData.boundsChanged && boundsData.bounds !== undefined) {
+                    const resize: ElementAndBounds = {
                         elementId: element.id,
-                        newBounds: boundsData.bounds
-                    })
+                        newSize: {
+                            width: boundsData.bounds.width,
+                            height: boundsData.bounds.height
+                        }
+                    }
+                    if (element instanceof SChildElement && isLayoutContainer(element.parent)) {
+                        resize.newPosition = {
+                            x: boundsData.bounds.x,
+                            y: boundsData.bounds.y
+                        }
+                    }
+                    resizes.push(resize)
+                }
             })
-        this.actionDispatcher.dispatch(new ComputedTextBoundsAction(resizes))
+        this.actionDispatcher.dispatch(new ComputedTextBoundsAction(resizes, request.requestId))
         this.element2boundsData.clear()
     }
 
@@ -97,11 +115,20 @@ export class HiddenTextBoundsUpdater implements IVNodeDecorator {
     }
 
     protected getBounds(elm: any, element: BoundsAware): Bounds {
+        if (typeof elm.getBBox !== 'function') {
+            this.logger.error(this, 'Not an SVG element:', elm);
+            return EMPTY_BOUNDS;
+        }
+        // Try to get the computed text length attribute, as it may be more accurate than the bounding box.
+        let textWidth: number | undefined
+        if (elm.children && elm.children[0] && elm.children[0].children[0] && typeof elm.children[0].children[0].getComputedTextLength === 'function') {
+            textWidth = elm.children[0].children[0].getComputedTextLength()
+        }
         const bounds = elm.getBBox();
         return {
             x: bounds.x,
             y: bounds.y,
-            width: bounds.width,
+            width: textWidth ? textWidth : bounds.width,
             height: bounds.height
         };
     }

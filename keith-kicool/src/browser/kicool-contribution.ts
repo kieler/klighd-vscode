@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,31 +11,35 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KeithDiagramManager } from '@kieler/keith-diagram/lib/keith-diagram-manager';
-import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/keith-diagram-widget';
-import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
-import { AbstractViewContribution, DidCreateWidgetEvent,
-    FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, Widget, WidgetManager, PrefixQuickOpenService, StatusBar, StatusBarAlignment
-} from "@theia/core/lib/browser";
-import { Command, CommandHandler, CommandRegistry, MessageService, Emitter, Event } from '@theia/core/lib/common';
-import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
-import { FileChange, FileSystemWatcher } from "@theia/filesystem/lib/browser";
-import { Workspace, NotificationType } from "@theia/languages/lib/browser";
-import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
-import { UserStorageUri } from "@theia/userstorage/lib/browser";
-import { inject, injectable } from "inversify";
-import { COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING, SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING,
-    CANCEL_COMPILATION,
-    CANCEL_GET_SYSTEMS} from "../common";
+import { KeithDiagramManager } from '@kieler/keith-diagram/lib/browser/keith-diagram-manager';
+import { displayInputModel } from '@kieler/keith-diagram/lib/browser/keith-diagram-server'
+import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
+import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
+import {
+    AbstractViewContribution, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, PrefixQuickOpenService,
+    StatusBar, StatusBarAlignment, Widget, WidgetManager
+} from '@theia/core/lib/browser';
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import { Command, CommandHandler, CommandRegistry, Emitter, Event, MessageService } from '@theia/core/lib/common';
+import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
+import { FileChange, FileSystemWatcher } from '@theia/filesystem/lib/browser';
+import { NotificationType, Workspace } from '@theia/languages/lib/browser';
+import { OutputChannelManager } from '@theia/output/lib/common/output-channel';
+import { UserStorageUri } from '@theia/userstorage/lib/browser';
+import { inject, injectable } from 'inversify';
+import { Action } from 'sprotty/lib';
+import {
+    CANCEL_COMPILATION, CANCEL_GET_SYSTEMS, COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING,
+    SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING
+} from "../common";
+import {
+    REQUEST_CS, REVEAL_COMPILATION_WIDGET, SELECT_COMPILATION_CHAIN, SELECT_SNAPSHOT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, TOGGLE_AUTO_COMPILE,
+    TOGGLE_BUTTON_MODE, TOGGLE_INPLACE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_SHOW_RESULTING_MODEL
+} from '../common/commands';
 import { delay } from "../common/helper";
 import { CodeContainer, CompilationSystem } from "../common/kicool-models";
 import { CompilerWidget, ShowSnapshotEvent } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
-import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import { TOGGLE_AUTO_COMPILE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_INPLACE, REQUEST_CS, TOGGLE_BUTTON_MODE,
-    SELECT_COMPILATION_CHAIN, SHOW_NEXT, SHOW_PREVIOUS, REVEAL_COMPILATION_WIDGET, SELECT_SNAPSHOT_COMPILATION_CHAIN } from '../common/commands';
-import { Action } from 'sprotty/lib';
-import { displayInputModel } from '@kieler/keith-diagram/lib/keith-diagram-server'
 
 export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
 export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
@@ -128,8 +132,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
     }
 
-    async initializeLayout(app: FrontendApplication): Promise<void> {
-        await this.openView()
+    /**
+     * This opens the widget on startup.
+     * @param app The app.
+     */
+    onDidInitializeLayout(app: FrontendApplication) {
+        this.openView()
     }
 
     onStart(): void {
@@ -212,7 +220,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     }
 
     async requestSystemDescriptions() {
-        if (this.compilerWidget && this.editor && this.client.documentSelector.includes(this.editor.editor.document.languageId)) {
+        if (this.compilerWidget && this.editor) {
             // when systems are requested request systems status bar entry is updated
             this.statusbar.setElement('request-systems', {
                 alignment: StatusBarAlignment.LEFT,
@@ -273,7 +281,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.kicoolCommands.push(command)
             const handler: CommandHandler = {
                 execute: (inplace, doNotShowResultingModel) => { // on compile these options are undefined
-                    this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel, system.snapshotSystem);
+                    this.compile(system.id, this.compilerWidget.compileInplace || !!inplace, !doNotShowResultingModel && this.compilerWidget.showResultingModel
+                        , system.snapshotSystem);
                 },
                 isVisible: () => {
                     return system.isPublic || this.compilerWidget.showPrivateSystems
@@ -314,6 +323,14 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 }
             }
         })
+        commands.registerCommand(TOGGLE_SHOW_RESULTING_MODEL, {
+            execute: () => {
+                if (this.compilerWidget) {
+                    this.compilerWidget.showResultingModel = !this.compilerWidget.showResultingModel
+                    this.compilerWidget.update()
+                }
+            }
+        })
         commands.registerCommand(REQUEST_CS, {
             execute: async () => {
                 await this.requestSystemDescriptions()
@@ -328,8 +345,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
         commands.registerCommand(SELECT_COMPILATION_CHAIN, {
             isEnabled: widget => {
-                return (widget !== undefined && !!this.editor) &&
-                this.client.documentSelector.includes((widget as EditorWidget).editor.document.languageId)
+                return (widget !== undefined && !!this.editor)
             },
             execute: () => {
                 this.quickOpenService.open('>Kicool: Compile model with ')
@@ -374,19 +390,20 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         switch (type.toLowerCase()) {
             case "error":
                 this.messageService.error(message)
-                this.outputManager.getChannel("SCTX").appendLine("ERROR: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('ERROR: ' + message)
+                this.outputManager.selectedChannel = this.outputManager.getChannel('SCTX')
                 break;
             case "warn":
                 this.messageService.warn(message)
-                this.outputManager.getChannel("SCTX").appendLine("WARN: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('WARN: ' + message)
                 break;
             case "info":
                 this.messageService.info(message)
-                this.outputManager.getChannel("SCTX").appendLine("INFO: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('INFO: ' + message)
                 break;
             default:
                 this.messageService.log(message)
-                this.outputManager.getChannel("SCTX").appendLine("LOG: " + message)
+                this.outputManager.getChannel('SCTX').appendLine('LOG: ' + message)
                 break;
         }
     }
@@ -456,7 +473,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         if (finished)  {
             let errorOccurred = false
             this.compilerWidget.compiling = false
-            this.compilationFinishedEmitter.fire(true)
+            let errorString = '';
             snapshotsDescriptions.files.forEach(array => {
                 array.forEach(element => {
                     element.warnings.forEach(warning => {
@@ -465,9 +482,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                     element.errors.forEach(error => {
                         this.outputManager.getChannel("SCTX").appendLine("ERROR: " + error)
                         errorOccurred = true
+                        errorString = errorString + '\n' + error
                     })
                 })
             });
+            this.compilationFinishedEmitter.fire(!errorOccurred)
+
             this.endTime = performance.now()
             // Set finished bar if the currentIndex of the processor is the maxIndex the compilation was not canceled
             this.statusbar.setElement('compile-status', {
@@ -480,7 +500,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 command: REVEAL_COMPILATION_WIDGET.id
             })
             if (errorOccurred) {
-                this.message('An error occurred during compilation. Check the Compiler Widget for details.', 'error')
+                this.message('An error occurred during compilation. Check the Compiler Widget for details.' + errorString, 'error')
             }
         } else {
             // Set progress bar for compilation

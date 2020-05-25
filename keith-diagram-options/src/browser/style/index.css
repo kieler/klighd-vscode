@@ -8,14 +8,16 @@
 
 .diagram-option-widget {
     display: inline-block;
-    margin-left: 5px;
-    margin-bottom: 10px;
+    margin-left: calc(var(--theia-ui-padding)*2);
+    margin-bottom: calc(var(--theia-ui-padding));
+    overflow-x: visible;
+    width: max-content;
 }
 
 .diagram-option {
     color: var(--theia-ui-font-color1);
     font-size: var(--theia-ui-font-size1);
-    margin-top: 5px;
+    margin-top: calc(var(--theia-ui-padding));
 }
 
 .diagram-option-actions {
@@ -25,24 +27,42 @@
 }
 
 .diagram-option-choice {
-    padding-left: 15px;
+    padding-left: 0px;
+}
+
+.diagram-option-choice-label {
+    padding-left: calc(var(--theia-ui-padding)*2);
 }
 
 .diagram-option-range {
     color: var(--theia-ui-font-color1);
     display: grid;
     font-size: var(--theia-ui-font-size1);
-    margin-top: 5px;
-    padding-left: 15px;
+    margin-top: calc(var(--theia-ui-padding));
+}
+
+.diagram-option-text {
+    padding-left: calc(var(--theia-ui-padding)*2);
+    font-size: var(--theia-ui-font-size1);
 }
 
 .category {
-    font-size: var(--theia-ui-font-size2);
-    padding: 5px;
+    font-size: var(--theia-ui-font-size1);
+}
+
+.category0 {
+    font-size: var(--theia-ui-font-size1);
+    background-color: var(--theia-layout-color0);
+}
+
+.category1 {
+    font-size: var(--theia-ui-font-size1);
+    background-color: var(--theia-layout-color1);
 }
 
 .category-options {
-    padding: 5px;
+    padding: calc(var(--theia-ui-padding));
+    padding-left: calc(var(--theia-ui-padding)*2);
 }
 
 .diagram-inputbox {
@@ -50,15 +70,12 @@
     align-content: center;
 }
 
-.seperator {
-    font-size: var(--theia-ui-font-size2);
-    margin-top: 20px
+.separator {
+    font-size: var(--theia-ui-font-size1);
+    margin-top: calc(var(--theia-ui-padding));
+    margin-bottom: calc(var(--theia-ui-padding));
 }
 
-label {
-    padding-left: 15px;
-    text-indent: -15px;
-}
 input[type="checkbox"] {
     margin-top: auto;
     margin-bottom: auto;
@@ -70,6 +87,11 @@ input[type="radio"] {
     vertical-align: bottom;
 }
 input[type="range"] {
+    width: 90%;
+    max-width: 200px;
+    padding-left: unset;
+}
+input[type="text"] {
     width: 90%;
     max-width: 200px;
     padding-left: unset;

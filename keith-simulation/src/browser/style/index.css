@@ -4,11 +4,20 @@
 }
 
 .simulation-table {
-    margin: 20px
+    margin: 20px;
+    width: 100%;
+}
+
+.simulation-data-table {
+    width: 95%;
+    margin-right: 50px;
+    border-collapse: collapse;
+    border-spacing: 0;
 }
 
 .simulation-data-row {
-    display: table-row
+    display: table-row;
+    resize: horizontal;
 }
 
 .simulation-data-truncate {
@@ -18,16 +27,9 @@
     white-space: nowrap;
     overflow: auto;
     max-width: 1px;
+    resize: horizontal;
 }
 
-
-.simulation-data-fix-size {
-    color: var(--theia-ui-font-color1);
-    border: 1px solid var(--theia-ui-font-color1);
-    border-collapse: collapse;
-    white-space: nowrap;
-    overflow: auto;
-}
 .simulation-data-inputbox::placeholder {
     font-style: italic;
 }
@@ -53,8 +55,6 @@
     box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.2), 0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 1px -2px rgba(0, 0, 0, 0.12);
     transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     width: 100%;
-    /* border-width: medium;    
-    border-style: solid; */
 }
 
 .preference-button {
@@ -83,11 +83,6 @@
     color: var(--theia-ui-button-font-color-secondary);
 }
 
-.right-aligned-button {
-    margin-left: auto;
-    margin-right: 5px;
-}
-
 .simulation-panel {
     margin-top: 12px;
     display: flex;
@@ -100,33 +95,14 @@
     text-align: center;
 }
 
-.selection-list {
-    line-height: var(--theia-content-line-height);
-    font-size: var(--theia-ui-font-size1);
-    border-width: 2px;
-    border-style: solid;
-    border-color: var(--theia-border-color1);
-    background: var(--theia-layout-color0);
-    color: var(--theia-ui-font-color1);
-    margin-left: 1px;
-    margin-right: 1px;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, var(--theia-ui-font-color1) 50%), linear-gradient(135deg, var(--theia-ui-font-color1) 50%, transparent 50%);
-    background-position: calc(100% - 6px) 8px, calc(100% - 2px) 8px, 100% 0;
-    background-size: 4px 5px;
-    background-repeat: no-repeat;
-}
-
 .simulation-history-inputbox {
     border: 0px;
-    width: 98%;
+    width: 98% !important;
+    max-width: unset !important;
     padding-left: 1%;
     padding-right: 1%;
 }
 
-/* .simulation-data-box.history {
-} */
 .compile-button {
     color: var(--theia-ui-button-font-color);
     background-color: var(--theia-ui-button-color);
@@ -152,20 +128,18 @@
     transform: rotate(180deg);
 }
 
-table {
-    border-collapse: collapse;
-    border-spacing: 0px;
-}
 simulation-td {
     border: 2px solid black;
     padding: 0;
     margin: 0px;
+    resize: horizontal;
 }
 
 .simulation-div {
     margin: 0px;
     padding: 0px;
     display:block;
+    resize: horizontal;
 }
 
 .simulation-speed-input-box {
@@ -179,4 +153,12 @@ simulation-td {
 
 .inactive-input-box {
     background: var(--theia-layout-color0)
+}
+
+.setwidth {
+    min-width: 40px;
+}
+
+.setwidth-h {
+    min-width: 200px;
 }

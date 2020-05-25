@@ -20,7 +20,8 @@
   "dependencies": {
     "@theia/application-package": "next",
     "@theia/getting-started": "next",
-    "@theia/monaco": "next"
+    "@theia/monaco": "next",
+    "@theia/navigator": "next"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

@@ -1,0 +1,35 @@
+{
+  "name": "@kieler/keith-interactive",
+  "version": "0.1.0",
+  "description": "An extension for Theia to interctively apply constraints to the diagram",
+  "author": "Kiel University https://rtsys.informatik.uni-kiel.de/kieler",
+  "license": "EPL-1.0",
+  "keywords": [
+    "keith-extension",
+    "theia",
+    "interactive"
+  ],
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "rimraf lib",
+    "lint": "tslint -c ../tslint.json --project ./tsconfig.json",
+    "build": "tsc && yarn lint",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "sprotty": "next"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/chai-as-promised": "7.1.0",
+    "@types/mocha": "^5.2.6",
+    "mocha": "^6.0.2",
+    "ts-node": "^8.0.3",
+    "typescript": "latest"
+  },
+  "files": [
+    "lib",
+    "src",
+    "build"
+  ]
+}

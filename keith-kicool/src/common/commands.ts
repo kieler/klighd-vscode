@@ -55,6 +55,15 @@ export const TOGGLE_INPLACE: Command = {
     label: 'Toggle inplace compilation',
     category: "Kicool"
 }
+/**
+ * Show the resulting model after compile.
+ * Never done on false or for simulation, done on compile if true.
+ */
+export const TOGGLE_SHOW_RESULTING_MODEL: Command = {
+    id: 'toggle-show-resulting-model',
+    label: 'Toggle show model after compile',
+    category: "Kicool"
+}
 export const TOGGLE_PRIVATE_SYSTEMS: Command = {
     id: 'toggle-private-systems',
     label: 'Toggle show private systems',

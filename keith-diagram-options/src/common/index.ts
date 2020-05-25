@@ -35,3 +35,8 @@ export const PERFORM_ACTION = 'keith/diagramOptions/performAction'
  * The ID of the diagram options view widget
  */
 export const diagramOptionsWidgetId = 'diagramoptions-view'
+
+/**
+ * Sprotty action message id.
+ */
+export const SPROTTY_ACTION = 'diagram/accept'

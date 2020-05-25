@@ -14,20 +14,20 @@
 import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
 import { CommandContribution, MenuContribution } from '@theia/core';
 import { FrontendApplicationContribution, OpenHandler, WidgetFactory, WidgetManager } from '@theia/core/lib/browser';
+import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { ContainerModule } from 'inversify';
 import 'sprotty-theia/css/theia-sprotty.css';
 import { DiagramConfiguration, DiagramManager, DiagramManagerProvider } from 'sprotty-theia/lib';
 import 'sprotty/css/sprotty.css';
+import '../../src/browser/style/index.css';
 import { KeithDiagramConfiguration } from './di.config';
 import { bindDiagramPreferences, KeithDiagramPreferenceService } from './diagram-preferences';
+import { KeithDiagramCommandContribution } from './keith-diagram-command-contribution';
 import { SynthesisCommandContribution } from './keith-diagram-commands';
+import './keith-diagram-icons';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithDiagramManager } from './keith-diagram-manager';
 import { KeithWidgetManager } from './keith-widget-manager';
-import { KeithDiagramCommandContribution } from './keith-diagram-command-contribution';
-import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import './keith-diagram-icons'
-import '../src/browser/style/index.css';
 
 /**
  * Dependency injection container for the KEITH frontend part of diagram functionality.

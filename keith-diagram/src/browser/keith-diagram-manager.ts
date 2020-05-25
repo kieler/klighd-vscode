@@ -13,13 +13,14 @@
 
 import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
 import { Emitter, Event } from '@theia/core';
-import { OpenerOptions, Widget, WidgetManager, WidgetOpenerOptions } from '@theia/core/lib/browser';
+import { OpenerOptions, WidgetManager, WidgetOpenerOptions } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { MonacoWorkspace } from "@theia/monaco/lib/browser/monaco-workspace";
 import { UserStorageUri } from "@theia/userstorage/lib/browser";
 import { inject, injectable } from 'inversify';
 import { DiagramManager, DiagramWidget, DiagramWidgetOptions, LSTheiaSprottyConnector, TheiaFileSaver } from 'sprotty-theia/lib';
+import { SynthesisCommandContribution } from './keith-diagram-commands';
 import { KeithDiagramLanguageClient } from './keith-diagram-language-client';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
@@ -51,12 +52,13 @@ export class KeithDiagramManager extends DiagramManager {
         @inject(EditorManager) editorManager: EditorManager,
         @inject(WidgetManager) widgetManager: WidgetManager,
         @inject(MonacoWorkspace) workspace: MonacoWorkspace,
-        @inject(SynthesisRegistry) synthesisRegistry: SynthesisRegistry
+        @inject(SynthesisRegistry) synthesisRegistry: SynthesisRegistry,
+        @inject(SynthesisCommandContribution) synthesisCommandContribution: SynthesisCommandContribution
         ) {
         super()
         this._diagramConnector = new KeithTheiaSprottyConnector({
             diagramLanguageClient, fileSaver, editorManager, widgetManager, workspace, diagramManager: this,
-            synthesisRegistry
+            synthesisRegistry, synthesisCommandContribution
         })
         editorManager.onCurrentEditorChanged(this.onCurrentEditorChanged.bind(this))
     }
@@ -108,12 +110,12 @@ export class KeithDiagramManager extends DiagramManager {
         }
     }
 
-    async createWidget(options?: any): Promise<Widget> {
+    async createWidget(options?: any): Promise<DiagramWidget> {
         if (DiagramWidgetOptions.is(options)) {
             const clientId = this.createClientId();
             const config = this.diagramConfigurationRegistry.get(options.diagramType);
             const diContainer = config.createContainer(clientId + '_sprotty');
-            const diagramWidget = new KeithDiagramWidget(options, clientId, diContainer, this.diagramConnector);
+            const diagramWidget = new KeithDiagramWidget(options, clientId + '_widget', diContainer, this.diagramConnector);
             return diagramWidget;
         }
         throw Error('DiagramWidgetFactory needs DiagramWidgetOptions but got ' + JSON.stringify(options));

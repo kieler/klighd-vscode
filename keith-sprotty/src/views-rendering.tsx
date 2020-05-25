@@ -14,13 +14,17 @@
 import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
+import { KGraphData } from '@kieler/keith-interactive/lib/constraint-classes';
+import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
 import {
-    Arc, isRendering, KArc, KChildArea, KContainerRendering, KEdge, KForeground, KGraphData, KGraphElement, KLabel, KPolyline, KRendering, KRenderingLibrary, KRenderingRef,
-    KRoundedBendsPolyline, KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE,
-    K_RENDERING_LIBRARY, K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT
-} from './kgraph-models';
-import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, KGraphRenderingContext } from './views-common';
-import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles } from './views-styles';
+    Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
+    K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode
+} from './skgraph-models';
+import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints, SKGraphRenderingContext } from './views-common';
+import {
+    DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
+} from './views-styles';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -31,7 +35,7 @@ import { getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getS
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildArea(rendering: KChildArea, parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext) {
+export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, propagatedStyles: KStyles, context: SKGraphRenderingContext) {
     if (parent.areChildrenRendered) {
         console.error('This element contains multiple child areas, skipping this one.')
         return <g />
@@ -68,7 +72,8 @@ export function renderChildArea(rendering: KChildArea, parent: KGraphElement, pr
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderRectangularShape(rendering: KContainerRendering, parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+export function renderRectangularShape(rendering: KContainerRendering, parent: SKGraphElement, propagatedStyles: KStyles,
+        context: SKGraphRenderingContext, mListener: KeithInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -90,12 +95,16 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
         </g>
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
+    // objects rendered here that have no background should get a invisible, but clickable background so that users do not click through the non-available background.
+    if (colorStyles.background === DEFAULT_FILL) {
+        colorStyles.background = DEFAULT_CLICKABLE_FILL
+    }
     const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles)
 
@@ -162,13 +171,16 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                             'stroke-linejoin': lineStyles.lineJoin,
                             'stroke-width': lineStyles.lineWidth,
                             'stroke-dasharray': lineStyles.dashArray,
-                            'stroke-miterlimit': lineStyles.miterLimit
+                            'stroke-miterlimit': lineStyles.miterLimit,
+                            'opacity': colorStyles.opacity,
+                            'stroke-opacity': colorStyles.foreground.opacity,
+                            'fill-opacity': colorStyles.background.opacity
                         } as React.CSSProperties}
-                        stroke={colorStyles.foreground}
-                        fill={colorStyles.background}
+                        stroke={colorStyles.foreground.color}
+                        fill={colorStyles.background.color}
                         filter={shadowStyles}
                     />
-                    {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
+                    {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
                 </g>
                 break
             } else {
@@ -187,13 +199,16 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit
+                        'stroke-miterlimit': lineStyles.miterLimit,
+                        'opacity': colorStyles.opacity,
+                        'stroke-opacity': colorStyles.foreground.opacity,
+                        'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
-                    stroke={colorStyles.foreground}
-                    fill={colorStyles.background}
+                    stroke={colorStyles.foreground.color}
+                    fill={colorStyles.background.color}
                     filter={shadowStyles}
                 />
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
             </g>
             break
         }
@@ -217,19 +232,36 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
                         'stroke-linejoin': lineStyles.lineJoin,
                         'stroke-width': lineStyles.lineWidth,
                         'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit
+                        'stroke-miterlimit': lineStyles.miterLimit,
+                        'opacity': colorStyles.opacity,
+                        'stroke-opacity': colorStyles.foreground.opacity,
+                        'fill-opacity': colorStyles.background.opacity
                     } as React.CSSProperties}
-                    stroke={colorStyles.foreground}
-                    fill={colorStyles.background}
+                    stroke={colorStyles.foreground.color}
+                    fill={colorStyles.background.color}
                     filter={shadowStyles}
                 />
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+            </g>
+            break
+        }
+        case K_IMAGE: {
+            // TODO: clipShape is not used yet.
+            const id = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
+            const extension = id.slice(id.lastIndexOf('.') + 1)
+            const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(id)
+            element = <g id={rendering.id} {...gAttrs}>
+                <image
+                    width={boundsAndTransformation.bounds.width}
+                    height={boundsAndTransformation.bounds.height}
+                    href={image}
+                />
             </g>
             break
         }
         default: {
             // This case can never happen. If it still does, happy debugging!
-            throw new Error('Rendering is neither an KEllipse, nor a KRectangle or KRoundedRectangle!')
+            throw new Error('Rendering is neither an KArc, KEllipse, KImage, nor a KRectangle or KRoundedRectangle!')
         }
     }
 
@@ -244,7 +276,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: K
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge, propagatedStyles: KStyles,
+        context: SKGraphRenderingContext, mListener: KeithInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -267,19 +300,19 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
         </g>
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
     const shadowStyles = getSvgShadowStyles(styles, context)
     const lineStyles = getSvgLineStyles(styles)
 
     const points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
         return <g>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
         </g>
     }
 
@@ -376,13 +409,16 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
                 'stroke-linejoin': lineStyles.lineJoin,
                 'stroke-width': lineStyles.lineWidth,
                 'stroke-dasharray': lineStyles.dashArray,
-                'stroke-miterlimit': lineStyles.miterLimit
+                'stroke-miterlimit': lineStyles.miterLimit,
+                'opacity': colorStyles.opacity,
+                'stroke-opacity': colorStyles.foreground.opacity,
+                'fill-opacity': colorStyles.background.opacity
             } as React.CSSProperties}
-            stroke={colorStyles.foreground}
-            fill={colorStyles.background}
+            stroke={colorStyles.foreground.color}
+            fill={colorStyles.background.color}
             filter={shadowStyles}
         />
-        {renderChildRenderings(rendering, parent, stylesToPropagate, context)}
+        {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
     </g>
     return element
 }
@@ -393,8 +429,10 @@ export function renderLine(rendering: KPolyline, parent: KGraphElement | KEdge, 
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param mListener The mouse listener.
  */
-export function renderKText(rendering: KText, parent: KGraphElement | KLabel, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode {
+export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles,
+        context: SKGraphRenderingContext, mListener: KeithInteractiveMouseListener): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -436,6 +474,7 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, pr
 
     // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
     // contained in the general style, otherwise it has to be repeated in every contained <tspan> element.
+    const opacity = mListener.hasDragged ? 0.1 : parent.opacity
     let style = {
         ...{ 'dominant-baseline': textStyles.dominantBaseline },
         ...{ 'font-family': textStyles.fontFamily },
@@ -443,7 +482,9 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, pr
         ...{ 'font-style': textStyles.fontStyle },
         ...{ 'font-weight': textStyles.fontWeight },
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
-        ...{ 'text-decoration-style': textStyles.textDecorationStyle }
+        ...{ 'text-decoration-style': textStyles.textDecorationStyle },
+        ...{ 'opacity': opacity},
+        ...(colorStyle ? {'fill-opacity': colorStyle.opacity } : {})
     }
 
     // The children to be contained in the returned text node.
@@ -451,53 +492,68 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, pr
 
     // The attributes to be contained in the returned text node.
     let attrs = {
+        x: boundsAndTransformation.bounds.x,
         style: style,
-        ...(boundsAndTransformation.bounds.y ? { y: boundsAndTransformation.bounds.y } : {}),
-        fill: colorStyle,
+        ...(colorStyle ? {fill: colorStyle.color} : {}),
         filter: shadowStyles,
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size estimation include any trailing white spaces.
     } as any
 
+    let elements: VNode[]
     if (lines.length === 1) {
         // If the text has only one line, just put the text in the text node directly.
-        attrs.x = boundsAndTransformation.bounds.x;
-        children = [lines[0]]
+        attrs.y = boundsAndTransformation.bounds.y;
+        // Render a space character for size estimation if the string is empty
+        let line = lines[0]
+        if (line === '') {
+            line = ' '
+        }
+
+        children = [line]
+        // Force any SVG renderer rendering this text to use the exact width calculated by this renderer.
+        // This avoids overlapping texts or too big gaps at the cost of slightly bigger/tighter glyph spacings
+        // when viewed in a different SVG viewer after exporting.
+        if (rendering.calculatedTextLineWidths) {
+            attrs.textLength = rendering.calculatedTextLineWidths[0]
+            attrs.lengthAdjust = 'spacingAndGlyphs'
+        }
+        elements = [
+            <text {...attrs}>
+                {...children}
+            </text>
+        ]
     } else {
-        // Otherwise, put each line of text in a separate <tspan> element.
-        let dy: string | undefined = undefined
-        children = []
-        lines.forEach(line => {
+        // Otherwise, put each line of text in a separate <text> element.
+        const calculatedTextLineWidths = rendering.calculatedTextLineWidths
+        const calculatedTextLineHeights = rendering.calculatedTextLineHeights
+        let currentY = boundsAndTransformation.bounds.y ? boundsAndTransformation.bounds.y : 0
+        if (rendering.calculatedTextLineWidths) {
+            attrs.lengthAdjust = 'spacingAndGlyphs'
+        }
+
+        elements = []
+        lines.forEach((line, index) => {
             // If the line is just a blank line, add a dummy space character so the size estimation will
             // include this character without rendering anything further visible to the screen.
             // Also, the <tspan> attribute dy needs at least one character per text so the offset is correctly applied.
             if (line === '') {
                 line = ' '
             }
-            children.push(
-                <tspan
-                    x={boundsAndTransformation.bounds.x}
-                    {...(dy ? { dy: dy } : {})}
-                >{line}</tspan>
-            )
-            dy = '1.1em' // Have a distance of 1.1em for every new line after the first one.
+            const currentElement = <text
+                {...attrs}
+                y = {currentY}
+                {...(calculatedTextLineWidths ? { textLength: calculatedTextLineWidths[index] } : {})}
+            >{line}</text>
+
+            elements.push(currentElement)
+            currentY = calculatedTextLineHeights ? currentY + calculatedTextLineHeights[index] : currentY
         });
     }
 
     // build the element from the above defined attributes and children
-    let element
-    if (gAttrs.transform === undefined) {
-        element = <text id={rendering.id} {...attrs}>
-            {...children}
-        </text>
-    } else {
-        element = <g id={rendering.id} {...gAttrs}>
-            <text {...attrs}>
-                {...children}
-            </text>
-        </g>
-    }
-
-    return element
+    return <g id={rendering.id} {...gAttrs}>
+        {...elements}
+    </g>
 }
 
 /**
@@ -507,14 +563,18 @@ export function renderKText(rendering: KText, parent: KGraphElement | KLabel, pr
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: KGraphElement, propagatedStyles: KStyles,
-    context: KGraphRenderingContext): (VNode | undefined)[] {
-    let renderings: (VNode | undefined)[] = []
-    for (let childRendering of parentRendering.children) {
-        let rendering = getRendering([childRendering], parentElement, propagatedStyles, context)
-        renderings.push(rendering)
+export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
+    context: SKGraphRenderingContext, mListener: KeithInteractiveMouseListener): (VNode | undefined)[] {
+    // children only should be rendered if the parentElement is not a shadow
+    if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
+        let renderings: (VNode | undefined)[] = []
+        for (let childRendering of parentRendering.children) {
+            let rendering = getRendering([childRendering], parentElement, propagatedStyles, context, mListener)
+            renderings.push(rendering)
+        }
+        return renderings
     }
-    return renderings
+    return []
 }
 
 export function renderError(rendering: KRendering) {
@@ -531,8 +591,10 @@ export function renderError(rendering: KRendering) {
  * @param parent The parent element containing this rendering.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this rendering.
+ * @param mListener The mouse listener.
  */
-export function getRendering(datas: KGraphData[], parent: KGraphElement, propagatedStyles: KStyles, context: KGraphRenderingContext): VNode | undefined {
+export function getRendering(datas: KGraphData[], parent: SKGraphElement, propagatedStyles: KStyles,
+        context: SKGraphRenderingContext, mListener: KeithInteractiveMouseListener): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -546,7 +608,7 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, propaga
         return undefined
     }
 
-    return renderKRendering(kRendering, parent, propagatedStyles, context)
+    return renderKRendering(kRendering, parent, propagatedStyles, context, mListener)
 }
 
 /**
@@ -555,9 +617,10 @@ export function getRendering(datas: KGraphData[], parent: KGraphElement, propaga
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param mListener The mouse listener.
  */
-export function renderKRendering(kRendering: KRendering, parent: KGraphElement, propagatedStyles: KStyles,
-    context: KGraphRenderingContext): VNode | undefined { // TODO: not all of these are implemented yet
+export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
+        context: SKGraphRenderingContext, mListener: KeithInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
@@ -573,23 +636,19 @@ export function renderKRendering(kRendering: KRendering, parent: KGraphElement, 
         }
         case K_ARC:
         case K_ELLIPSE:
+        case K_IMAGE:
         case K_RECTANGLE:
         case K_ROUNDED_RECTANGLE: {
-            return renderRectangularShape(kRendering as KContainerRendering, parent, propagatedStyles, context)
-        }
-        case K_IMAGE: {
-            console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
-            // data as KImage
-            return undefined
+            return renderRectangularShape(kRendering as KContainerRendering, parent, propagatedStyles, context, mListener)
         }
         case K_POLYLINE:
         case K_POLYGON:
         case K_ROUNDED_BENDS_POLYLINE:
         case K_SPLINE: {
-            return renderLine(kRendering as KPolyline, parent, propagatedStyles, context)
+            return renderLine(kRendering as KPolyline, parent, propagatedStyles, context, mListener)
         }
         case K_TEXT: {
-            return renderKText(kRendering as KText, parent, propagatedStyles, context)
+            return renderKText(kRendering as KText, parent, propagatedStyles, context, mListener)
         }
         default: {
             console.error('The rendering is of an unknown type:' + kRendering.type)
@@ -603,7 +662,7 @@ export function renderKRendering(kRendering: KRendering, parent: KGraphElement, 
  * @param datas The list of possible renderings.
  * @param context The rendering context for this rendering.
  */
-export function getKRendering(datas: KGraphData[], context: KGraphRenderingContext): KRendering | undefined {
+export function getKRendering(datas: KGraphData[], context: SKGraphRenderingContext): KRendering | undefined {
     for (let data of datas) {
         if (data === null)
             continue
@@ -628,8 +687,9 @@ export function getKRendering(datas: KGraphData[], context: KGraphRenderingConte
  * Renders all junction points of the given edge.
  * @param edge The edge the junction points should be rendered for.
  * @param context The rendering context for this rendering.
+ * @param mListener The mouse listener
  */
-export function getJunctionPointRenderings(edge: KEdge, context: KGraphRenderingContext): VNode[] {
+export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphRenderingContext, mListener: KeithInteractiveMouseListener): VNode[] {
     const kRenderingLibrary = edge.data.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -669,7 +729,7 @@ export function getJunctionPointRenderings(edge: KEdge, context: KGraphRendering
         return []
     }
     // Render each junction point.
-    const vNode = renderKRendering(junctionPointRendering, edge, new KStyles, context)
+    const vNode = renderKRendering(junctionPointRendering, edge, new KStyles, context, mListener)
     if (vNode === undefined) {
         return []
     }
