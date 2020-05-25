@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,84 +11,67 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Bounds, boundsFeature, Point, RectangularNode, RectangularPort, RGBColor, SEdge, selectFeature, SLabel, SParentElement } from 'sprotty/lib';
+import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/keith-interactive/lib/constraint-classes';
+import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty/lib';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
  * and labels. A graph element may contain an arbitrary number of additional
  * data instances.
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export interface KGraphElement extends SParentElement {
-    /**
-     * May contain a trace that points back to the server instance where this element was created.
-     */
-    trace?: string
-    data: KGraphData[]
-    /**
-     * Additional field to remember, if this element's children have already been rendered.
-     */
-    areChildrenRendered: boolean
+export interface SKGraphElement extends KGraphElement {
+    tooltip?: string
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KNode extends RectangularNode implements KGraphElement {
-    trace?: string
-    data: KGraphData[]
-    areChildrenRendered = false
+export class SKNode extends KNode {
+    tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
+        || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
+        || feature === popupFeature
     }
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KPort extends RectangularPort implements KGraphElement {
+export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === popupFeature
     }
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KLabel extends SLabel implements KGraphElement {
+export class SKLabel extends SLabel implements SKGraphElement {
     trace?: string
     data: KGraphData[]
+    tooltip?: string
     areChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         // The boundsFeature here is additionally needed because bounds of labels need to be
         // estimated during the estimateTextBounds action.
-        return feature === selectFeature || feature === boundsFeature
+        return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
 }
 
 /**
- * Represents its java counterpart in KLighD.
+ * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class KEdge extends SEdge implements KGraphElement {
-    trace?: string
-    data: KGraphData[]
-    junctionPoints: Point[]
-    areChildrenRendered = false
+export class SKEdge extends KEdge {
+    tooltip?: string
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
+        return feature === selectFeature || feature === popupFeature
     }
-}
-
-/**
- * This class can be extended to hold arbitrary additional data for
- * graph elements, such as layout or rendering information.
- * Represents its java counterpart in KLighD.
- */
-export interface KGraphData {
-    type: string
 }
 
 /**
@@ -116,6 +99,10 @@ export interface KRendering extends KGraphData, KStyleHolder {
      * The server pre-calculated decoration for this rendering.
      */
     calculatedDecoration?: Decoration
+    /**
+     * A possible tooltip that can be shown for this rendering.
+     */
+    tooltip?: string
 }
 
 /**
@@ -214,7 +201,7 @@ export interface KRoundedRectangle extends KContainerRendering {
 }
 
 /**
- * References an already defined rendering to make redefining unneccessary.
+ * References an already defined rendering to make redefining unnecessary.
  * Represents its java counterpart in KLighD.
  */
 export interface KRenderingRef extends KRendering {
@@ -238,6 +225,16 @@ export interface KText extends KRendering {
      * The server pre-calculated bounds for this text.
      */
     calculatedTextBounds?: Bounds
+
+    /**
+     * The server pre-calculated line widths for each individual line.
+     */
+    calculatedTextLineWidths?: number[]
+
+    /**
+     * The server pre-calculated line heights for each individual line.
+     */
+    calculatedTextLineHeights?: number[]
 }
 
 /**
@@ -435,19 +432,19 @@ export interface KColoring extends KStyle {
 }
 
 /**
- * Defines the Backgroundcolor and its alphaChannel of a rendering.
+ * Defines the BackgroundColor and its alphaChannel of a rendering.
  * Represents its java counterpart in KLighD.
  */
 export interface KBackground extends KColoring { }
 
 /**
- * Defines the Foregroundcolor and its alphaChannel of a rendering.
+ * Defines the ForegroundColor and its alphaChannel of a rendering.
  * Represents its java counterpart in KLighD.
  */
 export interface KForeground extends KColoring { }
 
 /**
- * FontStyle to dertermine whether to draw it bold or not.
+ * FontStyle to determine whether to draw it bold or not.
  * Represents its java counterpart in KLighD.
  */
 export interface KFontBold extends KStyle {
@@ -455,7 +452,7 @@ export interface KFontBold extends KStyle {
 }
 
 /**
- * FontStyle to dertermine whether to draw it italic or not.
+ * FontStyle to determine whether to draw it italic or not.
  * Represents its java counterpart in KLighD.
  */
 export interface KFontItalic extends KStyle {
@@ -567,7 +564,7 @@ export interface KTextStrikeout extends KStyle {
 }
 
 /**
- * FontStyle to add an unterline to an text element.
+ * FontStyle to add an underline to an text element.
  * Represents its java counterpart in KLighD.
  */
 export interface KTextUnderline extends KStyle {
@@ -695,4 +692,14 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
         || type === K_SPLINE
         || type === K_RECTANGLE
         || type === K_ROUNDED_RECTANGLE
+}
+
+/**
+ * Returns if the given parameter is a SKGraphRendering.
+ * @param test The potential SKGraphElement.
+ */
+export function isSKGraphElement(test: any): test is SKGraphElement {
+    return test instanceof SModelElement
+        && (test as any)['areChildrenRendered'] !== undefined
+        && (test as any)['data'] !== undefined
 }

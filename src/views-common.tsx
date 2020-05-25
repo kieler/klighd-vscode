@@ -13,10 +13,10 @@
 import { VNode } from 'snabbdom/vnode';
 import { Bounds, ModelRenderer, Point, toDegrees } from 'sprotty/lib';
 import {
-    Decoration, HorizontalAlignment, KColoring, KEdge, KGraphElement, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering,
-    KRenderingLibrary, KRotation, KText, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, Underline, VerticalAlignment
-} from './kgraph-models';
-import { KStyles } from './views-styles';
+    Decoration, HorizontalAlignment, KColoring, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering,
+    KRenderingLibrary, KRotation, KText, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, SKNode, Underline, VerticalAlignment
+} from './skgraph-models';
+import { KStyles, ColorStyle } from './views-styles';
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -27,13 +27,11 @@ const K_BOTTOM_POSITION = 'KBottomPositionImpl'
 // ------------- constants for string building --------------- //
 const RGB_START = 'rgb('
 const RGB_END = ')'
-const RGBA_START = 'rgba('
-const RGBA_END = ')'
 
 /**
- * Contains additional data needed for the rendering of KGraphs.
+ * Contains additional data needed for the rendering of SKGraphs.
  */
-export class KGraphRenderingContext extends ModelRenderer {
+export class SKGraphRenderingContext extends ModelRenderer {
     boundsMap: any
     decorationMap: any
     kRenderingLibrary: KRenderingLibrary
@@ -290,18 +288,13 @@ export function isSingleColor(coloring: KColoring) {
  * Returns the SVG fill string representing the given coloring, if it is a single color. Check that with isSingleColor(KColoring) beforehand.
  * @param coloring The coloring.
  */
-export function fillSingleColor(coloring: KColoring) {
-    if (coloring.alpha === undefined || coloring.alpha === 255) {
-        return RGB_START + coloring.color.red + ','
+export function fillSingleColor(coloring: KColoring): ColorStyle {
+    return {
+        color: RGB_START + coloring.color.red + ','
             + coloring.color.green + ','
             + coloring.color.blue
-            + RGB_END
-    } else {
-        return RGBA_START + coloring.color.red + ','
-            + coloring.color.green + ','
-            + coloring.color.blue + ','
-            + coloring.alpha / 255
-            + RGBA_END
+            + RGB_END,
+        opacity: coloring.alpha === undefined || coloring.alpha === 255 ? undefined : (coloring.alpha / 255).toString()
     }
 }
 
@@ -317,12 +310,12 @@ export function camelToKebab(string: string): string {
  * Calculate the bounds of the given rendering and the SVG transformation string that has to be applied to the SVG element for this rendering.
  * @param rendering The rendering to calculate the bounds and transformation for.
  * @param kRotation The KRotation style of the rendering.
- * @param parent The parent KGraphElement this rendering is contained in.
+ * @param parent The parent SKGraphElement this rendering is contained in.
  * @param context The rendering context used to render this element.
  * @param isEdge If the rendering is for an edge.
  */
-export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | undefined, parent: KGraphElement,
-    context: KGraphRenderingContext, isEdge?: boolean): BoundsAndTransformation | undefined {
+export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | undefined, parent: SKGraphElement,
+    context: SKGraphRenderingContext, isEdge?: boolean): BoundsAndTransformation | undefined {
     let bounds
     let decoration
 
@@ -368,6 +361,17 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
     } else if (decoration === undefined && bounds === undefined) {
         return
     }
+
+    if (parent instanceof SKNode && parent.shadow) {
+        // bounds of the shadow indicating the old position of the node
+        bounds = {
+            x: parent.shadowX - parent.position.x,
+            y: parent.shadowY - parent.position.y,
+            width: parent.size.width,
+            height: parent.size.height
+        }
+    }
+
     // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
     const transformation = getTransformation(bounds, decoration, kRotation, isEdge)
 
@@ -381,11 +385,11 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
  * Calculate the bounds of the given text rendering and the SVG transformation string that has to be applied to the SVG element for this text.
  * @param rendering The text rendering to calculate the bounds and transformation for.
  * @param styles The styles for this text rendering
- * @param parent The parent KGraphElement this rendering is contained in.
+ * @param parent The parent SKGraphElement this rendering is contained in.
  * @param context The rendering context used to render this element.
  * @param lines The number of lines the text rendering spans across.
  */
-export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: KGraphElement, context: KGraphRenderingContext, lines: number) {
+export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement, context: SKGraphRenderingContext, lines: number) {
     let bounds: {
         x: number | undefined,
         y: number | undefined,
@@ -554,7 +558,7 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, rotati
  * @param rendering The polyline rendering.
  * @param boundsAndTransformation The bounds and transformation data calculated by findBoundsAndTransformation(...).
  */
-export function getPoints(parent: KGraphElement | KEdge, rendering: KPolyline, boundsAndTransformation: BoundsAndTransformation): Point[] {
+export function getPoints(parent: SKGraphElement | SKEdge, rendering: KPolyline, boundsAndTransformation: BoundsAndTransformation): Point[] {
     let points: Point[] = []
     // If the rendering has points defined, use them for the rendering.
     if ('points' in rendering) {

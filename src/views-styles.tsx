@@ -15,11 +15,14 @@ import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { isSelectable } from 'sprotty';
 import {
-    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground, KGraphElement, KHorizontalAlignment, KInvisibility, KLineCap,
-    KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, VerticalAlignment
-} from './kgraph-models';
+    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
+    KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
+    KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge,
+    SKGraphElement, SKNode, VerticalAlignment
+} from './skgraph-models';
 import {
-    camelToKebab, fillSingleColor, isSingleColor, KGraphRenderingContext, lineCapText, lineJoinText, lineStyleText, textDecorationStyleText, verticalAlignmentText
+    camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText,
+    SKGraphRenderingContext, textDecorationStyleText, verticalAlignmentText
 } from './views-common';
 
 
@@ -51,8 +54,6 @@ const GRADIENT_TRANSFORM_ROTATE_END = ')'
 
 const RGB_START = 'rgb('
 const RGB_END = ')'
-const RGBA_START = 'rgba('
-const RGBA_END = ')'
 const URL_START = 'url(#'
 const URL_END = ')'
 
@@ -69,8 +70,16 @@ export const DEFAULT_LINE_JOIN = LineJoin.JOIN_MITER
 export const DEFAULT_MITER_LIMIT = 10
 export const DEFAULT_LINE_STYLE = LineStyle.SOLID
 export const DEFAULT_LINE_WIDTH = 1
-export const DEFAULT_FILL = 'none'
-export const DEFAULT_FOREGROUND = 'black'
+export const DEFAULT_FILL = {
+    color: 'none'
+} as ColorStyle
+export const DEFAULT_CLICKABLE_FILL = {
+    color: RGB_START + '0,0,0' + RGB_END,
+    opacity: '0'
+} as ColorStyle
+export const DEFAULT_FOREGROUND = {
+    color: 'black'
+} as ColorStyle
 export const DEFAULT_VERTICAL_ALIGNMENT = VerticalAlignment.CENTER
 export const DEFAULT_SHADOW = undefined
 export const DEFAULT_SHADOW_DEF = undefined
@@ -157,7 +166,7 @@ export class KStyles {
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param stylesToPropagage The optional styles object that should be propagated further to childern. It is modified in this method.
  */
-export function getKStyles(parent: KGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
+export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
     // TODO: not all of these are implemented yet
     let styles = new KStyles(false)
     // Include all propagated styles.
@@ -361,21 +370,23 @@ export function copyStyles(from: KStyles, to: KStyles) {
 /**
  * SVG element for color gradient definition.
  * @param colorId The unique identifying string for this color.
- * @param start The SVG string for the start color of the gradient.
- * @param end The SVG string for the end color of the gradient.
+ * @param start The SVG data for the start color of the gradient.
+ * @param end The SVG data for the end color of the gradient.
  * @param angle The angle at which the gradient should flow.
  */
-export function colorDefinition(colorId: string, start: string, end: string, angle: number | undefined): VNode {
+export function colorDefinition(colorId: string, start: ColorStyle, end: ColorStyle, angle: number | undefined): VNode {
     const startColorStop = <stop
         offset={0}
         style={{
-            'stop-color': start
+            'stop-color': start.color,
+            'stop-opacity': start.opacity
         } as React.CSSProperties}
     />
     const endColorStop = <stop
         offset={1}
         style={{
-            'stop-color': end
+            'stop-color': end.color,
+            'stop-opacity': end.opacity
         } as React.CSSProperties}
     />
     let angleFloat = angle === undefined ? 0 : angle
@@ -456,7 +467,7 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingContext): string | undefined {
+export function getSvgShadowStyles(styles: KStyles, context: SKGraphRenderingContext): string | undefined {
     const shadow = styles.kShadow
     if (shadow === undefined) {
         return undefined
@@ -506,12 +517,33 @@ export function getSvgShadowStyles(styles: KStyles, context: KGraphRenderingCont
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingContext): ColorStyles {
+export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingContext, parent: SKGraphElement | SKEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
+    const grayedOutColor = {color: 'grey', opacity: '255'}
+
+    if (parent instanceof SKEdge && parent.moved) {
+        // edge should be greyed out
+        return {
+            foreground: grayedOutColor,
+            background: background === undefined ? DEFAULT_FILL : grayedOutColor,
+            opacity: parent.opacity
+        }
+    }
+
+    if (parent instanceof SKNode && parent.shadow) {
+        // colors of the shadow node
+        return {
+            foreground: grayedOutColor,
+            background: background === undefined ? DEFAULT_FILL : {color: 'gainsboro', opacity: '255'},
+            opacity: parent.opacity
+        }
+    }
+
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
-        background: background === undefined ? DEFAULT_FILL : background
+        background: background === undefined ? DEFAULT_FILL : background,
+        opacity: parent.opacity
     }
 }
 
@@ -522,8 +554,8 @@ export function getSvgColorStyles(styles: KStyles, context: KGraphRenderingConte
  * @param context The rendering context.
  * @see getSvgColorStyles
  */
-export function getSvgColorStyle(coloring: KColoring | undefined, context: KGraphRenderingContext): string | undefined {
-    if (coloring === undefined) {
+export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): ColorStyle | undefined {
+    if (coloring === undefined || coloring.color === undefined) {
         return undefined
     }
     // If the color is a single color, just return its corresponding rgb resp. rgba color.
@@ -533,42 +565,30 @@ export function getSvgColorStyle(coloring: KColoring | undefined, context: KGrap
     // Otherwise, build an ID for the gradient color to refer to the definition described below.
     // Every color ID should start with a 'c'.
     let colorId = 'c'
-    let start
-    let end
+    let start = {} as ColorStyle
+    let end = {} as ColorStyle
     let angle
-    if (coloring.alpha === undefined || coloring.alpha === 255) {
-        // If the start color has no alpha or the alpha is full opaque, set it to an rgb color.
-        let startColor = coloring.color.red + ','
-            + coloring.color.green + ','
-            + coloring.color.blue
-        colorId += startColor
-        start = RGB_START + startColor + RGB_END
-    } else {
-        // Otherwise, set the start color to an rgba color.
-        let startColor = coloring.color.red + ','
-            + coloring.color.green + ','
-            + coloring.color.blue + ','
-            + coloring.alpha / 255
-        colorId += startColor
-        start = RGBA_START + startColor + RGBA_END
+    if (coloring.alpha !== undefined && coloring.alpha !== 255) {
+        start.opacity = (coloring.alpha / 255).toString()
     }
+    let startColor = coloring.color.red + ','
+        + coloring.color.green + ','
+        + coloring.color.blue
+    colorId += startColor
+    start.color = RGB_START + startColor + RGB_END
+
     // Separate the individual parts in the ID to guarantee uniqueness.
     colorId += '$'
     // Do the same for the end color.
-    if (coloring.targetAlpha === undefined || coloring.targetAlpha === 255) {
-        let endColor = coloring.targetColor.red + ','
-            + coloring.targetColor.green + ','
-            + coloring.targetColor.blue
-        colorId += endColor
-        end = RGB_START + endColor + RGB_END
-    } else {
-        let endColor = coloring.targetColor.red + ','
-            + coloring.targetColor.green + ','
-            + coloring.targetColor.blue + ','
-            + coloring.targetAlpha / 255
-        colorId += endColor
-        end = RGBA_START + endColor + RGBA_END
+    if (coloring.targetAlpha !== undefined && coloring.targetAlpha !== 255) {
+        end.opacity = (coloring.targetAlpha / 255).toString()
     }
+    let endColor = coloring.targetColor.red + ','
+        + coloring.targetColor.green + ','
+        + coloring.targetColor.blue
+    colorId += endColor
+    end.color = RGB_START + endColor + RGB_END
+
     // Add the angle of the gradient to the ID.
     if (coloring.gradientAngle !== 0) {
         angle = coloring.gradientAngle
@@ -580,7 +600,10 @@ export function getSvgColorStyle(coloring: KColoring | undefined, context: KGrap
         context.renderingDefs.set(colorId, colorDefinition(colorId, start, end, angle))
     }
     // Return the reference of the above defined ID to be put in the fill or stroke attribute of any SVG element.
-    return URL_START + colorId + URL_END
+    return {
+        color: URL_START + colorId + URL_END
+        // no opacity needed here as it is already in the gradient color definition.
+    } as ColorStyle
 }
 
 /**
@@ -622,11 +645,11 @@ export function getSvgLineStyles(styles: KStyles): LineStyles {
  * Returns the SVG strings for text styles that can be applied to the following SVG attributes:
  * 'dominant-baseline' has to be set to the dominantBaseline style,
  * 'font-family' has to be set to the fontFamily style,
- * 'font-size' has to be set to the dominantBaseline style,
- * 'font-style' has to be set to the dominantBaseline style,
- * 'font-weight' has to be set to the dominantBaseline style,
- * 'text-decoration-line' has to be set to the dominantBaseline style,
- * 'text-decoration-style' has to be set to the dominantBaseline style.
+ * 'font-size' has to be set to the fontSize style,
+ * 'font-style' has to be set to the fontStyle style,
+ * 'font-weight' has to be set to the fontWeight style,
+ * 'text-decoration-line' has to be set to the textDecorationLine style,
+ * 'text-decoration-style' has to be set to the textDecorationStyle style.
  * @param styles The KStyles of the rendering.
  */
 export function getSvgTextStyles(styles: KStyles): TextStyles {
@@ -634,7 +657,8 @@ export function getSvgTextStyles(styles: KStyles): TextStyles {
         dominantBaseline: verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === undefined ?
             DEFAULT_VERTICAL_ALIGNMENT : styles.kVerticalAlignment.verticalAlignment),
         fontFamily: styles.kFontName === undefined ? undefined : camelToKebab(styles.kFontName.name),
-        fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size + 'pt',
+        // Convert pt to px here with a default value of 96 dpi(px/in) and 72pt/in, making this a conversion from in to px.
+        fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size * 96 / 72 + 'px',
         fontStyle: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
         fontWeight: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
         textDecorationLine: styles.kTextUnderline === undefined ? undefined : 'underline',
@@ -645,11 +669,20 @@ export function getSvgTextStyles(styles: KStyles): TextStyles {
 }
 
 /**
+ * Data class holding the SVG attributes for a single color
+ */
+export interface ColorStyle {
+    color: string,
+    opacity: string | undefined
+}
+
+/**
  * Data class holding the different SVG attributes for color related styles.
  */
 export interface ColorStyles {
-    foreground: string | undefined,
-    background: string | undefined
+    foreground: ColorStyle,
+    background: ColorStyle,
+    opacity: number
 }
 
 /**
