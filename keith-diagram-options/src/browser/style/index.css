@@ -8,14 +8,16 @@
 
 .diagram-option-widget {
     display: inline-block;
-    margin-left: 5px;
-    margin-bottom: 10px;
+    margin-left: calc(var(--theia-ui-padding)*2);
+    margin-bottom: calc(var(--theia-ui-padding));
+    overflow-x: visible;
+    width: max-content;
 }
 
 .diagram-option {
     color: var(--theia-ui-font-color1);
     font-size: var(--theia-ui-font-size1);
-    margin-top: 5px;
+    margin-top: calc(var(--theia-ui-padding));
 }
 
 .diagram-option-actions {
@@ -29,18 +31,18 @@
 }
 
 .diagram-option-choice-label {
-    padding-left: 5px;
+    padding-left: calc(var(--theia-ui-padding)*2);
 }
 
 .diagram-option-range {
     color: var(--theia-ui-font-color1);
     display: grid;
     font-size: var(--theia-ui-font-size1);
-    margin-top: 5px;
+    margin-top: calc(var(--theia-ui-padding));
 }
 
 .diagram-option-text {
-    padding-left: 5px;
+    padding-left: calc(var(--theia-ui-padding)*2);
     font-size: var(--theia-ui-font-size1);
 }
 
@@ -59,7 +61,8 @@
 }
 
 .category-options {
-    padding: 5px;
+    padding: calc(var(--theia-ui-padding));
+    padding-left: calc(var(--theia-ui-padding)*2);
 }
 
 .diagram-inputbox {
@@ -69,8 +72,8 @@
 
 .separator {
     font-size: var(--theia-ui-font-size1);
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: calc(var(--theia-ui-padding));
+    margin-bottom: calc(var(--theia-ui-padding));
 }
 
 input[type="checkbox"] {
