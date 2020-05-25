@@ -254,7 +254,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             }
         })
         // Render all top level options.
-        children.push(...this.renderOptions(optionsToRender))
+        children.push(...this.renderOptions(optionsToRender, 0))
         if (children.length === 0) {
             return undefined
         } else {
@@ -270,7 +270,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      *
      * @param optionsToRender The options that should be rendered now.
      */
-    private renderOptions(optionsToRender: SynthesisOption[]): JSX.Element[] {
+    private renderOptions(optionsToRender: SynthesisOption[], index: number): JSX.Element[] {
         const children: JSX.Element[] = []
         optionsToRender.forEach(option => {
             switch (option.type) {
@@ -297,7 +297,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                 case TransformationOptionType.CATEGORY: {
                     const list = this.categoryMap.get(option.name)
                     if (list) {
-                        children.push(this.renderCategory(option, list))
+                        children.push(this.renderCategory(option, list, index))
                     }
                     break
                 }
@@ -345,7 +345,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private renderChoiceValue(value: any, option: SynthesisOption): JSX.Element {
         return <div key={'' + option.id + value} className='diagram-option'>
-            <label htmlFor={value}>
+            <label className='diagram-option-choice-label' htmlFor={value}>
                 <input
                     type='radio'
                     id={value}
@@ -448,13 +448,13 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      *
      * @param option The category option to render.
      */
-    private renderCategory(option: SynthesisOption, synthesisOptions: SynthesisOption[]): JSX.Element {
-        return <div key={option.id} className='diagram-option category'>
+    private renderCategory(option: SynthesisOption, synthesisOptions: SynthesisOption[], index: number): JSX.Element {
+        return <div key={option.id} className={'diagram-option category' + index}>
             <details open={option.currentValue}>
                 <summary
                     onClick={(e: React.MouseEvent) => this.onCategory(e, option)}
                 >{option.name}</summary>
-                {this.renderCategoryOptions(synthesisOptions)}
+                {this.renderCategoryOptions(synthesisOptions, (index + 1) % 2)}
             </details>
         </div>
     }
@@ -479,9 +479,9 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * Renders the options in this category.
      * @param options The options in this category.
      */
-    private renderCategoryOptions(options: SynthesisOption[]): JSX.Element {
+    private renderCategoryOptions(options: SynthesisOption[], index: number): JSX.Element {
         let children: JSX.Element[] = []
-        children.push(...this.renderOptions(options))
+        children.push(...this.renderOptions(options, index))
         return <div className='category-options'>{...children}</div>
     }
 

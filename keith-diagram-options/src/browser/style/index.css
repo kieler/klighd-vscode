@@ -25,7 +25,11 @@
 }
 
 .diagram-option-choice {
-    padding-left: 15px;
+    padding-left: 0px;
+}
+
+.diagram-option-choice-label {
+    padding-left: 5px;
 }
 
 .diagram-option-range {
@@ -33,17 +37,25 @@
     display: grid;
     font-size: var(--theia-ui-font-size1);
     margin-top: 5px;
-    padding-left: 15px;
 }
 
 .diagram-option-text {
-    padding-left: 15px;
+    padding-left: 5px;
     font-size: var(--theia-ui-font-size1);
 }
 
 .category {
-    font-size: var(--theia-ui-font-size2);
-    padding: 5px;
+    font-size: var(--theia-ui-font-size1);
+}
+
+.category0 {
+    font-size: var(--theia-ui-font-size1);
+    background-color: var(--theia-layout-color0);
+}
+
+.category1 {
+    font-size: var(--theia-ui-font-size1);
+    background-color: var(--theia-layout-color1);
 }
 
 .category-options {
@@ -56,14 +68,11 @@
 }
 
 .separator {
-    font-size: var(--theia-ui-font-size2);
-    margin-top: 20px
+    font-size: var(--theia-ui-font-size1);
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
-label {
-    padding-left: 15px;
-    text-indent: -15px;
-}
 input[type="checkbox"] {
     margin-top: auto;
     margin-bottom: auto;
