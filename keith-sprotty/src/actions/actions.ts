@@ -12,7 +12,7 @@
  */
 import { inject, injectable } from 'inversify';
 import {
-    Action, CommandExecutionContext, CommandResult, ElementAndBounds, generateRequestId, HiddenCommand, RequestAction, ResponseAction, SModelRootSchema, TYPES
+    Action, CommandExecutionContext, CommandResult, ElementAndBounds, generateRequestId, HiddenCommand, RequestAction, ResponseAction, SModelRootSchema, TYPES, Match, UpdateModelAction
 } from 'sprotty/lib';
 import { KImage } from '../skgraph-models';
 import { SetSynthesesActionData } from '../syntheses/synthesis-message-data';
@@ -156,4 +156,18 @@ export class RefreshLayoutAction implements Action {
     static readonly KIND: string = 'refreshLayout'
     readonly kind = RefreshLayoutAction.KIND
     constructor() {}
+}
+
+export class KeithUpdateModelAction extends UpdateModelAction {
+    static readonly KIND = 'updateModel';
+
+    public readonly newRoot?: SModelRootSchema;
+    public readonly matches?: Match[];
+    public cause: Action;
+
+    constructor(input: SModelRootSchema | Match[], cause: Action,
+                public readonly animate: boolean = true) {
+        super(input, animate)
+        this.cause = cause
+    }
 }

@@ -19,14 +19,15 @@ import {
 import { RectPackDeletePositionConstraintAction, RectPackSetPositionConstraintAction, SetAspectRatioAction } from '@kieler/keith-interactive/lib/rect-packing/actions';
 import {
     CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, PerformActionAction, RefreshLayoutAction, RequestTextBoundsCommand,
-    SetSynthesesAction, SetSynthesisAction, StoreImagesAction
+    SetSynthesesAction, SetSynthesisAction, StoreImagesAction, KeithUpdateModelAction
 } from '@kieler/keith-sprotty/lib/actions/actions';
 import { RequestKeithPopupModelAction } from '@kieler/keith-sprotty/lib/hover/hover';
 import { injectable } from 'inversify';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
 import {
-    Action, ActionHandlerRegistry, ActionMessage, BringToFrontAction, ComputedBoundsAction, findElement, FitToScreenAction, ICommand, RequestPopupModelAction, SetModelCommand,
-    SetPopupModelAction, SwitchEditModeAction
+    Action, ActionHandlerRegistry, ActionMessage, BringToFrontAction, ComputedBoundsAction, findElement, FitToScreenAction,
+    ICommand, RequestPopupModelAction, SetModelCommand,
+    SetPopupModelAction, SwitchEditModeAction, /* UpdateModelAction */
 } from 'sprotty/lib';
 import { isNullOrUndefined } from 'util';
 import { diagramPadding } from '../common/constants';
@@ -43,16 +44,23 @@ export type KeithDiagramServerProvider = () => Promise<KeithDiagramServer>;
 @injectable()
 export class KeithDiagramServer extends LSTheiaDiagramServer {
     messageReceived(message: ActionMessage) {
+        const wasUpdateModelAction = message.action.kind === KeithUpdateModelAction.KIND;
         super.messageReceived(message)
         // Special handling for the SetModel action.
-        if (message.action.kind === SetModelCommand.KIND) {
+        if (message.action.kind === SetModelCommand.KIND || wasUpdateModelAction) {
             // Fire the widget's event that a new model was received.
             const diagramWidget = this.getWidget()
             if (diagramWidget instanceof KeithDiagramWidget) {
-                diagramWidget.modelUpdated()
+                if (wasUpdateModelAction && (message.action as KeithUpdateModelAction).cause
+                    && (message.action as KeithUpdateModelAction).cause.kind) {
+                    return
+                }
+                if (message.action.kind === SetModelCommand.KIND) {
+                    diagramWidget.modelUpdated()
+                }
                 if (diagramWidget.resizeToFit) {
                     // Fit the received model to the widget size.
-                    this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], diagramPadding, undefined, false))
+                    this.actionDispatcher.dispatch(new FitToScreenAction(['$root'], diagramPadding, undefined, true))
                 }
             }
         }
@@ -149,6 +157,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(DeleteLayerConstraintAction.KIND, this)
         registry.register(DeletePositionConstraintAction.KIND, this)
         registry.register(DeleteStaticConstraintAction.KIND, this)
+        // registry.register(KeithUpdateModelAction.KIND, this)
         registry.register(PerformActionAction.KIND, this)
         registry.register(RectPackSetPositionConstraintAction.KIND, this)
         registry.register(RectPackDeletePositionConstraintAction.KIND, this)
