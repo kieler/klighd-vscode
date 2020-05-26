@@ -14,7 +14,7 @@ import { CommandRegistry, Emitter, Event } from '@theia/core';
 import { Widget } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
 import { inject } from 'inversify';
-import { InitializeCanvasBoundsAction, ModelSource, RequestModelAction, TYPES, FitToScreenAction } from 'sprotty';
+import { FitToScreenAction, InitializeCanvasBoundsAction, ModelSource, RequestModelAction, SetModelAction, TYPES } from 'sprotty';
 import { DiagramWidget, DiagramWidgetOptions, TheiaDiagramServer } from 'sprotty-theia';
 import { diagramPadding } from '../common/constants';
 
@@ -58,6 +58,13 @@ export class KeithDiagramWidget extends DiagramWidget {
      */
     public reInitialize(uri: URI): void {
         const uriString = uri.toString(true)
+        if (this.syncWithEditor) {
+            // Clear current diagram
+            this.actionDispatcher.dispatch(new SetModelAction({
+                id: 'ROOT',
+                type: 'NONE'
+            }));
+        }
         // If the uri is already set as this one in the uri, the re-initialization is not necessary.
         if (this.options.uri !== uriString) {
             this.options.uri = uriString
