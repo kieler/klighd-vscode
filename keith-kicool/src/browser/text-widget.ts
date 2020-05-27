@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,12 +11,13 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { injectable } from "inversify";
-import { Message } from "@theia/core/lib/browser";
-import { BaseWidget } from "@theia/core/lib/browser";
-import PerfectScrollbar from "perfect-scrollbar";
 import { MaybePromise } from "@theia/core";
+import { BaseWidget, Message } from "@theia/core/lib/browser";
 import { Disposable } from "@theia/languages/lib/browser";
+import { injectable } from "inversify";
+import PerfectScrollbar from "perfect-scrollbar";
+
+export const textWidgetId = 'text-widget';
 
 /**
  * Mock widget to display text. Currently not in use.
@@ -51,7 +52,7 @@ export class TextWidget extends BaseWidget {
                     this.scrollBar = undefined;
                 }
                 // tslint:disable-next-line:no-null-keyword
-                container.style.overflow = null;
+                container.style.overflow = '';
             }));
         })();
     }

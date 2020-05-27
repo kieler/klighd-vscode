@@ -14,7 +14,7 @@ import { CommandRegistry, Emitter, Event } from '@theia/core';
 import { Widget } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
 import { inject } from 'inversify';
-import { InitializeCanvasBoundsAction, ModelSource, RequestModelAction, TYPES, FitToScreenAction } from 'sprotty';
+import { FitToScreenAction, InitializeCanvasBoundsAction, ModelSource, RequestModelAction, TYPES } from 'sprotty';
 import { DiagramWidget, DiagramWidgetOptions, TheiaDiagramServer } from 'sprotty-theia';
 import { diagramPadding } from '../common/constants';
 
@@ -68,6 +68,10 @@ export class KeithDiagramWidget extends DiagramWidget {
                 }));
             }
         }
+    }
+
+    public getOptionUri() {
+        return this.options.uri
     }
 
     protected initializeSprotty(): void {

@@ -145,7 +145,7 @@ export class PerformActionAction implements Action {
     static readonly KIND = 'performAction'
     kind = PerformActionAction.KIND
 
-    constructor(protected actionId: string, protected kGraphElementId: string, protected kRenderingId: string) {
+    constructor(public readonly actionId: string, public kGraphElementId: string, protected kRenderingId: string) {
     }
 }
 

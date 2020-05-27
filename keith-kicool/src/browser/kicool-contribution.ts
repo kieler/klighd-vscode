@@ -12,15 +12,19 @@
  */
 
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/browser/keith-diagram-manager';
+import { displayInputModel } from '@kieler/keith-diagram/lib/browser/keith-diagram-server'
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
 import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
+import { PerformActionAction } from '@kieler/keith-sprotty/lib/actions/actions';
 import {
-    AbstractViewContribution, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, PrefixQuickOpenService,
+    AbstractViewContribution, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, KeybindingRegistry, open, OpenerService, PrefixQuickOpenService,
     StatusBar, StatusBarAlignment, Widget, WidgetManager
 } from '@theia/core/lib/browser';
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
 import { Command, CommandHandler, CommandRegistry, Emitter, Event, MessageService } from '@theia/core/lib/common';
+import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
+import { FileStat, FileSystem, FileSystemUtils } from '@theia/filesystem/lib/common';
 import { FileChange, FileSystemWatcher } from '@theia/filesystem/lib/browser';
 import { NotificationType, Workspace } from '@theia/languages/lib/browser';
 import { OutputChannelManager } from '@theia/output/lib/common/output-channel';
@@ -35,7 +39,7 @@ import {
     TOGGLE_BUTTON_MODE, TOGGLE_INPLACE, TOGGLE_PRIVATE_SYSTEMS, TOGGLE_SHOW_RESULTING_MODEL
 } from '../common/commands';
 import { delay } from "../common/helper";
-import { CodeContainer, CompilationSystem } from "../common/kicool-models";
+import { Code, CodeContainer, CompilationSystem } from "../common/kicool-models";
 import { CompilerWidget, ShowSnapshotEvent } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 
@@ -89,6 +93,8 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
     @inject(Workspace) protected readonly workspace: Workspace
     @inject(MessageService) protected readonly messageService: MessageService
+    @inject(FileSystem) public readonly fileSystem: FileSystem
+    @inject(OpenerService) protected readonly openerService: OpenerService;
     @inject(FrontendApplication) public readonly front: FrontendApplication
     @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
     @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext
@@ -156,6 +162,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget.cancelGetSystems(this.cancelGetSystems.bind(this))
             this.compilerWidget.cancelCompilation(this.cancelCompilation.bind(this))
             this.compilerWidget.showSnapshot(((event: ShowSnapshotEvent) => this.show(event.uri, event.index)).bind(this))
+            displayInputModel(this.displayInputModel.bind(this))
             const lClient = await this.client.languageClient
             while (!this.client.running) {
                 await delay(100)
@@ -547,6 +554,64 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget.requestedSystems = false
         }
         this.compilerWidget.update()
+    }
+
+    /**
+     * Sends request to LS to get text to open new code editor with
+     */
+    async displayInputModel(action: PerformActionAction) {
+        const lClient = await this.client.languageClient
+        const codeContainer: Code = await lClient.sendRequest('keith/kicool/get-code-of-model', [action.kGraphElementId, 'keith-diagram_sprotty'])
+        const uri = new URI(this.workspace.rootUri + '/KIELER_DEV/' + codeContainer.fileName)
+        this.fileSystem.delete(uri.toString())
+        this.fileSystem.createFolder(this.workspace.rootUri + '/KIELER_DEV')
+        this.getDirectory(uri).then(parent => {
+            if (parent) {
+                const parentUri = new URI(parent.uri);
+                const vacantChildUri = FileSystemUtils.generateUniqueResourceURI(parentUri, parent, uri.path.name, uri.path.ext);
+
+                if (vacantChildUri.toString()) {
+                    const fileUri = parentUri.resolve(vacantChildUri.displayName);
+                    this.fileSystem.createFile(fileUri.toString()).then(() => {
+                        open(this.openerService, fileUri, {
+                            mode: 'reveal',
+                            widgetOptions: {
+                                ref: this.editorManager.currentEditor
+                            }
+                        }).then(() => {
+                            this.editorManager.getByUri(fileUri).then(editor => {
+                                if (editor) {
+                                    editor.editor.replaceText({
+                                        source: fileUri.toString(),
+                                        replaceOperations: [{range: {
+                                            start: { line: 0, character: 0 },
+                                            end: {
+                                                line: editor.editor.document.lineCount,
+                                                character: editor.editor.document.getLineContent(editor.editor.document.lineCount).length
+                                            }
+                                        }, text: codeContainer.code}]
+                                    })
+                                    editor.editor.document.save()
+                                }
+                            })
+
+                        })
+                    })
+                }
+            }
+        })
+    }
+
+    protected async getDirectory(candidate: URI): Promise<FileStat | undefined> {
+        const stat = await this.fileSystem.getFileStat(candidate.toString());
+        if (stat && stat.isDirectory) {
+            return stat;
+        }
+        return this.getParent(candidate);
+    }
+
+    protected getParent(candidate: URI): Promise<FileStat | undefined> {
+        return this.fileSystem.getFileStat(candidate.parent.toString());
     }
 
     registerShowNext() {

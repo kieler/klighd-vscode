@@ -29,6 +29,11 @@ export interface CodeContainer {
     files: Snapshot[][]
 }
 
+export interface Code {
+    fileName: string
+    code: string
+}
+
 /**
  * (name, snapshotId) should be unique. GroupId for bundling in phases
  */

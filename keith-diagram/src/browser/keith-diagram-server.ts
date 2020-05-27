@@ -33,10 +33,16 @@ import { isNullOrUndefined } from 'util';
 import { diagramPadding } from '../common/constants';
 import { KeithDiagramWidget } from './keith-diagram-widget';
 import { KeithTheiaSprottyConnector } from './keith-theia-sprotty-connector';
+import { Emitter, Event } from '@theia/core/lib/common';
 
 export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
 export type KeithDiagramServerProvider = () => Promise<KeithDiagramServer>;
+
+
+export const onDisplayInputModelEmitter = new Emitter<Action | undefined>()
+export const displayInputModel: Event<Action | undefined> = onDisplayInputModelEmitter.event
+
 
 /**
  * This class extends the Theia diagram Server to also handle the Request- and ComputedTextBoundsAction
@@ -85,6 +91,9 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
     handle(action: Action): void | ICommand | Action {
         if (action.kind === SetSynthesesAction.KIND) {
             this.handleSetSyntheses(action as SetSynthesesAction)
+        } else if (action.kind === PerformActionAction.KIND &&
+            (action as PerformActionAction).actionId === 'de.cau.cs.kieler.kicool.ui.klighd.internal.model.action.OpenCodeInEditorAction') {
+            onDisplayInputModelEmitter.fire(action)
         } else if (action.kind === CheckImagesAction.KIND) {
             this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === StoreImagesAction.KIND) {
