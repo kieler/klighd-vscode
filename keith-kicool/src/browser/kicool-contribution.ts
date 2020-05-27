@@ -573,7 +573,12 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 if (vacantChildUri.toString()) {
                     const fileUri = parentUri.resolve(vacantChildUri.displayName);
                     this.fileSystem.createFile(fileUri.toString()).then(() => {
-                        open(this.openerService, fileUri).then(() => {
+                        open(this.openerService, fileUri, {
+                            mode: 'reveal',
+                            widgetOptions: {
+                                ref: this.editorManager.currentEditor
+                            }
+                        }).then(() => {
                             this.editorManager.getByUri(fileUri).then(editor => {
                                 if (editor) {
                                     editor.editor.replaceText({

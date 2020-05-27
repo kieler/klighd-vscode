@@ -70,6 +70,10 @@ export class KeithDiagramWidget extends DiagramWidget {
         }
     }
 
+    public getOptionUri() {
+        return this.options.uri
+    }
+
     protected initializeSprotty(): void {
         const modelSource = this.diContainer.get<ModelSource>(TYPES.ModelSource);
         this._modelSource = modelSource;

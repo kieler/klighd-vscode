@@ -91,7 +91,7 @@ export class KeithDiagramManager extends DiagramManager {
         const diagramWidgetPromise = this.open(uri)
         diagramWidgetPromise.then(widget => {
             if (widget instanceof KeithDiagramWidget) {
-                if (widget.syncWithEditor) {
+                if (widget.syncWithEditor && uri.toString() !== widget.getOptionUri()) {
                     // Clear current diagram
                     widget.actionDispatcher.dispatch(new SetModelAction({
                         id: 'ROOT',
