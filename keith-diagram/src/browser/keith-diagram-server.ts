@@ -44,6 +44,8 @@ export const onDisplayInputModelEmitter = new Emitter<Action | undefined>()
 export const displayInputModel: Event<Action | undefined> = onDisplayInputModelEmitter.event
 export const startSimulationEmitter = new Emitter<Action | undefined>()
 export const startSimulation: Event<Action | undefined> = startSimulationEmitter.event
+export const addCoSimulationEmitter = new Emitter<Action | undefined>()
+export const addCoSimulation: Event<Action | undefined> = addCoSimulationEmitter.event
 
 
 /**
@@ -101,7 +103,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
             startSimulationEmitter.fire(action)
         } else if (action.kind === PerformActionAction.KIND &&
             (action as PerformActionAction).actionId === 'de.cau.cs.kieler.simulation.ui.synthesis.action.AddCoSimulationAction') {
-            startSimulationEmitter.fire(action)
+            addCoSimulationEmitter.fire(action)
         } else if (action.kind === CheckImagesAction.KIND) {
             this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === StoreImagesAction.KIND) {

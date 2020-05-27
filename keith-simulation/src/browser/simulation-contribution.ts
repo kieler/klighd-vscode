@@ -12,7 +12,7 @@
  */
 
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
-import { startSimulation } from '@kieler/keith-diagram/lib/browser/keith-diagram-server';
+import { addCoSimulation, startSimulation } from '@kieler/keith-diagram/lib/browser/keith-diagram-server';
 import { KiCoolContribution } from '@kieler/keith-kicool/lib/browser/kicool-contribution';
 import { REQUEST_CS } from '@kieler/keith-kicool/lib/common/commands';
 import { CompilationSystem } from '@kieler/keith-kicool/lib/common/kicool-models';
@@ -25,7 +25,7 @@ import {
 import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
 import { WindowService } from "@theia/core/lib/browser/window/window-service";
 import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
-import { FileSystemWatcher } from "@theia/filesystem/lib/browser";
+import { FileSystemWatcher, FileDialogService } from "@theia/filesystem/lib/browser";
 import { NotificationType, Workspace } from "@theia/languages/lib/browser";
 import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler";
 import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
@@ -81,6 +81,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     @inject(WindowService) public readonly windowService: WindowService
     @inject(Workspace) protected readonly workspace: Workspace
     @inject(StatusBar) protected readonly statusbar: StatusBar
+    @inject(FileDialogService) protected readonly fileDialogService: FileDialogService
 
 
     constructor(
@@ -198,6 +199,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 await delay(100)
             }
             startSimulation(this.handleSimulationStartAction.bind(this))
+            addCoSimulation(this.handleAddCoSimulation.bind(this))
             lClient.onNotification(externalStepMessageType, this.handleStepMessage.bind(this))
             lClient.onNotification(valuesForNextStepMessageType, this.handleExternalNewUserValue.bind(this))
             lClient.onNotification(externalStopMessageType, this.handleExternalStop.bind(this))
@@ -364,6 +366,22 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             command: SELECT_SNAPSHOT_SIMULATION_CHAIN.id,
             tooltip: SELECT_SNAPSHOT_SIMULATION_CHAIN.label
         });
+    }
+
+    async handleAddCoSimulation(action: PerformActionAction) {
+        // Uri of simulation file
+        const executableUri = await this.fileDialogService.showOpenDialog({
+            title: 'Select CoSimulation executable',
+            canSelectFolders: false,
+            canSelectFiles: true,
+            canSelectMany: false
+
+        });
+        if (executableUri) {
+            const lClient = await this.client.languageClient
+            lClient.sendNotification('keith/simulation/addCoSimulation', ['keith-diagram_sprotty',
+                 executableUri.path.toString()])
+        }
     }
 
     async handleSimulationStartAction(action: PerformActionAction) {
