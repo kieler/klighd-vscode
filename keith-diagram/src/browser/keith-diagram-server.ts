@@ -93,8 +93,6 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
             this.handleSetSyntheses(action as SetSynthesesAction)
         } else if (action.kind === PerformActionAction.KIND &&
             (action as PerformActionAction).actionId === 'de.cau.cs.kieler.kicool.ui.klighd.internal.model.action.OpenCodeInEditorAction') {
-            // Currently not implemented
-            // Send to server in KiCoolLSExtension or notify kicool
             onDisplayInputModelEmitter.fire(action)
         } else if (action.kind === CheckImagesAction.KIND) {
             this.handleCheckImages(action as CheckImagesAction)
