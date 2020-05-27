@@ -12,6 +12,7 @@
  */
 
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
+import { startSimulation } from '@kieler/keith-diagram/lib/browser/keith-diagram-server';
 import { KiCoolContribution } from '@kieler/keith-kicool/lib/browser/kicool-contribution';
 import { REQUEST_CS } from '@kieler/keith-kicool/lib/common/commands';
 import { CompilationSystem } from '@kieler/keith-kicool/lib/common/kicool-models';
@@ -38,6 +39,7 @@ import { delay, strMapToObj } from "../common/helper";
 import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
 import { SimulationKeybindingContext } from "./simulation-keybinding-context";
 import { SimulationWidget } from "./simulation-widget";
+import { PerformActionAction } from '@kieler/keith-sprotty/lib/actions/actions';
 
 export const SIMULATION_CATEGORY = "Simulation"
 
@@ -195,6 +197,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             while (!this.client.running) {
                 await delay(100)
             }
+            startSimulation(this.handleSimulationStartAction.bind(this))
             lClient.onNotification(externalStepMessageType, this.handleStepMessage.bind(this))
             lClient.onNotification(valuesForNextStepMessageType, this.handleExternalNewUserValue.bind(this))
             lClient.onNotification(externalStopMessageType, this.handleExternalStop.bind(this))
@@ -361,6 +364,10 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             command: SELECT_SNAPSHOT_SIMULATION_CHAIN.id,
             tooltip: SELECT_SNAPSHOT_SIMULATION_CHAIN.label
         });
+    }
+
+    async handleSimulationStartAction(action: PerformActionAction) {
+        this.simulate()
     }
 
     /**

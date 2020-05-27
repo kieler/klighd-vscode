@@ -42,6 +42,8 @@ export type KeithDiagramServerProvider = () => Promise<KeithDiagramServer>;
 
 export const onDisplayInputModelEmitter = new Emitter<Action | undefined>()
 export const displayInputModel: Event<Action | undefined> = onDisplayInputModelEmitter.event
+export const startSimulationEmitter = new Emitter<Action | undefined>()
+export const startSimulation: Event<Action | undefined> = startSimulationEmitter.event
 
 
 /**
@@ -94,6 +96,12 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         } else if (action.kind === PerformActionAction.KIND &&
             (action as PerformActionAction).actionId === 'de.cau.cs.kieler.kicool.ui.klighd.internal.model.action.OpenCodeInEditorAction') {
             onDisplayInputModelEmitter.fire(action)
+        } else if (action.kind === PerformActionAction.KIND &&
+            (action as PerformActionAction).actionId === 'de.cau.cs.kieler.simulation.ui.synthesis.action.StartSimulationAction') {
+            startSimulationEmitter.fire(action)
+        } else if (action.kind === PerformActionAction.KIND &&
+            (action as PerformActionAction).actionId === 'de.cau.cs.kieler.simulation.ui.synthesis.action.AddCoSimulationAction') {
+            startSimulationEmitter.fire(action)
         } else if (action.kind === CheckImagesAction.KIND) {
             this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === StoreImagesAction.KIND) {
