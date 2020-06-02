@@ -355,7 +355,7 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                                 }
                                 this.onShowSnapshot(uri.toString(), currentIndex)
                             }}>
-                            {(snapshot.snapshotIndex === 0 && // draw the name of the snapshot if it is the first snapshot with a style that needs this
+                            {(snapshot.snapshotIndex === snapshots.length - 1 && // draw the name of the snapshot if it is the first snapshot with a style that needs this
                                 (this.selectedStyle && !this.selectedStyle.includes("tree") ||
                                 snapshots.length === 1)) ? snapshot.name : ""}
                         </li>
