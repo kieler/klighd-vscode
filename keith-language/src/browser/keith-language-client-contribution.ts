@@ -11,15 +11,21 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
-import { BaseLanguageClientContribution, NotificationType } from '@theia/languages/lib/browser';
-import { inject, injectable, multiInject, optional } from 'inversify';
-import { LS_ID, LS_NAME, languageDescriptions } from '../common';
-import { InitializationService } from './initialization-service';
 import { MessageService } from '@theia/core';
+import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
+import URI from '@theia/core/lib/common/uri';
+import { EditorManager } from '@theia/editor/lib/browser';
+import { BaseLanguageClientContribution, NotificationType } from '@theia/languages/lib/browser';
 import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
+import { inject, injectable, multiInject, optional } from 'inversify';
+import * as lsp from 'vscode-languageserver-types';
+import { Range } from 'vscode-languageserver-types';
+import { languageDescriptions, LS_ID, LS_NAME } from '../common';
+import { InitializationService } from './initialization-service';
 
 export const sendMessageType = new NotificationType<string, void>('general/sendMessage');
+
+export const updateEditorContentsType = new NotificationType<string, void>('general/replaceContentInFile');
 
 @injectable()
 export class KeithLanguageClientContribution extends BaseLanguageClientContribution {
@@ -31,6 +37,8 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
     @inject(MessageService) protected readonly messageService: MessageService
 
     @inject(FileNavigatorContribution) protected readonly fileNavigator: FileNavigatorContribution
+    @inject(EditorManager) protected readonly editorManager: EditorManager
+    @inject(FrontendApplication) protected readonly front: FrontendApplication
 
     /**
      * Define pattern of supported languages from language server registered in backend with id and name of class.
@@ -70,6 +78,7 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
         }
         this.languageClient.then(lClient => {
             lClient.onNotification(sendMessageType, this.handleSendMessageType.bind(this))
+            lClient.onNotification(updateEditorContentsType, this.handleUpdateEditorContentsType.bind(this))
         })
         return initializationOptions
     }
@@ -93,6 +102,21 @@ export class KeithLanguageClientContribution extends BaseLanguageClientContribut
                 this.messageService.info(message)
                 break;
             }
+        }
+    }
+
+    /**
+     * Called by the server to replace the current contents of an file by the given string.
+     *
+     * @param uri The file uri
+     * @param code The code string that is inserted
+     * @param range The range at which the replacement takes place
+     */
+    private async handleUpdateEditorContentsType(uri: string, code: string, range: Range) {
+        const editor = await this.editorManager.getByUri(new URI(uri))
+        if (editor) {
+            await editor.editor.executeEdits([lsp.TextEdit.replace(range, code)])
+            editor.saveable.save()
         }
     }
 }
