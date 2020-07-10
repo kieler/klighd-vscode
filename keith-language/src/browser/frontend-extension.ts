@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { CommandContribution } from '@theia/core';
+import { CommandContribution, MenuContribution } from '@theia/core';
 import { FrontendApplicationContribution, WidgetFactory } from '@theia/core/lib/browser';
 import { GettingStartedWidget } from '@theia/getting-started/lib/browser/getting-started-widget';
 import { LanguageClientContribution } from '@theia/languages/lib/browser';
@@ -24,6 +24,7 @@ import { KeithGettingStartedWidget } from './keith-getting-started-widget';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
 import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
 import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
+import { KeithCommandContribution } from './keith-command-contribution';
 
 export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.Unbind, _isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
     // register languages
@@ -72,6 +73,10 @@ export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.U
         id: GettingStartedWidget.ID,
         createWidget: () => context.container.get<KeithGettingStartedWidget>(KeithGettingStartedWidget),
     })).inSingletonScope();
+
+    bind(CommandContribution).toService(KeithCommandContribution)
+    bind(MenuContribution).toService(KeithCommandContribution)
+    bind(KeithCommandContribution).toSelf().inSingletonScope()
 
     // Register sctx icon, currently not in use. Needs an update of Theia and a high resolution icon.
     // bind(LabelProviderContribution).to(SCChartsIconProvider).inSingletonScope();
