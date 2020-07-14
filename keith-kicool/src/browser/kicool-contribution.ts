@@ -31,7 +31,7 @@ import { OutputChannelManager } from '@theia/output/lib/common/output-channel';
 import { UserStorageUri } from '@theia/userstorage/lib/browser';
 import { inject, injectable } from 'inversify';
 import {
-    CANCEL_COMPILATION, CANCEL_GET_SYSTEMS, COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING,
+    CANCEL_COMPILATION, COMPILE, compilerWidgetId, EDITOR_UNDEFINED_MESSAGE, GET_SYSTEMS, OPEN_COMPILER_WIDGET_KEYBINDING,
     SHOW, SHOW_NEXT_KEYBINDING, SHOW_PREVIOUS_KEYBINDING
 } from "../common";
 import {
@@ -159,7 +159,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             this.compilerWidget = widget as CompilerWidget
             this.compilerWidget.requestSystemDescriptions(this.requestSystemDescriptions.bind(this))
             this.compilerWidget.onActivateRequest(this.requestSystemDescriptions.bind(this))
-            this.compilerWidget.cancelGetSystems(this.cancelGetSystems.bind(this))
             this.compilerWidget.cancelCompilation(this.cancelCompilation.bind(this))
             this.compilerWidget.showSnapshot(((event: ShowSnapshotEvent) => this.show(event.uri, event.index)).bind(this))
             displayInputModel(this.displayInputModel.bind(this))
@@ -541,19 +540,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         if (success) {
             this.compilerWidget.compiling = false
         }
-    }
-
-    /**
-     * Cancels compilation by stopping the compilation thread on the LS.
-     */
-    public async cancelGetSystems(): Promise<void> {
-        this.message("This is currently not working, but try it anyway", "warn")
-        const lClient = await this.client.languageClient
-        const success = await lClient.sendRequest(CANCEL_GET_SYSTEMS)
-        if (success) {
-            this.compilerWidget.requestedSystems = false
-        }
-        this.compilerWidget.update()
     }
 
     /**
