@@ -53,9 +53,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
     protected readonly onCancelCompilationEmitter = new Emitter<void | undefined>()
     readonly cancelCompilation: Event<void | undefined> = this.onCancelCompilationEmitter.event
 
-    protected readonly onCancelGetSystemsEmitter = new Emitter<void | undefined>()
-    readonly cancelGetSystems: Event<void | undefined> = this.onCancelGetSystemsEmitter.event
-
     protected readonly onShowSnapshotEmitter = new Emitter<ShowSnapshotEvent | undefined>()
     readonly showSnapshot: Event<ShowSnapshotEvent | undefined> = this.onShowSnapshotEmitter.event
 
@@ -228,10 +225,6 @@ export class CompilerWidget extends ReactWidget implements StatefulWidget {
                 {this.renderShowButtons()}
             </React.Fragment>
         }
-    }
-
-    async onCancelGetSystems() {
-        this.onCancelGetSystemsEmitter.fire()
     }
 
     async requestCancelCompilation() {
