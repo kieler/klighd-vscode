@@ -19,12 +19,12 @@ import { MonacoEditorProvider } from '@theia/monaco/lib/browser/monaco-editor-pr
 import { ContainerModule, interfaces } from 'inversify';
 import "../../src/browser/style/index.css";
 import { languageDescriptions } from '../common';
+import { KeithCommandContribution } from './keith-command-contribution';
 import { KeithGettingStartedContribution } from './keith-getting-started-contribution';
 import { KeithGettingStartedWidget } from './keith-getting-started-widget';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
 import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
 import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
-import { KeithCommandContribution } from './keith-command-contribution';
 
 export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.Unbind, _isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
     // register languages
