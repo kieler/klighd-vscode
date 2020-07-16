@@ -126,10 +126,10 @@ export class KeithCommandContribution implements CommandContribution, MenuContri
     private newSCChartText(name: string) {
         return  `scchart ` + name + ` {
 
-            region {
-                initial state A
-            }
-        }`
+    region {
+        initial state A
+    }
+}`
     }
 
     /**
