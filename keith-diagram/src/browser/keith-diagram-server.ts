@@ -19,7 +19,7 @@ import {
 import { RectPackDeletePositionConstraintAction, RectPackSetPositionConstraintAction, SetAspectRatioAction } from '@kieler/keith-interactive/lib/rect-packing/actions';
 import {
     CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, PerformActionAction, RefreshLayoutAction, RequestTextBoundsCommand,
-    SetSynthesesAction, SetSynthesisAction, StoreImagesAction, KeithUpdateModelAction
+    SetSynthesesAction, SetSynthesisAction, StoreImagesAction, KeithUpdateModelAction, Pair
 } from '@kieler/keith-sprotty/lib/actions/actions';
 import { RequestKeithPopupModelAction } from '@kieler/keith-sprotty/lib/hover/hover';
 import { injectable } from 'inversify';
@@ -127,11 +127,11 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
 
     handleCheckImages(action: CheckImagesAction) {
         // check in local storage, if these images are already stored. If not, send back a request for those images.
-        const notCached: string[] = []
+        const notCached: Pair<string, string>[] = []
         for (let image of (action as CheckImagesAction).images) {
-            const id = image.bundleName + ':' + image.imagePath
+            const id = KeithDiagramServer.imageToSessionStorageString(image.bundleName, image.imagePath)
             if (isNullOrUndefined(sessionStorage.getItem(id))) {
-                notCached.push(id)
+                notCached.push({k: image.bundleName, v: image.imagePath})
             }
         }
         this.actionDispatcher.dispatch(new CheckedImagesAction(notCached))
@@ -140,10 +140,21 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
     handleStoreImages(action: StoreImagesAction) {
         // Put the new images in session storage.
         for (let imagePair of (action as StoreImagesAction).images) {
-            const key = imagePair.k
-            const image = imagePair.v
-            sessionStorage.setItem(key, image)
+            const imageIdentifier = imagePair.k
+            const id = KeithDiagramServer.imageToSessionStorageString(imageIdentifier.k, imageIdentifier.v)
+            const imageString = imagePair.v
+            sessionStorage.setItem(id, imageString)
         }
+    }
+
+    /**
+     * Converts the representation of the image data into a single string for identification in sessionStorage.
+     *
+     * @param bundleName The bundle name of the image.
+     * @param imagePath The image path of the image.
+     */
+    static imageToSessionStorageString(bundleName: string, imagePath: string) {
+        return bundleName + ":" + imagePath
     }
 
     handleRequestKeithPopupModel(action: RequestKeithPopupModelAction) {

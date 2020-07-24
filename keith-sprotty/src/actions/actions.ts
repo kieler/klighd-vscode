@@ -37,7 +37,7 @@ export class StoreImagesAction implements Action {
     static readonly KIND: string = 'storeImages'
     readonly kind = StoreImagesAction.KIND
 
-    constructor(public readonly images: Pair<string, string>[]) {
+    constructor(public readonly images: Pair<Pair<string, string>, string>[]) {
     }
 }
 
@@ -68,7 +68,7 @@ export class CheckedImagesAction implements Action {
     static readonly KIND: string = 'checkedImages'
     readonly kind = CheckedImagesAction.KIND
 
-    constructor(public readonly notCached: string[]) {
+    constructor(public readonly notCached: Pair<string, string>[]) {
     }
 }
 
