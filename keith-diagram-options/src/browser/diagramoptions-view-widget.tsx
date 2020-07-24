@@ -520,11 +520,8 @@ export class DiagramOptionsViewWidget extends ReactWidget {
             case Type.ENUM: {
                 return this.renderEnum(layoutOptionUIData)
             }
-            case Type.ENUMSET: {
-                return <p>{'Unimplemented layout option type!'}</p>
-            }
             default: {
-                return <p>{'Unknown layout option type!'}</p>
+                return <p>{'This option type is not supported: ' + layoutOptionUIData.type}</p>
             }
         }
     }
@@ -546,7 +543,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                 min={option.minValue}
                 max={option.maxValue}
                 value={option.currentValue}
-                step={1/*unknown*/}
+                step={option.type === Type.INT ? 1 : 0.01}
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                     option.currentValue = event.currentTarget.value
                     this.onLayoutOption(option.optionId, option.currentValue)
