@@ -31,7 +31,7 @@ export const DiagramPreferenceSchema: PreferenceSchema = {
         'diagram.shouldSelectText': {
             type: 'boolean',
             description: 'Describes if a diagram element selection should select the corresponding text segments',
-            default: true
+            default: false
         }
     }
 }
