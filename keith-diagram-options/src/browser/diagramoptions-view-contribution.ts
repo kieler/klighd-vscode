@@ -115,7 +115,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param option The newly configured synthesis option.
      */
     async sendNewSynthesisOption(option: SynthesisOption): Promise<void> {
-        this.sendNewRequestMessage(SET_SYNTHESIS_OPTIONS, { synthesisOptions: [option] })
+        this.sendNewNotificationMessage(SET_SYNTHESIS_OPTIONS, { synthesisOptions: [option] })
     }
 
     /**
@@ -123,7 +123,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param optionValue The newly configured layout option.
      */
     async sendNewLayoutOption(optionValue: LayoutOptionValue): Promise<void> {
-        this.sendNewRequestMessage(SET_LAYOUT_OPTIONS, { layoutOptions: [optionValue] })
+        this.sendNewNotificationMessage(SET_LAYOUT_OPTIONS, { layoutOptions: [optionValue] })
     }
 
     /**
@@ -132,7 +132,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      * @param actionId The id of the action that should be performed.
      */
     async sendNewAction(actionId: string): Promise<void> {
-        this.sendNewRequestMessage(PERFORM_ACTION, { actionId: actionId })
+        this.sendNewNotificationMessage(PERFORM_ACTION, { actionId: actionId })
     }
 
     /**
@@ -147,13 +147,13 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     }
 
     /**
-     * Sends any message with any parameter as a request to the language server.
-     * @param messageType The message type as a complete string, such as 'module/specificRequest'
+     * Sends any message with any parameter as a notification to the language server.
+     * @param messageType The message type as a complete string, such as 'module/specificNotification'
      * @param param The parameter to be sent with the message. There is nothing checking if the parameter fits the message type.
      */
-    async sendNewRequestMessage(messageType: string, param: any): Promise<void> {
+    async sendNewNotificationMessage(messageType: string, param: any): Promise<void> {
         const lClient = await this.client.languageClient
-        await lClient.sendRequest(messageType, { uri: this.editorWidget.editor.uri.toString(), ...param })
+        await lClient.sendNotification(messageType, { uri: this.editorWidget.editor.uri.toString(), ...param })
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
@@ -282,7 +282,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             }
 
             // Send predefined options to server.
-            await lClient.sendRequest(SET_SYNTHESIS_OPTIONS, { uri: this.editorWidget.editor.uri.toString(), synthesisOptions: predefinedOptions })
+            await lClient.sendNotification(SET_SYNTHESIS_OPTIONS, { uri: this.editorWidget.editor.uri.toString(), synthesisOptions: predefinedOptions })
 
             // Register commands in the command palette.
             this.registeredCommands.forEach(command => {
