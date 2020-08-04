@@ -38,8 +38,15 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
             const highY = boundsInWindow.y + boundsInWindow.height
             if (event.pageX > lowX && event.pageX < highX
                 && event.pageY > lowY && event.pageY < highY) {
-                    const actualPosition = node.properties.currentPosition
-                    if (actualPosition !== target.properties.currentPosition && actualPosition !== -1) {
+                    let actualPosition = node.properties.currentPosition
+                    if (node.properties.desiredPosition !== -1) {
+                        actualPosition = node.properties.desiredPosition
+                    }
+                    let actualTargetPosition = target.properties.currentPosition
+                    if (node.properties.desiredPosition !== -1) {
+                        actualTargetPosition = target.properties.desiredPosition
+                    }
+                    if (actualPosition !== actualTargetPosition && actualPosition !== -1) {
                         result = new RectPackSetPositionConstraintAction(
                             {id: target.id, order: actualPosition}
                         )
