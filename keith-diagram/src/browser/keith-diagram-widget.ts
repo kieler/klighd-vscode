@@ -108,7 +108,7 @@ export class KeithDiagramWidget extends DiagramWidget {
 
     restoreState(oldState: KeithDiagramWidget.Data): void {
         super.restoreState(oldState)
-        this.syncWithEditor = oldState.resizeToFit === undefined || oldState.syncWithEditor
+        this.syncWithEditor = oldState.syncWithEditor === undefined || oldState.syncWithEditor
         this.resizeToFit = oldState.resizeToFit === undefined || oldState.resizeToFit
     }
 }
