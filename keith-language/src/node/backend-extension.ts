@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2019 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -20,7 +20,8 @@ import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server';
 import { LS_ID, LS_NAME } from '../common';
 
 
-const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler', 'kieler'))
+const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler',
+'de.cau.cs.kieler.language.server.launch-1.2.0-SNAPSHOT-languageserver.jar'))
 const EXECUTABLE_PATH = resolve(join(__dirname, '..', '..', '..', '..', '..', osExtension))
 
 function getPort(): number | undefined {
@@ -78,7 +79,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                 console.log("Starting with LS_PATH as argument")
             }
             console.log("Starting LS with path: " + lsPath)
-            const command = lsPath
+            const command = 'java -jar ' + lsPath
             const serverConnection = await this.createProcessStreamConnectionAsync(command, []);
             this.forward(clientConnection, serverConnection);
             serverConnection.onClose(() => console.log("Connection closed"))
