@@ -57,7 +57,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
-    let element = <g id={rendering.id} {...gAttrs}>
+    let element = <g id={rendering.renderingId} {...gAttrs}>
         {context.renderChildren(parent)}
     </g>
 
@@ -163,7 +163,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                     }
                 }
 
-                element = <g id={rendering.id} {...gAttrs}>
+                element = <g id={rendering.renderingId} {...gAttrs}>
                     <path
                         d={d}
                         style={{
@@ -188,7 +188,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             }
         }
         case K_ELLIPSE: {
-            element = <g id={rendering.id} {...gAttrs}>
+            element = <g id={rendering.renderingId} {...gAttrs}>
                 <ellipse
                     cx={boundsAndTransformation.bounds.width / 2}
                     cy={boundsAndTransformation.bounds.height / 2}
@@ -221,7 +221,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             const rx = (rendering as KRoundedRectangle).cornerWidth
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
-            element = <g id={rendering.id} {...gAttrs}>
+            element = <g id={rendering.renderingId} {...gAttrs}>
                 <rect
                     width={boundsAndTransformation.bounds.width}
                     height={boundsAndTransformation.bounds.height}
@@ -250,7 +250,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             const id = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
             const extension = id.slice(id.lastIndexOf('.') + 1)
             const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(id)
-            element = <g id={rendering.id} {...gAttrs}>
+            element = <g id={rendering.renderingId} {...gAttrs}>
                 <image
                     width={boundsAndTransformation.bounds.width}
                     height={boundsAndTransformation.bounds.height}
@@ -401,7 +401,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
     }
 
     // Create the svg element for this rendering.
-    let element = <g id={rendering.id} {...gAttrs}>
+    let element = <g id={rendering.renderingId} {...gAttrs}>
         <path
             d={path}
             style={{
@@ -551,7 +551,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     }
 
     // build the element from the above defined attributes and children
-    return <g id={rendering.id} {...gAttrs}>
+    return <g id={rendering.renderingId} {...gAttrs}>
         {...elements}
     </g>
 }
@@ -581,7 +581,7 @@ export function renderError(rendering: KRendering) {
     return <text>
         {'Rendering cannot be drawn!\n' +
             'Type: ' + rendering.type + '\n' +
-            'ID: ' + rendering.id}
+            'ID: ' + rendering.renderingId}
     </text>
 }
 
@@ -667,9 +667,9 @@ export function getKRendering(datas: KGraphData[], context: SKGraphRenderingCont
         if (data === null)
             continue
         if (data.type === K_RENDERING_REF) {
-            const id = (data as KRenderingRef).id
+            const id = (data as KRenderingRef).renderingId
             for (let rendering of context.kRenderingLibrary.renderings) {
-                if (rendering.id === id) {
+                if ((rendering as KRendering).renderingId === id) {
                     context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
                     context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
                     return rendering as KRendering

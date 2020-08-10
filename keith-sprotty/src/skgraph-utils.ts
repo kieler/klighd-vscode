@@ -58,12 +58,12 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
             if (isContainerRendering(currentElement)) {
                 // First, look for the ID in the child renderings.
                 nextElement = currentElement.children.find(childRendering => {
-                    return id.startsWith(childRendering.id)
+                    return id.startsWith(childRendering.renderingId)
                 }) as KRendering
             }
             if (nextElement === undefined && currentElement.type === K_POLYLINE) {
                 // If the rendering was not found yet, take the junction point rendering.
-                if (id.startsWith((currentElement as KPolyline).junctionPointRendering.id)) {
+                if (id.startsWith((currentElement as KPolyline).junctionPointRendering.renderingId)) {
                     nextElement = (currentElement as KPolyline).junctionPointRendering
                 }
             } if (nextElement === undefined) {
@@ -75,7 +75,7 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         }
     }
     // Now the currentElement should be the element searched for by the id.
-    if (currentElement.id !== id) {
+    if (currentElement.renderingId !== id) {
         console.error('The found element does not match the searched id! id: ' + id + ', found element: ' + currentElement)
         return
     }
