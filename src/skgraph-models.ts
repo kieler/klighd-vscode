@@ -103,6 +103,10 @@ export interface KRendering extends KGraphData, KStyleHolder {
      * A possible tooltip that can be shown for this rendering.
      */
     tooltip?: string
+    /**
+     * The unique identifier of this rendering.
+     */
+    renderingId: string
 }
 
 /**
