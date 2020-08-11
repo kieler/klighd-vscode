@@ -325,7 +325,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
     }
     // If no bounds have been found yet, they should be in the boundsMap.
     if (bounds === undefined && context.boundsMap !== undefined) {
-        bounds = findById(context.boundsMap, rendering.id)
+        bounds = findById(context.boundsMap, rendering.renderingId)
     }
     // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
     if (rendering.calculatedDecoration !== undefined) {
@@ -339,7 +339,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
     }
     // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
     if (decoration === undefined && context.decorationMap !== undefined) {
-        decoration = findById(context.decorationMap, rendering.id)
+        decoration = findById(context.decorationMap, rendering.renderingId)
         if (decoration !== undefined) {
             bounds = {
                 x: decoration.bounds.x + decoration.origin.x,
@@ -415,7 +415,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         }
         // if no bounds have been found yet, they should be in the boundsMap
         if (bounds.x === undefined && context.boundsMap !== undefined) {
-            const foundBounds = findById(context.boundsMap, rendering.id)
+            const foundBounds = findById(context.boundsMap, rendering.renderingId)
             if (bounds !== undefined) {
                 bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
                 bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
@@ -433,7 +433,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         }
         // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
         if (decoration === undefined && context.decorationMap !== undefined) {
-            decoration = findById(context.decorationMap, rendering.id)
+            decoration = findById(context.decorationMap, rendering.renderingId)
             if (decoration !== undefined) {
                 bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment, textWidth)
                 bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment, lines)
