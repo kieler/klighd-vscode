@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019,2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -13,15 +13,15 @@
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom/vnode';
 import {
-    Action, almostEquals, Bounds, BoundsAware, ElementAndBounds, EMPTY_BOUNDS, IActionDispatcher, ILogger, isLayoutContainer, isSizeable, IVNodePostprocessor, SChildElement,
-    SModelElement, SModelRoot, TYPES
+    Action, almostEquals, BoundsAware, ElementAndBounds, EMPTY_BOUNDS, IActionDispatcher, ILogger, isSizeable, IVNodePostprocessor,
+    SModelElement, SModelRoot, TYPES, Dimension
 } from 'sprotty/lib';
 import { ComputedTextBoundsAction, RequestTextBoundsAction } from '../actions/actions';
 
 export class TextBoundsData {
     vnode?: VNode
-    bounds?: Bounds
-    boundsChanged: boolean
+    dimension?: Dimension
+    dimensionChanged: boolean
 }
 
 /**
@@ -49,8 +49,8 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         if (isSizeable(element)) {
             this.element2boundsData.set(element, {
                 vnode: vnode,
-                bounds: element.bounds,
-                boundsChanged: false,
+                dimension: element.bounds,
+                dimensionChanged: false,
             })
         }
         if (element instanceof SModelRoot)
@@ -67,18 +67,12 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         const resizes: ElementAndBounds[] = []
         this.element2boundsData.forEach(
             (boundsData, element) => {
-                if (boundsData.boundsChanged && boundsData.bounds !== undefined) {
+                if (boundsData.dimensionChanged && boundsData.dimension !== undefined) {
                     const resize: ElementAndBounds = {
                         elementId: element.id,
                         newSize: {
-                            width: boundsData.bounds.width,
-                            height: boundsData.bounds.height
-                        }
-                    }
-                    if (element instanceof SChildElement && isLayoutContainer(element.parent)) {
-                        resize.newPosition = {
-                            x: boundsData.bounds.x,
-                            y: boundsData.bounds.y
+                            width: boundsData.dimension.width,
+                            height: boundsData.dimension.height
                         }
                     }
                     resizes.push(resize)
@@ -91,22 +85,18 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
     protected getBoundsFromDOM() {
         this.element2boundsData.forEach(
             (boundsData, element) => {
-                if (boundsData.bounds && isSizeable(element)) {
+                if (boundsData.dimension && isSizeable(element)) {
                     const vnode = boundsData.vnode
                     if (vnode && vnode.elm) {
                         const boundingBox = this.getBounds(vnode.elm, element)
-                        const newBounds = {
-                            x: element.bounds.x,
-                            y: element.bounds.y,
+                        const newDimension = {
                             width: boundingBox.width,
                             height: boundingBox.height
                         };
-                        if (!(almostEquals(newBounds.x, element.bounds.x)
-                            && almostEquals(newBounds.y, element.bounds.y)
-                            && almostEquals(newBounds.width, element.bounds.width)
-                            && almostEquals(newBounds.height, element.bounds.height))) {
-                            boundsData.bounds = newBounds;
-                            boundsData.boundsChanged = true;
+                        if (!(almostEquals(newDimension.width, element.bounds.width)
+                            && almostEquals(newDimension.height, element.bounds.height))) {
+                            boundsData.dimension = newDimension;
+                            boundsData.dimensionChanged = true;
                         }
                     }
                 }
@@ -114,7 +104,7 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         );
     }
 
-    protected getBounds(elm: any, element: BoundsAware): Bounds {
+    protected getBounds(elm: any, element: BoundsAware): Dimension {
         if (typeof elm.getBBox !== 'function') {
             this.logger.error(this, 'Not an SVG element:', elm);
             return EMPTY_BOUNDS;
@@ -126,8 +116,6 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         }
         const bounds = elm.getBBox();
         return {
-            x: bounds.x,
-            y: bounds.y,
             width: textWidth ? textWidth : bounds.width,
             height: bounds.height
         };
