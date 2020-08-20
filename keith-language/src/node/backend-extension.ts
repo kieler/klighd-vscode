@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { isOSX, isWindows } from "@theia/core";
+import { isOSX } from '@theia/core';
 import { BaseLanguageServerContribution, IConnection, LanguageServerContribution } from '@theia/languages/lib/node';
 import { ContainerModule, injectable } from 'inversify';
 import * as net from 'net';
@@ -19,9 +19,8 @@ import { join, resolve } from 'path';
 import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server';
 import { LS_ID, LS_NAME } from '../common';
 
-
-const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler',
-'de.cau.cs.kieler.language.server.launch-1.2.0-SNAPSHOT-languageserver.jar'))
+const jar = 'de.cau.cs.kieler.language.server.launch-1.2.0-SNAPSHOT-languageserver.jar'
+const osExtension = isOSX ? join('kieler.app', 'Contents', 'MacOs', jar) : join('kieler', jar)
 const EXECUTABLE_JAR_PATH = resolve(join(__dirname, '..', '..', '..', '..', '..', osExtension))
 
 function getPort(): number | undefined {
@@ -54,7 +53,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
         // If this is the case connect to this port
         if (socketPort) {
             // socket case. Used mostly for debugging.
-            console.log("Starting LS over socket.")
+            console.log('Starting LS over socket.')
             const socket = new net.Socket()
             const serverConnection = createSocketConnection(socket, socket, () => {
                 socket.destroy()
@@ -70,20 +69,23 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                 let arg = process.argv.filter(arg => arg.startsWith('--root-dir='))[0]
                 if (!arg) {
                     lsPath = EXECUTABLE_JAR_PATH
-                    console.log("Starting with product path")
+                    console.log('Starting with product path')
                 } else {
                     // An exception is thrown if no LS_PATH is specified in the developer setup.
                     throw new Error("No path to LS was specified. Use '--LS_PATH=' to specify one.");
                 }
             } else {
-                console.log("Starting with LS_PATH as argument")
+                console.log('Starting with LS_PATH as argument')
             }
-            console.log("Starting LS with path: " + lsPath)
+            console.log('Starting LS with path: ' + lsPath)
             const command = 'java'
-            const args = ['-jar', lsPath]
+            let args = ['-jar', lsPath]
+            if (isOSX) {
+                args = args.concat(['-Djava.awt.headless=true', '-XstartOnFirstThread'])
+            }
             const serverConnection = await this.createProcessStreamConnectionAsync(command, args);
             this.forward(clientConnection, serverConnection);
-            serverConnection.onClose(() => console.log("Connection closed"))
+            serverConnection.onClose(() => console.log('Connection closed'))
         }
     }
 }
