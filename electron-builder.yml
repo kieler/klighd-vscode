@@ -20,9 +20,9 @@ win:
   # copy ls
   extraResources:
     - 
-      from: "../language-server"
+      from: "../"
       to: "app/kieler/"
-      filter: ["**/*"]  
+      filter: ["*.jar"]  
   target:
     - zip
   icon: ./icons/foerde-logo.ico
@@ -31,9 +31,9 @@ mac:
   identity: null
   extraResources:
     - 
-      from: "../language-server"
+      from: "../"
       to: "app/kieler.app/"
-      filter: ["**/*"]
+      filter: ["*.jar"]
   target:
     - zip
   icon: ./icons/foerde-logo.icns
@@ -41,9 +41,9 @@ linux:
   # copy ls
   extraResources:
     - 
-      from: "../language-server"
+      from: "../"
       to: "app/kieler/"
-      filter: ["**/*"]
+      filter: ["*.jar"]
   target:
     - tar.gz
     - AppImage

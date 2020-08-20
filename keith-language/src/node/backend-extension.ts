@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2019 by
+ * Copyright 2018, 2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -20,8 +20,9 @@ import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server';
 import { LS_ID, LS_NAME } from '../common';
 
 
-const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler', 'kieler'))
-const EXECUTABLE_PATH = resolve(join(__dirname, '..', '..', '..', '..', '..', osExtension))
+const osExtension = isWindows ? join('kieler', 'kieler.exe') : (isOSX ? join('kieler.app', 'Contents', 'MacOs', 'kieler') : join('kieler',
+'de.cau.cs.kieler.language.server.launch-1.2.0-SNAPSHOT-languageserver.jar'))
+const EXECUTABLE_JAR_PATH = resolve(join(__dirname, '..', '..', '..', '..', '..', osExtension))
 
 function getPort(): number | undefined {
     let arg = process.argv.filter(arg => arg.startsWith('--LSP_PORT='))[0]
@@ -68,7 +69,7 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                 // --root-dir is only present in the arguments if KEITH is started in its development setup
                 let arg = process.argv.filter(arg => arg.startsWith('--root-dir='))[0]
                 if (!arg) {
-                    lsPath = EXECUTABLE_PATH
+                    lsPath = EXECUTABLE_JAR_PATH
                     console.log("Starting with product path")
                 } else {
                     // An exception is thrown if no LS_PATH is specified in the developer setup.
@@ -78,8 +79,9 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
                 console.log("Starting with LS_PATH as argument")
             }
             console.log("Starting LS with path: " + lsPath)
-            const command = lsPath
-            const serverConnection = await this.createProcessStreamConnectionAsync(command, []);
+            const command = 'java'
+            const args = ['-jar', lsPath]
+            const serverConnection = await this.createProcessStreamConnectionAsync(command, args);
             this.forward(clientConnection, serverConnection);
             serverConnection.onClose(() => console.log("Connection closed"))
         }
