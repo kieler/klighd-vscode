@@ -19,7 +19,7 @@
   "dependencies": {
     "@kieler/keith-interactive": "0.1.0",
     "inversify": "5.0.1",
-    "sprotty": "next"
+    "sprotty": "0.9.0"
   },
   "devDependencies": {
     "rimraf": "^2.6.3",
