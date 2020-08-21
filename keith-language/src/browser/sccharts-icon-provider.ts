@@ -32,7 +32,7 @@ export class SCChartsIconProvider extends WorkspaceUriLabelProviderContribution 
     /**
      * returns an icon class for the given element.
      */
-    async getIcon(element: URI | FileStat): Promise<string> {
+    getIcon(element: URI | FileStat): string {
         if ((element instanceof URI && element.path.ext === ".sctx") || (FileStat.is(element) && element.uri.endsWith(".sctx"))) {
             return 'fa sctx-icon'
         }

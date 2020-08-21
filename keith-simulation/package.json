@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@kieler/keith-kicool": "0.1.0",
-    "@theia/editor": "next"
+    "@theia/editor": "1.4.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

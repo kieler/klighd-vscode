@@ -390,7 +390,7 @@ export class SimulationWidget extends ReactWidget implements StatefulWidget {
                         // return if not parsable
                         const currentNextValue = this.valuesForNextStep.get(key)
                         elem.value = JSON.stringify(currentNextValue)
-                        this.commands.message(error.toString(), "ERROR")
+                        this.commands.messageService.error(error.toString())
                         return
                     }
                     // always assume that the parsed value is valid

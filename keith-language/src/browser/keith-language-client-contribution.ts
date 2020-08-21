@@ -15,7 +15,7 @@ import { MessageService } from '@theia/core';
 import { FrontendApplication } from '@theia/core/lib/browser/frontend-application';
 import URI from '@theia/core/lib/common/uri';
 import { EditorManager } from '@theia/editor/lib/browser';
-import { BaseLanguageClientContribution, NotificationType } from '@theia/languages/lib/browser';
+import { BaseLanguageClientContribution } from '@theia/languages/lib/browser';
 import { FileNavigatorContribution } from '@theia/navigator/lib/browser/navigator-contribution';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import * as lsp from 'vscode-languageserver-types';
@@ -23,9 +23,9 @@ import { Range } from 'vscode-languageserver-types';
 import { languageDescriptions, LS_ID, LS_NAME } from '../common';
 import { InitializationService } from './initialization-service';
 
-export const sendMessageType = new NotificationType<string, void>('general/sendMessage');
+export const sendMessageType = 'general/sendMessage';
 
-export const updateEditorContentsType = new NotificationType<string, void>('general/replaceContentInFile');
+export const updateEditorContentsType = 'general/replaceContentInFile';
 
 @injectable()
 export class KeithLanguageClientContribution extends BaseLanguageClientContribution {

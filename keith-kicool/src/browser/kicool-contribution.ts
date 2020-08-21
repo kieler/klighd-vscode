@@ -26,8 +26,7 @@ import URI from '@theia/core/lib/common/uri';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { FileStat, FileSystem, FileSystemUtils } from '@theia/filesystem/lib/common';
 import { FileChange, FileSystemWatcher } from '@theia/filesystem/lib/browser';
-import { NotificationType, Workspace } from '@theia/languages/lib/browser';
-import { OutputChannelManager } from '@theia/output/lib/common/output-channel';
+import { Workspace } from '@theia/languages/lib/browser';
 import { UserStorageUri } from '@theia/userstorage/lib/browser';
 import { inject, injectable } from 'inversify';
 import {
@@ -43,9 +42,9 @@ import { Code, CodeContainer, CompilationSystem } from "../common/kicool-models"
 import { CompilerWidget, ShowSnapshotEvent } from "./compiler-widget";
 import { KiCoolKeybindingContext } from "./kicool-keybinding-context";
 
-export const snapshotDescriptionMessageType = new NotificationType<CodeContainer, void>('keith/kicool/compile');
-export const cancelCompilationMessageType = new NotificationType<boolean, void>('keith/kicool/cancel-compilation');
-export const compilationSystemsMessageType = new NotificationType<CompilationSystem[], void>('keith/kicool/compilation-systems');
+export const snapshotDescriptionMessageType = 'keith/kicool/compile';
+export const cancelCompilationMessageType = 'keith/kicool/cancel-compilation';
+export const compilationSystemsMessageType = 'keith/kicool/compilation-systems';
 
 export const compilationStatusPriority: number = 5
 export const requestSystemStatusPriority: number = 6
@@ -96,7 +95,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     @inject(FileSystem) public readonly fileSystem: FileSystem
     @inject(OpenerService) protected readonly openerService: OpenerService;
     @inject(FrontendApplication) public readonly front: FrontendApplication
-    @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
+    // @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
     @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext
     @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
     @inject(CommandRegistry) public commandRegistry: CommandRegistry
@@ -337,7 +336,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         commands.registerCommand(REQUEST_CS, {
             execute: async () => {
                 await this.requestSystemDescriptions()
-                this.message("Registered compilation systems", "INFO")
+                this.messageService.info("Registered compilation systems")
             }
         })
         commands.registerCommand(TOGGLE_BUTTON_MODE, {
@@ -389,28 +388,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         })
     }
 
-    public message(message: string, type: string) {
-        switch (type.toLowerCase()) {
-            case "error":
-                this.messageService.error(message)
-                this.outputManager.getChannel('SCTX').appendLine('ERROR: ' + message)
-                this.outputManager.selectedChannel = this.outputManager.getChannel('SCTX')
-                break;
-            case "warn":
-                this.messageService.warn(message)
-                this.outputManager.getChannel('SCTX').appendLine('WARN: ' + message)
-                break;
-            case "info":
-                this.messageService.info(message)
-                this.outputManager.getChannel('SCTX').appendLine('INFO: ' + message)
-                break;
-            default:
-                this.messageService.log(message)
-                this.outputManager.getChannel('SCTX').appendLine('LOG: ' + message)
-                break;
-        }
-    }
-
     /**
      *
      * @param id id of snapshot e.g. Signal
@@ -442,14 +419,14 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
 
     async executeCompile(command: string, inplace: boolean, showResultingModel: boolean, snapshot: boolean): Promise<void> {
         if (!this.editor) {
-            this.message(EDITOR_UNDEFINED_MESSAGE, "error")
+            this.messageService.error(EDITOR_UNDEFINED_MESSAGE)
             return;
         }
 
         const uri = this.compilerWidget.sourceModelPath
 
         if (!this.compilerWidget.autoCompile) {
-            this.message("Compiling " + uri + " with " + command, "info")
+            this.messageService.info("Compiling " + uri + " with " + command)
         }
         const lClient = await this.client.languageClient
         lClient.sendNotification(COMPILE, [uri, KeithDiagramManager.DIAGRAM_TYPE + '_sprotty', command, inplace, showResultingModel, snapshot])
@@ -479,11 +456,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
             let errorString = '';
             snapshotsDescriptions.files.forEach(array => {
                 array.forEach(element => {
-                    element.warnings.forEach(warning => {
-                        this.outputManager.getChannel("SCTX").appendLine("WARNING: " + warning)
-                    })
                     element.errors.forEach(error => {
-                        this.outputManager.getChannel("SCTX").appendLine("ERROR: " + error)
                         errorOccurred = true
                         errorString = errorString + '\n' + error
                     })
@@ -503,7 +476,7 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
                 command: REVEAL_COMPILATION_WIDGET.id
             })
             if (errorOccurred) {
-                this.message('An error occurred during compilation. Check the Compiler Widget for details.' + errorString, 'error')
+                this.messageService.error('An error occurred during compilation. Check the Compiler Widget for details.' + errorString)
             }
         } else {
             // Set progress bar for compilation
@@ -604,22 +577,22 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(SHOW_NEXT, {
             execute: () => {
                 if (!this.editor) {
-                    this.message(EDITOR_UNDEFINED_MESSAGE, "error")
+                    this.messageService.error(EDITOR_UNDEFINED_MESSAGE)
                     return false;
                 }
                 const uri = this.compilerWidget.sourceModelPath
                 if (!this.isCompiled.get(uri)) {
-                    this.message(uri + " was not compiled", "error")
+                    this.messageService.error(uri + " was not compiled")
                     return false
                 }
                 const lastIndex = this.indexMap.get(uri)
                 if (lastIndex !== 0 && !lastIndex) {
-                    this.message("Index is undefined", "error")
+                    this.messageService.error("Index is undefined")
                     return false
                 }
                 const length = this.lengthMap.get(uri)
                 if (length !== 0 && !length) {
-                    this.message("Length is undefined", "error")
+                    this.messageService.error("Length is undefined")
                     return false
                 }
                 if (lastIndex === length - 1) { // No show necessary, since the last snapshot is already drawn.
@@ -639,17 +612,17 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
         this.commandRegistry.registerCommand(SHOW_PREVIOUS, {
             execute: () => {
                 if (!this.editor) {
-                    this.message(EDITOR_UNDEFINED_MESSAGE, "error")
+                    this.messageService.error(EDITOR_UNDEFINED_MESSAGE)
                     return false;
                 }
                 const uri = this.compilerWidget.sourceModelPath
                 if (!this.isCompiled.get(uri)) {
-                    this.message(uri + " was not compiled", "error")
+                    this.messageService.error(uri + ' was not compiled')
                     return false
                 }
                 const lastIndex = this.indexMap.get(uri)
                 if (lastIndex !== 0 && !lastIndex) {
-                    this.message("Index is undefined", "error")
+                    this.messageService.error('Index is undefined')
                     return false
                 }
                 if (lastIndex === -1) { // No show necessary, since the original model is already drawn.

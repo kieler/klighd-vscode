@@ -20,7 +20,7 @@
   "dependencies": {
     "@kieler/keith-language": "0.1.0",
     "@kieler/keith-sprotty": "0.1.0",
-    "sprotty-theia": "next"
+    "sprotty-theia": "0.9.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

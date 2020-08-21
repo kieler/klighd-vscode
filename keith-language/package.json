@@ -18,10 +18,10 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@theia/application-package": "next",
-    "@theia/getting-started": "next",
-    "@theia/monaco": "next",
-    "@theia/navigator": "next"
+    "@theia/application-package": "1.4.0",
+    "@theia/getting-started": "1.4.0",
+    "@theia/monaco": "1.4.0",
+    "@theia/navigator": "1.4.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
