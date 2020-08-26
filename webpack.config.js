@@ -1,131 +1,17 @@
+/**
+ * This file can be edited to customize webpack configuration.
+ * To reset delete this file and rerun theia build again.
+ */
 // @ts-check
-const path = require('path');
-const webpack = require('webpack');
-const yargs = require('yargs');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const CircularDependencyPlugin = require('circular-dependency-plugin');
+const config = require('./gen-webpack.config.js');
 
-const outputPath = path.resolve(__dirname, 'lib');
-const { mode }  = yargs.option('mode', {
-    description: "Mode to use",
-    choices: ["development", "production"],
-    default: "production"
-}).argv;
-const development = mode === 'development';
+/**
+ * Expose bundled modules on window.theia.moduleName namespace, e.g.
+ * window['theia']['@theia/core/lib/common/uri'].
+ * Such syntax can be used by external code, for instance, for testing. */
+config.module.rules.push({
+    test: /\.js$/,
+    loader: require.resolve('@theia/application-manager/lib/expose-loader')
+});
 
-const monacoEditorCorePath = development ? '/home/sdo/Documents/repos/keith/node_modules/@typefox/monaco-editor-core/dev/vs' : '/home/sdo/Documents/repos/keith/node_modules/@typefox/monaco-editor-core/min/vs';
-const monacoCssLanguagePath = '/home/sdo/Documents/repos/keith/node_modules/monaco-css/release/min';
-const monacoHtmlLanguagePath = '/home/sdo/Documents/repos/keith/node_modules/monaco-html/release/min';
-
-module.exports = {
-    entry: path.resolve(__dirname, 'src-gen/frontend/index.js'),
-    output: {
-        filename: 'bundle.js',
-        path: outputPath
-    },
-    target: 'electron-renderer',
-    mode,
-    node: {
-        __dirname: false,
-        __filename: false
-    },
-    module: {
-        rules: [
-            {
-                test: /worker-main\.js$/,
-                loader: 'worker-loader',
-                options: {
-                    name: 'worker-ext.[hash].js'
-                }
-            },
-            {
-                test: /\.css$/,
-                exclude: /\.useable\.css$/,
-                loader: 'style-loader!css-loader'
-            },
-            {
-                test: /\.useable\.css$/,
-                use: [
-                  {
-                    loader: 'style-loader/useable',
-                    options: {
-                      singleton: true,
-                      attrs: { id: 'theia-theme' },
-                    }
-                  },
-                  'css-loader'
-                ]
-            },
-            {
-                test: /\.(ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
-                loader: 'url-loader?limit=10000&mimetype=image/svg+xml'
-            },
-            {
-                test: /\.(jpg|png|gif)$/,
-                loader: 'file-loader',
-                options: {
-                    name: '[hash].[ext]',
-                }
-            },
-            {
-                // see https://github.com/theia-ide/theia/issues/556
-                test: /source-map-support/,
-                loader: 'ignore-loader'
-            },
-            {
-                test: /\.js$/,
-                enforce: 'pre',
-                loader: 'source-map-loader',
-                exclude: /jsonc-parser|fast-plist|onigasm|(monaco-editor.*)/
-            },
-            {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: "url-loader?limit=10000&mimetype=application/font-woff"
-            },
-            {
-                test: /node_modules[\\|/](vscode-languageserver-types|vscode-uri|jsonc-parser)/,
-                use: { loader: 'umd-compat-loader' }
-            },
-            {
-                test: /\.wasm$/,
-                loader: "file-loader",
-                type: "javascript/auto",
-            },
-            {
-                test: /\.plist$/,
-                loader: "file-loader",
-            },
-        ]
-    },
-    resolve: {
-        extensions: ['.js'],
-        alias: {
-            'vs': path.resolve(outputPath, monacoEditorCorePath),
-            'vscode': require.resolve('monaco-languageclient/lib/vscode-compatibility')
-        }
-    },
-    devtool: 'source-map',
-    plugins: [
-        new CopyWebpackPlugin([
-            {
-                from: monacoEditorCorePath,
-                to: 'vs'
-            },
-            {
-                from: monacoCssLanguagePath,
-                to: 'vs/language/css'
-            },
-            {
-                from: monacoHtmlLanguagePath,
-                to: 'vs/language/html'
-            }
-        ]),
-        new CircularDependencyPlugin({
-            exclude: /(node_modules|examples)\/./,
-            failOnError: false // https://github.com/nodejs/readable-stream/issues/280#issuecomment-297076462
-        }),
-    ],
-    stats: {
-        warnings: true
-    }
-};
+module.exports = config;

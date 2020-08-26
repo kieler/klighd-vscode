@@ -21,7 +21,7 @@
   "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
   "scripts": {
     "build": "theia build",
-    "package": "yarn run build && electron-builder",
+    "package": "yarn build && electron-builder",
     "package:all": "yarn run build && electron-builder --linux --x64 && electron-builder --mac --x64",
     "package:all_old": "yarn run build && electron-builder --linux --x64 && electron-builder --mac --x64 && electron-builder --win --x64",
     "package:win": "yarn run build && electron-builder --win --x64",
@@ -89,7 +89,7 @@
     "@types/sinon": "^2.3.5",
     "@types/temp": "^0.8.29",
     "@types/webdriverio": "^5.0.0",
-    "electron-builder": "^20.40.2",
+    "electron-builder": "^22.4.1",
     "lerna": "^3.13.1",
     "mocha": "^6.0.2",
     "pkg-config": "^1.1.1",
