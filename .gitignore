@@ -2,6 +2,7 @@ build
 dist
 lib
 node_modules
+plugins
 src-gen
 lerna-debug.log
 workspace

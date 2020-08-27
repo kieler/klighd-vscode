@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { isOSX } from '@theia/core';
+import { isOSX, isWindows } from '@theia/core';
 import { BaseLanguageServerContribution, IConnection, LanguageServerContribution } from '@theia/languages/lib/node';
 import { ContainerModule, injectable } from 'inversify';
 import * as net from 'net';
@@ -19,7 +19,7 @@ import { join, resolve } from 'path';
 import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server';
 import { LS_ID, LS_NAME } from '../common';
 
-const jar = 'de.cau.cs.kieler.language.server.launch-1.2.0-SNAPSHOT-languageserver.jar'
+const jar = 'kieler-language-server.' + (isOSX ? 'osx' : isWindows ? 'win' : 'linux') + '.jar'
 const osExtension = isOSX ? join('kieler.app', 'Contents', 'MacOs', jar) : join('kieler', jar)
 const EXECUTABLE_JAR_PATH = resolve(join(__dirname, '..', '..', '..', '..', '..', osExtension))
 
@@ -79,9 +79,9 @@ class KeithLanguageServerContribution extends BaseLanguageServerContribution {
             }
             console.log('Starting LS with path: ' + lsPath)
             const command = 'java'
-            let args = ['-jar', lsPath]
+            let args = ['-jar', '-Djava.awt.headless=true', lsPath]
             if (isOSX) {
-                args = args.concat(['-Djava.awt.headless=true', '-XstartOnFirstThread'])
+                args = args.concat(['-XstartOnFirstThread'])
             }
             const serverConnection = await this.createProcessStreamConnectionAsync(command, args);
             this.forward(clientConnection, serverConnection);
