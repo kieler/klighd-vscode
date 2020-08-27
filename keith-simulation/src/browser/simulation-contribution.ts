@@ -26,7 +26,6 @@ import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/li
 import { WindowService } from '@theia/core/lib/browser/window/window-service';
 import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { FileSystemWatcher, FileDialogService } from '@theia/filesystem/lib/browser';
-import { NotificationType, Workspace } from '@theia/languages/lib/browser';
 import { MiniBrowserCommands } from '@theia/mini-browser/lib/browser/mini-browser-open-handler';
 import { inject, injectable } from 'inversify';
 import { OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationData, SimulationStartedMessage, SimulationStepMessage, SimulationStoppedMessage, simulationWidgetId } from '../common';
@@ -58,8 +57,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
 
     simulationWidget: SimulationWidget
 
-    progressMessageType = new NotificationType<any, void>('keith/kicool/progress');
-
     simulationCommands: Command[] = []
 
     startTime: number
@@ -77,7 +74,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     @inject(SelectSimulationTypeCommand) protected readonly selectSimulationTypeCommand: SelectSimulationTypeCommand
     @inject(SimulationKeybindingContext) protected readonly simulationKeybindingContext: SimulationKeybindingContext
     @inject(WindowService) public readonly windowService: WindowService
-    @inject(Workspace) protected readonly workspace: Workspace
     @inject(StatusBar) protected readonly statusbar: StatusBar
     @inject(FileDialogService) protected readonly fileDialogService: FileDialogService
 

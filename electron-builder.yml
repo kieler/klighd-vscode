@@ -5,11 +5,12 @@ asar: false
 directories:
   buildResources: resources
 files: 
-  - "src-gen/**/*"
-  - "lib/**/*"
-  - "node_modules/**/*"
-  - "icons/*"
-  - "package.json"
+  - src-gen
+  - lib
+  - node_modules
+  - icons
+  - scripts
+  - package.json
   - from: "."
     to: ../../
     filter: ["package.json"]
