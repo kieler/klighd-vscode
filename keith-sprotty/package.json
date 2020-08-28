@@ -21,11 +21,6 @@
     "inversify": "5.0.1",
     "sprotty": "0.9.0"
   },
-  "devDependencies": {
-    "rimraf": "^2.6.3",
-    "tslint": "^5.13.1",
-    "typescript": "latest"
-  },
   "files": [
     "lib",
     "src",

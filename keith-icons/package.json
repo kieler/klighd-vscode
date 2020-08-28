@@ -19,10 +19,6 @@
   "dependencies": {
     "@theia/core": "1.4.0"
   },
-  "devDependencies": {
-    "rimraf": "latest",
-    "typescript": "latest"
-  },
   "files": [
     "lib",
     "src"

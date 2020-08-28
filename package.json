@@ -25,7 +25,7 @@
     "package:all": "yarn run build && electron-builder --linux --x64 && electron-builder --mac --x64",
     "package:all_old": "yarn run build && electron-builder --linux --x64 && electron-builder --mac --x64 && electron-builder --win --x64",
     "package:win": "yarn run build && electron-builder --win --x64",
-    "package:linux": "yarn run build && electron-builder --linux --x64",
+    "package:linux": "electron-builder --linux --x64",
     "package:mac": "yarn run build && electron-builder --mac --x64",
     "preinstall": "node-gyp install",
     "prepare": "lerna run prepare && yarn run download:plugins",
@@ -78,10 +78,11 @@
   },
   "devDependencies": {
     "@theia/cli": "1.4.0",
-    "lerna": "^3.13.1",
+    "lerna": "^3.22.1",
     "electron-builder": "^22.4.1",
     "bufferutil": "4",
-    "utf-8-validate": "5"
+    "utf-8-validate": "5",
+    "typescript": "latest"
   },
   "resolutions": {
       "**/fs-extra": "^4.0.3"
