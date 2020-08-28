@@ -95,7 +95,6 @@ export class KiCoolContribution extends AbstractViewContribution<CompilerWidget>
     @inject(FileSystem) public readonly fileSystem: FileSystem
     @inject(OpenerService) protected readonly openerService: OpenerService;
     @inject(FrontendApplication) public readonly front: FrontendApplication
-    // @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
     @inject(KiCoolKeybindingContext) protected readonly kicoolKeybindingContext: KiCoolKeybindingContext
     @inject(KeithDiagramManager) public readonly diagramManager: KeithDiagramManager
     @inject(CommandRegistry) public commandRegistry: CommandRegistry
