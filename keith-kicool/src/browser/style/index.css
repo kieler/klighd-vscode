@@ -1,12 +1,12 @@
 .kico_widget {
     font-size: var(--theia-ui-font-size1);
-    color: var(--theia-ui-font-color1);
+    color: var(--theia-foreground);
     text-align: center;
 }
 
 .text_widget {
     font-size: var(--theia-ui-font-size1);
-    color: var(--theia-ui-font-color1);
+    color: var(--theia-foreground);
     display: block;
     margin-left: 20px;
     margin-right: 30px;
@@ -15,9 +15,8 @@
 button, .show-button {
     display: inline-block;
     border: none;
-    border-radius: 0;
-    color: var(--theia-ui-button-font-color);
-    background-color: var(--theia-ui-button-color);
+    color: var(--theia-button-foreground);
+    background-color: var(--theia-button-background);
     min-width: 5px;
     min-height: 5px;
     outline: none;
@@ -29,7 +28,7 @@ button, .show-button {
     margin-left: calc(var(--theia-ui-padding)*2);
     margin-top: 12px;
     border-radius: 1px;
-    box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.2), 0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 1px -2px rgba(0, 0, 0, 0.12);
+    box-shadow: 0px 1px 5px 0px var(--theia-checkbox-border), 0px 1px 2px 0px var(--theia-checkbox-border), 0px 1px 1px -2px var(--theia-checkbox-border);
     transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     width: auto;
     /* border-width: medium;    
@@ -37,20 +36,20 @@ button, .show-button {
 }
 
 .show-button.error {
-    background-color: var(--theia-error-color1);
-    color: var(--theia-error-font-color0);
+    background-color: var(--theia-notificationsErrorIcon-foreground);
+    color: var(--theia-button-foreground);
 }
 .show-button.warn {
-    background-color: var(--theia-warn-color1);
-    color: var(--theia-warn-font-color0);
+    background-color: var(--theia-notificationsWarningIcon-foreground);
+    color: var(--theia-button-foreground);
 }
 .show-button.info {
-    background-color: var(--theia-info-color1);
-    color: var(--theia-info-font-color0);
+    background-color: var(--theia-notificationsInfoIcon-foreground);
+    color: var(--theia-button-foreground);
 }
 .compiler-widget {
 	font-size: var(--theia-ui-font-size1);
-    color: var(--theia-ui-font-color1);
+    color: var(--theia-foreground);
     display: grid;
     grid-auto-rows: min-content;
 }
@@ -66,22 +65,22 @@ button, .show-button {
     font-size: var(--theia-ui-font-size1);
     border-width: 2px;
     border-style: solid;
-    border-color: var(--theia-border-color1);
-    background: var(--theia-layout-color0);
-    color: var(--theia-ui-font-color1);
+    border-color: var(--theia-dropdown-border);
+    background: var(--theia-dropdown-background);
+    color: var(--theia-dropdown-foreground);
     margin-left: 1px;
     margin-right: 1px;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: linear-gradient(45deg, transparent 50%, var(--theia-ui-font-color1) 50%), linear-gradient(135deg, var(--theia-ui-font-color1) 50%, transparent 50%);
+    background-image: linear-gradient(45deg, transparent 50%, var(--theia-dropdown-border) 50%), linear-gradient(135deg, var(--theia-dropdown-border) 50%, transparent 50%);
     background-position: calc(100% - 6px) 8px, calc(100% - 2px) 8px, 100% 0;
     background-size: 4px 5px;
     background-repeat: no-repeat;
 }
 
 .compile-button {
-    color: var(--theia-ui-button-font-color);
-    background-color: var(--theia-ui-button-color);
+    color: var(--theia-button-foreground);
+    background-color: var(--theia-button-background);
     block-size: var(--theia-content-line-height);
     line-height: var(--theia-content-line-height);
     margin-left: 1px;
@@ -90,7 +89,7 @@ button, .show-button {
     border-radius: 0;
     outline: none;
     cursor: pointer;
-    box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.2), 0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 1px -2px rgba(0, 0, 0, 0.12);
+    box-shadow: 0px 1px 5px 0px var(--theia-checkbox-border), 0px 1px 2px 0px var(--theia-checkbox-border), 0px 1px 1px -2px var(--theia-checkbox-border);
     transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     display: inline-block;
     text-align: center;
@@ -101,8 +100,8 @@ button, .show-button {
 }
 
 .preference-button {
-    background-color: var(--theia-ui-button-color);
-    color: var(--theia-ui-button-font-color);
+    background-color: var(--theia-button-background);
+    color: var(--theia-button-foreground);
     block-size: var(--theia-content-line-height);
     line-height: var(--theia-content-line-height);
     margin-left: 1px;
@@ -111,7 +110,7 @@ button, .show-button {
     border-radius: 0;
     outline: none;
     cursor: pointer;
-    box-shadow: 0px 1px 5px 0px rgba(0, 0, 0, 0.2), 0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 1px -2px rgba(0, 0, 0, 0.12);
+    box-shadow: 0px 1px 5px 0px var(--theia-checkbox-border), 0px 1px 2px 0px var(--theia-checkbox-border), 0px 1px 1px -2px var(--theia-checkbox-border);
     transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     display: inline-block;
     text-align: center;
@@ -122,8 +121,8 @@ button, .show-button {
 }
 
 .preference-button.off {
-    background-color: var(--theia-ui-button-color-secondary);
-    color: var(--theia-ui-button-font-color-secondary);
+    background-color: var(--theia-button-secondaryBackground);
+    color: var(--theia-button-secondaryForeground);
 }
 
 .icon {
@@ -145,9 +144,9 @@ button, .show-button {
     font-size: var(--theia-ui-font-size1);
     border-width: 2px;
     border-style: solid;
-    border-color: var(--theia-border-color1);
-    background: var(--theia-layout-color0);
-    color: var(--theia-ui-font-color1);
+    border-color: var(--theia-checkbox-border);
+    background: var(--theia-input-background);
+    color: var(--theia-input-foreground);
     margin-left: 1px;
     margin-right: 1px;
     height: fit-content;

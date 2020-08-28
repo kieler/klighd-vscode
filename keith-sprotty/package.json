@@ -19,12 +19,7 @@
   "dependencies": {
     "@kieler/keith-interactive": "0.1.0",
     "inversify": "5.0.1",
-    "sprotty": "next"
-  },
-  "devDependencies": {
-    "rimraf": "^2.6.3",
-    "tslint": "^5.13.1",
-    "typescript": "latest"
+    "sprotty": "0.9.0"
   },
   "files": [
     "lib",

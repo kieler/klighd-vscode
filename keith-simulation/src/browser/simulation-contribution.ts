@@ -16,39 +16,37 @@ import { addCoSimulation, startSimulation } from '@kieler/keith-diagram/lib/brow
 import { KiCoolContribution } from '@kieler/keith-kicool/lib/browser/kicool-contribution';
 import { REQUEST_CS } from '@kieler/keith-kicool/lib/common/commands';
 import { CompilationSystem } from '@kieler/keith-kicool/lib/common/kicool-models';
-import { KeithLanguageClientContribution } from "@kieler/keith-language/lib/browser/keith-language-client-contribution";
-import { Command, CommandHandler, CommandRegistry, MessageService } from "@theia/core";
+import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
+import { Command, CommandHandler, CommandRegistry, MessageService } from '@theia/core';
 import {
     AbstractViewContribution, DidCreateWidgetEvent, FrontendApplication, FrontendApplicationContribution, PrefixQuickOpenService,
     QuickOpenItem, QuickOpenMode, QuickOpenModel, QuickOpenOptions, QuickOpenService, StatusBar, StatusBarAlignment, Widget, WidgetManager
-} from "@theia/core/lib/browser";
-import { TabBarToolbarContribution, TabBarToolbarRegistry } from "@theia/core/lib/browser/shell/tab-bar-toolbar";
-import { WindowService } from "@theia/core/lib/browser/window/window-service";
-import { EditorManager, EditorWidget } from "@theia/editor/lib/browser";
-import { FileSystemWatcher, FileDialogService } from "@theia/filesystem/lib/browser";
-import { NotificationType, Workspace } from "@theia/languages/lib/browser";
-import { MiniBrowserCommands } from "@theia/mini-browser/lib/browser/mini-browser-open-handler";
-import { OutputChannelManager } from "@theia/output/lib/common/output-channel";
-import { inject, injectable } from "inversify";
-import { OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationData, SimulationStartedMessage, SimulationStepMessage, SimulationStoppedMessage, simulationWidgetId } from "../common";
+} from '@theia/core/lib/browser';
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import { WindowService } from '@theia/core/lib/browser/window/window-service';
+import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
+import { FileSystemWatcher, FileDialogService } from '@theia/filesystem/lib/browser';
+import { MiniBrowserCommands } from '@theia/mini-browser/lib/browser/mini-browser-open-handler';
+import { inject, injectable } from 'inversify';
+import { OPEN_SIMULATION_WIDGET_KEYBINDING, SimulationData, SimulationStartedMessage, SimulationStepMessage, SimulationStoppedMessage, simulationWidgetId } from '../common';
 import {
     OPEN_EXTERNAL_KVIZ_VIEW, OPEN_INTERNAL_KVIZ_VIEW, OPEN_SIMULATION_WIDGET_AND_REQUEST_CS, REVEAL_SIMULATION_WIDGET,
     SELECT_SIMULATION_CHAIN, SELECT_SNAPSHOT_SIMULATION_CHAIN, SET_SIMULATION_SPEED, SIMULATE, SIMULATION
-} from "../common/commands";
-import { delay, strMapToObj } from "../common/helper";
-import { SelectSimulationTypeCommand } from "./select-simulation-type-command";
-import { SimulationKeybindingContext } from "./simulation-keybinding-context";
-import { SimulationWidget } from "./simulation-widget";
+} from '../common/commands';
+import { delay, strMapToObj } from '../common/helper';
+import { SelectSimulationTypeCommand } from './select-simulation-type-command';
+import { SimulationKeybindingContext } from './simulation-keybinding-context';
+import { SimulationWidget } from './simulation-widget';
 import { PerformActionAction } from '@kieler/keith-sprotty/lib/actions/actions';
 
-export const SIMULATION_CATEGORY = "Simulation"
+export const SIMULATION_CATEGORY = 'Simulation'
 
 export const simulationCommandPrefix: string = 'simulation.'
 
-export const externalStepMessageType = new NotificationType<SimulationStepMessage, void>('keith/simulation/didStep');
-export const valuesForNextStepMessageType = new NotificationType<Object, void>('keith/simulation/valuesForNextStep');
-export const externalStopMessageType = new NotificationType<string, void>('keith/simulation/externalStop')
-export const startedSimulationMessageType = new NotificationType<SimulationStartedMessage, void>('keith/simulation/started')
+export const externalStepMessageType = 'keith/simulation/didStep';
+export const valuesForNextStepMessageType = 'keith/simulation/valuesForNextStep';
+export const externalStopMessageType = 'keith/simulation/externalStop';
+export const startedSimulationMessageType = 'keith/simulation/started';
 
 export const simulationStatusPriority: number = 4
 /**
@@ -58,8 +56,6 @@ export const simulationStatusPriority: number = 4
 export class SimulationContribution extends AbstractViewContribution<SimulationWidget> implements FrontendApplicationContribution, TabBarToolbarContribution {
 
     simulationWidget: SimulationWidget
-
-    progressMessageType = new NotificationType<any, void>('keith/kicool/progress');
 
     simulationCommands: Command[] = []
 
@@ -72,14 +68,12 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     @inject(FrontendApplication) public readonly front: FrontendApplication
     @inject(KeithLanguageClientContribution) public readonly client: KeithLanguageClientContribution
     @inject(KiCoolContribution) public readonly kicoolContribution: KiCoolContribution
-    @inject(MessageService) protected readonly messageService: MessageService
-    @inject(OutputChannelManager) protected readonly outputManager: OutputChannelManager
+    @inject(MessageService) public readonly messageService: MessageService
     @inject(PrefixQuickOpenService) public readonly quickOpenService: PrefixQuickOpenService
     @inject(QuickOpenService) protected readonly openService: QuickOpenService
     @inject(SelectSimulationTypeCommand) protected readonly selectSimulationTypeCommand: SelectSimulationTypeCommand
     @inject(SimulationKeybindingContext) protected readonly simulationKeybindingContext: SimulationKeybindingContext
     @inject(WindowService) public readonly windowService: WindowService
-    @inject(Workspace) protected readonly workspace: Workspace
     @inject(StatusBar) protected readonly statusbar: StatusBar
     @inject(FileDialogService) protected readonly fileDialogService: FileDialogService
 
@@ -153,7 +147,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         systems.forEach((system: CompilationSystem) => {
             const command: Command = {
                 id: simulationCommandPrefix + system.id + (system.snapshotSystem ? '.snapshot' : ''),
-                label: `Simulate ${system.snapshotSystem ? 'snapshot' : 'model'} via ${system.label}`, category: "Simulation"}
+                label: `Simulate ${system.snapshotSystem ? 'snapshot' : 'model'} via ${system.label}`, category: 'Simulation'}
             this.simulationCommands.push(command)
             const handler: CommandHandler = {
                 execute: () => {
@@ -269,7 +263,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 let newValue = this.simulationWidget.simulationStepDelay
                 const item: QuickOpenItem = new QuickOpenItem({
                     label: 'Set speed to ' + newValue,
-                    description: "Simulation speed",
+                    description: 'Simulation speed',
                     run: (mode: QuickOpenMode) => {
                         return true;
                     }
@@ -295,7 +289,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                     onClose: (cancelled: boolean) => {
                         if (!cancelled) {
                             this.simulationWidget.simulationStepDelay = newValue
-                            this.message(`Simulation speed set to ${this.simulationWidget.simulationStepDelay}`, 'INFO')
+                            this.messageService.info(`Simulation speed set to ${this.simulationWidget.simulationStepDelay}`)
                             this.simulationWidget.update()
                         }
                     }
@@ -431,7 +425,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 tooltip: 'Starting simulation...',
                 command: REVEAL_SIMULATION_WIDGET.id
             })
-            lClient.sendNotification("keith/simulation/start", [uri, this.simulationWidget.simulationType])
+            lClient.sendNotification('keith/simulation/start', [uri, this.simulationWidget.simulationType])
         } else {
             this.statusbar.setElement('simulation-status', {
                 alignment: StatusBarAlignment.LEFT,
@@ -446,11 +440,11 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     /**
      * Start simulation after server successfully started it.
      */
-    handleSimulationStarted(startMessage: SimulationStartedMessage) {
+    async handleSimulationStarted(startMessage: SimulationStartedMessage) {
         this.endTime = performance.now()
         if (!startMessage.successful) {
             this.startTime = performance.now()
-            this.message(startMessage.error, "error")
+            this.messageService.error(startMessage.error)
             this.statusbar.setElement('simulation-status', {
                 alignment: StatusBarAlignment.LEFT,
                 priority: simulationStatusPriority,
@@ -471,12 +465,12 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         const pool: Map<string, any> = new Map(Object.entries(startMessage.dataPool));
         const propertySet: Map<string, any> = new Map(Object.entries(startMessage.propertySet));
         // Inputs and outputs are handled separately
-        let inputs: string[] = propertySet.get("input")
+        let inputs: string[] = propertySet.get('input')
         inputs = inputs === undefined ? [] : inputs
-        let outputs: string[] = propertySet.get("output")
+        let outputs: string[] = propertySet.get('output')
         outputs = outputs === undefined ? [] : outputs
-        propertySet.delete("input")
-        propertySet.delete("output")
+        propertySet.delete('input')
+        propertySet.delete('output')
         // Construct list of all categories
         this.simulationWidget.categories = Array.from(propertySet.keys())
         pool.forEach((value, key) => {
@@ -497,7 +491,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         })
         this.simulationWidget.simulationRunning = true
         this.simulationWidget.simulationStep = 0
-        const widget = this.front.shell.revealWidget(simulationWidgetId)
+        const widget = await this.front.shell.revealWidget(simulationWidgetId)
         if (widget) {
             widget.update()
         }
@@ -510,7 +504,7 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         const lClient = await this.client.languageClient
         // Transform the input map to an object since this is the format the LS supports
         let jsonObject = strMapToObj(this.simulationWidget.changedValuesForNextStep)
-        lClient.sendNotification("keith/simulation/step", [jsonObject, "Manual"])
+        lClient.sendNotification('keith/simulation/step', [jsonObject, 'Manual'])
         // TODO Update data to indicate that a step is in process
         this.simulationWidget.update()
     }
@@ -528,9 +522,9 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
             command: REVEAL_SIMULATION_WIDGET.id
         })
         const lClient = await this.client.languageClient
-        const message: SimulationStoppedMessage = await lClient.sendRequest("keith/simulation/stop") as SimulationStoppedMessage
+        const message: SimulationStoppedMessage = await lClient.sendRequest('keith/simulation/stop') as SimulationStoppedMessage
         if (!message.successful) {
-            this.message(message.message, "ERROR")
+            this.messageService.error(message.message)
         }
         this.simulationWidget.update()
         this.statusbar.setElement('simulation-status', {
@@ -572,27 +566,6 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
         }
     }
 
-    public message(message: string, type: string) {
-        switch (type.toLowerCase()) {
-            case "error":
-                this.messageService.error(message)
-                this.outputManager.getChannel("SCTX").appendLine("ERROR: " + message)
-                break;
-            case "warn":
-                this.messageService.warn(message)
-                this.outputManager.getChannel("SCTX").appendLine("WARN: " + message)
-                break;
-            case "info":
-                this.messageService.info(message)
-                this.outputManager.getChannel("SCTX").appendLine("INFO: " + message)
-                break;
-            default:
-                this.messageService.log(message)
-                this.outputManager.getChannel("SCTX").appendLine("LOG: " + message)
-                break;
-        }
-    }
-
     /**
      * Is executed after the server finishes a step.
      * @param message data of step, includes new values.
@@ -614,13 +587,13 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
                 } else {
                     // This should not happen. An unexpected value was send by the server.
                     this.stopSimulation()
-                    this.message("Unexpected value for " + key + "in simulation data, stopping simulation", "ERROR")
+                    this.messageService.error("Unexpected value for " + key + "in simulation data, stopping simulation")
                     this.simulationWidget.update()
                     return false
                 }
             });
         } else {
-            this.message("Simulation data values are undefined", "ERROR")
+            this.messageService.error('Simulation data values are undefined')
         }
         this.simulationWidget.simulationStep++
         this.simulationWidget.changedValuesForNextStep.clear()
@@ -629,21 +602,21 @@ export class SimulationContribution extends AbstractViewContribution<SimulationW
     }
 
     handleExternalNewUserValue(values: Object) {
-        console.log("external value", values)
+        console.log('external value', values)
         this.messageService.warn('External new user values are not implemented')
     }
 
     handleExternalStop(message: string) {
-        this.message('Stopped simulation because of exception on LS. You might want to reload the window.', 'ERROR')
+        this.messageService.error('Stopped simulation because of exception on LS. You might want to reload the window.')
         this.messageService.error(message)
         this.setValuesToStopSimulation()
     }
 
     openInternalKVizView() {
-        this.commandRegistry.executeCommand(MiniBrowserCommands.OPEN_URL.id, "http://localhost:5010/visualization")
+        this.commandRegistry.executeCommand(MiniBrowserCommands.OPEN_URL.id, 'http://localhost:5010/visualization')
     }
 
     openExternalKVizView() {
-        this.windowService.openNewWindow("http://localhost:5010/visualization")
+        this.windowService.openNewWindow('http://localhost:5010/visualization')
     }
 }

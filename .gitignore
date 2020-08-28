@@ -1,13 +1,13 @@
 build
 dist
+lerna-debug.log
 lib
 node_modules
 plugins
 src-gen
-lerna-debug.log
 workspace
 yarn-error.log
 .browser_modules
 **/*.log
 **/package-backup.json
-**/webpack.config.js
+**/gen-webpack.config.js

@@ -18,18 +18,10 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@theia/application-package": "next",
-    "@theia/getting-started": "next",
-    "@theia/monaco": "next",
-    "@theia/navigator": "next"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/chai-as-promised": "7.1.0",
-    "@types/mocha": "^5.2.6",
-    "mocha": "^6.0.2",
-    "ts-node": "^8.0.3",
-    "typescript": "latest"
+    "@theia/application-package": "1.4.0",
+    "@theia/getting-started": "1.4.0",
+    "@theia/monaco": "1.4.0",
+    "@theia/navigator": "1.4.0"
   },
   "files": [
     "lib",
