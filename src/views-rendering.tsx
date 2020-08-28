@@ -35,7 +35,7 @@ import {
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, propagatedStyles: KStyles, context: SKGraphRenderingContext) {
+export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, propagatedStyles: KStyles, context: SKGraphRenderingContext): VNode {
     if (parent.areChildrenRendered) {
         console.error('This element contains multiple child areas, skipping this one.')
         return <g />
@@ -577,7 +577,7 @@ export function renderChildRenderings(parentRendering: KContainerRendering, pare
     return []
 }
 
-export function renderError(rendering: KRendering) {
+export function renderError(rendering: KRendering): VNode {
     return <text>
         {'Rendering cannot be drawn!\n' +
             'Type: ' + rendering.type + '\n' +
