@@ -84,6 +84,9 @@
     "utf-8-validate": "5",
     "typescript": "latest"
   },
+  "// Notes:": [
+      "The resolution for `fs-extra` was required due to this: https://spectrum.chat/theia/general/our-theia-electron-builder-app-no-longer-starts~f5cf09a0-6d88-448b-8818-24ad0ec2ee7c"
+  ],
   "resolutions": {
       "**/fs-extra": "^4.0.3"
   },
