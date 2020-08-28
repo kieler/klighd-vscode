@@ -12,7 +12,7 @@
  */
 
 import { CommandContribution, MenuContribution } from '@theia/core';
-import { FrontendApplicationContribution, WidgetFactory } from '@theia/core/lib/browser';
+import { FrontendApplicationContribution, WidgetFactory, LabelProviderContribution } from '@theia/core/lib/browser';
 import { GettingStartedWidget } from '@theia/getting-started/lib/browser/getting-started-widget';
 import { LanguageClientContribution } from '@theia/languages/lib/browser';
 import { MonacoEditorProvider } from '@theia/monaco/lib/browser/monaco-editor-provider';
@@ -25,6 +25,7 @@ import { KeithGettingStartedWidget } from './keith-getting-started-widget';
 import { KeithLanguageClientContribution } from './keith-language-client-contribution';
 import { KeithMonacoEditorProvider } from "./keith-monaco-editor-provider";
 import { configuration, KeithMonarchLanguage, LanguageDescription, monarchLanguage, RegistrationContribution } from './registration-contribution';
+import { SCChartsIconProvider } from './sccharts-icon-provider';
 
 export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.Unbind, _isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
     // register languages
@@ -79,5 +80,5 @@ export default new ContainerModule((bind: interfaces.Bind, _unbind: interfaces.U
     bind(KeithCommandContribution).toSelf().inSingletonScope()
 
     // Register sctx icon, currently not in use. Needs an update of Theia and a high resolution icon.
-    // bind(LabelProviderContribution).to(SCChartsIconProvider).inSingletonScope();
+    bind(LabelProviderContribution).to(SCChartsIconProvider).inSingletonScope();
 })
