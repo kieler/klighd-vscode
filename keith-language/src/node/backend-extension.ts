@@ -20,7 +20,7 @@ import { createSocketConnection } from 'vscode-ws-jsonrpc/lib/server';
 import { LS_ID, LS_NAME } from '../common';
 
 const jar = 'kieler-language-server.' + (isOSX ? 'osx' : isWindows ? 'win' : 'linux') + '.jar'
-const osExtension = isOSX ? join('kieler.app', 'Contents', 'MacOs', jar) : join('kieler', jar)
+const osExtension = join('kieler', jar)
 const EXECUTABLE_JAR_PATH = resolve(join(__dirname, '..', '..', '..', '..', '..', osExtension))
 
 function getPort(): number | undefined {

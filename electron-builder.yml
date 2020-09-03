@@ -33,7 +33,7 @@ mac:
   extraResources:
     - 
       from: "../language-server"
-      to: "app/kieler.app/"
+      to: "app/kieler/"
       filter: ["kieler-language-server.osx.jar"]
   target:
     - zip
