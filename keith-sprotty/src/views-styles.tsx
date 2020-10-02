@@ -14,6 +14,7 @@
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { isSelectable } from 'sprotty';
+import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
     KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
@@ -22,7 +23,7 @@ import {
 } from './skgraph-models';
 import {
     camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText,
-    SKGraphRenderingContext, textDecorationStyleText, verticalAlignmentText
+    textDecorationStyleText, verticalAlignmentText
 } from './views-common';
 
 
@@ -467,7 +468,7 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgShadowStyles(styles: KStyles, context: SKGraphRenderingContext): string | undefined {
+export function getSvgShadowStyles(styles: KStyles, context: SKGraphModelRenderer): string | undefined {
     const shadow = styles.kShadow
     if (shadow === undefined) {
         return undefined
@@ -517,7 +518,7 @@ export function getSvgShadowStyles(styles: KStyles, context: SKGraphRenderingCon
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
  */
-export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingContext, parent: SKGraphElement | SKEdge): ColorStyles {
+export function getSvgColorStyles(styles: KStyles, context: SKGraphModelRenderer, parent: SKGraphElement | SKEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
     const grayedOutColor = {color: 'grey', opacity: '255'}
@@ -554,7 +555,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphRenderingCont
  * @param context The rendering context.
  * @see getSvgColorStyles
  */
-export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphRenderingContext): ColorStyle | undefined {
+export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGraphModelRenderer): ColorStyle | undefined {
     if (coloring === undefined || coloring.color === undefined) {
         return undefined
     }

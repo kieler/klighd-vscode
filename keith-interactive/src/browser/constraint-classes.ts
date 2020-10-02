@@ -26,9 +26,15 @@ export interface KGraphElement extends SParentElement {
     trace?: string
     data: KGraphData[]
     /**
-     * Additional field to remember, if this element's children have already been rendered.
+     * Remembers, if this element's children that are placed within a potential child area have already been rendered.
+     * Accounts for child nodes and edges.
      */
-    areChildrenRendered: boolean
+    areChildAreaChildrenRendered: boolean
+    /**
+     * Remembers, if this element's children that are not placed within a potential child area have already been rendered.
+     * Accounts for child ports and labels.
+     */
+    areNonChildAreaChildrenRendered: boolean
     opacity: number
 }
 
@@ -38,7 +44,8 @@ export interface KGraphElement extends SParentElement {
 export class KNode extends RectangularNode implements KGraphElement {
     trace?: string
     data: KGraphData[]
-    areChildrenRendered = false
+    areChildAreaChildrenRendered = false
+    areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).properties.interactiveLayout)
     }
@@ -93,7 +100,8 @@ export class KEdge extends SEdge implements KGraphElement {
     trace?: string
     data: KGraphData[]
     junctionPoints: Point[]
-    areChildrenRendered = false
+    areChildAreaChildrenRendered = false
+    areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
     }

@@ -20,8 +20,8 @@ import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/kei
 import { inject, injectable } from 'inversify';
 import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
 import { RenderOptions, ShowConstraintOption } from './options';
+import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
-import { SKGraphRenderingContext } from './views-common';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 
@@ -32,8 +32,7 @@ import { KStyles } from './views-styles';
 @injectable()
 export class SKGraphView extends SGraphView {
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
-        // TODO: 'as any' is not very nice, but SKGraphRenderingContext cannot be used here (two undefined members)
-        const ctx = context as any as SKGraphRenderingContext
+        const ctx = context as SKGraphModelRenderer
         ctx.renderingDefs = new Map
         return super.render(model, context)
     }
@@ -50,16 +49,17 @@ export class KNodeView implements IView {
     @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
     render(node: SKNode, context: RenderingContext): VNode {
-        const ctx = context as any as SKGraphRenderingContext
-        // reset this property, if the diagram is drawn a second time
-        node.areChildrenRendered = false
+        const ctx = context as SKGraphModelRenderer
+        // reset these properties, if the diagram is drawn a second time
+        node.areChildAreaChildrenRendered = false
+        node.areNonChildAreaChildrenRendered = false
 
-        let result = <g></g>
+        let result: VNode[] = []
 
         const isShadow = node.shadow
         let shadow = undefined
-        let nodes = <g></g>
-        let constraints = <g></g>
+        let interactiveNodes = undefined
+        let interactiveConstraints = undefined
 
         if (isShadow) {
             // Render shadow of the node
@@ -68,7 +68,7 @@ export class KNodeView implements IView {
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
-                nodes = renderInteractiveLayout(node as SKNode)
+                interactiveNodes = renderInteractiveLayout(node as SKNode)
             }
         }
 
@@ -81,7 +81,7 @@ export class KNodeView implements IView {
 
             if (this.rOptions.get(ShowConstraintOption.ID) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
-                constraints = renderConstraints(node)
+                interactiveConstraints = renderConstraints(node)
             }
 
             // Currently does not work, since it changes the order of teh nodes in the dom.
@@ -117,31 +117,39 @@ export class KNodeView implements IView {
                 (defs.children as (string | VNode)[]).push(value)
             })
 
-            return <g>
-                {result}
-                {nodes}
-                {defs}
-                {...children}
-            </g>
+            result.push(defs)
+            if (interactiveNodes) {
+                result.push(interactiveNodes)
+            }
+            result.push(...children)
+
+            return <g>{...result}</g>
         }
 
         // Add renderings that are not undefined
         if (shadow !== undefined) {
-            result = <g>{result}{shadow}</g>
+            result.push(shadow)
         }
         if (rendering !== undefined) {
-            result = <g>{result}{rendering}</g>
+            result.push(rendering)
         } else {
             return <g>
                 {ctx.renderChildren(node)}
             </g>
         }
-        result = <g>{result}{nodes}{constraints}</g>
-        // Default case. If the children are not already rendered within a KChildArea add the children by default.
-        if (!node.areChildrenRendered) {
-            result = <g>{result}{ctx.renderChildren(node)}</g>
+        if (interactiveNodes) {
+            result.push(interactiveNodes)
         }
-        return result
+        if (interactiveConstraints) {
+            result.push(interactiveConstraints)
+        }
+        // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
+        if (!node.areChildAreaChildrenRendered) {
+            result.push(...ctx.renderChildren(node))
+        } else if (!node.areNonChildAreaChildrenRendered) {
+            result.push(...ctx.renderNonChildAreaChildren(node))
+        }
+        return <g>{...result}</g>
     }
 }
 
@@ -154,23 +162,30 @@ export class KPortView implements IView {
 
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode {
-        port.areChildrenRendered = false
-        const rendering = getRendering(port.data, port, new KStyles, context as any, this.mListener)
+        const ctx = context as SKGraphModelRenderer
+        port.areChildAreaChildrenRendered = false
+        port.areNonChildAreaChildrenRendered = false
+        const rendering = getRendering(port.data, port, new KStyles, ctx, this.mListener)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
-                {context.renderChildren(port)}
+                {ctx.renderChildren(port)}
             </g>
         }
-        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
-        if (port.areChildrenRendered) {
+        // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
+        if (!port.areChildAreaChildrenRendered) {
             return <g>
                 {rendering}
+                {ctx.renderChildren(port)}
+            </g>
+        } else if (!port.areNonChildAreaChildrenRendered) {
+            return <g>
+                {rendering}
+                {ctx.renderNonChildAreaChildren(port)}
             </g>
         } else {
             return <g>
                 {rendering}
-                {context.renderChildren(port)}
             </g>
         }
     }
@@ -184,30 +199,37 @@ export class KLabelView implements IView {
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
 
     render(label: SKLabel, context: RenderingContext): VNode {
-        label.areChildrenRendered = false
+        const ctx = context as SKGraphModelRenderer
+        label.areChildAreaChildrenRendered = false
+        label.areNonChildAreaChildrenRendered = false
 
         // let parent = label.parent
         if (this.mListener.hasDragged) {
             // Nodes that are not on the same hierarchy are less visible.
             label.opacity = 0.1
         }
-        let rendering = getRendering(label.data, label, new KStyles, context as any, this.mListener)
+        let rendering = getRendering(label.data, label, new KStyles, ctx, this.mListener)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
-                {context.renderChildren(label)}
+                {ctx.renderChildren(label)}
             </g>
         }
-        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
-        if (label.areChildrenRendered) {
+        // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
+        if (!label.areChildAreaChildrenRendered) {
             return <g>
                 {rendering}
+                {ctx.renderChildren(label)}
+            </g>
+        } else if (!label.areNonChildAreaChildrenRendered) {
+            return <g>
+                {rendering}
+                {ctx.renderNonChildAreaChildren(label)}
             </g>
         } else {
             return <g>
                 {rendering}
-                {context.renderChildren(label)}
             </g>
         }
     }
@@ -222,7 +244,9 @@ export class KEdgeView implements IView {
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
 
     render(edge: SKEdge, context: RenderingContext): VNode {
-        edge.areChildrenRendered = false
+        const ctx = context as SKGraphModelRenderer
+        edge.areChildAreaChildrenRendered = false
+        edge.areNonChildAreaChildrenRendered = false
 
         // edge should be greyed out if the source or target is moved
         let s = edge.source
@@ -235,30 +259,36 @@ export class KEdgeView implements IView {
         if (!this.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {
             // edge should only be visible if it is in the same hierarchical level as
             // the moved node or no node is moved at all
-            rendering = getRendering(edge.data, edge, new KStyles, context as any, this.mListener)
+            rendering = getRendering(edge.data, edge, new KStyles, ctx, this.mListener)
         }
         edge.moved = false
 
         // Also get the renderings for all junction points
-        const junctionPointRenderings = getJunctionPointRenderings(edge, context as any, this.mListener)
+        const junctionPointRenderings = getJunctionPointRenderings(edge, ctx, this.mListener)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
-                {context.renderChildren(edge)}
+                {ctx.renderChildren(edge)}
                 {...junctionPointRenderings}
             </g>
         }
-        // Default cases. If the children are already rendered within a KChildArea, only return the rendering. Otherwise, add the children by default.
-        if (edge.areChildrenRendered) {
+        // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
+        if (!edge.areChildAreaChildrenRendered) {
             return <g>
                 {rendering}
+                {ctx.renderChildren(edge)}
+                {...junctionPointRenderings}
+            </g>
+        } else if (!edge.areNonChildAreaChildrenRendered) {
+            return <g>
+                {rendering}
+                {ctx.renderNonChildAreaChildren(edge)}
                 {...junctionPointRenderings}
             </g>
         } else {
             return <g>
                 {rendering}
-                {context.renderChildren(edge)}
                 {...junctionPointRenderings}
             </g>
         }
