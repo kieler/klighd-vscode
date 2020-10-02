@@ -14,14 +14,15 @@
 import { interactiveModule } from '@kieler/keith-interactive/lib/interactive-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
-    configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView,
-    LogLevel, modelSourceModule, overrideViewerOptions, PreRenderedElement, PreRenderedView, selectModule, SGraph, SGraphFactory,
-    TYPES, updateModule, viewportModule
+    configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
+    LogLevel, ModelRendererFactory, modelSourceModule, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
+    TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { KeithHoverMouseListener } from './hover/hover';
 import { RenderOptions } from './options';
-import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
+import { SKGraphModelRenderer } from './skgraph-model-renderer';
+import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
@@ -44,14 +45,20 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
         popupOpen: false,
         previousPopupElement: undefined
     }));
+    rebind<ModelRendererFactory>(TYPES.ModelRendererFactory).toFactory<SKGraphModelRenderer>(ctx => {
+        return (targetKind: RenderingTargetKind, processors: IVNodePostprocessor[]) => {
+            const viewRegistry = ctx.container.get<ViewRegistry>(TYPES.ViewRegistry);
+            return new SKGraphModelRenderer(viewRegistry, targetKind, processors);
+        };
+    });
     const context = { bind, unbind, isBound, rebind }
     configureModelElement(context, 'html', HtmlRoot, HtmlRootView)
     configureModelElement(context, 'pre-rendered', PreRenderedElement, PreRenderedView)
     configureModelElement(context, 'graph', SGraph, SKGraphView);
-    configureModelElement(context, 'node', SKNode, KNodeView)
-    configureModelElement(context, 'edge', SKEdge, KEdgeView)
-    configureModelElement(context, 'port', SKPort, KPortView)
-    configureModelElement(context, 'label', SKLabel, KLabelView)
+    configureModelElement(context, NODE_TYPE, SKNode, KNodeView)
+    configureModelElement(context, EDGE_TYPE, SKEdge, KEdgeView)
+    configureModelElement(context, PORT_TYPE, SKPort, KPortView)
+    configureModelElement(context, LABEL_TYPE, SKLabel, KLabelView)
     bind(RenderOptions).toSelf().inSingletonScope()
 })
 

@@ -3,18 +3,19 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019,2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { VNode } from 'snabbdom/vnode';
-import { Bounds, ModelRenderer, Point, toDegrees } from 'sprotty/lib';
+
+import { Bounds, Point, toDegrees } from 'sprotty/lib';
+import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Decoration, HorizontalAlignment, KColoring, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering,
-    KRenderingLibrary, KRotation, KText, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, SKNode, Underline, VerticalAlignment
+    KRotation, KText, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
 import { KStyles, ColorStyle } from './views-styles';
 
@@ -27,16 +28,6 @@ const K_BOTTOM_POSITION = 'KBottomPositionImpl'
 // ------------- constants for string building --------------- //
 const RGB_START = 'rgb('
 const RGB_END = ')'
-
-/**
- * Contains additional data needed for the rendering of SKGraphs.
- */
-export class SKGraphRenderingContext extends ModelRenderer {
-    boundsMap: any
-    decorationMap: any
-    kRenderingLibrary: KRenderingLibrary
-    renderingDefs: Map<string, VNode>
-}
 
 /**
  * Translates a KLineCap into the text needed for the SVG 'stroke-linecap' attribute.
@@ -315,7 +306,7 @@ export function camelToKebab(string: string): string {
  * @param isEdge If the rendering is for an edge.
  */
 export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | undefined, parent: SKGraphElement,
-    context: SKGraphRenderingContext, isEdge?: boolean): BoundsAndTransformation | undefined {
+    context: SKGraphModelRenderer, isEdge?: boolean): BoundsAndTransformation | undefined {
     let bounds
     let decoration
 
@@ -389,7 +380,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
  * @param context The rendering context used to render this element.
  * @param lines The number of lines the text rendering spans across.
  */
-export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement, context: SKGraphRenderingContext, lines: number) {
+export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement, context: SKGraphModelRenderer, lines: number) {
     let bounds: {
         x: number | undefined,
         y: number | undefined,

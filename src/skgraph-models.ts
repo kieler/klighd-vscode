@@ -24,6 +24,11 @@ export interface SKGraphElement extends KGraphElement {
     tooltip?: string
 }
 
+export const NODE_TYPE = 'node'
+export const EDGE_TYPE = 'edge'
+export const PORT_TYPE = 'port'
+export const LABEL_TYPE = 'label'
+
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
@@ -43,7 +48,8 @@ export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     tooltip?: string
-    areChildrenRendered = false
+    areChildAreaChildrenRendered = false
+    areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
@@ -56,7 +62,8 @@ export class SKLabel extends SLabel implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     tooltip?: string
-    areChildrenRendered = false
+    areChildAreaChildrenRendered = false
+    areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
         // The boundsFeature here is additionally needed because bounds of labels need to be
         // estimated during the estimateTextBounds action.
