@@ -258,31 +258,19 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
 
             const valuedOptions: ValuedSynthesisOption[] = result.valuedSynthesisOptions
             const synthesisOptions: SynthesisOption[] = []
-            const predefinedOptions: SynthesisOption[] = []
 
             // Set up the current value of all options.
             if (valuedOptions) {
                 valuedOptions.forEach(valuedOption => {
                     const option = valuedOption.synthesisOption
-                    // Get option values from local storage.
-                    const localStorageString = window.localStorage.getItem(option.id)
-                    if (localStorageString !== null) {
-                        const localStorageValue: SynthesisOption = JSON.parse(localStorageString)
-                        option.currentValue = localStorageValue.currentValue
-                        predefinedOptions.push(option)
+                    if (valuedOption.currentValue === undefined) {
+                        option.currentValue = option.initialValue
                     } else {
-                        if (valuedOption.currentValue === undefined) {
-                            option.currentValue = option.initialValue
-                        } else {
-                            option.currentValue = valuedOption.currentValue
-                        }
+                        option.currentValue = valuedOption.currentValue
                     }
                     synthesisOptions.push(option)
                 })
             }
-
-            // Send predefined options to server.
-            await lClient.sendNotification(SET_SYNTHESIS_OPTIONS, { uri: this.editorWidget.editor.uri.toString(), synthesisOptions: predefinedOptions })
 
             // Register commands in the command palette.
             this.registeredCommands.forEach(command => {

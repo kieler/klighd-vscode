@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018,2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -40,3 +40,23 @@ export const diagramOptionsWidgetId = 'diagramoptions-view'
  * Sprotty action message id.
  */
 export const SPROTTY_ACTION = 'diagram/accept'
+
+/**
+ * The key under which the local diagram options are stored under in the local storage.
+ */
+export const OPTION_KEY = 'keith-diagram-options:local-options'
+
+/**
+ * The key below {@link OPTION_KEY} under that the synthesis options are stored.
+ */
+export const SYNTHESIS_OPTION = 'synthesis'
+
+/**
+ * The key below {@link OPTION_KEY} under that the layout options are stored.
+ */
+export const LAYOUT_OPTION = 'layout'
+
+/**
+ * The key below {@link OPTION_KEY} under that the render options are stored.
+ */
+export const RENDER_OPTION = 'render'

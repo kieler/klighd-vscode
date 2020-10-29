@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@kieler/keith-diagram": "0.1.0",
+    "@kieler/keith-language": "0.1.0",
     "@kieler/keith-sprotty": "0.1.0"
   },
   "files": [

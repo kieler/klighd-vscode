@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018,2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,13 +11,15 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { InitializationService } from '@kieler/keith-language/lib/browser/initialization-service';
 import { bindViewContribution, FrontendApplicationContribution, WidgetFactory } from "@theia/core/lib/browser";
 import { ContainerModule, interfaces } from "inversify";
+import '../../src/browser/style/index.css';
+import { diagramOptionsWidgetId } from "../common";
 import { DiagramOptionsViewContribution } from "./diagramoptions-view-contribution";
 import { DiagramOptionsViewWidget } from "./diagramoptions-view-widget";
-import { diagramOptionsWidgetId } from "../common";
-import './keith-diagramoptions-icons'
-import '../../src/browser/style/index.css'
+import './keith-diagramoptions-icons';
+import { OptionsInitialization } from './options-initialization';
 
 /**
  * Dependency injection container for the KEITH diagram options functionality.
@@ -31,4 +33,5 @@ export default new ContainerModule((bind: interfaces.Bind) => {
         createWidget: () => ctx.container.get(DiagramOptionsViewWidget)
     }))
     bind(DiagramOptionsViewWidget).toSelf()
+    bind(InitializationService).to(OptionsInitialization)
 })

@@ -20,7 +20,7 @@ import { injectable } from 'inversify';
 import * as React from 'react';
 import { isNullOrUndefined } from 'util';
 import '../../src/browser/style/index.css';
-import { diagramOptionsWidgetId } from '../common';
+import { diagramOptionsWidgetId, LAYOUT_OPTION, OPTION_KEY, RENDER_OPTION, SYNTHESIS_OPTION } from '../common';
 import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, RangeOption, SynthesisOption, Type } from '../common/option-models';
 
 /**
@@ -217,7 +217,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onCheckROption = (event: React.MouseEvent<HTMLInputElement>, option: RenderOption): void => {
         option.currentValue = event.currentTarget.checked
-        window.localStorage.setItem(option.id, JSON.stringify(option))
+        this.storeOption(option.id, option.currentValue, RENDER_OPTION)
         this.sendNewRenderOption(option)
     }
 
@@ -321,7 +321,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onCheck = (event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption): void => {
         option.currentValue = event.currentTarget.checked
-        window.localStorage.setItem(option.id, JSON.stringify(option))
+        this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
         this.sendNewSynthesisOption(option)
     }
 
@@ -365,7 +365,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onChoice(value: any, option: SynthesisOption) {
         option.currentValue = value
-        window.localStorage.setItem(option.id, JSON.stringify(option))
+        this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
         this.sendNewSynthesisOption(option)
     }
 
@@ -397,7 +397,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onRange(event: React.ChangeEvent<HTMLInputElement>, option: SynthesisOption) {
         option.currentValue = event.currentTarget.value
-        window.localStorage.setItem(option.id, JSON.stringify(option))
+        this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
         this.update()
         this.sendNewSynthesisOption(option)
     }
@@ -427,6 +427,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      */
     private onText(event: React.ChangeEvent<HTMLInputElement>, option: SynthesisOption) {
         option.currentValue = event.currentTarget.value
+        this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
         this.update()
         this.sendNewSynthesisOption(option)
     }
@@ -472,7 +473,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         }
         // This is called before the target opened or closed, so the inverted current open value is the correct value to use here.
         option.currentValue = !clickedDetailsElement.open
-        window.localStorage.setItem(option.id, JSON.stringify(option))
+        this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
     }
 
     /**
@@ -621,11 +622,34 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     }
 
     /**
+     * Stores the option in the local storage.
+     *
+     * @param option The option to store.
+     */
+    private storeOption(optionId: string, optionValue: any, type: string): void {
+        // Read the option element from local storage.
+        const optionsString = window.localStorage.getItem(OPTION_KEY)
+        let options: any = {}
+        if (optionsString !== null) {
+            options = JSON.parse(optionsString)
+        }
+
+        if (options[type] === undefined) {
+            options[type] = {}
+        }
+
+        // Put the new option in the option element and put it back into local storage.
+        options[type][optionId] = optionValue
+        window.localStorage.setItem(OPTION_KEY, JSON.stringify(options))
+    }
+
+    /**
      * Called whenever a layout option has been clicked with a new value. Updates the option that belongs to this event.
      * @param optionId The identifier of the layout option connected to this event.
      * @param value The value that is clicked.
      */
     private onLayoutOption(optionId: string, value: any) {
+        this.storeOption(optionId, value, LAYOUT_OPTION)
         this.sendNewLayoutOption(optionId, value)
     }
 
