@@ -350,7 +350,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                     type='radio'
                     id={value}
                     name={option.name}
-                    defaultChecked={option.currentValue === undefined ? value === option.currentValue : value === option.initialValue}
+                    defaultChecked={option.currentValue === undefined ? value === option.initialValue : value === option.currentValue}
                     onClick={e => this.onChoice(value, option)}
                 />
                 {value}
