@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2019 by
+ * Copyright 2018-2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,8 +18,8 @@ import {
 } from '@kieler/keith-interactive/lib/layered/actions';
 import { RectPackDeletePositionConstraintAction, RectPackSetPositionConstraintAction, SetAspectRatioAction } from '@kieler/keith-interactive/lib/rect-packing/actions';
 import {
-    CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, PerformActionAction, RefreshLayoutAction, RequestTextBoundsCommand,
-    SetSynthesesAction, SetSynthesisAction, StoreImagesAction, KeithUpdateModelAction, Pair
+    CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, KeithUpdateModelAction, Pair, PerformActionAction, RefreshLayoutAction, RequestTextBoundsCommand,
+    SetSynthesesAction, SetSynthesisAction, StoreImagesAction
 } from '@kieler/keith-sprotty/lib/actions/actions';
 import { RequestKeithPopupModelAction } from '@kieler/keith-sprotty/lib/hover/hover';
 import { injectable } from 'inversify';
@@ -39,13 +39,17 @@ export const KeithDiagramServerProvider = Symbol('KeithDiagramServerProvider');
 
 export type KeithDiagramServerProvider = () => Promise<KeithDiagramServer>;
 
-
+// TODO: these really should be instance properties, not global constants.
 export const onDisplayInputModelEmitter = new Emitter<Action | undefined>()
 export const displayInputModel: Event<Action | undefined> = onDisplayInputModelEmitter.event
 export const startSimulationEmitter = new Emitter<Action | undefined>()
 export const startSimulation: Event<Action | undefined> = startSimulationEmitter.event
 export const addCoSimulationEmitter = new Emitter<Action | undefined>()
 export const addCoSimulation: Event<Action | undefined> = addCoSimulationEmitter.event
+
+export const updateOptionsKind = 'updateOptions'
+export const onUpdateOptionsEmitter = new Emitter<Action | undefined>()
+export const updateOptions: Event<Action | undefined> = onUpdateOptionsEmitter.event
 
 
 /**
@@ -108,6 +112,8 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
             this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === StoreImagesAction.KIND) {
             this.handleStoreImages(action as StoreImagesAction)
+        } else if (action.kind === updateOptionsKind) {
+            onUpdateOptionsEmitter.fire(action)
         } else if (action.kind === RequestKeithPopupModelAction.KIND && action instanceof RequestKeithPopupModelAction) {
             this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction)
         } else if (action.kind === RequestPopupModelAction.KIND
@@ -203,6 +209,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
         registry.register(SetSynthesisAction.KIND, this)
         registry.register(StoreImagesAction.KIND, this)
         registry.register(SwitchEditModeAction.KIND, this)
+        registry.register(updateOptionsKind, this)
     }
 
     handleComputedBounds(_action: ComputedBoundsAction): boolean {

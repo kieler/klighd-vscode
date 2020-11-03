@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018 by
+ * Copyright 2018,2020 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -184,14 +184,14 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * Renders a check SynthesisOption as an HTML checkbox.
      * @param option The check option to render.
      */
-    private renderCheckOption(option: SynthesisOption, onClick: any): JSX.Element {
+    private renderCheckOption(option: SynthesisOption, onChange: any): JSX.Element {
         const currentValue = option.currentValue
         let inputAttrs = {
             type: 'checkbox',
             id: option.name,
             name: option.name,
-            defaultChecked: currentValue,
-            onClick: (e: React.MouseEvent<HTMLInputElement>) => onClick(e, option)
+            checked: currentValue,
+            onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(option)
         }
 
         return <div key={option.id} className='diagram-option'>
@@ -215,10 +215,11 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param event The mouseEvent that clicked the checkbox.
      * @param option The render option connected to the clicked checkbox.
      */
-    private onCheckROption = (event: React.MouseEvent<HTMLInputElement>, option: RenderOption): void => {
-        option.currentValue = event.currentTarget.checked
+    private onCheckROption = (option: RenderOption): void => {
+        option.currentValue = !option.currentValue
         this.storeOption(option.id, option.currentValue, RENDER_OPTION)
         this.sendNewRenderOption(option)
+        this.update()
     }
 
     /**
@@ -319,10 +320,13 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param event The mouseEvent that clicked the checkbox.
      * @param option The synthesis option connected to the clicked checkbox.
      */
-    private onCheck = (event: React.MouseEvent<HTMLInputElement>, option: SynthesisOption): void => {
-        option.currentValue = event.currentTarget.checked
+    private onCheck = (option: SynthesisOption): void => {
+        // The current value of the option is the state of check options, even when rendered. So changing the option's current
+        // value and synchronizing that with the server toggles the option here.
+        option.currentValue = !option.currentValue
         this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
         this.sendNewSynthesisOption(option)
+        this.update()
     }
 
     /**
@@ -350,8 +354,8 @@ export class DiagramOptionsViewWidget extends ReactWidget {
                     type='radio'
                     id={value}
                     name={option.name}
-                    defaultChecked={option.currentValue === undefined ? value === option.initialValue : value === option.currentValue}
-                    onClick={e => this.onChoice(value, option)}
+                    checked={option.currentValue === undefined ? value === option.initialValue : value === option.currentValue}
+                    onChange={e => this.onChoice(e, option)}
                 />
                 {value}
             </label>
@@ -359,14 +363,16 @@ export class DiagramOptionsViewWidget extends ReactWidget {
     }
 
     /**
-     * Called whenever a choice radio button has been clicked. Updates the option that belongs to this button.
-     * @param value The value that is clicked.
+     * Called whenever a choice radio button has been updated. Updates the option that belongs to this button.
+     * @param event The event causing the update.
      * @param option The synthesis option connected to the clicked radio button.
      */
-    private onChoice(value: any, option: SynthesisOption) {
-        option.currentValue = value
-        this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
+    private onChoice(event: React.ChangeEvent<HTMLInputElement>, option: SynthesisOption): void {
+        const newValue = event.target.id
+        option.currentValue = newValue
+        this.storeOption(option.id, newValue, SYNTHESIS_OPTION)
         this.sendNewSynthesisOption(option)
+        this.update()
     }
 
     /**
