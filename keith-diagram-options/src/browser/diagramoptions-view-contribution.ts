@@ -11,7 +11,9 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { UpdateDiagramOptionsAction } from '@kieler/keith-diagram-options/src/common/actions';
 import { KeithDiagramManager } from '@kieler/keith-diagram/lib/browser/keith-diagram-manager';
+import { updateOptions } from '@kieler/keith-diagram/lib/browser/keith-diagram-server';
 import { KeithDiagramWidget } from '@kieler/keith-diagram/lib/browser/keith-diagram-widget';
 import { RefreshDiagramAction } from '@kieler/keith-interactive/lib/actions';
 import { KeithLanguageClientContribution } from '@kieler/keith-language/lib/browser/keith-language-client-contribution';
@@ -20,11 +22,9 @@ import { Command, CommandHandler, CommandRegistry } from '@theia/core';
 import { DidCreateWidgetEvent, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { FrontendApplication, FrontendApplicationContribution } from '@theia/core/lib/browser/frontend-application';
 import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
-import URI from '@theia/core/lib/common/uri';
-import { EditorManager, EditorWidget } from '@theia/editor/lib/browser';
 import { inject, injectable } from 'inversify';
-import { GET_OPTIONS, PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId, SPROTTY_ACTION } from '../common';
-import { GetOptionsResult, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from '../common/option-models';
+import { PERFORM_ACTION, SET_LAYOUT_OPTIONS, SET_SYNTHESIS_OPTIONS, diagramOptionsWidgetId, SPROTTY_ACTION } from '../common';
+import { LayoutOptionValue, SynthesisOption } from '../common/option-models';
 import { DiagramOptionsViewWidget } from './diagramoptions-view-widget';
 
 /**
@@ -37,7 +37,12 @@ export const OPEN_DIAGRAM_OPTIONS_WIDGET_KEYBINDING = 'ctrlcmd+shift+h'
  */
 @injectable()
 export class DiagramOptionsViewContribution extends AbstractViewContribution<DiagramOptionsViewWidget> implements FrontendApplicationContribution {
-    editorWidget: EditorWidget
+
+    /**
+     * The URI of the model this diagram options view is currently synchronized with.
+     */
+    modelUri: string
+
     diagramOptionsViewWidget: DiagramOptionsViewWidget
 
     /**
@@ -51,7 +56,6 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
     protected registeredCommands: Command[]
 
     constructor(
-        @inject(EditorManager) protected readonly editorManager: EditorManager,
         @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
         @inject(KeithLanguageClientContribution) protected readonly client: KeithLanguageClientContribution,
         @inject(KeithDiagramManager) protected readonly diagramManager: KeithDiagramManager,
@@ -71,12 +75,6 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         this.registeredCommands = []
 
         // Set up event listeners.
-        editorManager.onCurrentEditorChanged(this.currentEditorChanged.bind(this))
-        if (editorManager.activeEditor) {
-            // if there is already an active editor, use that to initialize
-            this.editorWidget = editorManager.activeEditor
-            this.currentEditorChanged(this.editorWidget)
-        }
         widgetManager.onDidCreateWidget(this.onDidCreateWidget.bind(this))
 
         // Create and initialize a new widget.
@@ -104,9 +102,8 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             this.diagramOptionsViewWidget.onSendNewSynthesisOption(this.sendNewSynthesisOption.bind(this))
             this.diagramOptionsViewWidget.onSendNewLayoutOption(this.sendNewLayoutOption.bind(this))
             this.diagramOptionsViewWidget.onSendNewAction(this.sendNewAction.bind(this))
-            this.diagramOptionsViewWidget.onActivateRequest(this.updateContent.bind(this))
-            this.diagramOptionsViewWidget.onGetOptions(this.updateContent.bind(this))
             this.diagramOptionsViewWidget.onSendNewRenderOption(this.sendNewRenderOption.bind(this))
+            updateOptions(this.updateOptionsAction.bind(this))
         }
     }
 
@@ -153,7 +150,7 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
      */
     async sendNewNotificationMessage(messageType: string, param: any): Promise<void> {
         const lClient = await this.client.languageClient
-        await lClient.sendNotification(messageType, { uri: this.editorWidget.editor.uri.toString(), ...param })
+        await lClient.sendNotification(messageType, { uri: this.modelUri, ...param })
     }
 
     onDidCreateWidget(e: DidCreateWidgetEvent): void {
@@ -180,7 +177,6 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
                         this.diagramOptionsViewWidget.setRenderOptions(localRenderOptions)
                     }
                 }
-                (e.widget as KeithDiagramWidget).onModelUpdated(this.onModelUpdated.bind(this))
                 e.widget.disposed.connect(() => {
                     this.onDiagramWidgetsClosed()
                 })
@@ -191,24 +187,6 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
             if (this.rOptions) {
                 (e.widget as DiagramOptionsViewWidget).setRenderOptions(this.rOptions.getRenderOptions())
             }
-            this.updateContent()
-        }
-    }
-
-    /**
-     * Called whenever a new model is being displayed by the diagram view. Updates the visible options according to the new model.
-     * @param uri The URI the model was created from.
-     */
-    async onModelUpdated(uri: string): Promise<void> {
-        // If no editor widget was activated before, try to find an open editor widget matching the given uri
-        if (!this.editorWidget) {
-            const editorForUri = await this.editorManager.getByUri(new URI(uri))
-            if (editorForUri !== undefined) {
-                this.editorWidget = editorForUri
-            }
-        }
-        if (this.diagramOptionsViewWidget && !this.diagramOptionsViewWidget.isDisposed) {
-            this.updateContent()
         }
     }
 
@@ -223,78 +201,51 @@ export class DiagramOptionsViewContribution extends AbstractViewContribution<Dia
         this.diagramOptionsViewWidget.update()
     }
 
-    /**
-     * Called whenever the currently active editor changes.
-     * @param eWidget The editor widget that changed.
-     */
-    currentEditorChanged(eWidget: EditorWidget | undefined): void {
-        // Remember the currently active widget.
-        if (eWidget) {
-            this.editorWidget = eWidget
-        }
-        // If the view is not initialized yet, do that now.
-        if (!this.diagramOptionsViewWidget || this.diagramOptionsViewWidget.isDisposed) {
-            const widgetPromise = this.widgetManager.getWidget(diagramOptionsWidgetId)
-            widgetPromise.then(widget => {
-                this.initializeDiagramOptionsViewWidget(widget)
+    async updateOptionsAction(action: UpdateDiagramOptionsAction): Promise<void> {
+        const valuedSynthesisOptions = action.valuedSynthesisOptions
+        const layoutOptions = action.layoutOptions
+        const actions = action.actions
+        const modelUri = action.modelUri
+        this.modelUri = modelUri
+
+        const synthesisOptions: SynthesisOption[] = []
+
+        // Set up the current value of all options.
+        if (valuedSynthesisOptions) {
+            valuedSynthesisOptions.forEach(valuedOption => {
+                const option = valuedOption.synthesisOption
+                if (valuedOption.currentValue === undefined) {
+                    option.currentValue = option.initialValue
+                } else {
+                    option.currentValue = valuedOption.currentValue
+                }
+                synthesisOptions.push(option)
             })
         }
-    }
 
-    /**
-     * Updates the content of the diagram options widget. Sends a request to the server to get the options of the currently opened model and display them in the widget.
-     */
-    async updateContent(): Promise<void> {
-        if (this.editorWidget) {
-            // Get the options from the server.
-            const lClient = await this.client.languageClient
-            const param = {
-                uri: this.editorWidget.editor.uri.toString()
-            }
-            const result: GetOptionsResult = await lClient.sendRequest(GET_OPTIONS, param) as GetOptionsResult
-            if (!result) {
-                return
-            }
-
-            const valuedOptions: ValuedSynthesisOption[] = result.valuedSynthesisOptions
-            const synthesisOptions: SynthesisOption[] = []
-
-            // Set up the current value of all options.
-            if (valuedOptions) {
-                valuedOptions.forEach(valuedOption => {
-                    const option = valuedOption.synthesisOption
-                    if (valuedOption.currentValue === undefined) {
-                        option.currentValue = option.initialValue
-                    } else {
-                        option.currentValue = valuedOption.currentValue
+        // Register commands in the command palette.
+        this.registeredCommands.forEach(command => {
+            this.commandRegistry.unregisterCommand(command)
+        });
+        this.registeredCommands = []
+        if (actions) {
+            actions.forEach( action => {
+                const command: Command = {id: "Diagram: " + action.actionId, label: "Diagram: " + action.displayedName}
+                this.registeredCommands.push(command)
+                const handler: CommandHandler = {
+                    execute: () => {
+                        this.sendNewAction(action.actionId);
                     }
-                    synthesisOptions.push(option)
-                })
-            }
-
-            // Register commands in the command palette.
-            this.registeredCommands.forEach(command => {
-                this.commandRegistry.unregisterCommand(command)
-            });
-            this.registeredCommands = []
-            if (result.actions) {
-                result.actions.forEach( action => {
-                    const command: Command = {id: "Diagram: " + action.actionId, label: "Diagram: " + action.displayedName}
-                    this.registeredCommands.push(command)
-                    const handler: CommandHandler = {
-                        execute: () => {
-                            this.sendNewAction(action.actionId);
-                        }
-                    }
-                    this.commandRegistry.registerCommand(command, handler)
-                })
-            }
-
-            // Update the widget.
-            this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
-            this.diagramOptionsViewWidget.setLayoutOptions(result.layoutOptions)
-            this.diagramOptionsViewWidget.setActions(result.actions)
-            this.diagramOptionsViewWidget.update()
+                }
+                this.commandRegistry.registerCommand(command, handler)
+            })
         }
+
+        // Update the widget.
+        this.diagramOptionsViewWidget.setSynthesisOptions(synthesisOptions)
+        this.diagramOptionsViewWidget.setLayoutOptions(layoutOptions)
+        this.diagramOptionsViewWidget.setActions(actions)
+        this.diagramOptionsViewWidget.update()
     }
+
 }
