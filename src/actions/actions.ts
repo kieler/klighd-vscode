@@ -53,22 +53,24 @@ export interface Pair<K, V> {
  * Sent from the server to the client to check if the {@link KImage}s provided in the message are cached or if they need
  * to be sent to the client again.
  */
-export class CheckImagesAction implements Action { // TODO: change to Request/Response actions.
+export class CheckImagesAction implements RequestAction<CheckedImagesAction> {
     static readonly KIND: string = 'checkImages'
     readonly kind = CheckImagesAction.KIND
 
-    constructor(public readonly images: KImage[]) {
+    constructor(public readonly images: KImage[],
+        public readonly requestId: string = '') {
     }
 }
 
 /**
  * Sent from the client to the server to inform it whether images need to be sent to the client before accepting the next diagram.
  */
-export class CheckedImagesAction implements Action {
+export class CheckedImagesAction implements ResponseAction {
     static readonly KIND: string = 'checkedImages'
     readonly kind = CheckedImagesAction.KIND
 
-    constructor(public readonly notCached: Pair<string, string>[]) {
+    constructor(public readonly notCached: Pair<string, string>[],
+        public readonly responseId = '') {
     }
 }
 
