@@ -215,10 +215,11 @@ export class DiagramOptionsViewWidget extends ReactWidget {
      * @param event The mouseEvent that clicked the checkbox.
      * @param option The render option connected to the clicked checkbox.
      */
-    private onCheckROption = (event: React.MouseEvent<HTMLInputElement>, option: RenderOption): void => {
-        option.currentValue = event.currentTarget.checked
+    private onCheckROption = (option: RenderOption): void => {
+        option.currentValue = !option.currentValue
         this.storeOption(option.id, option.currentValue, RENDER_OPTION)
         this.sendNewRenderOption(option)
+        this.update()
     }
 
     /**
@@ -325,6 +326,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         option.currentValue = !option.currentValue
         this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
         this.sendNewSynthesisOption(option)
+        this.update()
     }
 
     /**
@@ -370,6 +372,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         option.currentValue = newValue
         this.storeOption(option.id, newValue, SYNTHESIS_OPTION)
         this.sendNewSynthesisOption(option)
+        this.update()
     }
 
     /**
@@ -477,6 +480,7 @@ export class DiagramOptionsViewWidget extends ReactWidget {
         // This is called before the target opened or closed, so the inverted current open value is the correct value to use here.
         option.currentValue = !clickedDetailsElement.open
         this.storeOption(option.id, option.currentValue, SYNTHESIS_OPTION)
+        this.sendNewSynthesisOption(option)
     }
 
     /**
