@@ -18,12 +18,14 @@ import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from '@kieler/keith-interactive/lib/interactive-view';
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
-import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
 import { RenderOptions, ShowConstraintOption } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
+import { DepthMap } from './depth-map';
+import { RenderingOptions } from './rendering-options';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -50,6 +52,21 @@ export class KNodeView implements IView {
 
     render(node: SKNode, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
+        const viewport = findParentByFeature(node, isViewport)
+        if (viewport) {
+            ctx.viewport = viewport
+        }
+        ctx.renderingOptions = RenderingOptions.getInstance()
+        // Add depthMap to context for rendering, when required.
+        if (ctx.renderingOptions.useSmartZoom) {
+            ctx.depthMap = DepthMap.getInstance(node.root)
+            if (viewport && ctx.depthMap && ctx.renderingOptions.useSmartZoom) {
+                ctx.depthMap.expandCollapse(viewport)
+            }
+            if (ctx.renderingDefs.size == 0) {
+                ctx.depthMap.isCompleteRendering = true
+            }
+        }
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -163,6 +180,14 @@ export class KPortView implements IView {
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
+        const viewport = findParentByFeature(port.root, isViewport)
+        if (viewport) {
+            ctx.viewport = viewport
+        }
+        ctx.renderingOptions = RenderingOptions.getInstance()
+        if (ctx.renderingOptions.useSmartZoom) {
+            ctx.depthMap = DepthMap.getInstance(port.root)
+        }
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
         const rendering = getRendering(port.data, port, new KStyles, ctx, this.mListener)
@@ -200,6 +225,14 @@ export class KLabelView implements IView {
 
     render(label: SKLabel, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
+        const viewport = findParentByFeature(label.root, isViewport)
+        if (viewport) {
+            ctx.viewport = viewport
+        }
+        ctx.renderingOptions = RenderingOptions.getInstance()
+        if (ctx.renderingOptions.useSmartZoom) {
+            ctx.depthMap = DepthMap.getInstance(label.root)
+        }
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -245,6 +278,14 @@ export class KEdgeView implements IView {
 
     render(edge: SKEdge, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
+        const viewport = findParentByFeature(edge.root, isViewport)
+        if (viewport) {
+            ctx.viewport = viewport
+        }
+        ctx.renderingOptions = RenderingOptions.getInstance()
+        if (ctx.renderingOptions.useSmartZoom) {
+            ctx.depthMap = DepthMap.getInstance(edge.root)
+        }
         edge.areChildAreaChildrenRendered = false
         edge.areNonChildAreaChildrenRendered = false
 

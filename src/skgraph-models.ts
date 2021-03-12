@@ -12,6 +12,7 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/keith-interactive/lib/constraint-classes';
+import { Position } from '@theia/plugin-ext/lib/plugin/types-impl';
 import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty/lib';
 
 /**
@@ -246,6 +247,11 @@ export interface KText extends KRendering {
      * The server pre-calculated line heights for each individual line.
      */
     calculatedTextLineHeights?: number[]
+
+    /**
+     * Whether the server pre-determined this KText to be the title of a node or not. 
+     */
+    isNodeTitle: boolean
 }
 
 /**

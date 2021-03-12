@@ -1,4 +1,5 @@
 import { injectable } from "inversify";
+import { RangeOption, Range } from '@kieler/keith-diagram-options/lib/common/option-models'
 
 export interface RenderOption {
     id: string
@@ -7,6 +8,7 @@ export interface RenderOption {
     initialValue: any
     currentValue: any
 }
+
 /**
  * The different types a SynthesisOption can have.
  */
@@ -29,13 +31,115 @@ export class ShowConstraintOption implements RenderOption {
     currentValue: boolean = false
 }
 
+export class UseSmartZoom implements RenderOption {
+    static readonly ID: string = 'use-smart-zoom'
+    static readonly NAME: string = 'Smart Zoom'
+    readonly id: string = UseSmartZoom.ID
+    readonly name: string = UseSmartZoom.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = true;
+    currentValue: boolean = true
+}
+
+export class SetTitleScalingFactor implements RangeOption {
+    static readonly ID: string = 'set-title-scaling-factor'
+    static readonly NAME: string = 'Set Title Scaling Factor'
+    readonly id: string = SetTitleScalingFactor.ID
+    readonly name: string = SetTitleScalingFactor.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range: Range = {
+        first: 0.5,
+        second: 3
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = 1
+    currentValue: number = 1
+}
+
+export class UseConstantLineWidth implements RenderOption {
+    static readonly ID: string = 'use-constant-line-width'
+    static readonly NAME: string = 'Constant Line Width'
+    readonly id: string = UseConstantLineWidth.ID
+    readonly name: string = UseConstantLineWidth.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = true;
+    currentValue: boolean = true
+}
+
+export class SetConstantLineWidth implements RangeOption {
+    static readonly ID: string = 'set-constant-line-width'
+    static readonly NAME: string = 'Set Constant Line Width'
+    readonly id: string = SetConstantLineWidth.ID
+    readonly name: string = SetConstantLineWidth.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range: Range = {
+        first: 0.1,
+        second: 3
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = 0.5
+    currentValue: number = 0.5
+}
+
+export class SimplifySmallText implements RenderOption {
+    static readonly ID: string = 'simplify-small-text'
+    static readonly NAME: string = 'Simplify Small Text'
+    readonly id: string = SimplifySmallText.ID
+    readonly name: string = SimplifySmallText.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = true;
+    currentValue: boolean = true
+}
+
+export class SetTextSimplificationThreshold implements RangeOption {
+    static readonly ID: string = 'set-text-simplification-threshold'
+    static readonly NAME: string = 'Set Text Simplification Threshold'
+    readonly id: string = SetTextSimplificationThreshold.ID
+    readonly name: string = SetTextSimplificationThreshold.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range: Range = {
+        first: 1,
+        second: 10
+    }
+    readonly stepSize = 0.1
+    readonly initialValue: number = 3
+    currentValue: number = 3
+}
+
+export class SetExpandCollapseThreshold implements RangeOption {
+    static readonly ID: string = 'set-expand-collapse-threshold'
+    static readonly NAME: string = 'Set Expand Collapse Threshold'
+    readonly id: string = SetExpandCollapseThreshold.ID
+    readonly name: string = SetExpandCollapseThreshold.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range: Range = {
+        first: 0.01,
+        second: 1
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = 0.2
+    currentValue: number = 0.2
+}
 
 @injectable()
 export class RenderOptions {
     renderOptions: RenderOption[]
 
     constructor() {
-        this.renderOptions = [new ShowConstraintOption()]
+        this.renderOptions = [
+            new ShowConstraintOption(),
+            new UseConstantLineWidth(),
+            new SetConstantLineWidth(),
+            new SimplifySmallText(),
+            new SetTextSimplificationThreshold(),
+            new UseSmartZoom(),
+            new SetTitleScalingFactor(),
+            new SetExpandCollapseThreshold()
+        ]
     }
 
     public getRenderOptions(): RenderOption[] {

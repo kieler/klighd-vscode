@@ -13,7 +13,7 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { isSelectable } from 'sprotty';
+import { getZoom, isSelectable } from 'sprotty';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
@@ -624,8 +624,18 @@ export function isInvisible(styles: KStyles): boolean {
  * 'stroke-miterlimit' has to be set to the miterLimit style. (This is not a string, but a number.)
  * @param styles The KStyles of the rendering.
  */
-export function getSvgLineStyles(styles: KStyles): LineStyles {
-    const lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+export function getSvgLineStyles(styles: KStyles, target:SKGraphElement, context: SKGraphModelRenderer): LineStyles {
+    var lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+    if(context.renderingOptions.useConstantLineWidth) {
+        const scaling = context.renderingOptions.constantLineWidth ? context.renderingOptions.constantLineWidth : 1
+        lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH * scaling / getZoom(target)
+                                                    : styles.kLineWidth.lineWidth * scaling / getZoom(target)
+        if(styles.kLineWidth.lineWidth == 0) {
+            lineWidth = 0
+        } else if(lineWidth < 1) {
+            lineWidth = 1
+        }
+    }
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)
     const lineJoin = styles.kLineJoin === undefined ? undefined : lineJoinText(styles.kLineJoin)
     const miterLimit = styles.kLineJoin.miterLimit === undefined ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit

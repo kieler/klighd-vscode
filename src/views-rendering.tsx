@@ -26,6 +26,7 @@ import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, g
 import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
+import { KNode } from '@kieler/keith-interactive/lib/constraint-classes';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -75,6 +76,36 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
  */
 export function renderRectangularShape(rendering: KContainerRendering, parent: SKGraphElement, propagatedStyles: KStyles,
         context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode {
+
+    // Use position of rendering svg in browser to determine actual position of regions and child areas.
+    // Determines whether or not this rectangular shape has a region inside.
+    let rectRegion = context.depthMap.getRegion((parent as KNode).id)
+    if (rectRegion && !rectRegion.absoluteBounds && context.depthMap.isCompleteRendering) {
+        // Find corresponding svg of rendering and the diagram
+        const svgElement = document.getElementById(rendering.renderingId);
+        const diagram = document.getElementById("keith-diagram_sprotty")
+        if (svgElement && diagram) {
+            // Get bounds of rendering and diagram to get bounds independent of diagram position in browser.
+            const boundsDOM = svgElement.getBoundingClientRect()
+            const boundsDiagram = diagram.getBoundingClientRect()
+            // Rescale using zoom and translate with viewport position.
+            // This introduces some positional error.
+            let errorX = Math.abs(rectRegion.boundingRectangle.bounds.width - boundsDOM.width / context.viewport.zoom) / context.viewport.zoom
+            let errorY = Math.abs(rectRegion.boundingRectangle.bounds.height - boundsDOM.height / context.viewport.zoom) / context.viewport.zoom
+            const error = Math.max(errorX, errorY)
+            // Only save positions, when error is below threshold.
+            if (error < context.depthMap.absoluteVisibilityBuffer) {    
+                const bounds = {
+                    x: (boundsDOM.x - boundsDiagram.x) / context.viewport.zoom + context.viewport.scroll.x,
+                    y: (boundsDOM.y - boundsDiagram.y) / context.viewport.zoom + context.viewport.scroll.y,
+                    width: rectRegion.boundingRectangle.bounds.width,
+                    height: rectRegion.boundingRectangle.bounds.height
+                }
+                rectRegion.absoluteBounds = bounds
+            }
+        }
+    }
+
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -107,7 +138,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const lineStyles = getSvgLineStyles(styles)
+    const lineStyles = getSvgLineStyles(styles, parent, context)
 
     // Create the svg element for this rendering.
     let element: VNode
@@ -266,6 +297,38 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         }
     }
 
+    // Use macro state label or placeholder to fill collapsed region.
+    if (context.renderingOptions.useSmartZoom) {
+        let region = context.depthMap.getRegion((parent as KNode).id)
+        // Draw macro state label, if there is just one macro state and no title for the region.
+        if (region && region.macroStateTitle && !region.expansionState && !region.hasMultipleMacroStates && !region.hasTitle) {
+            const titleSVG = renderKText(region.macroStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
+            element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
+        // Draw placeholder, if there is no title as well.
+        } else if (region && !region.hasTitle && !region.expansionState) {
+            const size = 50
+            const scaleX = region.boundingRectangle.bounds.width / size
+            const scaleY = region.boundingRectangle.bounds.height / size
+            let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+            // Use zoom for constant size in viewport.
+            if (context.viewport) {
+                scalingFactor = scalingFactor > 1 / context.viewport.zoom ? 1 / context.viewport.zoom : scalingFactor
+            }
+            let placeholder = <g 
+                id="ZoomPlaceholder" 
+                height={size}
+                width={size} >
+                <g transform = {`scale(${scalingFactor},${scalingFactor})`}>
+                <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
+                <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
+                <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
+                <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
+            </g>
+        </g>
+        element.children ? element.children.push(placeholder) : element.children = [placeholder]    
+        }
+    }
+
     return element
 }
 
@@ -308,7 +371,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent)
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const lineStyles = getSvgLineStyles(styles)
+    const lineStyles = getSvgLineStyles(styles, parent, context)
 
     const points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
@@ -452,26 +515,51 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const styles = getKStyles(parent, rendering.styles, propagatedStyles)
 
     // Determine the bounds of the rendering first and where it has to be placed.
-    const boundsAndTransformation = findTextBoundsAndTransformationData(rendering, styles, parent, context, lines.length)
+    let boundsAndTransformation = findTextBoundsAndTransformationData(rendering, styles, parent, context, lines.length)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
         return renderError(rendering)
     }
-
-    const gAttrs: SVGAttributes<SVGGElement> = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
-    }
-
+    
     // Check the invisibility first. If this rendering is supposed to be invisible, do not render it,
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g />
     }
-
+    
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const textStyles = getSvgTextStyles(styles)
+    var textStyles = getSvgTextStyles(styles)
+    
+    // Replace text with rectangle, if the text is too small.
+    const region = context.depthMap.getRegion(parent.id)
+    if (context.renderingOptions.simplifySmallText && !rendering.isNodeTitle && !region?.hasTitle) {
+        const minSize = context.renderingOptions.simplifyTextThreshold ? context.renderingOptions.simplifyTextThreshold : 3 // in pixels
+        const proportionalHeight = 0.5 // height of replacement compared to full text height
+        if (context.viewport && rendering.calculatedTextBounds 
+           && rendering.calculatedTextBounds.height * context.viewport.zoom <= minSize) {
+           let replacements: VNode[] = []
+           lines.forEach((line, index) => {
+               const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
+               const yPos = rendering.calculatedTextBounds && rendering.calculatedTextLineHeights ? 
+                    rendering.calculatedTextBounds.y + rendering.calculatedTextLineHeights[index] / 2 * proportionalHeight : 0
+               const width = rendering.calculatedTextLineWidths ? rendering.calculatedTextLineWidths[index] : 0
+               const height = rendering.calculatedTextLineHeights ? rendering.calculatedTextLineHeights[index] * proportionalHeight : 0
+               // Generate rectangle for each line with color style.
+               let curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
+                                        : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
+               replacements.push(curLine)   
+           });
+        const gAttrs: SVGAttributes<SVGGElement> = {
+        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
+        }
+        return <g id={rendering.renderingId} {...gAttrs}>
+            {...replacements}
+        </g>
+        }
+        
+    }
 
     // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
     // contained in the general style, otherwise it has to be repeated in every contained <tspan> element.
@@ -518,6 +606,41 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
+        
+        // If there is a collapsed region or state, scale title of region or single macro state.
+        if (context.renderingOptions.useSmartZoom) {
+            if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && text !== '-' && text !== '+') {
+                // Check whether or not the parent node is a child area.
+                // If the parent is a child area, the text is a title of the region.
+                // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
+                let region = context.depthMap.getRegion((parent as KNode).id)
+                if (region) {
+                    // To avoid drawing a placeholder, when there is a region title.
+                    // Avoid setting when called with macro state title.
+                    if (!context.depthMap.titleMap.has(rendering)) {
+                        region.hasTitle = true
+                    }
+                    if (!region.expansionState) {
+                        // Scale to limit of bounding box or max size.
+                        // There is a difference between the calculated size and the actual size.
+                        // This leads to some titles beeing scaled too far with respect to their width.
+                        const maxScale = context.renderingOptions.titleScalingFactor ? context.renderingOptions.titleScalingFactor : 1
+                        const scaleX = region.boundingRectangle.bounds.width / boundsAndTransformation.bounds.width
+                        const scaleY = region.boundingRectangle.bounds.height / boundsAndTransformation.bounds.height
+                        let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+                        if (context.viewport) {
+                            scalingFactor = scalingFactor > maxScale / context.viewport.zoom ? maxScale / context.viewport.zoom : scalingFactor
+                        }
+                        // Remove spacing to the left for region titles.
+                        if (region.hasTitle) {
+                            attrs.x = 0
+                        }
+                        boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
+                    } 
+                }
+            }
+        }
+        
         elements = [
             <text {...attrs}>
                 {...children}
@@ -549,6 +672,31 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             elements.push(currentElement)
             currentY = calculatedTextLineHeights ? currentY + calculatedTextLineHeights[index] : currentY
         });
+    }
+
+    // If there is one macro state in a child area, change the area title to the name of the macro state.
+    // If there are multiple macro states set the flag.
+    if (rendering.isNodeTitle && !context.depthMap.titleMap.has(rendering)) {
+        context.depthMap.titleMap.set(rendering, rendering)
+        let region = context.depthMap.findRegionWithElement(parent as KNode)
+        if (region && region.hasMacroState && region.macroStateTitle !== rendering) {
+            region.hasMultipleMacroStates = true
+            // Needed if macro states are searched more than once.
+            // Check for title in child regions as macro state titles get lifted one node.
+            region.children.forEach((child) => {
+                if (region && child.macroStateTitle && region.macroStateTitle && child.macroStateTitle === rendering) {
+                    region.hasMultipleMacroStates = false
+                }
+            });
+        } else if (region && !region.hasMacroState) {
+            region.macroStateTitle = rendering
+            region.hasMacroState = true
+        }
+    }
+
+        
+    const gAttrs: SVGAttributes<SVGGElement> = {
+        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
     // build the element from the above defined attributes and children
@@ -622,6 +770,12 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
  */
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
         context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
+    
+    // Handle expansion and collapse of regions
+    if (context.renderingOptions.useSmartZoom && (parent as KNode).expansionState === false) {
+        return undefined
+    }
+    
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')

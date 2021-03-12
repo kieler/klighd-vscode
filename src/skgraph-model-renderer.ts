@@ -12,7 +12,9 @@
  */
 
 import { VNode } from 'snabbdom/vnode';
-import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, ViewRegistry } from 'sprotty/lib';
+import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, Viewport, ViewRegistry } from 'sprotty/lib';
+import { DepthMap } from './depth-map';
+import { RenderingOptions } from './rendering-options';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
 
 /**
@@ -26,8 +28,11 @@ export class SKGraphModelRenderer extends ModelRenderer {
 
     boundsMap: any
     decorationMap: any
+    depthMap: DepthMap
+    renderingOptions: RenderingOptions
     kRenderingLibrary: KRenderingLibrary
     renderingDefs: Map<string, VNode>
+    viewport: Viewport
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.
