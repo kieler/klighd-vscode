@@ -1,4 +1,5 @@
-import { RenderOption, SetConstantLineWidth, SetExpandCollapseThreshold, SetTextSimplificationThreshold, SetTitleScalingFactor, SimplifySmallText, UseConstantLineWidth, UseSmartZoom } from "./options";
+import { RenderOption } from "@kieler/keith-diagram-options/src/common/option-models";
+import { SetConstantLineWidth, SetExpandCollapseThreshold, SetTextSimplificationThreshold, SetTitleScalingFactor, SimplifySmallText, UseConstantLineWidth, UseSmartZoom } from "./options";
 
 export class RenderingOptions {
     useSmartZoom: boolean

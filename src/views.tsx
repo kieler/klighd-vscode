@@ -60,7 +60,7 @@ export class KNodeView implements IView {
         // Add depthMap to context for rendering, when required.
         if (ctx.renderingOptions.useSmartZoom) {
             ctx.depthMap = DepthMap.getInstance(node.root)
-            if (viewport && ctx.depthMap && ctx.renderingOptions.useSmartZoom) {
+            if (viewport && (ctx.depthMap || ctx.renderingOptions.useSmartZoom)) {
                 ctx.depthMap.expandCollapse(viewport)
             }
             if (ctx.renderingDefs.size == 0) {

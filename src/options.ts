@@ -1,25 +1,5 @@
 import { injectable } from "inversify";
-import { RangeOption, Range } from '@kieler/keith-diagram-options/lib/common/option-models'
-
-export interface RenderOption {
-    id: string
-    name: string
-    type: TransformationOptionType
-    initialValue: any
-    currentValue: any
-}
-
-/**
- * The different types a SynthesisOption can have.
- */
-export enum TransformationOptionType {
-    CHECK = 0,
-    CHOICE = 1,
-    RANGE = 2,
-    TEXT = 3,
-    SEPARATOR = 4,
-    CATEGORY = 5
-}
+import { RangeOption, Range, TransformationOptionType, RenderOption } from '@kieler/keith-diagram-options/lib/common/option-models'
 
 export class ShowConstraintOption implements RenderOption {
     static readonly ID: string = 'show-constraints'
