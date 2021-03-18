@@ -1,6 +1,6 @@
 
 import { KNode } from "@kieler/keith-interactive/lib/constraint-classes";
-import { Bounds, getAbsoluteBounds, SModelRoot, Viewport } from "sprotty";
+import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderingOptions } from "./rendering-options";
 import { KText, K_RECTANGLE } from "./skgraph-models";
 
@@ -198,7 +198,7 @@ export class DepthMap {
                     region.setExpansionState(true)
                 // Expand when reached relative size threshold or native resolution.
                 } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= this.renderingOptions.expandCollapseThreshold 
-                    || getAbsoluteBounds(region.boundingRectangle).width >= region.boundingRectangle.bounds.width) {
+                           || viewport.zoom >= 1) {
                     region.setExpansionState(true)
                 // Collapse when reached relative size threshold.
                 } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= this.renderingOptions.expandCollapseThreshold) {
@@ -257,6 +257,8 @@ export class Region {
     hasTitle: boolean
     // Contains a macro state title, if there is at least one in the region.
     macroStateTitle?: KText
+    // Contains a super state title, if there is just one child region.
+    superStateTitle?: KText
     // Determines if there is at least one macro state in the region.
     hasMacroState: boolean
     // Determines if there are more than one macro state in the region.

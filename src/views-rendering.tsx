@@ -300,32 +300,37 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     // Use macro state label or placeholder to fill collapsed region.
     if (context.renderingOptions.useSmartZoom) {
         let region = context.depthMap.getRegion((parent as KNode).id)
-        // Draw macro state label, if there is just one macro state and no title for the region.
-        if (region && region.macroStateTitle && !region.expansionState && !region.hasMultipleMacroStates && !region.hasTitle) {
-            const titleSVG = renderKText(region.macroStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
-            element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
-        // Draw placeholder, if there is no title as well.
-        } else if (region && !region.hasTitle && !region.expansionState) {
-            const size = 50
-            const scaleX = region.boundingRectangle.bounds.width / size
-            const scaleY = region.boundingRectangle.bounds.height / size
-            let scalingFactor = scaleX > scaleY ? scaleY : scaleX
-            // Use zoom for constant size in viewport.
-            if (context.viewport) {
-                scalingFactor = scalingFactor > 1 / context.viewport.zoom ? 1 / context.viewport.zoom : scalingFactor
-            }
-            let placeholder = <g 
-                id="ZoomPlaceholder" 
-                height={size}
-                width={size} >
-                <g transform = {`scale(${scalingFactor},${scalingFactor})`}>
-                <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
-                <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
-                <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
-                <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
+        if (region && !region.expansionState && !region.hasTitle) {
+            // Render indirect region titles.
+            if (region.superStateTitle) {
+                const titleSVG = renderKText(region.superStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
+                element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
+            } else if (region.macroStateTitle && !region.hasMultipleMacroStates) {
+                const titleSVG = renderKText(region.macroStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
+                element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
+            // If there is no title draw placeholder.
+            } else {
+                const size = 50
+                const scaleX = region.boundingRectangle.bounds.width / size
+                const scaleY = region.boundingRectangle.bounds.height / size
+                let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+                // Use zoom for constant size in viewport.
+                if (context.viewport) {
+                    scalingFactor = scalingFactor > 1 / context.viewport.zoom ? 1 / context.viewport.zoom : scalingFactor
+                }
+                let placeholder = <g 
+                    id="ZoomPlaceholder" 
+                    height={size}
+                    width={size} >
+                    <g transform = {`scale(${scalingFactor},${scalingFactor})`}>
+                    <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
+                    <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
+                    <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
+                    <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
+                </g>
             </g>
-        </g>
-        element.children ? element.children.push(placeholder) : element.children = [placeholder]    
+            element.children ? element.children.push(placeholder) : element.children = [placeholder]    
+            }
         }
     }
 
@@ -497,6 +502,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
  */
 export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles,
         context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode {
+    
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -674,23 +680,48 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         });
     }
 
+    // If there is a super state use the name as a title.
     // If there is one macro state in a child area, change the area title to the name of the macro state.
     // If there are multiple macro states set the flag.
     if (rendering.isNodeTitle && !context.depthMap.titleMap.has(rendering)) {
         context.depthMap.titleMap.set(rendering, rendering)
         let region = context.depthMap.findRegionWithElement(parent as KNode)
-        if (region && region.hasMacroState && region.macroStateTitle !== rendering) {
-            region.hasMultipleMacroStates = true
-            // Needed if macro states are searched more than once.
-            // Check for title in child regions as macro state titles get lifted one node.
-            region.children.forEach((child) => {
-                if (region && child.macroStateTitle && region.macroStateTitle && child.macroStateTitle === rendering) {
-                    region.hasMultipleMacroStates = false
-                }
-            });
-        } else if (region && !region.hasMacroState) {
-            region.macroStateTitle = rendering
-            region.hasMacroState = true
+        if (region) {
+            // Handle super states
+            // If there is just one child region apply super state title.
+            if (region.children.size == 1) {
+                region.children.forEach(childRegion => {
+                    if (!childRegion.superStateTitle) {
+                        childRegion.superStateTitle = rendering
+                        // console.log("macro state titles: " + rendering.text)
+                        // console.log("Added title to region: " + childRegion.boundingRectangle.id)
+                    }
+                });
+            // Otherwise find correct region via id.
+            } else {
+                region.children.forEach(childRegion => {
+                    let position = -1
+                    let curPos = childRegion.boundingRectangle.id.indexOf(rendering.text)
+                    if (curPos > position) {
+                        position = curPos
+                        childRegion.superStateTitle = rendering
+                    }
+                });
+            }
+            // Handle macro states
+            if (region.hasMacroState && region.macroStateTitle !== rendering) {
+                region.hasMultipleMacroStates = true
+                // Needed if macro states are searched more than once.
+                // Check for title in child regions as macro state titles get lifted one node.
+                region.children.forEach((child) => {
+                    if (region && child.macroStateTitle && region.macroStateTitle && child.macroStateTitle === rendering) {
+                        region.hasMultipleMacroStates = false
+                    }
+                });
+            } else if (!region.hasMacroState) {
+                region.macroStateTitle = rendering
+                region.hasMacroState = true
+            }
         }
     }
 
