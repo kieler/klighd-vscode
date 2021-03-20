@@ -14,18 +14,18 @@
 import { VNode } from 'snabbdom/vnode';
 import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, Viewport, ViewRegistry } from 'sprotty/lib';
 import { DepthMap } from './depth-map';
-import { RenderingOptions } from './rendering-options';
+import { RenderingOptions } from './options';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
 
 /**
  * Contains additional data and functionality needed for the rendering of SKGraphs.
  */
 export class SKGraphModelRenderer extends ModelRenderer {
-
+   
     constructor(readonly viewRegistry: ViewRegistry, readonly targetKind: RenderingTargetKind, postprocessors: IVNodePostprocessor[]) {
         super(viewRegistry, targetKind, postprocessors)
     }
-
+   
     boundsMap: any
     decorationMap: any
     depthMap: DepthMap

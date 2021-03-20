@@ -1,5 +1,38 @@
 import { injectable } from "inversify";
-import { RangeOption, Range, TransformationOptionType, RenderOption } from '@kieler/keith-diagram-options/lib/common/option-models'
+
+/**
+ * A RenderOption with unique id and name as well as the option type.
+ * Holds the current value and the initial value of the option.
+ */
+ export interface RenderOption {
+    id: string
+    name: string
+    type: TransformationOptionType
+    initialValue: any
+    currentValue: any
+}
+
+/**
+ * The different types a SynthesisOption can have.
+ */
+ export enum TransformationOptionType {
+    CHECK = 0,
+    CHOICE = 1,
+    RANGE = 2,
+    TEXT = 3,
+    SEPARATOR = 4,
+    CATEGORY = 5
+}
+
+export interface RangeOption extends RenderOption {
+    range: Range
+    stepSize: number
+}
+
+export interface Range {
+    first: number
+    second: number
+}
 
 export class ShowConstraintOption implements RenderOption {
     static readonly ID: string = 'show-constraints'
@@ -143,3 +176,64 @@ export class RenderOptions {
         }
     }
 }
+
+export class RenderingOptions {
+    useSmartZoom: boolean
+    simplifySmallText: boolean
+    simplifyTextThreshold: number
+    titleScalingFactor: number
+    useConstantLineWidth: boolean
+    constantLineWidth: number
+    placeholderSize: number
+    expandCollapseThreshold: number
+    private static instance: RenderingOptions;
+
+    // Singleton pattern.
+    private constructor() {
+    }
+
+    static getInstance(): RenderingOptions {
+        if (this.instance === undefined) {
+            this.instance = new RenderingOptions();
+        }
+        return RenderingOptions.instance
+    }
+
+    updateSettings(option: RenderOption) {
+        switch (option.id) {
+            case SetConstantLineWidth.ID: {
+                this.constantLineWidth = option.currentValue
+                break;
+            }
+            case SetExpandCollapseThreshold.ID: {
+                this.expandCollapseThreshold = option.currentValue
+                break;
+            }
+            case SetTextSimplificationThreshold.ID: {
+                this.simplifyTextThreshold = option.currentValue
+                break;
+            }
+            case SetTitleScalingFactor.ID: { 
+                this.titleScalingFactor = option.currentValue
+                break;
+            }
+            case SimplifySmallText.ID: {
+                this.simplifySmallText = option.currentValue
+                break;
+            }
+            case UseConstantLineWidth.ID: {
+                this.useConstantLineWidth = option.currentValue
+                break;
+            }
+            case UseSmartZoom.ID: {
+                this.useSmartZoom = option.currentValue    
+                break;
+            }
+            // Avoid error as there are still other render options.
+            default: {
+                break;
+            }
+        }
+    }
+}
+

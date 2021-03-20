@@ -1,7 +1,7 @@
 
 import { KNode } from "@kieler/keith-interactive/lib/constraint-classes";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
-import { RenderingOptions } from "./rendering-options";
+import { RenderingOptions } from "./options";
 import { KText, K_RECTANGLE } from "./skgraph-models";
 
 export class DepthMap {
@@ -18,7 +18,7 @@ export class DepthMap {
     // Lookup map for quickly checking macro state titles.
     titleMap: Map<KText, KText>
     // Threshold and Compensation in viewport for error in absolute bounds positions.
-    absoluteVisibilityBuffer: number = 200
+    absoluteVisibilityBuffer: number = 500
     // Singleton pattern
     private static instance: DepthMap;
 

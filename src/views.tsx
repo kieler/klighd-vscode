@@ -19,13 +19,12 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/keith-intera
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
-import { RenderOptions, ShowConstraintOption } from './options';
+import { RenderOptions, ShowConstraintOption, RenderingOptions } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 import { DepthMap } from './depth-map';
-import { RenderingOptions } from './rendering-options';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
