@@ -20,6 +20,7 @@
   "dependencies": {
     "@theia/application-package": "1.4.0",
     "@theia/getting-started": "1.4.0",
+    "@theia/messages": "1.4.0",
     "@theia/monaco": "1.4.0",
     "@theia/navigator": "1.4.0"
   },
