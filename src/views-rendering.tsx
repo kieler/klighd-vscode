@@ -27,7 +27,7 @@ import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
 import { KNode } from '@kieler/keith-interactive/lib/constraint-classes';
-import { SimplifySmallText, TextSimplificationThreshold, UseSmartZoom } from './options';
+import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom } from './options';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -546,7 +546,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const region = context.depthMap.getRegion(parent.id)
     const simplifySmallTextOption = context.renderingOptions.getOption(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ? simplifySmallTextOption.currentValue : false // Only enable, if option is found.
-    if (simplifySmallText && !rendering.isNodeTitle && !region?.hasTitle) {
+    if (simplifySmallText && (!region || (region && region.expansionState))) {
         const simplificationThresholdOption = context.renderingOptions.getOption(TextSimplificationThreshold.ID)
         const defaultThreshold = 3
         const simplificationThreshold = simplificationThresholdOption ? simplificationThresholdOption.currentValue : defaultThreshold
@@ -555,15 +555,15 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
            && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {
            let replacements: VNode[] = []
            lines.forEach((line, index) => {
-               const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
-               const yPos = rendering.calculatedTextBounds && rendering.calculatedTextLineHeights ? 
-                    rendering.calculatedTextBounds.y + rendering.calculatedTextLineHeights[index] / 2 * proportionalHeight : 0
-               const width = rendering.calculatedTextLineWidths ? rendering.calculatedTextLineWidths[index] : 0
-               const height = rendering.calculatedTextLineHeights ? rendering.calculatedTextLineHeights[index] * proportionalHeight : 0
-               // Generate rectangle for each line with color style.
-               let curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
-                                        : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
-               replacements.push(curLine)   
+                const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
+                const yPos = boundsAndTransformation && boundsAndTransformation.bounds.y && rendering.calculatedTextLineHeights && boundsAndTransformation.bounds.height ? 
+                    boundsAndTransformation.bounds.y - boundsAndTransformation.bounds.height / 2 + rendering.calculatedTextLineHeights[index] / 2 * proportionalHeight : 0
+                const width = rendering.calculatedTextLineWidths ? rendering.calculatedTextLineWidths[index] : 0
+                const height = rendering.calculatedTextLineHeights ? rendering.calculatedTextLineHeights[index] * proportionalHeight : 0
+                // Generate rectangle for each line with color style.
+                let curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
+                                         : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
+                replacements.push(curLine)   
            });
         const gAttrs: SVGAttributes<SVGGElement> = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
@@ -638,16 +638,16 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                     }
                     if (!region.expansionState) {
                         // Scale to limit of bounding box or max size.
-                        const titleScalingFactorOption = context.renderingOptions.getOption(TextSimplificationThreshold.ID)
+                        const titleScalingFactorOption = context.renderingOptions.getOption(TitleScalingFactor.ID)
                         const defaultFactor = 1
                         let maxScale = titleScalingFactorOption ? titleScalingFactorOption.currentValue : defaultFactor
-                        maxScale = maxScale / context.viewport.zoom
+                        if (context.viewport) {
+                            maxScale = maxScale / context.viewport.zoom
+                        }
                         const scaleX = region.boundingRectangle.bounds.width / boundsAndTransformation.bounds.width
                         const scaleY = region.boundingRectangle.bounds.height / boundsAndTransformation.bounds.height
                         let scalingFactor = scaleX > scaleY ? scaleY : scaleX
-                        if (context.viewport) {
-                            scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
-                        }
+                        scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
                         // Remove spacing to the left for region titles.
                         if (region.hasTitle) {
                             attrs.x = 0

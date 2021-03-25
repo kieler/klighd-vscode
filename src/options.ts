@@ -37,8 +37,8 @@ export interface RangeOption extends RenderOption {
  * Defines a range through the bounds 'lower' and 'upper'.
  */
 export interface Range {
-    lower: number
-    upper: number
+    first: number
+    second: number
 }
 
 export class ShowConstraintOption implements RenderOption {
@@ -81,8 +81,8 @@ export class TitleScalingFactor implements RangeOption {
     readonly updateNeeded: boolean = false
     readonly values: any[] = []
     readonly range: Range = {
-        lower: 0.5,
-        upper: 3
+        first: 0.5,
+        second: 3
     }
     readonly stepSize = 0.01
     readonly initialValue: number = 1
@@ -115,8 +115,8 @@ export class ConstantLineWidth implements RangeOption {
     readonly updateNeeded: boolean = false
     readonly values: any[] = []
     readonly range: Range = {
-        lower: 0.1,
-        upper: 3
+        first: 0.1,
+        second: 3
     }
     readonly stepSize = 0.01
     readonly initialValue: number = 0.5
@@ -149,8 +149,8 @@ export class TextSimplificationThreshold implements RangeOption {
     readonly updateNeeded: boolean = false
     readonly values: any[] = []
     readonly range: Range = {
-        lower: 1,
-        upper: 10
+        first: 1,
+        second: 10
     }
     readonly stepSize = 0.1
     readonly initialValue: number = 3
@@ -170,8 +170,8 @@ export class ExpandCollapseThreshold implements RangeOption {
     readonly updateNeeded: boolean = false
     readonly values: any[] = []
     readonly range: Range = {
-        lower: 0.01,
-        upper: 1
+        first: 0.01,
+        second: 1
     }
     readonly stepSize = 0.01
     readonly initialValue: number = 0.2
