@@ -298,7 +298,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         }
     }
 
-    // Use macro state label or placeholder to fill collapsed region.
+    // Use indirect titles or placeholder to fill collapsed region.
     const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
     const useSmartZoomDefault = false
     const useSmartZoom = smartZoomOption ? smartZoomOption : useSmartZoomDefault
@@ -331,13 +331,12 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                     <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
                     <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
                     <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
+                    </g>
                 </g>
-            </g>
-            element.children ? element.children.push(placeholder) : element.children = [placeholder]    
+                element.children ? element.children.push(placeholder) : element.children = [placeholder]    
             }
         }
     }
-
     return element
 }
 
@@ -565,10 +564,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                                          : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
                 replacements.push(curLine)   
            });
-        const gAttrs: SVGAttributes<SVGGElement> = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
-        }
-        return <g id={rendering.renderingId} {...gAttrs}>
+        return <g id={rendering.renderingId} {...{}}>
             {...replacements}
         </g>
         }
@@ -632,7 +628,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 let region = context.depthMap.getRegion((parent as KNode).id)
                 if (region) {
                     // To avoid drawing a placeholder, when there is a region title.
-                    // Avoid setting when called with macro state title.
+                    // Avoid setting when called with macro or super state title.
                     if (!context.depthMap.titleMap.has(rendering)) {
                         region.hasTitle = true
                     }
@@ -641,17 +637,18 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         const titleScalingFactorOption = context.renderingOptions.getOption(TitleScalingFactor.ID)
                         const defaultFactor = 1
                         let maxScale = titleScalingFactorOption ? titleScalingFactorOption.currentValue : defaultFactor
+                        // Indentation used in the layouting in pixels.
+                        const indentation = 14
                         if (context.viewport) {
                             maxScale = maxScale / context.viewport.zoom
+                            // Rescale indentation as this is applied before the scaling.
+                            attrs.x = indentation * context.viewport.zoom / maxScale
                         }
-                        const scaleX = region.boundingRectangle.bounds.width / boundsAndTransformation.bounds.width
+                        const scaleX = (region.boundingRectangle.bounds.width - indentation) / boundsAndTransformation.bounds.width
                         const scaleY = region.boundingRectangle.bounds.height / boundsAndTransformation.bounds.height
                         let scalingFactor = scaleX > scaleY ? scaleY : scaleX
                         scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
                         // Remove spacing to the left for region titles.
-                        if (region.hasTitle) {
-                            attrs.x = 0
-                        }
                         boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
                     } 
                 }
@@ -704,8 +701,6 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 region.children.forEach(childRegion => {
                     if (!childRegion.superStateTitle) {
                         childRegion.superStateTitle = rendering
-                        // console.log("macro state titles: " + rendering.text)
-                        // console.log("Added title to region: " + childRegion.boundingRectangle.id)
                     }
                 });
             // Otherwise find correct region via id.
@@ -736,7 +731,6 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         }
     }
 
-        
     const gAttrs: SVGAttributes<SVGGElement> = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
