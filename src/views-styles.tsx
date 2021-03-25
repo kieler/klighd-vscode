@@ -14,6 +14,7 @@
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { getZoom, isSelectable } from 'sprotty';
+import { ConstantLineWidth, UseConstantLineWidth } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
@@ -626,14 +627,18 @@ export function isInvisible(styles: KStyles): boolean {
  */
 export function getSvgLineStyles(styles: KStyles, target:SKGraphElement, context: SKGraphModelRenderer): LineStyles {
     var lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    if(context.renderingOptions.useConstantLineWidth) {
-        const scaling = context.renderingOptions.constantLineWidth ? context.renderingOptions.constantLineWidth : 1
+    const useLineWidthOption = context.renderingOptions.getOption(UseConstantLineWidth.ID)
+    // Only enable, if option is found.
+    const useConstantLineWidth = useLineWidthOption ? useLineWidthOption.currentValue : false
+    if(useConstantLineWidth) {
+        const lineWidthOption = context.renderingOptions.getOption(ConstantLineWidth.ID)
+        const scaling = lineWidthOption ? lineWidthOption.currentValue : 1
         lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH * scaling / getZoom(target)
                                                     : styles.kLineWidth.lineWidth * scaling / getZoom(target)
         if(styles.kLineWidth.lineWidth == 0) {
             lineWidth = 0
-        } else if(lineWidth < 1) {
-            lineWidth = 1
+        } else if(lineWidth < DEFAULT_LINE_WIDTH) {
+            lineWidth = DEFAULT_LINE_WIDTH
         }
     }
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)

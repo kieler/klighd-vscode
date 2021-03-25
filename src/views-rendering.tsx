@@ -27,6 +27,7 @@ import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
 import { KNode } from '@kieler/keith-interactive/lib/constraint-classes';
+import { SimplifySmallText, TextSimplificationThreshold, UseSmartZoom } from './options';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -298,7 +299,10 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     }
 
     // Use macro state label or placeholder to fill collapsed region.
-    if (context.renderingOptions.useSmartZoom) {
+    const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
+    const useSmartZoomDefault = false
+    const useSmartZoom = smartZoomOption ? smartZoomOption : useSmartZoomDefault
+    if (useSmartZoom) {
         let region = context.depthMap.getRegion((parent as KNode).id)
         if (region && !region.expansionState && !region.hasTitle) {
             // Render indirect region titles.
@@ -540,11 +544,15 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     
     // Replace text with rectangle, if the text is too small.
     const region = context.depthMap.getRegion(parent.id)
-    if (context.renderingOptions.simplifySmallText && !rendering.isNodeTitle && !region?.hasTitle) {
-        const minSize = context.renderingOptions.simplifyTextThreshold ? context.renderingOptions.simplifyTextThreshold : 3 // in pixels
+    const simplifySmallTextOption = context.renderingOptions.getOption(SimplifySmallText.ID)
+    const simplifySmallText = simplifySmallTextOption ? simplifySmallTextOption.currentValue : false // Only enable, if option is found.
+    if (simplifySmallText && !rendering.isNodeTitle && !region?.hasTitle) {
+        const simplificationThresholdOption = context.renderingOptions.getOption(TextSimplificationThreshold.ID)
+        const defaultThreshold = 3
+        const simplificationThreshold = simplificationThresholdOption ? simplificationThresholdOption.currentValue : defaultThreshold
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.calculatedTextBounds 
-           && rendering.calculatedTextBounds.height * context.viewport.zoom <= minSize) {
+           && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {
            let replacements: VNode[] = []
            lines.forEach((line, index) => {
                const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
@@ -614,7 +622,9 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         }
         
         // If there is a collapsed region or state, scale title of region or single macro state.
-        if (context.renderingOptions.useSmartZoom) {
+        const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
+        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false // Only enable, if option is found.
+        if (useSmartZoom) {
             if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && text !== '-' && text !== '+') {
                 // Check whether or not the parent node is a child area.
                 // If the parent is a child area, the text is a title of the region.
@@ -628,14 +638,15 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                     }
                     if (!region.expansionState) {
                         // Scale to limit of bounding box or max size.
-                        // There is a difference between the calculated size and the actual size.
-                        // This leads to some titles beeing scaled too far with respect to their width.
-                        const maxScale = context.renderingOptions.titleScalingFactor ? context.renderingOptions.titleScalingFactor : 1
+                        const titleScalingFactorOption = context.renderingOptions.getOption(TextSimplificationThreshold.ID)
+                        const defaultFactor = 1
+                        let maxScale = titleScalingFactorOption ? titleScalingFactorOption.currentValue : defaultFactor
+                        maxScale = maxScale / context.viewport.zoom
                         const scaleX = region.boundingRectangle.bounds.width / boundsAndTransformation.bounds.width
                         const scaleY = region.boundingRectangle.bounds.height / boundsAndTransformation.bounds.height
                         let scalingFactor = scaleX > scaleY ? scaleY : scaleX
                         if (context.viewport) {
-                            scalingFactor = scalingFactor > maxScale / context.viewport.zoom ? maxScale / context.viewport.zoom : scalingFactor
+                            scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
                         }
                         // Remove spacing to the left for region titles.
                         if (region.hasTitle) {
@@ -803,7 +814,9 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement,
         context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
     
     // Handle expansion and collapse of regions
-    if (context.renderingOptions.useSmartZoom && (parent as KNode).expansionState === false) {
+    const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
+    const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false // Only enable, if option is found.
+    if (useSmartZoom && (parent as KNode).expansionState === false) {
         return undefined
     }
     

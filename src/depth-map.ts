@@ -1,7 +1,7 @@
 
 import { KNode } from "@kieler/keith-interactive/lib/constraint-classes";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
-import { RenderingOptions } from "./options";
+import { RenderingOptions, ExpandCollapseThreshold } from "./options";
 import { KText, K_RECTANGLE } from "./skgraph-models";
 
 export class DepthMap {
@@ -188,6 +188,9 @@ export class DepthMap {
         if (!this.renderingOptions) {
             this.renderingOptions = RenderingOptions.getInstance()
         }
+        const thresholdOption = this.renderingOptions.getOption(ExpandCollapseThreshold.ID)
+        const defaultThreshold = 0.2
+        const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
         for (let curArray of this.depthArray) {
             for (let region of curArray) {
                 // Collapse all invisible states and regions.
@@ -197,11 +200,11 @@ export class DepthMap {
                 } else if (!region.boundingRectangle) {
                     region.setExpansionState(true)
                 // Expand when reached relative size threshold or native resolution.
-                } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= this.renderingOptions.expandCollapseThreshold 
+                } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= expandCollapseThreshold
                            || viewport.zoom >= 1) {
                     region.setExpansionState(true)
                 // Collapse when reached relative size threshold.
-                } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= this.renderingOptions.expandCollapseThreshold) {
+                } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= expandCollapseThreshold) {
                     region.setExpansionState(false)
                 }
             }

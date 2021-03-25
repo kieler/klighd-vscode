@@ -19,7 +19,7 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/keith-intera
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
-import { RenderOptions, ShowConstraintOption, RenderingOptions } from './options';
+import { RenderOptions, ShowConstraintOption, RenderingOptions, UseSmartZoom } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
@@ -57,9 +57,12 @@ export class KNodeView implements IView {
         }
         ctx.renderingOptions = RenderingOptions.getInstance()
         // Add depthMap to context for rendering, when required.
-        if (ctx.renderingOptions.useSmartZoom) {
+        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
+        // Only enable, if option is found.
+        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
+        if (useSmartZoom) {
             ctx.depthMap = DepthMap.getInstance(node.root)
-            if (viewport && (ctx.depthMap || ctx.renderingOptions.useSmartZoom)) {
+            if (viewport && ctx.depthMap) {
                 ctx.depthMap.expandCollapse(viewport)
             }
             if (ctx.renderingDefs.size == 0) {
@@ -184,7 +187,10 @@ export class KPortView implements IView {
             ctx.viewport = viewport
         }
         ctx.renderingOptions = RenderingOptions.getInstance()
-        if (ctx.renderingOptions.useSmartZoom) {
+        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
+        // Only enable, if option is found.
+        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
+        if (useSmartZoom) {
             ctx.depthMap = DepthMap.getInstance(port.root)
         }
         port.areChildAreaChildrenRendered = false
@@ -229,7 +235,10 @@ export class KLabelView implements IView {
             ctx.viewport = viewport
         }
         ctx.renderingOptions = RenderingOptions.getInstance()
-        if (ctx.renderingOptions.useSmartZoom) {
+        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
+        // Only enable, if option is found.
+        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
+        if (useSmartZoom) {
             ctx.depthMap = DepthMap.getInstance(label.root)
         }
         label.areChildAreaChildrenRendered = false
@@ -282,7 +291,10 @@ export class KEdgeView implements IView {
             ctx.viewport = viewport
         }
         ctx.renderingOptions = RenderingOptions.getInstance()
-        if (ctx.renderingOptions.useSmartZoom) {
+        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
+        // Only enable, if option is found.
+        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
+        if (useSmartZoom) {
             ctx.depthMap = DepthMap.getInstance(edge.root)
         }
         edge.areChildAreaChildrenRendered = false
