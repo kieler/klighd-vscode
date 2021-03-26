@@ -12,7 +12,6 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/keith-interactive/lib/constraint-classes';
-import { Position } from '@theia/plugin-ext/lib/plugin/types-impl';
 import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty/lib';
 
 /**
@@ -139,7 +138,6 @@ export interface KArc extends KContainerRendering {
     startAngle: number
     arcAngle: number
     arcType: Arc
-    test: Position
 }
 
 /**

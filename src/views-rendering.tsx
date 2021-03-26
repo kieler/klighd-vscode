@@ -14,8 +14,9 @@
 import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
-import { KGraphData } from '@kieler/keith-interactive/lib/constraint-classes';
+import { KGraphData, KNode } from '@kieler/keith-interactive/lib/constraint-classes';
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
+import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -26,8 +27,6 @@ import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, g
 import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
-import { KNode } from '@kieler/keith-interactive/lib/constraint-classes';
-import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom } from './options';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -621,7 +620,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
         const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false // Only enable, if option is found.
         if (useSmartZoom) {
-            if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && text !== '-' && text !== '+') {
+            if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height 
+                && (rendering.isNodeTitle || (text !== '-' && text !== '+'))) {
                 // Check whether or not the parent node is a child area.
                 // If the parent is a child area, the text is a title of the region.
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.

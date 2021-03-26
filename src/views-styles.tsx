@@ -630,14 +630,14 @@ export function getSvgLineStyles(styles: KStyles, target:SKGraphElement, context
     const useLineWidthOption = context.renderingOptions.getOption(UseConstantLineWidth.ID)
     // Only enable, if option is found.
     const useConstantLineWidth = useLineWidthOption ? useLineWidthOption.currentValue : false
-    if(useConstantLineWidth) {
+    if (useConstantLineWidth) {
         const lineWidthOption = context.renderingOptions.getOption(ConstantLineWidth.ID)
         const scaling = lineWidthOption ? lineWidthOption.currentValue : 1
         lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH * scaling / getZoom(target)
                                                     : styles.kLineWidth.lineWidth * scaling / getZoom(target)
-        if(styles.kLineWidth.lineWidth == 0) {
+        if (styles.kLineWidth.lineWidth == 0) {
             lineWidth = 0
-        } else if(lineWidth < DEFAULT_LINE_WIDTH) {
+        } else if (lineWidth < DEFAULT_LINE_WIDTH) {
             lineWidth = DEFAULT_LINE_WIDTH
         }
     }

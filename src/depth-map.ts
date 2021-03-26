@@ -4,33 +4,46 @@ import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderingOptions, ExpandCollapseThreshold } from "./options";
 import { KText, K_RECTANGLE } from "./skgraph-models";
 
+/**
+ * Divides Model KNodes into regions. These are then saved in the 2D depthArray,
+ * where the first index corresponds to nesting depth. On these expand and collapse actions
+ * are defined via the expansionState. Also holds additional information to determine
+ * the appropriate expansion state, visibility and title for regions.
+ */
 export class DepthMap {
-    // Stores all regions sorted by nesting deth.
+    /** 
+     * Stores all regions sorted by nesting depth. The first index corresponds
+     * to the nesting depth and the second index is for each region of that depth. 
+     */
     depthArray: Region[][];
-    // Also used to monitor the switching of models.
+    /** Used to access the model and monitor switching of models. */
     rootElement: SModelRoot;
-    // A quick lookup map with the id of the bounding child area of a region as key.
+    /** A quick lookup map with the id of the bounding child area of a region as key. */
     regionMap: Map<String, Region>;
-    // Rendering options for adjusting functions.
+    /** Rendering options for adjusting functions. */
     renderingOptions: RenderingOptions
-    // Will be changed to true, when all micro layouting, etc. is done.
+    /** Will be changed to true, when all micro layouting, etc. is done. */
     isCompleteRendering: boolean = false
-    // Lookup map for quickly checking macro state titles.
+    /** Lookup map for quickly checking macro and super state titles. */
     titleMap: Map<KText, KText>
-    // Threshold and Compensation in viewport for error in absolute bounds positions.
+    /** Threshold and compensation margin for error in absolute bounds positions. */
     absoluteVisibilityBuffer: number = 500
-    // Singleton pattern
+    /** Singleton pattern */
     private static instance: DepthMap;
 
+    /** 
+     * Singleton pattern
+     * @param rootElement The root element of the model. 
+     */
     private constructor(rootElement: SModelRoot) {
         this.rootElement = rootElement
     }
     
-    /**
+    /** 
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
-    */
-    static getInstance(rootElement: SModelRoot): DepthMap {
+     */
+    public static getInstance(rootElement: SModelRoot): DepthMap {
         // Create new DepthMap, when there is none or the model is switched.
         if (!DepthMap.instance || DepthMap.instance.rootElement !== rootElement) {
             DepthMap.instance = new DepthMap(rootElement);
@@ -39,10 +52,8 @@ export class DepthMap {
         return DepthMap.instance
     }
 
-    /**
-     * Returns a DepthMap instance, if there is one.
-     */
-    static getCurrentInstance(): DepthMap | undefined {
+    /** Returns a DepthMap instance, if there is one. */
+    public static getCurrentInstance(): DepthMap | undefined {
         if (DepthMap.instance) {
             return DepthMap.instance
         } else {
@@ -50,7 +61,7 @@ export class DepthMap {
         }
     }
 
-    // Create a new DepthMap.
+    /** Create a new DepthMap. */
     protected init() {
         this.regionMap = new Map()
         this.titleMap = new Map()
@@ -61,7 +72,13 @@ export class DepthMap {
         this.findParentsAndChildren()
     }
     
-    // Recusively finds all regions in model and initializes them.
+    /** 
+     * Recusively finds all regions in model and initializes them.
+     * 
+     * @param node The current KNode checked.
+     * @param depth The current nesting depth of regions.
+     * @param region The current region being constructed.
+     */
     protected initHelper(node: KNode, depth: number, region?: Region) {
         // Get or create current depthArray and region.
         this.depthArray[depth] = this.depthArray[depth] ? this.depthArray[depth] : []
@@ -103,7 +120,13 @@ export class DepthMap {
         }
     }
 
-    createRegion(boundingRectangle?: KNode): Region {
+    /** 
+     * Initializes a new region.
+     * 
+     * @param boundingRectangle The rectangle of the child area the region is inside of 
+     * @returns The new region object. 
+     */
+    protected createRegion(boundingRectangle?: KNode): Region {
         let region = new Region()
         if (boundingRectangle) {
             region.boundingRectangle = boundingRectangle
@@ -113,18 +136,24 @@ export class DepthMap {
         return region
     }
 
-    addRegionToMap(depth: number, region: Region) {
+    /** 
+     * Adds a region to the depth map.
+     * 
+     * @param depth The nesting depth the region is put into. 
+     * @param region The region to add. 
+     */
+    protected addRegionToMap(depth: number, region: Region) {
         if (region.boundingRectangle && this.depthArray[depth]) {
             this.depthArray[depth].push(region)
             this.regionMap.set(region.boundingRectangle.id, region)
         }
     }
     
-    // Goes through each region from the bottom up to determine parent children structure.
+    /** Goes through each region from the bottom up to determine parent children structure. */
     protected findParentsAndChildren() {
         for (let i = this.depthArray.length - 1; i >= 0; i--) {
-            for (let curArray of this.depthArray) {
-                for (let region of curArray) {
+            for (let curDepth of this.depthArray) {
+                for (let region of curDepth) {
                     if (region.boundingRectangle) {
                         this.findParentsAndChildrenHelper(region, region.boundingRectangle.parent as KNode)
                     }
@@ -133,7 +162,12 @@ export class DepthMap {
         }
     }
     
-    // Goes through parents of a node until a new region is reached and add corresponding parent and child entries.
+    /** 
+     * Goes through parents of a node until a new region is reached and add corresponding parent and child entries.
+     * 
+     * @param region The region for which the parent region is searched for.
+     * @param node The curent node the function is on to traverse the model. 
+     */
     protected findParentsAndChildrenHelper(region: Region, node: KNode) {
         const parentRegion = this.regionMap.get(node.id)
         if (parentRegion) {
@@ -144,22 +178,21 @@ export class DepthMap {
         }
     }
     
-    // 
-    /**
+    /** 
      * Returns all regions with a specified nesting depth.
-     * @param depth The requested nesting depth.
+     * @param depth The requested nesting depth. 
      */
     getRegionsWithDepth(depth: number): Region[] {
         return this.depthArray[depth]
     }
 
-    /**
+    /** 
      * Goes through all elements of each region to find the region with the specified KNode.
-     * @param node The KNode to search for.
+     * @param node The KNode to search for. 
      */
     findRegionWithElement(node: KNode): Region | undefined {
-        for (let curArray of this.depthArray) {
-            for (let region of curArray) {
+        for (let curDepth of this.depthArray) {
+            for (let region of curDepth) {
                 for (let element of region.elements) {
                     if (element === node) {
                         return region
@@ -170,19 +203,20 @@ export class DepthMap {
         return undefined
     }
 
-    /**
+    /** 
      * Finds region with corresponding rectangle id of a child area.
-     * @param id ID of the rectangle the child area is in.
+     * @param id ID of the rectangle the child area is in. 
      */
     getRegion(id: String): Region | undefined {
         return this.regionMap.get(id)
     }
 
-    /**
+    /** 
      * Decides the appropriate collapsed or expanded state for region based on their size in the viewport and applies that state.
      * When the native resolution of the graph is reached, all visible regions will be expanded.
      * Also collapses all invisible states.
-     * @param viewport The current viewport.
+     * 
+     * @param viewport The current viewport. 
      */
     expandCollapse(viewport: Viewport): void {
         if (!this.renderingOptions) {
@@ -191,8 +225,8 @@ export class DepthMap {
         const thresholdOption = this.renderingOptions.getOption(ExpandCollapseThreshold.ID)
         const defaultThreshold = 0.2
         const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
-        for (let curArray of this.depthArray) {
-            for (let region of curArray) {
+        for (let curDepth of this.depthArray) {
+            for (let region of curDepth) {
                 // Collapse all invisible states and regions.
                 if (!this.isVisible(region, viewport)) {
                     region.setExpansionState(false)
@@ -211,11 +245,12 @@ export class DepthMap {
         }
     }
 
-    /**
+    /** 
      * Checks visibility of a region with position from browser coordinates in current viewport.
+     * 
      * @param region The region in question for visiblity.
      * @param viewport The current viewport.
-     * @returns 
+     * @returns Boolean value indicating the visibility of the region in the current viewport. 
      */
     isVisible(region: Region, viewport: Viewport): boolean {
         if (region.absoluteBounds) {
@@ -230,11 +265,12 @@ export class DepthMap {
         }
     }
 
-    /**
+    /** 
      * Compares the size of a node to the viewport and returns the biggest fraction of either height or width.
+     * 
      * @param node The KNode in question
      * @param viewport The curent viewport
-     * @returns 
+     * @returns  
      */
     sizeInViewport(node: KNode, viewport: Viewport): number {
         const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
@@ -243,37 +279,43 @@ export class DepthMap {
     }
 }
 
+/**
+ * Combines KNodes into regions. These correspond to child areas. A region can correspond to 
+ * a region or a super state in the model. Also manages the boundaries, title candidates, 
+ * tree structure of the model and application of expansion state of its KNodes.
+ */
 export class Region {
-    // All KNodes in the region.
+    /** All KNodes specifically in the region. */
     elements: KNode[]
-    // This is the rectangle of the child area in which the region lies.
+    /** The rectangle of the child area in which the region lies. */
     boundingRectangle: KNode
-    // Gained using browser position and rescaling and are therefore not perfect.
+    /** Gained using browser position and rescaling and are therefore not perfect. */
     absoluteBounds: Bounds
-    // Determines if the state is expanded (true) or collapsed (false).
+    /** Determines if the region is expanded (true) or collapsed (false). */
     expansionState: boolean
-    // The immediate parent region of this region.
+    /** The immediate parent region of this region. */
     parent: Region
-    // All immediate child regions of this region
+    /** All immediate child regions of this region */
     children: Set<Region>
-    // Determines if the region has a title by default.
+    /** Determines if the region has a title by default. */
     hasTitle: boolean
-    // Contains a macro state title, if there is at least one in the region.
+    /** Contains a macro state title, if there is at least one in the region. */
     macroStateTitle?: KText
-    // Contains a super state title, if there is just one child region.
+    /** Contains a super state title, if there is one. */
     superStateTitle?: KText
-    // Determines if there is at least one macro state in the region.
+    /** Determines if there is at least one macro state in the region. */
     hasMacroState: boolean
-    // Determines if there are more than one macro state in the region.
+    /** Determines if there are more than one macro state in the region. */
     hasMultipleMacroStates: boolean
 
+    /** Constructor initializes element array for region. */
     constructor(){
         this.elements = []
     }
 
-    /**
+    /** 
      * Applies the expansion state to all elements of a region.
-     * @param state True for expanded and false for collapsed.
+     * @param state True for expanded and false for collapsed. 
      */
     setExpansionState(state: boolean): void {
         this.expansionState = state
