@@ -20,6 +20,11 @@ export class DepthMap {
     rootElement: SModelRoot;
     /** A quick lookup map with the id of the bounding child area of a region as key. */
     regionMap: Map<String, Region>;
+    /** 
+     * Set for handling regions, that need to be checked for expansion state.
+     * Consists of the last expanded regions in the hierarchy.
+    */
+    criticalRegions: Set<Region>;
     /** Rendering options for adjusting functions. */
     renderingOptions: RenderingOptions
     /** Will be changed to true, when all micro layouting, etc. is done. */
@@ -65,6 +70,7 @@ export class DepthMap {
     protected init() {
         this.regionMap = new Map()
         this.titleMap = new Map()
+        this.criticalRegions = new Set()
         for (let child of this.rootElement.children) {
             this.depthArray = []
             this.initHelper((child as KNode), 0)
@@ -73,7 +79,7 @@ export class DepthMap {
     }
     
     /** 
-     * Recusively finds all regions in model and initializes them.
+     * Recursively finds all regions in model and initializes them.
      * 
      * @param node The current KNode checked.
      * @param depth The current nesting depth of regions.
@@ -82,12 +88,7 @@ export class DepthMap {
     protected initHelper(node: KNode, depth: number, region?: Region) {
         // Get or create current depthArray and region.
         this.depthArray[depth] = this.depthArray[depth] ? this.depthArray[depth] : []
-        let curRegion: Region
-        if (region) {
-            curRegion = region
-        } else {
-            curRegion = this.createRegion(node.parent as KNode)
-        }
+        let curRegion = region ? region : this.createRegion(node.parent as KNode)
         // Go through child nodes until there are no child nodes left.
         if (node.children.length !== 0) {
             for (let child of node.children) {
@@ -218,30 +219,132 @@ export class DepthMap {
      * 
      * @param viewport The current viewport. 
      */
-    expandCollapse(viewport: Viewport): void {
+    expandCollapse(viewport: Viewport) {
+        // Load Render Options
         if (!this.renderingOptions) {
             this.renderingOptions = RenderingOptions.getInstance()
         }
         const thresholdOption = this.renderingOptions.getOption(ExpandCollapseThreshold.ID)
         const defaultThreshold = 0.2
         const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
-        for (let curDepth of this.depthArray) {
-            for (let region of curDepth) {
-                // Collapse all invisible states and regions.
-                if (!this.isVisible(region, viewport)) {
-                    region.setExpansionState(false)
-                // The root has no boundingRectangle.
-                } else if (!region.boundingRectangle) {
-                    region.setExpansionState(true)
-                // Expand when reached relative size threshold or native resolution.
-                } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= expandCollapseThreshold
-                           || viewport.zoom >= 1) {
-                    region.setExpansionState(true)
-                // Collapse when reached relative size threshold.
-                } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= expandCollapseThreshold) {
-                    region.setExpansionState(false)
+        // Initialize expansion states on first run.
+        if (this.criticalRegions.size == 0) {
+            let firstRegion: Region
+            let breakCheck = false
+            for (let curDepth of this.depthArray) {
+                for (let region of curDepth) {
+                    firstRegion = region
+                    if(this.getExpansionState(firstRegion, viewport, expandCollapseThreshold)) {
+                        this.searchUntilCollapse(firstRegion, viewport, expandCollapseThreshold)
+                    }
+                    breakCheck = true
+                    break
+                }
+                if (breakCheck) {
+                    break
                 }
             }
+        } else {
+            this.checkCriticalRegions(viewport, expandCollapseThreshold)
+        }
+    }
+
+    /**
+     * Finds the regions with the lowest nesting level, that need to be collapsed and applies the state to it
+     * as well as all children until the model is exhausted.
+     * 
+     * @param region The root region
+     * @param viewport The curent viewport
+     * @param threshold The expand/collapse threshold
+     */
+    searchUntilCollapse(region: Region, viewport: Viewport, threshold: number) {
+        region.setExpansionState(true)
+        region.children.forEach(childRegion => {
+            if (childRegion.boundingRectangle) {
+                if (this.sizeInViewport(childRegion.boundingRectangle, viewport) <= threshold) {
+                    this.criticalRegions.add(region)
+                    this.applyExpansionState(childRegion, false)
+                } else {
+                    this.searchUntilCollapse(childRegion, viewport, threshold)
+                }
+            }
+        })
+    }
+
+    /** Applies expansion state recursively to all children */
+    applyExpansionState(region: Region, expansionState: boolean) {
+        region.setExpansionState(expansionState)
+        region.children.forEach(childRegion => {
+            this.applyExpansionState(childRegion, expansionState)
+        })
+    }
+
+    /**
+     * Looks for a change in expansion state for all critical regions.
+     * Applies this state and manages the critical regions.
+     * 
+     * @param viewport The current viewport
+     * @param threshold The expand/collapse threshold
+     */
+    checkCriticalRegions(viewport: Viewport, threshold: number) {
+        // Use set of child regions to avoid multiple checks.
+        let childSet: Set<Region> = new Set()
+        // All regions here are currently expanded.
+        this.criticalRegions.forEach(region => {
+            // Collapse either if the parent region is collapsed or the expansion state changes.
+            if (region.parent && region.parent.expansionState == false || !this.getExpansionState(region, viewport, threshold)) {
+                region.setExpansionState(false)
+                this.criticalRegions.delete(region)
+                if (region.parent) {
+                    this.criticalRegions.add(region.parent)
+                }
+                // Collapse all children.
+                region.children.forEach(childRegion => {
+                    childRegion.setExpansionState(false)
+                })
+            } else {
+                // Add children to check for expansion state change.
+                region.children.forEach(childRegion => {
+                    childSet.add(childRegion)
+                })
+            }
+        })
+        // Check all collected child regions of expanded states.
+        childSet.forEach(childRegion => {
+            if (this.getExpansionState(childRegion, viewport, threshold)) {
+                childRegion.setExpansionState(true)
+                this.criticalRegions.add(childRegion)
+            }
+        })
+        childSet.clear()
+    }
+
+    /**
+     * Decides the appropriate collapsed or expanded state for a region
+     * based on their size in the viewport and visibility
+     * 
+     * @param region The region in question
+     * @param viewport The currenr viewport
+     * @param threshold The expand/collapse threshold
+     * @returns The appropriate expansion state.
+     */
+    getExpansionState(region: Region, viewport: Viewport, threshold: number): boolean {
+        // Collapse all invisible states and regions.
+        if (!this.isVisible(region, viewport)) {
+            return false
+        // The root has no boundingRectangle.
+        } else if (!region.boundingRectangle) {
+            return true
+        // Expand when reached relative size threshold or native resolution.
+        } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= threshold
+                   || viewport.zoom >= 1) {
+            return true
+        // Collapse when reached relative size threshold.
+        } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= threshold) {
+            return false
+        // Default expand if nothing applies
+        } else {
+            return true
         }
     }
 

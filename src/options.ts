@@ -217,22 +217,15 @@ export class RenderOptions {
     }
 }
 
-/**
- * Contains all RenderOptions in an object to access them outside of classes.
- */
+/** Contains all RenderOptions in an object to access them outside of classes. */
 export class RenderingOptions {
-    /**
-     * HashMap containing all render options with the option ID as the key.
-     */
+    /** HashMap containing all render options with the option ID as the key. */
     options: Map<String, RenderOption>
-    /**
-     * Private instance for singleton pattern.
-     */
+
+    /** Private instance for singleton pattern. */
     private static instance: RenderingOptions;
 
-    /**
-     * Private constructor for singleton pattern.
-     */
+    /** Private constructor for singleton pattern.*/
     private constructor() {
         this.options = new Map()
     }
