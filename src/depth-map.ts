@@ -2,7 +2,7 @@
 import { KNode } from "@kieler/keith-interactive/lib/constraint-classes";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderingOptions, ExpandCollapseThreshold } from "./options";
-import { KText, K_RECTANGLE } from "./skgraph-models";
+import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
 
 /**
  * Divides Model KNodes into regions. These are then saved in the 2D depthArray,
@@ -97,7 +97,8 @@ export class DepthMap {
                     // Add the current node as element of region.
                     curRegion.elements.push(child as KNode)
                     // When the bounding rectangle of a new child area is reached, a new region is created.
-                    if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE) {
+                    if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE 
+                        && ((child as KNode).data[0] as KContainerRendering).children[0]) {
                         let nextRegion = this.createRegion(child as KNode)
                         // In the models parent child structure a child can occur multiple times.
                         if (!this.regionMap.has(curRegion.boundingRectangle.id)) {
