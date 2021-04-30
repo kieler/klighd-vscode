@@ -100,7 +100,8 @@
     "keith-language",
     "keith-kicool",
     "keith-simulation",
-    "keith-sprotty"
+    "keith-sprotty",
+    "keith-standalone-view"
   ],
   "theiaPluginsDir": "./plugins",
   "theiaPlugins": {
