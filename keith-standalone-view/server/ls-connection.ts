@@ -14,18 +14,8 @@
 import { FastifyLoggerInstance } from "fastify";
 import { Socket } from "net";
 import { join } from "path";
-import {
-  IWebSocket,
-  WebSocketMessageReader,
-  WebSocketMessageWriter,
-} from "vscode-ws-jsonrpc";
-import {
-  createConnection,
-  createServerProcess,
-  createSocketConnection,
-  forward,
-  IConnection,
-} from "vscode-ws-jsonrpc/lib/server";
+import { IWebSocket } from "vscode-ws-jsonrpc";
+import * as rpcServer from "vscode-ws-jsonrpc/lib/server";
 // _fastify-websocket_ typing for their conn.socket object. _ws_ is a dependency of _fastify-websocket_.
 import * as WebSocket from "ws";
 
@@ -41,45 +31,47 @@ import * as WebSocket from "ws";
  * @returns A dispose callback.
  */
 export function connectToLanguageServer(
-  websocket: WebSocket,
+  client: WebSocket,
   logger: FastifyLoggerInstance
 ): () => void {
-  const socket = transformWebSocketToIWebSocket(websocket);
-  const reader = new WebSocketMessageReader(socket);
-  const writer = new WebSocketMessageWriter(socket);
-  // Socket connection to the client
-  const socketConn = createConnection(reader, writer, () => {
-    socket.dispose();
-  });
+  const socket = transformWebSocketToIWebSocket(client);
+  const clientConnection = rpcServer.createWebSocketConnection(socket);
 
   const lsPort = getPort();
-  let lsConn: IConnection;
+  let lsConn: rpcServer.IConnection;
   if (lsPort) {
     const socket = new Socket();
     // Socket connection to the LS
-    lsConn = createSocketConnection(socket, socket, () => {
-      socket.destroy();
+    lsConn = rpcServer.createSocketConnection(socket, socket, () => {
+      socket.end();
     });
 
-    forward(socketConn, lsConn, (msg) => {
+    rpcServer.forward(clientConnection, lsConn, (msg) => {
       logger.debug(msg, "Forwarding message");
       return msg;
     });
+    logger.info("Forwarding to language server socket.");
     socket.connect(lsPort);
   } else {
     // TODO: (cfr) Use a more flexible pathing
     const lsPath = join(__dirname, "../kieler-language-server.linux.jar");
     let args = ["-jar", "-Djava.awt.headless=true", lsPath];
-    lsConn = createServerProcess("Language Server", "java", args);
+    lsConn = rpcServer.createServerProcess("Language Server", "java", args);
 
-    forward(socketConn, lsConn, (msg) => {
+    rpcServer.forward(clientConnection, lsConn, (msg) => {
       logger.debug(msg, "Forwarding message");
       return msg;
     });
+    logger.info("Forwarding to language server process.");
   }
 
+  socket.onClose(() => {
+    logger.info("Client closed. Shutting down language server.");
+    lsConn.dispose();
+  });
+
   return () => {
-    socketConn.dispose();
+    clientConnection.dispose();
     lsConn.dispose();
   };
 }

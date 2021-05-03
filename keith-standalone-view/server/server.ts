@@ -23,7 +23,7 @@ const server = fastify({ logger: { prettyPrint: true, level: "debug" } });
 server.register(websocketPlugin);
 server.register(staticPlugin, {
   // TODO: (cfr) Improve pathing to be more flexible
-  root: join(__dirname, "../public"),
+  root: join(__dirname, "../dist"),
 });
 
 // Setup WebSocket handler
