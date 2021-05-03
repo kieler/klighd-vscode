@@ -1,22 +1,5 @@
 {
-  "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "noEmitOnError": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "target": "es5",
-    "outDir": "lib",
-    "lib": ["es6", "dom"],
-    "jsx": "react",
-    "sourceMap": true,
-    "skipLibCheck": true
-  },
-  "include": ["src"]
+  // Default ts config used by your IDE to provide linting.
+  "extends": "./tsconfig.base.json",
+  "include": ["src", "server"]
 }

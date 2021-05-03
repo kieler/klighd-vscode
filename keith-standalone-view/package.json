@@ -11,11 +11,14 @@
     "standalone"
   ],
   "scripts": {
-    "prepare": "yarn run clean && yarn build",
-    "clean": "rimraf lib",
+    "prepare": "yarn run clean && run-p --print-label \"build:*\"",
+    "clean": "rimraf lib && rimraf dist",
     "lint": "tslint -c ./tslint.json --project ./tsconfig.json",
-    "build": "tsc",
-    "watch": "tsc -w -p ./tsconfig.json",
+    "build:app": "webpack --mode=\"production\" && tsc --noEmit -p ./tsconfig.web.json",
+    "build:server": "tsc -p ./tsconfig.server.json",
+    "watch": "run-p --print-label \"watch:*\"",
+    "watch:app": "webpack --watch --mode=\"development\"",
+    "watch:server": "tsc -w -p ./tsconfig.server.json",
     "start": "node ./lib/server.js",
     "socket": "node ./lib/server.js --LSP_PORT=5007"
   },
@@ -25,10 +28,16 @@
     "fastify-static": "^4.0.1",
     "fastify-websocket": "^3.1.0",
     "pino-pretty": "^4.7.1",
+    "vscode-languageserver-protocol": "^3.16.0",
     "vscode-ws-jsonrpc": "^0.2.0"
   },
   "files": [
     "lib"
   ],
-  "devDependencies": {}
+  "devDependencies": {
+    "html-webpack-plugin": "4",
+    "npm-run-all": "^4.1.5",
+    "ts-loader": "^8.2.0",
+    "webpack": "^4.44.1"
+  }
 }
