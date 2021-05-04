@@ -15,3 +15,4 @@
 
 import createKeithDiagramContainer from './di.config'
 export { createKeithDiagramContainer }
+export {Connection, IConnection, requestModel} from './diagram-server'

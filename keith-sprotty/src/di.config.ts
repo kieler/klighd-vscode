@@ -19,10 +19,12 @@ import {
     TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
+import { KeithDiagramServer } from './diagram-server';
 import { KeithHoverMouseListener } from './hover/hover';
 import { RenderOptions } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
+import { SynthesisRegistry } from './syntheses/synthesis-registry';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
@@ -30,6 +32,7 @@ import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './view
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
  */
 const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Unbind, isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
+    bind(TYPES.ModelSource).to(KeithDiagramServer).inSingletonScope();
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
     rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
@@ -60,6 +63,8 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     configureModelElement(context, PORT_TYPE, SKPort, KPortView)
     configureModelElement(context, LABEL_TYPE, SKLabel, KLabelView)
     bind(RenderOptions).toSelf().inSingletonScope()
+
+    bind(SynthesisRegistry).toSelf().inSingletonScope();
 })
 
 /**
