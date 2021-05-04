@@ -5,10 +5,34 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KEITH Standalone View</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+      }
+
+      #sprotty {
+        width: 100%;
+        height: 100%;
+      }
+
+      #sprotty > svg {
+        width: 100%;
+        height: 100%;
+        outline: none;
+      }
+
+      #sprotty_hidden {
+        /* Stop the sprotty_hidden container from participating in the page layout.
+        A better solution would be "display: none", however this causes
+        wrong text bound calculations. */
+        position: fixed;
+        top: 0;
+        z-index: -1;
+      }
+    </style>
   </head>
   <body>
-    <h1>Diagram View</h1>
-    <button id="reqModel">Request Model Action</button>
-    <p>Open the console to see the lsp messages!</p>
+    <div id="sprotty"></div>
   </body>
 </html>

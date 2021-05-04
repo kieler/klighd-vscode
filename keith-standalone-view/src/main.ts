@@ -1,11 +1,47 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2021 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
+import "reflect-metadata";
+import {
+  Connection,
+  createKeithDiagramContainer,
+  requestModel
+} from "@kieler/keith-sprotty/lib";
 import { LSPConnection } from "./connection";
-const btn = document.getElementById("reqModel");
-if(!btn) console.log("Button not found")
+import { getDiagramSourceUri, getLanguageId, sleep } from "./helpers";
 
-const socketUrl = `ws://${location.host}/socket`;
-const connection = new LSPConnection(socketUrl).connect();
+const sourceUri = getDiagramSourceUri();
 
-btn?.addEventListener("click", () => {
-  connection.sendDocumentDidOpen("file:///home/cf/Documents/bachelor/example-workspace/ABRO.sctx")
-  connection.requestModelAction("file:///home/cf/Documents/bachelor/example-workspace/ABRO.sctx");
-});
+if (!sourceUri) {
+  document.body.innerHTML =
+    "Please specify a sourceUri for your diagram as a search parameter.";
+} else {
+  main(sourceUri);
+}
+
+async function main(sourceUri: string) {
+  const languageId = getLanguageId(sourceUri);
+  const socketUrl = `ws://${location.host}/socket`;
+
+  const connection = new LSPConnection();
+  const diagramContainer = createKeithDiagramContainer("sprotty");
+  diagramContainer.bind(Connection).toConstantValue(connection);
+
+  // Connect to a language server and request a diagram.
+  await connection.connect(socketUrl);
+  await connection.sendInitialize();
+  connection.sendDocumentDidOpen(sourceUri, languageId);
+  // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions...
+  await sleep(200);
+  await requestModel(diagramContainer, sourceUri);
+}

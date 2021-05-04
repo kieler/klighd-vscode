@@ -1,5 +1,11 @@
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
+import { IConnection } from "@kieler/keith-sprotty/lib";
+import { ActionMessage } from "sprotty";
+
+const acceptMessageType = new rpc.NotificationType<ActionMessage, void>(
+  "diagram/accept"
+);
 
 /**
  * Connection to the language server.
@@ -7,46 +13,61 @@ import * as lsp from "vscode-languageserver-protocol";
  * Inspired by
  * [this implementation](https://github.com/wylieconlon/lsp-editor-adapter/blob/master/src/ws-connection.ts).
  */
-export class LSPConnection {
-  private webSocketUrl: string;
+export class LSPConnection implements IConnection {
   private socket?: WebSocket;
   private connection?: rpc.MessageConnection;
+  private messageHandlers: ((message: ActionMessage) => void)[] = [];
 
-  constructor(webSocketUrl: string) {
-    this.webSocketUrl = webSocketUrl;
-    console.log("Constructed");
+  sendMessage(message: ActionMessage): void {
+    this.connection?.sendNotification(acceptMessageType, message);
   }
 
-  connect(): this {
+  onMessageReceived(handler: (message: ActionMessage) => void): void {
+    this.messageHandlers.push(handler);
+  }
+
+  private notifyHandlers(message: ActionMessage) {
+    for (const handler of this.messageHandlers) {
+      handler(message);
+    }
+  }
+
+  connect(websocketUrl: string): Promise<this> {
     // The WebSocket has created in place! Passing it as a parameter might lead
     // to a race-condition where the socket is opened, before vscode-ws-jsonrpc
     // starts to listen. This causes the connection to not work.
-    const socket = new WebSocket(this.webSocketUrl);
-    this.socket = socket;
-    console.log("Connecting...");
+    return new Promise((resolve) => {
+      const socket = new WebSocket(websocketUrl);
+      this.socket = socket;
+      console.log("Connecting to language server.");
 
-    rpc.listen({
-      webSocket: socket,
-      logger: new rpc.ConsoleLogger(),
-      onConnection: (conn) => {
-        conn.listen();
-        console.log("Connected");
-        this.connection = conn;
-        
-        this.connection.onError((e) => {
-          console.error(e);
-        });
-        
-        this.connection.onClose(() => {
-          this.connection = undefined;
-          this.socket = undefined;
-        });
-        
-        this.sendInitialize();
-      },
+      rpc.listen({
+        webSocket: socket,
+        logger: new rpc.ConsoleLogger(),
+        onConnection: (conn) => {
+          conn.listen();
+          conn.inspect();
+          console.log("Connected to language server.");
+          this.connection = conn;
+
+          this.connection.onError((e) => {
+            console.error(e);
+          });
+
+          this.connection.onClose(() => {
+            this.connection = undefined;
+            this.socket = undefined;
+          });
+
+          this.connection.onNotification(
+            acceptMessageType,
+            this.notifyHandlers.bind(this)
+          );
+
+          resolve(this);
+        },
+      });
     });
-
-    return this;
   }
 
   close() {
@@ -56,6 +77,10 @@ export class LSPConnection {
     this.socket?.close();
   }
 
+  /**
+   * Initializes the connection according to the LSP specification.
+   * @see
+   */
   async sendInitialize() {
     if (!this.connection) return;
 
@@ -64,40 +89,27 @@ export class LSPConnection {
       processId: null,
       workspaceFolders: null,
       rootUri: null,
+      clientInfo: { name: "webview" },
       capabilities: {},
     };
 
-    console.log("Sending initialization.");
+    console.log("initialize LSP.");
     await this.connection.sendRequest(method, initParams);
     this.connection.sendNotification(lsp.InitializedNotification.type.method);
+    console.log("initialized LSP.");
   }
 
-  async requestModelAction(sourceUri: string) {
-    const method = "diagram/accept";
-    const params = {
-      clientId: "keith-diagram_sprotty",
-      action: {
-        options: {
-          needsClientLayout: false,
-          needsServerLayout: true,
-          sourceUri,
-          diagramType: "keith-diagram",
-        },
-        requestId: "",
-        kind: "requestModel",
-      },
-    };
-
-    this.connection?.sendRequest(method, params);
-  }
-
-  sendDocumentDidOpen(sourceUri: string) {
+  /**
+   * Notifies the connected language server about an opened document.
+   * @param sourceUri Valid our for the document. See the LSP for more information.
+   * @param languageId Id of the language inside the document.
+   */
+  sendDocumentDidOpen(sourceUri: string, languageId: string) {
     const method = lsp.DidOpenTextDocumentNotification.type.method;
     const params = {
       textDocument: {
-        languageId: "sccharts",
+        languageId: languageId,
         uri: sourceUri,
-        // text: "",
         version: 0,
       },
     };

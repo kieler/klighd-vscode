@@ -5,7 +5,6 @@ const path = require("path");
 /** @type {webpack.Configuration} */
 module.exports = {
   mode: "development",
-  devtool: "inline-source-map",
 
   entry: "./src/main.ts",
   output: {

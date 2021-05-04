@@ -17,7 +17,7 @@ import websocketPlugin from "fastify-websocket";
 import { join } from "path";
 import { connectToLanguageServer } from "./ls-connection";
 
-const server = fastify({ logger: { prettyPrint: true, level: "debug" } });
+const server = fastify({ logger: { prettyPrint: true, level: "info" } });
 
 // Register ecosystem plugins
 server.register(websocketPlugin);
