@@ -232,11 +232,11 @@ export async function requestModel(container: Container, sourceUri: string) {
     TYPES.IActionDispatcher
   );
 
-  const response = await actionDispatcher.request(
-    RequestModelAction.create({
+  await actionDispatcher.dispatch(
+    new RequestModelAction({
       sourceUri: sourceUri,
+      // TODO: Extract the diagramType. See keith-diagram/src/browser/di.config.ts as an example.
       diagramType: "keith-diagram",
     })
   );
-  await actionDispatcher.dispatch(response);
 }
