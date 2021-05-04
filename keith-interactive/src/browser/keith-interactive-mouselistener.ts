@@ -11,9 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { Action, MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
-import { LSTheiaDiagramServer } from 'sprotty-theia/lib/sprotty/languageserver/ls-theia-diagram-server';
 import { isUndefined } from 'util';
 import { RefreshDiagramAction } from './actions';
 import { KNode } from './constraint-classes';
@@ -40,11 +39,6 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
      * The currently moved node.
      */
     private target: KNode | undefined
-
-    /**
-     * The diagram server.
-     */
-    @inject(LSTheiaDiagramServer) protected readonly dserver: LSTheiaDiagramServer
 
     /**
      * Does not use super implementation, since it calls mouseUp
@@ -77,9 +71,11 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     }
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
-        if (this.dserver.connector.editorManager.currentEditor && this.dserver.connector.editorManager.currentEditor.saveable.dirty) {
-            this.dserver.connector.editorManager.currentEditor.saveable.save();
-        }
+        // TODO: This is the only situation, where core package reaches into Theia just to save an editor.
+        // This makes it impossible to use KEITH in an standalone browser view.
+        // if (this.dserver.connector.editorManager.currentEditor && this.dserver.connector.editorManager.currentEditor.saveable.dirty) {
+        //     this.dserver.connector.editorManager.currentEditor.saveable.save();
+        // }
         let targetNode = target
         if (target instanceof SLabel && target.parent instanceof SNode) {
             // nodes should be movable when the user clicks on the label
