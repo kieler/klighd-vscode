@@ -16,10 +16,11 @@ import "./styles/main.css";
 import {
   Connection,
   createKeithDiagramContainer,
-  requestModel
+  requestModel,
 } from "@kieler/keith-sprotty/lib";
 import { LSPConnection } from "./connection";
 import { getDiagramSourceUri, getLanguageId, sleep } from "./helpers";
+import { hideSpinner } from "./spinner";
 
 const sourceUri = getDiagramSourceUri();
 
@@ -27,7 +28,7 @@ if (!sourceUri) {
   document.body.innerHTML =
     "Please specify a sourceUri for your diagram as a search parameter.";
 } else {
-  main(sourceUri);
+  main(sourceUri).then(() => hideSpinner());
 }
 
 async function main(sourceUri: string) {
