@@ -249,7 +249,7 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
  * Render something to indicate the constraint set on a node.
  * @param node Node with a constraint
  */
-export function renderLayeredConstraint(node: KNode) {
+export function renderLayeredConstraint(node: KNode): VNode {
     let result = <g></g>
     let x = node.size.width
     let y = 0

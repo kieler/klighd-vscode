@@ -12,6 +12,7 @@
  */
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx';
+import { VNode } from "snabbdom/vnode";
 import { KNode } from '../constraint-classes';
 import { renderLock } from '../interactive-view-objects';
 
@@ -24,7 +25,7 @@ const lockOffset = 7
  * @param node All nodes in the hierarchical level for which the layers should be visualized.
  * @param root Root of the hierarchical level.
  */
-export function renderHierarchyLevel(nodes: KNode[], root: KNode) {
+export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
     // Draw rect around all child nodes
     let color = 'grey'
     let x: number = Number.MAX_VALUE
@@ -61,6 +62,6 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode) {
  * Renders a lock inside the node.
  * @param node The node with the constraint set.
  */
-export function renderRectPackConstraint(node: KNode) {
+export function renderRectPackConstraint(node: KNode): VNode {
     return <g>{renderLock(node.size.width - lockOffset, lockOffset)}</g>
 }
