@@ -20,9 +20,12 @@ import {
   BringToFrontAction,
   ComputedBoundsAction,
   DiagramServer,
+  FitToScreenAction,
   IActionDispatcher,
   ICommand,
   RequestModelAction,
+  RequestPopupModelAction,
+  SetModelCommand,
   SwitchEditModeAction,
   TYPES,
 } from "sprotty";
@@ -30,6 +33,7 @@ import {
   CheckedImagesAction,
   CheckImagesAction,
   ComputedTextBoundsAction,
+  KeithUpdateModelAction,
   Pair,
   PerformActionAction,
   RefreshLayoutAction,
@@ -75,6 +79,16 @@ export class KeithDiagramServer extends DiagramServer {
 
   messageReceived(message: ActionMessage) {
     super.messageReceived(message);
+
+    const wasDiagramModelUpdated =
+      message.action.kind === SetModelCommand.KIND ||
+      message.action.kind === KeithUpdateModelAction.KIND;
+
+    if (wasDiagramModelUpdated) {
+      this.actionDispatcher.dispatch(
+        new FitToScreenAction(["$root"], 10, undefined, true)
+      );
+    }
   }
 
   handleLocally(action: Action): boolean {
