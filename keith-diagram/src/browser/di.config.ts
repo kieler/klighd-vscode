@@ -37,7 +37,7 @@ export class KeithDiagramConfiguration implements DiagramConfiguration {
         container.bind(KeithDiagramServer).toSelf().inSingletonScope()
         container.bind(TheiaDiagramServer).toService(KeithDiagramServer)
         container.bind(LSTheiaDiagramServer).toService(KeithDiagramServer)
-        container.bind(TYPES.ModelSource).toService(TheiaDiagramServer)
+        container.rebind(TYPES.ModelSource).toService(TheiaDiagramServer)
         container.bind(EditDiagramLocker).toSelf().inSingletonScope()
         container.rebind(KeyTool).to(TheiaKeyTool).inSingletonScope()
         container.bind(IRootPopupModelProvider).to(PopupModelProvider)
