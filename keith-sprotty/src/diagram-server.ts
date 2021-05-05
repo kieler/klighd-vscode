@@ -1,3 +1,16 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2021 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
 import { RefreshDiagramAction } from "@kieler/keith-interactive/lib/actions";
 import {
   DeleteLayerConstraintAction,
@@ -47,14 +60,12 @@ import { SynthesisRegistry } from "./syntheses/synthesis-registry";
 
 export const updateOptionsKind = "updateOptions";
 
-/**
- * An abstract connection to a server.
- */
+/** An abstract connection to a server. */
 export interface IConnection {
   sendMessage(message: ActionMessage): void;
   onMessageReceived(handler: (message: ActionMessage) => void): void;
 }
-
+/** DI Symbol that should be used to inject services that implement {@link IConnection}. */
 export const Connection = Symbol("connection");
 
 /**
@@ -93,7 +104,9 @@ export class KeithDiagramServer extends DiagramServer {
 
   handleLocally(action: Action): boolean {
     switch (action.kind) {
-      case ComputedBoundsAction.KIND: // TODO: remove sending of a computedBoundsAction as well (not possible until https://github.com/inversify/InversifyJS/issues/1035).
+      case ComputedBoundsAction.KIND:
+        // TODO: remove sending of a computedBoundsAction as well
+        // (not possible until https://github.com/inversify/InversifyJS/issues/1035).
         return false;
       case ComputedTextBoundsAction.KIND:
         return true;
