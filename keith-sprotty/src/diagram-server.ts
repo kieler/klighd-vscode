@@ -124,6 +124,15 @@ export class KeithDiagramServer extends DiagramServer {
   }
 
   handle(action: Action): void | ICommand | Action {
+    if (
+      action.kind === BringToFrontAction.KIND ||
+      action.kind === SwitchEditModeAction.KIND ||
+      action.kind === RequestPopupModelAction.KIND
+    ) {
+      // Actions that should be ignored and not further handled by this diagram server
+      return;
+    }
+
     if (action.kind === SetSynthesesAction.KIND) {
       this.handleSetSyntheses(action as SetSynthesesAction);
     } else {
