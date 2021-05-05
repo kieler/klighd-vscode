@@ -46,7 +46,7 @@ export class LSPConnection implements IConnection {
         logger: new rpc.ConsoleLogger(),
         onConnection: (conn) => {
           conn.listen();
-          conn.inspect();
+          
           console.log("Connected to language server.");
           this.connection = conn;
 
@@ -157,8 +157,10 @@ export class LSPConnection implements IConnection {
     };
 
     console.log("initialize LSP.");
+    console.time("lsp-init");
     await this.connection.sendRequest(method, initParams);
     this.connection.sendNotification(lsp.InitializedNotification.type.method);
+    console.timeEnd("lsp-init");
     console.log("initialized LSP.");
   }
 
@@ -173,6 +175,8 @@ export class LSPConnection implements IConnection {
       textDocument: {
         languageId: languageId,
         uri: sourceUri,
+        // The standalone view is not able to change a document. Therefore,
+        // the document version is constant.
         version: 0,
       },
     };

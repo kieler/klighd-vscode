@@ -17,7 +17,10 @@ import websocketPlugin from "fastify-websocket";
 import { join } from "path";
 import { connectToLanguageServer } from "./ls-connection";
 
-const server = fastify({ logger: { prettyPrint: true, level: "info" } });
+const server = fastify({
+  logger: { prettyPrint: true, level: "info" },
+  disableRequestLogging: true,
+});
 
 // Register ecosystem plugins
 server.register(websocketPlugin);
@@ -31,8 +34,6 @@ server.get("/socket", { websocket: true }, (conn) => {
   // Connection established. Spawn a LS for the connection and stream messages
   connectToLanguageServer(conn.socket, server.log);
 });
-
-
 
 // IIFE to start the server and listen for requests
 (async function main() {
