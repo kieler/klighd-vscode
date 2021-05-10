@@ -11,20 +11,41 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { fastify } from "fastify";
+import { fastify, FastifyPluginAsync } from "fastify";
 import staticPlugin from "fastify-static";
 import websocketPlugin from "fastify-websocket";
 import { join } from "path";
 import { connectToLanguageServer } from "./ls-connection";
 
-interface SetupOptions {
-  /** Activate logging with the given level if this property is defined. */
-  logging?: "info" | "debug";
-
+/** Options required by the {@link webSocketHandler} plugin. */
+interface Options {
   lsPort?: number;
   lsPath?: string;
 }
 
+/** Fastify plugin that forwards incoming websocket connections to a language server. */
+const webSocketHandler: FastifyPluginAsync<Options> = async (fastify, opts) => {
+  fastify.register(websocketPlugin);
+
+  // Setup WebSocket handler
+  fastify.get("/socket", { websocket: true }, (conn) => {
+    // Connection established. Spawn a LS for the connection and stream messages
+    connectToLanguageServer(conn.socket, fastify.log, opts.lsPort, opts.lsPath);
+  });
+};
+
+interface SetupOptions extends Options {
+  /** Activate logging with the given level if this property is defined. */
+  logging?: "info" | "debug";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Creates and configures a [fastify](https://fastify.io/) server that is
+ * able to serve the standalone view and forward websocket connections
+ * to a language server.
+ */
 export function createServer(opts: SetupOptions) {
   const server = fastify({
     logger: opts.logging
@@ -33,18 +54,14 @@ export function createServer(opts: SetupOptions) {
     disableRequestLogging: true,
   });
 
-  // Register ecosystem plugins
-  server.register(websocketPlugin);
+  // Serving static file for the website
   server.register(staticPlugin, {
     // Web sources are bundled into the dist folder at the package root
     root: join(__dirname, "../dist"),
   });
 
-  // Setup WebSocket handler
-  server.get("/socket", { websocket: true }, (conn) => {
-    // Connection established. Spawn a LS for the connection and stream messages
-    connectToLanguageServer(conn.socket, server.log, opts.lsPort, opts.lsPath);
-  });
+  // Handling for incoming websocket requests
+  server.register(webSocketHandler, opts);
 
   return server;
 }
