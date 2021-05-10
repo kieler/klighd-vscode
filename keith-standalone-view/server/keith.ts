@@ -14,6 +14,7 @@
 // link to view the diagram for a given file.
 
 import { Command } from "commander";
+import open from "open";
 import { pathToFileURL } from "url";
 import { parseIntOrUndefined } from "./helpers";
 import { createServer } from "./server";
@@ -75,6 +76,8 @@ program
       console.log("Keith Diagram Viewer\n");
       console.log("Inspect your diagram at:");
       console.log(url);
+
+      open(url);
     });
   });
 

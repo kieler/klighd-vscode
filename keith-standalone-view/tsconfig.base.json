@@ -14,6 +14,7 @@
     "lib": ["es6", "dom"],
     "jsx": "react",
     "sourceMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "esModuleInterop": true
   }
 }
