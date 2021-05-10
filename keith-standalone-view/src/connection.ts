@@ -1,3 +1,16 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2021 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
 import { IConnection } from "@kieler/keith-sprotty/lib";
@@ -46,7 +59,7 @@ export class LSPConnection implements IConnection {
         logger: new rpc.ConsoleLogger(),
         onConnection: (conn) => {
           conn.listen();
-          
+
           console.log("Connected to language server.");
           this.connection = conn;
 
@@ -91,69 +104,6 @@ export class LSPConnection implements IConnection {
       rootUri: null,
       clientInfo: { name: "webview" },
       capabilities: {},
-      initializationOptions: {
-        clientDiagramOptions: {
-          render: { "show-constraints": false },
-          synthesis: {
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CATEGORY-438835660": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CATEGORY-1214423815": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CATEGORY-2025855158": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CATEGORY-504784764": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK1520377476": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK-857562601": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.LabelShorteningHook.CHOICE2065322287":
-              "Original Labels",
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.LayoutHook.CHOICE1041377119":
-              "HV",
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.BlackWhiteModeHook.CHECK605821231": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.HideAnnotationHook.CHECK-2114928004": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CATEGORY928052554": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.PolicySynthesis.CHECK611538288": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CATEGORY1854238712": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.DataflowRegionSynthesis.CHECK-727505055": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.StateActionsHook.CHECK-873394278": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.LabelShorteningHook.RANGE-230395005":
-              "270",
-            "de.cau.cs.kieler.sccharts.ui.synthesis.AdaptiveZoom.CHECK-1237943491": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.LabelPlacementSideHook.CHOICE284809027":
-              "Consistent side",
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.StateActionsHook.CHECK-2046341074": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.LocalDeclarationsHook.CHECK471261454": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK-2145070736": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.EquationSynthesis.CHECK321613575": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.EquationSynthesis.CHECK473531924": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.EquationSynthesis.CHECK-2122637839": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.EquationSynthesis.CHECK-812816818": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.EquationSynthesis.CHECK1969682858": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.ActionsAsDataflowHook.CHECK-1951201949": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.ShowStateDependencyHook.CHECK418094715": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.ShowAnnotationsHook.CHECK-1848878463": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK14433073": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.InducedDataflowHook.CHECK1192599980": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.ExpandCollapseHook.CHECK-1902441701": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.ExpandCollapseHook.CHECK-3391608": false,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.hooks.actions.MemorizingExpandCollapseAction.CHECK1798750659": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK-1446408673": false,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.AbstractStyledDiagramSynthesis.CHOICE80227729":
-              "Boring",
-            "de.cau.cs.kieler.graphs.klighd.syntheses.AbstractStyledDiagramSynthesis.CHOICE577556810":
-              "Truncate",
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHECK1714799860": true,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHECK1410680797": true,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHECK378967091": false,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CATEGORY1437626306": true,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHOICE203465303":
-              "Simple",
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHOICE-1071157120":
-              "Solid backgrounds",
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHECK696767334": false,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHECK-674497877": false,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHECK-1345429378": false,
-            "de.cau.cs.kieler.graphs.klighd.syntheses.ElkGraphDiagramSynthesis.CHECK-1822597353": true,
-            "de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK305112564": true,
-          },
-        },
-      },
     };
 
     console.log("initialize LSP.");
