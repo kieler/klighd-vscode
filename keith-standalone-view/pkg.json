@@ -1,0 +1,6 @@
+{
+  "pkg": {
+    "outputPath": "bin",
+    "assets": ["dist/**/*"]
+  }
+}

@@ -13,7 +13,6 @@
 
 import { FastifyLoggerInstance } from "fastify";
 import { Socket } from "net";
-import { join } from "path";
 import { IWebSocket } from "vscode-ws-jsonrpc";
 import * as rpcServer from "vscode-ws-jsonrpc/lib/server";
 // _fastify-websocket_ typing for their conn.socket object. _ws_ is a dependency of _fastify-websocket_.
@@ -32,12 +31,13 @@ import * as WebSocket from "ws";
  */
 export function connectToLanguageServer(
   client: WebSocket,
-  logger: FastifyLoggerInstance
+  logger: FastifyLoggerInstance,
+  lsPort?: number,
+  lsPath?: string
 ): () => void {
-  const socket = transformWebSocketToIWebSocket(client);
-  const clientConnection = rpcServer.createWebSocketConnection(socket);
+  const webSocket = transformWebSocketToIWebSocket(client);
+  const clientConnection = rpcServer.createWebSocketConnection(webSocket);
 
-  const lsPort = getPort();
   let lsConn: rpcServer.IConnection;
   if (lsPort) {
     const socket = new Socket();
@@ -50,11 +50,10 @@ export function connectToLanguageServer(
       logger.debug(msg, "Forwarding message");
       return msg;
     });
+
     logger.info("Forwarding to language server socket.");
     socket.connect(lsPort);
-  } else {
-    // TODO: (cfr) Use a more flexible pathing
-    const lsPath = join(__dirname, "../kieler-language-server.linux.jar");
+  } else if (lsPath) {
     let args = ["-jar", "-Djava.awt.headless=true", lsPath];
     lsConn = rpcServer.createServerProcess("Language Server", "java", args);
 
@@ -62,10 +61,13 @@ export function connectToLanguageServer(
       logger.debug(msg, "Forwarding message");
       return msg;
     });
+
     logger.info("Forwarding to language server process.");
+  } else {
+    logger.error("No options provided to start a language server.");
   }
 
-  socket.onClose(() => {
+  webSocket.onClose(() => {
     logger.info("Client closed. Shutting down language server.");
     lsConn.dispose();
   });
@@ -74,15 +76,6 @@ export function connectToLanguageServer(
     clientConnection.dispose();
     lsConn.dispose();
   };
-}
-
-function getPort(): number | undefined {
-  let arg = process.argv.filter((arg) => arg.startsWith("--LSP_PORT="))[0];
-  if (!arg) {
-    return undefined;
-  } else {
-    return Number.parseInt(arg.substring("--LSP_PORT=".length), 10);
-  }
 }
 
 /**

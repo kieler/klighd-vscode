@@ -17,30 +17,34 @@ import websocketPlugin from "fastify-websocket";
 import { join } from "path";
 import { connectToLanguageServer } from "./ls-connection";
 
-const server = fastify({
-  logger: { prettyPrint: true, level: "info" },
-  disableRequestLogging: true,
-});
+interface SetupOptions {
+  /** Activate logging with the given level if this property is defined. */
+  logging?: "info" | "debug";
 
-// Register ecosystem plugins
-server.register(websocketPlugin);
-server.register(staticPlugin, {
-  // TODO: (cfr) Improve pathing to be more flexible
-  root: join(__dirname, "../dist"),
-});
+  lsPort?: number;
+  lsPath?: string;
+}
 
-// Setup WebSocket handler
-server.get("/socket", { websocket: true }, (conn) => {
-  // Connection established. Spawn a LS for the connection and stream messages
-  connectToLanguageServer(conn.socket, server.log);
-});
+export function createServer(opts: SetupOptions) {
+  const server = fastify({
+    logger: opts.logging
+      ? { prettyPrint: true, level: opts.logging }
+      : undefined,
+    disableRequestLogging: true,
+  });
 
-// IIFE to start the server and listen for requests
-(async function main() {
-  try {
-    await server.listen(8000);
-  } catch (error) {
-    server.log.error(error);
-    process.exit(1);
-  }
-})();
+  // Register ecosystem plugins
+  server.register(websocketPlugin);
+  server.register(staticPlugin, {
+    // Web sources are bundled into the dist folder at the package root
+    root: join(__dirname, "../dist"),
+  });
+
+  // Setup WebSocket handler
+  server.get("/socket", { websocket: true }, (conn) => {
+    // Connection established. Spawn a LS for the connection and stream messages
+    connectToLanguageServer(conn.socket, server.log, opts.lsPort, opts.lsPath);
+  });
+
+  return server;
+}

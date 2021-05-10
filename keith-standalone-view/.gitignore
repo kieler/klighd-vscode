@@ -1,1 +1,4 @@
 *.jar
+bin
+dist
+lib
