@@ -101,7 +101,8 @@
     "keith-kicool",
     "keith-simulation",
     "keith-sprotty",
-    "keith-standalone-view"
+    "keith-standalone-view",
+    "keith-vscode"
   ],
   "theiaPluginsDir": "./plugins",
   "theiaPlugins": {

@@ -4,12 +4,11 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
             "type": "node",
             "request": "launch",
             "name": "Start Browser Backend Socket",
-            "program": "${workspaceRoot}/keith-app/src-gen/backend/main.js", 
+            "program": "${workspaceRoot}/keith-app/src-gen/backend/main.js",
             "args": [
                 "--root-dir=./workspace",
                 "--LSP_PORT=5007",
@@ -71,6 +70,14 @@
             "sourceMapPathOverrides": {
                 "webpack:///../*": "${webRoot}/*"
             }
+        },
+        {
+            "name": "Run VSC Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}/keith-vscode"],
+            "outFiles": ["${workspaceFolder}/keith-vscode/out/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
         }
     ]
 }
