@@ -16,9 +16,7 @@ import * as lsp from "vscode-languageserver-protocol";
 import { IConnection } from "@kieler/keith-sprotty/lib";
 import { ActionMessage } from "sprotty";
 
-const acceptMessageType = new rpc.NotificationType<ActionMessage, void>(
-  "diagram/accept"
-);
+const acceptMessageType = new rpc.NotificationType<ActionMessage, void>("diagram/accept");
 
 /**
  * Connection to the language server.
@@ -27,110 +25,110 @@ const acceptMessageType = new rpc.NotificationType<ActionMessage, void>(
  * [this implementation](https://github.com/wylieconlon/lsp-editor-adapter/blob/master/src/ws-connection.ts).
  */
 export class LSPConnection implements IConnection {
-  private socket?: WebSocket;
-  private connection?: rpc.MessageConnection;
-  private messageHandlers: ((message: ActionMessage) => void)[] = [];
+    private socket?: WebSocket;
+    private connection?: rpc.MessageConnection;
+    private messageHandlers: ((message: ActionMessage) => void)[] = [];
 
-  sendMessage(message: ActionMessage): void {
-    this.connection?.sendNotification(acceptMessageType, message);
-  }
-
-  onMessageReceived(handler: (message: ActionMessage) => void): void {
-    this.messageHandlers.push(handler);
-  }
-
-  private notifyHandlers(message: ActionMessage) {
-    for (const handler of this.messageHandlers) {
-      handler(message);
+    sendMessage(message: ActionMessage): void {
+        this.connection?.sendNotification(acceptMessageType, message);
     }
-  }
 
-  connect(websocketUrl: string): Promise<this> {
-    // The WebSocket has created in place! Passing it as a parameter might lead
-    // to a race-condition where the socket is opened, before vscode-ws-jsonrpc
-    // starts to listen. This causes the connection to not work.
-    return new Promise((resolve) => {
-      const socket = new WebSocket(websocketUrl);
-      this.socket = socket;
-      console.log("Connecting to language server.");
+    onMessageReceived(handler: (message: ActionMessage) => void): void {
+        this.messageHandlers.push(handler);
+    }
 
-      rpc.listen({
-        webSocket: socket,
-        logger: new rpc.ConsoleLogger(),
-        onConnection: (conn) => {
-          conn.listen();
+    private notifyHandlers(message: ActionMessage) {
+        for (const handler of this.messageHandlers) {
+            handler(message);
+        }
+    }
 
-          console.log("Connected to language server.");
-          this.connection = conn;
+    connect(websocketUrl: string): Promise<this> {
+        // The WebSocket has created in place! Passing it as a parameter might lead
+        // to a race-condition where the socket is opened, before vscode-ws-jsonrpc
+        // starts to listen. This causes the connection to not work.
+        return new Promise((resolve) => {
+            const socket = new WebSocket(websocketUrl);
+            this.socket = socket;
+            console.log("Connecting to language server.");
 
-          this.connection.onError((e) => {
-            console.error(e);
-          });
+            rpc.listen({
+                webSocket: socket,
+                logger: new rpc.ConsoleLogger(),
+                onConnection: (conn) => {
+                    conn.listen();
 
-          this.connection.onClose(() => {
-            this.connection = undefined;
-            this.socket = undefined;
-          });
+                    console.log("Connected to language server.");
+                    this.connection = conn;
 
-          this.connection.onNotification(
-            acceptMessageType,
-            this.notifyHandlers.bind(this)
-          );
+                    this.connection.onError((e) => {
+                        console.error(e);
+                    });
 
-          resolve(this);
-        },
-      });
-    });
-  }
+                    this.connection.onClose(() => {
+                        this.connection = undefined;
+                        this.socket = undefined;
+                    });
 
-  close() {
-    this.connection?.dispose();
-    this.connection = undefined;
+                    this.connection.onNotification(
+                        acceptMessageType,
+                        this.notifyHandlers.bind(this)
+                    );
 
-    this.socket?.close();
-  }
+                    resolve(this);
+                },
+            });
+        });
+    }
 
-  /**
-   * Initializes the connection according to the LSP specification.
-   * @see
-   */
-  async sendInitialize() {
-    if (!this.connection) return;
+    close() {
+        this.connection?.dispose();
+        this.connection = undefined;
 
-    const method = lsp.InitializeRequest.type.method;
-    const initParams: lsp.InitializeParams = {
-      processId: null,
-      workspaceFolders: null,
-      rootUri: null,
-      clientInfo: { name: "webview" },
-      capabilities: {},
-    };
+        this.socket?.close();
+    }
 
-    console.log("initialize LSP.");
-    console.time("lsp-init");
-    await this.connection.sendRequest(method, initParams);
-    this.connection.sendNotification(lsp.InitializedNotification.type.method);
-    console.timeEnd("lsp-init");
-    console.log("initialized LSP.");
-  }
+    /**
+     * Initializes the connection according to the LSP specification.
+     * @see
+     */
+    async sendInitialize() {
+        if (!this.connection) return;
 
-  /**
-   * Notifies the connected language server about an opened document.
-   * @param sourceUri Valid our for the document. See the LSP for more information.
-   * @param languageId Id of the language inside the document.
-   */
-  sendDocumentDidOpen(sourceUri: string, languageId: string) {
-    const method = lsp.DidOpenTextDocumentNotification.type.method;
-    const params = {
-      textDocument: {
-        languageId: languageId,
-        uri: sourceUri,
-        // The standalone view is not able to change a document. Therefore,
-        // the document version is constant.
-        version: 0,
-      },
-    };
+        const method = lsp.InitializeRequest.type.method;
+        const initParams: lsp.InitializeParams = {
+            processId: null,
+            workspaceFolders: null,
+            rootUri: null,
+            clientInfo: { name: "webview" },
+            capabilities: {},
+        };
 
-    this.connection?.sendNotification(method, params);
-  }
+        console.log("initialize LSP.");
+        console.time("lsp-init");
+        await this.connection.sendRequest(method, initParams);
+        this.connection.sendNotification(lsp.InitializedNotification.type.method);
+        console.timeEnd("lsp-init");
+        console.log("initialized LSP.");
+    }
+
+    /**
+     * Notifies the connected language server about an opened document.
+     * @param sourceUri Valid our for the document. See the LSP for more information.
+     * @param languageId Id of the language inside the document.
+     */
+    sendDocumentDidOpen(sourceUri: string, languageId: string) {
+        const method = lsp.DidOpenTextDocumentNotification.type.method;
+        const params = {
+            textDocument: {
+                languageId: languageId,
+                uri: sourceUri,
+                // The standalone view is not able to change a document. Therefore,
+                // the document version is constant.
+                version: 0,
+            },
+        };
+
+        this.connection?.sendNotification(method, params);
+    }
 }

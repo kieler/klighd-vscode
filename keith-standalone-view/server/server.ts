@@ -19,24 +19,24 @@ import { connectToLanguageServer } from "./ls-connection";
 
 /** Options required by the {@link webSocketHandler} plugin. */
 interface Options {
-  lsPort?: number;
-  lsPath?: string;
+    lsPort?: number;
+    lsPath?: string;
 }
 
 /** Fastify plugin that forwards incoming websocket connections to a language server. */
 const webSocketHandler: FastifyPluginAsync<Options> = async (fastify, opts) => {
-  fastify.register(websocketPlugin);
+    fastify.register(websocketPlugin);
 
-  // Setup WebSocket handler
-  fastify.get("/socket", { websocket: true }, (conn) => {
-    // Connection established. Spawn a LS for the connection and stream messages
-    connectToLanguageServer(conn.socket, fastify.log, opts.lsPort, opts.lsPath);
-  });
+    // Setup WebSocket handler
+    fastify.get("/socket", { websocket: true }, (conn) => {
+        // Connection established. Spawn a LS for the connection and stream messages
+        connectToLanguageServer(conn.socket, fastify.log, opts.lsPort, opts.lsPath);
+    });
 };
 
 interface SetupOptions extends Options {
-  /** Activate logging with the given level if this property is defined. */
-  logging?: "info" | "debug";
+    /** Activate logging with the given level if this property is defined. */
+    logging?: "info" | "debug";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,21 +47,19 @@ interface SetupOptions extends Options {
  * to a language server.
  */
 export function createServer(opts: SetupOptions) {
-  const server = fastify({
-    logger: opts.logging
-      ? { prettyPrint: true, level: opts.logging }
-      : undefined,
-    disableRequestLogging: true,
-  });
+    const server = fastify({
+        logger: opts.logging ? { prettyPrint: true, level: opts.logging } : undefined,
+        disableRequestLogging: true,
+    });
 
-  // Serving static file for the website
-  server.register(staticPlugin, {
-    // Web sources are bundled into the dist folder at the package root
-    root: join(__dirname, "../dist"),
-  });
+    // Serving static file for the website
+    server.register(staticPlugin, {
+        // Web sources are bundled into the dist folder at the package root
+        root: join(__dirname, "../dist"),
+    });
 
-  // Handling for incoming websocket requests
-  server.register(webSocketHandler, opts);
+    // Handling for incoming websocket requests
+    server.register(webSocketHandler, opts);
 
-  return server;
+    return server;
 }

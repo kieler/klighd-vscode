@@ -30,52 +30,52 @@ import * as WebSocket from "ws";
  * @returns A dispose callback.
  */
 export function connectToLanguageServer(
-  client: WebSocket,
-  logger: FastifyLoggerInstance,
-  lsPort?: number,
-  lsPath?: string
+    client: WebSocket,
+    logger: FastifyLoggerInstance,
+    lsPort?: number,
+    lsPath?: string
 ): () => void {
-  const webSocket = transformWebSocketToIWebSocket(client);
-  const clientConnection = rpcServer.createWebSocketConnection(webSocket);
+    const webSocket = transformWebSocketToIWebSocket(client);
+    const clientConnection = rpcServer.createWebSocketConnection(webSocket);
 
-  let lsConn: rpcServer.IConnection;
-  if (lsPort) {
-    const socket = new Socket();
-    // Socket connection to the LS
-    lsConn = rpcServer.createSocketConnection(socket, socket, () => {
-      socket.end();
+    let lsConn: rpcServer.IConnection;
+    if (lsPort) {
+        const socket = new Socket();
+        // Socket connection to the LS
+        lsConn = rpcServer.createSocketConnection(socket, socket, () => {
+            socket.end();
+        });
+
+        rpcServer.forward(clientConnection, lsConn, (msg) => {
+            logger.debug(msg, "Forwarding message");
+            return msg;
+        });
+
+        logger.info("Forwarding to language server socket.");
+        socket.connect(lsPort);
+    } else if (lsPath) {
+        let args = ["-jar", "-Djava.awt.headless=true", lsPath];
+        lsConn = rpcServer.createServerProcess("Language Server", "java", args);
+
+        rpcServer.forward(clientConnection, lsConn, (msg) => {
+            logger.debug(msg, "Forwarding message");
+            return msg;
+        });
+
+        logger.info("Forwarding to language server process.");
+    } else {
+        logger.error("No options provided to start a language server.");
+    }
+
+    webSocket.onClose(() => {
+        logger.info("Client closed. Shutting down language server.");
+        lsConn.dispose();
     });
 
-    rpcServer.forward(clientConnection, lsConn, (msg) => {
-      logger.debug(msg, "Forwarding message");
-      return msg;
-    });
-
-    logger.info("Forwarding to language server socket.");
-    socket.connect(lsPort);
-  } else if (lsPath) {
-    let args = ["-jar", "-Djava.awt.headless=true", lsPath];
-    lsConn = rpcServer.createServerProcess("Language Server", "java", args);
-
-    rpcServer.forward(clientConnection, lsConn, (msg) => {
-      logger.debug(msg, "Forwarding message");
-      return msg;
-    });
-
-    logger.info("Forwarding to language server process.");
-  } else {
-    logger.error("No options provided to start a language server.");
-  }
-
-  webSocket.onClose(() => {
-    logger.info("Client closed. Shutting down language server.");
-    lsConn.dispose();
-  });
-
-  return () => {
-    clientConnection.dispose();
-    lsConn.dispose();
-  };
+    return () => {
+        clientConnection.dispose();
+        lsConn.dispose();
+    };
 }
 
 /**
@@ -84,16 +84,16 @@ export function connectToLanguageServer(
  * Inspired by `toWebSocket` in _vscode-ws-jsonrpc_.
  */
 function transformWebSocketToIWebSocket(socket: WebSocket): IWebSocket {
-  return {
-    send: (content) => socket.send(content),
-    onMessage: (cb) => (socket.onmessage = (ev) => cb(ev.data)),
-    onError: (cb) =>
-      (socket.onerror = (ev) => {
-        if ("message" in ev) {
-          cb((ev as any).message);
-        }
-      }),
-    onClose: (cb) => (socket.onclose = (ev) => cb(ev.code, ev.reason)),
-    dispose: () => socket.close(),
-  };
+    return {
+        send: (content) => socket.send(content),
+        onMessage: (cb) => (socket.onmessage = (ev) => cb(ev.data)),
+        onError: (cb) =>
+            (socket.onerror = (ev) => {
+                if ("message" in ev) {
+                    cb((ev as any).message);
+                }
+            }),
+        onClose: (cb) => (socket.onclose = (ev) => cb(ev.code, ev.reason)),
+        dispose: () => socket.close(),
+    };
 }

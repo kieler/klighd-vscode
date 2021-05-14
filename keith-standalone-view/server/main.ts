@@ -20,16 +20,16 @@ import { getArgValue, parseIntOrUndefined } from "./helpers";
 
 // IIFE to start the server and listen for requests
 (async function main() {
-  const defaultLSPath = join(__dirname, "../kieler-language-server.linux.jar");
+    const defaultLSPath = join(__dirname, "../kieler-language-server.linux.jar");
 
-  const lsPort = parseIntOrUndefined(getArgValue("ls_port"));
-  const lsPath = getArgValue("ls_path") ?? defaultLSPath;
+    const lsPort = parseIntOrUndefined(getArgValue("ls_port"));
+    const lsPath = getArgValue("ls_path") ?? defaultLSPath;
 
-  const server = createServer({ logging: "debug", lsPort, lsPath });
-  try {
-    await server.listen(8000);
-  } catch (error) {
-    server.log.error(error);
-    process.exit(1);
-  }
+    const server = createServer({ logging: "debug", lsPort, lsPath });
+    try {
+        await server.listen(8000);
+    } catch (error) {
+        server.log.error(error);
+        process.exit(1);
+    }
 })();

@@ -13,16 +13,14 @@
 
 /** Parses a string or undefined as an integer. */
 export function parseIntOrUndefined(number?: string): number | undefined {
-  if (typeof number !== "string") return undefined;
-  return parseInt(number, 10);
+    if (typeof number !== "string") return undefined;
+    return parseInt(number, 10);
 }
 
 /** Parses a value for a given name from the process arguments. */
 export function getArgValue(argName: string): string | undefined {
-  const prefix = `--${argName}=`;
-  const argument: string | undefined = process.argv.filter((arg) =>
-    arg.startsWith(prefix)
-  )[0];
+    const prefix = `--${argName}=`;
+    const argument: string | undefined = process.argv.filter((arg) => arg.startsWith(prefix))[0];
 
-  return argument ? argument.substring(prefix.length) : undefined;
+    return argument ? argument.substring(prefix.length) : undefined;
 }

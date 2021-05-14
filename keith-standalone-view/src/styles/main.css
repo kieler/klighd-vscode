@@ -1,24 +1,24 @@
 body {
-  margin: 0;
-  height: 100vh;
+    margin: 0;
+    height: 100vh;
 }
 
 #sprotty {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 #sprotty > svg {
-  width: 100%;
-  height: 100%;
-  outline: none;
+    width: 100%;
+    height: 100%;
+    outline: none;
 }
 
 #sprotty_hidden {
-  /* Stop the sprotty_hidden container from participating in the page layout.
+    /* Stop the sprotty_hidden container from participating in the page layout.
   A better solution would be "display: none", however this causes
   wrong text bound calculations. */
-  position: fixed;
-  top: 0;
-  z-index: -1;
+    position: fixed;
+    top: 0;
+    z-index: -1;
 }
