@@ -1,6 +1,6 @@
 {
     "name": "keith-vscode",
-    "displayName": "KEITH vscode",
+    "displayName": "KEITH VSCode",
     "description": "KIEL Environment Integrated in VSCode",
     "version": "0.0.1",
     "publisher": "kieler",
@@ -13,16 +13,33 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:keith-vscode.helloWorld"
+        "onCommand:keith-vscode.helloWorld",
+        "onLanguage:sctx"
     ],
     "main": "./dist/extension.js",
     "contributes": {
-        "commands": [
+        "languages": [
             {
-                "command": "keith-vscode.helloWorld",
-                "title": "Hello World"
+                "id": "sctx",
+                "configuration": "./language-configs/sccharts-configuration.json",
+                "aliases": [
+                    "SCCharts"
+                ],
+                "extensions": [
+                    ".sctx"
+                ]
             }
-        ]
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "when": "resourceLangId == sctx",
+                    "command": "klighd-diagram.showDiagram",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "commands": []
     },
     "extensionDependencies": [
         "kieler.klighd-diagram"
@@ -47,6 +64,6 @@
         "webpack": "^5.19.0"
     },
     "dependencies": {
-        "vscode-languageclient": "^7.0.0"
+        "vscode-languageclient": "^6.1.4"
     }
 }

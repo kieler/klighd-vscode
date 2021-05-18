@@ -1,28 +1,42 @@
+import { join } from "path";
 import * as vscode from "vscode";
+import { LanguageClient, ServerOptions, LanguageClientOptions, Trace } from "vscode-languageclient";
+
+let lsClient: LanguageClient;
+
+const klighd = {
+    setLSClient: "klighd-diagram.setLanguageClient",
+    showDiagram: "klighd-diagram.showDiagram",
+};
 
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
-    console.log('"keith-vscode" extension is now active!');
+    const lsPath = context.asAbsolutePath("kieler-language-server.linux.jar");
 
-    const testObj = { a: "123", b: 123 };
+    const serverOptions: ServerOptions = {
+        run: { command: "java", args: ["-jar", lsPath] },
+        debug: { command: "java", args: ["-jar", lsPath] },
+    };
+    const clientOptions: LanguageClientOptions = {
+        documentSelector: [{ scheme: "file", language: "sctx" }],
+        synchronize: {
+            fileEvents: vscode.workspace.createFileSystemWatcher("**/*.*"),
+        },
+    };
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand("keith-vscode.helloWorld", async () => {
-            // The code you place here will be executed every time your command is executed
+    lsClient = new LanguageClient("KIELER Language Server", serverOptions, clientOptions, true);
 
-            // Display a message box to the user
-            vscode.window.showInformationMessage("Hello World from keith-vscode!");
+    // Inform the KLighD extension about the LS client
+    vscode.commands.executeCommand(klighd.setLSClient, lsClient);
 
-            const res = await vscode.commands.executeCommand(
-                "klighd-diagram.showDiagram",
-                testObj
-            );
-            console.log("Received res: ", res);
-            // eslint-disable-next-line eqeqeq
-            console.log("Exchanged object is the same:", testObj == res);
-        })
-    );
+    console.debug("Starting Language Server...");
+    lsClient.start();
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+    if (!lsClient) {
+        return;
+    }
+    return lsClient.stop();
+}
