@@ -75,8 +75,11 @@
             "name": "Run VSC Extension",
             "type": "extensionHost",
             "request": "launch",
-            "args": ["--extensionDevelopmentPath=${workspaceFolder}/keith-vscode"],
-            "outFiles": ["${workspaceFolder}/keith-vscode/out/**/*.js"],
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/extensions/keith-vscode",
+                "--extensions-dir=${workspaceFolder}/extensions"
+            ],
+            "outFiles": ["${workspaceFolder}/extensions/keith-vscode/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
         }
     ]

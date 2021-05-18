@@ -102,7 +102,8 @@
     "keith-simulation",
     "keith-sprotty",
     "keith-standalone-view",
-    "keith-vscode"
+    "extensions/keith-vscode",
+    "extensions/klighd-diagram"
   ],
   "theiaPluginsDir": "./plugins",
   "theiaPlugins": {
