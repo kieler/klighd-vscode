@@ -34,7 +34,30 @@ import { KStyles } from './views-styles';
 export class SKGraphView extends SGraphView {
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
+        ctx.renderingOptions = RenderingOptions.getInstance()
         ctx.renderingDefs = new Map
+
+        const viewport = findParentByFeature(model, isViewport)
+        if (viewport) {
+            ctx.viewport = viewport
+        }
+
+        // Add depthMap to context for rendering, when required.
+        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
+
+        // Only enable, if option is found.
+        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
+
+        if (useSmartZoom) {
+            ctx.depthMap = DepthMap.getInstance(model)
+            if (ctx.viewport && ctx.depthMap) {
+                ctx.depthMap.expandCollapse(ctx.viewport)
+            }
+            if (ctx.renderingDefs.size == 0) {
+                ctx.depthMap.isCompleteRendering = true
+            }
+        }
+
         return super.render(model, context)
     }
 }
@@ -51,24 +74,7 @@ export class KNodeView implements IView {
 
     render(node: SKNode, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
-        const viewport = findParentByFeature(node, isViewport)
-        if (viewport) {
-            ctx.viewport = viewport
-        }
-        ctx.renderingOptions = RenderingOptions.getInstance()
-        // Add depthMap to context for rendering, when required.
-        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
-        // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
-        if (useSmartZoom) {
-            ctx.depthMap = DepthMap.getInstance(node.root)
-            if (viewport && ctx.depthMap) {
-                ctx.depthMap.expandCollapse(viewport)
-            }
-            if (ctx.renderingDefs.size == 0) {
-                ctx.depthMap.isCompleteRendering = true
-            }
-        }
+
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -182,17 +188,7 @@ export class KPortView implements IView {
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
-        const viewport = findParentByFeature(port.root, isViewport)
-        if (viewport) {
-            ctx.viewport = viewport
-        }
-        ctx.renderingOptions = RenderingOptions.getInstance()
-        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
-        // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
-        if (useSmartZoom) {
-            ctx.depthMap = DepthMap.getInstance(port.root)
-        }
+
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
         const rendering = getRendering(port.data, port, new KStyles, ctx, this.mListener)
@@ -230,17 +226,7 @@ export class KLabelView implements IView {
 
     render(label: SKLabel, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
-        const viewport = findParentByFeature(label.root, isViewport)
-        if (viewport) {
-            ctx.viewport = viewport
-        }
-        ctx.renderingOptions = RenderingOptions.getInstance()
-        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
-        // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
-        if (useSmartZoom) {
-            ctx.depthMap = DepthMap.getInstance(label.root)
-        }
+
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -286,17 +272,7 @@ export class KEdgeView implements IView {
 
     render(edge: SKEdge, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
-        const viewport = findParentByFeature(edge.root, isViewport)
-        if (viewport) {
-            ctx.viewport = viewport
-        }
-        ctx.renderingOptions = RenderingOptions.getInstance()
-        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
-        // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
-        if (useSmartZoom) {
-            ctx.depthMap = DepthMap.getInstance(edge.root)
-        }
+
         edge.areChildAreaChildrenRendered = false
         edge.areNonChildAreaChildrenRendered = false
 
