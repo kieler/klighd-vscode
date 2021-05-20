@@ -25,7 +25,7 @@ import {
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
 } from "@kieler/keith-interactive/lib/rect-packing/actions";
-import { Container, inject, injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import {
     Action,
     ActionHandlerRegistry,
@@ -40,7 +40,6 @@ import {
     RequestPopupModelAction,
     SetModelCommand,
     SwitchEditModeAction,
-    TYPES,
 } from "sprotty";
 import {
     CheckedImagesAction,
@@ -261,14 +260,11 @@ export class KeithDiagramServer extends DiagramServer {
     }
 }
 
-export async function requestModel(container: Container, sourceUri: string) {
-    const actionDispatcher = container.get<IActionDispatcher>(TYPES.IActionDispatcher);
-
+export async function requestModel(
+    actionDispatcher: IActionDispatcher,
+    options: { sourceUri: string; diagramType: string }
+) {
     await actionDispatcher.dispatch(
-        new RequestModelAction({
-            sourceUri: sourceUri,
-            // TODO: Extract the diagramType. See keith-diagram/src/browser/di.config.ts as an example.
-            diagramType: "keith-diagram",
-        })
+        new RequestModelAction(options)
     );
 }

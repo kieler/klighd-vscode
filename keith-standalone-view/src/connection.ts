@@ -13,7 +13,7 @@
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { IConnection } from "@kieler/keith-sprotty/lib";
+import { IConnection } from "@kieler/keith-sprotty";
 import { ActionMessage } from "sprotty";
 
 const acceptMessageType = new rpc.NotificationType<ActionMessage, void>("diagram/accept");

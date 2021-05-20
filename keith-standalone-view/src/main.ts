@@ -13,10 +13,11 @@
 
 import "reflect-metadata";
 import "./styles/main.css";
-import { Connection, createKeithDiagramContainer, requestModel } from "@kieler/keith-sprotty/lib";
+import { Connection, createKeithDiagramContainer, requestModel } from "@kieler/keith-sprotty";
 import { LSPConnection } from "./connection";
 import { getDiagramSourceUri, getLanguageId, sleep } from "./helpers";
 import { hideSpinner } from "./spinner";
+import { IActionDispatcher, TYPES } from "sprotty";
 
 const sourceUri = getDiagramSourceUri();
 
@@ -33,6 +34,7 @@ async function main(sourceUri: string) {
     const connection = new LSPConnection();
     const diagramContainer = createKeithDiagramContainer("sprotty");
     diagramContainer.bind(Connection).toConstantValue(connection);
+    const actionDispatcher = diagramContainer.get<IActionDispatcher>(TYPES.IActionDispatcher);
 
     // Connect to a language server and request a diagram.
     await connection.connect(socketUrl);
@@ -40,5 +42,5 @@ async function main(sourceUri: string) {
     connection.sendDocumentDidOpen(sourceUri, languageId);
     // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions...
     await sleep(200);
-    await requestModel(diagramContainer, sourceUri);
+    await requestModel(actionDispatcher, { sourceUri, diagramType: "keith-diagram" });
 }
