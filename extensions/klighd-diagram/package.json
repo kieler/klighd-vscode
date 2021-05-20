@@ -4,7 +4,15 @@
     "description": "KLighD diagram support in VSCode",
     "version": "0.0.1",
     "publisher": "kieler",
+    "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
+    "icon": "icon.png",
     "license": "EPL-1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://git.rtsys.informatik.uni-kiel.de/projects/KIELER/repos/keith",
+        "directory": "extensions/klighd-diagram"
+    },
+    "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
     "engines": {
         "vscode": "^1.56.0"
     },
@@ -96,6 +104,7 @@
         "style-loader": "2.0.0",
         "typescript": "^4.1.3",
         "ts-loader": "^8.0.14",
+        "vsce": "1.88.0",
         "webpack": "^5.19.0"
     },
     "dependencies": {
