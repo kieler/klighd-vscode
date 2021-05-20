@@ -18,7 +18,7 @@ import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from '@kieler/keith-interactive/lib/interactive-view';
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
+import { findParentByFeature, IModelFactory, isViewport, IView, RenderingContext, SGraph, SGraphView, TYPES } from 'sprotty/lib';
 import { DepthMap } from './depth-map';
 import { RenderOptions, ShowConstraintOption, RenderingOptions, UseSmartZoom } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
@@ -47,7 +47,7 @@ export class KNodeView implements IView {
 
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
     @inject(RenderOptions) protected rOptions: RenderOptions
-    @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
+    @inject(TYPES.IModelFactory) protected graphFactory: IModelFactory
 
     render(node: SKNode, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
