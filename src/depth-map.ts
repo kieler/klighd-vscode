@@ -4,6 +4,9 @@ import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderingOptions, ExpandCollapseThreshold } from "./options";
 import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
 
+const EXPANDED = true
+const COLLAPSED = false
+
 /**
  * Divides Model KNodes into regions. These are then saved in the 2D depthArray,
  * where the first index corresponds to nesting depth. On these expand and collapse actions
@@ -303,7 +306,7 @@ export class DepthMap {
         // All regions here are currently expanded.
         this.criticalRegions.forEach(region => {
             // Collapse either if the parent region is collapsed or the expansion state changes.
-            if (region.parent && region.parent.expansionState == false || !this.getExpansionState(region, viewport, threshold)) {
+            if (region.parent && region.parent.expansionState == COLLAPSED || !this.getExpansionState(region, viewport, threshold)) {
                 region.setExpansionState(false)
                 this.criticalRegions.delete(region)
                 if (region.parent) {
@@ -342,20 +345,20 @@ export class DepthMap {
     getExpansionState(region: Region, viewport: Viewport, threshold: number): boolean {
         // Collapse all invisible states and regions.
         if (!this.isVisible(region, viewport)) {
-            return false
+            return COLLAPSED
             // The root has no boundingRectangle.
         } else if (!region.boundingRectangle) {
-            return true
+            return EXPANDED
             // Expand when reached relative size threshold or native resolution.
         } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= threshold
             || viewport.zoom >= 1) {
-            return true
+            return EXPANDED
             // Collapse when reached relative size threshold.
         } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= threshold) {
-            return false
+            return COLLAPSED
             // Default expand if nothing applies
         } else {
-            return true
+            return EXPANDED
         }
     }
 
