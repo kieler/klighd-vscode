@@ -9,6 +9,7 @@
     "keith",
     "diagram"
   ],
+  "main": "./lib/index.js",
   "scripts": {
     "prepare": "yarn run clean && yarn build",
     "clean": "rimraf lib",
