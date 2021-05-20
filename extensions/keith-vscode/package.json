@@ -34,7 +34,7 @@
             "editor/title": [
                 {
                     "when": "resourceLangId == sctx",
-                    "command": "klighd-diagram.showDiagram",
+                    "command": "klighd-diagram.diagram.open",
                     "group": "navigation"
                 }
             ]
@@ -64,6 +64,6 @@
         "webpack": "^5.19.0"
     },
     "dependencies": {
-        "vscode-languageclient": "^6.1.4"
+        "vscode-languageclient": "^5.2.1"
     }
 }

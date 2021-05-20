@@ -72,15 +72,33 @@
             }
         },
         {
-            "name": "Run VSC Extension",
+            "name": "Launch VSC Extension",
             "type": "extensionHost",
             "request": "launch",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}/extensions/keith-vscode",
                 "--extensions-dir=${workspaceFolder}/extensions"
             ],
+            "sourceMaps": true,
+            "smartStep": true,
             "outFiles": ["${workspaceFolder}/extensions/keith-vscode/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
-        }
+        },
+        {
+            "name": "Launch VSC Extension (Socket)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/extensions/keith-vscode",
+                "--extensions-dir=${workspaceFolder}/extensions"
+            ],
+            "env": {
+                "KEITH_LS_PORT": "5007"
+            },
+            "sourceMaps": true,
+            "smartStep": true,
+            "outFiles": ["${workspaceFolder}/extensions/keith-vscode/dist/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
+        },
     ]
 }
