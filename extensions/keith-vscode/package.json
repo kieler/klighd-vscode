@@ -37,6 +37,20 @@
                     "command": "klighd-diagram.diagram.open",
                     "group": "navigation"
                 }
+            ],
+            "editor/context": [
+                {
+                    "when": "resourceLangId == sctx",
+                    "command": "klighd-diagram.diagram.open",
+                    "group": "navigation"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "when": "resourceLangId == sctx",
+                    "command": "klighd-diagram.diagram.open",
+                    "group": "navigation"
+                }
             ]
         },
         "commands": []

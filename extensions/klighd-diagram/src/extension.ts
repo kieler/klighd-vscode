@@ -16,29 +16,41 @@ import { LanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
 import { KLighDExtension } from "./klighd-extension";
 
-
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
     let extension: KLighDExtension;
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
-        vscode.commands.registerCommand(command.setLanguageClient, (client: LanguageClient) => {
-            // TODO: Check if client is really a LanguageClient. Instanceof checks do not work,
-            // since the LanguageClient class from the host extension is not the same as this LanguageClient class.
-            // Both classes are part of different bundles and thus module system. Therefore, they are two different
-            // classes internally.
-            try {
-                KLighDExtension.lsClient = client;
-                extension = new KLighDExtension(context);
+        vscode.commands.registerCommand(
+            command.setLanguageClient,
+            (client: LanguageClient, fileEndings: string[]) => {
+                // TODO: Check if client is really a LanguageClient. Instanceof checks do not work,
+                // since the LanguageClient class from the host extension is not the same as this LanguageClient class.
+                // Both classes are part of different bundles and thus module system. Therefore, they are two different
+                // classes internally.
+                if (!isFileEndingsArray(fileEndings)) {
+                    vscode.window.showErrorMessage(
+                        "setLanguageClient must be executed with an array of supported file endings as the second argument."
+                    );
+                }
 
-                console.debug("KLighD extension activated.");
-            } catch (e) {
-                console.error(e);
+                try {
+                    KLighDExtension.lsClient = client;
+                    extension = new KLighDExtension(context, fileEndings);
+
+                    console.debug("KLighD extension activated.");
+                } catch (e) {
+                    console.error(e);
+                }
             }
-        })
+        )
     );
 }
 
 // this method is called when your extension is deactivated
 export function deactivate() {}
+
+function isFileEndingsArray(array: any): array is string[] {
+    return Array.isArray(array) && array.every((val) => typeof val === "string");
+}

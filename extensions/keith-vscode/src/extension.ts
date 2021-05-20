@@ -43,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
     lsClient = new LanguageClient("KIELER Language Server", serverOptions, clientOptions, true);
 
     // Inform the KLighD extension about the LS client
-    await vscode.commands.executeCommand(klighd.setLSClient, lsClient);
+    await vscode.commands.executeCommand(klighd.setLSClient, lsClient, ["sctx"]);
 
     console.debug("Starting Language Server...");
     lsClient.start();

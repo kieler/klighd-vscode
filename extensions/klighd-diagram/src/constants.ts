@@ -13,7 +13,18 @@
 
 /** Extension ID corresponding to the name property in the package.json */
 export const extensionId = "klighd-diagram";
-/** Diagram type that has been used by KEITH to communicate with the LS. */
+
+/**
+ * Diagram type that has been used by KEITH to communicate with the LS.
+ * The diagramType is also the name that is used by Sprotty for the webview.
+ *
+ * This key can also be used together with the "-focused" suffix (keith-diagram-focused)
+ * for VSCode contribution points that are only active when the diagram view is focused.
+ *
+ * Webview creation: @see https://github.com/eclipse/sprotty-vscode/blob/master/sprotty-vscode-extension/src/sprotty-webview.ts#L76
+ * Active tracking: @see https://github.com/eclipse/sprotty-vscode/blob/master/sprotty-vscode-extension/src/sprotty-webview.ts#L76
+ * Webview contribution: @see https://stackoverflow.com/a/54917749/7569889
+ */
 export const diagramType = "keith-diagram";
 
 const withPrefix = (name: string) => `${extensionId}.${name}`;
@@ -21,6 +32,7 @@ const withPrefix = (name: string) => `${extensionId}.${name}`;
 /** Commands that are register by this extension or `sprotty-vscode`.*/
 export const command = {
     setLanguageClient: withPrefix("setLanguageClient"),
+    // The following commands are registered by `sprotty-vscode`
     diagramOpen: withPrefix("diagram.open"),
     diagramExport: withPrefix("diagram.export"),
     diagramCenter: withPrefix("diagram.center"),
