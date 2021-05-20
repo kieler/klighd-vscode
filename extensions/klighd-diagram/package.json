@@ -27,19 +27,19 @@
             {
                 "command": "klighd-diagram.diagram.fit",
                 "title": "Fit diagram to screen",
-                "icon": "$(symbol-structure)",
+                "icon": "$(move)",
                 "category": "KLighD Diagram"
             },
             {
                 "command": "klighd-diagram.diagram.center",
                 "title": "Center diagram selection",
-                "icon": "$(symbol-structure)",
+                "icon": "$(location)",
                 "category": "KLighD Diagram"
             },
             {
                 "command": "klighd-diagram.diagram.export",
                 "title": "Export diagram to SVG",
-                "icon": "$(symbol-structure)",
+                "icon": "$(clone)",
                 "category": "KLighD Diagram"
             }
         ],
@@ -47,7 +47,32 @@
             "commandPalette": [
                 {
                     "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.fit"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.center"
+                },
+                {
+                    "when": "keith-diagram-focused",
                     "command": "klighd-diagram.diagram.export"
+                }
+            ],
+            "editor/title": [
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.fit",
+                    "group": "navigation"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.center",
+                    "group": "navigation"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.export",
+                    "group": "navigation"
                 }
             ]
         }
