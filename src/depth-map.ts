@@ -63,15 +63,6 @@ export class DepthMap {
         return DepthMap.instance
     }
 
-    /** Returns a DepthMap instance, if there is one. */
-    public static getCurrentInstance(): DepthMap | undefined {
-        if (DepthMap.instance) {
-            return DepthMap.instance
-        } else {
-            return undefined
-        }
-    }
-
     /** Create a new DepthMap. */
     protected init() {
         this.regionMap = new Map()
@@ -186,13 +177,6 @@ export class DepthMap {
         }
     }
 
-    /** 
-     * Returns all regions with a specified nesting depth.
-     * @param depth The requested nesting depth. 
-     */
-    getRegionsWithDepth(depth: number): Region[] {
-        return this.depthArray[depth]
-    }
 
     /** 
      * Goes through all elements of each region to find the region with the specified KNode.
@@ -349,16 +333,15 @@ export class DepthMap {
             // The root has no boundingRectangle.
         } else if (!region.boundingRectangle) {
             return EXPANDED
-            // Expand when reached relative size threshold or native resolution.
-        } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= threshold
-            || viewport.zoom >= 1) {
-            return EXPANDED
-            // Collapse when reached relative size threshold.
-        } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= threshold) {
-            return COLLAPSED
-            // Default expand if nothing applies
         } else {
-            return EXPANDED
+            let viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
+            // Expand when reached relative size threshold or native resolution.
+            if (viewportSize >= threshold || viewport.zoom >= 1) {
+                return EXPANDED
+                // Collapse when reached relative size threshold.
+            } else {
+                return COLLAPSED
+            }
         }
     }
 
