@@ -20,6 +20,9 @@ export class DepthMap {
     rootElement: SModelRoot;
     /** A quick lookup map with the id of the bounding child area of a region as key. */
     regionMap: Map<String, Region>;
+
+    viewport?: Viewport;
+
     /** 
      * Set for handling regions, that need to be checked for expansion state.
      * Consists of the last expanded regions in the hierarchy.
@@ -43,7 +46,7 @@ export class DepthMap {
     private constructor(rootElement: SModelRoot) {
         this.rootElement = rootElement
     }
-    
+
     /** 
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
@@ -77,7 +80,7 @@ export class DepthMap {
         }
         this.findParentsAndChildren()
     }
-    
+
     /** 
      * Recursively finds all regions in model and initializes them.
      * 
@@ -97,7 +100,7 @@ export class DepthMap {
                     // Add the current node as element of region.
                     curRegion.elements.push(child as KNode)
                     // When the bounding rectangle of a new child area is reached, a new region is created.
-                    if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE 
+                    if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
                         && ((child as KNode).data[0] as KContainerRendering).children[0]) {
                         let nextRegion = this.createRegion(child as KNode)
                         // In the models parent child structure a child can occur multiple times.
@@ -150,7 +153,7 @@ export class DepthMap {
             this.regionMap.set(region.boundingRectangle.id, region)
         }
     }
-    
+
     /** Goes through each region from the bottom up to determine parent children structure. */
     protected findParentsAndChildren() {
         for (let i = this.depthArray.length - 1; i >= 0; i--) {
@@ -163,7 +166,7 @@ export class DepthMap {
             }
         }
     }
-    
+
     /** 
      * Goes through parents of a node until a new region is reached and add corresponding parent and child entries.
      * 
@@ -179,7 +182,7 @@ export class DepthMap {
             this.findParentsAndChildrenHelper(region, node.parent as KNode)
         }
     }
-    
+
     /** 
      * Returns all regions with a specified nesting depth.
      * @param depth The requested nesting depth. 
@@ -221,6 +224,13 @@ export class DepthMap {
      * @param viewport The current viewport. 
      */
     expandCollapse(viewport: Viewport) {
+
+        if (this.viewport?.scroll === viewport.scroll && this.viewport?.zoom === viewport.zoom) {
+            return
+        }
+
+        this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
+
         // Load Render Options
         if (!this.renderingOptions) {
             this.renderingOptions = RenderingOptions.getInstance()
@@ -235,7 +245,7 @@ export class DepthMap {
             for (let curDepth of this.depthArray) {
                 for (let region of curDepth) {
                     firstRegion = region
-                    if(this.getExpansionState(firstRegion, viewport, expandCollapseThreshold)) {
+                    if (this.getExpansionState(firstRegion, viewport, expandCollapseThreshold)) {
                         this.searchUntilCollapse(firstRegion, viewport, expandCollapseThreshold)
                     }
                     breakCheck = true
@@ -333,17 +343,17 @@ export class DepthMap {
         // Collapse all invisible states and regions.
         if (!this.isVisible(region, viewport)) {
             return false
-        // The root has no boundingRectangle.
+            // The root has no boundingRectangle.
         } else if (!region.boundingRectangle) {
             return true
-        // Expand when reached relative size threshold or native resolution.
+            // Expand when reached relative size threshold or native resolution.
         } else if (this.sizeInViewport(region.boundingRectangle, viewport) >= threshold
-                   || viewport.zoom >= 1) {
+            || viewport.zoom >= 1) {
             return true
-        // Collapse when reached relative size threshold.
+            // Collapse when reached relative size threshold.
         } else if (this.sizeInViewport(region.boundingRectangle, viewport) <= threshold) {
             return false
-        // Default expand if nothing applies
+            // Default expand if nothing applies
         } else {
             return true
         }
@@ -413,7 +423,7 @@ export class Region {
     hasMultipleMacroStates: boolean
 
     /** Constructor initializes element array for region. */
-    constructor(){
+    constructor() {
         this.elements = []
     }
 
