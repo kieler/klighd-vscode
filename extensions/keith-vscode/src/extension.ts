@@ -23,7 +23,7 @@ import { connect, NetConnectOpts, Socket } from "net";
 let lsClient: LanguageClient;
 let socket: Socket;
 
-/** Lookup map for available commands by the KLighD extension */
+/** Lookup map for available commands by the KLighD extension that this extension uses */
 const klighd = {
     setLSClient: "klighd-diagram.setLanguageClient",
     showDiagram: "klighd-diagram.diagram.show",
@@ -87,7 +87,7 @@ function createServerOptions(context: vscode.ExtensionContext): ServerOptions {
         };
     } else {
         console.log("Spawning to language server as a process.");
-        const lsPath = context.asAbsolutePath("kieler-language-server.linux.jar");
+        const lsPath = context.asAbsolutePath("server/kieler-language-server.linux.jar");
 
         return {
             run: { command: "java", args: ["-jar", lsPath] },
