@@ -10,7 +10,7 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-
+import "reflect-metadata";
 import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { command } from "./constants";

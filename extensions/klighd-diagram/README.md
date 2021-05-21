@@ -12,11 +12,10 @@ This extension visualizes generated KLighD diagrams for other extensions.
 
 > **This extension is not intended to be used directly!**
 
-Instead, it should be used as a dependency by other extensions to easily support KLighD diagram
-visualization.
-
-Your host extension is only responsible for configuring a language client, while the KLighD
-extension handles the rest.
+Instead, it should be used as a dependency by other extensions to easily
+support diagram visualization with KLighD.
+Your host extension is responsible for configuring a language client, while the KLighD
+extension handles everything related to diagrams.
 
 ### Usage in your extension
 
@@ -28,13 +27,13 @@ extension handles the rest.
     ],
 ```
 
-2. Notify KLighD about your language client.
+2. Notify the KLighD extension about your language client.
 
 ```typescript
 export async function activate(context: vscode.ExtensionContext) {
     // ... configuring the language client options
 
-    const lsClient = new LanguageClient("Language Server", serverOptions, clientOptions, true);
+    const lsClient = new LanguageClient("Language Server", serverOptions, clientOptions);
 
     // Inform the KLighD extension about the LS client
     // The first argument is your language client

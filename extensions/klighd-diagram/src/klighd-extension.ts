@@ -10,13 +10,14 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { ExtensionContext, Uri } from "vscode";
+import { ExtensionContext, Uri, commands } from "vscode";
 import {
     SprottyDiagramIdentifier,
     SprottyLspVscodeExtension,
     SprottyLspWebview,
 } from "sprotty-vscode/lib/lsp";
 import { SprottyWebview } from "sprotty-vscode";
+import { CenterAction, FitToScreenAction, RequestExportSvgAction } from "sprotty";
 import { LanguageClient } from "vscode-languageclient";
 import { diagramType, extensionId } from "./constants";
 
@@ -68,13 +69,68 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         return undefined;
     }
 
+    private pathHasSupportedFileEnding(path: string) {
+        return this.supportedFileEndings.some((ending) => path.endsWith(ending));
+    }
+
     protected activateLanguageClient(_: ExtensionContext): LanguageClient {
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.
         return KLighDExtension.lsClient;
     }
 
-    private pathHasSupportedFileEnding(path: string) {
-        return this.supportedFileEndings.some((ending) => path.endsWith(ending));
+    /** Overwrite register from {@link SprottyLspVscodeExtension} commands to
+     * fix zooming problems with diagram.fit when an element is selected.
+     *
+     * _Note: This can not call the super implementation since VSCode is not able
+     * to overwrite commands and would throw an error._
+     */
+    protected registerCommands() {
+        this.context.subscriptions.push(
+            commands.registerCommand(
+                this.extensionPrefix + ".diagram.open",
+                async (...commandArgs: any[]) => {
+                    const identifier = await this.createDiagramIdentifier(commandArgs);
+                    if (identifier) {
+                        const key = this.getKey(identifier);
+                        let webView = this.singleton || this.webviewMap.get(key);
+                        if (webView) {
+                            webView.reloadContent(identifier);
+                            webView.diagramPanel.reveal(webView.diagramPanel.viewColumn);
+                        } else {
+                            webView = this.createWebView(identifier);
+                            this.webviewMap.set(key, webView);
+                            if (webView.singleton) {
+                                this.singleton = webView;
+                            }
+                        }
+                    }
+                }
+            )
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(this.extensionPrefix + ".diagram.fit", () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview) {
+                    activeWebview.dispatch(new FitToScreenAction(["$root"], 10, undefined, true));
+                }
+            })
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(this.extensionPrefix + ".diagram.center", () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview) {
+                    activeWebview.dispatch(new CenterAction([], true));
+                }
+            })
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(this.extensionPrefix + ".diagram.export", () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview) {
+                    activeWebview.dispatch(new RequestExportSvgAction());
+                }
+            })
+        );
     }
 }

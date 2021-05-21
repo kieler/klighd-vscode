@@ -15,7 +15,7 @@
 export const extensionId = "klighd-diagram";
 
 /**
- * Diagram type that has been used by KEITH to communicate with the LS.
+ * Diagram type that KEITH uses to communicate Sprotty diagrams with the LS.
  * The diagramType is also the name that is used by Sprotty for the webview.
  *
  * This key can also be used together with the "-focused" suffix (keith-diagram-focused)
