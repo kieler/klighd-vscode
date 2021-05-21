@@ -12,7 +12,7 @@
  */
 import { inject, injectable } from 'inversify';
 import {
-    Action, CommandExecutionContext, CommandResult, ElementAndBounds, generateRequestId, HiddenCommand, RequestAction, ResponseAction, SModelRootSchema, TYPES, Match, UpdateModelAction
+    Action, CommandExecutionContext, CommandResult, ElementAndBounds, generateRequestId, HiddenCommand, RequestAction, ResponseAction, SModelRootSchema, TYPES, Match, UpdateModelAction, FitToScreenAction
 } from 'sprotty/lib';
 import { KImage } from '../skgraph-models';
 import { SetSynthesesActionData } from '../syntheses/synthesis-message-data';
@@ -171,5 +171,15 @@ export class KeithUpdateModelAction extends UpdateModelAction {
                 public readonly animate: boolean = true) {
         super(input, animate)
         this.cause = cause
+    }
+}
+
+/** 
+ * Extended {@link FitToScreenAction} that always fits the root element with a padding
+ * of 10px. Most of the time this is the wanted behavior in KEITH.
+ */
+export class KeithFitToScreenAction extends FitToScreenAction {
+    constructor(animate?:boolean) {
+        super(["$root"], 10, undefined, animate)
     }
 }

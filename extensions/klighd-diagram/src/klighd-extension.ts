@@ -17,7 +17,8 @@ import {
     SprottyLspWebview,
 } from "sprotty-vscode/lib/lsp";
 import { SprottyWebview } from "sprotty-vscode";
-import { CenterAction, FitToScreenAction, RequestExportSvgAction } from "sprotty";
+import { CenterAction, RequestExportSvgAction } from "sprotty";
+import { KeithFitToScreenAction } from "@kieler/keith-sprotty/lib/actions/actions";
 import { LanguageClient } from "vscode-languageclient";
 import { diagramType, extensionId } from "./constants";
 
@@ -112,7 +113,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(this.extensionPrefix + ".diagram.fit", () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(new FitToScreenAction(["$root"], 10, undefined, true));
+                    activeWebview.dispatch(new KeithFitToScreenAction(true));
                 }
             })
         );

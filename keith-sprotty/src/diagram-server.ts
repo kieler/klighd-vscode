@@ -33,7 +33,6 @@ import {
     BringToFrontAction,
     ComputedBoundsAction,
     DiagramServer,
-    FitToScreenAction,
     IActionDispatcher,
     ICommand,
     RequestModelAction,
@@ -45,6 +44,7 @@ import {
     CheckedImagesAction,
     CheckImagesAction,
     ComputedTextBoundsAction,
+    KeithFitToScreenAction,
     KeithUpdateModelAction,
     Pair,
     PerformActionAction,
@@ -95,7 +95,7 @@ export class KeithDiagramServer extends DiagramServer {
             message.action.kind === KeithUpdateModelAction.KIND;
 
         if (wasDiagramModelUpdated) {
-            this.actionDispatcher.dispatch(new FitToScreenAction(["$root"], 10, undefined, true));
+            this.actionDispatcher.dispatch(new KeithFitToScreenAction(true));
         }
     }
 

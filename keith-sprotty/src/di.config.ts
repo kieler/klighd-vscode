@@ -15,12 +15,13 @@ import { interactiveModule } from '@kieler/keith-interactive/lib/interactive-mod
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
-    LogLevel, ModelRendererFactory, modelSourceModule, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
+    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
     TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { KeithDiagramServer } from './diagram-server';
 import { KeithHoverMouseListener } from './hover/hover';
+import { KeithModelViewer } from './model-viewer';
 import { RenderOptions } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
@@ -54,6 +55,10 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
             return new SKGraphModelRenderer(viewRegistry, targetKind, processors);
         };
     });
+    // Notes that this rebinds the Service and not the TYPE.ModelViewer intentionally as the type is bound to a dynamic value in Sprotty
+    rebind(ModelViewer).to(KeithModelViewer).inSingletonScope()
+
+
     const context = { bind, unbind, isBound, rebind }
     configureModelElement(context, 'html', HtmlRoot, HtmlRootView)
     configureModelElement(context, 'pre-rendered', PreRenderedElement, PreRenderedView)
