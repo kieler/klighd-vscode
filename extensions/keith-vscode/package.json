@@ -21,40 +21,95 @@
         "Other"
     ],
     "activationEvents": [
-        "onLanguage:sctx"
+        "onLanguage:sctx",
+        "onLanguage:elkt",
+        "onLanguage:kgt",
+        "onLanguage:kviz",
+        "onLanguage:strl",
+        "onLanguage:lus"
     ],
     "main": "./dist/extension.js",
     "contributes": {
         "languages": [
             {
                 "id": "sctx",
-                "configuration": "./language-configs/sccharts-configuration.json",
+                "configuration": "./language-configs/basic-configuration.json",
                 "aliases": [
                     "SCCharts"
                 ],
                 "extensions": [
                     ".sctx"
                 ]
+            },
+            {
+                "id": "elkt",
+                "configuration": "./language-configs/basic-configuration.json",
+                "aliases": [
+                    "Elk Graph"
+                ],
+                "extensions": [
+                    ".elkt"
+                ]
+            },
+            {
+                "id": "kgt",
+                "configuration": "./language-configs/basic-configuration.json",
+                "aliases": [
+                    "KGraph"
+                ],
+                "extensions": [
+                    ".kgt"
+                ]
+            },
+            {
+                "id": "kviz",
+                "configuration": "./language-configs/basic-configuration.json",
+                "aliases": [
+                    "Kieler Visualization"
+                ],
+                "extensions": [
+                    ".kviz"
+                ]
+            },
+            {
+                "id": "strl",
+                "configuration": "./language-configs/basic-configuration.json",
+                "aliases": [
+                    "Estrel"
+                ],
+                "extensions": [
+                    ".strl"
+                ]
+            },
+            {
+                "id": "lus",
+                "configuration": "./language-configs/basic-configuration.json",
+                "aliases": [
+                    "Lustre"
+                ],
+                "extensions": [
+                    ".lus"
+                ]
             }
         ],
         "menus": {
             "editor/title": [
                 {
-                    "when": "resourceLangId == sctx",
+                    "when": "resourceLangId == sctx || resourceLangId == elkt || resourceLangId == kgt || resourceLangId == kviz || resourceLangId == strl || resourceLangId == lus",
                     "command": "klighd-diagram.diagram.open",
                     "group": "navigation"
                 }
             ],
             "editor/context": [
                 {
-                    "when": "resourceLangId == sctx",
+                    "when": "resourceLangId == sctx || resourceLangId == elkt || resourceLangId == kgt || resourceLangId == kviz || resourceLangId == strl || resourceLangId == lus",
                     "command": "klighd-diagram.diagram.open",
                     "group": "navigation"
                 }
             ],
             "explorer/context": [
                 {
-                    "when": "resourceLangId == sctx",
+                    "when": "resourceLangId == sctx || resourceLangId == elkt || resourceLangId == kgt || resourceLangId == kviz || resourceLangId == strl || resourceLangId == lus",
                     "command": "klighd-diagram.diagram.open",
                     "group": "navigation"
                 }
