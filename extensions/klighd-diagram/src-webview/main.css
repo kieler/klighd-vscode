@@ -1,0 +1,4 @@
+/** The svg container has an outline when focused. It does not look nice so we remove it.*/
+.sprotty-graph {
+    outline: none;
+}
