@@ -36,8 +36,10 @@ export function activate(context: vscode.ExtensionContext) {
                 }
 
                 try {
-                    KLighDExtension.lsClient = client;
-                    extension = new KLighDExtension(context, fileEndings);
+                    extension = new KLighDExtension(context, {
+                        lsClient: client,
+                        supportedFileEnding: fileEndings,
+                    });
 
                     console.debug("KLighD extension activated.");
                 } catch (e) {

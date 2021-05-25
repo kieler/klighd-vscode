@@ -22,6 +22,11 @@ import { KeithFitToScreenAction } from "@kieler/keith-sprotty/lib/actions/action
 import { LanguageClient } from "vscode-languageclient";
 import { diagramType, extensionId } from "./constants";
 
+interface KLighDExtensionOptions {
+    lsClient: LanguageClient,
+    supportedFileEnding: string[]
+}
+
 /**
  * Bootstrap an extension with `sprotty-vscode` that manages a webview which
  * contains a Sprotty container to display diagrams.
@@ -29,17 +34,23 @@ import { diagramType, extensionId } from "./constants";
  * @see https://github.com/eclipse/sprotty-vscode
  */
 export class KLighDExtension extends SprottyLspVscodeExtension {
-    // Ideally this should be an instance property and not a static field. However,
-    // SprottyLspVscodeExtension calls activateLanguageClient in its constructor
-    // which happens before an instance property would be assigned by our
-    // constructor, since the super call has to be the first expression in the
-    // constructor.
-    static lsClient: LanguageClient;
+    // SprottyLspVscodeExtension calls "activateLanguageClient" in its constructor
+    // to receive a language client that is used for the diagrams and register
+    // event handlers on the client.
+    // We have to store our given client somewhere so it is available for "activateLanguageClient"
+    // to return. Using a instance property does not work because the super() call
+    // in the constructor, and therefore the "activateLanguageClient" call, has to happen
+    // before modifications to the instance. The only possible hack around this
+    // problem is a static property.
+    // PS. This hack is approved by als.
+    private static lsClient: LanguageClient;
     private supportedFileEndings: string[];
 
-    constructor(context: ExtensionContext, supportedFileEnding: string[]) {
+    constructor(context: ExtensionContext, options: KLighDExtensionOptions) {
+        KLighDExtension.lsClient = options.lsClient;
+
         super(extensionId, context);
-        this.supportedFileEndings = supportedFileEnding;
+        this.supportedFileEndings = options.supportedFileEnding;
     }
 
     protected createWebView(identifier: SprottyDiagramIdentifier): SprottyWebview {
