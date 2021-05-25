@@ -54,6 +54,10 @@
         "menus": {
             "commandPalette": [
                 {
+                    "when": "false",
+                    "command": "klighd-diagram.diagram.open"
+                },
+                {
                     "when": "keith-diagram-focused",
                     "command": "klighd-diagram.diagram.fit"
                 },
