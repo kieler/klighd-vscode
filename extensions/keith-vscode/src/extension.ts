@@ -16,9 +16,10 @@ import {
     LanguageClient,
     ServerOptions,
     LanguageClientOptions,
-    StreamInfo,
+    StreamInfo
 } from "vscode-languageclient";
 import { connect, NetConnectOpts, Socket } from "net";
+import { KeithErrorHandler } from "./error-handler";
 
 let lsClient: LanguageClient;
 let socket: Socket;
@@ -42,8 +43,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
     lsClient = new LanguageClient("KIELER Language Server", serverOptions, clientOptions, true);
 
+    // Setup basic connection error reporting
+    const defaultErrorHandler = lsClient.createDefaultErrorHandler();
+    lsClient.clientOptions.errorHandler = new KeithErrorHandler(defaultErrorHandler);
+
     // Inform the KLighD extension about the LS client and supported file endings
-    await vscode.commands.executeCommand(klighd.setLSClient, lsClient, [
+    vscode.commands.executeCommand(klighd.setLSClient, lsClient, [
         "sctx",
         "elkt",
         "kgt",
