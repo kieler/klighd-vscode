@@ -18,13 +18,21 @@ import { LSPConnection } from "./connection";
 import { getDiagramSourceUri, getLanguageId, sleep } from "./helpers";
 import { hideSpinner } from "./spinner";
 import { IActionDispatcher, TYPES } from "sprotty";
+import { showPopup } from "./popup";
 
 const sourceUri = getDiagramSourceUri();
 
 if (!sourceUri) {
     document.body.innerHTML = "Please specify a sourceUri for your diagram as a search parameter.";
 } else {
-    main(sourceUri).then(() => hideSpinner());
+    main(sourceUri)
+        .then(() => hideSpinner())
+        .catch(() =>
+            showPopup(
+                "Initialization error",
+                "Something went wrong while initializing the diagram. Please reload and try again."
+            )
+        );
 }
 
 async function main(sourceUri: string) {

@@ -15,6 +15,7 @@ import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
 import { IConnection } from "@kieler/keith-sprotty";
 import { ActionMessage } from "sprotty";
+import { showPopup } from "./popup";
 
 const acceptMessageType = new rpc.NotificationType<ActionMessage, void>("diagram/accept");
 
@@ -61,14 +62,7 @@ export class LSPConnection implements IConnection {
                     console.log("Connected to language server.");
                     this.connection = conn;
 
-                    this.connection.onError((e) => {
-                        console.error(e);
-                    });
-
-                    this.connection.onClose(() => {
-                        this.connection = undefined;
-                        this.socket = undefined;
-                    });
+                    this.setupErrorHandlers(conn);
 
                     this.connection.onNotification(
                         acceptMessageType,
@@ -78,6 +72,24 @@ export class LSPConnection implements IConnection {
                     resolve(this);
                 },
             });
+        });
+    }
+
+    private setupErrorHandlers(conn: rpc.MessageConnection) {
+        conn.onError((e) => {
+            showPopup(
+                "Connection error",
+                e[0].message ?? "An error on the connection to the language server occurred."
+            );
+            console.error(e[0]);
+        });
+
+        conn.onClose(() => {
+            showPopup(
+                "Connection closed",
+                "Connection to the language server closed. Please reload and try again."
+            );
+            this.close();
         });
     }
 
