@@ -87,7 +87,8 @@ export class LSPConnection implements IConnection {
         conn.onClose(() => {
             showPopup(
                 "Connection closed",
-                "Connection to the language server closed. Please reload and try again."
+                "Connection to the language server closed. Please reload to reconnect.",
+                { persist: true }
             );
             this.close();
         });

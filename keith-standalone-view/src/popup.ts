@@ -13,19 +13,26 @@
 
 import "./styles/popup.css";
 
+interface PopupOptions {
+    /** The created popup will not be hidden automatically. */
+    persist: boolean;
+}
+
 /**
  * Creates a popup message to notify the user about an important event.
  * The popup is automatically removed after 10 seconds.
  */
-export function showPopup(title: string, message: string) {
+export function showPopup(title: string, message: string, options?: Partial<PopupOptions>) {
     const container = document.querySelector("#popup-container");
     if (!container) throw new Error("No Popup Container found in current DOM!");
 
     const popupEle = createErrorPopup(title, message);
     container.appendChild(popupEle);
 
-    // Hide the Popup after 10 seconds
-    setTimeout(() => container.removeChild(popupEle), 10000);
+    if (!options?.persist) {
+        // Hide the Popup after 10 seconds
+        setTimeout(() => container.removeChild(popupEle), 10000);
+    }
 }
 
 function createErrorPopup(title: string, message: string) {
