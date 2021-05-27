@@ -13,7 +13,6 @@
 
 import "reflect-metadata";
 import "sprotty-vscode-webview/css/sprotty-vscode.css";
-import "sprotty/css/sprotty.css";
 import "./main.css";
 
 import { Container } from "inversify";

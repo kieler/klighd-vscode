@@ -1,12 +1,21 @@
-import { InitializeCanvasBoundsAction, ModelViewer } from "sprotty";
+import { inject } from "inversify";
 import { VNode } from "snabbdom/vnode";
+import { InitializeCanvasBoundsAction, IUIExtension, ModelViewer } from "sprotty";
 import { KeithFitToScreenAction } from "./actions/actions";
+import { UITYPES } from "./options/di.config";
 
 /**
  * Extend the {@link ModelViewer} to also dispatch a FitToScreenAction when the
  * window resizes.
+ * Futhermore, the extension resolves UIExtensions from the IoC that should be
+ * displayed immediately.
  */
 export class KeithModelViewer extends ModelViewer {
+    // Resolve UIExtensions that should be shown together with the model.
+    // Such UIExtensions should implement a @postConstruct to show them self.
+    // @ts-ignore value is never read. The IoC only has to resolve the dependency.
+    @inject(UITYPES.OptionsTrigger) private optionsTrigger: IUIExtension;
+
     protected onWindowResize = (vdom: VNode): void => {
         // This should do a super.onWindowResize call to not repeat the logic from the
         // base class. However, the method is defined as an arrow function, which
