@@ -1,11 +1,14 @@
 :root {
     --color-primary: #0552b5;
     --color-accent-red: #cf1124;
+    --color-background: #F7F7F7;
 }
 
 body {
     margin: 0;
     height: 100vh;
+
+    background: var(--color-background);
 }
 
 #sprotty {
