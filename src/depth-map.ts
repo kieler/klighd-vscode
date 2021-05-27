@@ -284,8 +284,10 @@ export class DepthMap {
         // Collapse all invisible states and regions.
         if (!this.isVisible(region, viewport)) {
             return COLLAPSED
-            // The root has no boundingRectangle.
-        } else {
+        } else if (!region.parent) {
+            // Regions without parents should always be expanded if they are visible
+            return EXPANDED
+        } {
             let viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
             // Expand when reached relative size threshold or native resolution.
             if (viewportSize >= threshold || viewport.zoom >= 1) {
