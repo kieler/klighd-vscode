@@ -124,11 +124,12 @@ export class DepthMap {
     }
 
     /** 
-   * Goes through all elements of each region to find the region with the specified KNode.
+     * Find the region that contains the node,
+     *  this should be the first ancestor that is a region
    * @param node The KNode to search for. 
-   */
+     */
     findRegionWithElement(node: KNode): Region | undefined {
-        let current = node;
+        let current = node.parent as KNode;
         while (current) {
 
             let region = this.getRegion(current.id);
