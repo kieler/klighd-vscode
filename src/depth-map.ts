@@ -83,7 +83,6 @@ export class DepthMap {
         } else {
             // Add the last regions, if there are no more child nodes
             this.addRegionToMap(0, region)
-        
         }
     }
 
@@ -116,7 +115,7 @@ export class DepthMap {
                 this.initHelper((child as KNode), depth, region)
             }
         }
-        
+
     }
 
     /** 
@@ -323,7 +322,9 @@ export class DepthMap {
             if (this.getExpansionState(childRegion, viewport, threshold) === EXPANDED) {
                 this.searchUntilCollapse(childRegion, viewport, threshold)
             } else {
-                this.criticalRegions.add(childRegion.parent)
+                if (childRegion.parent) {
+                    this.criticalRegions.add(childRegion.parent)
+                }
                 this.recursiveCollapseRegion(childRegion)
             }
         })
