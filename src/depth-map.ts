@@ -68,11 +68,24 @@ export class DepthMap {
         this.regionMap = new Map()
         this.titleMap = new Map()
         this.criticalRegions = new Set()
-        for (let child of this.rootElement.children) {
-            this.depthArray = []
-            this.initHelper((child as KNode), 0)
+        this.depthArray = []
+        //if (this.rootElement.children.length > 5) return
+        let node = this.rootElement.children[0] as KNode
+        let region = this.createRegion(node)
+        this.addRegionToMap(0, region)
+        // Get or create current depthArray and region.
+        this.depthArray[0] = []
+        // Go through child nodes until there are no child nodes left.
+        if (node.children.length !== 0) {
+            for (let child of node.children) {
+                // Handle immediate children of the root element seperately.
+                this.initHelper((child as KNode), 0, region)
+            }
+        } else {
+            // Add the last regions, if there are no more child nodes
+            this.addRegionToMap(0, region)
+        
         }
-        this.findParentsAndChildren()
     }
 
     /** 
@@ -82,41 +95,29 @@ export class DepthMap {
      * @param depth The current nesting depth of regions.
      * @param region The current region being constructed.
      */
-    protected initHelper(node: KNode, depth: number, region?: Region) {
+    protected initHelper(node: KNode, depth: number, region: Region) {
         // Get or create current depthArray and region.
         this.depthArray[depth] = this.depthArray[depth] ? this.depthArray[depth] : []
-        let curRegion = region ? region : this.createRegion(node.parent as KNode)
         // Go through child nodes until there are no child nodes left.
-        if (node.children.length !== 0) {
-            for (let child of node.children) {
-                // Handle immediate children of the root element seperately.
-                if (!(child.parent.id === "$root")) {
-                    // Add the current node as element of region.
-                    curRegion.elements.push(child as KNode)
-                    // When the bounding rectangle of a new child area is reached, a new region is created.
-                    if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
-                        && ((child as KNode).data[0] as KContainerRendering).children[0]) {
-                        let nextRegion = this.createRegion(child as KNode)
-                        // In the models parent child structure a child can occur multiple times.
-                        if (!this.regionMap.has(curRegion.boundingRectangle.id)) {
-                            this.addRegionToMap(depth, curRegion)
-                        }
-                        // Continue with the children of the new region.
-                        this.initHelper((child as KNode), (depth + 1), nextRegion)
-                    } else {
-                        // Continue with the other children on the current depth level.
-                        this.initHelper((child as KNode), depth, curRegion)
-                    }
-                } else {
-                    this.initHelper((child as KNode), depth)
-                }
-            }
-        } else {
-            // Add the last regions, if there are no more child nodes
-            if (!this.regionMap.has(curRegion.boundingRectangle.id)) {
-                this.addRegionToMap(depth, curRegion)
+        for (let child of node.children) {
+            // Add the current node as element of region.
+            region.elements.push(child as KNode)
+            // When the bounding rectangle of a new child area is reached, a new region is created.
+            if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
+                && ((child as KNode).data[0] as KContainerRendering).children[0]) {
+                let nextRegion = this.createRegion(child as KNode)
+                nextRegion.parent = region
+                region.children.add(nextRegion)
+                // In the models parent child structure a child can occur multiple times.
+                this.addRegionToMap(depth + 1, nextRegion)
+                // Continue with the children of the new region.
+                this.initHelper((child as KNode), (depth + 1), nextRegion)
+            } else {
+                // Continue with the other children on the current depth level.
+                this.initHelper((child as KNode), depth, region)
             }
         }
+        
     }
 
     /** 
@@ -394,7 +395,7 @@ export class Region {
     /** Determines if the region is expanded (true) or collapsed (false). */
     expansionState: boolean
     /** The immediate parent region of this region. */
-    parent: Region
+    parent?: Region
     /** All immediate child regions of this region */
     children: Set<Region>
     /** Determines if the region has a title by default. */
