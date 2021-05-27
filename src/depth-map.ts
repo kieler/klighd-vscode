@@ -225,11 +225,10 @@ export class DepthMap {
             let breakCheck = false
             for (let curDepth of this.depthArray) {
                 for (let region of curDepth) {
-                    if (this.getExpansionState(region, viewport, expandCollapseThreshold)) {
+                    if (this.getExpansionState(region, viewport, expandCollapseThreshold) === EXPANDED) {
                         this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
                     }
                     breakCheck = true
-                    break
                 }
                 if (breakCheck) {
                     break
