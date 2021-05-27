@@ -194,7 +194,7 @@ export class DepthMap {
         region.setExpansionState(true)
         region.children.forEach(childRegion => {
             if (childRegion.boundingRectangle) {
-                if (this.sizeInViewport(childRegion.boundingRectangle, viewport) <= threshold) {
+                if (this.getExpansionState(childRegion, viewport, threshold) === COLLAPSED) {
                     this.criticalRegions.add(region)
                     this.recursiveCollapseRegion(childRegion)
                 } else {
