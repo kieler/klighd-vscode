@@ -14,11 +14,10 @@ const COLLAPSED = false
  * the appropriate expansion state, visibility and title for regions.
  */
 export class DepthMap {
-    /** 
-     * Stores all regions sorted by nesting depth. The first index corresponds
-     * to the nesting depth and the second index is for each region of that depth. 
-     */
-    depthArray: Region[][];
+
+    // The immediate children of the SModelRoot
+    rootRegions: Region[];
+
     /** Used to access the model and monitor switching of models. */
     rootElement: SModelRoot;
     /** A quick lookup map with the id of the bounding child area of a region as key. */
@@ -39,7 +38,7 @@ export class DepthMap {
     /** Threshold and compensation margin for error in absolute bounds positions. */
     absoluteVisibilityBuffer: number = 500
     /** Singleton pattern */
-    private static instance: DepthMap;
+    private static instance?: DepthMap;
 
     /** 
      * Singleton pattern
@@ -47,6 +46,10 @@ export class DepthMap {
      */
     private constructor(rootElement: SModelRoot) {
         this.rootElement = rootElement
+        this.rootRegions = []
+        this.regionMap = new Map()
+        this.titleMap = new Map()
+        this.criticalRegions = new Set()
     }
 
     /** 
@@ -57,32 +60,26 @@ export class DepthMap {
         // Create new DepthMap, when there is none or the model is switched.
         if (!DepthMap.instance || DepthMap.instance.rootElement !== rootElement) {
             DepthMap.instance = new DepthMap(rootElement);
-            DepthMap.instance.init()
+            console.log("Starting reinizialization of DepthMap")
+            try {
+                DepthMap.instance.init(rootElement)
+                console.log("Reinizialized DepthMap")
+            } catch (e) {
+                console.log("Failed to initialize DepthMap", e);
+
+            }
         }
         return DepthMap.instance
     }
 
     /** Create a new DepthMap. */
-    protected init() {
-        this.regionMap = new Map()
-        this.titleMap = new Map()
-        this.criticalRegions = new Set()
-        this.depthArray = []
-        //if (this.rootElement.children.length > 5) return
-        let node = this.rootElement.children[0] as KNode
-        let region = this.createRegion(node)
-        this.addRegionToMap(0, region)
-        // Get or create current depthArray and region.
-        this.depthArray[0] = []
-        // Go through child nodes until there are no child nodes left.
-        if (node.children.length !== 0) {
-            for (let child of node.children) {
-                // Handle immediate children of the root element seperately.
-                this.initHelper((child as KNode), 0, region)
-            }
-        } else {
-            // Add the last regions, if there are no more child nodes
-            this.addRegionToMap(0, region)
+    protected init(model_root: SModelRoot) {
+        for (let root_child of model_root.children) {
+            let node = root_child as KNode;
+            let region = new Region(node)
+            this.rootRegions.push(region)
+            this.addRegionToMap(region)
+            this.initHelper(node, 0, region)
         }
     }
 
@@ -94,8 +91,6 @@ export class DepthMap {
      * @param region The current region being constructed.
      */
     protected initHelper(node: KNode, depth: number, region: Region) {
-        // Get or create current depthArray and region.
-        this.depthArray[depth] = this.depthArray[depth] ? this.depthArray[depth] : []
         // Go through child nodes until there are no child nodes left.
         for (let child of node.children) {
             // Add the current node as element of region.
@@ -103,11 +98,11 @@ export class DepthMap {
             // When the bounding rectangle of a new child area is reached, a new region is created.
             if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
                 && ((child as KNode).data[0] as KContainerRendering).children[0]) {
-                let nextRegion = this.createRegion(child as KNode)
+                let nextRegion = new Region(child as KNode)
                 nextRegion.parent = region
                 region.children.add(nextRegion)
                 // In the models parent child structure a child can occur multiple times.
-                this.addRegionToMap(depth + 1, nextRegion)
+                this.addRegionToMap(nextRegion)
                 // Continue with the children of the new region.
                 this.initHelper((child as KNode), (depth + 1), nextRegion)
             } else {
@@ -119,77 +114,30 @@ export class DepthMap {
     }
 
     /** 
-     * Initializes a new region.
-     * 
-     * @param boundingRectangle The rectangle of the child area the region is inside of 
-     * @returns The new region object. 
-     */
-    protected createRegion(boundingRectangle?: KNode): Region {
-        let region = new Region()
-        if (boundingRectangle) {
-            region.boundingRectangle = boundingRectangle
-        }
-        region.children = new Set()
-        region.hasTitle = false
-        return region
-    }
-
-    /** 
      * Adds a region to the depth map.
      * 
      * @param depth The nesting depth the region is put into. 
      * @param region The region to add. 
      */
-    protected addRegionToMap(depth: number, region: Region) {
-        if (region.boundingRectangle && this.depthArray[depth]) {
-            this.depthArray[depth].push(region)
-            this.regionMap.set(region.boundingRectangle.id, region)
-        }
-    }
-
-    /** Goes through each region from the bottom up to determine parent children structure. */
-    protected findParentsAndChildren() {
-        for (let i = this.depthArray.length - 1; i >= 0; i--) {
-            for (let curDepth of this.depthArray) {
-                for (let region of curDepth) {
-                    if (region.boundingRectangle) {
-                        this.findParentsAndChildrenHelper(region, region.boundingRectangle.parent as KNode)
-                    }
-                }
-            }
-        }
+    protected addRegionToMap(region: Region) {
+        this.regionMap.set(region.boundingRectangle.id, region)
     }
 
     /** 
-     * Goes through parents of a node until a new region is reached and add corresponding parent and child entries.
-     * 
-     * @param region The region for which the parent region is searched for.
-     * @param node The curent node the function is on to traverse the model. 
-     */
-    protected findParentsAndChildrenHelper(region: Region, node: KNode) {
-        const parentRegion = this.regionMap.get(node.id)
-        if (parentRegion) {
-            region.parent = parentRegion
-            parentRegion.children.add(region)
-        } else if (node.parent) {
-            this.findParentsAndChildrenHelper(region, node.parent as KNode)
-        }
-    }
-
-
-    /** 
-     * Goes through all elements of each region to find the region with the specified KNode.
-     * @param node The KNode to search for. 
-     */
+   * Goes through all elements of each region to find the region with the specified KNode.
+   * @param node The KNode to search for. 
+   */
     findRegionWithElement(node: KNode): Region | undefined {
-        for (let curDepth of this.depthArray) {
-            for (let region of curDepth) {
-                for (let element of region.elements) {
-                    if (element === node) {
-                        return region
-                    }
-                }
+        let current = node;
+        while (current) {
+
+            let region = this.getRegion(current.id);
+
+            if (region) {
+                return region
             }
+
+            current = current.parent as KNode
         }
         return undefined
     }
@@ -224,16 +172,9 @@ export class DepthMap {
 
         // Initialize expansion states on first run.
         if (this.criticalRegions.size == 0) {
-            let breakCheck = false
-            for (let curDepth of this.depthArray) {
-                for (let region of curDepth) {
-                    if (this.getExpansionState(region, viewport, expandCollapseThreshold) === EXPANDED) {
-                        this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
-                    }
-                    breakCheck = true
-                }
-                if (breakCheck) {
-                    break
+            for (let region of this.rootRegions) {
+                if (this.getExpansionState(region, viewport, expandCollapseThreshold) === EXPANDED) {
+                    this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
                 }
             }
         } else {
@@ -424,8 +365,11 @@ export class Region {
     hasMultipleMacroStates: boolean
 
     /** Constructor initializes element array for region. */
-    constructor() {
+    constructor(boundingRectangle: KNode) {
+        this.boundingRectangle = boundingRectangle
         this.elements = []
+        this.children = new Set()
+        this.hasTitle = false
     }
 
     /** 
