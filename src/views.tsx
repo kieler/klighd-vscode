@@ -51,7 +51,7 @@ export class SKGraphView extends SGraphView {
         if (useSmartZoom) {
             ctx.depthMap = DepthMap.getInstance(model)
             if (ctx.viewport && ctx.depthMap) {
-                ctx.depthMap.expandCollapse(ctx.viewport)
+                ctx.depthMap.expandCollapse(ctx.viewport, ctx.renderingOptions)
             }
             if (ctx.renderingDefs.size == 0) {
                 ctx.depthMap.isCompleteRendering = true

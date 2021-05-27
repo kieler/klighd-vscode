@@ -31,8 +31,7 @@ export class DepthMap {
      * Consists of the last expanded regions in the hierarchy.
     */
     criticalRegions: Set<Region>;
-    /** Rendering options for adjusting functions. */
-    renderingOptions: RenderingOptions
+
     /** Will be changed to true, when all micro layouting, etc. is done. */
     isCompleteRendering: boolean = false
     /** Lookup map for quickly checking macro and super state titles. */
@@ -210,7 +209,7 @@ export class DepthMap {
      * 
      * @param viewport The current viewport. 
      */
-    expandCollapse(viewport: Viewport) {
+    expandCollapse(viewport: Viewport, renderingOptions: RenderingOptions) {
 
         if (this.viewport?.scroll === viewport.scroll && this.viewport?.zoom === viewport.zoom) {
             return
@@ -218,22 +217,16 @@ export class DepthMap {
 
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
 
-        // Load Render Options
-        if (!this.renderingOptions) {
-            this.renderingOptions = RenderingOptions.getInstance()
-        }
-        const thresholdOption = this.renderingOptions.getOption(ExpandCollapseThreshold.ID)
+        const thresholdOption = renderingOptions.getOption(ExpandCollapseThreshold.ID)
         const defaultThreshold = 0.2
         const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
         // Initialize expansion states on first run.
         if (this.criticalRegions.size == 0) {
-            let firstRegion: Region
             let breakCheck = false
             for (let curDepth of this.depthArray) {
                 for (let region of curDepth) {
-                    firstRegion = region
-                    if (this.getExpansionState(firstRegion, viewport, expandCollapseThreshold)) {
-                        this.searchUntilCollapse(firstRegion, viewport, expandCollapseThreshold)
+                    if (this.getExpansionState(region, viewport, expandCollapseThreshold)) {
+                        this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
                     }
                     breakCheck = true
                     break
