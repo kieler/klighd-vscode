@@ -31,8 +31,7 @@ export class DepthMap {
      * Consists of the last expanded regions in the hierarchy.
     */
     criticalRegions: Set<Region>;
-    /** Rendering options for adjusting functions. */
-    renderingOptions: RenderingOptions
+
     /** Will be changed to true, when all micro layouting, etc. is done. */
     isCompleteRendering: boolean = false
     /** Lookup map for quickly checking macro and super state titles. */
@@ -211,33 +210,28 @@ export class DepthMap {
      * 
      * @param viewport The current viewport. 
      */
-    expandCollapse(viewport: Viewport) {
+    expandCollapse(viewport: Viewport, renderingOptions: RenderingOptions) {
 
         if (this.viewport?.scroll === viewport.scroll && this.viewport?.zoom === viewport.zoom) {
+            // the viewport did not change, no need to update
             return
         }
 
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
 
-        // Load Render Options
-        if (!this.renderingOptions) {
-            this.renderingOptions = RenderingOptions.getInstance()
-        }
-        const thresholdOption = this.renderingOptions.getOption(ExpandCollapseThreshold.ID)
+        const thresholdOption = renderingOptions.getOption(ExpandCollapseThreshold.ID)
         const defaultThreshold = 0.2
         const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
+
         // Initialize expansion states on first run.
         if (this.criticalRegions.size == 0) {
-            let firstRegion: Region
             let breakCheck = false
             for (let curDepth of this.depthArray) {
                 for (let region of curDepth) {
-                    firstRegion = region
-                    if (this.getExpansionState(firstRegion, viewport, expandCollapseThreshold)) {
-                        this.searchUntilCollapse(firstRegion, viewport, expandCollapseThreshold)
+                    if (this.getExpansionState(region, viewport, expandCollapseThreshold) === EXPANDED) {
+                        this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
                     }
                     breakCheck = true
-                    break
                 }
                 if (breakCheck) {
                     break
@@ -262,7 +256,7 @@ export class DepthMap {
             if (childRegion.boundingRectangle) {
                 if (this.sizeInViewport(childRegion.boundingRectangle, viewport) <= threshold) {
                     this.criticalRegions.add(region)
-                    this.applyExpansionState(childRegion, false)
+                    this.recursiveCollapseRegion(childRegion)
                 } else {
                     this.searchUntilCollapse(childRegion, viewport, threshold)
                 }
@@ -271,10 +265,13 @@ export class DepthMap {
     }
 
     /** Applies expansion state recursively to all children */
-    applyExpansionState(region: Region, expansionState: boolean) {
-        region.setExpansionState(expansionState)
+    recursiveCollapseRegion(region: Region) {
+        region.setExpansionState(COLLAPSED)
+        this.criticalRegions.delete(region)
         region.children.forEach(childRegion => {
-            this.applyExpansionState(childRegion, expansionState)
+            if (childRegion.expansionState === EXPANDED) {
+                this.recursiveCollapseRegion(childRegion)
+            }
         })
     }
 
@@ -288,33 +285,49 @@ export class DepthMap {
     checkCriticalRegions(viewport: Viewport, threshold: number) {
         // Use set of child regions to avoid multiple checks.
         let childSet: Set<Region> = new Set()
-        // All regions here are currently expanded.
-        this.criticalRegions.forEach(region => {
-            // Collapse either if the parent region is collapsed or the expansion state changes.
-            if (region.parent && region.parent.expansionState == COLLAPSED || !this.getExpansionState(region, viewport, threshold)) {
-                region.setExpansionState(false)
-                this.criticalRegions.delete(region)
-                if (region.parent) {
-                    this.criticalRegions.add(region.parent)
+
+        // All regions here are currently expanded and have a collapsed child and have not yet been checked.
+        let toBeProcessed: Set<Region> = new Set(this.criticalRegions)
+
+        let nextToBeProcessed: Set<Region> = new Set()
+
+        while (toBeProcessed.size !== 0) {
+            toBeProcessed.forEach(region => {
+                // Collapse either if the parent region is collapsed or the expansion state changes.
+                if (region.parent && region.parent.expansionState == COLLAPSED || !this.getExpansionState(region, viewport, threshold)) {
+                    region.setExpansionState(false)
+                    this.criticalRegions.delete(region)
+                    if (region.parent) {
+                        nextToBeProcessed.add(region.parent)
+                        this.criticalRegions.add(region.parent)
+                    }
+                    // Collapse all children.
+                    region.children.forEach(childRegion => {
+                        this.recursiveCollapseRegion(childRegion)
+                    })
+                } else {
+                    // Add children to check for expansion state change.
+                    region.children.forEach(childRegion => {
+                        childSet.add(childRegion)
+                    })
                 }
-                // Collapse all children.
-                region.children.forEach(childRegion => {
-                    childRegion.setExpansionState(false)
-                })
-            } else {
-                // Add children to check for expansion state change.
-                region.children.forEach(childRegion => {
-                    childSet.add(childRegion)
-                })
-            }
-        })
+
+            })
+
+            toBeProcessed = nextToBeProcessed;
+            nextToBeProcessed = new Set();
+        }
+
         // Check all collected child regions of expanded states.
         childSet.forEach(childRegion => {
-            if (this.getExpansionState(childRegion, viewport, threshold)) {
-                childRegion.setExpansionState(true)
-                this.criticalRegions.add(childRegion)
+            if (this.getExpansionState(childRegion, viewport, threshold) === EXPANDED) {
+                this.searchUntilCollapse(childRegion, viewport, threshold)
+            } else {
+                this.criticalRegions.add(childRegion.parent)
+                this.recursiveCollapseRegion(childRegion)
             }
         })
+
         childSet.clear()
     }
 
