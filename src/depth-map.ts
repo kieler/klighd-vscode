@@ -193,13 +193,11 @@ export class DepthMap {
     searchUntilCollapse(region: Region, viewport: Viewport, threshold: number) {
         region.setExpansionState(true)
         region.children.forEach(childRegion => {
-            if (childRegion.boundingRectangle) {
-                if (this.getExpansionState(childRegion, viewport, threshold) === COLLAPSED) {
-                    this.criticalRegions.add(region)
-                    this.recursiveCollapseRegion(childRegion)
-                } else {
-                    this.searchUntilCollapse(childRegion, viewport, threshold)
-                }
+            if (this.getExpansionState(childRegion, viewport, threshold) === COLLAPSED) {
+                this.criticalRegions.add(region)
+                this.recursiveCollapseRegion(childRegion)
+            } else {
+                this.searchUntilCollapse(childRegion, viewport, threshold)
             }
         })
     }
@@ -287,8 +285,6 @@ export class DepthMap {
         if (!this.isVisible(region, viewport)) {
             return COLLAPSED
             // The root has no boundingRectangle.
-        } else if (!region.boundingRectangle) {
-            return EXPANDED
         } else {
             let viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
             // Expand when reached relative size threshold or native resolution.
