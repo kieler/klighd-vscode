@@ -73,9 +73,11 @@ export class DepthMap {
     protected reset(model_root: SModelRoot) {
         this.rootElement = model_root
 
+
         let current_regions = this.rootRegions
         let remaining_regions: Region[] = []
 
+        // Go through all regions and clear the references to other Regions and KNodes
         while (current_regions.length !== 0) {
             for (let region of current_regions) {
                 remaining_regions.concat(region.children)
