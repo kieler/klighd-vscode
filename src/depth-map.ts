@@ -35,6 +35,11 @@ export class DepthMap {
      */
     viewport?: Viewport;
 
+    /**
+     * The threshold for which we updated the state of KNodes
+     */
+    lastThreshold?: number;
+
     /** 
      * Set for handling regions, that need to be checked for expansion state.
      * Consists of the last expanded regions in the hierarchy.
@@ -72,6 +77,12 @@ export class DepthMap {
 
     protected reset(model_root: SModelRoot) {
         this.rootElement = model_root
+        // rootRegions are reset below as we also want to remove the edges from the graph spaned by the regions
+        this.regionMap.clear()
+        this.titleMap.clear()
+        this.criticalRegions.clear()
+        this.viewport = undefined
+        this.lastThreshold = undefined
 
 
         let current_regions = this.rootRegions
@@ -90,9 +101,6 @@ export class DepthMap {
         }
 
         this.rootRegions = []
-        this.regionMap.clear()
-        this.titleMap.clear()
-        this.criticalRegions.clear()
     }
 
     /** 
@@ -206,16 +214,19 @@ export class DepthMap {
      */
     expandCollapse(viewport: Viewport, renderingOptions: RenderingOptions) {
 
-        if (this.viewport?.scroll === viewport.scroll && this.viewport?.zoom === viewport.zoom) {
+        const thresholdOption = renderingOptions.getOption(ExpandCollapseThreshold.ID)
+        const defaultThreshold: number = 0.2
+        const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
+
+        if (this.viewport?.scroll === viewport.scroll
+            && this.viewport?.zoom === viewport.zoom
+            && this.lastThreshold === expandCollapseThreshold) {
             // the viewport did not change, no need to update
             return
         }
 
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
-
-        const thresholdOption = renderingOptions.getOption(ExpandCollapseThreshold.ID)
-        const defaultThreshold = 0.2
-        const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
+        this.lastThreshold = expandCollapseThreshold;
 
         // Initialize expansion states on first run.
         if (this.criticalRegions.size == 0) {
