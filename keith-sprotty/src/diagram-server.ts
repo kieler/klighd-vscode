@@ -159,6 +159,10 @@ export class KeithDiagramServer extends DiagramServer {
 
         if (action.kind === SetSynthesesAction.KIND) {
             this.handleSetSyntheses(action as SetSynthesesAction);
+        } else if (action.kind === CheckImagesAction.KIND) {
+            this.handleCheckImages(action as CheckImagesAction);
+        } else if (action.kind === StoreImagesAction.KIND) {
+            this.handleStoreImages(action as StoreImagesAction);
         } else {
             super.handle(action);
         }
@@ -264,7 +268,5 @@ export async function requestModel(
     actionDispatcher: IActionDispatcher,
     options: { sourceUri: string; diagramType: string }
 ) {
-    await actionDispatcher.dispatch(
-        new RequestModelAction(options)
-    );
+    await actionDispatcher.dispatch(new RequestModelAction(options));
 }
