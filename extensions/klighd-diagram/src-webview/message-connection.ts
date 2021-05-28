@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { IConnection } from "@kieler/keith-sprotty";
+import { Connection } from "@kieler/keith-sprotty";
 import { inject, injectable } from "inversify";
 import { ActionMessage, isActionMessage, ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
@@ -19,7 +19,7 @@ import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
 
 /** Message based connection to the VSCode extension. */
 @injectable()
-export class MessageConnection implements IConnection {
+export class MessageConnection implements Connection {
     private messageHandlers: ((message: ActionMessage) => void)[] = [];
 
     constructor(
