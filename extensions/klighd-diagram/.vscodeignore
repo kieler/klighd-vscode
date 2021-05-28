@@ -4,6 +4,7 @@
 node_modules
 out/**
 src/**
+src-webview/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
