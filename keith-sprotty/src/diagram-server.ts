@@ -58,8 +58,6 @@ import { RequestKeithPopupModelAction } from "./hover/hover";
 import { Connection, SessionStorage } from "./services";
 import { SynthesisRegistry } from "./syntheses/synthesis-registry";
 
-export const updateOptionsKind = "updateOptions";
-
 /**
  * This class extends {@link DiagramServer} to also handle the
  * Request- and ComputedTextBoundsAction.
@@ -138,7 +136,6 @@ export class KeithDiagramServer extends DiagramServer {
         registry.register(SetSynthesisAction.KIND, this);
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
-        registry.register(updateOptionsKind, this);
     }
 
     handle(action: Action): void | ICommand | Action {
@@ -180,25 +177,11 @@ export class KeithDiagramServer extends DiagramServer {
         //     "de.cau.cs.kieler.simulation.ui.synthesis.action.AddCoSimulationAction"
         // ) {
         //   addCoSimulationEmitter.fire(action);
-        // } else if (action.kind === CheckImagesAction.KIND) {
-        //   this.handleCheckImages(action as CheckImagesAction);
-        // } else if (action.kind === StoreImagesAction.KIND) {
-        //   this.handleStoreImages(action as StoreImagesAction);
-        // } else if (action.kind === updateOptionsKind) {
-        //   onUpdateOptionsEmitter.fire(action);
         // } else if (
         //   action.kind === RequestKeithPopupModelAction.KIND &&
         //   action instanceof RequestKeithPopupModelAction
         // ) {
         //   this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction);
-        // } else if (
-        //   action.kind === RequestPopupModelAction.KIND ||
-        //   action.kind === SwitchEditModeAction.KIND ||
-        //   action.kind === BringToFrontAction.KIND
-        // ) {
-        //   // Ignore these ones
-        // } else {
-        //   super.handle(action);
         // }
     }
 

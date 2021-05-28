@@ -11,7 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SetUIExtensionVisibilityAction } from "sprotty";
+import { Action, SetUIExtensionVisibilityAction } from "sprotty";
+import { DisplayedActionData, LayoutOptionUIData, ValuedSynthesisOption } from "./option-models";
 import { OptionsPanel } from "./options-panel";
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the option panel */
@@ -26,4 +27,22 @@ export class HideOptionsPanelAction extends SetUIExtensionVisibilityAction {
     constructor() {
         super(OptionsPanel.ID, false);
     }
+}
+
+/** Request message from the server to update the diagram options widget on the client. */
+export class UpdateOptionsAction implements Action {
+    static readonly KIND = "updateOptions";
+    readonly kind = UpdateOptionsAction.KIND;
+
+    constructor(
+        public readonly valuedSynthesisOptions: ValuedSynthesisOption[],
+        public readonly layoutOptions: LayoutOptionUIData[],
+        public readonly actions: DisplayedActionData[],
+        public readonly modelUri: string
+    ) {}
+}
+
+/** Type predicate to narrow an action to {@link UpdateOptionsAction}. */
+export function isUpdateOptionsAction(action: Action): action is UpdateOptionsAction {
+    return action.kind === UpdateOptionsAction.KIND;
 }

@@ -12,8 +12,10 @@
  */
 
 import { ContainerModule } from "inversify";
-import { TYPES } from "sprotty";
+import { configureActionHandler, TYPES } from "sprotty";
+import { UpdateOptionsAction } from "./actions";
 import { OptionsPanel } from "./options-panel";
+import { OptionsRegistry } from "./options-registry";
 import { OptionsTrigger } from "./options-trigger";
 
 export const UITYPES = {
@@ -21,14 +23,18 @@ export const UITYPES = {
     OptionsPanel: Symbol("optsions-panel"),
 };
 
-export const optionsModule = new ContainerModule((bind) => {
+export const optionsModule = new ContainerModule((bind, _, isBound) => {
     bind(UITYPES.OptionsTrigger)
         .to(OptionsTrigger)
         .inSingletonScope();
     bind(UITYPES.OptionsPanel)
         .to(OptionsPanel)
         .inSingletonScope();
-
     bind(TYPES.IUIExtension).toService(UITYPES.OptionsTrigger);
     bind(TYPES.IUIExtension).toService(UITYPES.OptionsPanel);
+
+    bind(OptionsRegistry)
+        .toSelf()
+        .inSingletonScope();
+    configureActionHandler({ bind, isBound }, UpdateOptionsAction.KIND, OptionsRegistry);
 });
