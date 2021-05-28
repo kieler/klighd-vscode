@@ -8,21 +8,31 @@ const EXPANDED = true
 const COLLAPSED = false
 
 /**
- * Divides Model KNodes into regions. These are then saved in the 2D depthArray,
- * where the first index corresponds to nesting depth. On these expand and collapse actions
+ * Divides Model KNodes into regions. On these expand and collapse actions
  * are defined via the expansionState. Also holds additional information to determine
  * the appropriate expansion state, visibility and title for regions.
  */
 export class DepthMap {
 
-    // The immediate children of the SModelRoot
+    /**
+     * The region for immediate children of the SModelRoot, 
+     * aka. the root regions
+     *  */
     rootRegions: Region[];
 
-    /** Used to access the model and monitor switching of models. */
+    /** 
+     * The model for which the DephtMap is generated 
+     * */
     rootElement: SModelRoot;
-    /** A quick lookup map with the id of the bounding child area of a region as key. */
+
+    /**  
+     * A quick lookup map with the id of the bounding child area of a region as key.
+     * */
     regionMap: Map<String, Region>;
 
+    /**
+     * The last viewport for which we updated the state of KNodes
+     */
     viewport?: Viewport;
 
     /** 
@@ -31,17 +41,25 @@ export class DepthMap {
     */
     criticalRegions: Set<Region>;
 
-    /** Will be changed to true, when all micro layouting, etc. is done. */
+    /**
+     *  Will be changed to true, when all micro layouting, etc. is done. 
+     * */
     isCompleteRendering: boolean = false
-    /** Lookup map for quickly checking macro and super state titles. */
+
+    /**
+     *  Lookup map for quickly checking macro and super state titles. 
+     * */
     titleMap: Map<KText, KText>
-    /** Threshold and compensation margin for error in absolute bounds positions. */
+
+    /** 
+     * Threshold and compensation margin for error in absolute bounds positions. 
+     * */
     absoluteVisibilityBuffer: number = 500
+
     /** Singleton pattern */
     private static instance?: DepthMap;
 
     /** 
-     * Singleton pattern
      * @param rootElement The root element of the model. 
      */
     private constructor(rootElement: SModelRoot) {
@@ -72,7 +90,9 @@ export class DepthMap {
         return DepthMap.instance
     }
 
-    /** Create a new DepthMap. */
+    /** 
+     * Initialize a new DepthMap. 
+     * */
     protected init(model_root: SModelRoot) {
         for (let root_child of model_root.children) {
             let node = root_child as KNode;
@@ -184,15 +204,14 @@ export class DepthMap {
     }
 
     /**
-     * Finds the regions with the lowest nesting level, that need to be collapsed and applies the state to it
-     * as well as all children until the model is exhausted.
+     * Expand the given region and recursively determine and update the chilrens expansion state
      * 
      * @param region The root region
      * @param viewport The curent viewport
      * @param threshold The expand/collapse threshold
      */
     searchUntilCollapse(region: Region, viewport: Viewport, threshold: number) {
-        region.setExpansionState(true)
+        region.setExpansionState(EXPANDED)
         region.children.forEach(childRegion => {
             if (this.getExpansionState(childRegion, viewport, threshold) === COLLAPSED) {
                 this.criticalRegions.add(region)
@@ -203,11 +222,14 @@ export class DepthMap {
         })
     }
 
-    /** Applies expansion state recursively to all children */
+    /** 
+     * Collapses the region and all chldren recursively 
+     * */
     recursiveCollapseRegion(region: Region) {
         region.setExpansionState(COLLAPSED)
         this.criticalRegions.delete(region)
         region.children.forEach(childRegion => {
+            // bail early when child is already collapsed
             if (childRegion.expansionState === EXPANDED) {
                 this.recursiveCollapseRegion(childRegion)
             }
@@ -228,6 +250,7 @@ export class DepthMap {
         // All regions here are currently expanded and have a collapsed child and have not yet been checked.
         let toBeProcessed: Set<Region> = new Set(this.criticalRegions)
 
+        // The regions that have become critical and therfore need to be checked as well
         let nextToBeProcessed: Set<Region> = new Set()
 
         while (toBeProcessed.size !== 0) {
@@ -263,6 +286,8 @@ export class DepthMap {
                 this.searchUntilCollapse(childRegion, viewport, threshold)
             } else {
                 if (childRegion.parent) {
+                    // our parent is expanded and we are not, 
+                    // this meand our parent is a critical region
                     this.criticalRegions.add(childRegion.parent)
                 }
                 this.recursiveCollapseRegion(childRegion)
@@ -345,7 +370,7 @@ export class Region {
     /** The rectangle of the child area in which the region lies. */
     boundingRectangle: KNode
     /** Gained using browser position and rescaling and are therefore not perfect. */
-    absoluteBounds: Bounds
+    absoluteBounds?: Bounds
     /** Determines if the region is expanded (true) or collapsed (false). */
     expansionState: boolean
     /** The immediate parent region of this region. */
