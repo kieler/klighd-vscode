@@ -70,22 +70,46 @@ export class DepthMap {
         this.criticalRegions = new Set()
     }
 
+    protected reset(model_root: SModelRoot) {
+        this.rootElement = model_root
+
+        let current_regions = this.rootRegions
+        let remaining_regions: Region[] = []
+
+        while (current_regions.length !== 0) {
+            for (let region of current_regions) {
+                remaining_regions.concat(region.children)
+                region.children = []
+                region.elements = []
+                region.parent = undefined
+            }
+            current_regions = remaining_regions
+            remaining_regions = []
+        }
+
+        this.rootRegions = []
+        this.regionMap.clear()
+        this.titleMap.clear()
+        this.criticalRegions.clear()
+    }
+
     /** 
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
     public static getInstance(rootElement: SModelRoot): DepthMap {
-        // Create new DepthMap, when there is none or the model is switched.
-        if (!DepthMap.instance || DepthMap.instance.rootElement !== rootElement) {
+        if (!DepthMap.instance) {
+            // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement);
+            console.log("Starting inizialization of DepthMap")
+            DepthMap.instance.init(rootElement)
+            console.log("Inizialized DepthMap")
+        } else if (DepthMap.instance.rootElement !== rootElement) {
+            // Reset and reinitialize if the model changed
+            DepthMap.instance.reset(rootElement)
             console.log("Starting reinizialization of DepthMap")
-            try {
-                DepthMap.instance.init(rootElement)
-                console.log("Reinizialized DepthMap")
-            } catch (e) {
-                console.log("Failed to initialize DepthMap", e);
-
-            }
+            DepthMap.instance.init(rootElement)
+            console.log("Reinizialized DepthMap")
         }
         return DepthMap.instance
     }
@@ -120,7 +144,7 @@ export class DepthMap {
                 && ((child as KNode).data[0] as KContainerRendering).children[0]) {
                 let nextRegion = new Region(child as KNode)
                 nextRegion.parent = region
-                region.children.add(nextRegion)
+                region.children.push(nextRegion)
                 // In the models parent child structure a child can occur multiple times.
                 this.addRegionToMap(nextRegion)
                 // Continue with the children of the new region.
@@ -376,7 +400,7 @@ export class Region {
     /** The immediate parent region of this region. */
     parent?: Region
     /** All immediate child regions of this region */
-    children: Set<Region>
+    children: Region[]
     /** Determines if the region has a title by default. */
     hasTitle: boolean
     /** Contains a macro state title, if there is at least one in the region. */
@@ -392,7 +416,7 @@ export class Region {
     constructor(boundingRectangle: KNode) {
         this.boundingRectangle = boundingRectangle
         this.elements = []
-        this.children = new Set()
+        this.children = []
         this.hasTitle = false
     }
 
