@@ -21,26 +21,37 @@ import {
 } from "@kieler/keith-sprotty";
 import { LSPConnection } from "./services/connection";
 import { getDiagramSourceUri, getLanguageId, sleep } from "./helpers";
-import { hideSpinner } from "./spinner";
+import { showSpinner, hideSpinner } from "./spinner";
 import { IActionDispatcher, TYPES } from "sprotty";
 import { showPopup } from "./popup";
 
-const sourceUri = getDiagramSourceUri();
+// IIFE booting the application
+(async function main() {
+    const sourceUri = getDiagramSourceUri();
 
-if (!sourceUri) {
-    document.body.innerHTML = "Please specify a sourceUri for your diagram as a search parameter.";
-} else {
-    main(sourceUri)
-        .then(() => hideSpinner())
-        .catch(() =>
-            showPopup(
-                "Initialization error",
-                "Something went wrong while initializing the diagram. Please reload and try again."
-            )
+    if (!sourceUri) {
+        showPopup(
+            "Usage error",
+            "Please specify a fileUri for your diagram as a search parameter. (?source=...)",
+            { persist: true }
         );
-}
+        return;
+    }
 
-async function main(sourceUri: string) {
+    try {
+        showSpinner();
+        await initDiagramView(sourceUri);
+        hideSpinner();
+    } catch (e) {
+        console.error(e);
+        showPopup(
+            "Initialization error",
+            "Something went wrong while initializing the diagram. Please reload and try again."
+        );
+    }
+})();
+
+async function initDiagramView(sourceUri: string) {
     const languageId = getLanguageId(sourceUri);
     const socketUrl = `ws://${location.host}/socket`;
 
