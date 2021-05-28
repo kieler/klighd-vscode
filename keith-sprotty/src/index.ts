@@ -18,6 +18,7 @@
 import "../styles/options.css";
 import "sprotty/css/sprotty.css";
 
-import createKeithDiagramContainer from './di.config'
-export { createKeithDiagramContainer }
-export {Connection, IConnection, requestModel} from './diagram-server'
+import createKeithDiagramContainer from "./di.config";
+export { createKeithDiagramContainer };
+export { requestModel } from "./diagram-server";
+export { Connection, SessionStorage } from "./services";

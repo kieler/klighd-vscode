@@ -13,8 +13,13 @@
 
 import "reflect-metadata";
 import "./styles/main.css";
-import { Connection, createKeithDiagramContainer, requestModel } from "@kieler/keith-sprotty";
-import { LSPConnection } from "./connection";
+import {
+    Connection,
+    createKeithDiagramContainer,
+    requestModel,
+    SessionStorage,
+} from "@kieler/keith-sprotty";
+import { LSPConnection } from "./services/connection";
 import { getDiagramSourceUri, getLanguageId, sleep } from "./helpers";
 import { hideSpinner } from "./spinner";
 import { IActionDispatcher, TYPES } from "sprotty";
@@ -42,6 +47,7 @@ async function main(sourceUri: string) {
     const connection = new LSPConnection();
     const diagramContainer = createKeithDiagramContainer("sprotty");
     diagramContainer.bind(Connection).toConstantValue(connection);
+    diagramContainer.bind(SessionStorage).toConstantValue(sessionStorage);
     const actionDispatcher = diagramContainer.get<IActionDispatcher>(TYPES.IActionDispatcher);
 
     // Connect to a language server and request a diagram.

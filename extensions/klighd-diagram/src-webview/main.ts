@@ -23,7 +23,7 @@ import {
     VscodeDiagramWidgetFactory,
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { Connection, createKeithDiagramContainer } from "@kieler/keith-sprotty";
+import { Connection, createKeithDiagramContainer, SessionStorage } from "@kieler/keith-sprotty";
 import { MessageConnection } from "./message-connection";
 import { KeyTool } from "sprotty";
 import { KlighDDiagramWidget } from "./klighd-widget";
@@ -31,6 +31,7 @@ import { KlighDDiagramWidget } from "./klighd-widget";
 export class KLighDSprottyStarter extends SprottyStarter {
     protected createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
         const container = createKeithDiagramContainer(diagramIdentifier.clientId);
+        container.bind(SessionStorage).toConstantValue(sessionStorage);
         container
             .bind(Connection)
             .to(MessageConnection)

@@ -55,17 +55,10 @@ import {
     StoreImagesAction,
 } from "./actions/actions";
 import { RequestKeithPopupModelAction } from "./hover/hover";
+import { Connection, SessionStorage } from "./services";
 import { SynthesisRegistry } from "./syntheses/synthesis-registry";
 
 export const updateOptionsKind = "updateOptions";
-
-/** An abstract connection to a server. */
-export interface IConnection {
-    sendMessage(message: ActionMessage): void;
-    onMessageReceived(handler: (message: ActionMessage) => void): void;
-}
-/** DI Symbol that should be used to inject services that implement {@link IConnection}. */
-export const Connection = Symbol("connection");
 
 /**
  * This class extends {@link DiagramServer} to also handle the
@@ -73,11 +66,12 @@ export const Connection = Symbol("connection");
  */
 @injectable()
 export class KeithDiagramServer extends DiagramServer {
-    private _connection: IConnection;
+    private _connection: Connection;
 
     @inject(SynthesisRegistry) protected synthesisRegistry: SynthesisRegistry;
+    @inject(SessionStorage) protected sessionStorage: SessionStorage;
 
-    constructor(@inject(Connection) connection: IConnection) {
+    constructor(@inject(Connection) connection: Connection) {
         super();
         this._connection = connection;
         connection.onMessageReceived(this.messageReceived.bind(this));
@@ -224,7 +218,7 @@ export class KeithDiagramServer extends DiagramServer {
                 image.bundleName,
                 image.imagePath
             );
-            if (!sessionStorage.getItem(id)) {
+            if (!this.sessionStorage.getItem(id)) {
                 notCached.push({ k: image.bundleName, v: image.imagePath });
             }
         }
@@ -240,7 +234,7 @@ export class KeithDiagramServer extends DiagramServer {
                 imageIdentifier.v
             );
             const imageString = imagePair.v;
-            sessionStorage.setItem(id, imageString);
+            this.sessionStorage.setItem(id, imageString);
         }
     }
 
@@ -250,7 +244,7 @@ export class KeithDiagramServer extends DiagramServer {
      * @param bundleName The bundle name of the image.
      * @param imagePath The image path of the image.
      */
-    static imageToSessionStorageString(bundleName: string, imagePath: string) {
+    private static imageToSessionStorageString(bundleName: string, imagePath: string) {
         return bundleName + ":" + imagePath;
     }
 

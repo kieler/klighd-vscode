@@ -13,9 +13,9 @@
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { IConnection } from "@kieler/keith-sprotty";
+import { Connection } from "@kieler/keith-sprotty";
 import { ActionMessage } from "sprotty";
-import { showPopup } from "./popup";
+import { showPopup } from "../popup";
 
 const acceptMessageType = new rpc.NotificationType<ActionMessage, void>("diagram/accept");
 
@@ -25,7 +25,7 @@ const acceptMessageType = new rpc.NotificationType<ActionMessage, void>("diagram
  * Inspired by
  * [this implementation](https://github.com/wylieconlon/lsp-editor-adapter/blob/master/src/ws-connection.ts).
  */
-export class LSPConnection implements IConnection {
+export class LSPConnection implements Connection {
     private socket?: WebSocket;
     private connection?: rpc.MessageConnection;
     private messageHandlers: ((message: ActionMessage) => void)[] = [];
