@@ -50,6 +50,7 @@
 
 .options-panel-container {
     /* Positioned further to the edges compared to the trigger so it hides the shadows of the trigger. */
+    box-sizing: border-box;
     position: fixed;
     top: 16px;
     right: 16px;
@@ -57,11 +58,15 @@
 
     padding: 12px;
     width: fit-content;
-    height: 300px;
+    height: fit-content;
+    /* Max screen height while also respecting a margin of 16px to top and bottom. */
+    max-height: calc(100vh - 32px);
     border-radius: 4px;
+    overflow-y: auto;
 
     background-color: white;
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
+    color: hsl(0, 0%, 13%);
 }
 
 .options-panel-container > h4 {

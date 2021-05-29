@@ -13,28 +13,26 @@
 
 import { ContainerModule } from "inversify";
 import { configureActionHandler, TYPES } from "sprotty";
+import { DISymbol } from "../di.symbols";
 import { UpdateOptionsAction } from "./actions";
 import { OptionsPanel } from "./options-panel";
 import { OptionsRegistry } from "./options-registry";
+import { OptionsRenderer } from "./options-renderer";
 import { OptionsTrigger } from "./options-trigger";
 
-export const UITYPES = {
-    OptionsTrigger: Symbol("optsions-trigger"),
-    OptionsPanel: Symbol("optsions-panel"),
-};
-
 export const optionsModule = new ContainerModule((bind, _, isBound) => {
-    bind(UITYPES.OptionsTrigger)
+    bind(DISymbol.OptionsTrigger)
         .to(OptionsTrigger)
         .inSingletonScope();
-    bind(UITYPES.OptionsPanel)
+    bind(DISymbol.OptionsPanel)
         .to(OptionsPanel)
         .inSingletonScope();
-    bind(TYPES.IUIExtension).toService(UITYPES.OptionsTrigger);
-    bind(TYPES.IUIExtension).toService(UITYPES.OptionsPanel);
+    bind(TYPES.IUIExtension).toService(DISymbol.OptionsTrigger);
+    bind(TYPES.IUIExtension).toService(DISymbol.OptionsPanel);
 
-    bind(OptionsRegistry)
-        .toSelf()
+    bind(DISymbol.OptionsRenderer).to(OptionsRenderer);
+    bind(DISymbol.OptionsRegistry)
+        .to(OptionsRegistry)
         .inSingletonScope();
-    configureActionHandler({ bind, isBound }, UpdateOptionsAction.KIND, OptionsRegistry);
+    configureActionHandler({ bind, isBound }, UpdateOptionsAction.KIND, DISymbol.OptionsRegistry);
 });

@@ -17,6 +17,9 @@ import { VNode } from "snabbdom/vnode";
 import { inject, injectable, postConstruct } from "inversify";
 import { AbstractUIExtension, Patcher, PatcherProvider, TYPES } from "sprotty";
 import { OptionsRegistry } from "./options-registry";
+import { OptionsRenderer } from "./options-renderer";
+import { RenderOptions } from "../options";
+import { DISymbol } from "../di.symbols";
 
 @injectable()
 export class OptionsPanel extends AbstractUIExtension {
@@ -27,7 +30,9 @@ export class OptionsPanel extends AbstractUIExtension {
     private content: number = 0;
 
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
-    @inject(OptionsRegistry) optionsRegistry: OptionsRegistry;
+    @inject(DISymbol.OptionsRegistry) optionsRegistry: OptionsRegistry;
+    @inject(RenderOptions) renderOptions: RenderOptions;
+    @inject(DISymbol.OptionsRenderer) optionsRenderer: OptionsRenderer;
 
     @postConstruct()
     init() {
@@ -54,7 +59,9 @@ export class OptionsPanel extends AbstractUIExtension {
         title.classList.add("options-panel__title");
         title.innerText = "Options";
 
-        this.node = this.patcher(jsxRoot, this.getJSXContent());
+        // onBeforeShow patches the real content. This only prepares the initial VDOM.
+        // Using the real Content would patch it twice on first open.
+        this.node = this.patcher(jsxRoot, <div></div>);
 
         containerElement.appendChild(title);
         containerElement.appendChild(jsxRoot);
@@ -66,11 +73,16 @@ export class OptionsPanel extends AbstractUIExtension {
     private getJSXContent(): VNode {
         return (
             <div class={{ "options-panel__content": true }}>
-                <p>Panel has been opened <strong>{this.content}</strong> time(s).</p>
+                <p>
+                    Panel has been opened <strong>{this.content}</strong> time(s).
+                </p>
                 <hr />
-                <p>Amount of synthesis options: {this.optionsRegistry.valuedSynthesisOptions.length}</p>
-                <p>Amount of layout options: {this.optionsRegistry.layoutOptions.length}</p>
-                <p>Amount of displayed actions: {this.optionsRegistry.displayedActions.length}</p>
+                {this.optionsRenderer.render({
+                    actions: this.optionsRegistry.displayedActions,
+                    layoutOptions: this.optionsRegistry.layoutOptions,
+                    synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
+                    renderOptions: this.renderOptions.getRenderOptions()
+                })}
             </div>
         );
     }

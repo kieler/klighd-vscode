@@ -2,7 +2,7 @@ import { inject } from "inversify";
 import { VNode } from "snabbdom/vnode";
 import { InitializeCanvasBoundsAction, IUIExtension, ModelViewer } from "sprotty";
 import { KeithFitToScreenAction } from "./actions/actions";
-import { UITYPES } from "./options/di.config";
+import { DISymbol } from "./di.symbols";
 
 /**
  * Extend the {@link ModelViewer} to also dispatch a FitToScreenAction when the
@@ -14,7 +14,7 @@ export class KeithModelViewer extends ModelViewer {
     // Resolve UIExtensions that should be shown together with the model.
     // Such UIExtensions should implement a @postConstruct to show them self.
     // @ts-ignore value is never read. The IoC only has to resolve the dependency.
-    @inject(UITYPES.OptionsTrigger) private optionsTrigger: IUIExtension;
+    @inject(DISymbol.OptionsTrigger) private optionsTrigger: IUIExtension;
 
     protected onWindowResize = (vdom: VNode): void => {
         // This should do a super.onWindowResize call to not repeat the logic from the
