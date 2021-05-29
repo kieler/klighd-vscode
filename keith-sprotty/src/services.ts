@@ -23,15 +23,36 @@
 
 import { ActionMessage } from "sprotty";
 
+/**
+ * Notification types used in `keith-sprotty`. Most of the times the default Sprotty type
+ * (diagram/accept) is used.
+ * However, diagram options changes are communicated on a separate namespace.
+ * 
+ * @see de.cau.cs.kieler.klighd.lsp.IDiagramOptionsLanguageServerExtension.xtend
+ */
+export const enum NotificationType {
+    /** The default notification type that is used by Sprotty and thus most of the communication. */
+    Accept = "diagram/accept",
+    /** Notifies the server about an updated synthesis option. */
+    SetSynthesisOption = "keith/diagramOptions/setSynthesisOptions",
+    /** Notifies the server about an updated layout option. */
+    SetLayoutOption = "keith/diagramOptions/setLayoutOptions",
+    /** Perform an actionOption. Do not confuse this with the PerformActionAction with is send with the Accept type! */
+    PerformAction = "keith/diagramOptions/performAction",
+}
+
 /** An abstract connection to a server. */
 export interface Connection {
-  /** Sends a {@link ActionMessage} to the server. */
-  sendMessage(message: ActionMessage): void;
-  /** Registers a callback that is executed when a {@link ActionMessage} is received from the server. */
-  onMessageReceived(handler: (message: ActionMessage) => void): void;
+    /** Sends a {@link ActionMessage} to the server. ActionMessages should use the notification type "diagram/accept". */
+    sendMessage(message: ActionMessage): void;
+
+    /** Sends a generic notification message to the server with any payload. */
+    sendNotification<T extends object>(type: NotificationType, payload: T): void;
+
+    /** Registers a callback that is executed when a {@link ActionMessage} is received from the server. */
+    onMessageReceived(handler: (message: ActionMessage) => void): void;
 }
 export const Connection = Symbol("Connection");
-
 
 /**
  * Key/Value Storage that should be used for short term persistence, lasting only the users

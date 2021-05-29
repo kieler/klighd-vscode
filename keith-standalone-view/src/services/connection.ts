@@ -13,7 +13,7 @@
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { Connection } from "@kieler/keith-sprotty";
+import { Connection, NotificationType } from "@kieler/keith-sprotty";
 import { ActionMessage } from "sprotty";
 import { showPopup } from "../popup";
 
@@ -32,6 +32,10 @@ export class LSPConnection implements Connection {
 
     sendMessage(message: ActionMessage): void {
         this.connection?.sendNotification(acceptMessageType, message);
+    }
+
+    sendNotification<T extends object>(type: NotificationType, payload: T): void {
+        this.connection?.sendNotification(type, payload);
     }
 
     onMessageReceived(handler: (message: ActionMessage) => void): void {

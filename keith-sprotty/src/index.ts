@@ -21,4 +21,4 @@ import "sprotty/css/sprotty.css";
 import createKeithDiagramContainer from "./di.config";
 export { createKeithDiagramContainer };
 export { requestModel } from "./diagram-server";
-export { Connection, SessionStorage } from "./services";
+export { Connection, SessionStorage, NotificationType } from "./services";

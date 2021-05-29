@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Connection } from "@kieler/keith-sprotty";
+import { Connection, NotificationType } from "@kieler/keith-sprotty";
 import { inject, injectable } from "inversify";
 import { ActionMessage, isActionMessage, ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
@@ -48,6 +48,18 @@ export class MessageConnection implements Connection {
         console.groupEnd();
 
         vscodeApi.postMessage(message);
+    }
+
+    sendNotification<T extends object>(type: NotificationType, payload: T): void {
+        console.groupCollapsed(`MessageConnection sends ${type} notification:`);
+        console.log(payload);
+        console.groupEnd();
+
+        // SprottyLSPWebview sends a message with the language client, if it
+        // has a method property and passes a params property as the second argument
+        // to languageClient.sendNotification.
+        vscodeApi.postMessage({method: type, params: payload});
+        throw new Error("Method not implemented.");
     }
 
     onMessageReceived(handler: (message: ActionMessage) => void): void {
