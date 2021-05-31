@@ -18,15 +18,23 @@ interface PopupOptions {
     persist: boolean;
 }
 
+type PopupType = "info" | "warn" | "error";
+
 /**
  * Creates a popup message to notify the user about an important event.
  * The popup is automatically removed after 10 seconds.
  */
-export function showPopup(title: string, message: string, options?: Partial<PopupOptions>) {
+export function showPopup(
+    type: PopupType,
+    title: string,
+    message: string,
+    options?: Partial<PopupOptions>
+): void {
     const container = document.querySelector("#popup-container");
     if (!container) throw new Error("No Popup Container found in current DOM!");
 
-    const popupEle = createErrorPopup(title, message);
+    const popupEle = createPopupElement(title, message);
+    popupEle.classList.add(`popup--${type}`);
     container.appendChild(popupEle);
 
     if (!options?.persist) {
@@ -35,9 +43,9 @@ export function showPopup(title: string, message: string, options?: Partial<Popu
     }
 }
 
-function createErrorPopup(title: string, message: string) {
+function createPopupElement(title: string, message: string): HTMLElement {
     const containerEle = document.createElement("div");
-    containerEle.classList.add("popup", "popup--error");
+    containerEle.classList.add("popup");
 
     const titleEle = document.createElement("h4");
     titleEle.classList.add("popup__title");
@@ -46,7 +54,7 @@ function createErrorPopup(title: string, message: string) {
 
     const msgEle = document.createElement("p");
     msgEle.classList.add("popup__message");
-    msgEle.innerText = message;
+    msgEle.innerHTML = message;
     containerEle.appendChild(msgEle);
 
     return containerEle;

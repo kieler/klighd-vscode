@@ -31,7 +31,8 @@ import { showPopup } from "./popup";
 
     if (!sourceUri) {
         showPopup(
-            "Usage error",
+            "warn",
+            "Wrong usage",
             "Please specify a fileUri for your diagram as a search parameter. (?source=...)",
             { persist: true }
         );
@@ -45,6 +46,7 @@ import { showPopup } from "./popup";
     } catch (e) {
         console.error(e);
         showPopup(
+            "error",
             "Initialization error",
             "Something went wrong while initializing the diagram. Please reload and try again."
         );

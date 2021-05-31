@@ -17,7 +17,12 @@ import { Connection, NotificationType } from "@kieler/keith-sprotty";
 import { ActionMessage } from "sprotty";
 import { showPopup } from "../popup";
 
+type GeneralMessageParams = [string, "info" | "warn" | "error"];
+
 const acceptMessageType = new rpc.NotificationType<ActionMessage, void>("diagram/accept");
+const generalMessageType = new rpc.NotificationType<GeneralMessageParams, void>(
+    "general/sendMessage"
+);
 
 /**
  * Connection to the language server.
@@ -73,6 +78,12 @@ export class LSPConnection implements Connection {
                         this.notifyHandlers.bind(this)
                     );
 
+                    // Handle message from the server that should be displayed to the user
+                    this.connection.onNotification(
+                        generalMessageType,
+                        this.displayGeneralMessage.bind(this)
+                    );
+
                     resolve(this);
                 },
             });
@@ -82,6 +93,7 @@ export class LSPConnection implements Connection {
     private setupErrorHandlers(conn: rpc.MessageConnection) {
         conn.onError((e) => {
             showPopup(
+                "error",
                 "Connection error",
                 e[0].message ?? "An error on the connection to the language server occurred."
             );
@@ -90,12 +102,19 @@ export class LSPConnection implements Connection {
 
         conn.onClose(() => {
             showPopup(
+                "error",
                 "Connection closed",
                 "Connection to the language server closed. Please reload to reconnect.",
                 { persist: true }
             );
             this.close();
         });
+    }
+
+    private displayGeneralMessage(params: GeneralMessageParams) {
+        const [message, type] = params;
+
+        showPopup(type, "Server message", message, {persist: true});
     }
 
     close() {

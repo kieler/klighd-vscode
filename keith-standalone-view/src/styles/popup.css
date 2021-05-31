@@ -13,11 +13,11 @@
     box-sizing: border-box;
     padding: 16px;
     max-width: 400px;
+    word-break: break-all;
 
     font-family: sans-serif;
     font-size: 16px;
     line-height: 1.5;
-
 
     background: white;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
@@ -25,6 +25,12 @@
     border-radius: 4px;
 }
 
+.popup--info {
+  border-color: var(--color-accent-blue);
+}
+.popup--warn {
+  border-color: var(--color-accent-yellow);
+}
 .popup--error {
   border-color: var(--color-accent-red);
 }
