@@ -83,6 +83,7 @@ export class DepthMap {
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
+        this.isCompleteRendering = false
 
 
         let current_regions = this.rootRegions
