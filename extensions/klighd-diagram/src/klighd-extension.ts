@@ -10,7 +10,7 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { ExtensionContext, Uri, commands } from "vscode";
+import { ExtensionContext, Uri, commands, window } from "vscode";
 import {
     SprottyDiagramIdentifier,
     SprottyLspVscodeExtension,
@@ -19,12 +19,16 @@ import {
 import { SprottyWebview } from "sprotty-vscode";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { KeithFitToScreenAction } from "@kieler/keith-sprotty/lib/actions/actions";
-import { LanguageClient } from "vscode-languageclient";
+import { LanguageClient, NotificationType } from "vscode-languageclient";
 import { diagramType, extensionId } from "./constants";
 
+type GeneralMessageParams = [string, "info" | "warn" | "error"];
+const generalMessageType = new NotificationType<GeneralMessageParams, void>("general/sendMessage");
+
+/** Options required to construct a KLighDExtension */
 interface KLighDExtensionOptions {
-    lsClient: LanguageClient,
-    supportedFileEnding: string[]
+    lsClient: LanguageClient;
+    supportedFileEnding: string[];
 }
 
 /**
@@ -86,9 +90,35 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     }
 
     protected activateLanguageClient(_: ExtensionContext): LanguageClient {
+        // A KLighD LSP might send messages as the method type "general/sendMessage"
+        // which should be displayed to the user
+        KLighDExtension.lsClient.onNotification(
+            generalMessageType,
+            this.handleGeneralMessage.bind(this)
+        );
+
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.
         return KLighDExtension.lsClient;
+    }
+
+    private handleGeneralMessage(params: GeneralMessageParams) {
+        const [message, type] = params;
+
+        switch (type) {
+            case "info":
+                window.showInformationMessage(message);
+                break;
+            case "warn":
+                window.showWarningMessage(message);
+                break;
+            case "error":
+                window.showErrorMessage(message);
+                break;
+            default:
+                window.showInformationMessage(message);
+                break;
+        }
     }
 
     /** Overwrite register from {@link SprottyLspVscodeExtension} commands to
