@@ -12,7 +12,7 @@
  */
 
 import { Action, SetUIExtensionVisibilityAction } from "sprotty";
-import { DisplayedActionData, LayoutOptionUIData, ValuedSynthesisOption } from "./option-models";
+import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from "./option-models";
 import { OptionsPanel } from "./options-panel";
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the option panel */
@@ -45,4 +45,51 @@ export class UpdateOptionsAction implements Action {
 /** Type predicate to narrow an action to {@link UpdateOptionsAction}. */
 export function isUpdateOptionsAction(action: Action): action is UpdateOptionsAction {
     return action.kind === UpdateOptionsAction.KIND;
+}
+
+/**
+ * Triggers a action from the options that should be performed.
+ * Do not confuse this with PerformActionAction!
+ */
+export class PerformOptionsActionAction implements Action {
+    static readonly KIND = "performOptionsAction";
+    readonly kind = PerformOptionsActionAction.KIND;
+
+    constructor(readonly actionId: string) {}
+}
+
+/** Type predicate to narrow an action to {@link PerformOptionsActionAction}. */
+export function isPerformOptionsActionAction(action: Action): action is PerformOptionsActionAction {
+    return action.kind === PerformOptionsActionAction.KIND;
+}
+
+/**
+ * Triggers a action from the options that should be performed.
+ * Do not confuse this with PerformActionAction!
+ */
+export class SetSynthesisOptionsAction implements Action {
+    static readonly KIND = "setSynthesisOptions";
+    readonly kind = SetSynthesisOptionsAction.KIND;
+
+    constructor(options: SynthesisOption[]) {}
+}
+
+/** Type predicate to narrow an action to {@link SetSynthesisOptionsAction}. */
+export function isSetSynthesisOptionsAction(action: Action): action is SetSynthesisOptionsAction {
+    return action.kind === SetSynthesisOptionsAction.KIND;
+}
+/**
+ * Triggers a action from the options that should be performed.
+ * Do not confuse this with PerformActionAction!
+ */
+export class SetLayoutOptionsAction implements Action {
+    static readonly KIND = "setLayoutOptions";
+    readonly kind = SetLayoutOptionsAction.KIND;
+
+    constructor(options: LayoutOptionValue[]) {}
+}
+
+/** Type predicate to narrow an action to {@link SetLayoutOptionsAction}. */
+export function isSetLayoutOptionsAction(action: Action): action is SetLayoutOptionsAction {
+    return action.kind === SetLayoutOptionsAction.KIND;
 }

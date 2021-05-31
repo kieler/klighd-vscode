@@ -11,18 +11,21 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { Action, IActionHandler, ICommand } from "sprotty";
-import { isUpdateOptionsAction } from "./actions";
+import { Connection, NotificationType } from "../services";
+import { isPerformOptionsActionAction, isUpdateOptionsAction } from "./actions";
 import { DisplayedActionData, LayoutOptionUIData, ValuedSynthesisOption } from "./option-models";
 
 /**
  * Registry that stores and manages KLighD options provided by the server.
- * 
+ *
  * Acts as an action handler that handles UpdateOptionsActions.
  */
 @injectable()
 export class OptionsRegistry implements IActionHandler {
+    @inject(Connection) connection: Connection;
+
     private _modelUri: string = "";
     private _valuedSynthesisOptions: ValuedSynthesisOption[] = [];
     private _layoutOptions: LayoutOptionUIData[] = [];
@@ -30,12 +33,17 @@ export class OptionsRegistry implements IActionHandler {
 
     handle(action: Action): void | Action | ICommand {
         // Abort early if this handler is registered for another action
-        if (!isUpdateOptionsAction(action)) return;
-
-        this._modelUri = action.modelUri;
-        this._valuedSynthesisOptions = action.valuedSynthesisOptions;
-        this._displayedActions = action.actions;
-        this._layoutOptions = action.layoutOptions;
+        if (isUpdateOptionsAction(action)) {
+            this._modelUri = action.modelUri;
+            this._valuedSynthesisOptions = action.valuedSynthesisOptions;
+            this._displayedActions = action.actions;
+            this._layoutOptions = action.layoutOptions;
+        } else if (isPerformOptionsActionAction(action)) {
+            this.connection.sendNotification(NotificationType.PerformAction, {
+                actionId: action.actionId,
+                uri: this.modelUri
+            });
+        }
     }
 
     get modelUri(): string {

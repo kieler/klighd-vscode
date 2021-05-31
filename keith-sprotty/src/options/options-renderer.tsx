@@ -14,9 +14,11 @@
 /** @jsx html */
 import { html } from "snabbdom-jsx";
 import { VNode } from "snabbdom/vnode";
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { RenderOption } from "../options";
 import { DisplayedActionData, LayoutOptionUIData, ValuedSynthesisOption } from "./option-models";
+import { IActionDispatcher, TYPES } from "sprotty";
+import { PerformOptionsActionAction } from "./actions";
 
 // Note: Skipping a JSX children by rendering null or undefined for that child does not work the same way
 // as it works in React. It will render the literals as words. To skip a child return an empty string "".
@@ -31,9 +33,11 @@ interface AllOptions {
 
 @injectable()
 export class OptionsRenderer {
+    @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher;
+
     render(options: AllOptions): VNode {
         return (
-            <div class={{ options: true }}>
+            <div classNames="options">
                 {this.renderActions(options.actions)}
                 {this.renderSynthesisOptions(options.synthesisOptions)}
                 {this.renderRenderOptions(options.renderOptions)}
@@ -46,13 +50,14 @@ export class OptionsRenderer {
         if (actions.length === 0) return "";
 
         return (
-            <div class={{ options__section: true }}>
-                <h5 class={{ options__heading: true }}>Actions</h5>
+            <div classNames="options__section">
+                <h5 classNames="options__heading">Actions</h5>
                 {actions.map((action) => (
                     <button
-                        class={{ options__button: true }}
+                        classNames="options__button"
                         key={action.actionId}
                         title={action.tooltipText}
+                        on-click={this.handleActionClick.bind(this, action.actionId) }
                     >
                         {action.displayedName}
                     </button>
@@ -61,12 +66,16 @@ export class OptionsRenderer {
         );
     }
 
+    private handleActionClick(actionId: string) {
+        this.actionDispatcher.dispatch(new PerformOptionsActionAction(actionId));
+    }
+
     private renderSynthesisOptions(synthesisOptions: ValuedSynthesisOption[]): VNode | "" {
         if (synthesisOptions.length === 0) return "";
 
         return (
-            <div class={{ options__section: true }}>
-                <h5 class={{ options__heading: true }}>Synthesis Options</h5>
+            <div classNames="options__section">
+                <h5 classNames="options__heading">Synthesis Options</h5>
                 {synthesisOptions.map((synthesisOption) => (
                     <p>{synthesisOption.synthesisOption.name}</p>
                 ))}
@@ -78,8 +87,8 @@ export class OptionsRenderer {
         if (renderOptions.length === 0) return "";
 
         return (
-            <div class={{ options__section: true }}>
-                <h5 class={{ options__heading: true }}>Render Options</h5>
+            <div classNames="options__section">
+                <h5 classNames="options__heading">Render Options</h5>
                 {renderOptions.map((renderOption) => (
                     <p>{renderOption.name}</p>
                 ))}
@@ -91,8 +100,8 @@ export class OptionsRenderer {
         if (layoutOptions.length === 0) return "";
 
         return (
-            <div class={{ options__section: true }}>
-                <h5 class={{ options__heading: true }}>Layout Options</h5>
+            <div classNames="options__section">
+                <h5 classNames="options__heading">Layout Options</h5>
                 {layoutOptions.map((layoutOption) => (
                     <p>{layoutOption.name}</p>
                 ))}
