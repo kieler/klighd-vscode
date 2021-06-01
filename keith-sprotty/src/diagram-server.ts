@@ -50,13 +50,11 @@ import {
     PerformActionAction,
     RefreshLayoutAction,
     RequestTextBoundsCommand,
-    SetSynthesesAction,
-    SetSynthesisAction,
     StoreImagesAction,
 } from "./actions/actions";
 import { RequestKeithPopupModelAction } from "./hover/hover";
 import { Connection, SessionStorage } from "./services";
-import { SynthesisRegistry } from "./syntheses/synthesis-registry";
+import { SetSynthesisAction } from "./syntheses/action";
 
 /**
  * This class extends {@link DiagramServer} to also handle the
@@ -66,7 +64,6 @@ import { SynthesisRegistry } from "./syntheses/synthesis-registry";
 export class KeithDiagramServer extends DiagramServer {
     private _connection: Connection;
 
-    @inject(SynthesisRegistry) protected synthesisRegistry: SynthesisRegistry;
     @inject(SessionStorage) protected sessionStorage: SessionStorage;
 
     constructor(@inject(Connection) connection: Connection) {
@@ -132,7 +129,6 @@ export class KeithDiagramServer extends DiagramServer {
         registry.register(SetLayerConstraintAction.KIND, this);
         registry.register(SetPositionConstraintAction.KIND, this);
         registry.register(SetStaticConstraintAction.KIND, this);
-        registry.register(SetSynthesesAction.KIND, this);
         registry.register(SetSynthesisAction.KIND, this);
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
@@ -148,9 +144,7 @@ export class KeithDiagramServer extends DiagramServer {
             return;
         }
 
-        if (action.kind === SetSynthesesAction.KIND) {
-            this.handleSetSyntheses(action as SetSynthesesAction);
-        } else if (action.kind === CheckImagesAction.KIND) {
+        if (action.kind === CheckImagesAction.KIND) {
             this.handleCheckImages(action as CheckImagesAction);
         } else if (action.kind === StoreImagesAction.KIND) {
             this.handleStoreImages(action as StoreImagesAction);
@@ -183,14 +177,6 @@ export class KeithDiagramServer extends DiagramServer {
         // ) {
         //   this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction);
         // }
-    }
-
-    handleSetSyntheses(action: SetSynthesesAction) {
-        this.synthesisRegistry.setAvailableSyntheses(action.syntheses);
-        this.synthesisRegistry.setProvidingDiagramServer(this);
-        // this.connector.synthesisCommandContribution.onNewSyntheses(
-        //   action.syntheses
-        // );
     }
 
     handleCheckImages(action: CheckImagesAction) {

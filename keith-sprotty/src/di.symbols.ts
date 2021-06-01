@@ -17,4 +17,5 @@ export const DISymbol = {
     OptionsPanel: Symbol("OptionsPanel"),
     OptionsRegistry: Symbol("OptionsRegistry"),
     OptionsRenderer: Symbol("OptionsRenderer"),
+    SynthesesRegistry: Symbol("SynthesesRegistry"),
 };

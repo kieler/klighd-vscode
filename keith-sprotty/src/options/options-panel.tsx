@@ -15,11 +15,14 @@
 import { html } from "snabbdom-jsx";
 import { VNode } from "snabbdom/vnode";
 import { inject, injectable, postConstruct } from "inversify";
-import { AbstractUIExtension, Patcher, PatcherProvider, TYPES } from "sprotty";
+import { AbstractUIExtension, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty";
 import { OptionsRegistry } from "./options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { RenderOptions } from "../options";
 import { DISymbol } from "../di.symbols";
+import { SynthesesRegistry } from "../syntheses/syntheses-registry";
+import { SynthesisPicker } from "./options-components";
+import { SetSynthesisAction } from "../syntheses/action";
 
 @injectable()
 export class OptionsPanel extends AbstractUIExtension {
@@ -29,7 +32,9 @@ export class OptionsPanel extends AbstractUIExtension {
     private node: VNode;
 
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
+    @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher;
     @inject(DISymbol.OptionsRegistry) optionsRegistry: OptionsRegistry;
+    @inject(DISymbol.SynthesesRegistry) synthesesRegistry: SynthesesRegistry;
     @inject(RenderOptions) renderOptions: RenderOptions;
     @inject(DISymbol.OptionsRenderer) optionsRenderer: OptionsRenderer;
 
@@ -40,6 +45,10 @@ export class OptionsPanel extends AbstractUIExtension {
             // Rerender if the options changed
             if (this.node) this.node = this.patcher(this.node, this.getJSXContent());
         });
+        this.synthesesRegistry.onSynthesisChange(() => {
+             // Rerender if the synthesis changed
+             if (this.node) this.node = this.patcher(this.node, this.getJSXContent());
+        })
     }
 
     id(): string {
@@ -75,6 +84,11 @@ export class OptionsPanel extends AbstractUIExtension {
     private getJSXContent(): VNode {
         return (
             <div classNames="options-panel__content">
+                <SynthesisPicker
+                    currentId={this.synthesesRegistry.currentSynthesisID}
+                    syntheses={this.synthesesRegistry.syntheses}
+                    onChange={this.handleSynthesisPickerChange.bind(this)}
+                />
                 {this.optionsRenderer.render({
                     actions: this.optionsRegistry.displayedActions,
                     layoutOptions: this.optionsRegistry.layoutOptions,
@@ -83,6 +97,10 @@ export class OptionsPanel extends AbstractUIExtension {
                 })}
             </div>
         );
+    }
+
+    private handleSynthesisPickerChange(newId: string) {
+        this.actionDispatcher.dispatch(new SetSynthesisAction(newId));
     }
 
     /**

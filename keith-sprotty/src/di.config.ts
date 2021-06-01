@@ -16,9 +16,10 @@ import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
     LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
-    TYPES, updateModule, viewportModule, ViewRegistry
+    TYPES, updateModule, viewportModule, ViewRegistry, configureActionHandler
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
+import { DISymbol } from './di.symbols';
 import { KeithDiagramServer } from './diagram-server';
 import { KeithHoverMouseListener } from './hover/hover';
 import { KeithModelViewer } from './model-viewer';
@@ -26,7 +27,8 @@ import { RenderOptions } from './options';
 import { optionsModule } from './options/di.config';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
-import { SynthesisRegistry } from './syntheses/synthesis-registry';
+import { SetSynthesesAction, SetSynthesisAction } from './syntheses/action';
+import { SynthesesRegistry } from './syntheses/syntheses-registry';
 import textBoundsModule from './textbounds/textbounds-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
@@ -70,7 +72,9 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     configureModelElement(context, LABEL_TYPE, SKLabel, KLabelView)
     bind(RenderOptions).toSelf().inSingletonScope()
 
-    bind(SynthesisRegistry).toSelf().inSingletonScope();
+    bind(DISymbol.SynthesesRegistry).to(SynthesesRegistry).inSingletonScope();
+    configureActionHandler(context, SetSynthesesAction.KIND, DISymbol.SynthesesRegistry);
+    configureActionHandler(context, SetSynthesisAction.KIND, DISymbol.SynthesesRegistry);
 })
 
 /**
