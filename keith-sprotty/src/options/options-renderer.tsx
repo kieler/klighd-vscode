@@ -15,10 +15,28 @@
 import { html } from "snabbdom-jsx";
 import { VNode } from "snabbdom/vnode";
 import { inject, injectable } from "inversify";
-import { RenderOption } from "../options";
-import { DisplayedActionData, LayoutOptionUIData, ValuedSynthesisOption } from "./option-models";
+import { RenderOption, TransformationOptionType } from "../options";
+import {
+    DisplayedActionData,
+    LayoutOptionUIData,
+    SynthesisOption,
+    RangeOption as RangeOptionData,
+    Type,
+} from "./option-models";
 import { IActionDispatcher, TYPES } from "sprotty";
-import { PerformOptionsActionAction } from "./actions";
+import {
+    PerformOptionsActionAction,
+    SetLayoutOptionsAction,
+    SetSynthesisOptionsAction,
+} from "./actions";
+import {
+    CheckOption,
+    ChoiceOption,
+    RangeOption,
+    TextOption,
+    SeparatorOption,
+    CategoryOption,
+} from "./options-components";
 
 // Note: Skipping a JSX children by rendering null or undefined for that child does not work the same way
 // as it works in React. It will render the literals as words. To skip a child return an empty string "".
@@ -28,7 +46,7 @@ interface AllOptions {
     actions: DisplayedActionData[];
     renderOptions: RenderOption[];
     layoutOptions: LayoutOptionUIData[];
-    synthesisOptions: ValuedSynthesisOption[];
+    synthesisOptions: SynthesisOption[];
 }
 
 @injectable()
@@ -36,6 +54,13 @@ export class OptionsRenderer {
     @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher;
 
     render(options: AllOptions): VNode {
+        console.groupCollapsed("Rendering diagram options:");
+        console.log(options.actions);
+        console.log(options.synthesisOptions);
+        console.log(options.renderOptions);
+        console.log(options.layoutOptions);
+        console.groupEnd();
+
         return (
             <div classNames="options">
                 {this.renderActions(options.actions)}
@@ -57,7 +82,7 @@ export class OptionsRenderer {
                         classNames="options__button"
                         key={action.actionId}
                         title={action.tooltipText}
-                        on-click={this.handleActionClick.bind(this, action.actionId) }
+                        on-click={this.handleActionClick.bind(this, action.actionId)}
                     >
                         {action.displayedName}
                     </button>
@@ -70,16 +95,85 @@ export class OptionsRenderer {
         this.actionDispatcher.dispatch(new PerformOptionsActionAction(actionId));
     }
 
-    private renderSynthesisOptions(synthesisOptions: ValuedSynthesisOption[]): VNode | "" {
+    private renderSynthesisOptions(synthesisOptions: SynthesisOption[]): VNode | "" {
         if (synthesisOptions.length === 0) return "";
 
         return (
             <div classNames="options__section">
                 <h5 classNames="options__heading">Synthesis Options</h5>
-                {synthesisOptions.map((synthesisOption) => (
-                    <p>{synthesisOption.synthesisOption.name}</p>
-                ))}
+                {synthesisOptions.map((option) => {
+                    switch (option.type) {
+                        case TransformationOptionType.CHECK:
+                            return (
+                                <CheckOption
+                                    key={option.id}
+                                    id={option.id}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                                />
+                            );
+                        case TransformationOptionType.CHOICE:
+                            return (
+                                <ChoiceOption
+                                    key={option.id}
+                                    id={option.id}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    availableValues={option.values}
+                                    onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                                />
+                            );
+                        case TransformationOptionType.RANGE:
+                            return (
+                                <RangeOption
+                                    key={option.id}
+                                    id={option.id}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    minValue={(option as RangeOptionData).range.first}
+                                    maxValue={(option as RangeOptionData).range.second}
+                                    stepSize={(option as RangeOptionData).stepSize}
+                                    onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                                />
+                            );
+                        case TransformationOptionType.TEXT:
+                            return (
+                                <TextOption
+                                    key={option.id}
+                                    id={option.id}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                                />
+                            );
+                        case TransformationOptionType.SEPARATOR:
+                            return <SeparatorOption key={option.id} name={option.name} />;
+                        case TransformationOptionType.CATEGORY:
+                            return (
+                                <CategoryOption
+                                    key={option.id}
+                                    id={option.id}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                                >
+                                    <p>Children...</p>
+                                </CategoryOption>
+                            );
+                        default:
+                            console.error("Unsupported option type for option:", option.name);
+                            return "";
+                    }
+                })}
             </div>
+        );
+    }
+
+    private handleSynthesisOptionChange(option: SynthesisOption, newValue: any) {
+        console.log("Synthesis Option toggled", option, newValue);
+        this.actionDispatcher.dispatch(
+            new SetSynthesisOptionsAction([{ ...option, currentValue: newValue }])
         );
     }
 
@@ -89,11 +183,29 @@ export class OptionsRenderer {
         return (
             <div classNames="options__section">
                 <h5 classNames="options__heading">Render Options</h5>
-                {renderOptions.map((renderOption) => (
-                    <p>{renderOption.name}</p>
-                ))}
+                {renderOptions.map((option) => {
+                    switch (option.type) {
+                        case TransformationOptionType.CHECK:
+                            return (
+                                <CheckOption
+                                    key={option.id}
+                                    id={option.id}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    onChange={this.handleRenderOptionChange.bind(this, option)}
+                                />
+                            );
+                        default:
+                            console.error("Unsupported option type for option:", option.name);
+                            return "";
+                    }
+                })}
             </div>
         );
+    }
+
+    private handleRenderOptionChange(option: RenderOption, newValue: any) {
+        console.log("Render Option toggled", option, newValue);
     }
 
     private renderLayoutOptions(layoutOptions: LayoutOptionUIData[]): VNode | "" {
@@ -102,10 +214,58 @@ export class OptionsRenderer {
         return (
             <div classNames="options__section">
                 <h5 classNames="options__heading">Layout Options</h5>
-                {layoutOptions.map((layoutOption) => (
-                    <p>{layoutOption.name}</p>
-                ))}
+                {layoutOptions.map((option) => {
+                    switch (option.type) {
+                        case Type.INT:
+                        case Type.DOUBLE:
+                            return (
+                                <RangeOption
+                                    key={option.optionId}
+                                    id={option.optionId}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    minValue={option.minValue}
+                                    maxValue={option.maxValue}
+                                    stepSize={option.type === Type.INT ? 1 : 0.01}
+                                    onChange={this.handleLayoutOptionChange.bind(this, option)}
+                                />
+                            );
+                        case Type.BOOLEAN:
+                            return (
+                                <CheckOption
+                                    key={option.optionId}
+                                    id={option.optionId}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    onChange={this.handleLayoutOptionChange.bind(this, option)}
+                                />
+                            );
+                        case Type.ENUM:
+                            // TODO: Enums appear to be a bit different from other choice options. See DiagramOptionsViewWidget
+                            // I need to have an example with enum layout options to build and test this...
+                            return (
+                                <ChoiceOption
+                                    key={option.optionId}
+                                    id={option.optionId}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    availableValues={option.availableValues.k}
+                                    onChange={this.handleLayoutOptionChange.bind(this, option)}
+                                />
+                            );
+                        default:
+                            console.error("Unsupported option type for option:", option.name);
+                            return "";
+                    }
+                })}
             </div>
+        );
+    }
+
+    private handleLayoutOptionChange(option: LayoutOptionUIData, newValue: any) {
+        console.log("Layout Option toggled", option, newValue);
+        this.actionDispatcher.dispatch(
+            new SetLayoutOptionsAction([{ optionId: option.optionId, value: newValue }])
         );
     }
 }

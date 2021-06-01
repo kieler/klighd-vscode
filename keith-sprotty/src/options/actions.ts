@@ -71,7 +71,7 @@ export class SetSynthesisOptionsAction implements Action {
     static readonly KIND = "setSynthesisOptions";
     readonly kind = SetSynthesisOptionsAction.KIND;
 
-    constructor(options: SynthesisOption[]) {}
+    constructor(readonly options: SynthesisOption[]) {}
 }
 
 /** Type predicate to narrow an action to {@link SetSynthesisOptionsAction}. */
@@ -86,7 +86,7 @@ export class SetLayoutOptionsAction implements Action {
     static readonly KIND = "setLayoutOptions";
     readonly kind = SetLayoutOptionsAction.KIND;
 
-    constructor(options: LayoutOptionValue[]) {}
+    constructor(readonly options: LayoutOptionValue[]) {}
 }
 
 /** Type predicate to narrow an action to {@link SetLayoutOptionsAction}. */

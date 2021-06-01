@@ -26,6 +26,7 @@
     border-radius: 4px;
 
     cursor: pointer;
+    outline: none;
     background: var(--background);
     color: hsl(0, 0%, 13%);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -48,7 +49,7 @@
 
 /******************************** OPTIONS PANEL ********************************/
 
-.options-panel-container {
+.options-panel {
     /* Positioned further to the edges compared to the trigger so it hides the shadows of the trigger. */
     box-sizing: border-box;
     position: fixed;
@@ -67,8 +68,40 @@
     background-color: white;
     box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
     color: hsl(0, 0%, 13%);
+    font-size: 16px;
 }
 
-.options-panel-container > h4 {
+.options-panel__title {
     margin: 0;
+}
+
+/*********************************** OPTIONS ***********************************/
+
+.options__section {
+    display: flex;
+    flex-direction: column;
+}
+
+.options__heading {
+    margin: 0;
+    margin-top: 12px;
+}
+
+.options__input-container {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Indent inputs (wrapped by a label) inside a multi input group */
+.options__input-container > label {
+    margin-left: 8px;
+}
+
+.options__separator {
+    display: block;
+    margin: 8px 0;
+}
+
+.options__category > :not(summary) {
+    margin-left: 8px;
 }

@@ -27,7 +27,6 @@ export class OptionsPanel extends AbstractUIExtension {
 
     private patcher: Patcher;
     private node: VNode;
-    private content: number = 0;
 
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
     @inject(DISymbol.OptionsRegistry) optionsRegistry: OptionsRegistry;
@@ -37,6 +36,10 @@ export class OptionsPanel extends AbstractUIExtension {
     @postConstruct()
     init() {
         this.patcher = this.patcherProvider.patcher;
+        this.optionsRegistry.onOptionsChange(() => {
+            // Rerender if the options changed
+            if (this.node) this.node = this.patcher(this.node, this.getJSXContent());
+        });
     }
 
     id(): string {
@@ -44,11 +47,10 @@ export class OptionsPanel extends AbstractUIExtension {
     }
 
     containerClass(): string {
-        return `${OptionsPanel.ID}-container`;
+        return OptionsPanel.ID;
     }
 
     protected onBeforeShow(): void {
-        this.content++;
         this.node = this.patcher(this.node, this.getJSXContent());
     }
 
@@ -72,16 +74,12 @@ export class OptionsPanel extends AbstractUIExtension {
 
     private getJSXContent(): VNode {
         return (
-            <div class={{ "options-panel__content": true }}>
-                <p>
-                    Panel has been opened <strong>{this.content}</strong> time(s).
-                </p>
-                <hr />
+            <div classNames="options-panel__content">
                 {this.optionsRenderer.render({
                     actions: this.optionsRegistry.displayedActions,
                     layoutOptions: this.optionsRegistry.layoutOptions,
                     synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
-                    renderOptions: this.renderOptions.getRenderOptions()
+                    renderOptions: this.renderOptions.getRenderOptions(),
                 })}
             </div>
         );
