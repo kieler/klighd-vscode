@@ -11,15 +11,13 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SetSynthesisAction } from '@kieler/keith-sprotty/lib/actions/actions';
-import { SetSynthesesActionData } from '@kieler/keith-sprotty/lib/syntheses/synthesis-message-data';
-import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
+import { SetSynthesesActionData } from '@kieler/keith-sprotty/lib/syntheses/action';
+import { SynthesesRegistry } from '@kieler/keith-sprotty/lib/syntheses/syntheses-registry';
 import { Command, CommandContribution, CommandHandler, CommandRegistry, MenuContribution, MenuModelRegistry, MenuPath } from '@theia/core';
 import { QuickPickItem, StatusBar, StatusBarAlignment } from '@theia/core/lib/browser';
 import { QuickPickService } from '@theia/core/lib/common/quick-pick-service';
 import { inject, injectable } from 'inversify';
 import { DiagramMenus } from 'sprotty-theia';
-import { KeithDiagramServer } from './keith-diagram-server';
 
 /**
  * Contains constants for the synthesis menu items.
@@ -47,8 +45,8 @@ export class SynthesisCommandContribution implements CommandContribution, MenuCo
     @inject(StatusBar)
     protected readonly statusBar: StatusBar
 
-    @inject(SynthesisRegistry)
-    protected readonly synthesisRegistry: SynthesisRegistry
+    @inject(SynthesesRegistry)
+    protected readonly synthesisRegistry: SynthesesRegistry
 
     onNewSyntheses(syntheses: SetSynthesesActionData[]) {
         if (syntheses && syntheses.length > 0) {
@@ -75,25 +73,26 @@ export class SynthesisCommandContribution implements CommandContribution, MenuCo
     }
 
     async execute() {
-        const syntheses: QuickPickItem<string>[] = this.synthesisRegistry.getAvailableSyntheses().map(synthesis => {
-            return this.toQuickPickSynthesis(synthesis)
-        })
+        // THIS NO LONGER WORKS WITH THE NEW SYNTHESES REGISTRY WHICH IS CONTROLLED WITH ACTIONS!!!
+        // const syntheses: QuickPickItem<string>[] = this.synthesisRegistry.syntheses.map(synthesis => {
+        //     return this.toQuickPickSynthesis(synthesis)
+        // })
 
-        const selectedId = await this.quickPick.show(syntheses, {
-            placeholder: 'Select Synthesis'
-        });
-        if (selectedId) {
-            const server = this.synthesisRegistry.getProvidingDiagramServer()
-            if (server instanceof KeithDiagramServer) {
-                (server as KeithDiagramServer).actionDispatcher.dispatch(new SetSynthesisAction(selectedId))
-                this.statusBar.setElement(synthesisStatus, {
-                    text: this.synthesisRegistry.getAvailableSyntheses().filter(synthesis => synthesis.id === selectedId)[0].displayName,
-                    alignment: StatusBarAlignment.RIGHT,
-                    priority: 4,
-                    command: this.id
-                })
-            }
-        }
+        // const selectedId = await this.quickPick.show(syntheses, {
+        //     placeholder: 'Select Synthesis'
+        // });
+        // if (selectedId) {
+        //     const server = this.synthesisRegistry.getProvidingDiagramServer()
+        //     if (server instanceof KeithDiagramServer) {
+        //         (server as KeithDiagramServer).actionDispatcher.dispatch(new SetSynthesisAction(selectedId))
+        //         this.statusBar.setElement(synthesisStatus, {
+        //             text: this.synthesisRegistry.syntheses.filter(synthesis => synthesis.id === selectedId)[0].displayName,
+        //             alignment: StatusBarAlignment.RIGHT,
+        //             priority: 4,
+        //             command: this.id
+        //         })
+        //     }
+        // }
     }
 
     toQuickPickSynthesis(synthesis: SetSynthesesActionData): QuickPickItem<string> {

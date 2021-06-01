@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
+import { SynthesesRegistry } from '@kieler/keith-sprotty/lib/syntheses/syntheses-registry';
 import { Emitter, Event } from '@theia/core';
 import { OpenerOptions, WidgetManager, WidgetOpenerOptions } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
@@ -53,7 +53,7 @@ export class KeithDiagramManager extends DiagramManager {
         @inject(EditorManager) editorManager: EditorManager,
         @inject(WidgetManager) widgetManager: WidgetManager,
         @inject(MonacoWorkspace) workspace: MonacoWorkspace,
-        @inject(SynthesisRegistry) synthesisRegistry: SynthesisRegistry,
+        @inject(SynthesesRegistry) synthesisRegistry: SynthesesRegistry,
         @inject(SynthesisCommandContribution) synthesisCommandContribution: SynthesisCommandContribution
         ) {
         super()

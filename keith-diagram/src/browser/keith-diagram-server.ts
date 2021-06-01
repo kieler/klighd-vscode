@@ -18,9 +18,10 @@ import {
 } from '@kieler/keith-interactive/lib/layered/actions';
 import { RectPackDeletePositionConstraintAction, RectPackSetPositionConstraintAction, SetAspectRatioAction } from '@kieler/keith-interactive/lib/rect-packing/actions';
 import {
-    CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, KeithUpdateModelAction, Pair, PerformActionAction, RefreshLayoutAction, RequestTextBoundsCommand,
-    SetSynthesesAction, SetSynthesisAction, StoreImagesAction
+    CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, KeithUpdateModelAction, Pair, PerformActionAction, RefreshLayoutAction,
+    RequestTextBoundsCommand, StoreImagesAction
 } from '@kieler/keith-sprotty/lib/actions/actions';
+import {SetSynthesesAction, SetSynthesisAction} from "@kieler/keith-sprotty/lib/syntheses/action"
 import { RequestKeithPopupModelAction } from '@kieler/keith-sprotty/lib/hover/hover';
 import { injectable } from 'inversify';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';
@@ -126,9 +127,9 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
     }
 
     handleSetSyntheses(action: SetSynthesesAction) {
-        this.connector.synthesisRegistry.setAvailableSyntheses(action.syntheses)
-        this.connector.synthesisCommandContribution.onNewSyntheses(action.syntheses)
-        this.connector.synthesisRegistry.setProvidingDiagramServer(this)
+        // this.connector.synthesisRegistry.setAvailableSyntheses(action.syntheses)
+        // this.connector.synthesisCommandContribution.onNewSyntheses(action.syntheses)
+        // this.connector.synthesisRegistry.setProvidingDiagramServer(this)
     }
 
     handleCheckImages(action: CheckImagesAction) {
@@ -178,7 +179,7 @@ export class KeithDiagramServer extends LSTheiaDiagramServer {
     disconnect() {
         super.disconnect()
         // Unregister all commands for this server on disconnect.
-        this.connector.synthesisRegistry.clearAvailableSyntheses()
+        // this.connector.synthesisRegistry.clearAvailableSyntheses()
         this.connector.synthesisCommandContribution.onNewSyntheses([])
     }
 

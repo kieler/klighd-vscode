@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SynthesisRegistry } from '@kieler/keith-sprotty/lib/syntheses/synthesis-registry';
+import { SynthesesRegistry } from '@kieler/keith-sprotty/lib/syntheses/syntheses-registry';
 import { CommandContribution, MenuContribution } from '@theia/core';
 import { FrontendApplicationContribution, OpenHandler, WidgetFactory, WidgetManager } from '@theia/core/lib/browser';
 import { TabBarToolbarContribution } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
@@ -50,7 +50,7 @@ export default new ContainerModule((bind, _unbind, _isBound, rebind) => {
     })
     rebind(WidgetManager).to(KeithWidgetManager).inSingletonScope()
 
-    bind(SynthesisRegistry).toSelf().inSingletonScope()
+    bind(SynthesesRegistry).toSelf().inSingletonScope()
     bind(SynthesisCommandContribution).toSelf().inSingletonScope()
     bind(MenuContribution).toService(SynthesisCommandContribution)
     bind(CommandContribution).toService(SynthesisCommandContribution)
