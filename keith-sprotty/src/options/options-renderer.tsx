@@ -255,8 +255,6 @@ export class OptionsRenderer {
                         />
                     );
                 case Type.ENUM:
-                    // TODO: Enums appear to be a bit different from other choice options. See DiagramOptionsViewWidget
-                    // I need to have an example with enum layout options to build and test this...
                     return (
                         <ChoiceOption
                             key={option.optionId}
@@ -264,6 +262,7 @@ export class OptionsRenderer {
                             name={option.name}
                             value={option.currentValue}
                             availableValues={option.availableValues.k}
+                            availableValuesLabels={option.availableValues.v}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
                         />
                     );

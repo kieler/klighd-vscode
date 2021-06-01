@@ -43,6 +43,7 @@ export function CheckOption(props: CheckOptionProps): VNode {
 
 interface ChoiceOptionProps extends BaseProps<string> {
     availableValues: string[];
+    availableValuesLabels?: string[];
 }
 
 /** Render a labeled group of radio inputs. */
@@ -50,15 +51,15 @@ export function ChoiceOption(props: ChoiceOptionProps): VNode {
     return (
         <div classNames="options__input-container">
             <legend>{props.name}</legend>
-            {props.availableValues.map((value) => (
-                <label key={value} htmlFor={value}>
+            {props.availableValues.map((value, i) => (
+                <label key={value} htmlFor={props.availableValuesLabels?.[i] ?? value}>
                     <input
                         type="radio"
-                        id={value}
+                        id={props.availableValuesLabels?.[i] ?? value}
                         checked={props.value === value}
                         on-change={() => props.onChange(value)}
                     />
-                    {value}
+                    {props.availableValuesLabels?.[i] ?? value}
                 </label>
             ))}
         </div>
@@ -83,7 +84,7 @@ export function RangeOption(props: RangeOptionProps): VNode {
                 id={props.id}
                 min={props.minValue}
                 max={props.maxValue}
-                value={props.stepSize}
+                value={props.value}
                 step={props.stepSize}
                 on-change={(e: any) => props.onChange(e.target.value)}
             />

@@ -49,18 +49,25 @@ export class OptionsRegistry implements IActionHandler {
         if (isUpdateOptionsAction(action)) {
             this._modelUri = action.modelUri;
             this._displayedActions = action.actions;
-            this._layoutOptions = action.layoutOptions;
 
             // Transform valued synthesis options to synthesis options by setting their current value
             this._synthesisOptions = action.valuedSynthesisOptions.map<SynthesisOption>(
-                (valuedOption) => {
-                    return {
-                        ...valuedOption.synthesisOption,
-                        currentValue:
-                            valuedOption.currentValue ?? valuedOption.synthesisOption.initialValue,
-                    };
-                }
+                (valuedOption) => ({
+                    ...valuedOption.synthesisOption,
+                    currentValue:
+                        valuedOption.currentValue ?? valuedOption.synthesisOption.initialValue,
+                })
             );
+
+            // Transform layout options to ensure that they have a current value.
+            // Fallback to an already stored currentValue, since the server does not provide a current value for layout options.
+            this._layoutOptions = action.layoutOptions.map<LayoutOptionUIData>((option, i) => ({
+                ...option,
+                currentValue:
+                    option.currentValue ??
+                    this._layoutOptions[i]?.currentValue ??
+                    option.defaultValue.k,
+            }));
 
             this.notifyListeners();
         } else if (isPerformOptionsActionAction(action)) {
@@ -80,7 +87,7 @@ export class OptionsRegistry implements IActionHandler {
             // Optimistic update. Replaces all changed options with the new options
             this.updateLayoutOptions(action.options);
 
-            this.connection.sendNotification(NotificationType.SetSynthesisOption, {
+            this.connection.sendNotification(NotificationType.SetLayoutOption, {
                 layoutOptions: action.options,
                 uri: this.modelUri,
             });
