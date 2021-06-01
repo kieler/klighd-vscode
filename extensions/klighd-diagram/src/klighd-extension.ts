@@ -92,10 +92,12 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     protected activateLanguageClient(_: ExtensionContext): LanguageClient {
         // A KLighD LSP might send messages as the method type "general/sendMessage"
         // which should be displayed to the user
-        KLighDExtension.lsClient.onNotification(
-            generalMessageType,
-            this.handleGeneralMessage.bind(this)
-        );
+        KLighDExtension.lsClient.onReady().then(() => {
+            KLighDExtension.lsClient.onNotification(
+                generalMessageType,
+                this.handleGeneralMessage.bind(this)
+            );
+        });
 
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.

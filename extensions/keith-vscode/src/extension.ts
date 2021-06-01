@@ -16,7 +16,7 @@ import {
     LanguageClient,
     ServerOptions,
     LanguageClientOptions,
-    StreamInfo
+    StreamInfo,
 } from "vscode-languageclient";
 import { connect, NetConnectOpts, Socket } from "net";
 import { KeithErrorHandler } from "./error-handler";
@@ -63,15 +63,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    // Possible socket connection is not ended together with the lsClient
-    // and has to be ended separately, otherwise the LS crashes on the next connection,
-    // thus leading to an unpleasing development experience.
-    return Promise.all([
-        lsClient?.stop(),
-        new Promise<void>((resolve) => {
-            socket ? socket.end(resolve) : resolve();
-        }),
-    ]);
+    return new Promise<void>((resolve) => {
+        if (socket) {
+            // Don't call lsClient.stop when we are connected via socket for development.
+            // That call will end the LS server, leading to a bad dev experience.
+            socket.end(resolve);
+            return;
+        }
+        lsClient?.stop().then(resolve);
+    });
 }
 
 function createServerOptions(context: vscode.ExtensionContext): ServerOptions {
