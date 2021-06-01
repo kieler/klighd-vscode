@@ -114,7 +114,7 @@ export class LSPConnection implements Connection {
     private displayGeneralMessage(params: GeneralMessageParams) {
         const [message, type] = params;
 
-        showPopup(type, "Server message", message, {persist: true});
+        showPopup(type, "Server message", message);
     }
 
     close() {
