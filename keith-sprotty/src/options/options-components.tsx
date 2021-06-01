@@ -115,17 +115,19 @@ export function SeparatorOption(props: { name: string }): VNode {
 
 interface CategoryOptionProps extends BaseProps<boolean> {
     // While Snabbdom passes the children as a separate param, this children props is necessary, otherwise TS does complain.
-    children?: VNode;
+    children?: (VNode | "") | (VNode | "")[];
 }
 
 /** Renders a labeled options group. */
 export function CategoryOption(props: CategoryOptionProps, children: VNode[]): VNode {
+    function handleToggle(e: any) {
+        // The toggle event is also fired if the details are rendered default open.
+        // To prevent an infinite toggle loop, change is only called if the state has really changed.
+        if (e.target.open !== props.value) props.onChange(e.target.open);
+    }
+
     return (
-        <details
-            open={props.value}
-            classNames="options__category"
-            on-toggle={() => props.onChange(!props.value)}
-        >
+        <details open={props.value} classNames="options__category" on-toggle={handleToggle}>
             <summary>{props.name}</summary>
             {children}
         </details>

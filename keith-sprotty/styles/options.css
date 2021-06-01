@@ -58,6 +58,7 @@
     z-index: 10;
 
     padding: 12px;
+    min-width: 350px;
     width: fit-content;
     height: fit-content;
     /* Max screen height while also respecting a margin of 16px to top and bottom. */
@@ -100,6 +101,11 @@
 .options__separator {
     display: block;
     margin: 8px 0;
+}
+
+.options__category {
+    display: flex;
+    flex-direction: column;
 }
 
 .options__category > :not(summary) {
