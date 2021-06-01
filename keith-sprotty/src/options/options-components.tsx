@@ -120,11 +120,13 @@ interface CategoryOptionProps extends BaseProps<boolean> {
 
 /** Renders a labeled options group. */
 export function CategoryOption(props: CategoryOptionProps, children: VNode[]): VNode {
-  // TODO: The category does not open/close after the first click. Even through it is
-  // registered and the VDOM re-renders with the correct options. This brings the UI and Data out of sync.
     return (
-        <details open={props.value} classNames="options__category">
-            <summary on-click={() => props.onChange(!props.value)}>{props.name}</summary>
+        <details
+            open={props.value}
+            classNames="options__category"
+            on-toggle={() => props.onChange(!props.value)}
+        >
+            <summary>{props.name}</summary>
             {children}
         </details>
     );
