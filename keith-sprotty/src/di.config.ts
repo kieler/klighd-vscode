@@ -85,7 +85,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the keith-specific modules at the last positions because of possible binding overrides.
-        textBoundsModule, actionModule, optionsModule,sidebarModule, kGraphDiagramModule)
+        textBoundsModule, actionModule, optionsModule, sidebarModule, kGraphDiagramModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
