@@ -54,7 +54,7 @@ import {
 } from "./actions/actions";
 import { RequestKeithPopupModelAction } from "./hover/hover";
 import { Connection, SessionStorage } from "./services";
-import { SetSynthesisAction } from "./syntheses/action";
+import { SetSynthesisAction } from "./syntheses/actions";
 
 /**
  * This class extends {@link DiagramServer} to also handle the

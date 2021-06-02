@@ -27,11 +27,11 @@ export class SetSynthesesAction implements Action {
     readonly kind = SetSynthesesAction.KIND;
 
     constructor(public readonly syntheses: SetSynthesesActionData[]) {}
-}
 
-/** Type predicate to narrow an action to {@link SetSynthesesAction}. */
-export function isSetSynthesesAction(action: Action): action is SetSynthesesAction {
-    return action.kind === SetSynthesesAction.KIND;
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetSynthesesAction {
+        return action.kind === SetSynthesesAction.KIND;
+    }
 }
 
 /** Sent from the client to the server to request a new diagram with the given synthesis. */
@@ -40,9 +40,9 @@ export class SetSynthesisAction implements Action {
     readonly kind = SetSynthesisAction.KIND;
 
     constructor(public readonly id: string) {}
-}
 
-/** Type predicate to narrow an action to {@link SetSynthesisAction}. */
-export function isSetSynthesisAction(action: Action): action is SetSynthesisAction {
-    return action.kind === SetSynthesisAction.KIND;
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetSynthesisAction {
+        return action.kind === SetSynthesisAction.KIND;
+    }
 }

@@ -12,7 +12,7 @@
  */
 import { injectable } from "inversify";
 import { Action, IActionHandler, ICommand } from "sprotty";
-import { isSetSynthesesAction, isSetSynthesisAction, SetSynthesesActionData } from "./action";
+import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "./actions";
 
 /**
  * A simple injectable registry that holds a list of all available syntheses
@@ -20,7 +20,6 @@ import { isSetSynthesesAction, isSetSynthesisAction, SetSynthesesActionData } fr
  *
  * Handles SetSyntheses and SetSynthesis actions to keep the state in sync which
  * new events.
- *
  */
 @injectable()
 export class SynthesesRegistry implements IActionHandler {
@@ -30,12 +29,12 @@ export class SynthesesRegistry implements IActionHandler {
     private _listeners: (() => void)[] = [];
 
     handle(action: Action): void | Action | ICommand {
-        if (isSetSynthesesAction(action)) {
+        if (SetSynthesesAction.isThisAction(action)) {
             this._syntheses = action.syntheses;
             this._currentSynthesisID = action.syntheses[0]?.id ?? "";
 
             this.notifyListeners();
-        } else if (isSetSynthesisAction(action)) {
+        } else if (SetSynthesisAction.isThisAction(action)) {
             this._currentSynthesisID = action.id;
             this.notifyListeners();
         }

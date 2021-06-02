@@ -12,23 +12,23 @@
  */
 
 import { ContainerModule } from "inversify";
-import { configureActionHandler, TYPES } from "sprotty";
+import { configureActionHandler } from "sprotty";
 import { DISymbol } from "../di.symbols";
-import { UpdateOptionsAction, PerformOptionsActionAction, SetSynthesisOptionsAction, SetLayoutOptionsAction } from "./actions";
+import {
+    UpdateOptionsAction,
+    PerformOptionsActionAction,
+    SetSynthesisOptionsAction,
+    SetLayoutOptionsAction,
+} from "./actions";
 import { OptionsPanel } from "./options-panel";
 import { OptionsRegistry } from "./options-registry";
 import { OptionsRenderer } from "./options-renderer";
-import { OptionsTrigger } from "./options-trigger";
 
 export const optionsModule = new ContainerModule((bind, _, isBound) => {
-    bind(DISymbol.OptionsTrigger)
-        .to(OptionsTrigger)
-        .inSingletonScope();
     bind(DISymbol.OptionsPanel)
         .to(OptionsPanel)
         .inSingletonScope();
-    bind(TYPES.IUIExtension).toService(DISymbol.OptionsTrigger);
-    bind(TYPES.IUIExtension).toService(DISymbol.OptionsPanel);
+    bind(DISymbol.SidebarPanel).toService(DISymbol.OptionsPanel);
 
     bind(DISymbol.OptionsRenderer).to(OptionsRenderer);
     bind(DISymbol.OptionsRegistry)

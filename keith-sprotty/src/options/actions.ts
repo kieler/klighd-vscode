@@ -11,23 +11,14 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Action, SetUIExtensionVisibilityAction } from "sprotty";
-import { DisplayedActionData, LayoutOptionUIData, LayoutOptionValue, SynthesisOption, ValuedSynthesisOption } from "./option-models";
-import { OptionsPanel } from "./options-panel";
-
-/** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the option panel */
-export class ShowOptionsPanelAction extends SetUIExtensionVisibilityAction {
-    constructor() {
-        super(OptionsPanel.ID, true);
-    }
-}
-
-/** Wrapper action around {@link SetUIExtensionVisibilityAction} which hides the option panel */
-export class HideOptionsPanelAction extends SetUIExtensionVisibilityAction {
-    constructor() {
-        super(OptionsPanel.ID, false);
-    }
-}
+import { Action } from "sprotty";
+import {
+    DisplayedActionData,
+    LayoutOptionUIData,
+    LayoutOptionValue,
+    SynthesisOption,
+    ValuedSynthesisOption,
+} from "./option-models";
 
 /** Request message from the server to update the diagram options widget on the client. */
 export class UpdateOptionsAction implements Action {
@@ -40,11 +31,11 @@ export class UpdateOptionsAction implements Action {
         public readonly actions: DisplayedActionData[],
         public readonly modelUri: string
     ) {}
-}
 
-/** Type predicate to narrow an action to {@link UpdateOptionsAction}. */
-export function isUpdateOptionsAction(action: Action): action is UpdateOptionsAction {
-    return action.kind === UpdateOptionsAction.KIND;
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is UpdateOptionsAction {
+        return action.kind === UpdateOptionsAction.KIND;
+    }
 }
 
 /**
@@ -56,11 +47,11 @@ export class PerformOptionsActionAction implements Action {
     readonly kind = PerformOptionsActionAction.KIND;
 
     constructor(readonly actionId: string) {}
-}
 
-/** Type predicate to narrow an action to {@link PerformOptionsActionAction}. */
-export function isPerformOptionsActionAction(action: Action): action is PerformOptionsActionAction {
-    return action.kind === PerformOptionsActionAction.KIND;
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is PerformOptionsActionAction {
+        return action.kind === PerformOptionsActionAction.KIND;
+    }
 }
 
 /**
@@ -72,12 +63,13 @@ export class SetSynthesisOptionsAction implements Action {
     readonly kind = SetSynthesisOptionsAction.KIND;
 
     constructor(readonly options: SynthesisOption[]) {}
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetSynthesisOptionsAction {
+        return action.kind === SetSynthesisOptionsAction.KIND;
+    }
 }
 
-/** Type predicate to narrow an action to {@link SetSynthesisOptionsAction}. */
-export function isSetSynthesisOptionsAction(action: Action): action is SetSynthesisOptionsAction {
-    return action.kind === SetSynthesisOptionsAction.KIND;
-}
 /**
  * Triggers a action from the options that should be performed.
  * Do not confuse this with PerformActionAction!
@@ -87,9 +79,9 @@ export class SetLayoutOptionsAction implements Action {
     readonly kind = SetLayoutOptionsAction.KIND;
 
     constructor(readonly options: LayoutOptionValue[]) {}
-}
 
-/** Type predicate to narrow an action to {@link SetLayoutOptionsAction}. */
-export function isSetLayoutOptionsAction(action: Action): action is SetLayoutOptionsAction {
-    return action.kind === SetLayoutOptionsAction.KIND;
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetLayoutOptionsAction {
+        return action.kind === SetLayoutOptionsAction.KIND;
+    }
 }

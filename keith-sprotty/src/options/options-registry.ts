@@ -15,10 +15,10 @@ import { inject, injectable } from "inversify";
 import { Action, IActionHandler, ICommand } from "sprotty";
 import { Connection, NotificationType } from "../services";
 import {
-    isPerformOptionsActionAction,
-    isSetLayoutOptionsAction,
-    isSetSynthesisOptionsAction,
-    isUpdateOptionsAction,
+    PerformOptionsActionAction,
+    SetLayoutOptionsAction,
+    SetSynthesisOptionsAction,
+    UpdateOptionsAction,
 } from "./actions";
 import {
     DisplayedActionData,
@@ -46,7 +46,7 @@ export class OptionsRegistry implements IActionHandler {
 
     handle(action: Action): void | Action | ICommand {
         // Abort early if this handler is registered for another action
-        if (isUpdateOptionsAction(action)) {
+        if (UpdateOptionsAction.isThisAction(action)) {
             this._modelUri = action.modelUri;
             this._displayedActions = action.actions;
 
@@ -70,12 +70,12 @@ export class OptionsRegistry implements IActionHandler {
             }));
 
             this.notifyListeners();
-        } else if (isPerformOptionsActionAction(action)) {
+        } else if (PerformOptionsActionAction.isThisAction(action)) {
             this.connection.sendNotification(NotificationType.PerformAction, {
                 actionId: action.actionId,
                 uri: this.modelUri,
             });
-        } else if (isSetSynthesisOptionsAction(action)) {
+        } else if (SetSynthesisOptionsAction.isThisAction(action)) {
             // Optimistic update. Replaces all changed options with the new options
             this.updateSynthesisOptions(action.options);
 
@@ -83,7 +83,7 @@ export class OptionsRegistry implements IActionHandler {
                 synthesisOptions: action.options,
                 uri: this.modelUri,
             });
-        } else if (isSetLayoutOptionsAction(action)) {
+        } else if (SetLayoutOptionsAction.isThisAction(action)) {
             // Optimistic update. Replaces all changed options with the new options
             this.updateLayoutOptions(action.options);
 
