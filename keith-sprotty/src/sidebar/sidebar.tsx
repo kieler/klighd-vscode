@@ -90,8 +90,16 @@ export class Sidebar extends AbstractUIExtension {
             if (title.innerHTML !== currentPanel.title) title.innerHTML = currentPanel.title;
 
             // Mark current panel button active. Only triggers a DOM change if the class is not already set.
-            const btn = this.containerElement.querySelector(`[data-panel-id=${currentPanel.id}]`);
-            btn?.classList.add("sidebar__toggle-button--active");
+            const buttons = this.containerElement.querySelectorAll<HTMLButtonElement>(
+                ".sidebar__toggle-button"
+            );
+            buttons.forEach((btn) => {
+                if (btn.dataset.panelId === currentPanel.id) {
+                    btn.classList.add("sidebar__toggle-button--active");
+                } else {
+                    btn.classList.remove("sidebar__toggle-button--active");
+                }
+            });
 
             // Update panel content with efficient VDOM patching.
             this.oldPanelContentRoot = this.patcher(
