@@ -1,0 +1,82 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2021 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
+.sidebar {
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+
+    padding: 16px;
+    /* Sidebar should consume at least 1/4th of the screen but not forced to be wider than 400px. */
+    min-width: min(400px, 25vw);
+    /* Sidebar should consume at max 3/4th of the screen. */
+    max-width: 75vw;
+    width: fit-content;
+    border-radius: 4px 0 0 4px;
+
+    background-color: white;
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
+    color: hsl(0, 0%, 13%);
+    font-size: 16px;
+
+    transition: transform 200ms ease-in-out;
+    transform: translateX(100%);
+}
+
+.sidebar--open {
+  transform: translateX(0%);
+}
+
+.sidebar__title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.5;
+    margin: 0 0 16px 0;
+}
+
+.sidebar__toggle-container {
+    position: absolute;
+    left: 0;
+    top: 16px;
+    transform: translateX(-100%);
+}
+
+.sidebar__toggle-button {
+    --background: white;
+    padding: 8px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+
+    cursor: pointer;
+    outline: none;
+    background: var(--background);
+    color: hsl(0, 0%, 13%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+    transition: background 200ms ease-in-out;
+}
+
+.sidebar__toggle-button:hover {
+    --background: hsl(0, 0%, 88%);
+}
+
+/* Resets extra button height that is caused by an svg child */
+.sidebar__toggle-button > svg {
+    vertical-align: bottom;
+}
+
+.sidebar__toggle-button--active {
+    --background: hsl(0, 0%, 81%);
+}

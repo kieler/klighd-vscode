@@ -1,6 +1,6 @@
-import { inject } from "inversify";
+import { injectable, inject } from "inversify";
 import { VNode } from "snabbdom/vnode";
-import { InitializeCanvasBoundsAction, IUIExtension, ModelViewer } from "sprotty";
+import { InitializeCanvasBoundsAction, ModelViewer } from "sprotty";
 import { KeithFitToScreenAction } from "./actions/actions";
 import { DISymbol } from "./di.symbols";
 
@@ -10,11 +10,12 @@ import { DISymbol } from "./di.symbols";
  * Futhermore, the extension resolves UIExtensions from the IoC that should be
  * displayed immediately.
  */
+@injectable()
 export class KeithModelViewer extends ModelViewer {
     // Resolve UIExtensions that should be shown together with the model.
     // Such UIExtensions should implement a @postConstruct to show them self.
     // @ts-ignore value is never read. The IoC only has to resolve the dependency.
-    @inject(DISymbol.OptionsTrigger) private optionsTrigger: IUIExtension;
+    @inject(DISymbol.Sidebar) private sidebar: unknown;
 
     protected onWindowResize = (vdom: VNode): void => {
         // This should do a super.onWindowResize call to not repeat the logic from the

@@ -13,6 +13,9 @@
 
 /** DI Symbols for Services provided by the KEITH DI container. */
 export const DISymbol = {
+    Sidebar: Symbol("Sidebar"),
+    SidebarPanel: Symbol("SidebarPanel"),
+    SidebarPanelRegistry: Symbol("SidebarPanelRegistry"),
     OptionsTrigger: Symbol("OptionsTrigger"),
     OptionsPanel: Symbol("OptionsPanel"),
     OptionsRegistry: Symbol("OptionsRegistry"),

@@ -25,6 +25,7 @@ import { KeithHoverMouseListener } from './hover/hover';
 import { KeithModelViewer } from './model-viewer';
 import { RenderOptions } from './options';
 import { optionsModule } from './options/di.config';
+import { sidebarModule } from './sidebar';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/action';
@@ -84,7 +85,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the keith-specific modules at the last positions because of possible binding overrides.
-        textBoundsModule, actionModule, optionsModule, kGraphDiagramModule)
+        textBoundsModule, actionModule, optionsModule,sidebarModule, kGraphDiagramModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
