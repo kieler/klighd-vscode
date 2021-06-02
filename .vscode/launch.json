@@ -100,5 +100,19 @@
             "outFiles": ["${workspaceFolder}/extensions/keith-vscode/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Start Standalone Webserver",
+            "program": "${workspaceRoot}/keith-standalone-view/lib/main.js",
+            "args": ["--ls_port=5007"],
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceRoot}/keith-standalone-view/lib/**/*.js",
+            ],
+            "smartStep": true,
+            "internalConsoleOptions": "openOnSessionStart",
+            "outputCapture": "std"
+        }
     ]
 }

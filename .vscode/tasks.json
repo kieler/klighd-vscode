@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Watch keith-vscode",
+            "label": "Watch project",
             "type": "npm",
             "script": "watch",
             "problemMatcher": "$tsc-watch",
