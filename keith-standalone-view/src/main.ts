@@ -33,7 +33,7 @@ import { showPopup } from "./popup";
         showPopup(
             "warn",
             "Wrong usage",
-            "Please specify a fileUri for your diagram as a search parameter. (?source=...)",
+            "Please specify a file URI to your diagram as a search parameter. (?source=...)",
             { persist: true }
         );
         return;
