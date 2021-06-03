@@ -18,7 +18,11 @@
     right: 0;
     bottom: 0;
 
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     padding: 16px;
+
     /* Sidebar should consume at least 1/4th of the screen but not forced to be wider than 400px. */
     min-width: min(400px, 25vw);
     /* Sidebar should consume at max 3/4th of the screen. */
@@ -36,14 +40,22 @@
 }
 
 .sidebar--open {
-  transform: translateX(0%);
+    transform: translateX(0%);
+}
+
+.sidebar__content {
+    box-sizing: border-box;
+    overflow-y: auto;
+
+    /* Consume all available height in the sidebar */
+    flex-grow: 2;
 }
 
 .sidebar__title {
     font-size: 1.5rem;
-    font-weight: 500;
+    font-weight: 700;
     line-height: 1.5;
-    margin: 0 0 16px 0;
+    margin: 0;
 }
 
 .sidebar__toggle-container {

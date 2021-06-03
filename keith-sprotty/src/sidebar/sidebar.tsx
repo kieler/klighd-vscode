@@ -134,7 +134,6 @@ export class Sidebar extends AbstractUIExtension {
 
             return button;
         });
-
         panelButtons.forEach((button) => toggleContainer.appendChild(button));
         containerElement.appendChild(toggleContainer);
 
@@ -144,11 +143,17 @@ export class Sidebar extends AbstractUIExtension {
         title.innerText = "Sidebar";
         containerElement.appendChild(title);
 
-        // Prepare the virtual DOM. Snabbdom does not work directly on the container element.
-        // Therefore, an empty element is used.
+        // Create content container which provides an overflow scrollbar for the content
+        const contentContainer = document.createElement("div");
+        contentContainer.classList.add("sidebar__content");
+        containerElement.appendChild(contentContainer);
+
+        // Prepare the virtual DOM. Snabbdom requires an empty element.
+        // Furthermore, the element is completely replaces by the panel on every update,
+        // so we use an extra, empty element to ensure that we loose no important attributes (such as classes).
         const panelContentRoot = document.createElement("div");
         this.oldPanelContentRoot = this.patcher(panelContentRoot, <div />);
-        containerElement.appendChild(panelContentRoot);
+        contentContainer.appendChild(panelContentRoot);
 
         // Notice that AbstractUIExtension only calls initializeContents once,
         // so this handler is also only registered once.
