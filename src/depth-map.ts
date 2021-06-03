@@ -25,11 +25,6 @@ export class DepthMap {
      * */
     rootElement: SModelRoot;
 
-    /**  
-     * A quick lookup map with the id of the bounding child area of a region as key.
-     * */
-    regionMap: Map<String, Region>;
-
     /**
      * The last viewport for which we updated the state of KNodes
      */
@@ -70,7 +65,6 @@ export class DepthMap {
     private constructor(rootElement: SModelRoot) {
         this.rootElement = rootElement
         this.rootRegions = []
-        this.regionMap = new Map()
         this.titleMap = new Map()
         this.criticalRegions = new Set()
     }
@@ -78,7 +72,6 @@ export class DepthMap {
     protected reset(model_root: SModelRoot) {
         this.rootElement = model_root
         // rootRegions are reset below as we also want to remove the edges from the graph spaned by the regions
-        this.regionMap.clear()
         this.titleMap.clear()
         this.criticalRegions.clear()
         this.viewport = undefined
@@ -94,7 +87,6 @@ export class DepthMap {
             for (let region of current_regions) {
                 remaining_regions.concat(region.children)
                 region.children = []
-                region.elements = []
                 region.parent = undefined
             }
             current_regions = remaining_regions
@@ -133,7 +125,6 @@ export class DepthMap {
             let node = root_child as KNode;
             let region = new Region(node)
             this.rootRegions.push(region)
-            this.addRegionToMap(region)
             this.initHelper(node, 0, region)
         }
     }
@@ -148,62 +139,25 @@ export class DepthMap {
     protected initHelper(node: KNode, depth: number, region: Region) {
         // Go through child nodes until there are no child nodes left.
         for (let child of node.children) {
-            // Add the current node as element of region.
-            region.elements.push(child as KNode)
+
+            let child_node = child as KNode;
+            child_node.containingDepthMapRegion = region
+
             // When the bounding rectangle of a new child area is reached, a new region is created.
-            if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
-                && ((child as KNode).data[0] as KContainerRendering).children[0]) {
-                let nextRegion = new Region(child as KNode)
+            if (child_node.data.length > 0 && child_node.data[0].type === K_RECTANGLE
+                && (child_node.data[0] as KContainerRendering).children[0]) {
+                let nextRegion = new Region(child_node)
+                child_node.depthMapRegion = nextRegion
                 nextRegion.parent = region
                 region.children.push(nextRegion)
-                // In the models parent child structure a child can occur multiple times.
-                this.addRegionToMap(nextRegion)
                 // Continue with the children of the new region.
-                this.initHelper((child as KNode), (depth + 1), nextRegion)
+                this.initHelper(child_node, (depth + 1), nextRegion)
             } else {
                 // Continue with the other children on the current depth level.
-                this.initHelper((child as KNode), depth, region)
+                this.initHelper(child_node, depth, region)
             }
         }
 
-    }
-
-    /** 
-     * Adds a region to the depth map.
-     * 
-     * @param depth The nesting depth the region is put into. 
-     * @param region The region to add. 
-     */
-    protected addRegionToMap(region: Region) {
-        this.regionMap.set(region.boundingRectangle.id, region)
-    }
-
-    /** 
-     * Find the region that contains the node,
-     *  this should be the first ancestor that is a region
-   * @param node The KNode to search for. 
-     */
-    findRegionWithElement(node: KNode): Region | undefined {
-        let current = node.parent as KNode;
-        while (current) {
-
-            let region = this.getRegion(current.id);
-
-            if (region) {
-                return region
-            }
-
-            current = current.parent as KNode
-        }
-        return undefined
-    }
-
-    /** 
-     * Finds region with corresponding rectangle id of a child area.
-     * @param id ID of the rectangle the child area is in. 
-     */
-    getRegion(id: String): Region | undefined {
-        return this.regionMap.get(id)
     }
 
     /** 
@@ -400,8 +354,6 @@ export class DepthMap {
  * tree structure of the model and application of expansion state of its KNodes.
  */
 export class Region {
-    /** All KNodes specifically in the region. */
-    elements: KNode[]
     /** The rectangle of the child area in which the region lies. */
     boundingRectangle: KNode
     /** Gained using browser position and rescaling and are therefore not perfect. */
@@ -426,9 +378,9 @@ export class Region {
     /** Constructor initializes element array for region. */
     constructor(boundingRectangle: KNode) {
         this.boundingRectangle = boundingRectangle
-        this.elements = []
         this.children = []
         this.hasTitle = false
+        this.expansionState = true
     }
 
     /** 
@@ -437,8 +389,5 @@ export class Region {
      */
     setExpansionState(state: boolean): void {
         this.expansionState = state
-        for (let elem of this.elements) {
-            elem.expansionState = state
-        }
     }
 }

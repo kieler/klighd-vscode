@@ -79,7 +79,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     // Use position of rendering svg in browser to determine actual position of regions and child areas.
     // Determines whether or not this rectangular shape has a region inside.
-    let rectRegion = context.depthMap.getRegion((parent as KNode).id)
+    let rectRegion = (parent as KNode).depthMapRegion
     if (rectRegion && !rectRegion.absoluteBounds && context.depthMap.isCompleteRendering) {
         // Find corresponding svg of rendering and the diagram
         const svgElement = document.getElementById(rendering.renderingId);
@@ -302,7 +302,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     const useSmartZoomDefault = false
     const useSmartZoom = smartZoomOption ? smartZoomOption : useSmartZoomDefault
     if (useSmartZoom) {
-        let region = context.depthMap.getRegion((parent as KNode).id)
+        let region = (parent as KNode).depthMapRegion
         if (region && !region.expansionState && !region.hasTitle) {
             // Render indirect region titles.
             if (region.superStateTitle) {
@@ -541,7 +541,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     var textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
-    const region = context.depthMap.getRegion(parent.id)
+    const region = (parent as KNode).depthMapRegion
     const simplifySmallTextOption = context.renderingOptions.getOption(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ? simplifySmallTextOption.currentValue : false // Only enable, if option is found.
     if (simplifySmallText && (!region || (region && region.expansionState))) {
@@ -625,7 +625,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // Check whether or not the parent node is a child area.
                 // If the parent is a child area, the text is a title of the region.
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
-                let region = context.depthMap.getRegion((parent as KNode).id)
+
+                let region = (parent as KNode).depthMapRegion
                 if (region) {
                     // To avoid drawing a placeholder, when there is a region title.
                     // Avoid setting when called with macro or super state title.
@@ -693,7 +694,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     // If there are multiple macro states set the flag.
     if (rendering.isNodeTitle && !context.depthMap.titleMap.has(rendering)) {
         context.depthMap.titleMap.set(rendering, rendering)
-        let region = context.depthMap.findRegionWithElement(parent as KNode)
+        let region = (parent as KNode).containingDepthMapRegion
         if (region) {
             // Handle super states
             // If there is just one child region apply super state title.
@@ -810,7 +811,7 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement,
     // Handle expansion and collapse of regions
     const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
     const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false // Only enable, if option is found.
-    if (useSmartZoom && (parent as KNode).expansionState === false) {
+    if (useSmartZoom && (parent as KNode).depthMapRegion?.expansionState === false) {
         return undefined
     }
 
