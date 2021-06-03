@@ -294,17 +294,14 @@ export class DepthMap {
         while (toBeProcessed.size !== 0) {
             toBeProcessed.forEach(region => {
                 // Collapse either if the parent region is collapsed or the expansion state changes.
-                if (region.parent && region.parent.expansionState == COLLAPSED || !this.getExpansionState(region, viewport, threshold)) {
-                    region.setExpansionState(false)
-                    this.criticalRegions.delete(region)
+                if (region.parent && region.parent.expansionState === COLLAPSED) {
+                    this.recursiveCollapseRegion(region)
+                } else if (this.getExpansionState(region, viewport, threshold) === COLLAPSED) {
                     if (region.parent) {
                         nextToBeProcessed.add(region.parent)
                         this.criticalRegions.add(region.parent)
                     }
-                    // Collapse all children.
-                    region.children.forEach(childRegion => {
-                        this.recursiveCollapseRegion(childRegion)
-                    })
+                    this.recursiveCollapseRegion(region)
                 } else {
                     // Add children to check for expansion state change.
                     region.children.forEach(childRegion => {
