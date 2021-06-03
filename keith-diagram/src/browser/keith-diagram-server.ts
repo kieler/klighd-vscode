@@ -21,7 +21,7 @@ import {
     CheckedImagesAction, CheckImagesAction, ComputedTextBoundsAction, KeithUpdateModelAction, Pair, PerformActionAction, RefreshLayoutAction,
     RequestTextBoundsCommand, StoreImagesAction
 } from '@kieler/keith-sprotty/lib/actions/actions';
-import {SetSynthesesAction, SetSynthesisAction} from "@kieler/keith-sprotty/lib/syntheses/action"
+import {SetSynthesesAction, SetSynthesisAction} from "@kieler/keith-sprotty/lib/syntheses/actions"
 import { RequestKeithPopupModelAction } from '@kieler/keith-sprotty/lib/hover/hover';
 import { injectable } from 'inversify';
 import { LSTheiaDiagramServer } from 'sprotty-theia/lib';

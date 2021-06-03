@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SetSynthesesActionData } from '@kieler/keith-sprotty/lib/syntheses/action';
+import { SetSynthesesActionData } from '@kieler/keith-sprotty/lib/syntheses/actions';
 import { SynthesesRegistry } from '@kieler/keith-sprotty/lib/syntheses/syntheses-registry';
 import { Command, CommandContribution, CommandHandler, CommandRegistry, MenuContribution, MenuModelRegistry, MenuPath } from '@theia/core';
 import { QuickPickItem, StatusBar, StatusBarAlignment } from '@theia/core/lib/browser';
