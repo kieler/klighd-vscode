@@ -13,14 +13,16 @@
 
 import "reflect-metadata";
 import "./styles/main.css";
+import "@kieler/keith-sprotty/styles/main.css";
 import {
     Connection,
     createKeithDiagramContainer,
     requestModel,
     SessionStorage,
+    SetPreferencesAction,
 } from "@kieler/keith-sprotty";
 import { LSPConnection } from "./services/connection";
-import { getDiagramSourceUri, getLanguageId, sleep } from "./helpers";
+import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
 import { IActionDispatcher, TYPES } from "sprotty";
 import { showPopup } from "./popup";
@@ -63,6 +65,8 @@ async function initDiagramView(sourceUri: string) {
     diagramContainer.bind(SessionStorage).toConstantValue(sessionStorage);
     const actionDispatcher = diagramContainer.get<IActionDispatcher>(TYPES.IActionDispatcher);
 
+    sendUrlSearchParamPreferences(actionDispatcher);
+
     // Connect to a language server and request a diagram.
     await connection.connect(socketUrl);
     await connection.sendInitialize();
@@ -70,4 +74,13 @@ async function initDiagramView(sourceUri: string) {
     // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions...
     await sleep(200);
     await requestModel(actionDispatcher, { sourceUri, diagramType: "keith-diagram" });
+}
+
+/** Communicates preferences to the diagram container which are red from the url search params. */
+function sendUrlSearchParamPreferences(actionDispatcher: IActionDispatcher) {
+    actionDispatcher.dispatch(
+        new SetPreferencesAction({
+            resizeBehavior: readSearchParam("resizeBehavior") ?? "fit",
+        })
+    );
 }

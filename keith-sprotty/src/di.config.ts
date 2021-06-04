@@ -25,6 +25,7 @@ import { KeithHoverMouseListener } from './hover/hover';
 import { KeithModelViewer } from './model-viewer';
 import { RenderOptions } from './options';
 import { optionsModule } from './options/options-module';
+import { PreferencesRegistry, SetPreferencesAction } from './preferences-registry';
 import { sidebarModule } from './sidebar';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
@@ -76,6 +77,9 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     bind(DISymbol.SynthesesRegistry).to(SynthesesRegistry).inSingletonScope();
     configureActionHandler(context, SetSynthesesAction.KIND, DISymbol.SynthesesRegistry);
     configureActionHandler(context, SetSynthesisAction.KIND, DISymbol.SynthesesRegistry);
+
+    bind(DISymbol.PreferencesRegistry).to(PreferencesRegistry).inSingletonScope();
+    configureActionHandler(context, SetPreferencesAction.KIND, DISymbol.PreferencesRegistry);
 })
 
 /**

@@ -3,6 +3,7 @@ import { VNode } from "snabbdom/vnode";
 import { InitializeCanvasBoundsAction, ModelViewer } from "sprotty";
 import { KeithFitToScreenAction } from "./actions/actions";
 import { DISymbol } from "./di.symbols";
+import { PreferencesRegistry } from "./preferences-registry";
 
 /**
  * Extend the {@link ModelViewer} to also dispatch a FitToScreenAction when the
@@ -16,6 +17,8 @@ export class KeithModelViewer extends ModelViewer {
     // Such UIExtensions should implement a @postConstruct to show them self.
     // @ts-ignore value is never read. The IoC only has to resolve the dependency.
     @inject(DISymbol.Sidebar) private sidebar: unknown;
+    
+    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
 
     protected onWindowResize = (vdom: VNode): void => {
         // This should do a super.onWindowResize call to not repeat the logic from the
@@ -26,8 +29,9 @@ export class KeithModelViewer extends ModelViewer {
         if (baseDiv !== null) {
             const newBounds = this.getBoundsInPage(baseDiv as Element);
             this.actiondispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds));
-            // TODO: Provide an option to toggle this on and off like it is done in KEITH Theia.
-            this.actiondispatcher.dispatch(new KeithFitToScreenAction(false));
+
+            if (this.preferencesRegistry.preferences.resizeBehavior === "fit")
+                this.actiondispatcher.dispatch(new KeithFitToScreenAction(false));
         }
     };
 }

@@ -18,12 +18,17 @@ export function sleep(ms: number): Promise<void> {
     });
 }
 
+/** Returns the value for a given url search param key. Returns null if the key is not defined. */
+export function readSearchParam(param: string): string | null {
+    const params = new URLSearchParams(location.search);
+    return params.get(param);
+}
+
 /**
  * Read the sourceURI for that diagram that should be displayed from search params.
  */
 export function getDiagramSourceUri(): string | null {
-    const params = new URLSearchParams(location.search);
-    return params.get("source");
+    return readSearchParam("source");
 }
 
 export function getLanguageId(documentUri: string): string {

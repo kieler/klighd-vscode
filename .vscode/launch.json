@@ -101,18 +101,19 @@
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
+            "name": "Start Standalone Webserver",
             "type": "node",
             "request": "launch",
-            "name": "Start Standalone Webserver",
-            "program": "${workspaceRoot}/keith-standalone-view/lib/main.js",
+            "program": "${workspaceFolder}/keith-standalone-view/lib/main.js",
             "args": ["--ls_port=5007"],
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceRoot}/keith-standalone-view/lib/**/*.js",
+                "${workspaceFolder}/keith-standalone-view/lib/**/*.js",
+                "${workspaceFolder}/keith-standalone-view/dist/**/*.js",
+                "${workspaceFolder}/keith-sprotty/lib/**/*.js",
             ],
             "smartStep": true,
-            "internalConsoleOptions": "openOnSessionStart",
-            "outputCapture": "std"
+            "preLaunchTask": "${defaultBuildTask}"
         }
     ]
 }

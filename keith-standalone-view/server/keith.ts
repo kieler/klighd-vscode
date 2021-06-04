@@ -48,6 +48,7 @@ program
         "--ls_path <path>",
         "Starts a language server for the synthesis located as a jar at the given path."
     )
+    .option("--no-fit", "Do not fit the diagram to the view when the view is resized.")
     .action((file, options, program: Command) => {
         // A path to a language can be configured by an environment variable.
         // The lsp_path option for the command takes a higher preference.
@@ -62,6 +63,12 @@ program
             program.help({ error: true });
         }
 
+        // options.fit is true when the --no-fit flag is absent.
+        // See https://www.npmjs.com/package/commander#other-option-types-negatable-boolean-and-booleanvalue
+        const fitOnResize = options.fit;
+
+        const preferences = `${!fitOnResize ? "&resizeBehavior=nothing" : ""}`;
+
         const fileUrl = pathToFileURL(file);
         const server = createServer({ lsPort, lsPath });
 
@@ -71,7 +78,7 @@ program
                 process.exit(1);
             }
 
-            const url = `${addr}?source=${fileUrl}`;
+            const url = `${addr}?source=${fileUrl}${preferences}`;
 
             console.log("Keith Diagram Viewer\n");
             console.log("Inspect your diagram at:");

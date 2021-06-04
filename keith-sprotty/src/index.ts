@@ -13,13 +13,8 @@
 
 // ------------------ Base ------------------
 
-// Import styles that are required to display beautiful diagrams. Implementing
-// applications can decide how they bundle the styles. (Extract, dynamic inlining, etc.)
-import "../styles/options.css";
-import "../styles/sidebar.css";
-import "sprotty/css/sprotty.css";
-
 import createKeithDiagramContainer from "./di.config";
 export { createKeithDiagramContainer };
 export { requestModel } from "./diagram-server";
 export { Connection, SessionStorage, NotificationType } from "./services";
+export { SetPreferencesAction } from "./preferences-registry";
