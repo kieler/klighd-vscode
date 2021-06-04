@@ -43,7 +43,7 @@ export class MessageConnection implements Connection {
     }
 
     sendMessage(message: ActionMessage): void {
-        console.groupCollapsed("MessageConnection sends message:");
+        console.groupCollapsed(`MessageConnection sends ${message.action.kind} action:`);
         console.log(message);
         console.groupEnd();
 
@@ -59,7 +59,6 @@ export class MessageConnection implements Connection {
         // has a method property and passes a params property as the second argument
         // to languageClient.sendNotification.
         vscodeApi.postMessage({method: type, params: payload});
-        throw new Error("Method not implemented.");
     }
 
     onMessageReceived(handler: (message: ActionMessage) => void): void {
@@ -67,7 +66,7 @@ export class MessageConnection implements Connection {
     }
 
     logHandler(message: ActionMessage) {
-        console.groupCollapsed("MessageConnection received message");
+        console.groupCollapsed(`MessageConnection received ${message.action.kind} action:`);
         console.log(message);
         console.groupEnd();
     }

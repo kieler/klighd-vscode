@@ -21,6 +21,7 @@ import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { KeithFitToScreenAction } from "@kieler/keith-sprotty/lib/actions/actions";
 import { LanguageClient, NotificationType } from "vscode-languageclient";
 import { diagramType, extensionId } from "./constants";
+import { KLighDWebview } from "./klighd-webview";
 
 type GeneralMessageParams = [string, "info" | "warn" | "error"];
 const generalMessageType = new NotificationType<GeneralMessageParams, void>("general/sendMessage");
@@ -58,7 +59,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     }
 
     protected createWebView(identifier: SprottyDiagramIdentifier): SprottyWebview {
-        const webview = new SprottyLspWebview({
+        const webview = new KLighDWebview({
             extension: this,
             identifier,
             localResourceRoots: [this.getExtensionFileUri("dist")],
