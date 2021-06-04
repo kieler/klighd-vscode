@@ -14,17 +14,13 @@ import { ExtensionContext, Uri, commands, window } from "vscode";
 import {
     SprottyDiagramIdentifier,
     SprottyLspVscodeExtension,
-    SprottyLspWebview,
 } from "sprotty-vscode/lib/lsp";
 import { SprottyWebview } from "sprotty-vscode";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { KeithFitToScreenAction } from "@kieler/keith-sprotty/lib/actions/actions";
-import { LanguageClient, NotificationType } from "vscode-languageclient";
+import { LanguageClient } from "vscode-languageclient";
 import { diagramType, extensionId } from "./constants";
 import { KLighDWebview } from "./klighd-webview";
-
-type GeneralMessageParams = [string, "info" | "warn" | "error"];
-const generalMessageType = new NotificationType<GeneralMessageParams, void>("general/sendMessage");
 
 /** Options required to construct a KLighDExtension */
 interface KLighDExtensionOptions {
@@ -95,7 +91,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         // which should be displayed to the user
         KLighDExtension.lsClient.onReady().then(() => {
             KLighDExtension.lsClient.onNotification(
-                generalMessageType,
+                "general/sendMessage",
                 this.handleGeneralMessage.bind(this)
             );
         });
@@ -105,9 +101,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         return KLighDExtension.lsClient;
     }
 
-    private handleGeneralMessage(params: GeneralMessageParams) {
-        const [message, type] = params;
-
+    private handleGeneralMessage(message: string, type: "info" | "warn" | "error") {
         switch (type) {
             case "info":
                 window.showInformationMessage(message);
