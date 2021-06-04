@@ -12,7 +12,8 @@
  */
 
 import { injectable, multiInject, optional } from "inversify";
-import { Action, IActionHandler, ICommand } from "sprotty";
+import { Action, ICommand } from "sprotty";
+import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
 import { ToggleSidebarPanelAction } from "./actions";
 import { ISidebarPanel } from "./sidebar-panel";
@@ -25,29 +26,17 @@ import { ISidebarPanel } from "./sidebar-panel";
  * Other components can subscribe to this registry to be informed about state changes.
  */
 @injectable()
-export class SidebarPanelRegistry implements IActionHandler {
+export class SidebarPanelRegistry extends Registry {
     private _panels: Map<string, ISidebarPanel>;
     private _currentPanelID: string | null;
 
-    private _listeners: (() => void)[];
-
     constructor(@multiInject(DISymbol.SidebarPanel) @optional() panels: ISidebarPanel[] = []) {
+        super();
         this._panels = new Map();
         this._currentPanelID = null;
-        this._listeners = [];
 
         for (const panel of panels) {
             this._panels.set(panel.id, panel);
-        }
-    }
-
-    onCurrentPanelChange(listener: () => void) {
-        this._listeners.push(listener);
-    }
-
-    private notifyListener() {
-        for (const listener of this._listeners) {
-            listener();
         }
     }
 
@@ -60,11 +49,11 @@ export class SidebarPanelRegistry implements IActionHandler {
             if (this._currentPanelID === action.id) {
                 // Panel is active so it should either be hidden explicitly or toggled to be hidden
                 this._currentPanelID = null;
-                this.notifyListener();
+                this.notifyListeners();
             } else if (this._panels.has(action.id)) {
                 // Panel is inactive and id exists so it should either be shown explicitly or toggled to be shown
                 this._currentPanelID = action.id;
-                this.notifyListener();
+                this.notifyListeners();
             }
         }
     }

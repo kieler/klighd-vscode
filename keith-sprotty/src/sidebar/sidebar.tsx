@@ -42,7 +42,7 @@ export class Sidebar extends AbstractUIExtension {
         this.patcher = this.patcherProvider.patcher;
 
         // Update the panel if the registry state changes
-        this.sidebarPanelRegistry.onCurrentPanelChange(() => this.update());
+        this.sidebarPanelRegistry.onChange(() => this.update());
 
         // Update the panel if the current panel requests an update
         this.sidebarPanelRegistry.allPanel.forEach((panel) => {

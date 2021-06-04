@@ -11,7 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import { injectable } from "inversify";
-import { Action, IActionHandler, ICommand } from "sprotty";
+import { Action, ICommand } from "sprotty";
+import { Registry } from "../base/registry";
 import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "./actions";
 
 /**
@@ -22,11 +23,9 @@ import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "
  * new events.
  */
 @injectable()
-export class SynthesesRegistry implements IActionHandler {
+export class SynthesesRegistry extends Registry {
     private _currentSynthesisID: string = "";
     private _syntheses: SetSynthesesActionData[] = [];
-
-    private _listeners: (() => void)[] = [];
 
     handle(action: Action): void | Action | ICommand {
         if (SetSynthesesAction.isThisAction(action)) {
@@ -37,16 +36,6 @@ export class SynthesesRegistry implements IActionHandler {
         } else if (SetSynthesisAction.isThisAction(action)) {
             this._currentSynthesisID = action.id;
             this.notifyListeners();
-        }
-    }
-
-    onSynthesisChange(handler: () => void) {
-        this._listeners.push(handler);
-    }
-
-    private notifyListeners() {
-        for (const listener of this._listeners) {
-            listener();
         }
     }
 

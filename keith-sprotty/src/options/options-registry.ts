@@ -12,7 +12,8 @@
  */
 
 import { inject, injectable } from "inversify";
-import { Action, IActionHandler, ICommand } from "sprotty";
+import { Action, ICommand } from "sprotty";
+import { Registry } from "../base/registry";
 import { Connection, NotificationType } from "../services";
 import {
     PerformOptionsActionAction,
@@ -34,15 +35,13 @@ import {
  * to the Options. Changes are synchronized with the server.
  */
 @injectable()
-export class OptionsRegistry implements IActionHandler {
+export class OptionsRegistry extends Registry {
     @inject(Connection) connection: Connection;
 
     private _modelUri: string = "";
     private _synthesisOptions: SynthesisOption[] = [];
     private _layoutOptions: LayoutOptionUIData[] = [];
     private _displayedActions: DisplayedActionData[] = [];
-
-    private _listeners: (() => void)[] = [];
 
     handle(action: Action): void | Action | ICommand {
         // Abort early if this handler is registered for another action
@@ -91,16 +90,6 @@ export class OptionsRegistry implements IActionHandler {
                 layoutOptions: action.options,
                 uri: this.modelUri,
             });
-        }
-    }
-
-    onOptionsChange(handler: () => void) {
-        this._listeners.push(handler);
-    }
-
-    private notifyListeners() {
-        for (const listener of this._listeners) {
-            listener();
         }
     }
 

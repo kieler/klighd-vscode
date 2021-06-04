@@ -35,8 +35,8 @@ export class OptionsPanel extends SidebarPanel {
 
     @postConstruct()
     init() {
-        this.optionsRegistry.onOptionsChange(() => this.update());
-        this.synthesesRegistry.onSynthesisChange(() => this.update());
+        this.optionsRegistry.onChange(() => this.update());
+        this.synthesesRegistry.onChange(() => this.update());
     }
 
     get id(): string {
