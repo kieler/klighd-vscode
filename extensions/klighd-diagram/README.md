@@ -12,10 +12,9 @@ This extension visualizes generated KLighD diagrams for other extensions.
 
 > **This extension is not intended to be used directly!**
 
-Instead, it should be used as a dependency by other extensions to easily
-support diagram visualization with KLighD.
-Your host extension is responsible for configuring a language client, while the KLighD
-extension handles everything related to diagrams.
+Instead, it should be used as a dependency by other extensions to easily support diagram
+visualization with KLighD. Your host extension is responsible for configuring a language client,
+while the KLighD extension handles everything related to diagrams.
 
 ### Usage in your extension
 
@@ -30,15 +29,24 @@ extension handles everything related to diagrams.
 2. Notify the KLighD extension about your language client.
 
 ```typescript
+import { command } from "klighd-diagram";
+
 export async function activate(context: vscode.ExtensionContext) {
     // ... configuring the language client options
 
     const lsClient = new LanguageClient("Language Server", serverOptions, clientOptions);
 
-    // Inform the KLighD extension about the LS client
-    // The first argument is your language client
-    // The second argument is an array of language file endings that are supported by your LS client
-    await vscode.commands.executeCommand("klighd-diagram.setLanguageClient", lsClient, ["sctx"]);
+    // Inform the KLighD extension about the LS client.
+    // The first argument is your language client.
+    // The second argument is an array of language file endings
+    // that are supported by your LS client.
+    // Returns an ID that is used to identify this extension when future
+    // commands are sent to klighd-diagram.
+    const refId = await vscode.commands.executeCommand(
+        "klighd-diagram.setLanguageClient",
+        lsClient,
+        ["sctx"]
+    );
 
     console.debug("Starting Language Server...");
     lsClient.start();

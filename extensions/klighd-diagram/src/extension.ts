@@ -11,14 +11,23 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import "reflect-metadata";
+import { nanoid } from "nanoid/non-secure";
 import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
-import { KLighDExtension } from "./klighd-extension";
+import { ActionHandlerClass, KLighDExtension } from "./klighd-extension";
+
+// potential exports for other extensions to improve their dev experience
+// This mainly involves our command string and the ability to properly type action handlers.
+// This may also export actions that can be potentially intercepted by other extensions.
+export { command, ActionHandlerClass };
+export { PerformActionAction } from "@kieler/keith-sprotty/lib/actions/actions";
+export { Action } from "sprotty";
+export { ActionHandler } from "sprotty-vscode/lib/action-handler";
 
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
-    let extension: KLighDExtension;
+    let extensionMap: Map<string, KLighDExtension> = new Map();
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
@@ -33,18 +42,45 @@ export function activate(context: vscode.ExtensionContext) {
                     vscode.window.showErrorMessage(
                         "setLanguageClient must be executed with an array of supported file endings as the second argument."
                     );
+                    throw new Error(
+                        "Unsupported usage of of KLighD setLanguageClient. Please refer to the extensions README."
+                    );
                 }
 
                 try {
-                    extension = new KLighDExtension(context, {
+                    const extension = new KLighDExtension(context, {
                         lsClient: client,
                         supportedFileEnding: fileEndings,
                     });
 
-                    console.debug("KLighD extension activated.");
+                    // Uses nanoid (non-secure) to quickly generate a random id with low collision probability
+                    const id = nanoid(16);
+                    extensionMap.set(id, extension);
+
+                    return id;
                 } catch (e) {
                     console.error(e);
+                    throw e;
                 }
+            }
+        )
+    );
+
+    // Command provided for other extensions to add an action handler to their created diagram extension instance.
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            command.addActionHandler,
+            (id: string, actionHandler: ActionHandlerClass) => {
+                const extension = extensionMap.get(id);
+                if (!extension) {
+                    vscode.window.showErrorMessage(
+                        `${command.addActionHandler} command called with unknown reference id: ${id}`
+                    );
+                    return;
+                }
+
+                // TODO: Ensure that it really is an ActionHandlerClass somehow...
+                extension.addActionHandler(actionHandler);
             }
         )
     );

@@ -36,6 +36,14 @@ const extensionConfig = {
                 use: [
                     {
                         loader: "ts-loader",
+                        options: {
+                            onlyCompileBundledFiles: true,
+                            compilerOptions: {
+                                outDir: "dist",
+                                declaration: true,
+                                declarationMap: true,
+                            },
+                        },
                     },
                 ],
             },

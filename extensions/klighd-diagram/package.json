@@ -23,6 +23,10 @@
     "activationEvents": [
         "onCommand:klighd-diagram.setLanguageClient"
     ],
+    "files": [
+        "README.md",
+        "dist"
+    ],
     "main": "./dist/extension.js",
     "contributes": {
         "commands": [
@@ -108,7 +112,7 @@
     },
     "scripts": {
         "prepare": "yarn run clean && yarn run compile",
-        "clean": "rimraf out",
+        "clean": "rimraf dist",
         "vscode:prepublish": "yarn run package",
         "compile": "webpack",
         "watch": "webpack --watch",
@@ -131,6 +135,7 @@
     "dependencies": {
         "@kieler/keith-sprotty": "0.1.0",
         "inversify": "5.0.1",
+        "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",
         "sprotty": "0.9.0",
         "sprotty-vscode": "^0.1.3",

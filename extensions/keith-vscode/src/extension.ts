@@ -20,15 +20,11 @@ import {
 } from "vscode-languageclient";
 import { connect, NetConnectOpts, Socket } from "net";
 import { KeithErrorHandler } from "./error-handler";
+import { PerformActionHandler } from "./perform-action-handler";
+import { command } from "klighd-diagram";
 
 let lsClient: LanguageClient;
 let socket: Socket;
-
-/** Lookup map for available commands by the KLighD extension that this extension uses */
-const klighd = {
-    setLSClient: "klighd-diagram.setLanguageClient",
-    showDiagram: "klighd-diagram.diagram.show",
-};
 
 // this method is called when your extension is activated
 export async function activate(context: vscode.ExtensionContext) {
@@ -48,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext) {
     lsClient.clientOptions.errorHandler = new KeithErrorHandler(defaultErrorHandler);
 
     // Inform the KLighD extension about the LS client and supported file endings
-    vscode.commands.executeCommand(klighd.setLSClient, lsClient, [
+    const refId = await vscode.commands.executeCommand<string>(command.setLanguageClient, lsClient, [
         "sctx",
         "elkt",
         "kgt",
@@ -56,6 +52,7 @@ export async function activate(context: vscode.ExtensionContext) {
         "strl",
         "lus",
     ]);
+    vscode.commands.executeCommand(command.addActionHandler, refId, PerformActionHandler);
 
     console.debug("Starting Language Server...");
     lsClient.start();

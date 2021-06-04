@@ -10,14 +10,12 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { ExtensionContext, Uri, commands, window } from "vscode";
-import {
-    SprottyDiagramIdentifier,
-    SprottyLspVscodeExtension,
-} from "sprotty-vscode/lib/lsp";
-import { SprottyWebview } from "sprotty-vscode";
-import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { KeithFitToScreenAction } from "@kieler/keith-sprotty/lib/actions/actions";
+import { CenterAction, RequestExportSvgAction } from "sprotty";
+import { SprottyWebview } from "sprotty-vscode";
+import { ActionHandler } from "sprotty-vscode/lib/action-handler";
+import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
+import { commands, ExtensionContext, Uri, window } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { diagramType, extensionId } from "./constants";
 import { KLighDWebview } from "./klighd-webview";
@@ -27,6 +25,12 @@ interface KLighDExtensionOptions {
     lsClient: LanguageClient;
     supportedFileEnding: string[];
 }
+
+/**
+ * Type definition for a class that implements an {@link ActionHandler}.
+ * Corresponds to the expected type of `sprotty-vscode` for `SprottyWebview.addActionHandler`.
+ */
+export type ActionHandlerClass = new (webview: SprottyWebview) => ActionHandler;
 
 /**
  * Bootstrap an extension with `sprotty-vscode` that manages a webview which
@@ -47,11 +51,22 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     private static lsClient: LanguageClient;
     private supportedFileEndings: string[];
 
+    /**
+     * Stored action handlers that where registered by another extension.
+     * They are added to the web views created for their languageclient.
+     */
+    private actionHandlers: ActionHandlerClass[];
+
     constructor(context: ExtensionContext, options: KLighDExtensionOptions) {
         KLighDExtension.lsClient = options.lsClient;
 
         super(extensionId, context);
         this.supportedFileEndings = options.supportedFileEnding;
+        this.actionHandlers = [];
+    }
+
+    addActionHandler(handler: ActionHandlerClass) {
+        this.actionHandlers.push(handler);
     }
 
     protected createWebView(identifier: SprottyDiagramIdentifier): SprottyWebview {
@@ -62,6 +77,10 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             scriptUri: this.getExtensionFileUri("dist", "webview.js"),
             singleton: true,
         });
+
+        for (const handler of this.actionHandlers) {
+            webview.addActionHandler(handler);
+        }
 
         return webview;
     }
@@ -118,7 +137,8 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         }
     }
 
-    /** Overwrite register from {@link SprottyLspVscodeExtension} commands to
+    /**
+     * Overwrite register from {@link SprottyLspVscodeExtension} commands to
      * fix zooming problems with diagram.fit when an element is selected.
      *
      * _Note: This can not call the super implementation since VSCode is not able

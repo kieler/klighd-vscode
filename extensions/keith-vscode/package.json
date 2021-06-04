@@ -141,6 +141,7 @@
         "webpack": "^5.19.0"
     },
     "dependencies": {
-        "vscode-languageclient": "^5.2.1"
+        "vscode-languageclient": "^5.2.1",
+        "klighd-diagram": "^0.0.1"
     }
 }

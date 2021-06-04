@@ -29,9 +29,10 @@ export const diagramType = "keith-diagram";
 
 const withPrefix = (name: string) => `${extensionId}.${name}`;
 
-/** Commands that are register by this extension or `sprotty-vscode`.*/
+/** Commands that are registered by this extension or `sprotty-vscode`.*/
 export const command = {
     setLanguageClient: withPrefix("setLanguageClient"),
+    addActionHandler: withPrefix("addActionHandler"),
     // The following commands are registered by `sprotty-vscode`
     diagramOpen: withPrefix("diagram.open"),
     diagramExport: withPrefix("diagram.export"),

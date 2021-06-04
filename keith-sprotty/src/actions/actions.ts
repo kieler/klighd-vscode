@@ -126,6 +126,11 @@ export class PerformActionAction implements Action {
 
     constructor(public readonly actionId: string, public kGraphElementId: string, protected kRenderingId: string, protected revision?: number) {
     }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is PerformActionAction {
+        return action.kind === PerformActionAction.KIND;
+    }
 }
 
 /**
