@@ -811,7 +811,7 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement,
     // Handle expansion and collapse of regions
     const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
     const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false // Only enable, if option is found.
-    if (useSmartZoom && (parent as KNode).containingDepthMapRegion?.expansionState === false) {
+    if (useSmartZoom && (parent as KNode).depthMapRegion?.expansionState === false) {
         return undefined
     }
 
