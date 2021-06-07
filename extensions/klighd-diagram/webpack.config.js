@@ -3,6 +3,7 @@
 "use strict";
 
 const path = require("path");
+const webpack = require("webpack");
 
 // Webpack Documentation: https://webpack.js.org/concepts/
 
@@ -49,6 +50,7 @@ const extensionConfig = {
             },
         ],
     },
+    plugins: [new webpack.WatchIgnorePlugin({ paths: [/\.d\.ts$/] })],
 };
 
 /**
@@ -90,5 +92,7 @@ const webviewConfig = {
             },
         ],
     },
+    plugins: [new webpack.WatchIgnorePlugin({ paths: [/\.d\.ts$/] })],
 };
+
 module.exports = [extensionConfig, webviewConfig];
