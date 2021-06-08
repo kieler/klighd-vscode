@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020 by
+ * Copyright 2019, 2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -706,11 +706,13 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
 }
 
 /**
- * Returns if the given parameter is a SKGraphRendering.
+ * Returns if the given parameter is an SKGraphElement.
  * @param test The potential SKGraphElement.
  */
 export function isSKGraphElement(test: any): test is SKGraphElement {
     return test instanceof SModelElement
-        && (test as any)['areChildrenRendered'] !== undefined
+        && (test as any)['areChildAreaChildrenRendered'] !== undefined
+        && (test as any)['areNonChildAreaChildrenRendered'] !== undefined
+        && (test as any)['opacity'] !== undefined
         && (test as any)['data'] !== undefined
 }
