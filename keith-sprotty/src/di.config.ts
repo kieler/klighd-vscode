@@ -22,6 +22,7 @@ import actionModule from './actions/actions-module';
 import { DISymbol } from './di.symbols';
 import { KeithDiagramServer } from './diagram-server';
 import { KeithHoverMouseListener } from './hover/hover';
+import { PopupModelProvider } from './hover/popup-provider';
 import { KeithModelViewer } from './model-viewer';
 import { RenderOptions } from './options';
 import { optionsModule } from './options/options-module';
@@ -48,6 +49,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
         undoHistoryLimit: 50
     })
     bind(TYPES.MouseListener).to(KeithHoverMouseListener)
+    bind(TYPES.IPopupModelProvider).to(PopupModelProvider)
     rebind<HoverState>(TYPES.HoverState).toDynamicValue(ctx => ({
         mouseOverTimer: undefined,
         mouseOutTimer: undefined,

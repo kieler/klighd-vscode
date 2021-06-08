@@ -33,12 +33,15 @@ import {
     BringToFrontAction,
     ComputedBoundsAction,
     DiagramServer,
+    findElement,
     IActionDispatcher,
     ICommand,
     RequestModelAction,
     RequestPopupModelAction,
     SetModelCommand,
+    SetPopupModelAction,
     SwitchEditModeAction,
+    TYPES,
 } from "sprotty";
 import {
     CheckedImagesAction,
@@ -53,6 +56,7 @@ import {
     StoreImagesAction,
 } from "./actions/actions";
 import { RequestKeithPopupModelAction } from "./hover/hover";
+import { PopupModelProvider } from "./hover/popup-provider";
 import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
 
@@ -64,7 +68,8 @@ import { SetSynthesisAction } from "./syntheses/actions";
 export class KeithDiagramServer extends DiagramServer {
     private _connection: Connection;
 
-    @inject(SessionStorage) protected sessionStorage: SessionStorage;
+    @inject(SessionStorage) private sessionStorage: SessionStorage;
+    @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider;
 
     constructor(@inject(Connection) connection: Connection) {
         super();
@@ -135,11 +140,7 @@ export class KeithDiagramServer extends DiagramServer {
     }
 
     handle(action: Action): void | ICommand | Action {
-        if (
-            action.kind === BringToFrontAction.KIND ||
-            action.kind === SwitchEditModeAction.KIND ||
-            action.kind === RequestPopupModelAction.KIND
-        ) {
+        if (action.kind === BringToFrontAction.KIND || action.kind === SwitchEditModeAction.KIND) {
             // Actions that should be ignored and not further handled by this diagram server
             return;
         }
@@ -148,35 +149,14 @@ export class KeithDiagramServer extends DiagramServer {
             this.handleCheckImages(action as CheckImagesAction);
         } else if (action.kind === StoreImagesAction.KIND) {
             this.handleStoreImages(action as StoreImagesAction);
+        } else if (action.kind === RequestPopupModelAction.KIND) {
+            // Handle RequestPopupModelAction if they are modified RequestKeithPopupModelAction.
+            // Other PopupModel requests are simply ignored.
+            if (action instanceof RequestKeithPopupModelAction)
+                this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction);
         } else {
             super.handle(action);
         }
-
-        // TODO: (cfr) Have a look at what cases can be supported directly by the core.
-        // else if (
-        //   action.kind === PerformActionAction.KIND &&
-        //   (action as PerformActionAction).actionId ===
-        //     "de.cau.cs.kieler.kicool.ui.klighd.internal.model.action.OpenCodeInEditorAction"
-        // ) {
-        //   onDisplayInputModelEmitter.fire(action);
-        // } else if (
-        //   action.kind === PerformActionAction.KIND &&
-        //   (action as PerformActionAction).actionId ===
-        //     "de.cau.cs.kieler.simulation.ui.synthesis.action.StartSimulationAction"
-        // ) {
-        //   startSimulationEmitter.fire(action);
-        // } else if (
-        //   action.kind === PerformActionAction.KIND &&
-        //   (action as PerformActionAction).actionId ===
-        //     "de.cau.cs.kieler.simulation.ui.synthesis.action.AddCoSimulationAction"
-        // ) {
-        //   addCoSimulationEmitter.fire(action);
-        // } else if (
-        //   action.kind === RequestKeithPopupModelAction.KIND &&
-        //   action instanceof RequestKeithPopupModelAction
-        // ) {
-        //   this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction);
-        // }
     }
 
     handleCheckImages(action: CheckImagesAction) {
@@ -215,6 +195,22 @@ export class KeithDiagramServer extends DiagramServer {
      */
     private static imageToSessionStorageString(bundleName: string, imagePath: string) {
         return bundleName + ":" + imagePath;
+    }
+
+    /**
+     * Handles Popup Requests because the action requires the currentRoot,
+     * which is stored as a protected property in the super class.
+     */
+    handleRequestKeithPopupModel(action: RequestKeithPopupModelAction) {
+        const element = findElement(this.currentRoot, action.elementId);
+        if (element) {
+            const model = this.popupModelProvider.getPopupModel(action, element);
+
+            if (model) {
+                this.actionDispatcher.dispatch(new SetPopupModelAction(model));
+            }
+        }
+        return false;
     }
 
     handleComputedBounds(_action: ComputedBoundsAction): boolean {
