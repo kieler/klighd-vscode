@@ -38,14 +38,6 @@
     "download:plugins": "theia download:plugins"
   },
   "dependencies": {
-    "@kieler/keith-diagram": "0.1.0",
-    "@kieler/keith-diagram-options": "0.1.0",
-    "@kieler/keith-icons": "0.1.0",
-    "@kieler/keith-interactive": "0.1.0",
-    "@kieler/keith-kicool": "0.1.0",
-    "@kieler/keith-language": "0.1.0",
-    "@kieler/keith-simulation": "0.1.0",
-    "@kieler/keith-sprotty": "0.1.0",
     "@theia/callhierarchy": "1.4.0",
     "@theia/core": "1.4.0",
     "@theia/editor": "1.4.0",
@@ -91,15 +83,7 @@
       "**/fs-extra": "^4.0.3"
   },
   "workspaces": [
-    "keith-app",
-    "keith-app-electron",
-    "keith-diagram",
-    "keith-diagram-options",
-    "keith-icons",
     "keith-interactive",
-    "keith-language",
-    "keith-kicool",
-    "keith-simulation",
     "keith-sprotty",
     "keith-standalone-view",
     "extensions/keith-vscode",

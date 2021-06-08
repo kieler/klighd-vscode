@@ -3,7 +3,7 @@
         "module": "commonjs",
         "target": "es6",
         "outDir": "out",
-        "lib": ["es6"],
+        "lib": ["es6", "dom"],
         // Decorators are required for the Sprotty container inside the webview
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,

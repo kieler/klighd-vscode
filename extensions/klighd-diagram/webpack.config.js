@@ -50,7 +50,7 @@ const extensionConfig = {
             },
         ],
     },
-    plugins: [new webpack.WatchIgnorePlugin({ paths: [/\.d\.ts$/] })],
+    plugins: [new webpack.WatchIgnorePlugin([/\.d\.ts$/])],
 };
 
 /**
@@ -92,7 +92,7 @@ const webviewConfig = {
             },
         ],
     },
-    plugins: [new webpack.WatchIgnorePlugin({ paths: [/\.d\.ts$/] })],
+    plugins: [new webpack.WatchIgnorePlugin([/\.d\.ts$/])],
 };
 
 module.exports = [extensionConfig, webviewConfig];
