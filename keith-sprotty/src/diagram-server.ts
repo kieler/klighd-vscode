@@ -55,8 +55,10 @@ import {
     RequestTextBoundsCommand,
     StoreImagesAction,
 } from "./actions/actions";
+import { DISymbol } from "./di.symbols";
 import { RequestKeithPopupModelAction } from "./hover/hover";
 import { PopupModelProvider } from "./hover/popup-provider";
+import { PreferencesRegistry } from "./preferences-registry";
 import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
 
@@ -70,6 +72,7 @@ export class KeithDiagramServer extends DiagramServer {
 
     @inject(SessionStorage) private sessionStorage: SessionStorage;
     @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider;
+    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
 
     constructor(@inject(Connection) connection: Connection) {
         super();
@@ -88,7 +91,7 @@ export class KeithDiagramServer extends DiagramServer {
             message.action.kind === SetModelCommand.KIND ||
             message.action.kind === KeithUpdateModelAction.KIND;
 
-        if (wasDiagramModelUpdated) {
+        if (wasDiagramModelUpdated && this.preferencesRegistry.preferences.resizeToFit) {
             this.actionDispatcher.dispatch(new KeithFitToScreenAction(true));
         }
     }

@@ -46,7 +46,7 @@ export class KLighDWebview extends SprottyLspWebview {
         const config = workspace.getConfiguration(extensionId);
         this.dispatch(
             new SetPreferencesAction({
-                resizeBehavior: config.get("resizeBehavior") ?? "fit",
+                resizeToFit: config.get<boolean>("resizeToFit") ?? true,
             })
         );
     }

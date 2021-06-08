@@ -96,15 +96,10 @@
             {
                 "title": "KLighD Diagram",
                 "properties": {
-                    "klighd-diagram.resizeBehavior": {
-                        "description": "Defines how the diagram behaves when its view panel resizes.",
-                        "type": "string",
-                        "default": "fit",
-                        "enum": ["nothing", "fit"],
-                        "enumDescriptions": [
-                            "Do nothing when the diagram view panel resizes.",
-                            "Fits the diagram to the new size when the diagram view panel resizes."
-                        ]
+                    "klighd-diagram.resizeToFit": {
+                        "description": "Resize the diagram to fit the viewport when it is redrawn.",
+                        "type": "boolean",
+                        "default": "true"
                     }
                 }
             }

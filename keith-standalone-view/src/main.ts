@@ -80,7 +80,7 @@ async function initDiagramView(sourceUri: string) {
 function sendUrlSearchParamPreferences(actionDispatcher: IActionDispatcher) {
     actionDispatcher.dispatch(
         new SetPreferencesAction({
-            resizeBehavior: readSearchParam("resizeBehavior") ?? "fit",
+            resizeToFit: readSearchParam("resizeToFit") === "false" ? false : true,
         })
     );
 }

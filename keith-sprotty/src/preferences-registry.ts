@@ -5,10 +5,10 @@ import { Registry } from "./base/registry";
 /** User preferences that change how the diagram view behaves. */
 export interface Preferences {
     /**
-     * Behavior of the diagram when the diagram window resizes. Only the values
-     * `"fit"` and `"nothing"` are considered by `keith-sprotty`.
+     * Resize the diagram to fit the viewport if it is redrawn after a model update
+     * or a viewport resize.
      */
-    resizeBehavior: string;
+    resizeToFit: boolean;
 }
 
 /** Registry that stores user preferences which change the behavior of the diagram view. */
@@ -24,7 +24,7 @@ export class PreferencesRegistry extends Registry {
         super();
         // Initialize default settings
         this._preferences = {
-            resizeBehavior: "fit",
+            resizeToFit: true,
         };
     }
 
@@ -32,11 +32,7 @@ export class PreferencesRegistry extends Registry {
         if (SetPreferencesAction.isThisAction(action)) {
             this._preferences = {
                 ...this._preferences,
-                resizeBehavior: validateWithFallback(
-                    action.preferences.resizeBehavior,
-                    ["fit", "nothing"],
-                    this._preferences.resizeBehavior
-                ),
+                resizeToFit: action.preferences.resizeToFit ?? this._preferences.resizeToFit,
             };
             this.notifyListeners();
         }
@@ -54,13 +50,4 @@ export class SetPreferencesAction implements Action {
     static isThisAction(action: Action): action is SetPreferencesAction {
         return action.kind === SetPreferencesAction.KIND;
     }
-}
-
-function validateWithFallback<T extends string>(
-    value: string | undefined,
-    allowedValues: T[],
-    fallback: T
-): T {
-    const newValue = allowedValues.find((allowedValue) => allowedValue === value);
-    return newValue ?? fallback;
 }

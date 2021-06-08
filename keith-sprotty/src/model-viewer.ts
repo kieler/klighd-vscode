@@ -30,7 +30,7 @@ export class KeithModelViewer extends ModelViewer {
             const newBounds = this.getBoundsInPage(baseDiv as Element);
             this.actiondispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds));
 
-            if (this.preferencesRegistry.preferences.resizeBehavior === "fit")
+            if (this.preferencesRegistry.preferences.resizeToFit)
                 this.actiondispatcher.dispatch(new KeithFitToScreenAction(false));
         }
     };

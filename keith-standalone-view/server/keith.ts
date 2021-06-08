@@ -48,7 +48,7 @@ program
         "--ls_path <path>",
         "Starts a language server for the synthesis located as a jar at the given path."
     )
-    .option("--no-fit", "Do not fit the diagram to the view when the view is resized.")
+    .option("--no-fit", "Do not resize the diagram to fit the viewport when it is redrawn.")
     .action((file, options, program: Command) => {
         // A path to a language can be configured by an environment variable.
         // The lsp_path option for the command takes a higher preference.
@@ -65,9 +65,9 @@ program
 
         // options.fit is true when the --no-fit flag is absent.
         // See https://www.npmjs.com/package/commander#other-option-types-negatable-boolean-and-booleanvalue
-        const fitOnResize = options.fit;
+        const resizeToFit = options.fit;
 
-        const preferences = `${!fitOnResize ? "&resizeBehavior=nothing" : ""}`;
+        const preferences = `${!resizeToFit ? "&resizeToFit=false" : ""}`;
 
         const fileUrl = pathToFileURL(file);
         const server = createServer({ lsPort, lsPath });
