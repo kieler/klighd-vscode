@@ -14,3 +14,8 @@
 @import "./options.css";
 @import "./sidebar.css";
 @import "sprotty/css/sprotty.css";
+
+.sprotty {
+  /* Disable text selection in diagrams and sidebar panels. */
+  user-select: none;
+}
