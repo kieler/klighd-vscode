@@ -27,14 +27,14 @@ export class KeithErrorHandler implements ErrorHandler {
     constructor(private defaultHandler: ErrorHandler) {}
 
     error(error: Error, message: Message, count: number): ErrorAction {
-        window.showErrorMessage("Connection to Kieler Language Server produced an error!");
+        window.showErrorMessage("Connection to KIELER Language Server produced an error!");
         console.error(error);
 
         return this.defaultHandler.error(error, message, count);
     }
 
     closed(): CloseAction {
-        window.showErrorMessage("Connection to Kieler Language Server got closed!");
+        window.showErrorMessage("Connection to KIELER Language Server got closed!");
 
         return this.defaultHandler.closed();
     }

@@ -1,0 +1,2 @@
+Place your the language server jar for each plattform in this folder. They
+will be picked up by the extension.

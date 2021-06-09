@@ -44,14 +44,11 @@ export async function activate(context: vscode.ExtensionContext) {
     lsClient.clientOptions.errorHandler = new KeithErrorHandler(defaultErrorHandler);
 
     // Inform the KLighD extension about the LS client and supported file endings
-    const refId = await vscode.commands.executeCommand<string>(command.setLanguageClient, lsClient, [
-        "sctx",
-        "elkt",
-        "kgt",
-        "kviz",
-        "strl",
-        "lus",
-    ]);
+    const refId = await vscode.commands.executeCommand<string>(
+        command.setLanguageClient,
+        lsClient,
+        ["sctx", "elkt", "kgt", "kviz", "strl", "lus"]
+    );
     vscode.commands.executeCommand(command.addActionHandler, refId, PerformActionHandler);
 
     console.debug("Starting Language Server...");
@@ -71,6 +68,12 @@ export function deactivate() {
     });
 }
 
+/**
+ * Depending on the launch configuration, returns {@link ServerOptions} that either
+ * connect to a socket or start the LS as a process. It uses a socket if the
+ * environment variable `KEITH_LS_PORT` is present. Otherwise it runs the jar located
+ * at `server/kieler-language-server.{platform}.jar`.
+ */
 function createServerOptions(context: vscode.ExtensionContext): ServerOptions {
     // Connect to language server via socket if a port is specified as an env variable
     if (typeof process.env.KEITH_LS_PORT !== "undefined") {
@@ -89,11 +92,27 @@ function createServerOptions(context: vscode.ExtensionContext): ServerOptions {
         };
     } else {
         console.log("Spawning to language server as a process.");
-        const lsPath = context.asAbsolutePath("server/kieler-language-server.linux.jar");
+        const lsPath = context.asAbsolutePath(
+            `server/kieler-language-server.${getPlattformType()}.jar`
+        );
 
         return {
             run: { command: "java", args: ["-jar", lsPath] },
             debug: { command: "java", args: ["-jar", lsPath] },
         };
+    }
+}
+
+/** Returns the codename used by KIELER for current OS plattform. */
+function getPlattformType(): "linux" | "win" | "osx" {
+    switch (process.platform) {
+        case "linux":
+            return "linux";
+        case "win32":
+            return "win";
+        case "darwin":
+            return "osx";
+        default:
+            throw new Error(`Unknown plattform "${process.platform}".`);
     }
 }
