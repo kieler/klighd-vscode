@@ -22,7 +22,7 @@ import { ISidebarPanel } from "./sidebar-panel";
  * Simply registry that stores all sidebar panels that are resolved by the DI container.
  * At most one panel is considered active. The state (which panel is active) can
  * be changed with an {@link ToggleSidebarPanelAction}.
- * 
+ *
  * Other components can subscribe to this registry to be informed about state changes.
  */
 @injectable()
@@ -58,8 +58,12 @@ export class SidebarPanelRegistry extends Registry {
         }
     }
 
-    get allPanel(): ISidebarPanel[] {
-        return Array.from(this._panels.values());
+    get allPanels(): ISidebarPanel[] {
+        // Sort the panels before they are returned. There won't be any considerable
+        // amount of panels which could lead to performance concerns. If sorting becomes
+        // an issue, it could be moved to the constructor to only be applied once. This
+        // would only work as long as it is not possible to add panels dynamically.
+        return Array.from(this._panels.values()).sort((p1, p2) => p1.position - p2.position);
     }
 
     get currentPanel(): ISidebarPanel | null {

@@ -45,7 +45,7 @@ export class Sidebar extends AbstractUIExtension {
         this.sidebarPanelRegistry.onChange(() => this.update());
 
         // Update the panel if the current panel requests an update
-        this.sidebarPanelRegistry.allPanel.forEach((panel) => {
+        this.sidebarPanelRegistry.allPanels.forEach((panel) => {
             panel.onUpdate(() => {
                 if (panel.id === this.sidebarPanelRegistry.currentPanelID) this.update();
             });
@@ -124,7 +124,7 @@ export class Sidebar extends AbstractUIExtension {
         const toggleContainer = document.createElement("div");
         toggleContainer.classList.add("sidebar__toggle-container");
 
-        const panelButtons = this.sidebarPanelRegistry.allPanel.map((panel) => {
+        const panelButtons = this.sidebarPanelRegistry.allPanels.map((panel) => {
             const button = document.createElement("button");
             button.classList.add("sidebar__toggle-button");
             button.setAttribute("title", panel.title);

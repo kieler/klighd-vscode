@@ -33,6 +33,13 @@ export interface ISidebarPanel {
      */
     readonly icon: string;
 
+    /**
+     * A sidebar panel can provide a position for its trigger in the trigger stack.
+     * The trigger at the top has the smallest postion. If two panels specify the
+     * same position, the panel that is resolved first by the DI container is placed on top.
+     */
+    readonly position: number;
+
     /** Registers a callback that is called when this panel should be re-rendered. */
     onUpdate(callback: () => void): void;
 
@@ -53,10 +60,12 @@ export interface ISidebarPanel {
 @injectable()
 export abstract class SidebarPanel implements ISidebarPanel {
     private _updateCallbacks: (() => void)[] = [];
-
+    
     abstract get id(): string;
     abstract get title(): string;
     abstract get icon(): string;
+
+    readonly position: number = 0;
 
     onUpdate(callback: () => void): void {
         this._updateCallbacks.push(callback);
