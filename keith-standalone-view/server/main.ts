@@ -20,7 +20,7 @@ import { getArgValue, parseIntOrUndefined } from "./helpers";
 
 // IIFE to start the server and listen for requests
 (async function main() {
-    const defaultLSPath = join(__dirname, "../kieler-language-server.linux.jar");
+    const defaultLSPath = join(__dirname, `../kieler-language-server.${getPlattformType()}.jar`);
 
     const lsPort = parseIntOrUndefined(getArgValue("ls_port"));
     const lsPath = getArgValue("ls_path") ?? defaultLSPath;
@@ -33,3 +33,17 @@ import { getArgValue, parseIntOrUndefined } from "./helpers";
         process.exit(1);
     }
 })();
+
+/** Returns the codename used by KIELER for current OS plattform. */
+function getPlattformType(): "linux" | "win" | "osx" {
+    switch (process.platform) {
+        case "linux":
+            return "linux";
+        case "win32":
+            return "win";
+        case "darwin":
+            return "osx";
+        default:
+            throw new Error(`Unknown plattform "${process.platform}".`);
+    }
+}
