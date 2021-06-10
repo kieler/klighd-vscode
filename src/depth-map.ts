@@ -437,6 +437,7 @@ export class Region {
         this.elements = []
         this.children = []
         this.hasTitle = false
+        this.expansionState = true
     }
 
     /** 
