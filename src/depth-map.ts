@@ -156,8 +156,8 @@ export class DepthMap {
                 && ((child as KNode).data[0] as KContainerRendering).children[0]) {
                 let nextRegion = new Region(child as KNode)
                 nextRegion.absoluteBounds = {
-                    x: node.bounds.x + (child as KNode).bounds.x,
-                    y: node.bounds.y + (child as KNode).bounds.y,
+                    x: region.absoluteBounds.x + (child as KNode).bounds.x,
+                    y: region.absoluteBounds.y + (child as KNode).bounds.y,
                     width: (child as KNode).bounds.width,
                     height: (child as KNode).bounds.height
                 }
@@ -412,7 +412,7 @@ export class Region {
     /** The rectangle of the child area in which the region lies. */
     boundingRectangle: KNode
     /** Gained using browser position and rescaling and are therefore not perfect. */
-    absoluteBounds?: Bounds
+    absoluteBounds: Bounds
     /** Determines if the region is expanded (true) or collapsed (false). */
     expansionState: boolean
     /** The immediate parent region of this region. */
