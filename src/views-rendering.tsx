@@ -45,21 +45,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
     // remember, that this parent's children are now already rendered
     parent.areChildAreaChildrenRendered = true
 
-    // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(parent, rendering.styles, propagatedStyles)
-
-    // Determine the bounds of the rendering first and where it has to be placed.
-    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
-    if (boundsAndTransformation === undefined) {
-        // If no bounds are found, the rendering can not be drawn.
-        return renderError(rendering)
-    }
-
-    const gAttrs: SVGAttributes<SVGGElement> = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
-    }
-
-    let element = <g id={rendering.renderingId} {...gAttrs}>
+    let element = <g id={rendering.renderingId}>
         {context.renderChildAreaChildren(parent)}
     </g>
 
