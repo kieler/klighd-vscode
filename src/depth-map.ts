@@ -377,10 +377,11 @@ export class DepthMap {
     isVisible(region: Region, viewport: Viewport): boolean {
         if (region.absoluteBounds) {
             const canvasBounds = this.rootElement.canvasBounds
-            return (region.absoluteBounds.x - viewport.scroll.x) + region.absoluteBounds.width >= viewport.scroll.x - this.absoluteVisibilityBuffer
-                && (region.absoluteBounds.x - viewport.scroll.x) <= viewport.scroll.x + (canvasBounds.width / viewport.zoom) + this.absoluteVisibilityBuffer
-                && (region.absoluteBounds.y - viewport.scroll.y) + region.absoluteBounds.height >= viewport.scroll.y - this.absoluteVisibilityBuffer
-                && (region.absoluteBounds.y - viewport.scroll.y) <= viewport.scroll.y + (canvasBounds.height / viewport.zoom) + this.absoluteVisibilityBuffer
+
+            return region.absoluteBounds.x + region.absoluteBounds.width - viewport.scroll.x >= -this.absoluteVisibilityBuffer
+                && region.absoluteBounds.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom) + this.absoluteVisibilityBuffer
+                && region.absoluteBounds.y + region.absoluteBounds.height - viewport.scroll.y >= -this.absoluteVisibilityBuffer
+                && region.absoluteBounds.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom) + this.absoluteVisibilityBuffer
         } else {
             // Better to assume it is visible, if information are not sufficient
             return true
