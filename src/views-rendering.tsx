@@ -79,32 +79,32 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     // Use position of rendering svg in browser to determine actual position of regions and child areas.
     // Determines whether or not this rectangular shape has a region inside.
-    let rectRegion = context.depthMap.getRegion((parent as KNode).id)
-    if (rectRegion && !rectRegion.absoluteBounds && context.depthMap.isCompleteRendering) {
-        // Find corresponding svg of rendering and the diagram
-        const svgElement = document.getElementById(rendering.renderingId);
-        const diagram = document.getElementById("keith-diagram_sprotty")
-        if (svgElement && diagram) {
-            // Get bounds of rendering and diagram to get bounds independent of diagram position in browser.
-            const boundsDOM = svgElement.getBoundingClientRect()
-            const boundsDiagram = diagram.getBoundingClientRect()
-            // Rescale using zoom and translate with viewport position.
-            // This introduces some positional error.
-            let errorX = Math.abs(rectRegion.boundingRectangle.bounds.width - boundsDOM.width / context.viewport.zoom) / context.viewport.zoom
-            let errorY = Math.abs(rectRegion.boundingRectangle.bounds.height - boundsDOM.height / context.viewport.zoom) / context.viewport.zoom
-            const error = Math.max(errorX, errorY)
-            // Only save positions, when error is below threshold.
-            if (error < context.depthMap.absoluteVisibilityBuffer) {
-                const bounds = {
-                    x: (boundsDOM.x - boundsDiagram.x) / context.viewport.zoom + context.viewport.scroll.x,
-                    y: (boundsDOM.y - boundsDiagram.y) / context.viewport.zoom + context.viewport.scroll.y,
-                    width: rectRegion.boundingRectangle.bounds.width,
-                    height: rectRegion.boundingRectangle.bounds.height
-                }
-                rectRegion.absoluteBounds = bounds
-            }
-        }
-    }
+    // let rectRegion = context.depthMap.getRegion((parent as KNode).id)
+    // if (rectRegion && !rectRegion.absoluteBounds && context.depthMap.isCompleteRendering) {
+    //     // Find corresponding svg of rendering and the diagram
+    //     const svgElement = document.getElementById(rendering.renderingId);
+    //     const diagram = document.getElementById("keith-diagram_sprotty")
+    //     if (svgElement && diagram) {
+    //         // Get bounds of rendering and diagram to get bounds independent of diagram position in browser.
+    //         const boundsDOM = svgElement.getBoundingClientRect()
+    //         const boundsDiagram = diagram.getBoundingClientRect()
+    //         // Rescale using zoom and translate with viewport position.
+    //         // This introduces some positional error.
+    //         let errorX = Math.abs(rectRegion.boundingRectangle.bounds.width - boundsDOM.width / context.viewport.zoom) / context.viewport.zoom
+    //         let errorY = Math.abs(rectRegion.boundingRectangle.bounds.height - boundsDOM.height / context.viewport.zoom) / context.viewport.zoom
+    //         const error = Math.max(errorX, errorY)
+    //         // Only save positions, when error is below threshold.
+    //         if (error < context.depthMap.absoluteVisibilityBuffer) {
+    //             const bounds = {
+    //                 x: (boundsDOM.x - boundsDiagram.x) / context.viewport.zoom + context.viewport.scroll.x,
+    //                 y: (boundsDOM.y - boundsDiagram.y) / context.viewport.zoom + context.viewport.scroll.y,
+    //                 width: rectRegion.boundingRectangle.bounds.width,
+    //                 height: rectRegion.boundingRectangle.bounds.height
+    //             }
+    //             rectRegion.absoluteBounds = bounds
+    //         }
+    //     }
+    // }
 
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles

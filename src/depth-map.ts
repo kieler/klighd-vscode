@@ -132,6 +132,7 @@ export class DepthMap {
         for (let root_child of model_root.children) {
             let node = root_child as KNode;
             let region = new Region(node)
+            region.absoluteBounds = node.bounds
             this.rootRegions.push(region)
             this.addRegionToMap(region)
             this.initHelper(node, 0, region)
@@ -154,6 +155,12 @@ export class DepthMap {
             if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
                 && ((child as KNode).data[0] as KContainerRendering).children[0]) {
                 let nextRegion = new Region(child as KNode)
+                nextRegion.absoluteBounds = {
+                    x: node.bounds.x + (child as KNode).bounds.x,
+                    y: node.bounds.y + (child as KNode).bounds.y,
+                    width: (child as KNode).bounds.width,
+                    height: (child as KNode).bounds.height
+                }
                 nextRegion.parent = region
                 region.children.push(nextRegion)
                 // In the models parent child structure a child can occur multiple times.
@@ -370,10 +377,10 @@ export class DepthMap {
     isVisible(region: Region, viewport: Viewport): boolean {
         if (region.absoluteBounds) {
             const canvasBounds = this.rootElement.canvasBounds
-            return region.absoluteBounds.x + region.absoluteBounds.width >= viewport.scroll.x - this.absoluteVisibilityBuffer
-                && region.absoluteBounds.x <= viewport.scroll.x + (canvasBounds.width / viewport.zoom) + this.absoluteVisibilityBuffer
-                && region.absoluteBounds.y + region.absoluteBounds.height >= viewport.scroll.y - this.absoluteVisibilityBuffer
-                && region.absoluteBounds.y <= viewport.scroll.y + (canvasBounds.height / viewport.zoom) + this.absoluteVisibilityBuffer
+            return (region.absoluteBounds.x - viewport.scroll.x) + region.absoluteBounds.width >= viewport.scroll.x - this.absoluteVisibilityBuffer
+                && (region.absoluteBounds.x - viewport.scroll.x) <= viewport.scroll.x + (canvasBounds.width / viewport.zoom) + this.absoluteVisibilityBuffer
+                && (region.absoluteBounds.y - viewport.scroll.y) + region.absoluteBounds.height >= viewport.scroll.y - this.absoluteVisibilityBuffer
+                && (region.absoluteBounds.y - viewport.scroll.y) <= viewport.scroll.y + (canvasBounds.height / viewport.zoom) + this.absoluteVisibilityBuffer
         } else {
             // Better to assume it is visible, if information are not sufficient
             return true
