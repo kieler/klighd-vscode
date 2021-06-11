@@ -1,9 +1,10 @@
 # KLighD Diagrams
 
-<figure style="text-align: center;">
-<img style="width: 75%;" src="./media/banner.png" alt="Example with a visualized SCChart"/>
+<!-- TODO: Images must come from an https source. They are not packages by vsce. This should be resolved, when this extension is hosted on GitHub. Rename "imagine" to "img" when ready. -->
+<!-- <figure style="text-align: center;">
+<imagine style="width: 75%;" src="./media/banner.png" alt="Example with a visualized SCChart"/>
 <figcaption>Example of the KLighD diagram extension used to visualize a SCChart.</figcaption>
-</figure>
+</figure> -->
 
 ## Features
 
@@ -93,8 +94,8 @@ export async function activate(context: vscode.ExtensionContext) {
 The KLighD diagram extension provides the option to intercept diagram actions that are send to the
 language server.
 
-_TODO: Write about action handlers. The API is currently quite complex as it simply relies on Sprotty
-functionality and might be further abstracted before it is finalized._
+_TODO: Write about action handlers. The API is currently quite complex as it simply relies on
+Sprotty functionality and might be further abstracted before it is finalized._
 
 ## Known Issues
 
