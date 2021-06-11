@@ -26,6 +26,8 @@ import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { CenterIcon, ExportIcon, FitIcon, LayoutIcon, RefreshIcon } from "./components/icons";
 import { RenderOptionsRegistry } from "./render-options-registry";
 import { OptionsRenderer } from "./options-renderer";
+import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
+import { CheckOption } from "./components/option-inputs";
 
 type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export";
 
@@ -36,6 +38,7 @@ export class GeneralPanel extends SidebarPanel {
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
+    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
@@ -112,6 +115,12 @@ export class GeneralPanel extends SidebarPanel {
                 </div>
                 <div classNames="options__section">
                     <h5 classNames="options__heading">Preferences</h5>
+                    <CheckOption
+                        id="resizeToFit"
+                        name="Resize to fit"
+                        value={this.preferencesRegistry.preferences.resizeToFit}
+                        onChange={this.handlePreferenceChange.bind(this, "resizeToFit")}
+                    />
                 </div>
             </div>
         );
@@ -119,6 +128,10 @@ export class GeneralPanel extends SidebarPanel {
 
     private handleSynthesisPickerChange(newId: string) {
         this.actionDispatcher.dispatch(new SetSynthesisAction(newId));
+    }
+
+    private handlePreferenceChange(key: string, newValue: any) {
+        this.actionDispatcher.dispatch(new SetPreferencesAction({ [key]: newValue }));
     }
 
     private handleActionClick(type: PossibleAction) {
