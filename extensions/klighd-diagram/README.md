@@ -1,8 +1,13 @@
 # KLighD Diagrams
 
-This extension visualizes generated KLighD diagrams for other extensions.
+<figure style="text-align: center;">
+<img style="width: 75%;" src="./media/banner.png" alt="Example with a visualized SCChart"/>
+<figcaption>Example of the KLighD diagram extension used to visualize a SCChart.</figcaption>
+</figure>
 
 ## Features
+
+This extension visualizes generated KLighD diagrams for other extensions. Some notable features are:
 
 -   Open a diagram for a file in your language
 -   Export diagrams as SVG
@@ -83,4 +88,16 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 ```
 
+### Advanced
+
+The KLighD diagram extension provides the option to intercept diagram actions that are send to the
+language server.
+
+_TODO: Write about action handlers. The API is currently quite complex as it simply relies on Sprotty
+functionality and might be further abstracted before it is finalized._
+
 ## Known Issues
+
+-   Currently, only at most one extension that depends on `kieler.klighd-diagram` can be activated
+    at the same time. This causes problems if a workspace opens multiple files that are handled by
+    different KLighD dependent extensions.
