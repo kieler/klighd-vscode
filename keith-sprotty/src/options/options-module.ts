@@ -19,20 +19,31 @@ import {
     PerformOptionsActionAction,
     SetSynthesisOptionsAction,
     SetLayoutOptionsAction,
+    SetRenderOptionAction,
 } from "./actions";
 import { OptionsPanel } from "./options-panel";
 import { OptionsRegistry } from "./options-registry";
 import { OptionsRenderer } from "./options-renderer";
+import { GeneralPanel } from "./general-panel";
+import { RenderOptionsRegistry } from "./render-options-registry";
 
 export const optionsModule = new ContainerModule((bind, _, isBound) => {
-    bind(DISymbol.OptionsPanel)
-        .to(OptionsPanel)
+    bind(OptionsPanel)
+        .toSelf()
         .inSingletonScope();
-    bind(DISymbol.SidebarPanel).toService(DISymbol.OptionsPanel);
+    bind(DISymbol.SidebarPanel).toService(OptionsPanel);
+
+    bind(GeneralPanel)
+        .toSelf()
+        .inSingletonScope();
+    bind(DISymbol.SidebarPanel).toService(GeneralPanel);
 
     bind(DISymbol.OptionsRenderer).to(OptionsRenderer);
     bind(DISymbol.OptionsRegistry)
         .to(OptionsRegistry)
+        .inSingletonScope();
+    bind(DISymbol.RenderOptionsRegistry)
+        .to(RenderOptionsRegistry)
         .inSingletonScope();
 
     const ctx = { bind, isBound };
@@ -40,4 +51,5 @@ export const optionsModule = new ContainerModule((bind, _, isBound) => {
     configureActionHandler(ctx, PerformOptionsActionAction.KIND, DISymbol.OptionsRegistry);
     configureActionHandler(ctx, SetSynthesisOptionsAction.KIND, DISymbol.OptionsRegistry);
     configureActionHandler(ctx, SetLayoutOptionsAction.KIND, DISymbol.OptionsRegistry);
+    configureActionHandler(ctx, SetRenderOptionAction.KIND, DISymbol.RenderOptionsRegistry);
 });

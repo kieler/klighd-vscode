@@ -54,10 +54,7 @@ export class PerformOptionsActionAction implements Action {
     }
 }
 
-/**
- * Triggers a action from the options that should be performed.
- * Do not confuse this with PerformActionAction!
- */
+/** Change the value of one or multiple synthesis options. */
 export class SetSynthesisOptionsAction implements Action {
     static readonly KIND = "setSynthesisOptions";
     readonly kind = SetSynthesisOptionsAction.KIND;
@@ -70,10 +67,7 @@ export class SetSynthesisOptionsAction implements Action {
     }
 }
 
-/**
- * Triggers a action from the options that should be performed.
- * Do not confuse this with PerformActionAction!
- */
+/** Change the value of one or multiple layout options. */
 export class SetLayoutOptionsAction implements Action {
     static readonly KIND = "setLayoutOptions";
     readonly kind = SetLayoutOptionsAction.KIND;
@@ -83,5 +77,18 @@ export class SetLayoutOptionsAction implements Action {
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetLayoutOptionsAction {
         return action.kind === SetLayoutOptionsAction.KIND;
+    }
+}
+
+/** Change the value of one or multiple layout options. */
+export class SetRenderOptionAction implements Action {
+    static readonly KIND = "setRenderOption";
+    readonly kind = SetRenderOptionAction.KIND;
+
+    constructor(readonly id: string, readonly value: any) {}
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetRenderOptionAction {
+        return action.kind === SetRenderOptionAction.KIND;
     }
 }

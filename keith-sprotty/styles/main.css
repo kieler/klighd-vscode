@@ -11,6 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+@import "./theme.css";
 @import "./options.css";
 @import "./sidebar.css";
 @import "sprotty/css/sprotty.css";
@@ -18,4 +19,9 @@
 .sprotty {
   /* Disable text selection in diagrams and sidebar panels. */
   user-select: none;
+}
+
+/* Resets extra button height that is caused by an svg child */
+button > svg {
+  vertical-align: bottom;
 }

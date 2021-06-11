@@ -134,24 +134,3 @@ export function CategoryOption(props: CategoryOptionProps, children: VNode[]): V
         </details>
     );
 }
-
-interface SynthesisPickerProps {
-    currentId: string;
-    syntheses: { displayName: string; id: string }[];
-    onChange: OptionChangeHandler<string>;
-}
-
-export function SynthesisPicker(props: SynthesisPickerProps): VNode {
-    return (
-        <div classNames="options__input-container">
-            <label htmlFor="synthesisSelect">Change diagram synthesis</label>
-            <select id="synthesisSelect" on-change={(e: any) => props.onChange(e.target.value)}>
-                {props.syntheses.map((synthesis) => (
-                    <option value={synthesis.id} selected={synthesis.id === props.currentId}>
-                        {synthesis.displayName}
-                    </option>
-                ))}
-            </select>
-        </div>
-    );
-}

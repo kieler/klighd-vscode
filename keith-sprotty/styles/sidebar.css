@@ -87,11 +87,6 @@
     --background: hsl(0, 0%, 88%);
 }
 
-/* Resets extra button height that is caused by an svg child */
-.sidebar__toggle-button > svg {
-    vertical-align: bottom;
-}
-
 .sidebar__toggle-button--active {
     --background: hsl(0, 0%, 81%);
 }

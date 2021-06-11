@@ -19,11 +19,12 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/keith-intera
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
-import { RenderOptions, ShowConstraintOption } from './options';
+import { RenderOptionsRegistry, ShowConstraintOption } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
+import { DISymbol } from './di.symbols';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -45,7 +46,7 @@ export class SKGraphView extends SGraphView {
 export class KNodeView implements IView {
 
     @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
-    @inject(RenderOptions) protected rOptions: RenderOptions
+    @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
     @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
     render(node: SKNode, context: RenderingContext): VNode {
@@ -79,7 +80,7 @@ export class KNodeView implements IView {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
 
-            if (this.rOptions.get(ShowConstraintOption.ID) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
+            if (this.renderOptionsRegistry.getValueForId(ShowConstraintOption.ID) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }

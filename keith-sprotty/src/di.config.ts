@@ -24,7 +24,6 @@ import { KeithDiagramServer } from './diagram-server';
 import { KeithHoverMouseListener } from './hover/hover';
 import { PopupModelProvider } from './hover/popup-provider';
 import { KeithModelViewer } from './model-viewer';
-import { RenderOptions } from './options';
 import { optionsModule } from './options/options-module';
 import { PreferencesRegistry, SetPreferencesAction } from './preferences-registry';
 import { sidebarModule } from './sidebar';
@@ -74,7 +73,6 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     configureModelElement(context, EDGE_TYPE, SKEdge, KEdgeView)
     configureModelElement(context, PORT_TYPE, SKPort, KPortView)
     configureModelElement(context, LABEL_TYPE, SKLabel, KLabelView)
-    bind(RenderOptions).toSelf().inSingletonScope()
 
     bind(DISymbol.SynthesesRegistry).to(SynthesesRegistry).inSingletonScope();
     configureActionHandler(context, SetSynthesesAction.KIND, DISymbol.SynthesesRegistry);

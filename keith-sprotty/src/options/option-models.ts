@@ -11,7 +11,26 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { RenderOption } from '../options';
+/** Base option that can be rendered as an ui input*/
+export interface RenderOption {
+    id: string;
+    name: string;
+    type: TransformationOptionType;
+    initialValue: any;
+    currentValue: any;
+}
+
+/**
+ * The different types a SynthesisOption can have.
+ */
+export enum TransformationOptionType {
+    CHECK = 0,
+    CHOICE = 1,
+    RANGE = 2,
+    TEXT = 3,
+    SEPARATOR = 4,
+    CATEGORY = 5,
+}
 
  /**
   * Holds an option defined by the diagram synthesis.

@@ -15,18 +15,20 @@
 import { html } from "snabbdom-jsx";
 import { VNode } from "snabbdom/vnode";
 import { inject, injectable } from "inversify";
-import { RenderOption, TransformationOptionType } from "../options";
 import {
     DisplayedActionData,
     LayoutOptionUIData,
     SynthesisOption,
     RangeOption as RangeOptionData,
     Type,
+    RenderOption,
+    TransformationOptionType
 } from "./option-models";
 import { IActionDispatcher, TYPES } from "sprotty";
 import {
     PerformOptionsActionAction,
     SetLayoutOptionsAction,
+    SetRenderOptionAction,
     SetSynthesisOptionsAction,
 } from "./actions";
 import {
@@ -36,7 +38,7 @@ import {
     TextOption,
     SeparatorOption,
     CategoryOption,
-} from "./options-components";
+} from "./components/option-inputs";
 
 // Note: Skipping a JSX children by rendering null or undefined for that child does not work the same way
 // as it works in React. It will render the literals as words. To skip a child return an empty string "".
@@ -44,7 +46,6 @@ import {
 
 interface AllOptions {
     actions: DisplayedActionData[];
-    renderOptions: RenderOption[];
     layoutOptions: LayoutOptionUIData[];
     synthesisOptions: SynthesisOption[];
 }
@@ -53,14 +54,11 @@ interface AllOptions {
 export class OptionsRenderer {
     @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher;
 
-    render(options: AllOptions): VNode {
-        console.groupCollapsed("Rendering diagram options:");
-        console.log(options.actions);
-        console.log(options.synthesisOptions);
-        console.log(options.renderOptions);
-        console.log(options.layoutOptions);
-        console.groupEnd();
-
+    /**
+     * Renders all diagram options that are provided by the server. This includes
+     * the synthesis and layout options as well as performable actions.
+     */
+    renderServerOptions(options: AllOptions): VNode {
         return (
             <div classNames="options">
                 {options.actions.length === 0 ? (
@@ -77,14 +75,6 @@ export class OptionsRenderer {
                     <div classNames="options__section">
                         <h5 classNames="options__heading">Synthesis Options</h5>
                         {this.renderSynthesisOptions(options.synthesisOptions, null)}
-                    </div>
-                )}
-                {options.renderOptions.length === 0 ? (
-                    ""
-                ) : (
-                    <div classNames="options__section">
-                        <h5 classNames="options__heading">Render Options</h5>
-                        {this.renderRenderOptions(options.renderOptions)}
                     </div>
                 )}
                 {options.layoutOptions.length === 0 ? (
@@ -197,34 +187,9 @@ export class OptionsRenderer {
     }
 
     private handleSynthesisOptionChange(option: SynthesisOption, newValue: any) {
-        console.log("Synthesis Option toggled", option, newValue);
         this.actionDispatcher.dispatch(
             new SetSynthesisOptionsAction([{ ...option, currentValue: newValue }])
         );
-    }
-
-    private renderRenderOptions(renderOptions: RenderOption[]): (VNode | "")[] | "" {
-        return renderOptions.map((option) => {
-            switch (option.type) {
-                case TransformationOptionType.CHECK:
-                    return (
-                        <CheckOption
-                            key={option.id}
-                            id={option.id}
-                            name={option.name}
-                            value={option.currentValue}
-                            onChange={this.handleRenderOptionChange.bind(this, option)}
-                        />
-                    );
-                default:
-                    console.error("Unsupported option type for option:", option.name);
-                    return "";
-            }
-        });
-    }
-
-    private handleRenderOptionChange(option: RenderOption, newValue: any) {
-        console.log("Render Option toggled", option, newValue);
     }
 
     private renderLayoutOptions(layoutOptions: LayoutOptionUIData[]): (VNode | "")[] | "" {
@@ -274,9 +239,35 @@ export class OptionsRenderer {
     }
 
     private handleLayoutOptionChange(option: LayoutOptionUIData, newValue: any) {
-        console.log("Layout Option toggled", option, newValue);
         this.actionDispatcher.dispatch(
             new SetLayoutOptionsAction([{ optionId: option.optionId, value: newValue }])
         );
+    }
+
+    /** Renders render options that are stored in the client. An example would be "show constraints" */
+    renderRenderOptions(renderOptions: RenderOption[]): (VNode | "")[] | "" {
+        if (renderOptions.length === 0) return "";
+
+        return renderOptions.map((option) => {
+            switch (option.type) {
+                case TransformationOptionType.CHECK:
+                    return (
+                        <CheckOption
+                            key={option.id}
+                            id={option.id}
+                            name={option.name}
+                            value={option.currentValue}
+                            onChange={this.handleRenderOptionChange.bind(this, option)}
+                        />
+                    );
+                default:
+                    console.error("Unsupported option type for option:", option.name);
+                    return "";
+            }
+        });
+    }
+
+    private handleRenderOptionChange(option: RenderOption, newValue: any) {
+        this.actionDispatcher.dispatch(new SetRenderOptionAction(option.id, newValue));
     }
 }

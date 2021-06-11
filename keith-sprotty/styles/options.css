@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
- .options__section {
+.options__section {
     display: flex;
     flex-direction: column;
     margin-top: 12px;
@@ -22,6 +22,40 @@
     font-size: 1rem;
     font-weight: 700;
     line-height: 1.5;
+}
+
+/*********************************** BUTTON ***********************************/
+
+/* These styles would normally be applied as attributes to feather icons but
+snabbdom-jsx for svg does not add them to the created html elements. */
+.options__icon {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.options__button-group {
+    display: flex;
+    gap: 4px;
+}
+
+.options__icon-button {
+    box-sizing: border-box;
+    appearance: none;
+    border: none;
+    border-radius: var(--default-border-radius);
+    padding: 4px;
+    
+    color: inherit;
+    background: transparent;
+    transition: background var(--transition);
+    cursor: pointer;
+}
+
+.options__icon-button:hover {
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .options__input-container {
