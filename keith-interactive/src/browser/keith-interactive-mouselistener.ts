@@ -71,11 +71,6 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
     }
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
-        // TODO: This is the only situation, where core package reaches into Theia just to save an editor.
-        // This makes it impossible to use KEITH in an standalone browser view.
-        // if (this.dserver.connector.editorManager.currentEditor && this.dserver.connector.editorManager.currentEditor.saveable.dirty) {
-        //     this.dserver.connector.editorManager.currentEditor.saveable.save();
-        // }
         let targetNode = target
         if (target instanceof SLabel && target.parent instanceof SNode) {
             // nodes should be movable when the user clicks on the label
@@ -141,7 +136,15 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 // Algorithm not supported
             }
             this.target = undefined
-            return result
+
+            // Appends a RefreshDiagramAction to the result. This fixes a bug
+            // where the interaction is only applied after the dragged not is
+            // clicked again, causing the second if case in this method to execute. 
+            if(result.some(action => action.kind === RefreshDiagramAction.KIND)) {
+                return result
+            } else {
+                return result.concat([new RefreshDiagramAction()])
+            }
         } else if (this.target) {
             this.target.selected = false
             const result = super.mouseUp(this.target, event).concat([new RefreshDiagramAction()]);
