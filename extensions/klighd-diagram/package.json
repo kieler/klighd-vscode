@@ -37,15 +37,27 @@
                 "category": "KLighD Diagram"
             },
             {
+                "command": "klighd-diagram.diagram.center",
+                "title": "Center diagram selection",
+                "icon": "$(location)",
+                "category": "KLighD Diagram"
+            },
+            {
                 "command": "klighd-diagram.diagram.fit",
-                "title": "Fit diagram to screen",
+                "title": "Fit diagram to viewport",
                 "icon": "$(move)",
                 "category": "KLighD Diagram"
             },
             {
-                "command": "klighd-diagram.diagram.center",
-                "title": "Center diagram selection",
-                "icon": "$(location)",
+                "command": "klighd-diagram.diagram.layout",
+                "title": "Layout the diagram to fit the new viewport",
+                "icon": "$(editor-layout)",
+                "category": "KLighD Diagram"
+            },
+            {
+                "command": "klighd-diagram.diagram.refresh",
+                "title": "Refresh the diagram",
+                "icon": "$(refresh)",
                 "category": "KLighD Diagram"
             },
             {
@@ -63,32 +75,23 @@
                 },
                 {
                     "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.fit"
-                },
-                {
-                    "when": "keith-diagram-focused",
                     "command": "klighd-diagram.diagram.center"
                 },
                 {
                     "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.fit"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.layout"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-diagram.diagram.refresh"
+                },
+                {
+                    "when": "keith-diagram-focused",
                     "command": "klighd-diagram.diagram.export"
-                }
-            ],
-            "editor/title": [
-                {
-                    "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.fit",
-                    "group": "navigation"
-                },
-                {
-                    "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.center",
-                    "group": "navigation"
-                },
-                {
-                    "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.export",
-                    "group": "navigation"
                 }
             ]
         },

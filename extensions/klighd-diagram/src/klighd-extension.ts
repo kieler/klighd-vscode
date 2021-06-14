@@ -10,14 +10,18 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { KeithFitToScreenAction } from "@kieler/keith-sprotty/lib/actions/actions";
+import {
+    KeithFitToScreenAction,
+    RefreshLayoutAction,
+    RefreshDiagramAction,
+} from "@kieler/keith-sprotty";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
 import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
 import { commands, ExtensionContext, Uri, window } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
-import { diagramType, extensionId } from "./constants";
+import { command, diagramType, extensionId } from "./constants";
 import { KLighDWebview } from "./klighd-webview";
 
 /** Options required to construct a KLighDExtension */
@@ -146,37 +150,26 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
      */
     protected registerCommands() {
         this.context.subscriptions.push(
-            commands.registerCommand(
-                this.extensionPrefix + ".diagram.open",
-                async (...commandArgs: any[]) => {
-                    const identifier = await this.createDiagramIdentifier(commandArgs);
-                    if (identifier) {
-                        const key = this.getKey(identifier);
-                        let webView = this.singleton || this.webviewMap.get(key);
-                        if (webView) {
-                            webView.reloadContent(identifier);
-                            webView.diagramPanel.reveal(webView.diagramPanel.viewColumn);
-                        } else {
-                            webView = this.createWebView(identifier);
-                            this.webviewMap.set(key, webView);
-                            if (webView.singleton) {
-                                this.singleton = webView;
-                            }
+            commands.registerCommand(command.diagramOpen, async (...commandArgs: any[]) => {
+                const identifier = await this.createDiagramIdentifier(commandArgs);
+                if (identifier) {
+                    const key = this.getKey(identifier);
+                    let webView = this.singleton || this.webviewMap.get(key);
+                    if (webView) {
+                        webView.reloadContent(identifier);
+                        webView.diagramPanel.reveal(webView.diagramPanel.viewColumn);
+                    } else {
+                        webView = this.createWebView(identifier);
+                        this.webviewMap.set(key, webView);
+                        if (webView.singleton) {
+                            this.singleton = webView;
                         }
                     }
-                }
-            )
-        );
-        this.context.subscriptions.push(
-            commands.registerCommand(this.extensionPrefix + ".diagram.fit", () => {
-                const activeWebview = this.findActiveWebview();
-                if (activeWebview) {
-                    activeWebview.dispatch(new KeithFitToScreenAction(true));
                 }
             })
         );
         this.context.subscriptions.push(
-            commands.registerCommand(this.extensionPrefix + ".diagram.center", () => {
+            commands.registerCommand(command.diagramCenter, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
                     activeWebview.dispatch(new CenterAction([], true));
@@ -184,7 +177,33 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             })
         );
         this.context.subscriptions.push(
-            commands.registerCommand(this.extensionPrefix + ".diagram.export", () => {
+            commands.registerCommand(command.diagramFit, () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview) {
+                    activeWebview.dispatch(new KeithFitToScreenAction(true));
+                }
+            })
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(command.diagramLayout, () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview) {
+                    console.log("Called!!!");
+                    activeWebview.dispatch(new RefreshLayoutAction());
+                }
+            })
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(command.diagramRefresh, () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview) {
+                    console.log("Called!!!");
+                    activeWebview.dispatch(new RefreshDiagramAction());
+                }
+            })
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(command.diagramExport, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
                     activeWebview.dispatch(new RequestExportSvgAction());

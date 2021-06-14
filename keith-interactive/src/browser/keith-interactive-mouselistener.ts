@@ -139,8 +139,8 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
 
             // Appends a RefreshDiagramAction to the result. This fixes a bug
             // where the interaction is only applied after the dragged not is
-            // clicked again, causing the second if case in this method to execute. 
-            if(result.some(action => action.kind === RefreshDiagramAction.KIND)) {
+            // clicked again, causing the second if case in this method to execute.
+            if (result.some(action => action.kind === RefreshDiagramAction.KIND)) {
                 return result
             } else {
                 return result.concat([new RefreshDiagramAction()])

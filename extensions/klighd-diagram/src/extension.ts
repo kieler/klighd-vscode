@@ -21,7 +21,7 @@ import { ActionHandlerClass, KLighDExtension } from "./klighd-extension";
 // This mainly involves our command string and the ability to properly type action handlers.
 // This may also export actions that can be potentially intercepted by other extensions.
 export { command, ActionHandlerClass };
-export { PerformActionAction } from "@kieler/keith-sprotty/lib/actions/actions";
+export { PerformActionAction } from "@kieler/keith-sprotty";
 export { Action } from "sprotty";
 export { ActionHandler } from "sprotty-vscode/lib/action-handler";
 

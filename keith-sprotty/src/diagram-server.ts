@@ -110,6 +110,10 @@ export class KeithDiagramServer extends DiagramServer {
                 return false;
             case SetSynthesisAction.KIND:
                 return true;
+            case RefreshLayoutAction.KIND:
+                return true;
+            case RefreshDiagramAction.KIND:
+                return true;
         }
         return super.handleLocally(action);
     }

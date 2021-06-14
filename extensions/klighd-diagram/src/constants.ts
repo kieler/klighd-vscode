@@ -38,4 +38,6 @@ export const command = {
     diagramExport: withPrefix("diagram.export"),
     diagramCenter: withPrefix("diagram.center"),
     diagramFit: withPrefix("diagram.fit"),
+    diagramLayout: withPrefix("diagram.layout"),
+    diagramRefresh: withPrefix("diagram.refresh")
 };
