@@ -15,7 +15,6 @@ import { ContainerModule } from "inversify";
 import { configureActionHandler, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import { ToggleSidebarPanelAction } from "./actions";
-import { CounterPanel } from "./counter-panel";
 import { Sidebar } from "./sidebar";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
@@ -32,10 +31,4 @@ export const sidebarModule = new ContainerModule((bind, _, isBound) => {
 
     const ctx = { bind, isBound };
     configureActionHandler(ctx, ToggleSidebarPanelAction.KIND, DISymbol.SidebarPanelRegistry);
-
-    // Add counter panel as an example
-    bind(CounterPanel)
-        .toSelf()
-        .inSingletonScope();
-    bind(DISymbol.SidebarPanel).toService(CounterPanel);
 });
