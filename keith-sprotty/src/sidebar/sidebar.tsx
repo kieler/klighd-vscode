@@ -21,7 +21,7 @@ import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
 /**
- * UIExtensions that adds a sidebar to the Sprotty container. The content of the
+ * UIExtension that adds a sidebar to the Sprotty container. The content of the
  * sidebar is implemented by panels, which are provided separately. The sidebar
  * reacts to updates of the {@link SidebarPanelRegistry} and syncs the UI with
  * the registry state.
@@ -65,7 +65,7 @@ export class Sidebar extends AbstractUIExtension {
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
         const title = this.containerElement.querySelector<HTMLHeadingElement>(".sidebar__title");
 
-        // Only update of the content was initialized, which is the case if a
+        // Only update if the content was initialized, which is the case if a
         // VNode Root for the panel content is created.
         if (!this.oldPanelContentRoot) return;
         if (!title) {
@@ -149,13 +149,13 @@ export class Sidebar extends AbstractUIExtension {
         containerElement.appendChild(contentContainer);
 
         // Prepare the virtual DOM. Snabbdom requires an empty element.
-        // Furthermore, the element is completely replaces by the panel on every update,
+        // Furthermore, the element is completely replaced by the panel on every update,
         // so we use an extra, empty element to ensure that we loose no important attributes (such as classes).
         const panelContentRoot = document.createElement("div");
         this.oldPanelContentRoot = this.patcher(panelContentRoot, <div />);
         contentContainer.appendChild(panelContentRoot);
 
-        // Notice that AbstractUIExtension only calls initializeContents once,
+        // Notice that an AbstractUIExtension only calls initializeContents once,
         // so this handler is also only registered once.
         this.addClickOutsideListenser(containerElement);
     }

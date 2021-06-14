@@ -53,7 +53,7 @@ export interface ISidebarPanel {
 }
 
 /**
- * Abstract SidebarPanel that should be used as the base for custom a {@link ISidebarPanel}.y
+ * Abstract SidebarPanel that should be used as the base for custom a {@link ISidebarPanel}.
  *
  * This class simplifies the implementation around handling render updates.
  */
