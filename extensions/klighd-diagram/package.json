@@ -99,8 +99,8 @@
             {
                 "title": "KLighD Diagram",
                 "properties": {
-                    "klighd-diagram.resizeToFit": {
-                        "description": "Resize the diagram to fit the viewport when it is redrawn.",
+                    "klighd-diagram.initialResizeToFit": {
+                        "description": "Initial value for new web-views about resizing the diagram to fit the viewport when it is redrawn.",
                         "type": "boolean",
                         "default": "true"
                     }

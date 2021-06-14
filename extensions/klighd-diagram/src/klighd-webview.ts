@@ -25,20 +25,12 @@ export class KLighDWebview extends SprottyLspWebview {
     constructor(options: SprottyWebviewOptions) {
         super(options);
 
-        // Dispatch preferences when the webview is ready. Notice, that the
-        // preference are still dispatched before the diagram identifier is send
-        // to the webview. There appears to be no possibility to ensure that the
-        // message is only send after the identifier in vscode-sprotty.
-        // This requires some special handling in the webview, as the container only receives
-        // messages after the diagram identifier is send. See src-webview/main.ts
+        // Dispatch preferences when the webview is ready. The current configuration
+        // should only dispatched initially and not sync the current webview with changes.
+        // If this changes in the future, use `workspace.onDidChangeConfiguration`
+        // to sync changes that should be updated after initialization.
         this.ready().then(() => {
             this.sendConfiguration();
-
-            workspace.onDidChangeConfiguration((e) => {
-                if (e.affectsConfiguration(extensionId)) {
-                    this.sendConfiguration();
-                }
-            });
         });
     }
 
@@ -46,7 +38,7 @@ export class KLighDWebview extends SprottyLspWebview {
         const config = workspace.getConfiguration(extensionId);
         this.dispatch(
             new SetPreferencesAction({
-                resizeToFit: config.get<boolean>("resizeToFit") ?? true,
+                resizeToFit: config.get<boolean>("initialResizeToFit") ?? true,
             })
         );
     }
