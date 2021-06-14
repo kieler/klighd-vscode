@@ -16,7 +16,7 @@ import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { KGraphData, KNode } from '@kieler/keith-interactive/lib/constraint-classes';
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
-import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom } from './options';
+import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -254,11 +254,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         }
     }
 
-    // Use indirect titles or placeholder to fill collapsed region.
-    const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
-    const useSmartZoomDefault = false
-    const useSmartZoom = smartZoomOption ? smartZoomOption : useSmartZoomDefault
-    if (useSmartZoom) {
+    if (context.depthMap) {
         let region = context.depthMap.getRegion((parent as KNode).id)
         if (region && !region.expansionState && !region.hasTitle) {
             // Render indirect region titles.
@@ -498,10 +494,10 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     var textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
-    const region = context.depthMap.getRegion(parent.id)
+    const region = context.depthMap?.getRegion(parent.id)
     const simplifySmallTextOption = context.renderingOptions.getOption(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ? simplifySmallTextOption.currentValue : false // Only enable, if option is found.
-    if (simplifySmallText && (!region || (region && region.expansionState))) {
+    if (simplifySmallText && (!region || region.expansionState)) {
         const simplificationThresholdOption = context.renderingOptions.getOption(TextSimplificationThreshold.ID)
         const defaultThreshold = 3
         const simplificationThreshold = simplificationThresholdOption ? simplificationThresholdOption.currentValue : defaultThreshold
@@ -573,10 +569,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
-        // If there is a collapsed region or state, scale title of region or single macro state.
-        const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
-        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false // Only enable, if option is found.
-        if (useSmartZoom) {
+        if (context.depthMap) {
             if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height
                 && (rendering.isNodeTitle || (text !== '-' && text !== '+'))) {
                 // Check whether or not the parent node is a child area.
@@ -648,7 +641,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     // If there is a super state use the name as a title.
     // If there is one macro state in a child area, change the area title to the name of the macro state.
     // If there are multiple macro states set the flag.
-    if (rendering.isNodeTitle && !context.depthMap.titleMap.has(rendering)) {
+    if (rendering.isNodeTitle && context.depthMap && !context.depthMap.titleMap.has(rendering)) {
         context.depthMap.titleMap.add(rendering)
         let region = context.depthMap.findRegionWithElement(parent as KNode)
         if (region) {
@@ -764,10 +757,7 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
 
-    // Handle expansion and collapse of regions
-    const smartZoomOption = context.renderingOptions.getOption(UseSmartZoom.ID)
-    const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false // Only enable, if option is found.
-    if (useSmartZoom && (parent as KNode).expansionState === false) {
+    if (context.depthMap && (parent as KNode).expansionState === false) {
         return undefined
     }
 

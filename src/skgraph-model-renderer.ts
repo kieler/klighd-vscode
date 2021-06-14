@@ -28,7 +28,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
    
     boundsMap: any
     decorationMap: any
-    depthMap: DepthMap
+    depthMap?: DepthMap
     renderingOptions: RenderingOptions
     kRenderingLibrary: KRenderingLibrary
     renderingDefs: Map<string, VNode>
