@@ -649,7 +649,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     // If there is one macro state in a child area, change the area title to the name of the macro state.
     // If there are multiple macro states set the flag.
     if (rendering.isNodeTitle && !context.depthMap.titleMap.has(rendering)) {
-        context.depthMap.titleMap.set(rendering, rendering)
+        context.depthMap.titleMap.add(rendering)
         let region = context.depthMap.findRegionWithElement(parent as KNode)
         if (region) {
             // Handle super states

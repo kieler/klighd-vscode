@@ -52,9 +52,9 @@ export class DepthMap {
     isCompleteRendering: boolean = false
 
     /**
-     *  Lookup map for quickly checking macro and super state titles. 
+     *  Lookup set for quickly checking macro and super state titles. 
      * */
-    titleMap: Map<KText, KText>
+    titleMap: Set<KText>
 
     /** Singleton pattern */
     private static instance?: DepthMap;
@@ -66,7 +66,7 @@ export class DepthMap {
         this.rootElement = rootElement
         this.rootRegions = []
         this.regionMap = new Map()
-        this.titleMap = new Map()
+        this.titleMap = new Set()
         this.criticalRegions = new Set()
     }
 
