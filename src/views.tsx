@@ -72,18 +72,6 @@ export class KNodeView implements IView {
     render(node: SKNode, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
 
-        // Add depthMap to context for rendering, when required.
-        const smartZoomOption = ctx.renderingOptions.getOption(UseSmartZoom.ID)
-
-        // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
-
-        if (useSmartZoom) {
-            if (ctx.renderingDefs.size == 0) {
-                ctx.depthMap.isCompleteRendering = true
-            }
-        }
-
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false

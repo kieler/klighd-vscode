@@ -47,11 +47,6 @@ export class DepthMap {
     criticalRegions: Set<Region>;
 
     /**
-     *  Will be changed to true, when all micro layouting, etc. is done. 
-     * */
-    isCompleteRendering: boolean = false
-
-    /**
      *  Lookup set for quickly checking macro and super state titles. 
      * */
     titleMap: Set<KText>
@@ -78,8 +73,6 @@ export class DepthMap {
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
-        this.isCompleteRendering = false
-
 
         let current_regions = this.rootRegions
         let remaining_regions: Region[] = []
