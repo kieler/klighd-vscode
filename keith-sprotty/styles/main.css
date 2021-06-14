@@ -21,7 +21,11 @@
   user-select: none;
 }
 
-/* Resets extra button height that is caused by an svg child */
 button > svg {
+  /* Resets extra button height that is caused by an svg child */
   vertical-align: bottom;
+  /* sprotty-vscode overwrites the with of svg tags to 100% which causes a scaling bug for
+  icon buttons when the user applies zoom. Disable this lines to see it for yourself... ;) */
+  width: auto;
+  height: auto;
 }
