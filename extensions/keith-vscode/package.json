@@ -92,6 +92,19 @@
                 ]
             }
         ],
+        "grammars": [
+            {
+                "language": "sctx",
+                "scopeName": "source.sctx",
+                "path": "./syntaxes/sctx.tmLanguage.json"
+            },
+            {
+                "language": "elkt",
+                "scopeName": "source.elkt",
+                "path": "./syntaxes/elkt.tmLanguage.json"
+            }
+            
+        ],
         "menus": {
             "editor/title": [
                 {
