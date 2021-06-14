@@ -45,6 +45,7 @@ export class GeneralPanel extends SidebarPanel {
     @postConstruct()
     init() {
         this.synthesesRegistry.onChange(() => this.update());
+        this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
     }
 
