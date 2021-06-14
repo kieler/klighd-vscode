@@ -56,11 +56,6 @@ export class DepthMap {
      * */
     titleMap: Map<KText, KText>
 
-    /** 
-     * Threshold and compensation margin for error in absolute bounds positions. 
-     * */
-    absoluteVisibilityBuffer: number = 500
-
     /** Singleton pattern */
     private static instance?: DepthMap;
 
@@ -135,7 +130,7 @@ export class DepthMap {
             region.absoluteBounds = node.bounds
             this.rootRegions.push(region)
             this.addRegionToMap(region)
-            this.initHelper(node, 0, region)
+            this.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
         }
     }
 
@@ -146,7 +141,7 @@ export class DepthMap {
      * @param depth The current nesting depth of regions.
      * @param region The current region being constructed.
      */
-    protected initHelper(node: KNode, depth: number, region: Region) {
+    protected initHelper(node: KNode, depth: number, region: Region, offsetX: number, offsetY: number) {
         // Go through child nodes until there are no child nodes left.
         for (let child of node.children) {
             // Add the current node as element of region.
@@ -156,8 +151,8 @@ export class DepthMap {
                 && ((child as KNode).data[0] as KContainerRendering).children[0]) {
                 let nextRegion = new Region(child as KNode)
                 nextRegion.absoluteBounds = {
-                    x: region.absoluteBounds.x + (child as KNode).bounds.x,
-                    y: region.absoluteBounds.y + (child as KNode).bounds.y,
+                    x: offsetX + (child as KNode).bounds.x,
+                    y: offsetY + (child as KNode).bounds.y,
                     width: (child as KNode).bounds.width,
                     height: (child as KNode).bounds.height
                 }
@@ -166,10 +161,10 @@ export class DepthMap {
                 // In the models parent child structure a child can occur multiple times.
                 this.addRegionToMap(nextRegion)
                 // Continue with the children of the new region.
-                this.initHelper((child as KNode), (depth + 1), nextRegion)
+                this.initHelper((child as KNode), (depth + 1), nextRegion, nextRegion.absoluteBounds.x, nextRegion.absoluteBounds.y)
             } else {
                 // Continue with the other children on the current depth level.
-                this.initHelper((child as KNode), depth, region)
+                this.initHelper((child as KNode), depth, region, offsetX + (child as KNode).bounds.x, offsetY + (child as KNode).bounds.y)
             }
         }
 
@@ -378,10 +373,10 @@ export class DepthMap {
         if (region.absoluteBounds) {
             const canvasBounds = this.rootElement.canvasBounds
 
-            return region.absoluteBounds.x + region.absoluteBounds.width - viewport.scroll.x >= -this.absoluteVisibilityBuffer
-                && region.absoluteBounds.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom) + this.absoluteVisibilityBuffer
-                && region.absoluteBounds.y + region.absoluteBounds.height - viewport.scroll.y >= -this.absoluteVisibilityBuffer
-                && region.absoluteBounds.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom) + this.absoluteVisibilityBuffer
+            return region.absoluteBounds.x + region.absoluteBounds.width - viewport.scroll.x >= 0
+                && region.absoluteBounds.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom)
+                && region.absoluteBounds.y + region.absoluteBounds.height - viewport.scroll.y >= 0
+                && region.absoluteBounds.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom)
         } else {
             // Better to assume it is visible, if information are not sufficient
             return true
