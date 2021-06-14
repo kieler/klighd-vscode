@@ -12,14 +12,14 @@
  */
 import {
     KeithFitToScreenAction,
-    RefreshLayoutAction,
     RefreshDiagramAction,
+    RefreshLayoutAction,
 } from "@kieler/keith-sprotty";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
 import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
-import { commands, ExtensionContext, Uri, window } from "vscode";
+import { commands, ExtensionContext, Uri } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { command, diagramType, extensionId } from "./constants";
 import { KLighDWebview } from "./klighd-webview";
@@ -62,9 +62,11 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     private actionHandlers: ActionHandlerClass[];
 
     constructor(context: ExtensionContext, options: KLighDExtensionOptions) {
+        // The static property has to be set before super is called. Otherwise,
+        // the Sprotty glue-code has no language client.
         KLighDExtension.lsClient = options.lsClient;
-
         super(extensionId, context);
+
         this.supportedFileEndings = options.supportedFileEnding;
         this.actionHandlers = [];
     }
@@ -110,35 +112,9 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     }
 
     protected activateLanguageClient(_: ExtensionContext): LanguageClient {
-        // A KLighD LSP might send messages as the method type "general/sendMessage"
-        // which should be displayed to the user
-        KLighDExtension.lsClient.onReady().then(() => {
-            KLighDExtension.lsClient.onNotification(
-                "general/sendMessage",
-                this.handleGeneralMessage.bind(this)
-            );
-        });
-
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.
         return KLighDExtension.lsClient;
-    }
-
-    private handleGeneralMessage(message: string, type: "info" | "warn" | "error") {
-        switch (type) {
-            case "info":
-                window.showInformationMessage(message);
-                break;
-            case "warn":
-                window.showWarningMessage(message);
-                break;
-            case "error":
-                window.showErrorMessage(message);
-                break;
-            default:
-                window.showInformationMessage(message);
-                break;
-        }
     }
 
     /**

@@ -16,6 +16,7 @@ import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
 import { ActionHandlerClass, KLighDExtension } from "./klighd-extension";
+import { LspHandler } from "./lsp-handler";
 
 // potential exports for other extensions to improve their dev experience
 // This mainly involves our command string and the ability to properly type action handlers.
@@ -33,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand(
             command.setLanguageClient,
-            (client: LanguageClient, fileEndings: string[]) => {
+            (client: LanguageClient, fileEndings: any) => {
                 // TODO: Check if client is really a LanguageClient. Instanceof checks do not work,
                 // since the LanguageClient class from the host extension is not the same as this LanguageClient class.
                 // Both classes are part of different bundles and thus module system. Therefore, they are two different
@@ -52,6 +53,8 @@ export function activate(context: vscode.ExtensionContext) {
                         lsClient: client,
                         supportedFileEnding: fileEndings,
                     });
+                    // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
+                    new LspHandler(client);
 
                     // Uses nanoid (non-secure) to quickly generate a random id with low collision probability
                     const id = nanoid(16);
