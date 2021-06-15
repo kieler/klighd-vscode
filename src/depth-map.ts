@@ -92,6 +92,10 @@ export class DepthMap {
         this.rootRegions = []
     }
 
+    public static getDM(): DepthMap | undefined {
+        return DepthMap.instance
+    }
+
     /** 
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.

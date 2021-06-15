@@ -18,8 +18,8 @@
  import { configureCommand } from "sprotty";
  import { UpdateDepthmapModelCommand } from './update-depthmap-model';
  
- const updateModule = new ContainerModule((bind, _unbind, isBound) => {
+ const updateDepthmapModule = new ContainerModule((bind, _unbind, isBound) => {
      configureCommand({ bind, isBound }, UpdateDepthmapModelCommand);
  });
  
- export default updateModule;
+ export default updateDepthmapModule;

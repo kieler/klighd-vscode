@@ -16,7 +16,7 @@ import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
     LogLevel, ModelRendererFactory, modelSourceModule, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
-    TYPES, viewportModule, ViewRegistry
+    TYPES, viewportModule, ViewRegistry, updateModule
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { KeithHoverMouseListener } from './hover/hover';
@@ -24,8 +24,9 @@ import { RenderOptions } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
-import updateModule from './update/update-depthmap-module';
+import updateDepthmapModule from './update/update-depthmap-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
+
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
@@ -70,7 +71,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the keith-specific modules at the last positions because of possible binding overrides.
-        textBoundsModule, actionModule, kGraphDiagramModule)
+        textBoundsModule, actionModule, kGraphDiagramModule, updateDepthmapModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
