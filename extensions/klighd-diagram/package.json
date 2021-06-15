@@ -103,6 +103,10 @@
                         "description": "Initial value for new web-views about resizing the diagram to fit the viewport when it is redrawn.",
                         "type": "boolean",
                         "default": "true"
+                    },
+                    "klighd-diagram.useLightBackground": {
+                        "description": "Use a light color as the initial webview background color. By default, the webview uses the current theme for the background color. However, this can make some diagrams hard to read.",
+                        "type": "boolean"
                     }
                 }
             }

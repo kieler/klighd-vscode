@@ -17,15 +17,20 @@
 @import "sprotty/css/sprotty.css";
 
 .sprotty {
-  /* Disable text selection in diagrams and sidebar panels. */
-  user-select: none;
+    /* Disable text selection in diagrams and sidebar panels. */
+    user-select: none;
 }
 
 button > svg {
-  /* Resets extra button height that is caused by an svg child */
-  vertical-align: bottom;
-  /* sprotty-vscode overwrites the with of svg tags to 100% which causes a scaling bug for
+    /* Resets extra button height that is caused by an svg child */
+    vertical-align: bottom;
+    /* sprotty-vscode overwrites the with of svg tags to 100% which causes a scaling bug for
   icon buttons when the user applies zoom. Disable this lines to see it for yourself... ;) */
-  width: auto;
-  height: auto;
+    width: auto;
+    height: auto;
+}
+
+/* Used to be able to force a white background for the diagram view instead of a themed background. */
+.light-bg {
+    background: #f7f7f7;
 }

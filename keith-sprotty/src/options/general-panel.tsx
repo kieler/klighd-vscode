@@ -118,9 +118,15 @@ export class GeneralPanel extends SidebarPanel {
                     <h5 classNames="options__heading">Preferences</h5>
                     <CheckOption
                         id="resizeToFit"
-                        name="Resize to fit"
+                        name="Resize To Fit"
                         value={this.preferencesRegistry.preferences.resizeToFit}
                         onChange={this.handlePreferenceChange.bind(this, "resizeToFit")}
+                    />
+                    <CheckOption
+                        id="forceLightBackground"
+                        name="Use Light Background"
+                        value={this.preferencesRegistry.preferences.forceLightBackground}
+                        onChange={this.handlePreferenceChange.bind(this, "forceLightBackground")}
                     />
                 </div>
             </div>

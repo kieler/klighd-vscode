@@ -9,6 +9,8 @@ export interface Preferences {
      * or a viewport resize.
      */
     resizeToFit: boolean;
+    /** Uses a light background instead of an applied theme. */
+    forceLightBackground: boolean;
 }
 
 /** Registry that stores user preferences which change the behavior of the diagram view. */
@@ -25,6 +27,7 @@ export class PreferencesRegistry extends Registry {
         // Initialize default settings
         this._preferences = {
             resizeToFit: true,
+            forceLightBackground: false,
         };
     }
 
@@ -33,6 +36,9 @@ export class PreferencesRegistry extends Registry {
             this._preferences = {
                 ...this._preferences,
                 resizeToFit: action.preferences.resizeToFit ?? this._preferences.resizeToFit,
+                forceLightBackground:
+                    action.preferences.forceLightBackground ??
+                    this.preferences.forceLightBackground,
             };
             this.notifyListeners();
         }

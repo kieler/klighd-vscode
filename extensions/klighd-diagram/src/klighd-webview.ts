@@ -39,6 +39,7 @@ export class KLighDWebview extends SprottyLspWebview {
         this.dispatch(
             new SetPreferencesAction({
                 resizeToFit: config.get<boolean>("initialResizeToFit") ?? true,
+                forceLightBackground: config.get<boolean>("useLightBackground") ?? false,
             })
         );
     }
