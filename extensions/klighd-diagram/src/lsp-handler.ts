@@ -10,11 +10,13 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import { window, TextEdit, workspace, Uri, Range, Position, WorkspaceEdit } from "vscode";
-import { LanguageClient, Range as LspRange, Protocol2CodeConverter } from "vscode-languageclient";
+import { window, TextEdit, workspace, Uri, WorkspaceEdit } from "vscode";
+import { LanguageClient, Range as LspRange } from "vscode-languageclient";
 
 /** Handles KLighD specific LSP extensions. */
 export class LspHandler {
+    private lastEditSuccessful: boolean;
+
     constructor(private lsClient: LanguageClient) {
         lsClient.onReady().then(() => {
             lsClient.onNotification("general/sendMessage", this.handleGeneralMessage.bind(this));
@@ -23,6 +25,8 @@ export class LspHandler {
                 this.handleReplaceContentInFile.bind(this)
             );
         });
+
+        this.lastEditSuccessful = true;
     }
 
     /** Handles a message notification from the server for messages that should be displayed to the user. */
@@ -52,6 +56,14 @@ export class LspHandler {
             console.error(
                 `Server requested a text edit but the requested uri was not found among the known documents: ${uri}`
             );
+
+            // Show a warning to the user, but only show it once per "stream of failed edits"
+            if (this.lastEditSuccessful) {
+                this.lastEditSuccessful = false;
+                window.showWarningMessage(
+                    "Changes can not be saved because the effected document is unknown. Make sure that the document is open so your changes can be saved."
+                );
+            }
             return;
         }
 
@@ -65,11 +77,15 @@ export class LspHandler {
         const edited = await workspace.applyEdit(workSpaceEdit);
         if (!edited) {
             console.error("Workspace edit could not be applied!");
+            return;
         }
 
         const saved = await textDocument.save();
         if (!saved) {
             console.error(`TextDocument ${textDocument.uri} could not be saved!`);
+            return;
         }
+
+        this.lastEditSuccessful = true;
     }
 }
