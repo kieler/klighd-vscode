@@ -100,13 +100,13 @@ export class DepthMap {
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement);
-            console.log("Starting inizialization of DepthMap")
+            console.log("Starting inizialization of DepthMap new Root")
             DepthMap.instance.init(rootElement)
             console.log("Inizialized DepthMap")
         } else if (DepthMap.instance.rootElement !== rootElement) {
             // Reset and reinitialize if the model changed
             DepthMap.instance.reset(rootElement)
-            console.log("Starting reinizialization of DepthMap")
+            console.log("Starting reinizialization of DepthMap changed root")
             DepthMap.instance.init(rootElement)
             console.log("Reinizialized DepthMap")
         }
@@ -386,7 +386,7 @@ export class DepthMap {
     sizeInViewport(node: KNode, viewport: Viewport): number {
         const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
         const vertical = node.bounds.height / (node.root.canvasBounds.height / viewport.zoom)
-        return horizontal > vertical ? horizontal : vertical
+        return horizontal < vertical ? horizontal : vertical
     }
 }
 

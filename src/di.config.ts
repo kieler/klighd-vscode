@@ -16,7 +16,7 @@ import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
     LogLevel, ModelRendererFactory, modelSourceModule, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
-    TYPES, updateModule, viewportModule, ViewRegistry
+    TYPES, viewportModule, ViewRegistry
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { KeithHoverMouseListener } from './hover/hover';
@@ -24,6 +24,7 @@ import { RenderOptions } from './options';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import textBoundsModule from './textbounds/textbounds-module';
+import updateModule from './update/update-depthmap-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
 /**
