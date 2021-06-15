@@ -52,3 +52,5 @@ export class UpdateDepthmapModelCommand extends UpdateModelCommand{
         return super.performUpdate(oldRoot, newRoot, context);
     }
 }
+
+// Need also the setModel Command which is definded in the default module -> problematic !
