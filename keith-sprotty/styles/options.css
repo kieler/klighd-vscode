@@ -136,12 +136,12 @@ snabbdom-jsx for svg does not add them to the created html elements. */
 .options__button:focus,
 .options__icon-button:focus {
     /* Chromium has this thing where an outline is colored and white. This just colors it. */
-    outline-style: solid;
-    outline-color: var(--kdc-color-primary);
+    outline: 2px solid var(--kdc-color-primary);
 }
 
 .options__selection {
     padding: 4px 6px;
+    border-width: 2px;
     border-radius: var(--kdc-border-radius-default);
     background: var(--kdc-color-sidebar-trigger-background-active);
     color: var(--kdc-color-sidebar-font-primary);
