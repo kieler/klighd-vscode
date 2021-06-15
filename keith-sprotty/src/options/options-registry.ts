@@ -123,4 +123,13 @@ export class OptionsRegistry extends Registry {
     get displayedActions(): DisplayedActionData[] {
         return this._displayedActions;
     }
+
+    /** Returns `true` when the registry contains options and is therefore not empty. */
+    hasOptions(): boolean {
+        return (
+            this._displayedActions.length !== 0 ||
+            this._synthesisOptions.length !== 0 ||
+            this._layoutOptions.length !== 0
+        );
+    }
 }
