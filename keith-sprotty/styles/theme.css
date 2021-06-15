@@ -1,4 +1,21 @@
+/* Set of CSS variables used in klighd-core. All variables should be prefixed with "kdc" */
+
 :root {
-  --transition: 200ms ease-in-out;
-  --default-border-radius: 4px;
+    /* Behavior and sizing variables */
+    --kdc-transition: 200ms ease-in-out;
+    --kdc-border-radius-default: 4px;
+    --kdc-font-size-base: 16px;
+    --kdc-sidebar-shadow: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
+    --kdc-sidebar-button-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+    /* Color semantic theme token (not used "dump" token like gray100 etc.
+    but rather scoped to where they should be applied. Allows for finer theme control. */
+    --kdc-color-sidebar-background: white;
+    --kdc-color-sidebar-trigger-background: white;
+    --kdc-color-sidebar-trigger-background-hover: hsl(0, 0%, 88%);
+    --kdc-color-sidebar-trigger-background-active: hsl(0, 0%, 81%);
+    --kdc-color-sidebar-hover-background: rgba(0, 0, 0, 0.15);
+    --kdc-color-sidebar-font-primary: hsl(0, 0%, 12%);
+    --kdc-color-sidebar-icon-primary: hsl(0, 0%, 24%);
+    --kdc-color-primary: #0552b5;
 }

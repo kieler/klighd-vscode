@@ -14,12 +14,17 @@
 .options__section {
     display: flex;
     flex-direction: column;
-    margin-top: 12px;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.options__section:last-of-type {
+    margin-bottom: 0;
 }
 
 .options__heading {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.12rem;
     font-weight: 700;
     line-height: 1.5;
 }
@@ -38,46 +43,113 @@ snabbdom-jsx for svg does not add them to the created html elements. */
 
 .options__button-group {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
 }
 
 .options__icon-button {
+    --background: transparent;
     box-sizing: border-box;
     appearance: none;
     border: none;
-    border-radius: var(--default-border-radius);
+    border-radius: var(--kdc-border-radius-default);
     padding: 4px;
-    
-    color: inherit;
-    background: transparent;
-    transition: background var(--transition);
+
+    color: var(--kdc-color-sidebar-icon-primary);
+    background: var(--background);
+    transition: background var(--kdc-transition);
     cursor: pointer;
 }
 
 .options__icon-button:hover {
-    background: rgba(0, 0, 0, 0.2);
+    --background: var(--kdc-color-sidebar-hover-background);
 }
 
+.options__button {
+    box-sizing: border-box;
+    appearance: none;
+    border: none;
+    border-radius: var(--kdc-border-radius-default);
+    padding: 6px 12px;
+
+    font-size: 1rem;
+    font-weight: 700;
+
+    box-shadow: none;
+    color: var(--kdc-color-sidebar-font-primary);
+    background: var(--kdc-color-sidebar-trigger-background-active);
+    transition: box-shadow var(--kdc-transition);
+    cursor: pointer;
+}
+
+.options__button:hover {
+    box-shadow: var(--kdc-sidebar-button-shadow);
+}
+
+/*********************************** INPUTS ***********************************/
+
+/* Group that renders children in a column */
+.options__column {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Group that renders children in a column and indents the children */
 .options__input-container {
     display: flex;
     flex-direction: column;
 }
 
-/* Indent inputs (wrapped by a label) inside a multi input group */
-.options__input-container > label {
-    margin-left: 8px;
+/* Indent content except the legend inside an input group */
+.options__input-container > :not(legend) {
+    margin-left: 12px;
 }
 
 .options__separator {
     display: block;
-    margin: 8px 0;
+    font-weight: 700;
 }
 
 .options__category {
     display: flex;
     flex-direction: column;
+    /* This should also have a gap just like .options__section. However, it
+    appears like the gap is not applied for details. Therefore, we use margin on the children. */
+}
+
+.options__category > summary {
+    font-weight: 700;
+    margin-bottom: 4px;
 }
 
 .options__category > :not(summary) {
-    margin-left: 8px;
+    margin: 0 0 4px 12px;
+}
+
+.options__input {
+    margin: 0 4px 0 0;
+    vertical-align: baseline;
+}
+
+.options__input:focus,
+.options__category > summary:focus,
+.options__button:focus,
+.options__icon-button:focus {
+    /* Chromium has this thing where an outline is colored and white. This just colors it. */
+    outline-style: solid;
+    outline-color: var(--kdc-color-primary);
+}
+
+.options__selection {
+    padding: 4px 6px;
+    border-radius: var(--kdc-border-radius-default);
+    background: var(--kdc-color-sidebar-trigger-background-active);
+    color: var(--kdc-color-sidebar-font-primary);
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.options__selection:focus {
+    outline: none;
+    border-color: var(--kdc-color-primary);
 }

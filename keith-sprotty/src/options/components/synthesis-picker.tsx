@@ -23,9 +23,9 @@ interface SynthesisPickerProps {
 
 export function SynthesisPicker(props: SynthesisPickerProps): VNode {
     return (
-        <div classNames="options__input-container">
+        <div classNames="options__column">
             <label htmlFor="synthesisSelect">Current synthesis:</label>
-            <select id="synthesisSelect" on-change={(e: any) => props.onChange(e.target.value)}>
+            <select id="synthesisSelect" classNames="options__selection" on-change={(e: any) => props.onChange(e.target.value)}>
                 {props.syntheses.map((synthesis) => (
                     <option value={synthesis.id} selected={synthesis.id === props.currentId}>
                         {synthesis.displayName}

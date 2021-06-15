@@ -31,6 +31,7 @@ export function CheckOption(props: CheckOptionProps): VNode {
     return (
         <label htmlFor={props.id}>
             <input
+                classNames="options__input"
                 type="checkbox"
                 id={props.id}
                 checked={props.value}
@@ -54,6 +55,7 @@ export function ChoiceOption(props: ChoiceOptionProps): VNode {
             {props.availableValues.map((value, i) => (
                 <label key={value} htmlFor={props.availableValuesLabels?.[i] ?? value}>
                     <input
+                        classNames="options__input"
                         type="radio"
                         id={props.availableValuesLabels?.[i] ?? value}
                         checked={props.value === value}
@@ -75,11 +77,12 @@ interface RangeOptionProps extends BaseProps<number> {
 /** Render a labeled range slider as input. */
 export function RangeOption(props: RangeOptionProps): VNode {
     return (
-        <div classNames="options__input-container">
+        <div classNames="options__column">
             <label htmlFor={props.id}>
                 {props.name}: {props.value}
             </label>
             <input
+                classNames="options__input"
                 type="range"
                 id={props.id}
                 min={props.minValue}
@@ -99,6 +102,7 @@ export function TextOption(props: TextOptionProps): VNode {
     return (
         <label htmlFor={props.id}>
             <input
+                classNames="options__input"
                 type="text"
                 id={props.id}
                 value={props.value}

@@ -39,18 +39,14 @@ export class OptionsPanel extends SidebarPanel {
     }
 
     render(): VNode {
-        return (
-            <div classNames="options-panel__content">
-                {this.optionsRegistry.hasOptions() ? (
-                    this.optionsRenderer.renderServerOptions({
-                        actions: this.optionsRegistry.displayedActions,
-                        layoutOptions: this.optionsRegistry.layoutOptions,
-                        synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
-                    })
-                ) : (
-                    <span>No options provided by the diagram server.</span>
-                )}
-            </div>
+        return this.optionsRegistry.hasOptions() ? (
+            this.optionsRenderer.renderServerOptions({
+                actions: this.optionsRegistry.displayedActions,
+                layoutOptions: this.optionsRegistry.layoutOptions,
+                synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
+            })
+        ) : (
+            <span>No options provided by the diagram server.</span>
         );
     }
 

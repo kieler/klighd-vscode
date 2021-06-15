@@ -2,3 +2,15 @@
 .sprotty-graph {
     outline: none;
 }
+
+/** Apply VSCode theme to klighd-core semantic theme tokens */
+body {
+    --kdc-color-sidebar-background: var(--vscode-sideBar-background);
+    --kdc-color-sidebar-trigger-background: var(--vscode-sideBar-background);
+    --kdc-color-sidebar-trigger-background-hover: var(--vscode-list-activeSelectionBackground);
+    --kdc-color-sidebar-trigger-background-active: var(--vscode-list-inactiveSelectionBackground);
+    --kdc-color-sidebar-hover-background: var(--vscode-toolbar-hoverBackground);
+    --kdc-color-sidebar-font-primary: var(--vscode-foreground);
+    --kdc-color-sidebar-icon-primary: var(--vscode-icon-foreground);
+    --kdc-color-primary: var(--vscode-focusBorder);
+}
