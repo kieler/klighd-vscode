@@ -2,85 +2,16 @@
   "name": "keith",
   "version": "0.1.0",
   "private": true,
-  "electronVersion": "4.1.3",
-  "main": "scripts/theia-electron-main.js",
   "description": "KIEL Environment Integrated in Theia",
-  "theia": {
-    "target": "electron",
-    "frontend": {
-        "config": {
-            "defaultTheme": "light"
-        }
-    }
-  },
   "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
   "license": "EPL-1.0",
   "bugs": {
     "url": "https://rtsys.informatik.uni-kiel.de/jira"
   },
   "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
-  "scripts": {
-    "build": "theia build",
-    "package": "yarn run build && electron-builder",
-    "package:all": "yarn run build && electron-builder --linux --x64 && electron-builder --mac --x64",
-    "package:all_old": "yarn run build && electron-builder --linux --x64 && electron-builder --mac --x64 && electron-builder --win --x64",
-    "package:win": "yarn run build && electron-builder --win --x64",
-    "package:linux": "yarn run build && electron-builder --linux --x64",
-    "package:mac": "yarn run build && electron-builder --mac --x64",
-    "preinstall": "node-gyp install",
-    "prepare": "lerna run prepare && yarn run download:plugins",
-    "rebuild:browser": "theia rebuild:browser",
-    "rebuild:electron": "theia rebuild:electron",
-    "publish:latest": "lerna publish --registry=https://registry.npmjs.org/ --exact --skip-git",
-    "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --skip-git --yes",
-    "update": "git pull origin master && git submodule foreach git pull origin master",
-    "watch": "lerna run watch --parallel",
-    "download:plugins": "theia download:plugins"
-  },
-  "dependencies": {
-    "@theia/callhierarchy": "1.4.0",
-    "@theia/core": "1.4.0",
-    "@theia/editor": "1.4.0",
-    "@theia/electron": "1.4.0",
-    "@theia/file-search": "1.4.0",
-    "@theia/filesystem": "1.4.0",
-    "@theia/getting-started": "1.4.0",
-    "@theia/git": "1.4.0",
-    "@theia/keymaps": "1.4.0",
-    "@theia/markers": "1.4.0",
-    "@theia/messages": "1.4.0",
-    "@theia/mini-browser": "1.4.0",
-    "@theia/monaco": "1.4.0",
-    "@theia/navigator": "1.4.0",
-    "@theia/outline-view": "1.4.0",
-    "@theia/output": "1.4.0",
-    "@theia/plugin-ext": "1.4.0",
-    "@theia/plugin-ext-vscode": "1.4.0",
-    "@theia/preferences": "1.4.0",
-    "@theia/preview": "1.4.0",
-    "@theia/process": "1.4.0",
-    "@theia/search-in-workspace": "1.4.0",
-    "@theia/task": "1.4.0",
-    "@theia/terminal": "1.4.0",
-    "@theia/userstorage": "1.4.0",
-    "@theia/workspace": "1.4.0",
-    "monaco-editor-core": "^0.16.0",
-    "sprotty": "0.9.0",
-    "sprotty-theia": "0.9.0"
-  },
-  "devDependencies": {
-    "@theia/cli": "1.4.0",
-    "lerna": "^3.22.1",
-    "electron-builder": "^22.4.1",
-    "bufferutil": "4",
-    "utf-8-validate": "5",
-    "typescript": "latest"
-  },
-  "// Notes:": [
-      "The resolution for `fs-extra` was required due to this: https://spectrum.chat/theia/general/our-theia-electron-builder-app-no-longer-starts~f5cf09a0-6d88-448b-8818-24ad0ec2ee7c"
-  ],
-  "resolutions": {
-      "**/fs-extra": "^4.0.3"
+  "engines": {
+    "node": "^14.17.1",
+    "yarn": "^1.22.10"
   },
   "workspaces": [
     "keith-interactive",
@@ -89,13 +20,14 @@
     "extensions/keith-vscode",
     "extensions/klighd-diagram"
   ],
-  "theiaPluginsDir": "./plugins",
-  "theiaPlugins": {
-    "vscode-builtin-configuration-editing": "https://open-vsx.org/api/vscode/configuration-editing/1.44.2/file/vscode.configuration-editing-1.44.2.vsix",
-    "vscode-builtin-cpp": "https://open-vsx.org/api/vscode/cpp/1.44.2/file/vscode.cpp-1.44.2.vsix",
-    "vscode-builtin-java": "https://open-vsx.org/api/vscode/java/1.44.2/file/vscode.java-1.44.2.vsix",
-    "vscode-editorconfig": "https://open-vsx.org/api/EditorConfig/EditorConfig/0.14.4/file/EditorConfig.EditorConfig-0.14.4.vsix",
-    "vscode-eslint": "https://open-vsx.org/api/dbaeumer/vscode-eslint/2.1.1/file/dbaeumer.vscode-eslint-2.1.1.vsix",
-    "vscode-references-view": "https://open-vsx.org/api/ms-vscode/references-view/0.0.47/file/ms-vscode.references-view-0.0.47.vsix"
+  "scripts": {
+    "publish:latest": "lerna publish --registry=https://registry.npmjs.org/ --exact --skip-git",
+    "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --skip-git --yes",
+    "watch": "lerna run watch --parallel"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "lerna": "^3.22.1",
+    "typescript": "^4.3.2"
   }
 }

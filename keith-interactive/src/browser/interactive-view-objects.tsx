@@ -39,7 +39,7 @@ export function createRect(begin: number, end: number, top: number, bottom: numb
                     height={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? bottom - top : Math.abs(begin - end)}
                     fill={forbidden ? forbiddenColor : backgroundColor}
                     stroke={forbidden ? forbiddenColor : 'grey'}
-                    style={{ 'stroke-dasharray': "4" } as React.CSSProperties}>
+                    style={{ 'stroke-dasharray': "4" }}>
                 </rect>
             </g>
 }
@@ -60,7 +60,7 @@ export function createVerticalLine(mid: number, top: number, bot: number, direct
                     y2={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? bot : mid}
                     fill='none'
                     stroke='grey'
-                    style={{ 'stroke-dasharray': 4 } as React.CSSProperties}
+                    style={{ 'stroke-dasharray': 4 }}
                 />
             </g>
 }
@@ -82,7 +82,7 @@ export function renderCircle(fill: boolean, x: number, y: number, forbidden: boo
                     r="2"
                     stroke={color}
                     fill={fill ? color : "none"}
-                    style={{ 'stroke-width': 0.5 } as React.CSSProperties}
+                    style={{ 'stroke-width': 0.5 }}
                 />
             </g>
 }

@@ -11,7 +11,6 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { SVGAttributes } from 'react';
 import { svg } from 'snabbdom-jsx';
 import { VNode } from 'snabbdom/vnode';
 import { KGraphData } from '@kieler/keith-interactive/lib/constraint-classes';
@@ -54,7 +53,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
         return renderError(rendering)
     }
 
-    const gAttrs: SVGAttributes<SVGGElement> = {
+    const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
@@ -88,7 +87,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         return renderError(rendering)
     }
 
-    const gAttrs: SVGAttributes<SVGGElement> = {
+    const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
@@ -176,7 +175,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                             'opacity': colorStyles.opacity,
                             'stroke-opacity': colorStyles.foreground.opacity,
                             'fill-opacity': colorStyles.background.opacity
-                        } as React.CSSProperties}
+                        }}
                         stroke={colorStyles.foreground.color}
                         fill={colorStyles.background.color}
                         filter={shadowStyles}
@@ -204,7 +203,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'opacity': colorStyles.opacity,
                         'stroke-opacity': colorStyles.foreground.opacity,
                         'fill-opacity': colorStyles.background.opacity
-                    } as React.CSSProperties}
+                    }}
                     stroke={colorStyles.foreground.color}
                     fill={colorStyles.background.color}
                     filter={shadowStyles}
@@ -237,7 +236,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                         'opacity': colorStyles.opacity,
                         'stroke-opacity': colorStyles.foreground.opacity,
                         'fill-opacity': colorStyles.background.opacity
-                    } as React.CSSProperties}
+                    }}
                     stroke={colorStyles.foreground.color}
                     fill={colorStyles.background.color}
                     filter={shadowStyles}
@@ -293,7 +292,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
         return renderError(rendering)
     }
 
-    const gAttrs: SVGAttributes<SVGGElement> = {
+    const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
@@ -414,7 +413,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
                 'opacity': colorStyles.opacity,
                 'stroke-opacity': colorStyles.foreground.opacity,
                 'fill-opacity': colorStyles.background.opacity
-            } as React.CSSProperties}
+            }}
             stroke={colorStyles.foreground.color}
             fill={colorStyles.background.color}
             filter={shadowStyles}
@@ -458,7 +457,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         return renderError(rendering)
     }
 
-    const gAttrs: SVGAttributes<SVGGElement> = {
+    const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 

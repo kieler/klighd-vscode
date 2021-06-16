@@ -18,6 +18,7 @@ import { VNode } from "snabbdom/vnode";
 type OptionChangeHandler<T> = (newValue: T) => void;
 
 interface BaseProps<T> {
+    key?: string
     id: string;
     name: string;
     value: T;
@@ -114,7 +115,7 @@ export function TextOption(props: TextOptionProps): VNode {
 }
 
 /** Renders a named separator. */
-export function SeparatorOption(props: { name: string }): VNode {
+export function SeparatorOption(props: { name: string, key?: string }): VNode {
     return <span classNames="options__separator">{props.name}</span>;
 }
 

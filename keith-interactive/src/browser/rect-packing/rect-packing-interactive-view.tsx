@@ -54,7 +54,7 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
         stroke={color}
         fill= 'rgba(0,0,0,0)'
         strokeWidth={2 * boundingBoxMargin}
-        style={{ 'stroke-dasharray': 4 } as React.CSSProperties}>
+        style={{ 'stroke-dasharray': 4 }}>
     </rect></g>
 }
 

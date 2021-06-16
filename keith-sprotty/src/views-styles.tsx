@@ -381,14 +381,14 @@ export function colorDefinition(colorId: string, start: ColorStyle, end: ColorSt
         style={{
             'stop-color': start.color,
             'stop-opacity': start.opacity
-        } as React.CSSProperties}
+        }}
     />
     const endColorStop = <stop
         offset={1}
         style={{
             'stop-color': end.color,
             'stop-opacity': end.opacity
-        } as React.CSSProperties}
+        }}
     />
     let angleFloat = angle === undefined ? 0 : angle
 

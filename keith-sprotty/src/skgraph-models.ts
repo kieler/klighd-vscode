@@ -138,7 +138,7 @@ export interface KArc extends KContainerRendering {
     startAngle: number
     arcAngle: number
     arcType: Arc
-    test: Position
+    test: KPosition
 }
 
 /**
