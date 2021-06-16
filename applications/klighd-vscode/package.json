@@ -113,13 +113,12 @@
         ]
     },
     "scripts": {
-        "prepare": "yarn run clean && yarn run compile",
-        "clean": "rimraf dist",
-        "vscode:prepublish": "yarn run package",
-        "compile": "webpack",
+        "clean": "rm -rf dist",
+        "lint": "eslint src --ext ts",
+        "build": "webpack --mode production --devtool hidden-source-map",
         "watch": "webpack --watch",
-        "package": "webpack --mode production --devtool hidden-source-map",
-        "lint": "eslint src --ext ts"
+        "package": "vsce package --yarn -o klighd-vscode.vsix",
+        "vscode:prepublish": "yarn run build"
     },
     "devDependencies": {
         "@types/vscode": "^1.56.0",

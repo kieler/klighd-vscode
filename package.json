@@ -14,16 +14,17 @@
     "yarn": "^1.22.10"
   },
   "workspaces": [
-    "keith-interactive",
-    "keith-sprotty",
-    "keith-standalone-view",
-    "extensions/keith-vscode",
-    "extensions/klighd-diagram"
+    "applications/*",
+    "packages/*"
   ],
   "scripts": {
+    "clean": "lerna run clean --parallel",
+    "prebuild": "yarn clean",
+    "build": "lerna run build",
+    "watch": "lerna run watch --parallel",
+    "package": "lerna run build && lerna run package --parallel",
     "publish:latest": "lerna publish --registry=https://registry.npmjs.org/ --exact --skip-git",
-    "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --skip-git --yes",
-    "watch": "lerna run watch --parallel"
+    "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --skip-git --yes"
   },
   "dependencies": {},
   "devDependencies": {

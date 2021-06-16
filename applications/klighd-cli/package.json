@@ -17,18 +17,16 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "yarn build",
-    "clean": "rimraf lib && rimraf dist && rimraf bin",
+    "clean": "rm -rf lib dist bin",
     "lint": "tslint -c ./tslint.json --project ./tsconfig.json",
     "prebuild": "yarn clean",
     "build": "run-p --print-label \"build:*\"",
-    "build:app": "webpack --mode=\"production\" && tsc --noEmit -p ./tsconfig.web.json",
+    "build:app": "webpack --mode production --devtool hidden-source-map",
     "build:server": "tsc -p ./tsconfig.server.json",
-    "precompile": "yarn build",
-    "compile": "pkg -c pkg.json ./lib/keith.js",
     "watch": "run-p --print-label \"watch:*\"",
-    "watch:app": "webpack --watch --mode=\"development\"",
+    "watch:app": "webpack --watch",
     "watch:server": "tsc -w -p ./tsconfig.server.json",
+    "package": "pkg -c pkg.json ./lib/keith.js",
     "start": "node ./lib/main.js",
     "socket": "node ./lib/main.js --ls_port=5007"
   },

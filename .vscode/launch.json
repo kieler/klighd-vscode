@@ -5,114 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
-            "request": "launch",
-            "name": "Start Browser Backend Socket",
-            "program": "${workspaceRoot}/keith-app/src-gen/backend/main.js",
-            "args": [
-                "--root-dir=./workspace",
-                "--LSP_PORT=5007",
-                "--loglevel=debug",
-                "--port=3000",
-                "--no-cluster",
-                "--socket"
-            ],
-            "env": {
-                "NODE_ENV": "development"
-            },
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceRoot}/node_modules/@theia/*/lib/**/*.js",
-                "${workspaceRoot}/keith-app/lib/**/*.js",
-                "${workspaceRoot}/keith-app/src-gen/**/*.js",
-                "${workspaceRoot}/sprotty/client/lib/**/*.js"
-            ],
-            "smartStep": true,
-            "internalConsoleOptions": "openOnSessionStart",
-            "outputCapture": "std"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Electron",
-            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
-            "windows": {
-                "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron.cmd"
-            },
-            "program": "${workspaceRoot}/keith-app-electron/src-gen/frontend/electron-main.js",
-            "protocol": "inspector",
-            "args": [
-                "--loglevel=debug",
-                "--hostname=localhost",
-                "--no-cluster",
-                "--app-project-path=${workspaceRoot}",
-                "--no-app-auto-install"
-            ],
-            "env": {
-                "NODE_ENV": "development"
-            },
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceRoot}/keith-app-electron/src-gen/frontend/electron-main.js",
-                "${workspaceRoot}/keith-app-electron/src-gen/backend/main.js",
-                "${workspaceRoot}/keith-app-electron/lib/**/*.js"
-            ],
-            "smartStep": true,
-            "internalConsoleOptions": "openOnSessionStart",
-            "outputCapture": "std"
-        },
-        {
-            "name": "Launch in Chrome",
-            "type": "chrome",
-            "request": "launch",
-            "url": "http://localhost:3000",
-            "webRoot": "${workspaceFolder}",
-            "sourceMapPathOverrides": {
-                "webpack:///../*": "${webRoot}/*"
-            }
-        },
-        {
             "name": "Launch VSC Extension",
             "type": "extensionHost",
             "request": "launch",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/extensions/keith-vscode",
-                "--extensions-dir=${workspaceFolder}/extensions"
-            ],
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}/applications/klighd-vscode"],
             "sourceMaps": true,
             "smartStep": true,
-            "outFiles": ["${workspaceFolder}/extensions/keith-vscode/dist/**/*.js"],
+            "outFiles": ["${workspaceFolder}/applications/klighd-vscode/dist/**/*.js"],
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
-            "name": "Launch VSC Extension (Socket)",
-            "type": "extensionHost",
-            "request": "launch",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}/extensions/keith-vscode",
-                "--extensions-dir=${workspaceFolder}/extensions"
-            ],
-            "env": {
-                "KEITH_LS_PORT": "5007"
-            },
-            "sourceMaps": true,
-            "smartStep": true,
-            "outFiles": ["${workspaceFolder}/extensions/keith-vscode/dist/**/*.js"],
-            "preLaunchTask": "${defaultBuildTask}"
-        },
-        {
-            "name": "Start Standalone Webserver",
+            "name": "Start CLI Webserver",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/keith-standalone-view/lib/main.js",
+            "program": "${workspaceFolder}/application/klighd-cli/lib/main.js",
+            "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
+            "name": "Start CLI Webserver (Port)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/application/klighd-cli/lib/main.js",
             "args": ["--ls_port=5007"],
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/keith-standalone-view/lib/**/*.js",
-                "${workspaceFolder}/keith-standalone-view/dist/**/*.js",
-                "${workspaceFolder}/keith-sprotty/lib/**/*.js",
-            ],
-            "smartStep": true,
             "preLaunchTask": "${defaultBuildTask}"
         }
     ]
