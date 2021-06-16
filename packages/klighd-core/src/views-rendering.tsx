@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx';
+import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
 import { KGraphData } from '@kieler/keith-interactive/lib/constraint-classes';
 import { KeithInteractiveMouseListener } from '@kieler/keith-interactive/lib/keith-interactive-mouselistener';
@@ -57,7 +57,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
 
-    let element = <g id={rendering.renderingId} {...gAttrs}>
+    const element = <g id={rendering.renderingId} {...gAttrs}>
         {context.renderChildAreaChildren(parent)}
     </g>
 
@@ -109,7 +109,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     const lineStyles = getSvgLineStyles(styles)
 
     // Create the svg element for this rendering.
-    let element: VNode
+    let element: VNode | undefined = undefined
     switch (rendering.type) {
         case K_ARC: {
             const kArcRendering = rendering as KArc
@@ -186,6 +186,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             } else {
                 // Fallthrough to KEllipse case.
             }
+            break
         }
         case K_ELLIPSE: {
             element = <g id={rendering.renderingId} {...gAttrs}>
@@ -265,7 +266,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         }
     }
 
-    return element
+    return element as VNode
 }
 
 /**
@@ -322,7 +323,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
         case K_SPLINE: {
             path += `M${points[0].x},${points[0].y}`
             for (let i = 1; i < points.length; i = i + 3) {
-                let remainingPoints = points.length - i
+                const remainingPoints = points.length - i
                 if (remainingPoints === 1) {
                     // if one routing point is left, draw a straight line to there.
                     path += `L${points[i].x},${points[i].y}`
@@ -393,7 +394,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
                 path += `L${xs},${ys}Q${xp},${yp} ${xe},${ye}`
             }
             if (points.length > 1) {
-                let lastPoint = points[points.length - 1]
+                const lastPoint = points[points.length - 1]
                 path += `L${lastPoint.x},${lastPoint.y}`
             }
             break
@@ -401,7 +402,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
     }
 
     // Create the svg element for this rendering.
-    let element = <g id={rendering.renderingId} {...gAttrs}>
+    const element = <g id={rendering.renderingId} {...gAttrs}>
         <path
             d={path}
             style={{
@@ -445,7 +446,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     if (text === undefined) return <g />
 
     // The text split into an array for each individual line
-    let lines = text.split('\n')
+    const lines = text.split('\n')
 
     // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(parent, rendering.styles, propagatedStyles)
@@ -475,7 +476,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
     // contained in the general style, otherwise it has to be repeated in every contained <tspan> element.
     const opacity = mListener.hasDragged ? 0.1 : parent.opacity
-    let style = {
+    const style = {
         ...{ 'dominant-baseline': textStyles.dominantBaseline },
         ...{ 'font-family': textStyles.fontFamily },
         ...{ 'font-size': textStyles.fontSize },
@@ -491,7 +492,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     let children: any[]
 
     // The attributes to be contained in the returned text node.
-    let attrs = {
+    const attrs = {
         x: boundsAndTransformation.bounds.x,
         style: style,
         ...(colorStyle ? {fill: colorStyle.color} : {}),
@@ -567,9 +568,9 @@ export function renderChildRenderings(parentRendering: KContainerRendering, pare
     context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): (VNode | undefined)[] {
     // children only should be rendered if the parentElement is not a shadow
     if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
-        let renderings: (VNode | undefined)[] = []
-        for (let childRendering of parentRendering.children) {
-            let rendering = getRendering([childRendering], parentElement, propagatedStyles, context, mListener)
+        const renderings: (VNode | undefined)[] = []
+        for (const childRendering of parentRendering.children) {
+            const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, mListener)
             renderings.push(rendering)
         }
         return renderings
@@ -663,12 +664,12 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement,
  * @param context The rendering context for this rendering.
  */
 export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer): KRendering | undefined {
-    for (let data of datas) {
+    for (const data of datas) {
         if (data === null)
             continue
         if (data.type === K_RENDERING_REF) {
             const id = (data as KRenderingRef).renderingId
-            for (let rendering of context.kRenderingLibrary.renderings) {
+            for (const rendering of context.kRenderingLibrary.renderings) {
                 if ((rendering as KRendering).renderingId === id) {
                     context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
                     context.decorationMap = (data as KRenderingRef).calculatedDecorationMap

@@ -43,7 +43,7 @@ export abstract class Registry implements IActionHandler {
         this._listeners.push(handler);
     }
 
-    protected notifyListeners() {
+    protected notifyListeners(): void {
         for (const listener of this._listeners) {
             listener();
         }

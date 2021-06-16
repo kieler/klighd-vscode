@@ -24,7 +24,7 @@ import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "
  */
 @injectable()
 export class SynthesesRegistry extends Registry {
-    private _currentSynthesisID: string = "";
+    private _currentSynthesisID = "";
     private _syntheses: SetSynthesesActionData[] = [];
 
     handle(action: Action): void | Action | ICommand {
@@ -39,11 +39,11 @@ export class SynthesesRegistry extends Registry {
         }
     }
 
-    get syntheses() {
+    get syntheses(): SetSynthesesActionData[] {
         return this._syntheses;
     }
 
-    get currentSynthesisID() {
+    get currentSynthesisID(): string {
         return this._currentSynthesisID;
     }
 }

@@ -51,7 +51,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
                 // nodes should be movable when the user clicks on the label
                 target = target.parent
             }
-            let result = []
+            const result = []
             if (this.startDragPosition) {
                 if (this.elementId2startPos.size === 0) {
                     this.collectStartPositions(this.target.root);
@@ -117,7 +117,7 @@ export class KeithInteractiveMouseListener extends MoveMouseListener {
      * @param target target
      * @param event event
      */
-    mouseEnter(target: SModelElement, event: MouseEvent): Action[] {
+    mouseEnter(): Action[] {
         return [];
     }
 

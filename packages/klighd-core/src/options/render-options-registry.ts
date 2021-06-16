@@ -25,7 +25,7 @@ export class ShowConstraintOption implements RenderOption {
     readonly name: string = ShowConstraintOption.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = false;
-    currentValue: boolean = false;
+    currentValue = false;
 }
 
 @injectable()
@@ -50,7 +50,7 @@ export class RenderOptionsRegistry extends Registry {
         }
     }
 
-    get allRenderOptions() {
+    get allRenderOptions(): RenderOption[] {
         return Array.from(this._renderOptions.values());
     }
 

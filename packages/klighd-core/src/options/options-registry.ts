@@ -38,7 +38,7 @@ import {
 export class OptionsRegistry extends Registry {
     @inject(Connection) connection: Connection;
 
-    private _modelUri: string = "";
+    private _modelUri = "";
     private _synthesisOptions: SynthesisOption[] = [];
     private _layoutOptions: LayoutOptionUIData[] = [];
     private _displayedActions: DisplayedActionData[] = [];

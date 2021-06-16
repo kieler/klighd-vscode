@@ -18,7 +18,7 @@ export interface Preferences {
 export class PreferencesRegistry extends Registry {
     private _preferences: Preferences;
 
-    get preferences() {
+    get preferences(): Preferences {
         return this._preferences;
     }
 

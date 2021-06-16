@@ -120,7 +120,7 @@ export interface KRendering extends KGraphData, KStyleHolder {
  * Define a child area inside of a rendering to force children being placed inside the defined area.
  * Represents its java counterpart in KLighD.
  */
-export interface KChildArea extends KRendering { }
+export type KChildArea = KRendering
 
 /**
  * KRendering that can have Children.
@@ -147,14 +147,14 @@ export interface KArc extends KContainerRendering {
 export interface KCustomRendering extends KContainerRendering {
     className: string
     bundleName: string
-    figureObject: object
+    figureObject: Record<string, unknown>
 }
 
 /**
  * Define an ellipse shape that fits inside the space defined (a) by the node it is attached to or (b) by the placementData that is attached to the rendering.
  * Represents its java counterpart in KLighD.
  */
-export interface KEllipse extends KContainerRendering { }
+export type KEllipse = KContainerRendering
 
 /**
  * Use an image instead of defining the renderings completely by yourself.
@@ -163,7 +163,7 @@ export interface KEllipse extends KContainerRendering { }
 export interface KImage extends KContainerRendering {
     bundleName: string
     imagePath: string
-    imageObject: object
+    imageObject: Record<string, unknown>
     clipShape: KRendering
 }
 
@@ -180,7 +180,7 @@ export interface KPolyline extends KContainerRendering {
  * Creates a polygon based on a list of points. The polygon is a closed figure (last point = first point) even when not defined explicitly.
  * Represents its java counterpart in KLighD.
  */
-export interface KPolygon extends KPolyline { }
+export type KPolygon = KPolyline
 
 /**
  * A polyline with rounded corners at its bendpoints.
@@ -194,13 +194,13 @@ export interface KRoundedBendsPolyline extends KPolyline {
  * Creates a rounded edge.
  * Represents its java counterpart in KLighD.
  */
-export interface KSpline extends KPolyline { }
+export type KSpline = KPolyline
 
 /**
  * Define a rectangle by adding the topLeft and bottomRight coordinates.
  * Represents its java counterpart in KLighD.
  */
-export interface KRectangle extends KContainerRendering { }
+export type KRectangle = KContainerRendering
 
 /**
  * The rounded rectangle is used to create a rectangle with rounded corners. Corner width and height need to be passed in order to define the style of the corners.
@@ -327,14 +327,14 @@ export interface KXPosition {
  * pos = (L+absolute) + (R-L)*relative = (R-absolute) - widthOfParent*relative
  * Represents its java counterpart in KLighD.
  */
-export interface KLeftPosition extends KXPosition { }
+export type KLeftPosition = KXPosition
 
 /**
  * Defines a position starting at the rightmost point R of the parent rendering.
  * pos = (R-absolute) - (R-L)*relative = (R-absolute) - widthOfParent*relative
  * Represents its java counterpart in KLighD.
  */
-export interface KRightPosition extends KXPosition { }
+export type KRightPosition = KXPosition
 
 /**
  * Define an y-position by setting absolute and relative position respective to a parent rendering.
@@ -354,7 +354,7 @@ export interface KYPosition {
  * pos = (H+absolute) + heightOfParent*relative
  * Represents its java counterpart in KLighD.
  */
-export interface KTopPosition extends KYPosition { }
+export type KTopPosition = KYPosition
 
 /**
  * Defines a position starting at the bottom point B of the parent rendering.
@@ -362,7 +362,7 @@ export interface KTopPosition extends KYPosition { }
  * pos = (B-absolute) - heightOfParent*relative
  * Represents its java counterpart in KLighD.
  */
-export interface KBottomPosition extends KYPosition { }
+export type KBottomPosition = KYPosition
 
 /**
  * Represents its java counterpart in KLighD.
@@ -446,13 +446,13 @@ export interface KColoring extends KStyle {
  * Defines the BackgroundColor and its alphaChannel of a rendering.
  * Represents its java counterpart in KLighD.
  */
-export interface KBackground extends KColoring { }
+export type KBackground = KColoring
 
 /**
  * Defines the ForegroundColor and its alphaChannel of a rendering.
  * Represents its java counterpart in KLighD.
  */
-export interface KForeground extends KColoring { }
+export type KForeground = KColoring
 
 /**
  * FontStyle to determine whether to draw it bold or not.
@@ -709,7 +709,7 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
  * Returns if the given parameter is an SKGraphElement.
  * @param test The potential SKGraphElement.
  */
-export function isSKGraphElement(test: any): test is SKGraphElement {
+export function isSKGraphElement(test: unknown): test is SKGraphElement {
     return test instanceof SModelElement
         && (test as any)['areChildAreaChildrenRendered'] !== undefined
         && (test as any)['areNonChildAreaChildrenRendered'] !== undefined

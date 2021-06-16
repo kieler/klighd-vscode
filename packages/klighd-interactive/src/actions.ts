@@ -20,7 +20,6 @@ import { DeleteConstraint } from './layered/constraint-types';
 export class RefreshDiagramAction implements Action {
     static readonly KIND: string = 'refreshDiagram'
     readonly kind = RefreshDiagramAction.KIND
-    constructor() {}
 }
 
 /**

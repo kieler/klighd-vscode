@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx';
+import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
 import { isSelectable } from 'sprotty';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
@@ -169,7 +169,7 @@ export class KStyles {
  */
 export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
     // TODO: not all of these are implemented yet
-    let styles = new KStyles(false)
+    const styles = new KStyles(false)
     // Include all propagated styles.
     copyStyles(propagatedStyles, styles)
     if (stylesToPropagage !== undefined) {
@@ -181,13 +181,13 @@ export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagat
     }
 
     // First, apply all non-selection styles.
-    for (let style of styleList) {
+    for (const style of styleList) {
         if (style.selection === false) {
             applyKStyle(style, styles, stylesToPropagage)
         }
     }
     // Then, override with selection styles, if any are available.
-    for (let style of styleList) {
+    for (const style of styleList) {
         if (isSelectable(parent) && parent.selected && style.selection === true) {
             applyKStyle(style, styles, stylesToPropagage)
         }
@@ -345,7 +345,7 @@ export function applyKStyle(style: KStyle, styles: KStyles, stylesToPropagage?: 
  * @param from The KStyles to copy from.
  * @param to The KStyles to copy to.
  */
-export function copyStyles(from: KStyles, to: KStyles) {
+export function copyStyles(from: KStyles, to: KStyles): void {
     to.kBackground = from.kBackground
     to.kForeground = from.kForeground
     to.kFontBold = from.kFontBold
@@ -390,7 +390,7 @@ export function colorDefinition(colorId: string, start: ColorStyle, end: ColorSt
             'stop-opacity': end.opacity
         }}
     />
-    let angleFloat = angle === undefined ? 0 : angle
+    const angleFloat = angle === undefined ? 0 : angle
 
     const gradientAttributes = {
         id: colorId,
@@ -476,12 +476,12 @@ export function getSvgShadowStyles(styles: KStyles, context: SKGraphModelRendere
     // Every shadow ID should start with an 's'.
     let shadowId = 's'
     let color
-    let blur = shadow.blur
-    let xOffset = shadow.xOffset
-    let yOffset = shadow.yOffset
+    const blur = shadow.blur
+    const xOffset = shadow.xOffset
+    const yOffset = shadow.yOffset
     // Extract the color and also put it in the ID.
     if (shadow.color !== undefined) {
-        let shadowColor = shadow.color.red + ','
+        const shadowColor = shadow.color.red + ','
             + shadow.color.green + ','
             + shadow.color.blue
         shadowId += shadowColor
@@ -566,13 +566,13 @@ export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGra
     // Otherwise, build an ID for the gradient color to refer to the definition described below.
     // Every color ID should start with a 'c'.
     let colorId = 'c'
-    let start = {} as ColorStyle
-    let end = {} as ColorStyle
+    const start = {} as ColorStyle
+    const end = {} as ColorStyle
     let angle
     if (coloring.alpha !== undefined && coloring.alpha !== 255) {
         start.opacity = (coloring.alpha / 255).toString()
     }
-    let startColor = coloring.color.red + ','
+    const startColor = coloring.color.red + ','
         + coloring.color.green + ','
         + coloring.color.blue
     colorId += startColor
@@ -584,7 +584,7 @@ export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGra
     if (coloring.targetAlpha !== undefined && coloring.targetAlpha !== 255) {
         end.opacity = (coloring.targetAlpha / 255).toString()
     }
-    let endColor = coloring.targetColor.red + ','
+    const endColor = coloring.targetColor.red + ','
         + coloring.targetColor.green + ','
         + coloring.targetColor.blue
     colorId += endColor

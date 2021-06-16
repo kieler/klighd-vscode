@@ -139,7 +139,6 @@ export class PerformActionAction implements Action {
 export class RefreshLayoutAction implements Action {
     static readonly KIND: string = 'refreshLayout'
     readonly kind = RefreshLayoutAction.KIND
-    constructor() {}
 }
 
 export class KeithUpdateModelAction extends UpdateModelAction {

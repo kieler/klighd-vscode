@@ -50,7 +50,7 @@ export class MessageConnection implements Connection {
         vscodeApi.postMessage(message);
     }
 
-    sendNotification<T extends object>(type: NotificationType, payload: T): void {
+    sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void {
         console.groupCollapsed(`MessageConnection sends ${type} notification:`);
         console.log(payload);
         console.groupEnd();
@@ -65,13 +65,13 @@ export class MessageConnection implements Connection {
         this.messageHandlers.push(handler);
     }
 
-    logHandler(message: ActionMessage) {
+    logHandler(message: ActionMessage): void {
         console.groupCollapsed(`MessageConnection received ${message.action.kind} action:`);
         console.log(message);
         console.groupEnd();
     }
 
-    statusMessageHandler(message: ActionMessage) {
+    statusMessageHandler(message: ActionMessage): void {
         if (message.action.kind === ServerStatusAction.KIND) {
             this.diagramWidgetFactory().setStatus(message.action as ServerStatusAction);
         }

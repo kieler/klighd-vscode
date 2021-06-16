@@ -12,7 +12,7 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx";
+import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { inject, injectable, postConstruct } from "inversify";
 import { OptionsRegistry } from "./options-registry";
@@ -26,7 +26,7 @@ export class OptionsPanel extends SidebarPanel {
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
     @postConstruct()
-    init() {
+    init(): void {
         this.optionsRegistry.onChange(() => this.update());
     }
 

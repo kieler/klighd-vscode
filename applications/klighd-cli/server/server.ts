@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { fastify, FastifyPluginAsync } from "fastify";
+import { fastify, FastifyPluginAsync, FastifyInstance } from "fastify";
 import staticPlugin from "fastify-static";
 import websocketPlugin from "fastify-websocket";
 import { join } from "path";
@@ -46,7 +46,7 @@ interface SetupOptions extends Options {
  * able to serve the standalone view and forward websocket connections
  * to a language server.
  */
-export function createServer(opts: SetupOptions) {
+export function createServer(opts: SetupOptions): FastifyInstance {
     const server = fastify({
         logger: opts.logging ? { prettyPrint: true, level: opts.logging } : undefined,
         disableRequestLogging: true,

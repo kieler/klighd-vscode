@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "clean": "rm -rf lib",
-    "lint": "tslint -c ../tslint.json --project ./tsconfig.json",
+    "lint": "eslint .",
     "build": "tsc",
     "watch": "tsc -w"
   },

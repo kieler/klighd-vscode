@@ -23,7 +23,7 @@ import { KNode } from '../constraint-classes';
  * @param parent The parent node.
  * @param event The mouse released event.
  */
-export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent: KNode | undefined, event: MouseEvent) {
+export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent: KNode | undefined, event: MouseEvent): SetAspectRatioAction | RefreshDiagramAction {
     // If node is not put to a valid position the diagram will be refreshed.
     let result = new RefreshDiagramAction()
     // If the node is moved on top of another node it takes its place.

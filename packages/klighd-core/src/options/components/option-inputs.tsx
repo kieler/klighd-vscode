@@ -12,20 +12,20 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx";
+import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 
 type OptionChangeHandler<T> = (newValue: T) => void;
 
 interface BaseProps<T> {
-    key?: string
+    key?: string;
     id: string;
     name: string;
     value: T;
     onChange: OptionChangeHandler<T>;
 }
 
-interface CheckOptionProps extends BaseProps<boolean> {}
+type CheckOptionProps = BaseProps<boolean>;
 
 /** Render a labeled checkbox input. */
 export function CheckOption(props: CheckOptionProps): VNode {
@@ -96,7 +96,7 @@ export function RangeOption(props: RangeOptionProps): VNode {
     );
 }
 
-interface TextOptionProps extends BaseProps<string> {}
+type TextOptionProps = BaseProps<string>;
 
 /** Renders a labeled text input. */
 export function TextOption(props: TextOptionProps): VNode {
@@ -115,7 +115,7 @@ export function TextOption(props: TextOptionProps): VNode {
 }
 
 /** Renders a named separator. */
-export function SeparatorOption(props: { name: string, key?: string }): VNode {
+export function SeparatorOption(props: { name: string; key?: string }): VNode {
     return <span classNames="options__separator">{props.name}</span>;
 }
 

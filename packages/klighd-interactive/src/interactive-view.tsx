@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx';
+import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { KNode } from './constraint-classes';
 import { filterKNodes } from './helper-methods';
@@ -25,12 +25,12 @@ import { isUndefined } from 'util';
  */
 export function renderInteractiveLayout(root: KNode): VNode {
     // Filter KNodes
-    let nodes = filterKNodes(root.children)
+    const nodes = filterKNodes(root.children)
     let result = undefined
     if (isUndefined(root.properties.algorithm) || root.properties.algorithm.endsWith('layered')) {
-        result = renderHierarchyLevelLayered(nodes, root)
+        result = renderHierarchyLevelLayered(nodes)
     } else if (root.properties.algorithm.endsWith('rectpacking')) {
-        result = renderHierarchyLevelRectPacking(nodes, root)
+        result = renderHierarchyLevelRectPacking(nodes)
     } else {
         // Not supported
     }

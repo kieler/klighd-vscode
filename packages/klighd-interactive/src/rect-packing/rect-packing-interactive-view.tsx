@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx';
+import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { KNode } from '../constraint-classes';
 import { renderLock } from '../interactive-view-objects';
@@ -25,9 +25,9 @@ const lockOffset = 7
  * @param node All nodes in the hierarchical level for which the layers should be visualized.
  * @param root Root of the hierarchical level.
  */
-export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
+export function renderHierarchyLevel(nodes: KNode[]): VNode {
     // Draw rect around all child nodes
-    let color = 'grey'
+    const color = 'grey'
     let x: number = Number.MAX_VALUE
     let y: number = Number.MAX_VALUE
     let maxX: number = Number.MIN_VALUE

@@ -19,7 +19,7 @@ import { PerformActionAction } from './actions';
  * Mouse listener handling KLighD actions that can be defined on SKGraphElements in the model.
  */
 export class ActionListener extends MouseListener {
-    mouseMoved: boolean = false
+    mouseMoved = false
 
     doubleClick(target: SModelElement, event: WheelEvent): (Action | Promise<Action>)[] {
         // Ignore the event if the top level graph element is clicked, as that is not a SKGraphElement.
@@ -29,12 +29,12 @@ export class ActionListener extends MouseListener {
         return [];
     }
 
-    mouseDown(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseDown(): (Action | Promise<Action>)[] {
         this.mouseMoved = false
         return [];
     }
 
-    mouseMove(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseMove(): (Action | Promise<Action>)[] {
         this.mouseMoved = true
         return [];
     }
@@ -54,7 +54,7 @@ export class ActionListener extends MouseListener {
      * @param eventType The event type of the event (e.g. 'dblclk', 'clk', etc.).
      */
     protected actions(target: SKGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
-        let actions: Action[] = []
+        const actions: Action[] = []
         // Look up the ID of the semantic element that was clicked.
         const semanticElement = getSemanticElement(event.target)
         if (semanticElement === undefined) {

@@ -85,7 +85,7 @@ export class SetRenderOptionAction implements Action {
     static readonly KIND = "setRenderOption";
     readonly kind = SetRenderOptionAction.KIND;
 
-    constructor(readonly id: string, readonly value: any) {}
+    constructor(readonly id: string, readonly value: unknown) {}
 
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetRenderOptionAction {

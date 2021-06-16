@@ -14,7 +14,7 @@
 /** @jsx html */
 import { RefreshDiagramAction } from "@kieler/keith-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
-import { html } from "snabbdom-jsx";
+import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { CenterAction, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
 import { KeithFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
@@ -43,7 +43,7 @@ export class GeneralPanel extends SidebarPanel {
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
     @postConstruct()
-    init() {
+    init(): void {
         this.synthesesRegistry.onChange(() => this.update());
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());

@@ -33,12 +33,12 @@ export const ONE_LAYER_PADDING = 10;
  * @param layers All layers at the hierarchical level.
  */
 export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], direction: Direction): number {
-    let coordinateInLayoutDirection = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
+    const coordinateInLayoutDirection = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
         ? node.position.x + node.size.width / 2 : node.position.y + node.size.height / 2
 
     // check for all layers if the node is in the layer
     for (let i = 0; i < layers.length; i++) {
-        let layer = layers[i]
+        const layer = layers[i]
         if (coordinateInLayoutDirection < layer.end &&
             (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ||
         coordinateInLayoutDirection > layer.end && (direction === Direction.LEFT || direction === Direction.UP)) {
@@ -47,7 +47,7 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
     }
 
     // if the node is the only one in the last layer it can not be in a new last layer
-    let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
+    const lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
     if (lastLNodes.length === 1 && lastLNodes[0].selected) {
         // node is in last layer
         return layers.length - 1
@@ -63,10 +63,10 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
  * @param nodes all nodes
  * @param layerCandidate the current candidate value for the new layer constraint
  */
-export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number) {
+export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number): number {
 
     // Examine all nodes that have a layer Id left or equal to the layerCandidate and that have a layerCons > their layerId
-    let layerConstraintLeftOfCandidate = nodes.filter(n => n.properties.layerId <= layerCandidate && n.properties.layerConstraint > n.properties.layerId)
+    const layerConstraintLeftOfCandidate = nodes.filter(n => n.properties.layerId <= layerCandidate && n.properties.layerConstraint > n.properties.layerId)
 
     // In case that there are no such nodes return the layerCandidate
     if (layerConstraintLeftOfCandidate.length === 0) {
@@ -78,7 +78,7 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
     // of shifts
     let nodeWithMaxCons = null
     let maxCons = -1
-    for (let n of layerConstraintLeftOfCandidate) {
+    for (const n of layerConstraintLeftOfCandidate) {
         const layerConstraint = n.properties.layerConstraint
         if (layerConstraint > maxCons) {
             nodeWithMaxCons = n
@@ -87,7 +87,7 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
     }
 
     if (nodeWithMaxCons !== null) {
-        let idDiff = layerCandidate - nodeWithMaxCons.properties.layerId
+        const idDiff = layerCandidate - nodeWithMaxCons.properties.layerId
         return maxCons + idDiff
     }
 
@@ -100,14 +100,14 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
  * @param alreadyInLayer signals whether the node already was in the layer before it was moved.
  * @param layerNodes all nodes of the target layer
  */
-export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolean, layerNodes: KNode[]) {
+export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolean, layerNodes: KNode[]): number {
     let localTargetIndex = targetIndex
     if (localTargetIndex > 0) {
         // Check whether there is an user defined pos constraint on the upper neighbour that is higher
         // than its position ID
-        let upperIndex = localTargetIndex - 1
-        let upperNeighbor = layerNodes[upperIndex]
-        let posConsOfUpper = upperNeighbor.properties.positionConstraint
+        const upperIndex = localTargetIndex - 1
+        const upperNeighbor = layerNodes[upperIndex]
+        const posConsOfUpper = upperNeighbor.properties.positionConstraint
         if (posConsOfUpper > upperIndex) {
             if (alreadyInLayer && upperNeighbor.properties.positionId === localTargetIndex) {
                 localTargetIndex = posConsOfUpper
@@ -126,7 +126,7 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
 export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
     // All nodes within one hierarchy level have the same direction
     nodes.sort((a, b) => a.properties.layerId - b.properties.layerId)
-    let layers = []
+    const layers = []
     let layer = 0
     // Begin coordinate of layer, depending of on the layout direction this might be a x or y coordinate
     let beginCoordinate = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ? Number.MAX_VALUE : Number.MIN_VALUE
@@ -136,7 +136,7 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
     let bottomBorder = Number.MIN_VALUE
     // calculate bounds of the layers
     for (let i = 0; i < nodes.length; i++) {
-        let node = nodes[i]
+        const node = nodes[i]
         if (node.properties.layerId !== layer) {
             // node is in the next layer
             layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
@@ -197,9 +197,9 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
     // update left and right bounds of the layers and set y bounds
     for (let i = 0; i < layers.length - 1; i++) {
         // calculate the mid between two layers
-        let currentLayer = layers[i]
-        let precedingLayer = layers[i + 1]
-        let mid = currentLayer.end + (precedingLayer.begin - currentLayer.end) / 2
+        const currentLayer = layers[i]
+        const precedingLayer = layers[i + 1]
+        const mid = currentLayer.end + (precedingLayer.begin - currentLayer.end) / 2
         // set right bound of the first and left bound of the second layer to the calculated mid
         currentLayer.end = mid
         precedingLayer.begin = mid
@@ -210,7 +210,7 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
 
     // special case: only one layer exists
     if (layers.length === 1) {
-        let firstLayer = layers[0]
+        const firstLayer = layers[0]
         // add padding
         switch (direction) {
             case Direction.UNDEFINED: case Direction.RIGHT: {
@@ -245,15 +245,15 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
     } else {
         // update left bound of the first layer
         // add padding
-        let firstLayer = layers[0]
+        const firstLayer = layers[0]
         firstLayer.begin = firstLayer.mid - (firstLayer.end - firstLayer.mid)
 
         // update bounds of the last layer
         // left bound of the layer is the right bound of the layer left of it
-        let lastLayer = layers[layers.length - 1]
+        const lastLayer = layers[layers.length - 1]
         lastLayer.begin = layers[layers.length - 2].end
         // distance from mid of the last layer to the right bound should be the same as to the left bound
-        let distance = lastLayer.mid - lastLayer.begin
+        const distance = lastLayer.mid - lastLayer.begin
         lastLayer.end = lastLayer.mid + distance
         // set y coordinates
         lastLayer.topBorder = topBorder
@@ -268,8 +268,8 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
  * @param nodes All nodes the graph contains.
  */
 export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
-    let nodesOfLayer: KNode[] = []
-    for (let node of nodes) {
+    const nodesOfLayer: KNode[] = []
+    for (const node of nodes) {
         if (node.properties.layerId === layer) {
             nodesOfLayer[nodesOfLayer.length] = node
         }
@@ -308,18 +308,18 @@ export function getPositionInLayer(nodes: KNode[], target: KNode): number {
  */
 export function isLayerForbidden(node: KNode, layer: number): boolean {
     // collect the connected nodes
-    let connectedNodes: KNode[] = []
+    const connectedNodes: KNode[] = []
     let edges = node.outgoingEdges as any as KEdge[]
-    for (let edge of edges) {
+    for (const edge of edges) {
         connectedNodes[connectedNodes.length] = edge.target as KNode
     }
     edges = node.incomingEdges as any as KEdge[]
-    for (let edge of edges) {
+    for (const edge of edges) {
         connectedNodes[connectedNodes.length] = edge.source as KNode
     }
 
     // check the connected nodes for layer constraints
-    for (let node of connectedNodes) {
+    for (const node of connectedNodes) {
         if (node.properties.layerId === layer && node.properties.layerConstraint !== -1) {
             // layer is forbidden for the given node
             return true
@@ -336,11 +336,11 @@ export function isLayerForbidden(node: KNode, layer: number): boolean {
  * @param layers The layers in the graph.
  */
 export function shouldOnlyLCBeSet(node: KNode, layers: Layer[], direction: Direction): boolean {
-    let coordinateToCheck = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT) ?
+    const coordinateToCheck = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT) ?
         node.position.y : node.position.x
     if (layers.length !== 0) {
-        let layerTop = layers[0].topBorder
-        let layerBot = layers[0].bottomBorder
+        const layerTop = layers[0].topBorder
+        const layerBot = layers[0].bottomBorder
         // if the node is below or above the layer only the layer constraint should be set
         return coordinateToCheck < layerTop || coordinateToCheck > layerBot
     }

@@ -72,7 +72,7 @@ export class SidebarPanelRegistry extends Registry {
             : this._panels.get(this._currentPanelID) ?? null;
     }
 
-    get currentPanelID() {
+    get currentPanelID(): string | null {
         return this._currentPanelID;
     }
 }

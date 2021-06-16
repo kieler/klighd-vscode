@@ -92,7 +92,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
         this.addCustomBindings(container);
     }
 
-    protected addCustomBindings(container: Container) {
+    protected addCustomBindings(container: Container): void {
         container.rebind(VscodeDiagramWidget).to(KlighDDiagramWidget);
     }
 }

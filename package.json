@@ -1,34 +1,38 @@
 {
-  "name": "keith",
-  "version": "0.1.0",
-  "private": true,
-  "description": "KIEL Environment Integrated in Theia",
-  "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
-  "license": "EPL-1.0",
-  "bugs": {
-    "url": "https://rtsys.informatik.uni-kiel.de/jira"
-  },
-  "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
-  "engines": {
-    "node": "^14.17.1",
-    "yarn": "^1.22.10"
-  },
-  "workspaces": [
-    "applications/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "clean": "lerna run clean --parallel",
-    "prebuild": "yarn clean",
-    "build": "lerna run build",
-    "watch": "lerna run watch --parallel",
-    "package": "lerna run build && lerna run package --parallel",
-    "publish:latest": "lerna publish --registry=https://registry.npmjs.org/ --exact --skip-git",
-    "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --skip-git --yes"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "lerna": "^3.22.1",
-    "typescript": "^4.3.2"
-  }
+    "name": "keith",
+    "version": "0.1.0",
+    "private": true,
+    "description": "KIEL Environment Integrated in Theia",
+    "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
+    "license": "EPL-1.0",
+    "bugs": {
+        "url": "https://rtsys.informatik.uni-kiel.de/jira"
+    },
+    "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
+    "engines": {
+        "node": "^14.17.1",
+        "yarn": "^1.22.10"
+    },
+    "workspaces": [
+        "applications/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "clean": "lerna run clean --parallel",
+        "lint": "lerna run lint --parallel",
+        "prebuild": "yarn clean",
+        "build": "lerna run build",
+        "watch": "lerna run watch --parallel",
+        "package": "lerna run build && lerna run package --parallel",
+        "publish:latest": "lerna publish --registry=https://registry.npmjs.org/ --exact --skip-git",
+        "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --skip-git --yes"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^4.27.0",
+        "@typescript-eslint/parser": "^4.27.0",
+        "eslint": "^7.28.0",
+        "lerna": "^4.0.0",
+        "typescript": "^4.3.2"
+    }
 }

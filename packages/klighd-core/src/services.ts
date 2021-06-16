@@ -47,7 +47,7 @@ export interface Connection {
     sendMessage(message: ActionMessage): void;
 
     /** Sends a generic notification message to the server with any payload. */
-    sendNotification<T extends object>(type: NotificationType, payload: T): void;
+    sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void;
 
     /** Registers a callback that is executed when a {@link ActionMessage} is received from the server. */
     onMessageReceived(handler: (message: ActionMessage) => void): void;
@@ -58,5 +58,5 @@ export const Connection = Symbol("Connection");
  * Key/Value Storage that should be used for short term persistence, lasting only the users
  * session. Uses the same interface as the web {@link Storage} API.
  */
-export interface SessionStorage extends Storage {}
+export type SessionStorage = Storage;
 export const SessionStorage = Symbol("SessionStorage");

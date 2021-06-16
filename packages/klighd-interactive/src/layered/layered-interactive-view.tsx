@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx';
+import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { Direction, KNode } from '../constraint-classes';
 import { getSelectedNode } from '../helper-methods';
@@ -26,27 +26,27 @@ import { getLayerOfNode, getLayers, getNodesOfLayer, getPositionInLayer, isLayer
  * @param node All nodes in the hierarchical level for which the layers should be visualized.
  * @param root Root of the hierarchical level.
  */
-export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
+export function renderHierarchyLevel(nodes: KNode[]): VNode {
     const direction = nodes[0].direction
-    let selNode = getSelectedNode(nodes)
+    const selNode = getSelectedNode(nodes)
     if (selNode !== undefined) {
-        let layers = getLayers(nodes, direction)
-        let currentLayer = getLayerOfNode(selNode, nodes, layers, direction)
-        let forbidden = isLayerForbidden(selNode, currentLayer)
+        const layers = getLayers(nodes, direction)
+        const currentLayer = getLayerOfNode(selNode, nodes, layers, direction)
+        const forbidden = isLayerForbidden(selNode, currentLayer)
 
         // y coordinates of the layers
-        let topBorder = layers[0].topBorder
-        let bottomBorder = layers[0].bottomBorder
+        const topBorder = layers[0].topBorder
+        const bottomBorder = layers[0].bottomBorder
 
         // let globalEndCoordinate = layers[layers.length - 1].end
 
         // determines whether only the layer constraint will be set when the node is released
-        let onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.properties.layerId !== currentLayer
+        const onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.properties.layerId !== currentLayer
 
         // create layers
         let result = <g></g>
         for (let i = 0; i < layers.length; i++) {
-            let layer = layers[i]
+            const layer = layers[i]
             if (i === currentLayer) {
                 result = <g>{result}{createRect(layer.begin, layer.end, topBorder, bottomBorder, forbidden, onlyLC, direction)}</g>
             } else {
@@ -57,8 +57,8 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
         }
 
         // Show a new empty last layer the node can be moved to
-        let lastLayer = layers[layers.length - 1]
-        let lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
+        const lastLayer = layers[layers.length - 1]
+        const lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
         if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
             // Only show the layer if the moved node is not (the only node) in the last layer
             // globalEndCoordinate = lastLayer.end + lastLayer.end - lastLayer.begin
@@ -92,17 +92,17 @@ export function renderHierarchyLevel(nodes: KNode[], root: KNode): VNode {
  * @param forbidden Determines whether the current layer is forbidden.
  */
 export function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: Direction): VNode {
-    let layerNodes: KNode[] = getNodesOfLayer(current, nodes)
+    const layerNodes: KNode[] = getNodesOfLayer(current, nodes)
 
     // get the selected node
     let target = nodes[0]
-    for (let node of nodes) {
+    for (const node of nodes) {
         if (node.selected) {
             target = node
         }
     }
     // position of selected node
-    let curPos = getPositionInLayer(layerNodes, target)
+    const curPos = getPositionInLayer(layerNodes, target)
 
     layerNodes.sort((a, b) => a.properties.positionId - b.properties.positionId)
     if (layerNodes.length > 0) {
@@ -113,36 +113,36 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
         let x = 0, y = 0;
         // calculate positions between nodes
         for (let i = 0; i < layerNodes.length - 1; i++) {
-            let node = layerNodes[i]
+            const node = layerNodes[i]
             // at the old position of the selected node should not be a circle
             if (!node.selected && !layerNodes[i + 1].selected) {
                 // calculate y coordinate of the mid between the two nodes
                 switch (direction) {
                     case Direction.UNDEFINED: case Direction.RIGHT: {
                         x = layers[current].mid
-                        let topY = node.position.y + node.size.height
-                        let botY = layerNodes[i + 1].position.y
+                        const topY = node.position.y + node.size.height
+                        const botY = layerNodes[i + 1].position.y
                         y = topY + (botY - topY) / 2
                         break;
                     }
                     case Direction.LEFT: {
                         x = layers[current].mid
-                        let topY = node.position.y + node.size.height
-                        let botY = layerNodes[i + 1].position.y
+                        const topY = node.position.y + node.size.height
+                        const botY = layerNodes[i + 1].position.y
                         y = topY + (botY - topY) / 2
                         break;
                     }
                     case Direction.DOWN: {
                         y = layers[current].mid
-                        let topX = node.position.x + node.size.width
-                        let botX = layerNodes[i + 1].position.x
+                        const topX = node.position.x + node.size.width
+                        const botX = layerNodes[i + 1].position.x
                         x = topX + (botX - topX) / 2
                         break;
                     }
                     case Direction.UP: {
                         y = layers[current].mid
-                        let topX = node.position.x + node.size.width
-                        let botX = layerNodes[i + 1].position.x
+                        const topX = node.position.x + node.size.width
+                        const botX = layerNodes[i + 1].position.x
                         x = topX + (botX - topX) / 2
                         break;
                     }
@@ -154,7 +154,7 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
         }
 
         // position above the first node is available if the first node is not the selected one
-        let first = layerNodes[0]
+        const first = layerNodes[0]
         if (!first.selected) {
             switch (direction) {
                 case Direction.UNDEFINED: case Direction.RIGHT: {
@@ -181,7 +181,7 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
             result = <g>{result}{renderCircle(curPos === 0, x, y, forbidden)}</g>
         }
         // position below the last node is available if the last node is not the selected one
-        let last = layerNodes[layerNodes.length - 1]
+        const last = layerNodes[layerNodes.length - 1]
         if (!last.selected) {
             switch (direction) {
                 case Direction.UNDEFINED: case Direction.RIGHT: {
@@ -216,25 +216,25 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
         let x = 0, y = 0
         switch (direction) {
             case Direction.UNDEFINED: case Direction.RIGHT: {
-                let lastLayer = layers[layers.length - 1]
+                const lastLayer = layers[layers.length - 1]
                 x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
             }
             case Direction.LEFT: {
-                let lastLayer = layers[layers.length - 1]
+                const lastLayer = layers[layers.length - 1]
                 x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
             }
             case Direction.DOWN: {
-                let lastLayer = layers[layers.length - 1]
+                const lastLayer = layers[layers.length - 1]
                 y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
             }
             case Direction.UP: {
-                let lastLayer = layers[layers.length - 1]
+                const lastLayer = layers[layers.length - 1]
                 y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
                 x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
                 break;
@@ -251,8 +251,8 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
  */
 export function renderLayeredConstraint(node: KNode): VNode {
     let result = <g></g>
-    let x = node.size.width
-    let y = 0
+    const x = node.size.width
+    const y = 0
     const constraintOffset = 2
     const positionConstraint = node.properties.positionConstraint
     const layerConstraint = node.properties.layerConstraint

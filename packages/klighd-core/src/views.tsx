@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx';
+import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
 
 import { isChildSelected } from '@kieler/keith-interactive/lib/helper-methods';
@@ -55,7 +55,7 @@ export class KNodeView implements IView {
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
 
-        let result: VNode[] = []
+        const result: VNode[] = []
 
         const isShadow = node.shadow
         let shadow = undefined
@@ -114,7 +114,7 @@ export class KNodeView implements IView {
             const children = ctx.renderChildren(node)
             // Add all color and shadow definitions put into the context by the child renderings.
             const defs = <defs></defs>
-            ctx.renderingDefs.forEach((value: VNode, key: String) => {
+            ctx.renderingDefs.forEach((value: VNode) => {
                 (defs.children as (string | VNode)[]).push(value)
             })
 
@@ -209,7 +209,7 @@ export class KLabelView implements IView {
             // Nodes that are not on the same hierarchy are less visible.
             label.opacity = 0.1
         }
-        let rendering = getRendering(label.data, label, new KStyles, ctx, this.mListener)
+        const rendering = getRendering(label.data, label, new KStyles, ctx, this.mListener)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
@@ -250,8 +250,8 @@ export class KEdgeView implements IView {
         edge.areNonChildAreaChildrenRendered = false
 
         // edge should be greyed out if the source or target is moved
-        let s = edge.source
-        let t = edge.target
+        const s = edge.source
+        const t = edge.target
         if (s !== undefined && t !== undefined && s instanceof SKNode && t instanceof SKNode) {
             edge.moved = (s.selected || t.selected) && this.mListener.hasDragged
         }

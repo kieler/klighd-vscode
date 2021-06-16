@@ -12,7 +12,7 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx";
+import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { inject, postConstruct } from "inversify";
 import { VNode } from "snabbdom/vnode";
 import { AbstractUIExtension, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty";
@@ -37,7 +37,7 @@ export class Sidebar extends AbstractUIExtension {
     @inject(DISymbol.SidebarPanelRegistry) private sidebarPanelRegistry: SidebarPanelRegistry;
 
     @postConstruct()
-    init() {
+    init(): void {
         this.actionDispatcher.dispatch(new ShowSidebarAction());
         this.patcher = this.patcherProvider.patcher;
 
@@ -60,7 +60,7 @@ export class Sidebar extends AbstractUIExtension {
         return Sidebar.ID;
     }
 
-    update() {
+    update(): void {
         console.time("sidebar-update");
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
         const title = this.containerElement.querySelector<HTMLHeadingElement>(".sidebar__title");

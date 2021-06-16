@@ -27,8 +27,8 @@ export { Action } from "sprotty";
 export { ActionHandler } from "sprotty-vscode/lib/action-handler";
 
 // this method is called when your extension is activated
-export function activate(context: vscode.ExtensionContext) {
-    let extensionMap: Map<string, KLighDExtension> = new Map();
+export function activate(context: vscode.ExtensionContext): void {
+    const extensionMap: Map<string, KLighDExtension> = new Map();
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
@@ -89,9 +89,6 @@ export function activate(context: vscode.ExtensionContext) {
     );
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {}
-
-function isFileEndingsArray(array: any): array is string[] {
+function isFileEndingsArray(array: unknown): array is string[] {
     return Array.isArray(array) && array.every((val) => typeof val === "string");
 }

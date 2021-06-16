@@ -18,9 +18,9 @@ import { KNode } from "./constraint-classes"
  * Filters the KNodes out of graphElements.
  * @param graphElements Elements which should be filtered.
  */
-export function filterKNodes(graphElements: any): KNode[] {
-    let nodes: KNode[] = []
-    for (let elem of graphElements) {
+export function filterKNodes(graphElements: any): KNode[] { // eslint-disable-line
+    const nodes: KNode[] = []
+    for (const elem of graphElements) {
         if (elem instanceof SNode) {
             nodes[nodes.length] = elem as KNode
         }
@@ -34,7 +34,7 @@ export function filterKNodes(graphElements: any): KNode[] {
  * @param nodes All nodes of one hierarchical level.
  */
 export function getSelectedNode(nodes: KNode[]): KNode | undefined {
-    for (let node of nodes) {
+    for (const node of nodes) {
         if (node.selected) {
             return node
         }
@@ -47,9 +47,9 @@ export function getSelectedNode(nodes: KNode[]): KNode | undefined {
 * @param root Node which children should be checked.
 */
 export function isChildSelected(root: KNode): boolean {
-    let nodes = root.children
+    const nodes = root.children
     if (nodes !== undefined) {
-        for (let node of nodes) {
+        for (const node of nodes) {
             if (node instanceof SNode && node.selected) {
                 return true
             }

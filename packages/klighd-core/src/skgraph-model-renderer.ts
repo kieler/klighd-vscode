@@ -34,7 +34,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
      *
      * @param element The element to render the children from.
      */
-    renderChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement, args?: object): VNode[] {
+    renderChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement, args?: Record<string, unknown>): VNode[] {
         element.areChildAreaChildrenRendered = true
         return element.children
             .filter(child =>
@@ -51,7 +51,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
      *
      * @param element The element to render the children from.
      */
-    renderNonChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement, args?: object): VNode[] {
+    renderNonChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement, args?: Record<string, unknown>): VNode[] {
         element.areNonChildAreaChildrenRendered = true
         return element.children
             .filter(child =>

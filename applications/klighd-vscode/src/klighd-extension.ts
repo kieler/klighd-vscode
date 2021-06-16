@@ -71,7 +71,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         this.actionHandlers = [];
     }
 
-    addActionHandler(handler: ActionHandlerClass) {
+    addActionHandler(handler: ActionHandlerClass): void {
         this.actionHandlers.push(handler);
     }
 
@@ -111,7 +111,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         return this.supportedFileEndings.some((ending) => path.endsWith(ending));
     }
 
-    protected activateLanguageClient(_: ExtensionContext): LanguageClient {
+    protected activateLanguageClient(): LanguageClient {
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.
         return KLighDExtension.lsClient;
@@ -124,7 +124,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
      * _Note: This can not call the super implementation since VSCode is not able
      * to overwrite commands and would throw an error._
      */
-    protected registerCommands() {
+    protected registerCommands(): void {
         this.context.subscriptions.push(
             commands.registerCommand(command.diagramOpen, async (...commandArgs: any[]) => {
                 const identifier = await this.createDiagramIdentifier(commandArgs);

@@ -12,7 +12,7 @@
  */
 
 /** @jsx svg */
-import { svg } from "snabbdom-jsx";
+import { svg } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 
 export function CenterIcon(): VNode {

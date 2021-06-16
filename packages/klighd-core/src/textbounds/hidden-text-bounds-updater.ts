@@ -58,7 +58,7 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         return vnode
     }
 
-    postUpdate(cause?: Action) {
+    postUpdate(cause?: Action): void {
         if (cause === undefined || cause.kind !== RequestTextBoundsAction.KIND) {
             return;
         }
@@ -82,7 +82,7 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         this.element2boundsData.clear()
     }
 
-    protected getBoundsFromDOM() {
+    protected getBoundsFromDOM(): void {
         this.element2boundsData.forEach(
             (boundsData, element) => {
                 if (boundsData.dimension && isSizeable(element)) {
@@ -104,7 +104,7 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
         );
     }
 
-    protected getBounds(elm: any, element: BoundsAware): Dimension {
+    protected getBounds(elm: any, element: BoundsAware): Dimension { // eslint-disable-line
         if (typeof elm.getBBox !== 'function') {
             this.logger.error(this, 'Not an SVG element:', elm);
             return EMPTY_BOUNDS;

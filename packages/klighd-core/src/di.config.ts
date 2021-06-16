@@ -49,7 +49,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     })
     bind(TYPES.MouseListener).to(KeithHoverMouseListener)
     bind(TYPES.IPopupModelProvider).to(PopupModelProvider)
-    rebind<HoverState>(TYPES.HoverState).toDynamicValue(ctx => ({
+    rebind<HoverState>(TYPES.HoverState).toDynamicValue(() => ({
         mouseOverTimer: undefined,
         mouseOutTimer: undefined,
         popupOpen: false,

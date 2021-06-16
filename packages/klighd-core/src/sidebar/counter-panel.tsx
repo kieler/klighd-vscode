@@ -12,7 +12,7 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx";
+import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { SidebarPanel } from "./sidebar-panel";
 
@@ -31,7 +31,7 @@ import { SidebarPanel } from "./sidebar-panel";
  * ```
  */
 export class CounterPanel extends SidebarPanel {
-    private count: number = 0;
+    private count = 0;
 
     get id(): string {
         return "counter-panel";

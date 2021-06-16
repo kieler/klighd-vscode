@@ -39,7 +39,7 @@ export class LSPConnection implements Connection {
         this.connection?.sendNotification(acceptMessageType, message);
     }
 
-    sendNotification<T extends object>(type: NotificationType, payload: T): void {
+    sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void {
         this.connection?.sendNotification(type, payload);
     }
 
@@ -117,7 +117,7 @@ export class LSPConnection implements Connection {
         showPopup(type, "Server message", message);
     }
 
-    close() {
+    close(): void {
         this.connection?.dispose();
         this.connection = undefined;
 
@@ -128,7 +128,7 @@ export class LSPConnection implements Connection {
      * Initializes the connection according to the LSP specification.
      * @see
      */
-    async sendInitialize() {
+    async sendInitialize(): Promise<void> {
         if (!this.connection) return;
 
         const method = lsp.InitializeRequest.type.method;
@@ -153,7 +153,7 @@ export class LSPConnection implements Connection {
      * @param sourceUri Valid our for the document. See the LSP for more information.
      * @param languageId Id of the language inside the document.
      */
-    sendDocumentDidOpen(sourceUri: string, languageId: string) {
+    sendDocumentDidOpen(sourceUri: string, languageId: string): void {
         const method = lsp.DidOpenTextDocumentNotification.type.method;
         const params = {
             textDocument: {

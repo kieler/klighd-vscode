@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx';
+import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
 import { Direction } from './constraint-classes';
 import { lockPath, arrowVertical, arrowHorizontal } from './svg-path';
@@ -29,8 +29,8 @@ const iconScale = 0.01
  * @param direction The direction of the layer.
  */
 export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: Direction): VNode {
-    let forbiddenColor = 'indianred'
-    let backgroundColor = selected ? 'grey' : 'lightgrey'
+    const forbiddenColor = 'indianred'
+    const backgroundColor = selected ? 'grey' : 'lightgrey'
     // @ts-ignore
     return <g> <rect
                     x={(direction === Direction.RIGHT || direction === Direction.UNDEFINED) ? begin : direction === Direction.LEFT ? end : top}
@@ -73,8 +73,8 @@ export function createVerticalLine(mid: number, top: number, bot: number, direct
  * @param forbidden If the layer the circle is in is forbidden the colour is red.
  */
 export function renderCircle(fill: boolean, x: number, y: number, forbidden: boolean): VNode {
-    let forbiddenColor = 'indianred'
-    let color = forbidden ? forbiddenColor : 'grey'
+    const forbiddenColor = 'indianred'
+    const color = forbidden ? forbiddenColor : 'grey'
     // @ts-ignore
     return  <g> <circle
                     cx={x}
@@ -94,7 +94,7 @@ export function renderCircle(fill: boolean, x: number, y: number, forbidden: boo
  */
 export function renderLock(xTranslate: number, yTranslate: number): VNode {
     const generalYOffset = 5
-    let s = "translate(" + xTranslate + ","
+    const s = "translate(" + xTranslate + ","
             + (yTranslate - generalYOffset) + ") scale(" + iconScale + ", " + iconScale + ")"
             // @ts-ignore
     return  <g transform={s}

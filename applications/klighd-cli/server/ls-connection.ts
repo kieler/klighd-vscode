@@ -54,7 +54,7 @@ export function connectToLanguageServer(
         logger.info("Forwarding to language server socket.");
         socket.connect(lsPort);
     } else if (lsPath) {
-        let args = ["-jar", "-Djava.awt.headless=true", lsPath];
+        const args = ["-jar", "-Djava.awt.headless=true", lsPath];
         lsConn = rpcServer.createServerProcess("Language Server", "java", args);
 
         rpcServer.forward(clientConnection, lsConn, (msg) => {
@@ -90,7 +90,7 @@ function transformWebSocketToIWebSocket(socket: WebSocket): IWebSocket {
         onError: (cb) =>
             (socket.onerror = (ev) => {
                 if ("message" in ev) {
-                    cb((ev as any).message);
+                    cb(ev.message);
                 }
             }),
         onClose: (cb) => (socket.onclose = (ev) => cb(ev.code, ev.reason)),

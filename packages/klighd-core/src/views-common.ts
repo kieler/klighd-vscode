@@ -145,7 +145,7 @@ export function textDecorationStyleText(underline: KTextUnderline): 'solid' | 'd
     }
 }
 
-export function textDecorationColor(underline: KTextUnderline): string | undefined {
+export function textDecorationColor(): string | undefined {
     return undefined // TODO:
 }
 
@@ -221,7 +221,7 @@ export function calculateY(y: number, height: number, verticalAlignment: KVertic
 export function evaluateKPosition(position: KPosition, parentBounds: Bounds, topLeft: boolean): Point {
     const width = parentBounds.width
     const height = parentBounds.height
-    let point = { x: 0, y: 0 }
+    const point = { x: 0, y: 0 }
 
     let xPos = position.x
     let yPos = position.y
@@ -260,7 +260,7 @@ export function evaluateKPosition(position: KPosition, parentBounds: Bounds, top
  * @param map The object containing something under the given ID.
  * @param idString The ID too look up.
  */
-export function findById(map: any, idString: string): any {
+export function findById(map: Record<string, unknown>, idString: string): any {
     if (map === undefined) {
         return
     }
@@ -271,7 +271,7 @@ export function findById(map: any, idString: string): any {
  * Returns if the given coloring is a single color and no gradient.
  * @param coloring The coloring to check.
  */
-export function isSingleColor(coloring: KColoring) {
+export function isSingleColor(coloring: KColoring): boolean {
     return coloring.targetColor === undefined || coloring.targetAlpha === undefined
 }
 
@@ -380,7 +380,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
  * @param context The rendering context used to render this element.
  * @param lines The number of lines the text rendering spans across.
  */
-export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement, context: SKGraphModelRenderer, lines: number) {
+export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement, context: SKGraphModelRenderer, lines: number) { // eslint-disable-line
     let bounds: {
         x: number | undefined,
         y: number | undefined,
@@ -481,7 +481,7 @@ export interface BoundsAndTransformation {
  * @param isEdge If the rendering is for an edge.
  * @param isText If the rendering is a text.
  */
-export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | undefined, isEdge?: boolean, isText?: boolean) {
+export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | undefined, isEdge?: boolean, isText?: boolean): string | undefined {
     if (isEdge === undefined) {
         isEdge = false
     }
@@ -597,7 +597,7 @@ export function getPoints(parent: SKGraphElement | SKEdge, rendering: KPolyline,
     // hack to avoid paths with no width / height. These paths will not get drawn by chrome due to a bug in their svg renderer TODO: find a fix if there is any better way
     const EPSILON = 0.001
     if (points.length > 1) {
-        let lastPoint = points[points.length - 1]
+        const lastPoint = points[points.length - 1]
         let lastX = lastPoint.x
         let lastY = lastPoint.y
         // if this path has no width and the last point does not add anything to that, we need to shift one value by a tiny, invisible value so the width will now be bigger than 0.

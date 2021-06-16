@@ -84,7 +84,7 @@ export class KeithDiagramServer extends DiagramServer {
         this._connection.sendMessage(message);
     }
 
-    messageReceived(message: ActionMessage) {
+    messageReceived(message: ActionMessage): void {
         super.messageReceived(message);
 
         const wasDiagramModelUpdated =
@@ -166,10 +166,10 @@ export class KeithDiagramServer extends DiagramServer {
         }
     }
 
-    handleCheckImages(action: CheckImagesAction) {
+    handleCheckImages(action: CheckImagesAction): void {
         // check in local storage, if these images are already stored. If not, send back a request for those images.
         const notCached: Pair<string, string>[] = [];
-        for (let image of (action as CheckImagesAction).images) {
+        for (const image of (action as CheckImagesAction).images) {
             const id = KeithDiagramServer.imageToSessionStorageString(
                 image.bundleName,
                 image.imagePath
@@ -181,9 +181,9 @@ export class KeithDiagramServer extends DiagramServer {
         this.actionDispatcher.dispatch(new CheckedImagesAction(notCached));
     }
 
-    handleStoreImages(action: StoreImagesAction) {
+    handleStoreImages(action: StoreImagesAction): void {
         // Put the new images in session storage.
-        for (let imagePair of (action as StoreImagesAction).images) {
+        for (const imagePair of (action as StoreImagesAction).images) {
             const imageIdentifier = imagePair.k;
             const id = KeithDiagramServer.imageToSessionStorageString(
                 imageIdentifier.k,
@@ -208,7 +208,7 @@ export class KeithDiagramServer extends DiagramServer {
      * Handles Popup Requests because the action requires the currentRoot,
      * which is stored as a protected property in the super class.
      */
-    handleRequestKeithPopupModel(action: RequestKeithPopupModelAction) {
+    handleRequestKeithPopupModel(action: RequestKeithPopupModelAction): boolean {
         const element = findElement(this.currentRoot, action.elementId);
         if (element) {
             const model = this.popupModelProvider.getPopupModel(action, element);
@@ -220,7 +220,7 @@ export class KeithDiagramServer extends DiagramServer {
         return false;
     }
 
-    handleComputedBounds(_action: ComputedBoundsAction): boolean {
+    handleComputedBounds(): boolean {
         // ComputedBounds actions should not be generated and forwarded anymore, since only the computedTextBounds action is used by kgraph diagrams
         if (this.viewerOptions.needsServerLayout) {
             return true;
@@ -233,6 +233,6 @@ export class KeithDiagramServer extends DiagramServer {
 export async function requestModel(
     actionDispatcher: IActionDispatcher,
     options: { sourceUri: string; diagramType: string }
-) {
+): Promise<void> {
     await actionDispatcher.dispatch(new RequestModelAction(options));
 }
