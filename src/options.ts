@@ -175,7 +175,7 @@ export class ExpandCollapseThreshold implements RangeOption {
     }
     readonly stepSize = 0.01
     readonly initialValue: number = 0.2
-    currentValue: number = 0.2
+    currentValue: number = 0.17
 }
 
 @injectable()
