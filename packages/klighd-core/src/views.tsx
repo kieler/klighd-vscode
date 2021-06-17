@@ -16,7 +16,7 @@ import { VNode } from 'snabbdom/vnode';
 
 import { isChildSelected } from 'klighd-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from 'klighd-interactive/lib/interactive-view';
-import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/keith-interactive-mouselistener';
+import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
 import { RenderOptionsRegistry, ShowConstraintOption } from './options/render-options-registry';

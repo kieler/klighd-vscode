@@ -13,7 +13,7 @@
 
 import { ContainerModule } from 'inversify';
 import { TYPES, configureCommand, MoveCommand, LocationPostprocessor, MoveMouseListener } from 'sprotty';
-import { KlighdInteractiveMouseListener } from './keith-interactive-mouselistener';
+import { KlighdInteractiveMouseListener } from './klighd-interactive-mouselistener';
 
 /**
  * Bindings for the interactive mouse listener.
