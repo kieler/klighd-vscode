@@ -28,7 +28,7 @@ const textBoundsModule = new ContainerModule((bind, _unbind, isBound) => {
     // unbind(Types.HiddenVNodePostprocessor).from(HiddenBoundsUpdater)
     // to remove only that specific binding, not all of the bindings registered for the Types.HiddenVNodePostprocessor.
     // With that, the HiddenBoundsUpdater should not be called anymore and not issue any CalculatedBoundsAction,
-    // which is currently only ignored by the overwritten handle method for that action in the KeithDiagramServer.
+    // which is currently only ignored by the overwritten handle method for that action in the KlighdDiagramServer.
     configureCommand({ bind, isBound }, RequestTextBoundsCommand);
     bind(TYPES.HiddenVNodePostprocessor).to(HiddenTextBoundsUpdater).inSingletonScope()
 });

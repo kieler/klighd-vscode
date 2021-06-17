@@ -47,8 +47,8 @@ import {
     CheckedImagesAction,
     CheckImagesAction,
     ComputedTextBoundsAction,
-    KeithFitToScreenAction,
-    KeithUpdateModelAction,
+    KlighdFitToScreenAction,
+    KlighdUpdateModelAction,
     Pair,
     PerformActionAction,
     RefreshLayoutAction,
@@ -56,7 +56,7 @@ import {
     StoreImagesAction,
 } from "./actions/actions";
 import { DISymbol } from "./di.symbols";
-import { RequestKeithPopupModelAction } from "./hover/hover";
+import { RequestKlighdPopupModelAction } from "./hover/hover";
 import { PopupModelProvider } from "./hover/popup-provider";
 import { PreferencesRegistry } from "./preferences-registry";
 import { Connection, SessionStorage } from "./services";
@@ -67,7 +67,7 @@ import { SetSynthesisAction } from "./syntheses/actions";
  * Request- and ComputedTextBoundsAction.
  */
 @injectable()
-export class KeithDiagramServer extends DiagramServer {
+export class KlighdDiagramServer extends DiagramServer {
     private _connection: Connection;
 
     @inject(SessionStorage) private sessionStorage: SessionStorage;
@@ -89,10 +89,10 @@ export class KeithDiagramServer extends DiagramServer {
 
         const wasDiagramModelUpdated =
             message.action.kind === SetModelCommand.KIND ||
-            message.action.kind === KeithUpdateModelAction.KIND;
+            message.action.kind === KlighdUpdateModelAction.KIND;
 
         if (wasDiagramModelUpdated && this.preferencesRegistry.preferences.resizeToFit) {
-            this.actionDispatcher.dispatch(new KeithFitToScreenAction(true));
+            this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
         }
     }
 
@@ -121,7 +121,7 @@ export class KeithDiagramServer extends DiagramServer {
     initialize(registry: ActionHandlerRegistry): void {
         super.initialize(registry);
 
-        // Register the KEITH specific new actions.
+        // Register the KLighD specific new actions.
         registry.register(BringToFrontAction.KIND, this);
         registry.register(CheckImagesAction.KIND, this);
         registry.register(CheckedImagesAction.KIND, this);
@@ -129,13 +129,12 @@ export class KeithDiagramServer extends DiagramServer {
         registry.register(DeleteLayerConstraintAction.KIND, this);
         registry.register(DeletePositionConstraintAction.KIND, this);
         registry.register(DeleteStaticConstraintAction.KIND, this);
-        // registry.register(KeithUpdateModelAction.KIND, this)
         registry.register(PerformActionAction.KIND, this);
         registry.register(RectPackSetPositionConstraintAction.KIND, this);
         registry.register(RectPackDeletePositionConstraintAction.KIND, this);
         registry.register(RefreshDiagramAction.KIND, this);
         registry.register(RefreshLayoutAction.KIND, this);
-        registry.register(RequestKeithPopupModelAction.KIND, this);
+        registry.register(RequestKlighdPopupModelAction.KIND, this);
         registry.register(RequestTextBoundsCommand.KIND, this);
         registry.register(SetAspectRatioAction.KIND, this);
         registry.register(SetLayerConstraintAction.KIND, this);
@@ -157,10 +156,10 @@ export class KeithDiagramServer extends DiagramServer {
         } else if (action.kind === StoreImagesAction.KIND) {
             this.handleStoreImages(action as StoreImagesAction);
         } else if (action.kind === RequestPopupModelAction.KIND) {
-            // Handle RequestPopupModelAction if they are modified RequestKeithPopupModelAction.
+            // Handle RequestPopupModelAction if they are modified RequestKlighdPopupModelAction.
             // Other PopupModel requests are simply ignored.
-            if (action instanceof RequestKeithPopupModelAction)
-                this.handleRequestKeithPopupModel(action as RequestKeithPopupModelAction);
+            if (action instanceof RequestKlighdPopupModelAction)
+                this.handleRequestKlighdPopupModel(action as RequestKlighdPopupModelAction);
         } else {
             super.handle(action);
         }
@@ -170,7 +169,7 @@ export class KeithDiagramServer extends DiagramServer {
         // check in local storage, if these images are already stored. If not, send back a request for those images.
         const notCached: Pair<string, string>[] = [];
         for (const image of (action as CheckImagesAction).images) {
-            const id = KeithDiagramServer.imageToSessionStorageString(
+            const id = KlighdDiagramServer.imageToSessionStorageString(
                 image.bundleName,
                 image.imagePath
             );
@@ -185,7 +184,7 @@ export class KeithDiagramServer extends DiagramServer {
         // Put the new images in session storage.
         for (const imagePair of (action as StoreImagesAction).images) {
             const imageIdentifier = imagePair.k;
-            const id = KeithDiagramServer.imageToSessionStorageString(
+            const id = KlighdDiagramServer.imageToSessionStorageString(
                 imageIdentifier.k,
                 imageIdentifier.v
             );
@@ -208,7 +207,7 @@ export class KeithDiagramServer extends DiagramServer {
      * Handles Popup Requests because the action requires the currentRoot,
      * which is stored as a protected property in the super class.
      */
-    handleRequestKeithPopupModel(action: RequestKeithPopupModelAction): boolean {
+    handleRequestKlighdPopupModel(action: RequestKlighdPopupModelAction): boolean {
         const element = findElement(this.currentRoot, action.elementId);
         if (element) {
             const model = this.popupModelProvider.getPopupModel(action, element);

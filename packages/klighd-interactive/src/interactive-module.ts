@@ -13,15 +13,15 @@
 
 import { ContainerModule } from 'inversify';
 import { TYPES, configureCommand, MoveCommand, LocationPostprocessor, MoveMouseListener } from 'sprotty';
-import { KeithInteractiveMouseListener } from './keith-interactive-mouselistener';
+import { KlighdInteractiveMouseListener } from './keith-interactive-mouselistener';
 
 /**
  * Bindings for the interactive mouse listener.
  */
 export const interactiveModule = new ContainerModule((bind, _unbind, isBound) => {
-    bind(KeithInteractiveMouseListener).toSelf().inSingletonScope()
-    bind(TYPES.MouseListener).toService(KeithInteractiveMouseListener)
-    bind(MoveMouseListener).toService(KeithInteractiveMouseListener)
+    bind(KlighdInteractiveMouseListener).toSelf().inSingletonScope()
+    bind(TYPES.MouseListener).toService(KlighdInteractiveMouseListener)
+    bind(MoveMouseListener).toService(KlighdInteractiveMouseListener)
     configureCommand({ bind, isBound }, MoveCommand);
     bind(TYPES.IVNodePostprocessor).to(LocationPostprocessor);
     bind(TYPES.HiddenVNodePostprocessor).to(LocationPostprocessor);

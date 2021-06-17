@@ -13,7 +13,7 @@
 
 // ------------------ Base ------------------
 
-export { default as createKeithDiagramContainer } from "./di.config";
+export { default as createKlighdDiagramContainer } from "./di.config";
 export { requestModel } from "./diagram-server";
 export { Connection, SessionStorage, NotificationType } from "./services";
 

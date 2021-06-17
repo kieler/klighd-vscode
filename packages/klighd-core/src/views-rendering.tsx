@@ -14,7 +14,7 @@
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
 import { KGraphData } from 'klighd-interactive/lib/constraint-classes';
-import { KeithInteractiveMouseListener } from 'klighd-interactive/lib/keith-interactive-mouselistener';
+import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/keith-interactive-mouselistener';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -73,7 +73,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
  * @param context The rendering context for this element.
  */
 export function renderRectangularShape(rendering: KContainerRendering, parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode {
+        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -278,7 +278,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
  * @param context The rendering context for this element.
  */
 export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode {
+        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -433,7 +433,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
  * @param mListener The mouse listener.
  */
 export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode {
+        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -565,7 +565,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
  * @param context The rendering context for this element.
  */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
-    context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): (VNode | undefined)[] {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): (VNode | undefined)[] {
     // children only should be rendered if the parentElement is not a shadow
     if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
         const renderings: (VNode | undefined)[] = []
@@ -595,7 +595,7 @@ export function renderError(rendering: KRendering): VNode {
  * @param mListener The mouse listener.
  */
 export function getRendering(datas: KGraphData[], parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode | undefined {
+        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -621,7 +621,7 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
  * @param mListener The mouse listener.
  */
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
+        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
@@ -690,7 +690,7 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
  * @param context The rendering context for this rendering.
  * @param mListener The mouse listener
  */
-export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRenderer, mListener: KeithInteractiveMouseListener): VNode[] {
+export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode[] {
     const kRenderingLibrary = edge.data.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {

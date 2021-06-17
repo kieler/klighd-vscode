@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 import {
-    KeithFitToScreenAction,
+    KlighdFitToScreenAction,
     RefreshDiagramAction,
     RefreshLayoutAction,
 } from "klighd-core";
@@ -156,7 +156,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramFit, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(new KeithFitToScreenAction(true));
+                    activeWebview.dispatch(new KlighdFitToScreenAction(true));
                 }
             })
         );

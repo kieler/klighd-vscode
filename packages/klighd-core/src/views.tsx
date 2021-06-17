@@ -16,7 +16,7 @@ import { VNode } from 'snabbdom/vnode';
 
 import { isChildSelected } from 'klighd-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from 'klighd-interactive/lib/interactive-view';
-import { KeithInteractiveMouseListener } from 'klighd-interactive/lib/keith-interactive-mouselistener';
+import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/keith-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
 import { RenderOptionsRegistry, ShowConstraintOption } from './options/render-options-registry';
@@ -45,7 +45,7 @@ export class SKGraphView extends SGraphView {
 @injectable()
 export class KNodeView implements IView {
 
-    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
+    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
     @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
@@ -161,7 +161,7 @@ export class KNodeView implements IView {
 @injectable()
 export class KPortView implements IView {
 
-    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
+    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
         port.areChildAreaChildrenRendered = false
@@ -197,7 +197,7 @@ export class KPortView implements IView {
  */
 @injectable()
 export class KLabelView implements IView {
-    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
+    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
     render(label: SKLabel, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
@@ -242,7 +242,7 @@ export class KLabelView implements IView {
 @injectable()
 export class KEdgeView implements IView {
 
-    @inject(KeithInteractiveMouseListener) mListener: KeithInteractiveMouseListener
+    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
     render(edge: SKEdge, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer

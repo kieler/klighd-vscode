@@ -20,10 +20,10 @@ import {
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { DISymbol } from './di.symbols';
-import { KeithDiagramServer } from './diagram-server';
-import { KeithHoverMouseListener } from './hover/hover';
+import { KlighdDiagramServer } from './diagram-server';
+import { KlighdHoverMouseListener } from './hover/hover';
 import { PopupModelProvider } from './hover/popup-provider';
-import { KeithModelViewer } from './model-viewer';
+import { KlighdModelViewer } from './model-viewer';
 import { optionsModule } from './options/options-module';
 import { PreferencesRegistry, SetPreferencesAction } from './preferences-registry';
 import { sidebarModule } from './sidebar';
@@ -38,7 +38,7 @@ import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './view
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
  */
 const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Unbind, isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
-    bind(TYPES.ModelSource).to(KeithDiagramServer).inSingletonScope();
+    bind(TYPES.ModelSource).to(KlighdDiagramServer).inSingletonScope();
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
     rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
@@ -47,7 +47,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
         defaultDuration: 500,
         undoHistoryLimit: 50
     })
-    bind(TYPES.MouseListener).to(KeithHoverMouseListener)
+    bind(TYPES.MouseListener).to(KlighdHoverMouseListener)
     bind(TYPES.IPopupModelProvider).to(PopupModelProvider)
     rebind<HoverState>(TYPES.HoverState).toDynamicValue(() => ({
         mouseOverTimer: undefined,
@@ -62,7 +62,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
         };
     });
     // Notes that this rebinds the Service and not the TYPE.ModelViewer intentionally as the type is bound to a dynamic value in Sprotty
-    rebind(ModelViewer).to(KeithModelViewer).inSingletonScope()
+    rebind(ModelViewer).to(KlighdModelViewer).inSingletonScope()
 
 
     const context = { bind, unbind, isBound, rebind }
@@ -88,7 +88,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
-        // keep the keith-specific modules at the last positions because of possible binding overrides.
+        // keep the klighd-specific modules at the last positions because of possible binding overrides.
         textBoundsModule, actionModule, optionsModule, sidebarModule, kGraphDiagramModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,

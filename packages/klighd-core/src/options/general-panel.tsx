@@ -17,7 +17,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { CenterAction, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
-import { KeithFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
+import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { SynthesisPicker } from "./components/synthesis-picker";
 import { SidebarPanel } from "../sidebar";
@@ -147,13 +147,12 @@ export class GeneralPanel extends SidebarPanel {
                 this.actionDispatcher.dispatch(new CenterAction([], true));
                 break;
             case "fit":
-                this.actionDispatcher.dispatch(new KeithFitToScreenAction(true));
+                this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
                 break;
             case "layout":
                 this.actionDispatcher.dispatch(new RefreshLayoutAction());
                 break;
             case "refresh":
-                // TODO: Move this action into keith-sprotty
                 this.actionDispatcher.dispatch(new RefreshDiagramAction());
                 break;
             case "export":

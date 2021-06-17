@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-/** DI Symbols for Services provided by the KEITH DI container. */
+/** DI Symbols for Services provided by the KLighD DI container. */
 export const DISymbol = {
     Sidebar: Symbol("Sidebar"),
     SidebarPanel: Symbol("SidebarPanel"),

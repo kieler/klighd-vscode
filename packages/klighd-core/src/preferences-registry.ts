@@ -45,7 +45,7 @@ export class PreferencesRegistry extends Registry {
     }
 }
 
-/** Change the user preferences stored in the keith-sprotty container. */
+/** Change the user preferences stored in the klighd-core container. */
 export class SetPreferencesAction implements Action {
     static readonly KIND = "setPreferences";
     readonly kind = SetPreferencesAction.KIND;

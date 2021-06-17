@@ -22,7 +22,7 @@ import {
 } from "sprotty";
 import { isSKGraphElement, SKGraphElement } from "../skgraph-models";
 import { findRendering } from "../skgraph-utils";
-import { RequestKeithPopupModelAction } from "./hover";
+import { RequestKlighdPopupModelAction } from "./hover";
 
 @injectable()
 export class PopupModelProvider implements IPopupModelProvider {
@@ -32,7 +32,7 @@ export class PopupModelProvider implements IPopupModelProvider {
     ): SModelRootSchema | undefined {
         if (
             elementSchema &&
-            request instanceof RequestKeithPopupModelAction &&
+            request instanceof RequestKlighdPopupModelAction &&
             isSKGraphElement(request.parent) &&
             request.element !== undefined
         ) {

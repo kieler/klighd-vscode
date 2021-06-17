@@ -1,6 +1,6 @@
 import { injectable, inject, postConstruct } from "inversify";
 import { InitializeCanvasBoundsAction, ModelViewer } from "sprotty";
-import { KeithFitToScreenAction } from "./actions/actions";
+import { KlighdFitToScreenAction } from "./actions/actions";
 import { DISymbol } from "./di.symbols";
 import { PreferencesRegistry } from "./preferences-registry";
 
@@ -11,7 +11,7 @@ import { PreferencesRegistry } from "./preferences-registry";
  * displayed immediately.
  */
 @injectable()
-export class KeithModelViewer extends ModelViewer {
+export class KlighdModelViewer extends ModelViewer {
     // Resolve UIExtensions that should be shown together with the model.
     // Such UIExtensions should implement a @postConstruct to show them self.
     // @ts-ignore
@@ -46,7 +46,7 @@ export class KeithModelViewer extends ModelViewer {
             this.actiondispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds));
 
             if (this.preferencesRegistry.preferences.resizeToFit)
-                this.actiondispatcher.dispatch(new KeithFitToScreenAction(false));
+                this.actiondispatcher.dispatch(new KlighdFitToScreenAction(false));
         }
     };
 }

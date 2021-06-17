@@ -141,7 +141,7 @@ export class RefreshLayoutAction implements Action {
     readonly kind = RefreshLayoutAction.KIND
 }
 
-export class KeithUpdateModelAction extends UpdateModelAction {
+export class KlighdUpdateModelAction extends UpdateModelAction {
     static readonly KIND = 'updateModel';
 
     public readonly newRoot?: SModelRootSchema;
@@ -157,10 +157,10 @@ export class KeithUpdateModelAction extends UpdateModelAction {
 
 /** 
  * Extended {@link FitToScreenAction} that always fits the root element with a padding
- * of 10px. Most of the time this is the wanted behavior in KEITH.
+ * of 10px. Most of the time this is the wanted behavior in the `klighd-core`.
  */
-export class KeithFitToScreenAction extends FitToScreenAction {
-    constructor(animate?:boolean) {
-        super(["$root"], 10, undefined, animate)
+export class KlighdFitToScreenAction extends FitToScreenAction {
+    constructor(KlighdFitToScreenAction?:boolean) {
+        super(["$root"], 10, undefined, KlighdFitToScreenAction)
     }
 }

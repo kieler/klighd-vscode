@@ -34,8 +34,8 @@ If both a path and a port for a language server is provided, the webserver will
 use the port to connect to the listening language server.
 
 Example calls:
-  $ keith --ls_port 5007 ./ABRO.sctx
-  $ keith --ls_path ../language-server.jar ./example.elkt`
+  $ klighd --ls_port 5007 ./ABRO.sctx
+  $ klighd --ls_path ../language-server.jar ./example.elkt`
     );
 
 program
@@ -80,7 +80,7 @@ program
 
             const url = `${addr}?source=${fileUrl}${preferences}`;
 
-            console.log("Keith Diagram Viewer\n");
+            console.log("KLighD Diagram Viewer\n");
             console.log("Inspect your diagram at:");
             console.log(url);
 

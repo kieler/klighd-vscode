@@ -19,7 +19,7 @@ import { getSemanticElement } from '../skgraph-utils';
  * that element. This action is sent from the client to the model source, e.g. a DiagramServer.
  * The response is a SetPopupModelAction.
  */
-export class RequestKeithPopupModelAction extends RequestPopupModelAction {
+export class RequestKlighdPopupModelAction extends RequestPopupModelAction {
 
     constructor(public readonly element: SVGElement,
                 public readonly parent: SModelElement,
@@ -30,7 +30,7 @@ export class RequestKeithPopupModelAction extends RequestPopupModelAction {
 }
 
 @injectable()
-export class KeithHoverMouseListener extends HoverMouseListener {
+export class KlighdHoverMouseListener extends HoverMouseListener {
     protected startMouseOverTimer(target: SModelElement, event: MouseEvent): Promise<Action> {
         this.stopMouseOverTimer();
         return new Promise((resolve) => {
@@ -39,7 +39,7 @@ export class KeithHoverMouseListener extends HoverMouseListener {
                 const semanticElement = getSemanticElement(event.target)
 
                 if (semanticElement) {
-                    resolve(new RequestKeithPopupModelAction(semanticElement, target, popupBounds))
+                    resolve(new RequestKlighdPopupModelAction(semanticElement, target, popupBounds))
 
                     this.state.popupOpen = true;
                     this.state.previousPopupElement = target;

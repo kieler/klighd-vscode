@@ -7,11 +7,7 @@
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
     "icon": "icon.png",
     "license": "EPL-2.0",
-    "repository": {
-        "type": "git",
-        "url": "https://git.rtsys.informatik.uni-kiel.de/projects/KIELER/repos/keith",
-        "directory": "extensions/klighd-vscode"
-    },
+    "repository": {"type": "git", "url": "https://github.com/kieler/klighd-vscode"},
     "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
     "engines": {
         "vscode": "^1.56.0"

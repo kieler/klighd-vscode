@@ -23,7 +23,7 @@ import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 import { setGenerateRectPackAction } from './rect-packing/constraint-util';
 
 @injectable()
-export class KeithInteractiveMouseListener extends MoveMouseListener {
+export class KlighdInteractiveMouseListener extends MoveMouseListener {
 
     /**
      * Map to holds algorithm specific data generated on mouse down.

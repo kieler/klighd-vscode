@@ -16,7 +16,7 @@ import "./styles/main.css";
 import "klighd-core/styles/main.css";
 import {
     Connection,
-    createKeithDiagramContainer,
+    createKlighdDiagramContainer,
     requestModel,
     SessionStorage,
     SetPreferencesAction,
@@ -60,7 +60,7 @@ async function initDiagramView(sourceUri: string) {
     const socketUrl = `ws://${location.host}/socket`;
 
     const connection = new LSPConnection();
-    const diagramContainer = createKeithDiagramContainer("sprotty");
+    const diagramContainer = createKlighdDiagramContainer("sprotty");
     diagramContainer.bind(Connection).toConstantValue(connection);
     diagramContainer.bind(SessionStorage).toConstantValue(sessionStorage);
     const actionDispatcher = diagramContainer.get<IActionDispatcher>(TYPES.IActionDispatcher);

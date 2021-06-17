@@ -24,7 +24,7 @@ import {
     VscodeDiagramWidgetFactory,
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { Connection, createKeithDiagramContainer, SessionStorage } from "klighd-core";
+import { Connection, createKlighdDiagramContainer, SessionStorage } from "klighd-core";
 import { MessageConnection } from "./message-connection";
 import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
 import { KlighDDiagramWidget } from "./klighd-widget";
@@ -58,7 +58,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
     }
 
     protected createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
-        const container = createKeithDiagramContainer(diagramIdentifier.clientId);
+        const container = createKlighdDiagramContainer(diagramIdentifier.clientId);
         container.bind(SessionStorage).toConstantValue(sessionStorage);
         container
             .bind(Connection)
@@ -73,7 +73,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
 
     /**
      * Override the bindings function to not bind a diagram server. We already bind a
-     * diagram server in keith-sprotty that communicates over a generic connection.
+     * diagram server in klighd-core that communicates over a generic connection.
      */
     protected addVscodeBindings(
         container: Container,

@@ -12,7 +12,7 @@
  */
 // Main entry point to run the webserver directly in node. This is mainly intended
 // to be used for development or as a deployable server. For distribution, the
-// CLI at keith.ts should be used.
+// CLI at klighd.ts should be used.
 
 import { createServer } from "./server";
 import { join } from "path";

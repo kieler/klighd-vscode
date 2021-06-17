@@ -11,9 +11,9 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-// Services provide infrastructure functionality to the KEITH Sprotty container.
+// Services provide infrastructure functionality to the KLighD Sprotty container.
 // A service shall not implemented by this core package. Each service has to be
-// provided by an application that integrates `keith-sprotty`, as their implementation
+// provided by an application that integrates `klighd-core`, as their implementation
 // might be plattform dependent.
 
 // Notice how a symbol with the same name as the service interface is exported.
@@ -24,7 +24,7 @@
 import { ActionMessage } from "sprotty";
 
 /**
- * Notification types used in `keith-sprotty`. Most of the times the default Sprotty type
+ * Notification types used in `klighd-core`. Most of the times the default Sprotty type
  * (diagram/accept) is used.
  * However, diagram options changes are communicated on a separate namespace.
  * 
