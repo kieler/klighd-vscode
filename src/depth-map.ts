@@ -1,11 +1,15 @@
 
 import { KNode } from "@kieler/keith-interactive/lib/constraint-classes";
+import { VNode } from "snabbdom/vnode";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderingOptions, ExpandCollapseThreshold } from "./options";
 import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
 
-const EXPANDED = true
-const COLLAPSED = false
+export enum Visibility {
+    Expanded,
+    Collapsed,
+    OutOfBounds,
+}
 
 /**
  * Divides Model KNodes into regions. On these expand and collapse actions
@@ -19,6 +23,8 @@ export class DepthMap {
      * aka. the root regions
      *  */
     rootRegions: Region[];
+
+    lastRender?: VNode | VNode[];
 
     /** 
      * The model for which the DephtMap is generated 
@@ -73,6 +79,7 @@ export class DepthMap {
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
+        this.lastRender = undefined
 
         let current_regions = this.rootRegions
         let remaining_regions: Region[] = []
@@ -231,7 +238,7 @@ export class DepthMap {
         // Initialize expansion states on first run.
         if (this.criticalRegions.size == 0) {
             for (let region of this.rootRegions) {
-                if (this.getExpansionState(region, viewport, expandCollapseThreshold) === EXPANDED) {
+                if (this.getExpansionState(region, viewport, expandCollapseThreshold) === Visibility.Expanded) {
                     this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
                 }
             }
@@ -248,11 +255,12 @@ export class DepthMap {
      * @param threshold The expand/collapse threshold
      */
     searchUntilCollapse(region: Region, viewport: Viewport, threshold: number) {
-        region.setExpansionState(EXPANDED)
+        region.setExpansionState(Visibility.Expanded)
         region.children.forEach(childRegion => {
-            if (this.getExpansionState(childRegion, viewport, threshold) === COLLAPSED) {
+            let vis = this.getExpansionState(childRegion, viewport, threshold);
+            if (vis !== Visibility.Expanded) {
                 this.criticalRegions.add(region)
-                this.recursiveCollapseRegion(childRegion)
+                this.recursiveCollapseRegion(childRegion, vis)
             } else {
                 this.searchUntilCollapse(childRegion, viewport, threshold)
             }
@@ -260,15 +268,15 @@ export class DepthMap {
     }
 
     /** 
-     * Collapses the region and all chldren recursively 
+     * Collapses the region and all chldren recursively or sets it OutOfBounds
      * */
-    recursiveCollapseRegion(region: Region) {
-        region.setExpansionState(COLLAPSED)
+    recursiveCollapseRegion(region: Region, vis: Visibility.Collapsed | Visibility.OutOfBounds) {
+        region.setExpansionState(vis)
         this.criticalRegions.delete(region)
         region.children.forEach(childRegion => {
             // bail early when child is already collapsed
-            if (childRegion.expansionState === EXPANDED) {
-                this.recursiveCollapseRegion(childRegion)
+            if (childRegion.expansionState === Visibility.Expanded) {
+                this.recursiveCollapseRegion(childRegion, vis)
             }
         })
     }
@@ -293,21 +301,23 @@ export class DepthMap {
         while (toBeProcessed.size !== 0) {
             toBeProcessed.forEach(region => {
                 // Collapse either if the parent region is collapsed or the expansion state changes.
-                if (region.parent && region.parent.expansionState === COLLAPSED) {
-                    this.recursiveCollapseRegion(region)
-                } else if (this.getExpansionState(region, viewport, threshold) === COLLAPSED) {
-                    if (region.parent) {
-                        nextToBeProcessed.add(region.parent)
-                        this.criticalRegions.add(region.parent)
-                    }
-                    this.recursiveCollapseRegion(region)
+                if (region.parent && region.parent.expansionState !== Visibility.Expanded) {
+                    this.recursiveCollapseRegion(region, region.parent.expansionState)
                 } else {
-                    // Add children to check for expansion state change.
-                    region.children.forEach(childRegion => {
-                        childSet.add(childRegion)
-                    })
+                    let vis = this.getExpansionState(region, viewport, threshold);
+                    if (vis !== Visibility.Expanded) {
+                        if (region.parent) {
+                            nextToBeProcessed.add(region.parent)
+                            this.criticalRegions.add(region.parent)
+                        }
+                        this.recursiveCollapseRegion(region, vis)
+                    } else {
+                        // Add children to check for expansion state change.
+                        region.children.forEach(childRegion => {
+                            childSet.add(childRegion)
+                        })
+                    }
                 }
-
             })
 
             toBeProcessed = nextToBeProcessed;
@@ -316,7 +326,8 @@ export class DepthMap {
 
         // Check all collected child regions of expanded states.
         childSet.forEach(childRegion => {
-            if (this.getExpansionState(childRegion, viewport, threshold) === EXPANDED) {
+            let vis = this.getExpansionState(childRegion, viewport, threshold);
+            if (vis === Visibility.Expanded) {
                 this.searchUntilCollapse(childRegion, viewport, threshold)
             } else {
                 if (childRegion.parent) {
@@ -324,7 +335,7 @@ export class DepthMap {
                     // this meand our parent is a critical region
                     this.criticalRegions.add(childRegion.parent)
                 }
-                this.recursiveCollapseRegion(childRegion)
+                this.recursiveCollapseRegion(childRegion, vis)
             }
         })
 
@@ -340,21 +351,21 @@ export class DepthMap {
      * @param threshold The expand/collapse threshold
      * @returns The appropriate expansion state.
      */
-    getExpansionState(region: Region, viewport: Viewport, threshold: number): boolean {
+    getExpansionState(region: Region, viewport: Viewport, threshold: number): Visibility {
         // Collapse all invisible states and regions.
         if (!this.isVisible(region, viewport)) {
-            return COLLAPSED
+            return Visibility.OutOfBounds
         } else if (!region.parent) {
             // Regions without parents should always be expanded if they are visible
-            return EXPANDED
+            return Visibility.Expanded
         } {
             let viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
             // Expand when reached relative size threshold or native resolution.
             if (viewportSize >= threshold || viewport.zoom >= 1) {
-                return EXPANDED
+                return Visibility.Expanded
                 // Collapse when reached relative size threshold.
             } else {
-                return COLLAPSED
+                return Visibility.Collapsed
             }
         }
     }
@@ -407,7 +418,7 @@ export class Region {
     /** Gained using browser position and rescaling and are therefore not perfect. */
     absoluteBounds: Bounds
     /** Determines if the region is expanded (true) or collapsed (false). */
-    expansionState: boolean
+    expansionState: Visibility
     /** The immediate parent region of this region. */
     parent?: Region
     /** All immediate child regions of this region */
@@ -429,17 +440,24 @@ export class Region {
         this.elements = []
         this.children = []
         this.hasTitle = false
-        this.expansionState = true
+        this.expansionState = Visibility.Expanded
     }
 
     /** 
      * Applies the expansion state to all elements of a region.
      * @param state True for expanded and false for collapsed. 
      */
-    setExpansionState(state: boolean): void {
+    setExpansionState(state: Visibility): void {
+        if (state !== Visibility.OutOfBounds && state !== this.expansionState) {
+            let dm = DepthMap.getDM();
+            if (dm) {
+                dm.lastRender = undefined
+            }
+        }
+
         this.expansionState = state
         for (let elem of this.elements) {
-            elem.expansionState = state
+            elem.expansionState = state === Visibility.Expanded
         }
     }
 }

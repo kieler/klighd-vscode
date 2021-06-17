@@ -27,6 +27,7 @@ import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, g
 import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
+import { Visibility } from './depth-map';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -256,7 +257,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     if (context.depthMap) {
         let region = context.depthMap.getRegion((parent as KNode).id)
-        if (region && !region.expansionState && !region.hasTitle) {
+        if (region && region.expansionState !== Visibility.Expanded && !region.hasTitle) {
             // Render indirect region titles.
             if (region.superStateTitle) {
                 const titleSVG = renderKText(region.superStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
@@ -497,7 +498,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const region = context.depthMap?.getRegion(parent.id)
     const simplifySmallTextOption = context.renderingOptions.getOption(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ? simplifySmallTextOption.currentValue : false // Only enable, if option is found.
-    if (simplifySmallText && (!region || region.expansionState)) {
+    if (simplifySmallText && (!region || region.expansionState === Visibility.Expanded)) {
         const simplificationThresholdOption = context.renderingOptions.getOption(TextSimplificationThreshold.ID)
         const defaultThreshold = 3
         const simplificationThreshold = simplificationThresholdOption ? simplificationThresholdOption.currentValue : defaultThreshold
@@ -582,7 +583,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                     if (!context.depthMap.titleMap.has(rendering)) {
                         region.hasTitle = true
                     }
-                    if (!region.expansionState) {
+                    if (region.expansionState !== Visibility.Expanded) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getOption(TitleScalingFactor.ID)
                         const defaultFactor = 1
