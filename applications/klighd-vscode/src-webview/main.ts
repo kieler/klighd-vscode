@@ -14,7 +14,7 @@
 import "reflect-metadata";
 import "sprotty-vscode-webview/css/sprotty-vscode.css";
 import "./main.css";
-import "@kieler/keith-sprotty/styles/main.css";
+import "klighd-core/styles/main.css";
 
 import { Container } from "inversify";
 import {
@@ -24,7 +24,7 @@ import {
     VscodeDiagramWidgetFactory,
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { Connection, createKeithDiagramContainer, SessionStorage } from "@kieler/keith-sprotty";
+import { Connection, createKeithDiagramContainer, SessionStorage } from "klighd-core";
 import { MessageConnection } from "./message-connection";
 import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
 import { KlighDDiagramWidget } from "./klighd-widget";

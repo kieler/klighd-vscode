@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/keith-interactive/lib/constraint-classes';
+import { KEdge, KGraphData, KGraphElement, KNode } from 'klighd-interactive/lib/constraint-classes';
 import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty/lib';
 
 /**

@@ -28,14 +28,14 @@ while the KLighD extension handles everything related to diagrams.
 
 ```json
     "extensionDependencies": [
-        "kieler.klighd-diagram"
+        "kieler.klighd-vscode"
     ],
 ```
 
 2. Notify the KLighD extension about your language client.
 
 ```typescript
-import { command } from "klighd-diagram";
+import { command } from "klighd-vscode";
 
 export async function activate(context: vscode.ExtensionContext) {
     // ... configuring the language client options
@@ -47,9 +47,9 @@ export async function activate(context: vscode.ExtensionContext) {
     // The second argument is an array of language file endings
     // that are supported by your LS client.
     // Returns an ID that is used to identify this extension when future
-    // commands are sent to klighd-diagram.
+    // commands are sent to klighd-vscode.
     const refId = await vscode.commands.executeCommand(
-        "klighd-diagram.setLanguageClient",
+        "klighd-vscode.setLanguageClient",
         lsClient,
         ["sctx"]
     );
@@ -67,21 +67,21 @@ export async function activate(context: vscode.ExtensionContext) {
             "editor/title": [
                 {
                     "when": "resourceLangId == sctx",
-                    "command": "klighd-diagram.diagram.open",
+                    "command": "klighd-vscode.diagram.open",
                     "group": "navigation"
                 }
             ],
             "editor/context": [
                 {
                     "when": "resourceLangId == sctx",
-                    "command": "klighd-diagram.diagram.open",
+                    "command": "klighd-vscode.diagram.open",
                     "group": "navigation"
                 }
             ],
             "explorer/context": [
                 {
                     "when": "resourceLangId == sctx",
-                    "command": "klighd-diagram.diagram.open",
+                    "command": "klighd-vscode.diagram.open",
                     "group": "navigation"
                 }
             ]
@@ -99,6 +99,6 @@ Sprotty functionality and might be further abstracted before it is finalized._
 
 ## Known Issues
 
--   Currently, only at most one extension that depends on `kieler.klighd-diagram` can be activated
+-   Currently, only at most one extension that depends on `kieler.klighd-vscode` can be activated
     at the same time. This causes problems if a workspace opens multiple files that are handled by
     different KLighD dependent extensions.

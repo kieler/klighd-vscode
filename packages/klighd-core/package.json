@@ -1,13 +1,13 @@
 {
-  "name": "@kieler/keith-sprotty",
+  "name": "klighd-core",
   "version": "0.1.0",
-  "description": "sprotty diagrams for KEITH",
+  "description": "Core KLighD diagram visualization with Sprotty",
   "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
-  "license": "EPL-1.0",
+  "license": "EPL-2.0",
   "keywords": [
+    "klighd",
     "sprotty",
-    "keith",
-    "diagram"
+    "diagrams"
   ],
   "main": "./lib/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@kieler/keith-interactive": "0.1.0",
+    "klighd-interactive": "0.1.0",
     "inversify": "5.0.1",
     "sprotty": "0.9.0"
   },

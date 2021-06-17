@@ -1,6 +1,6 @@
 import { ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidget } from "sprotty-vscode-webview";
-import { requestModel } from "@kieler/keith-sprotty";
+import { requestModel } from "klighd-core";
 
 /**
  * Overwrite the VSCodeDiagramWidget to dispatch the RequestModelAction instead

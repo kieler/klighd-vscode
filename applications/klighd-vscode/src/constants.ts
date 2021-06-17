@@ -12,7 +12,7 @@
  */
 
 /** Extension ID corresponding to the name property in the package.json */
-export const extensionId = "klighd-diagram";
+export const extensionId = "klighd-vscode";
 
 /**
  * Diagram type that KEITH uses to communicate Sprotty diagrams with the LS.

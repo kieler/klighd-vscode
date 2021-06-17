@@ -13,7 +13,7 @@
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { Connection, NotificationType } from "@kieler/keith-sprotty";
+import { Connection, NotificationType } from "klighd-core";
 import { ActionMessage } from "sprotty";
 import { showPopup } from "../popup";
 

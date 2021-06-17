@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { RefreshDiagramAction } from "@kieler/keith-interactive/lib/actions";
+import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
 import { injectable } from "inversify";
 import { Action, ICommand } from "sprotty";
 import { Registry } from "../base/registry";

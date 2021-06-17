@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { SetPreferencesAction } from "@kieler/keith-sprotty";
+import { SetPreferencesAction } from "klighd-core";
 import { SprottyWebviewOptions } from "sprotty-vscode";
 import { SprottyLspWebview } from "sprotty-vscode/lib/lsp";
 import { workspace } from "vscode";

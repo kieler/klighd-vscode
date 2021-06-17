@@ -13,14 +13,14 @@
 
 import "reflect-metadata";
 import "./styles/main.css";
-import "@kieler/keith-sprotty/styles/main.css";
+import "klighd-core/styles/main.css";
 import {
     Connection,
     createKeithDiagramContainer,
     requestModel,
     SessionStorage,
     SetPreferencesAction,
-} from "@kieler/keith-sprotty";
+} from "klighd-core";
 import { LSPConnection } from "./services/connection";
 import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";

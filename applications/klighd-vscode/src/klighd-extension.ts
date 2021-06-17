@@ -14,7 +14,7 @@ import {
     KeithFitToScreenAction,
     RefreshDiagramAction,
     RefreshLayoutAction,
-} from "@kieler/keith-sprotty";
+} from "klighd-core";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";

@@ -22,7 +22,7 @@ import { LspHandler } from "./lsp-handler";
 // This mainly involves our command string and the ability to properly type action handlers.
 // This may also export actions that can be potentially intercepted by other extensions.
 export { command, ActionHandlerClass };
-export { PerformActionAction } from "@kieler/keith-sprotty";
+export { PerformActionAction } from "klighd-core";
 export { Action } from "sprotty";
 export { ActionHandler } from "sprotty-vscode/lib/action-handler";
 

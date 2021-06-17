@@ -1,16 +1,16 @@
 {
-    "name": "klighd-diagram",
-    "displayName": "KLighD Diagram",
+    "name": "klighd-vscode",
+    "displayName": "KLighD Diagrams",
     "description": "KLighD diagram support in VSCode",
     "version": "0.0.1",
     "publisher": "kieler",
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
     "icon": "icon.png",
-    "license": "EPL-1.0",
+    "license": "EPL-2.0",
     "repository": {
         "type": "git",
         "url": "https://git.rtsys.informatik.uni-kiel.de/projects/KIELER/repos/keith",
-        "directory": "extensions/klighd-diagram"
+        "directory": "extensions/klighd-vscode"
     },
     "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
     "engines": {
@@ -21,7 +21,7 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:klighd-diagram.setLanguageClient"
+        "onCommand:klighd-vscode.setLanguageClient"
     ],
     "files": [
         "README.md",
@@ -31,37 +31,37 @@
     "contributes": {
         "commands": [
             {
-                "command": "klighd-diagram.diagram.open",
+                "command": "klighd-vscode.diagram.open",
                 "title": "Open in Diagram",
                 "icon": "$(symbol-structure)",
                 "category": "KLighD Diagram"
             },
             {
-                "command": "klighd-diagram.diagram.center",
+                "command": "klighd-vscode.diagram.center",
                 "title": "Center diagram selection",
                 "icon": "$(location)",
                 "category": "KLighD Diagram"
             },
             {
-                "command": "klighd-diagram.diagram.fit",
+                "command": "klighd-vscode.diagram.fit",
                 "title": "Fit diagram to viewport",
                 "icon": "$(move)",
                 "category": "KLighD Diagram"
             },
             {
-                "command": "klighd-diagram.diagram.layout",
+                "command": "klighd-vscode.diagram.layout",
                 "title": "Layout the diagram to fit the new viewport",
                 "icon": "$(editor-layout)",
                 "category": "KLighD Diagram"
             },
             {
-                "command": "klighd-diagram.diagram.refresh",
+                "command": "klighd-vscode.diagram.refresh",
                 "title": "Refresh the diagram",
                 "icon": "$(refresh)",
                 "category": "KLighD Diagram"
             },
             {
-                "command": "klighd-diagram.diagram.export",
+                "command": "klighd-vscode.diagram.export",
                 "title": "Export diagram to SVG",
                 "icon": "$(clone)",
                 "category": "KLighD Diagram"
@@ -71,27 +71,27 @@
             "commandPalette": [
                 {
                     "when": "false",
-                    "command": "klighd-diagram.diagram.open"
+                    "command": "klighd-vscode.diagram.open"
                 },
                 {
                     "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.center"
+                    "command": "klighd-vscode.diagram.center"
                 },
                 {
                     "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.fit"
+                    "command": "klighd-vscode.diagram.fit"
                 },
                 {
                     "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.layout"
+                    "command": "klighd-vscode.diagram.layout"
                 },
                 {
                     "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.refresh"
+                    "command": "klighd-vscode.diagram.refresh"
                 },
                 {
                     "when": "keith-diagram-focused",
-                    "command": "klighd-diagram.diagram.export"
+                    "command": "klighd-vscode.diagram.export"
                 }
             ]
         },
@@ -99,12 +99,12 @@
             {
                 "title": "KLighD Diagram",
                 "properties": {
-                    "klighd-diagram.initialResizeToFit": {
+                    "klighd-vscode.initialResizeToFit": {
                         "description": "Initial value for new web-views about resizing the diagram to fit the viewport when it is redrawn.",
                         "type": "boolean",
                         "default": "true"
                     },
-                    "klighd-diagram.useLightBackground": {
+                    "klighd-vscode.useLightBackground": {
                         "description": "Use a light color as the initial webview background color. By default, the webview uses the current theme for the background color. However, this can make some diagrams hard to read.",
                         "type": "boolean"
                     }
@@ -131,7 +131,7 @@
         "webpack": "^4.44.1"
     },
     "dependencies": {
-        "@kieler/keith-sprotty": "0.1.0",
+        "klighd-core": "0.1.0",
         "inversify": "5.0.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",

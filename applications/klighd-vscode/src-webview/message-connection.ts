@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { Connection, NotificationType } from "@kieler/keith-sprotty";
+import { Connection, NotificationType } from "klighd-core";
 import { inject, injectable } from "inversify";
 import { ActionMessage, isActionMessage, ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";

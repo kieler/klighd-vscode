@@ -1,12 +1,11 @@
 {
-  "name": "@kieler/keith-interactive",
+  "name": "klighd-interactive",
   "version": "0.1.0",
-  "description": "An extension for Theia to interctively apply constraints to the diagram",
+  "description": "A module for klighd-core to interactively apply constraints to the diagram",
   "author": "Kiel University https://rtsys.informatik.uni-kiel.de/kieler",
-  "license": "EPL-1.0",
+  "license": "EPL-2.0",
   "keywords": [
-    "keith-extension",
-    "theia",
+    "klighd",
     "interactive"
   ],
   "scripts": {

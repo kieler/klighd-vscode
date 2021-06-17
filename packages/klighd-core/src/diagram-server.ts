@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-import { RefreshDiagramAction } from "@kieler/keith-interactive/lib/actions";
+import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
 import {
     DeleteLayerConstraintAction,
     DeletePositionConstraintAction,
@@ -19,12 +19,12 @@ import {
     SetLayerConstraintAction,
     SetPositionConstraintAction,
     SetStaticConstraintAction,
-} from "@kieler/keith-interactive/lib/layered/actions";
+} from "klighd-interactive/lib/layered/actions";
 import {
     RectPackDeletePositionConstraintAction,
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
-} from "@kieler/keith-interactive/lib/rect-packing/actions";
+} from "klighd-interactive/lib/rect-packing/actions";
 import { inject, injectable } from "inversify";
 import {
     Action,
