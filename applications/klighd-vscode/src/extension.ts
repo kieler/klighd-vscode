@@ -15,16 +15,12 @@ import { nanoid } from "nanoid/non-secure";
 import * as vscode from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
-import { ActionHandlerClass, KLighDExtension } from "./klighd-extension";
+import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { LspHandler } from "./lsp-handler";
 
 // potential exports for other extensions to improve their dev experience
-// This mainly involves our command string and the ability to properly type action handlers.
-// This may also export actions that can be potentially intercepted by other extensions.
-export { command, ActionHandlerClass };
-export { PerformActionAction } from "klighd-core";
-export { Action } from "sprotty";
-export { ActionHandler } from "sprotty-vscode/lib/action-handler";
+// Currently, this only includes our command string.
+export { command };
 
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext): void {
@@ -43,9 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
                     vscode.window.showErrorMessage(
                         "setLanguageClient must be executed with an array of supported file endings as the second argument."
                     );
-                    throw new Error(
-                        "Unsupported usage of of KLighD setLanguageClient. Please refer to the extensions README."
-                    );
+                    return;
                 }
 
                 try {
@@ -73,7 +67,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.commands.registerCommand(
             command.addActionHandler,
-            (id: string, actionHandler: ActionHandlerClass) => {
+            (id: string, kind: string, actionHandler: ActionHandlerCallback) => {
                 const extension = extensionMap.get(id);
                 if (!extension) {
                     vscode.window.showErrorMessage(
@@ -82,8 +76,13 @@ export function activate(context: vscode.ExtensionContext): void {
                     return;
                 }
 
-                // TODO: Ensure that it really is an ActionHandlerClass somehow...
-                extension.addActionHandler(actionHandler);
+                if (typeof kind !== "string" || typeof actionHandler !== "function") {
+                    vscode.window.showErrorMessage(
+                        "AddActionHandler command called with invalid arguments. Please refer to the documentation for reference about the correct usage."
+                    );
+                }
+
+                extension.addActionHandler(kind, actionHandler);
             }
         )
     );

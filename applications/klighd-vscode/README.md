@@ -89,16 +89,30 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-### Advanced
+### Intercepting messages
 
-The KLighD diagram extension provides the option to intercept diagram actions that are send to the
-language server.
+The KLighD diagram extension provides the option to intercept diagram actions that are about to be
+send to the language server. Each action has an identifier named `kind`.
 
-_TODO: Write about action handlers. The API is currently quite complex as it simply relies on
-Sprotty functionality and might be further abstracted before it is finalized._
+To intercept an action, your extension has to provide an action handler with the following
+signature:
+
+```typescript
+// Return `true` if the action should be forwarded to the language server. `false` otherwise.
+type ActionHandler = (action: { kind: string }) => Promise<boolean>;
+```
+
+To register your action handler with the `klighd-vscode` extension call the following command:
+
+```typescript
+// - refId: your registration id returned from the setLanguageClient command
+// - kind: the action kind that should be intercepted by the handler
+// - handler: the action handler that is called for the provided action type.
+vscode.commands.executeCommand("klighd-vscode.addActionHandler", refId: string, kind: string, handler: ActionHandler);
+```
 
 ## Known Issues
 
--   Currently, only at most one extension that depends on `kieler.klighd-vscode` can be activated
-    at the same time. This causes problems if a workspace opens multiple files that are handled by
+-   Currently, only at most one extension that depends on `kieler.klighd-vscode` can be activated at
+    the same time. This causes problems if a workspace opens multiple files that are handled by
     different KLighD dependent extensions.

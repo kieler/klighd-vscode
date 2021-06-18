@@ -10,13 +10,9 @@
  *
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
-import {
-    KlighdFitToScreenAction,
-    RefreshDiagramAction,
-    RefreshLayoutAction,
-} from "klighd-core";
+import { KlighdFitToScreenAction, RefreshDiagramAction, RefreshLayoutAction } from "klighd-core";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
-import { SprottyWebview } from "sprotty-vscode";
+import { Action, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
 import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
 import { commands, ExtensionContext, Uri } from "vscode";
@@ -31,10 +27,19 @@ interface KLighDExtensionOptions {
 }
 
 /**
+ * Callback provided by other extension to register an {@link ActionHandler}.
+ * To simplify the implementation for other extensions which do not have access to
+ * the type definition, we simplify the requirement to provide an action kind and
+ * callback instead of an class.
+ * @returns `true` if the action should be forwarded to the server.
+ */
+export type ActionHandlerCallback = (action: Action) => Promise<boolean>;
+
+/**
  * Type definition for a class that implements an {@link ActionHandler}.
  * Corresponds to the expected type of `sprotty-vscode` for `SprottyWebview.addActionHandler`.
  */
-export type ActionHandlerClass = new (webview: SprottyWebview) => ActionHandler;
+type ActionHandlerClass = new (webview: SprottyWebview) => ActionHandler;
 
 /**
  * Bootstrap an extension with `sprotty-vscode` that manages a webview which
@@ -71,8 +76,14 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         this.actionHandlers = [];
     }
 
-    addActionHandler(handler: ActionHandlerClass): void {
-        this.actionHandlers.push(handler);
+    addActionHandler(kind: string, handler: ActionHandlerCallback): void {
+        // Dynamically create an ActionHandler class for other extensions.
+        // This simplifies their implementation requirements to intercept actions.
+        class ActionHandlerImpl implements ActionHandler {
+            kind = kind;
+            handleAction = handler;
+        }
+        this.actionHandlers.push(ActionHandlerImpl);
     }
 
     protected createWebView(identifier: SprottyDiagramIdentifier): SprottyWebview {
