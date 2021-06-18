@@ -13,3 +13,6 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+# Images in the README has to resolve with an https URL. vsce will replace relative
+# paths with URL to the repository. Therefore, media should exist in the repo but should not be packaged.
+media

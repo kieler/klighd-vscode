@@ -1,10 +1,9 @@
 # KLighD Diagrams
 
-<!-- TODO: Images must come from an https source. They are not packages by vsce. This should be resolved, when this extension is hosted on GitHub. Rename "imagine" to "img" when ready. -->
-<!-- <figure style="text-align: center;">
-<imagine style="width: 75%;" src="./media/banner.png" alt="Example with a visualized SCChart"/>
+<figure style="text-align: center;">
+<img style="width: 75%;" src="./media/banner.png" alt="Example with a visualized SCChart"/>
 <figcaption>Example of the KLighD diagram extension used to visualize a SCChart.</figcaption>
-</figure> -->
+</figure>
 
 ## Features
 
@@ -92,7 +91,7 @@ export async function activate(context: vscode.ExtensionContext) {
 ### Intercepting messages
 
 The KLighD diagram extension provides the option to intercept diagram actions that are about to be
-send to the language server. Each action has an identifier named `kind`.
+sent to the language server. Each action has an identifier named `kind`.
 
 To intercept an action, your extension has to provide an action handler with the following
 signature:
