@@ -118,33 +118,30 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static init(rootElement: SModelRoot){
+    public static init(rootElement: SModelRoot) {
+        let needsInit = false;
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
-            DepthMap.instance = new DepthMap(rootElement);
+            DepthMap.instance = new DepthMap(rootElement)
             console.log("Starting inizialization of DepthMap new Root")
-            for (let root_child of rootElement.children) {
-                let node = root_child as KNode;
-                let region = new Region(node)
-                region.absoluteBounds = node.bounds
-                DepthMap.instance.rootRegions.push(region)
-                DepthMap.instance.addRegionToMap(region)
-                DepthMap.instance.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
-            }
-            console.log("Inizialized DepthMap")
+            needsInit = true
         } else if (DepthMap.instance.rootElement !== rootElement) {
             // Reset and reinitialize if the model changed
             DepthMap.instance.reset(rootElement)
             console.log("Starting reinizialization of DepthMap changed root")
+            needsInit = true
+        }
+
+        if (needsInit) {
             for (let root_child of rootElement.children) {
-                let node = root_child as KNode;
+                let node = root_child as KNode
                 let region = new Region(node)
                 region.absoluteBounds = node.bounds
                 DepthMap.instance.rootRegions.push(region)
                 DepthMap.instance.addRegionToMap(region)
                 DepthMap.instance.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
             }
-            console.log("Reinizialized DepthMap")
+            console.log("(Re-)Inizialized DepthMap")
         }
     }
 
