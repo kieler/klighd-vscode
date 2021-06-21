@@ -118,7 +118,7 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static init(rootElement: SModelRoot): DepthMap {
+    public static init(rootElement: SModelRoot){
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement);
@@ -146,7 +146,6 @@ export class DepthMap {
             }
             console.log("Reinizialized DepthMap")
         }
-        return DepthMap.instance
     }
 
     /** 
