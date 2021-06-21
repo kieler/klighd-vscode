@@ -27,6 +27,7 @@ import {
     LayoutOptionValue,
     SynthesisOption,
 } from "./option-models";
+import { optionsBlacklist } from "./options-blacklist";
 
 /**
  * Registry that stores and manages KLighD options provided by the server.
@@ -49,14 +50,14 @@ export class OptionsRegistry extends Registry {
             this._modelUri = action.modelUri;
             this._displayedActions = action.actions;
 
-            // Transform valued synthesis options to synthesis options by setting their current value
-            this._synthesisOptions = action.valuedSynthesisOptions.map<SynthesisOption>(
-                (valuedOption) => ({
+            // Transform valued synthesis options to synthesis options by setting their current value and remove blacklisted options
+            this._synthesisOptions = action.valuedSynthesisOptions
+                .filter((opt) => !optionsBlacklist.includes(opt.synthesisOption.id))
+                .map<SynthesisOption>((valuedOption) => ({
                     ...valuedOption.synthesisOption,
                     currentValue:
                         valuedOption.currentValue ?? valuedOption.synthesisOption.initialValue,
-                })
-            );
+                }));
 
             // Transform layout options to ensure that they have a current value.
             // Fallback to an already stored currentValue, since the server does not provide a current value for layout options.
