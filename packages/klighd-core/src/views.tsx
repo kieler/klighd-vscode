@@ -249,9 +249,14 @@ export class KEdgeView implements IView {
         edge.areChildAreaChildrenRendered = false
         edge.areNonChildAreaChildrenRendered = false
 
-        // edge should be greyed out if the source or target is moved
         const s = edge.source
         const t = edge.target
+        
+        // Do not draw edges without a source or target.
+        if (s === undefined || t === undefined) {
+            return <g/>
+        }
+        // edge should be greyed out if the source or target is moved
         if (s !== undefined && t !== undefined && s instanceof SKNode && t instanceof SKNode) {
             edge.moved = (s.selected || t.selected) && this.mListener.hasDragged
         }
