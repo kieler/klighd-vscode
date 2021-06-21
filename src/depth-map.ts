@@ -48,6 +48,10 @@ export class DepthMap {
      */
     viewport?: Viewport;
 
+    zoomActionsSinceRenders: number;
+
+    MaxZoomActionsUntillRender: number = 5;
+
     /**
      * The threshold for which we updated the state of KNodes
      */
@@ -76,6 +80,7 @@ export class DepthMap {
         this.regionMap = new Map()
         this.titleMap = new Set()
         this.criticalRegions = new Set()
+        this.zoomActionsSinceRenders = 0
     }
 
     protected reset(model_root: SModelRoot) {
@@ -87,6 +92,7 @@ export class DepthMap {
         this.viewport = undefined
         this.lastThreshold = undefined
         this.lastRender = undefined
+        this.zoomActionsSinceRenders = 0
 
         let current_regions = this.rootRegions
         let remaining_regions: Region[] = []
@@ -240,6 +246,12 @@ export class DepthMap {
             && this.lastThreshold === expandCollapseThreshold) {
             // the viewport did not change, no need to update
             return
+        }
+
+        if (viewport.zoom !== this.viewport?.zoom) this.zoomActionsSinceRenders +=1
+        if (this.zoomActionsSinceRenders > this.MaxZoomActionsUntillRender){
+            this.zoomActionsSinceRenders = 0
+            this.lastRender = undefined
         }
 
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
@@ -462,6 +474,7 @@ export class Region {
             let dm = DepthMap.getDM();
             if (dm) {
                 dm.lastRender = undefined
+                dm.zoomActionsSinceRenders = 0
             }
         }
 
