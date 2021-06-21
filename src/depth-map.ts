@@ -5,6 +5,9 @@ import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderingOptions, ExpandCollapseThreshold } from "./options";
 import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
 
+/**
+ * Every Region is either of the enums
+ */
 export enum Visibility {
     Expanded,
     Collapsed,
@@ -24,6 +27,10 @@ export class DepthMap {
      *  */
     rootRegions: Region[];
 
+
+    /**
+     * Stores the lastRendered VNode Such that in case of pan / zoom actions the vnode is not redrawn
+     */
     lastRender?: VNode | VNode[];
 
     /** 
@@ -99,6 +106,10 @@ export class DepthMap {
         this.rootRegions = []
     }
 
+    /**
+     * Returns the current Depthmap instance or nothing if its not initilized
+     * @returns Depthmap | undefined 
+     */
     public static getDM(): DepthMap | undefined {
         return DepthMap.instance
     }
@@ -107,35 +118,35 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static getInstance(rootElement: SModelRoot): DepthMap {
+    public static init(rootElement: SModelRoot): DepthMap {
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement);
             console.log("Starting inizialization of DepthMap new Root")
-            DepthMap.instance.init(rootElement)
+            for (let root_child of rootElement.children) {
+                let node = root_child as KNode;
+                let region = new Region(node)
+                region.absoluteBounds = node.bounds
+                DepthMap.instance.rootRegions.push(region)
+                DepthMap.instance.addRegionToMap(region)
+                DepthMap.instance.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
+            }
             console.log("Inizialized DepthMap")
         } else if (DepthMap.instance.rootElement !== rootElement) {
             // Reset and reinitialize if the model changed
             DepthMap.instance.reset(rootElement)
             console.log("Starting reinizialization of DepthMap changed root")
-            DepthMap.instance.init(rootElement)
+            for (let root_child of rootElement.children) {
+                let node = root_child as KNode;
+                let region = new Region(node)
+                region.absoluteBounds = node.bounds
+                DepthMap.instance.rootRegions.push(region)
+                DepthMap.instance.addRegionToMap(region)
+                DepthMap.instance.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
+            }
             console.log("Reinizialized DepthMap")
         }
         return DepthMap.instance
-    }
-
-    /** 
-     * Initialize a new DepthMap. 
-     * */
-    protected init(model_root: SModelRoot) {
-        for (let root_child of model_root.children) {
-            let node = root_child as KNode;
-            let region = new Region(node)
-            region.absoluteBounds = node.bounds
-            this.rootRegions.push(region)
-            this.addRegionToMap(region)
-            this.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
-        }
     }
 
     /** 
@@ -392,7 +403,7 @@ export class DepthMap {
     }
 
     /** 
-     * Compares the size of a node to the viewport and returns the biggest fraction of either height or width.
+     * Compares the size of a node to the viewport and returns the smallest fraction of either height or width.
      * 
      * @param node The KNode in question
      * @param viewport The curent viewport
