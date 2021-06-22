@@ -10,8 +10,8 @@
     },
     "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
     "engines": {
-        "node": "^14.17.1",
-        "yarn": "^1.22.10"
+        "node": "14.x",
+        "yarn": "1.x"
     },
     "workspaces": [
         "applications/*",
