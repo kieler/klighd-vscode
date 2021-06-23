@@ -15,16 +15,15 @@ import "reflect-metadata";
 import "./styles/main.css";
 import "klighd-core/styles/main.css";
 import {
-    Connection,
     createKlighdDiagramContainer,
     requestModel,
-    SessionStorage,
+    getActionDispatcher,
     SetPreferencesAction,
+    bindServices,
 } from "klighd-core";
 import { LSPConnection } from "./services/connection";
 import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
-import { IActionDispatcher, TYPES } from "sprotty";
 import { showPopup } from "./popup";
 
 // IIFE booting the application
@@ -61,9 +60,8 @@ async function initDiagramView(sourceUri: string) {
 
     const connection = new LSPConnection();
     const diagramContainer = createKlighdDiagramContainer("sprotty");
-    diagramContainer.bind(Connection).toConstantValue(connection);
-    diagramContainer.bind(SessionStorage).toConstantValue(sessionStorage);
-    const actionDispatcher = diagramContainer.get<IActionDispatcher>(TYPES.IActionDispatcher);
+    bindServices(diagramContainer, { connection, sessionStorage });
+    const actionDispatcher = getActionDispatcher(diagramContainer);
 
     sendUrlSearchParamPreferences(actionDispatcher);
 
@@ -73,11 +71,11 @@ async function initDiagramView(sourceUri: string) {
     connection.sendDocumentDidOpen(sourceUri, languageId);
     // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions...
     await sleep(200);
-    await requestModel(actionDispatcher, { sourceUri, diagramType: "keith-diagram" });
+    await requestModel(actionDispatcher, sourceUri);
 }
 
 /** Communicates preferences to the diagram container which are red from the url search params. */
-function sendUrlSearchParamPreferences(actionDispatcher: IActionDispatcher) {
+function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     actionDispatcher.dispatch(
         new SetPreferencesAction({
             resizeToFit: readSearchParam("resizeToFit") === "false" ? false : true,

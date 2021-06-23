@@ -11,6 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
+import { diagramType as originalDiagramType } from "klighd-core";
+
 /** Extension ID corresponding to the name property in the package.json */
 export const extensionId = "klighd-vscode";
 
@@ -24,8 +26,11 @@ export const extensionId = "klighd-vscode";
  * Webview creation: @see https://github.com/eclipse/sprotty-vscode/blob/master/sprotty-vscode-extension/src/sprotty-webview.ts#L76
  * Active tracking: @see https://github.com/eclipse/sprotty-vscode/blob/master/sprotty-vscode-extension/src/sprotty-webview.ts#L76
  * Webview contribution: @see https://stackoverflow.com/a/54917749/7569889
+ *
+ * _PS. This value is reexported here to not loose the extra documentation about sprotty-vscode
+ * specific diagramType usage and behavior._
  */
-export const diagramType = "keith-diagram";
+export const diagramType = originalDiagramType;
 
 const withPrefix = (name: string) => `${extensionId}.${name}`;
 
@@ -39,5 +44,5 @@ export const command = {
     diagramCenter: withPrefix("diagram.center"),
     diagramFit: withPrefix("diagram.fit"),
     diagramLayout: withPrefix("diagram.layout"),
-    diagramRefresh: withPrefix("diagram.refresh")
+    diagramRefresh: withPrefix("diagram.refresh"),
 };

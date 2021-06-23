@@ -13,8 +13,7 @@
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { Connection, NotificationType } from "klighd-core";
-import { ActionMessage } from "sprotty";
+import { Connection, NotificationType, ActionMessage } from "klighd-core";
 import { showPopup } from "../popup";
 
 type GeneralMessageParams = [string, "info" | "warn" | "error"];

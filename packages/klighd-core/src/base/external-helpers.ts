@@ -1,0 +1,34 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2021 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This code is provided under the terms of the Eclipse Public License (EPL).
+ */
+
+import { Container } from "inversify";
+import { IActionDispatcher, RequestModelAction, TYPES } from "sprotty";
+
+// This module contains helper methods that can simplify the interaction with the Sprotty container outside this module.
+// The main goal of each helper is to abstract Sprotty internal implementations.
+
+/** Diagram type that is communicated with the diagram server. */
+export const diagramType = "keith-diagram";
+
+/** Queries and returns an ActionDispatcher from the given DI Container. */
+export function getActionDispatcher(container: Container): IActionDispatcher {
+    return container.get<IActionDispatcher>(TYPES.IActionDispatcher);
+}
+
+/** Starts a model communication with the diagram server by dispatching a model request. */
+export async function requestModel(
+    actionDispatcher: IActionDispatcher,
+    sourceUri: string
+): Promise<void> {
+    await actionDispatcher.dispatch(new RequestModelAction({ sourceUri, diagramType }));
+}

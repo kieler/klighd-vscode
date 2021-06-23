@@ -34,9 +34,7 @@ import {
     ComputedBoundsAction,
     DiagramServer,
     findElement,
-    IActionDispatcher,
     ICommand,
-    RequestModelAction,
     RequestPopupModelAction,
     SetModelCommand,
     SetPopupModelAction,
@@ -227,11 +225,4 @@ export class KlighdDiagramServer extends DiagramServer {
             return false;
         }
     }
-}
-
-export async function requestModel(
-    actionDispatcher: IActionDispatcher,
-    options: { sourceUri: string; diagramType: string }
-): Promise<void> {
-    await actionDispatcher.dispatch(new RequestModelAction(options));
 }

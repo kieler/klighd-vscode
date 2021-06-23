@@ -22,9 +22,10 @@ import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
 export class MessageConnection implements Connection {
     private messageHandlers: ((message: ActionMessage) => void)[] = [];
 
-    constructor(
-        @inject(VscodeDiagramWidgetFactory) private diagramWidgetFactory: VscodeDiagramWidgetFactory
-    ) {
+    @inject(VscodeDiagramWidgetFactory)
+    private diagramWidgetFactory!: VscodeDiagramWidgetFactory;
+
+    constructor() {
         this.messageHandlers.push(this.statusMessageHandler);
         this.messageHandlers.push(this.logHandler);
 
@@ -58,7 +59,7 @@ export class MessageConnection implements Connection {
         // SprottyLSPWebview sends a message with the language client, if it
         // has a method property and passes a params property as the second argument
         // to languageClient.sendNotification.
-        vscodeApi.postMessage({method: type, params: payload});
+        vscodeApi.postMessage({ method: type, params: payload });
     }
 
     onMessageReceived(handler: (message: ActionMessage) => void): void {

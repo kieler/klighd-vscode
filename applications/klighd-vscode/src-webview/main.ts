@@ -24,7 +24,7 @@ import {
     VscodeDiagramWidgetFactory,
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { Connection, createKlighdDiagramContainer, SessionStorage } from "klighd-core";
+import { createKlighdDiagramContainer, bindServices } from "klighd-core";
 import { MessageConnection } from "./message-connection";
 import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
 import { KlighDDiagramWidget } from "./klighd-widget";
@@ -58,12 +58,9 @@ export class KLighDSprottyStarter extends SprottyStarter {
     }
 
     protected createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
+        const connection = new MessageConnection();
         const container = createKlighdDiagramContainer(diagramIdentifier.clientId);
-        container.bind(SessionStorage).toConstantValue(sessionStorage);
-        container
-            .bind(Connection)
-            .to(MessageConnection)
-            .inSingletonScope();
+        bindServices(container, { connection, sessionStorage });
 
         // Send stored actions to the container, which is no able to receive them
         this.replayCapturedActionMessages();
@@ -79,10 +76,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
         container: Container,
         diagramIdentifier: SprottyDiagramIdentifier
     ): void {
-        container
-            .bind(VscodeDiagramWidget)
-            .toSelf()
-            .inSingletonScope();
+        container.bind(VscodeDiagramWidget).toSelf().inSingletonScope();
         container.bind(VscodeDiagramWidgetFactory).toFactory((context) => {
             return () => context.container.get<VscodeDiagramWidget>(VscodeDiagramWidget);
         });

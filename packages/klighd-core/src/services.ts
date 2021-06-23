@@ -21,13 +21,26 @@
 // the constant is used as a DI symbol and the interface as a type automatically.
 // https://gitter.im/inversify/InversifyJS?at=5e4ed3645fd3f22ede92d911
 
+import { Container } from "inversify";
 import { ActionMessage } from "sprotty";
+
+/** All services that are required by the klighd-core and have to be provided externally. */
+interface Services {
+    connection: Connection;
+    sessionStorage: SessionStorage;
+}
+
+/** Bind all required services to the given DI Container. */
+export function bindServices(container: Container, services: Services): void {
+    container.bind(Connection).toConstantValue(services.connection);
+    container.bind(SessionStorage).toConstantValue(services.sessionStorage);
+}
 
 /**
  * Notification types used in `klighd-core`. Most of the times the default Sprotty type
  * (diagram/accept) is used.
  * However, diagram options changes are communicated on a separate namespace.
- * 
+ *
  * @see de.cau.cs.kieler.klighd.lsp.IDiagramOptionsLanguageServerExtension.xtend
  */
 export const enum NotificationType {

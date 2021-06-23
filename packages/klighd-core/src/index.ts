@@ -14,8 +14,8 @@
 // ------------------ Base ------------------
 
 export { default as createKlighdDiagramContainer } from "./di.config";
-export { requestModel } from "./diagram-server";
-export { Connection, SessionStorage, NotificationType } from "./services";
+export { bindServices, Connection, SessionStorage, NotificationType } from "./services";
+export { diagramType, getActionDispatcher, requestModel } from "./base/external-helpers";
 
 // Export actions
 export * from "./actions/actions";
@@ -24,3 +24,4 @@ export { ToggleSidebarPanelAction } from "./sidebar/actions";
 export { SetSynthesesAction, SetSynthesisAction } from "./syntheses/actions";
 export { SetPreferencesAction } from "./preferences-registry";
 export { RefreshDiagramAction } from "klighd-interactive/lib/actions";
+export { ActionMessage } from "sprotty";
