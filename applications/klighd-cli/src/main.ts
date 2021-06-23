@@ -41,7 +41,7 @@ import { showPopup } from "./popup";
     }
 
     try {
-        showSpinner();
+        showSpinner("Initializing connection...");
         await initDiagramView(sourceUri);
         hideSpinner();
     } catch (e) {
