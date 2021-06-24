@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-// ------------------ Base ------------------
+// Main package entry point. Exports the public API
 
 export { default as createKlighdDiagramContainer } from "./di.config";
 export { bindServices, Connection, SessionStorage, NotificationType } from "./services";

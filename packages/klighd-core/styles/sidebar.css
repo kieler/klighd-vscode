@@ -23,7 +23,7 @@
     gap: 16px;
     padding: 16px;
 
-    /* Sidebar should consume at least 1/4th of the screen but not forced to be wider than 400px. */
+    /* Sidebar should consume at least ~1/3th of the screen but not forced to be wider than 400px. */
     min-width: min(400px, 35vw);
     /* Sidebar should consume at max 3/4th of the screen. */
     max-width: 75vw;

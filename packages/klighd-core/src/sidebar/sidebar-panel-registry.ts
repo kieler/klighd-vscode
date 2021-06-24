@@ -19,11 +19,9 @@ import { ToggleSidebarPanelAction } from "./actions";
 import { ISidebarPanel } from "./sidebar-panel";
 
 /**
- * Simply registry that stores all sidebar panels that are resolved by the DI container.
+ * {@link Registry} that stores all sidebar panels which are resolved by the DI container.
  * At most one panel is considered active. The state (which panel is active) can
- * be changed with an {@link ToggleSidebarPanelAction}.
- *
- * Other components can subscribe to this registry to be informed about state changes.
+ * be changed with a {@link ToggleSidebarPanelAction}.
  */
 @injectable()
 export class SidebarPanelRegistry extends Registry {
@@ -51,7 +49,7 @@ export class SidebarPanelRegistry extends Registry {
                 this._currentPanelID = null;
                 this.notifyListeners();
             } else if (this._panels.has(action.id)) {
-                // Panel is inactive and id exists so it should either be shown explicitly or toggled to be shown
+                // Panel is inactive and the given id exists so it should either be shown explicitly or toggled to be shown
                 this._currentPanelID = action.id;
                 this.notifyListeners();
             }
@@ -60,7 +58,7 @@ export class SidebarPanelRegistry extends Registry {
 
     get allPanels(): ISidebarPanel[] {
         // Sort the panels before they are returned. There won't be any considerable
-        // amount of panels which could lead to performance concerns. If sorting becomes
+        // amount of panels that could cause performance concerns. If sorting becomes
         // an issue, it could be moved to the constructor to only be applied once. This
         // would only work as long as it is not possible to add panels dynamically.
         return Array.from(this._panels.values()).sort((p1, p2) => p1.position - p2.position);

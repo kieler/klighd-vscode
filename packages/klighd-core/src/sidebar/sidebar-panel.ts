@@ -29,7 +29,7 @@ export interface ISidebarPanel {
      *
      * _It has to be an SVG string because JSX SVGs did not work properly if they
      * are part of a file that uses snabbdom-jsx `html` as the JSX pragma, which
-     * might be the case for files containing SidebarPanels._
+     * mostly is the case for files containing SidebarPanels._
      */
     readonly icon: string;
 
@@ -53,7 +53,7 @@ export interface ISidebarPanel {
 }
 
 /**
- * Abstract SidebarPanel that should be used as the base for custom a {@link ISidebarPanel}.
+ * Abstract SidebarPanel that should be used as the base for a custom {@link ISidebarPanel}.
  *
  * This class simplifies the implementation around handling render updates.
  */
@@ -71,7 +71,7 @@ export abstract class SidebarPanel implements ISidebarPanel {
         this._updateCallbacks.push(callback);
     }
 
-    /** Call this method if you want to trigger an re-render and update the UI. */
+    /** Call this method if you want to trigger a re-render and update the UI. */
     update(): void {
         for (const callback of this._updateCallbacks) {
             callback();

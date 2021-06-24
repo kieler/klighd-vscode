@@ -61,11 +61,12 @@ import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
 
 /**
- * This class extends {@link DiagramServer} to also handle the
- * Request- and ComputedTextBoundsAction.
+ * This class extends {@link DiagramServer} to handle different `klighd-core` specific
+ * actions and forward them to the server is required.
  */
 @injectable()
 export class KlighdDiagramServer extends DiagramServer {
+    /** Generic connection to the server used to send and receive actions. */
     private _connection: Connection;
 
     @inject(SessionStorage) private sessionStorage: SessionStorage;
@@ -95,6 +96,8 @@ export class KlighdDiagramServer extends DiagramServer {
     }
 
     handleLocally(action: Action): boolean {
+        // In contract to the name, this should return true, if the actions should be
+        // sent to the server. Don't know what the Sprotty folks where thinking when they named it...
         switch (action.kind) {
             case ComputedBoundsAction.KIND:
                 // TODO: remove sending of a computedBoundsAction as well
@@ -218,7 +221,8 @@ export class KlighdDiagramServer extends DiagramServer {
     }
 
     handleComputedBounds(): boolean {
-        // ComputedBounds actions should not be generated and forwarded anymore, since only the computedTextBounds action is used by kgraph diagrams
+        // ComputedBounds actions should not be generated and forwarded anymore,
+        // since only the computedTextBounds action is used by kgraph diagrams
         if (this.viewerOptions.needsServerLayout) {
             return true;
         } else {

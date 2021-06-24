@@ -80,7 +80,7 @@ export class SetLayoutOptionsAction implements Action {
     }
 }
 
-/** Change the value of one or multiple layout options. */
+/** Change the value of one or multiple render options. */
 export class SetRenderOptionAction implements Action {
     static readonly KIND = "setRenderOption";
     readonly kind = SetRenderOptionAction.KIND;

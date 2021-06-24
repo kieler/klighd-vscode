@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License (EPL).
  */
 
-// Blacklist all options not working yet in KEITH or not working at all yet. They are the following:
+// Blacklist all options not working yet in KLighD or not working at all yet. They are the following:
 // SCCharts:
 // - causal dataflow de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK14433073
 // - initially collapse regions updates the view and collapses/expands all regions de.cau.cs.kieler.sccharts.ui.synthesis.hooks.ExpandCollapseHook.CHECK-1902441701

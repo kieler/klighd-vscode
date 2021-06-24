@@ -21,12 +21,10 @@ import { SidebarPanel } from "./sidebar-panel";
  * implementation guide when implementing your own panel.
  *
  * To use this panel, or any {@link SidebarPanel}, bind it to the DI symbol "SidebarPanel".
- * 
+ *
  * ```ts
  *   // Add counter panel as an example
- *  bind(CounterPanel)
- *    .toSelf()
- *    .inSingletonScope();
+ *  bind(CounterPanel).toSelf().inSingletonScope();
  *  bind(DISymbol.SidebarPanel).toService(CounterPanel);
  * ```
  */
@@ -57,6 +55,7 @@ export class CounterPanel extends SidebarPanel {
 
     private changeCount(by: number) {
         this.count += by;
+        // Request an update to make the panel reactive to changes
         this.update();
     }
 

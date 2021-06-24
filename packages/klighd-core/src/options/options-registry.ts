@@ -30,7 +30,7 @@ import {
 import { optionsBlacklist } from "./options-blacklist";
 
 /**
- * Registry that stores and manages KLighD options provided by the server.
+ * {@link Registry} that stores and manages KLighD options provided by the server.
  *
  * Acts as an action handler that handles UpdateOptionsActions and modifications
  * to the Options. Changes are synchronized with the server.
@@ -45,7 +45,6 @@ export class OptionsRegistry extends Registry {
     private _displayedActions: DisplayedActionData[] = [];
 
     handle(action: Action): void | Action | ICommand {
-        // Abort early if this handler is registered for another action
         if (UpdateOptionsAction.isThisAction(action)) {
             this._modelUri = action.modelUri;
             this._displayedActions = action.actions;

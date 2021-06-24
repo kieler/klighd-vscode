@@ -28,12 +28,14 @@ export class ShowConstraintOption implements RenderOption {
     currentValue = false;
 }
 
+/** {@link Registry} that stores and updates different render options. */
 @injectable()
 export class RenderOptionsRegistry extends Registry {
     private _renderOptions: Map<string, RenderOption> = new Map();
 
     constructor() {
         super();
+        // Add available render options to this registry
         this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
     }
 

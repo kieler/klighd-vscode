@@ -22,14 +22,14 @@ type Handler = () => void;
  * Examples for such state include diagram options or preferences.
  *
  * The state should be readonly and can only be changed with an {@link Action}.
- * This is inline with a flux architecture that is utilized by Sprotty, where a
+ * This is similar to the flux architecture that is utilized by Sprotty, where a
  * view dispatches actions, which can change the state, causing the view to react
- * to the changed state and update.
+ * to the changed state and update. Therefore, every registry implements {@link IActionHandler}.
  *
  * Implementations define how their actions are handled and automatically
- * provide a subscription options for listeners. A handled action should call
- * `notifyListeners` to inform them about state changes.
- * 
+ * provide a subscription options for listeners, by extending this base class.
+ * A handled action should call `notifyListeners` to inform them about state changes.
+ *
  * A registry has to be bound to the actions it is supposed to handle in the DI container.
  * Sprotty provides a `configureActionHandler` function to simplify this process.
  */

@@ -24,13 +24,13 @@
 import { Container } from "inversify";
 import { ActionMessage } from "sprotty";
 
-/** All services that are required by the klighd-core and have to be provided externally. */
+/** All services that are required by the `klighd-core` package and have to be provided externally. */
 interface Services {
     connection: Connection;
     sessionStorage: SessionStorage;
 }
 
-/** Bind all required services to the given DI Container. */
+/** Helper function to bind all required services to the given DI Container. */
 export function bindServices(container: Container, services: Services): void {
     container.bind(Connection).toConstantValue(services.connection);
     container.bind(SessionStorage).toConstantValue(services.sessionStorage);
@@ -39,7 +39,7 @@ export function bindServices(container: Container, services: Services): void {
 /**
  * Notification types used in `klighd-core`. Most of the times the default Sprotty type
  * (diagram/accept) is used.
- * However, diagram options changes are communicated on a separate namespace.
+ * However, diagram options changes are communicated with separate method types.
  *
  * @see de.cau.cs.kieler.klighd.lsp.IDiagramOptionsLanguageServerExtension.xtend
  */
@@ -56,7 +56,7 @@ export const enum NotificationType {
 
 /** An abstract connection to a server. */
 export interface Connection {
-    /** Sends a {@link ActionMessage} to the server. ActionMessages should use the notification type "diagram/accept". */
+    /** Sends a {@link ActionMessage} to the server. ActionMessages should use the notification type "diagram/accept". This is the common scenario. */
     sendMessage(message: ActionMessage): void;
 
     /** Sends a generic notification message to the server with any payload. */

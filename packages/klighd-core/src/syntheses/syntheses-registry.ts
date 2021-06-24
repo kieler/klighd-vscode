@@ -16,7 +16,7 @@ import { Registry } from "../base/registry";
 import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "./actions";
 
 /**
- * A simple injectable registry that holds a list of all available syntheses
+ * A simple {@link Registry} that holds a list of all available syntheses
  * as well as the currently selected synthesis.
  *
  * Handles SetSyntheses and SetSynthesis actions to keep the state in sync which

@@ -16,7 +16,7 @@ import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
-import { CenterAction, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
+import { Action, CenterAction, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { SynthesisPicker } from "./components/synthesis-picker";
@@ -29,12 +29,20 @@ import { OptionsRenderer } from "./options-renderer";
 import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
 import { CheckOption } from "./components/option-inputs";
 
+/** Type for available quick actions. */
 type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export";
 
+/**
+ * Sidebar panel that displays general diagram configurations,
+ * such as quick actions, changing the synthesis or preferences.
+ */
 @injectable()
 export class GeneralPanel extends SidebarPanel {
     // This panel should always have the first trigger in the sidebar
     readonly position = -10;
+
+    /** Quick actions reference for this panel */
+    private quickActions: [key: PossibleAction, title: string, icon: VNode, action: Action][];
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
@@ -44,9 +52,18 @@ export class GeneralPanel extends SidebarPanel {
 
     @postConstruct()
     init(): void {
+        // Subscribe to different registry changes to make this panel reactive
         this.synthesesRegistry.onChange(() => this.update());
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
+
+        this.quickActions = [
+            ["center", "Center diagram", <CenterIcon />, new CenterAction([], true)],
+            ["fit", "Fit to screen", <FitIcon />, new KlighdFitToScreenAction(true)],
+            ["layout", "Layout diagram", <LayoutIcon />, new RefreshLayoutAction()],
+            ["refresh", "Refresh diagram", <RefreshIcon />, new RefreshDiagramAction()],
+            ["export", "Export as SVG", <ExportIcon />, new RequestExportSvgAction()],
+        ];
     }
 
     get id(): string {
@@ -63,41 +80,15 @@ export class GeneralPanel extends SidebarPanel {
                 <div classNames="options__section">
                     <h5 classNames="options__heading">Quick Actions</h5>
                     <div classNames="options__button-group">
-                        <button
-                            title="Center diagram"
-                            classNames="options__icon-button"
-                            on-click={() => this.handleActionClick("center")}
-                        >
-                            <CenterIcon />
-                        </button>
-                        <button
-                            title="Fit to screen"
-                            classNames="options__icon-button"
-                            on-click={() => this.handleActionClick("fit")}
-                        >
-                            <FitIcon />
-                        </button>
-                        <button
-                            title="Layout diagram"
-                            classNames="options__icon-button"
-                            on-click={() => this.handleActionClick("layout")}
-                        >
-                            <LayoutIcon />
-                        </button>
-                        <button
-                            title="Refresh diagram"
-                            classNames="options__icon-button"
-                            on-click={() => this.handleActionClick("refresh")}
-                        >
-                            <RefreshIcon />
-                        </button>
-                        <button
-                            title="Export as svg"
-                            classNames="options__icon-button"
-                            on-click={() => this.handleActionClick("export")}
-                        >
-                            <ExportIcon />
-                        </button>
+                        {this.quickActions.map((action) => (
+                            <button
+                                title={action[1]}
+                                classNames="options__icon-button"
+                                on-click={() => this.handleQuickActionClick(action[0])}
+                            >
+                                {action[2]}
+                            </button>
+                        ))}
                     </div>
                 </div>
                 <div classNames="options__section">
@@ -141,24 +132,12 @@ export class GeneralPanel extends SidebarPanel {
         this.actionDispatcher.dispatch(new SetPreferencesAction({ [key]: newValue }));
     }
 
-    private handleActionClick(type: PossibleAction) {
-        switch (type) {
-            case "center":
-                this.actionDispatcher.dispatch(new CenterAction([], true));
-                break;
-            case "fit":
-                this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
-                break;
-            case "layout":
-                this.actionDispatcher.dispatch(new RefreshLayoutAction());
-                break;
-            case "refresh":
-                this.actionDispatcher.dispatch(new RefreshDiagramAction());
-                break;
-            case "export":
-                this.actionDispatcher.dispatch(new RequestExportSvgAction());
-                break;
-        }
+    private handleQuickActionClick(type: PossibleAction) {
+        const action = this.quickActions.find((a) => a[0] === type)?.[3];
+
+        if (!action) return;
+
+        this.actionDispatcher.dispatch(action);
     }
 
     get icon(): string {

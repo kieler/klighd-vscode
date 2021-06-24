@@ -22,7 +22,7 @@ export class ShowSidebarAction extends SetUIExtensionVisibilityAction {
 }
 
 /**
- * Action used toggle a registered sidebar panel in the sidebar. This may open
+ * Action used to toggle a registered sidebar panel in the sidebar. This may open
  * the sidebar if it is currently closed or replace the current panel with the
  * panel that should be toggled. If the panel is already shown, it is hidden and
  * the sidebar is closed.

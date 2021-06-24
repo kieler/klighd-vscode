@@ -50,6 +50,7 @@ interface AllOptions {
     synthesisOptions: SynthesisOption[];
 }
 
+/** Renderer that is capable of rendering different option models to jsx. */
 @injectable()
 export class OptionsRenderer {
     @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher;

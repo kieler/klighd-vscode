@@ -14,7 +14,7 @@
 import { Container } from "inversify";
 import { IActionDispatcher, RequestModelAction, TYPES } from "sprotty";
 
-// This module contains helper methods that can simplify the interaction with the Sprotty container outside this module.
+// This module contains helper methods that can simplify the interaction with the Sprotty container from outside this package.
 // The main goal of each helper is to abstract Sprotty internal implementations.
 
 /** Diagram type that is communicated with the diagram server. */

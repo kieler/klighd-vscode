@@ -13,7 +13,7 @@ export interface Preferences {
     forceLightBackground: boolean;
 }
 
-/** Registry that stores user preferences which change the behavior of the diagram view. */
+/** {@link Registry} that stores user preferences which change the behavior of the diagram view. */
 @injectable()
 export class PreferencesRegistry extends Registry {
     private _preferences: Preferences;
@@ -45,7 +45,7 @@ export class PreferencesRegistry extends Registry {
     }
 }
 
-/** Change the user preferences stored in the klighd-core container. */
+/** Change the user preferences stored in the `klighd-core` container. */
 export class SetPreferencesAction implements Action {
     static readonly KIND = "setPreferences";
     readonly kind = SetPreferencesAction.KIND;

@@ -120,7 +120,7 @@ export function SeparatorOption(props: { name: string; key?: string }): VNode {
 }
 
 interface CategoryOptionProps extends BaseProps<boolean> {
-    // While Snabbdom passes the children as a separate param, this children props is necessary, otherwise TS does complain.
+    // While Snabbdom passes the children as a separate param, this children prop is necessary, otherwise TS does complain.
     children?: (VNode | "") | (VNode | "")[];
 }
 

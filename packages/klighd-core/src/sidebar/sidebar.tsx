@@ -29,6 +29,7 @@ import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 export class Sidebar extends AbstractUIExtension {
     static readonly ID = "sidebar";
 
+    /** Snabbdom patcher function and VDom root */
     private patcher: Patcher;
     private oldPanelContentRoot: VNode;
 
@@ -150,7 +151,7 @@ export class Sidebar extends AbstractUIExtension {
 
         // Prepare the virtual DOM. Snabbdom requires an empty element.
         // Furthermore, the element is completely replaced by the panel on every update,
-        // so we use an extra, empty element to ensure that we loose no important attributes (such as classes).
+        // so we use an extra, empty element to ensure that we do not loose important attributes (such as classes).
         const panelContentRoot = document.createElement("div");
         this.oldPanelContentRoot = this.patcher(panelContentRoot, <div />);
         contentContainer.appendChild(panelContentRoot);

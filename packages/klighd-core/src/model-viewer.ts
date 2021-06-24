@@ -35,7 +35,7 @@ export class KlighdModelViewer extends ModelViewer {
         });
     }
 
-    protected onWindowResize = (): void => {
+    protected override onWindowResize = (): void => {
         // This should do a super.onWindowResize call to not repeat the logic from the
         // base class. However, the method is defined as an arrow function, which
         // technically is a function assigned to property and not a method.
@@ -45,6 +45,7 @@ export class KlighdModelViewer extends ModelViewer {
             const newBounds = this.getBoundsInPage(baseDiv as Element);
             this.actiondispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds));
 
+            // Fit the diagram to the new window size, if the user enabled this behavior
             if (this.preferencesRegistry.preferences.resizeToFit)
                 this.actiondispatcher.dispatch(new KlighdFitToScreenAction(false));
         }

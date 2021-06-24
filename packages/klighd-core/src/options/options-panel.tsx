@@ -20,6 +20,7 @@ import { OptionsRenderer } from "./options-renderer";
 import { DISymbol } from "../di.symbols";
 import { SidebarPanel } from "../sidebar";
 
+/** Sidebar panel that displays server provided KLighD options.  */
 @injectable()
 export class OptionsPanel extends SidebarPanel {
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;

@@ -160,7 +160,7 @@ export class KlighdUpdateModelAction extends UpdateModelAction {
  * of 10px. Most of the time this is the wanted behavior in the `klighd-core`.
  */
 export class KlighdFitToScreenAction extends FitToScreenAction {
-    constructor(KlighdFitToScreenAction?:boolean) {
-        super(["$root"], 10, undefined, KlighdFitToScreenAction)
+    constructor(animate?: boolean) {
+        super(["$root"], 10, undefined, animate)
     }
 }

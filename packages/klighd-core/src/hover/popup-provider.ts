@@ -24,6 +24,7 @@ import { isSKGraphElement, SKGraphElement } from "../skgraph-models";
 import { findRendering } from "../skgraph-utils";
 import { RequestKlighdPopupModelAction } from "./hover";
 
+/** Provide PopupModels created from SKGraphElements. */
 @injectable()
 export class PopupModelProvider implements IPopupModelProvider {
     getPopupModel(

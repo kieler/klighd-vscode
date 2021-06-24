@@ -27,24 +27,17 @@ import { OptionsRenderer } from "./options-renderer";
 import { GeneralPanel } from "./general-panel";
 import { RenderOptionsRegistry } from "./render-options-registry";
 
+/** Module that configures option related panels and registries. */
 export const optionsModule = new ContainerModule((bind, _, isBound) => {
-    bind(OptionsPanel)
-        .toSelf()
-        .inSingletonScope();
+    bind(OptionsPanel).toSelf().inSingletonScope();
     bind(DISymbol.SidebarPanel).toService(OptionsPanel);
 
-    bind(GeneralPanel)
-        .toSelf()
-        .inSingletonScope();
+    bind(GeneralPanel).toSelf().inSingletonScope();
     bind(DISymbol.SidebarPanel).toService(GeneralPanel);
 
     bind(DISymbol.OptionsRenderer).to(OptionsRenderer);
-    bind(DISymbol.OptionsRegistry)
-        .to(OptionsRegistry)
-        .inSingletonScope();
-    bind(DISymbol.RenderOptionsRegistry)
-        .to(RenderOptionsRegistry)
-        .inSingletonScope();
+    bind(DISymbol.OptionsRegistry).to(OptionsRegistry).inSingletonScope();
+    bind(DISymbol.RenderOptionsRegistry).to(RenderOptionsRegistry).inSingletonScope();
 
     const ctx = { bind, isBound };
     configureActionHandler(ctx, UpdateOptionsAction.KIND, DISymbol.OptionsRegistry);
