@@ -120,7 +120,7 @@ export class KNodeView implements IView {
             const children = ctx.renderChildren(node)
             // Add all color and shadow definitions put into the context by the child renderings.
             const defs = <defs></defs>
-            ctx.renderingDefs.forEach((value: VNode, key: String) => {
+            ctx.renderingDefs.forEach((value: VNode, key: string) => {
                 (defs.children as (string | VNode)[]).push(value)
             })
 

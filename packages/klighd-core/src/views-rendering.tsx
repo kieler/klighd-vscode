@@ -46,7 +46,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
     // remember, that this parent's children are now already rendered
     parent.areChildAreaChildrenRendered = true
 
-    let element = <g id={rendering.renderingId}>
+    const element = <g id={rendering.renderingId}>
         {context.renderChildAreaChildren(parent)}
     </g>
 
@@ -504,7 +504,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.calculatedTextBounds
             && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {
-            let replacements: VNode[] = []
+            const replacements: VNode[] = []
             lines.forEach((line, index) => {
                 const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
                 const yPos = boundsAndTransformation && boundsAndTransformation.bounds.y && rendering.calculatedTextLineHeights && boundsAndTransformation.bounds.height ?
@@ -512,7 +512,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 const width = rendering.calculatedTextLineWidths ? rendering.calculatedTextLineWidths[index] : 0
                 const height = rendering.calculatedTextLineHeights ? rendering.calculatedTextLineHeights[index] * proportionalHeight : 0
                 // Generate rectangle for each line with color style.
-                let curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
+                const curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
                     : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
                 replacements.push(curLine)
             });
@@ -575,7 +575,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // Check whether or not the parent node is a child area.
                 // If the parent is a child area, the text is a title of the region.
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
-                let region = context.depthMap.getRegion((parent as KNode).id)
+                const region = context.depthMap.getRegion((parent as KNode).id)
                 if (region) {
                     // To avoid drawing a placeholder, when there is a region title.
                     // Avoid setting when called with macro or super state title.

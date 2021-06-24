@@ -19,7 +19,7 @@ import { PerformActionAction } from './actions';
  * Mouse listener handling KLighD actions that can be defined on SKGraphElements in the model.
  */
 export class ActionListener extends MouseListener {
-    mouseMoved: boolean = false
+    mouseMoved = false
 
     doubleClick(target: SModelElement, event: WheelEvent): (Action | Promise<Action>)[] {
         // Ignore the event if the top level graph element is clicked, as that is not a SKGraphElement.
