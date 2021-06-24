@@ -31,6 +31,7 @@ export function getDiagramSourceUri(): string | null {
     return readSearchParam("source");
 }
 
+/** Returns the file ending for a given uri string. */
 export function getLanguageId(documentUri: string): string {
     const matches = documentUri.match(/\w+$/);
 

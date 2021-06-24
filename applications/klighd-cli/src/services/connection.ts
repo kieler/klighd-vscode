@@ -18,13 +18,15 @@ import { showPopup } from "../popup";
 
 type GeneralMessageParams = [string, "info" | "warn" | "error"];
 
+// Custom LSP methods defined by KLighD
 const acceptMessageType = new rpc.NotificationType<ActionMessage, void>("diagram/accept");
 const generalMessageType = new rpc.NotificationType<GeneralMessageParams, void>(
     "general/sendMessage"
 );
 
 /**
- * Connection to the language server.
+ * Websocket connection to a language server. Implements the {@link Connection} service
+ * required by `klighd-core`.
  *
  * Inspired by
  * [this implementation](https://github.com/wylieconlon/lsp-editor-adapter/blob/master/src/ws-connection.ts).
@@ -52,8 +54,9 @@ export class LSPConnection implements Connection {
         }
     }
 
+    /** Connect to a given websocket url using `vscode-ws-jsonrpc`. */
     connect(websocketUrl: string): Promise<this> {
-        // The WebSocket has created in place! Passing it as a parameter might lead
+        // The WebSocket has to be created in place! Passing it as a parameter might lead
         // to a race-condition where the socket is opened, before vscode-ws-jsonrpc
         // starts to listen. This causes the connection to not work.
         return new Promise((resolve) => {
@@ -72,6 +75,7 @@ export class LSPConnection implements Connection {
 
                     this.setupErrorHandlers(conn);
 
+                    // Setup subscriber notifications for incoming accept messages.
                     this.connection.onNotification(
                         acceptMessageType,
                         this.notifyHandlers.bind(this)
@@ -89,6 +93,7 @@ export class LSPConnection implements Connection {
         });
     }
 
+    /** Display connections errors and close events to the user. */
     private setupErrorHandlers(conn: rpc.MessageConnection) {
         conn.onError((e) => {
             showPopup(
@@ -116,6 +121,7 @@ export class LSPConnection implements Connection {
         showPopup(type, "Server message", message);
     }
 
+    /** Close the connection. */
     close(): void {
         this.connection?.dispose();
         this.connection = undefined;
@@ -125,12 +131,12 @@ export class LSPConnection implements Connection {
 
     /**
      * Initializes the connection according to the LSP specification.
-     * @see
      */
     async sendInitialize(): Promise<void> {
         if (!this.connection) return;
 
         const method = lsp.InitializeRequest.type.method;
+        // The standalone view does not really has any LSP capabilities
         const initParams: lsp.InitializeParams = {
             processId: null,
             workspaceFolders: null,
@@ -148,7 +154,9 @@ export class LSPConnection implements Connection {
     }
 
     /**
-     * Notifies the connected language server about an opened document.
+     * Notifies the connected language server about an opened document. This only sends
+     * the uri of the document. The LS uses the uri to open the document and parse
+     * its content.
      * @param sourceUri Valid our for the document. See the LSP for more information.
      * @param languageId Id of the language inside the document.
      */

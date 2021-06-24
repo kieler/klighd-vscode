@@ -18,13 +18,13 @@ import { join } from "path";
 import { connectToLanguageServer } from "./ls-connection";
 
 /** Options required by the {@link webSocketHandler} plugin. */
-interface Options {
+interface WebSocketOptions {
     lsPort?: number;
     lsPath?: string;
 }
 
 /** Fastify plugin that forwards incoming websocket connections to a language server. */
-const webSocketHandler: FastifyPluginAsync<Options> = async (fastify, opts) => {
+const webSocketHandler: FastifyPluginAsync<WebSocketOptions> = async (fastify, opts) => {
     fastify.register(websocketPlugin);
 
     // Setup WebSocket handler
@@ -34,12 +34,13 @@ const webSocketHandler: FastifyPluginAsync<Options> = async (fastify, opts) => {
     });
 };
 
-interface SetupOptions extends Options {
+////////////////////////////////////////////////////////////////////////////////
+
+/** Options required to create a server instance. */
+interface SetupOptions extends WebSocketOptions {
     /** Activate logging with the given level if this property is defined. */
     logging?: "info" | "debug";
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Creates and configures a [fastify](https://fastify.io/) server that is

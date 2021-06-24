@@ -19,9 +19,9 @@ import * as rpcServer from "vscode-ws-jsonrpc/lib/server";
 import * as WebSocket from "ws";
 
 /**
- * Creates a connection to the language server. If the process is started with
- * an --LS_PORT argument, a socket connection is created using that port.
- * Otherwise, the language server is started as a subprocess.
+ * Creates a connection to the language server. The connection is able to either
+ * use a socket connection or start a subprocess for a given path. The socket
+ * connection has a higher precedence if both a port and path are provided.
  *
  * The implementation uses _vscode-ws-jsonrpc_ to tunnel a connection from a
  * WebSocket to the LS.
@@ -79,7 +79,7 @@ export function connectToLanguageServer(
 }
 
 /**
- * Transforms a _fastify-websocket_ `WebSocket` object to an `IWebSocket`.
+ * Transforms a _fastify-websocket_  {@link WebSocket} object to an {@link IWebSocket}.
  *
  * Inspired by `toWebSocket` in _vscode-ws-jsonrpc_.
  */

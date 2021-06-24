@@ -54,6 +54,11 @@ import { showPopup } from "./popup";
     }
 })();
 
+/**
+ * Opens a connection to the LS, prepares the `klighd-core` view and start a
+ * visualization by dispatching a model request.
+ * @see `klighd-core` for more getting started information.
+ */
 async function initDiagramView(sourceUri: string) {
     const languageId = getLanguageId(sourceUri);
     const socketUrl = `ws://${location.host}/socket`;
@@ -69,8 +74,10 @@ async function initDiagramView(sourceUri: string) {
     await connection.connect(socketUrl);
     await connection.sendInitialize();
     connection.sendDocumentDidOpen(sourceUri, languageId);
-    // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions...
-    await sleep(200);
+    // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions.
+    // Properly because the document changes from the open notification. However, there is no way to await
+    // notification in the vscode-languageclient api.
+    await sleep(500);
     await requestModel(actionDispatcher, sourceUri);
 }
 

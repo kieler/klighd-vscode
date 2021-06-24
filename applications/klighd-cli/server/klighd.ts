@@ -67,11 +67,13 @@ program
         // See https://www.npmjs.com/package/commander#other-option-types-negatable-boolean-and-booleanvalue
         const resizeToFit = options.fit;
 
+        // Default resizeToFit behavior is true. So the param is only added when it should be disabled
         const preferences = `${!resizeToFit ? "&resizeToFit=false" : ""}`;
 
         const fileUrl = pathToFileURL(file);
         const server = createServer({ lsPort, lsPath });
 
+        // Listen on a random, available port
         server.listen(0, (err, addr) => {
             if (err) {
                 console.error(err);
