@@ -57,6 +57,9 @@ export class KNode extends RectangularNode implements KGraphElement {
     shadow: boolean
     shadowX: number
     shadowY: number
+
+    /** Wheter the DepthMap Region this KNode is contained in is collapsed (false) or expanded (true) */
+    expansionState: boolean
 }
 
 export enum Direction {

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2021 by
+ * Copyright 2019, 2020, 2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -246,6 +246,11 @@ export interface KText extends KRendering {
      * The server pre-calculated line heights for each individual line.
      */
     calculatedTextLineHeights?: number[]
+
+    /**
+     * Whether the server pre-determined this KText to be the title of a node or not. 
+     */
+    isNodeTitle: boolean
 }
 
 /**

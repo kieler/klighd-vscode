@@ -18,8 +18,9 @@ import { isChildSelected } from 'klighd-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from 'klighd-interactive/lib/interactive-view';
 import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
-import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
-import { RenderOptionsRegistry, ShowConstraintOption } from './options/render-options-registry';
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
+import { RenderOptionsRegistry, ShowConstraintOption,UseSmartZoom } from './options/render-options-registry';
+import { DepthMap } from './depth-map';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
@@ -32,10 +33,56 @@ import { DISymbol } from './di.symbols';
  */
 @injectable()
 export class SKGraphView extends SGraphView {
+
+    @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
+
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
         ctx.renderingDefs = new Map
-        return super.render(model, context)
+        ctx.renderingOptions = this.renderOptionsRegistry;
+
+        const viewport = findParentByFeature(model, isViewport)
+        if (viewport) {
+            ctx.viewport = viewport
+        }
+
+        
+
+        // Add depthMap to context for rendering, when required.
+        const smartZoomOption = this.renderOptionsRegistry.getValueForId(UseSmartZoom.ID)
+
+        // Only enable, if option is found.
+        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
+
+        if (useSmartZoom) {
+            ctx.depthMap = DepthMap.getDM()
+            if (ctx.viewport && ctx.depthMap) {
+                ctx.depthMap.expandCollapse(ctx.viewport, this.renderOptionsRegistry)
+            }
+        }
+
+        //  do the same as return super.render(model, context)
+        // but reuse the child rendering if nothing changed there
+
+        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`;
+
+        let childsRedered;
+        
+        if (ctx.targetKind !== 'hidden' && ctx.depthMap?.lastRender) {
+            childsRedered = ctx.depthMap.lastRender
+        } else {
+            childsRedered = context.renderChildren(model)
+            if (ctx.targetKind !== 'hidden' && ctx.depthMap) {
+                ctx.depthMap.lastRender = childsRedered
+            }
+        }
+
+        return <svg class-sprotty-graph={true}>
+            <g transform={transform}>
+                {childsRedered}
+            </g>
+        </svg>;
+
     }
 }
 
@@ -58,20 +105,34 @@ export class KNodeView implements IView {
         const result: VNode[] = []
 
         const isShadow = node.shadow
-        let shadow = undefined
         let interactiveNodes = undefined
-        let interactiveConstraints = undefined
 
-        if (isShadow) {
-            // Render shadow of the node
-            shadow = getRendering(node.data, node, new KStyles, ctx, this.mListener)
-        }
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
                 interactiveNodes = renderInteractiveLayout(node as SKNode)
             }
         }
+
+        if (node.id === '$root') {
+            // The root node should not be rendered, only its children should.
+            const children = ctx.renderChildren(node)
+            // Add all color and shadow definitions put into the context by the child renderings.
+            const defs = <defs></defs>
+            ctx.renderingDefs.forEach((value: VNode, key: String) => {
+                (defs.children as (string | VNode)[]).push(value)
+            })
+
+            result.push(defs)
+            if (interactiveNodes) {
+                result.push(interactiveNodes)
+            }
+            result.push(...children)
+
+            return <g>{...result}</g>
+        }
+
+        let interactiveConstraints = undefined
 
         // Render nodes and constraint icon. All nodes that are not moved do not have a shadow and have their opacity set to 0.1.
         node.shadow = false
@@ -107,24 +168,14 @@ export class KNodeView implements IView {
             node.opacity = 0.1
             rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
         }
+
         node.shadow = isShadow
 
-        if (node.id === '$root') {
-            // The root node should not be rendered, only its children should.
-            const children = ctx.renderChildren(node)
-            // Add all color and shadow definitions put into the context by the child renderings.
-            const defs = <defs></defs>
-            ctx.renderingDefs.forEach((value: VNode) => {
-                (defs.children as (string | VNode)[]).push(value)
-            })
+        let shadow = undefined
 
-            result.push(defs)
-            if (interactiveNodes) {
-                result.push(interactiveNodes)
-            }
-            result.push(...children)
-
-            return <g>{...result}</g>
+        if (isShadow) {
+            // Render shadow of the node
+            shadow = getRendering(node.data, node, new KStyles, ctx, this.mListener)
         }
 
         // Add renderings that are not undefined

@@ -32,6 +32,7 @@ import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, S
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions';
 import { SynthesesRegistry } from './syntheses/syntheses-registry';
 import textBoundsModule from './textbounds/textbounds-module';
+import updateDepthmapModule from './update/update-depthmap-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
 
 /**
@@ -89,7 +90,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
-        textBoundsModule, actionModule, optionsModule, sidebarModule, kGraphDiagramModule)
+        textBoundsModule, actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthmapModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
