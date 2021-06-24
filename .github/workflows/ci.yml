@@ -1,5 +1,5 @@
-# CI workflow used for code quality checks
-# Future tests might also be executed by this workflow
+# CI workflow used for code quality checks and to ensure that a PR can be built.
+# Future tests might also be executed by this workflow.
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
 name: ci
@@ -12,7 +12,7 @@ on:
 
 jobs:
     lint:
-        name: Run eslint
+        name: Run eslint and build
         runs-on: ubuntu-latest
 
         steps:
@@ -22,3 +22,4 @@ jobs:
                   node-version: 14.x
             - run: yarn
             - run: yarn lint
+            - run: yarn build

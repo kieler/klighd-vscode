@@ -87,4 +87,4 @@ following steps have are required to start developing.
 1. Fulfill the requirements above.
 1. Run `yarn` in the monorepo root to install all dependencies (if not already done).
 1. Run `yarn package`
-1. Run `code --install-extension applications/klighd-vscode.vsix`
+1. Run `code --install-extension applications/klighd-vscode/klighd-vscode.vsix`

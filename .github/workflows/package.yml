@@ -21,13 +21,11 @@ jobs:
             - run: yarn package
             # Artifacts have a few limitation and will always be zips. See: https://github.com/actions/upload-artifact#zipped-artifact-downloads
             - uses: actions/upload-artifact@v2
-              if: success()
               with:
                   name: klighd-cli
                   path: applications/klighd-cli/bin
                   if-no-files-found: error
             - uses: actions/upload-artifact@v2
-              if: success()
               with:
                   name: klighd-vsix
                   path: applications/klighd-vscode/klighd-vscode.vsix
