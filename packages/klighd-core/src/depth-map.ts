@@ -41,7 +41,7 @@ export class DepthMap {
     /**  
      * A quick lookup map with the id of the bounding child area of a region as key.
      * */
-    regionMap: Map<String, Region>;
+    regionMap: Map<string, Region>;
 
     /**
      * The last viewport for which we updated the state of KNodes
@@ -50,7 +50,7 @@ export class DepthMap {
 
     zoomActionsSinceRenders: number;
 
-    MaxZoomActionsUntillRender: number = 5;
+    MaxZoomActionsUntillRender = 5;
 
     /**
      * The threshold for which we updated the state of KNodes
@@ -83,7 +83,7 @@ export class DepthMap {
         this.zoomActionsSinceRenders = 0
     }
 
-    protected reset(model_root: SModelRoot) {
+    protected reset(model_root: SModelRoot) : void {
         this.rootElement = model_root
         // rootRegions are reset below as we also want to remove the edges from the graph spaned by the regions
         this.regionMap.clear()
@@ -99,7 +99,7 @@ export class DepthMap {
 
         // Go through all regions and clear the references to other Regions and KNodes
         while (current_regions.length !== 0) {
-            for (let region of current_regions) {
+            for (const region of current_regions) {
                 remaining_regions.concat(region.children)
                 region.children = []
                 region.elements = []
@@ -124,7 +124,7 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static init(rootElement: SModelRoot) {
+    public static init(rootElement: SModelRoot) : void {
         let needsInit = false;
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
@@ -139,9 +139,9 @@ export class DepthMap {
         }
 
         if (needsInit) {
-            for (let root_child of rootElement.children) {
-                let node = root_child as KNode
-                let region = new Region(node)
+            for (const root_child of rootElement.children) {
+                const node = root_child as KNode
+                const region = new Region(node)
                 region.absoluteBounds = node.bounds
                 DepthMap.instance.rootRegions.push(region)
                 DepthMap.instance.addRegionToMap(region)
@@ -158,15 +158,15 @@ export class DepthMap {
      * @param depth The current nesting depth of regions.
      * @param region The current region being constructed.
      */
-    protected initHelper(node: KNode, depth: number, region: Region, offsetX: number, offsetY: number) {
+    protected initHelper(node: KNode, depth: number, region: Region, offsetX: number, offsetY: number) : void {
         // Go through child nodes until there are no child nodes left.
-        for (let child of node.children) {
+        for (const child of node.children) {
             // Add the current node as element of region.
             region.elements.push(child as KNode)
             // When the bounding rectangle of a new child area is reached, a new region is created.
             if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
-                && ((child as KNode).data[0] as KContainerRendering).children[0]) {
-                let nextRegion = new Region(child as KNode)
+                && ((child as KNode).data[0] as unknown as KContainerRendering).children[0]) {
+                const nextRegion = new Region(child as KNode)
                 nextRegion.absoluteBounds = {
                     x: offsetX + (child as KNode).bounds.x,
                     y: offsetY + (child as KNode).bounds.y,
@@ -193,7 +193,7 @@ export class DepthMap {
      * @param depth The nesting depth the region is put into. 
      * @param region The region to add. 
      */
-    protected addRegionToMap(region: Region) {
+    protected addRegionToMap(region: Region) : void {
         this.regionMap.set(region.boundingRectangle.id, region)
     }
 
@@ -206,7 +206,7 @@ export class DepthMap {
         let current = node.parent as KNode;
         while (current) {
 
-            let region = this.getRegion(current.id);
+            const region = this.getRegion(current.id);
 
             if (region) {
                 return region
@@ -221,7 +221,7 @@ export class DepthMap {
      * Finds region with corresponding rectangle id of a child area.
      * @param id ID of the rectangle the child area is in. 
      */
-    getRegion(id: String): Region | undefined {
+    getRegion(id: string): Region | undefined {
         return this.regionMap.get(id)
     }
 
@@ -256,7 +256,7 @@ export class DepthMap {
 
         // Initialize expansion states on first run.
         if (this.criticalRegions.size == 0) {
-            for (let region of this.rootRegions) {
+            for (const region of this.rootRegions) {
                 if (this.getExpansionState(region, viewport, expandCollapseThreshold) === Visibility.Expanded) {
                     this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
                 }
@@ -273,10 +273,10 @@ export class DepthMap {
      * @param viewport The curent viewport
      * @param threshold The expand/collapse threshold
      */
-    searchUntilCollapse(region: Region, viewport: Viewport, threshold: number) {
+    searchUntilCollapse(region: Region, viewport: Viewport, threshold: number) : void {
         region.setExpansionState(Visibility.Expanded)
         region.children.forEach(childRegion => {
-            let vis = this.getExpansionState(childRegion, viewport, threshold);
+            const vis = this.getExpansionState(childRegion, viewport, threshold);
             if (vis !== Visibility.Expanded) {
                 this.criticalRegions.add(region)
                 this.recursiveCollapseRegion(childRegion, vis)
@@ -289,7 +289,7 @@ export class DepthMap {
     /** 
      * Collapses the region and all chldren recursively or sets it OutOfBounds
      * */
-    recursiveCollapseRegion(region: Region, vis: Visibility.Collapsed | Visibility.OutOfBounds) {
+    recursiveCollapseRegion(region: Region, vis: Visibility.Collapsed | Visibility.OutOfBounds) : void {
         region.setExpansionState(vis)
         this.criticalRegions.delete(region)
         region.children.forEach(childRegion => {
@@ -307,9 +307,9 @@ export class DepthMap {
      * @param viewport The current viewport
      * @param threshold The expand/collapse threshold
      */
-    checkCriticalRegions(viewport: Viewport, threshold: number) {
+    checkCriticalRegions(viewport: Viewport, threshold: number) : void {
         // Use set of child regions to avoid multiple checks.
-        let childSet: Set<Region> = new Set()
+        const childSet: Set<Region> = new Set()
 
         // All regions here are currently expanded and have a collapsed child and have not yet been checked.
         let toBeProcessed: Set<Region> = new Set(this.criticalRegions)
@@ -323,7 +323,7 @@ export class DepthMap {
                 if (region.parent && region.parent.expansionState !== Visibility.Expanded) {
                     this.recursiveCollapseRegion(region, region.parent.expansionState)
                 } else {
-                    let vis = this.getExpansionState(region, viewport, threshold);
+                    const vis = this.getExpansionState(region, viewport, threshold);
                     if (vis !== Visibility.Expanded) {
                         if (region.parent) {
                             nextToBeProcessed.add(region.parent)
@@ -345,7 +345,7 @@ export class DepthMap {
 
         // Check all collected child regions of expanded states.
         childSet.forEach(childRegion => {
-            let vis = this.getExpansionState(childRegion, viewport, threshold);
+            const vis = this.getExpansionState(childRegion, viewport, threshold);
             if (vis === Visibility.Expanded) {
                 this.searchUntilCollapse(childRegion, viewport, threshold)
             } else {
@@ -378,7 +378,7 @@ export class DepthMap {
             // Regions without parents should always be expanded if they are visible
             return Visibility.Expanded
         } {
-            let viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
+            const viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
             // Expand when reached relative size threshold or native resolution.
             if (viewportSize >= threshold || viewport.zoom >= 1) {
                 return Visibility.Expanded
@@ -468,7 +468,7 @@ export class Region {
      */
     setExpansionState(state: Visibility): void {
         if (state !== Visibility.OutOfBounds && state !== this.expansionState) {
-            let dm = DepthMap.getDM();
+            const dm = DepthMap.getDM();
             if (dm) {
                 dm.lastRender = undefined
                 dm.zoomActionsSinceRenders = 0
@@ -476,7 +476,7 @@ export class Region {
         }
 
         this.expansionState = state
-        for (let elem of this.elements) {
+        for (const elem of this.elements) {
             elem.expansionState = state === Visibility.Expanded
         }
     }
