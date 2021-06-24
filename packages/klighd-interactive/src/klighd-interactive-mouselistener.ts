@@ -138,7 +138,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             this.target = undefined
 
             // Appends a RefreshDiagramAction to the result. This fixes a bug
-            // where the interaction is only applied after the dragged not is
+            // where the interaction is only applied after the dragged node is
             // clicked again, causing the second if case in this method to execute.
             if (result.some(action => action.kind === RefreshDiagramAction.KIND)) {
                 return result
