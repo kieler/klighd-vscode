@@ -83,7 +83,7 @@
     transition: background var(--kdc-transition);
 }
 
-.sidebar__toggle-button:hover {
+.sidebar__toggle-button:hover, .sidebar__toggle-button:focus-visible {
     --background: var(--kdc-color-sidebar-trigger-background-hover);
 }
 
