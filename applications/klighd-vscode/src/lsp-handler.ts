@@ -47,7 +47,7 @@ export class LspHandler {
         }
     }
 
-    /** Handle a edit notification from the server  that should replace the content of a specified file. */
+    /** Handle a edit notification from the server that should replace the content of a specified file. */
     private async handleReplaceContentInFile(uri: string, code: string, lspRange: LspRange) {
         const textDocument = workspace.textDocuments.find(
             (doc) => doc.uri.toString() === Uri.parse(uri).toString()

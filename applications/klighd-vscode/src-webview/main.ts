@@ -12,6 +12,7 @@
  */
 
 import "reflect-metadata";
+// Load styles to make the diagram pretty
 import "sprotty-vscode-webview/css/sprotty-vscode.css";
 import "./main.css";
 import "klighd-core/styles/main.css";
@@ -27,11 +28,12 @@ import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
 import { createKlighdDiagramContainer, bindServices } from "klighd-core";
 import { MessageConnection } from "./message-connection";
 import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
-import { KlighDDiagramWidget } from "./klighd-widget";
+import { KlighdDiagramWidget } from "./klighd-widget";
 
+/** Uses `klighd-core` and {@link SprottyStarter} to create a diagram container in a webview. */
 export class KLighDSprottyStarter extends SprottyStarter {
     // SprottyStarter creates the container after a diagram identifier is received.
-    // Thus our message connection only receives and send messages to the container,
+    // Thus our message connection only receives and sends messages to the container,
     // after the identifier message is received. However, the KLighD extension
     // tries to send messages (e.g. set preferences) to the container before the identifier is received.
     // The extension has no save way to ensure that a message is only send after the identifier in sprotty-vscode.
@@ -43,12 +45,17 @@ export class KLighDSprottyStarter extends SprottyStarter {
         window.addEventListener("message", this.queueActionMessage);
     }
 
+    /** Queues an action message to be replayed for the diagram container */
     private queueActionMessage = (message: any) => {
         if ("data" in message && isActionMessage(message.data)) {
             this.queuedActionMessages.push(message.data);
         }
     };
 
+    /**
+     * Replay stored action messages for the diagram container. Empties the message queue.
+     * Further, stops the starter form storing more messages.
+     */
     private replayCapturedActionMessages() {
         window.removeEventListener("message", this.queueActionMessage);
         for (const action of this.queuedActionMessages) {
@@ -57,7 +64,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
         this.queuedActionMessages = [];
     }
 
-    protected createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
+    protected override createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
         const connection = new MessageConnection();
         const container = createKlighdDiagramContainer(diagramIdentifier.clientId);
         bindServices(container, { connection, sessionStorage });
@@ -70,9 +77,9 @@ export class KLighDSprottyStarter extends SprottyStarter {
 
     /**
      * Override the bindings function to not bind a diagram server. We already bind a
-     * diagram server in klighd-core that communicates over a generic connection.
+     * diagram server in klighd-core that communicates over an abstract connection.
      */
-    protected addVscodeBindings(
+    protected override addVscodeBindings(
         container: Container,
         diagramIdentifier: SprottyDiagramIdentifier
     ): void {
@@ -87,7 +94,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
     }
 
     protected addCustomBindings(container: Container): void {
-        container.rebind(VscodeDiagramWidget).to(KlighDDiagramWidget);
+        container.rebind(VscodeDiagramWidget).to(KlighdDiagramWidget);
     }
 }
 

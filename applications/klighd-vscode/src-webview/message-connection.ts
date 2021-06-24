@@ -17,7 +17,11 @@ import { ActionMessage, isActionMessage, ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
 import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
 
-/** Message based connection to the VSCode extension. */
+/**
+ * Message based {@link Connection} to the VSCode extension. `sprotty-vscode` is used in
+ * the extension to forward the messages to the server and sends server messages as
+ * message events.
+ */
 @injectable()
 export class MessageConnection implements Connection {
     private messageHandlers: ((message: ActionMessage) => void)[] = [];

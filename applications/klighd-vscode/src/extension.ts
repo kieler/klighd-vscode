@@ -19,7 +19,7 @@ import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { LspHandler } from "./lsp-handler";
 
 // potential exports for other extensions to improve their dev experience
-// Currently, this only includes our command string.
+// Currently, this only includes our command string. Requires this extension to be published as a package.
 export { command };
 
 // this method is called when your extension is activated

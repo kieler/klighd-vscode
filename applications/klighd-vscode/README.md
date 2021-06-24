@@ -34,8 +34,6 @@ while the KLighD extension handles everything related to diagrams.
 2. Notify the KLighD extension about your language client.
 
 ```typescript
-import { command } from "klighd-vscode";
-
 export async function activate(context: vscode.ExtensionContext) {
     // ... configuring the language client options
 
@@ -115,3 +113,5 @@ vscode.commands.executeCommand("klighd-vscode.addActionHandler", refId: string, 
 -   Currently, only at most one extension that depends on `kieler.klighd-vscode` can be activated at
     the same time. This causes problems if a workspace opens multiple files that are handled by
     different KLighD dependent extensions.
+-   Exported SVG are currently not displayed properly. This issue is tracked
+    [here](https://github.com/eclipse/sprotty/issues/149).

@@ -27,9 +27,9 @@ interface KLighDExtensionOptions {
 }
 
 /**
- * Callback provided by other extension to register an {@link ActionHandler}.
- * To simplify the implementation for other extensions which do not have access to
- * the type definition, we simplify the requirement to provide an action kind and
+ * Callback provided for other extension to register an {@link ActionHandler}.
+ * To simplify the implementation for other extensions, which do not have access to
+ * the type definition, we simplify the requirements to provide an action kind and
  * callback instead of an class.
  * @returns `true` if the action should be forwarded to the server.
  */
@@ -56,7 +56,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     // in the constructor, and therefore the "activateLanguageClient" call, has to happen
     // before modifications to the instance. The only possible hack around this
     // problem is a static property.
-    // PS. This hack is approved by als.
+    // PS. This hack is approved by "als".
     private static lsClient: LanguageClient;
     private supportedFileEndings: string[];
 
@@ -76,6 +76,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         this.actionHandlers = [];
     }
 
+    /** Register an action handler that intercepts action messages that are sent to the server. */
     addActionHandler(kind: string, handler: ActionHandlerCallback): void {
         // Dynamically create an ActionHandler class for other extensions.
         // This simplifies their implementation requirements to intercept actions.
@@ -86,7 +87,8 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         this.actionHandlers.push(ActionHandlerImpl);
     }
 
-    protected createWebView(identifier: SprottyDiagramIdentifier): SprottyWebview {
+    /** @override */
+    protected override createWebView(identifier: SprottyDiagramIdentifier): SprottyWebview {
         const webview = new KLighDWebview({
             extension: this,
             identifier,
@@ -95,6 +97,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             singleton: true,
         });
 
+        // Attach all action handlers, registered in this instance, to the created Sprotty webview.
         for (const handler of this.actionHandlers) {
             webview.addActionHandler(handler);
         }
@@ -122,7 +125,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         return this.supportedFileEndings.some((ending) => path.endsWith(ending));
     }
 
-    protected activateLanguageClient(): LanguageClient {
+    protected override activateLanguageClient(): LanguageClient {
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.
         return KLighDExtension.lsClient;
@@ -135,7 +138,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
      * _Note: This can not call the super implementation since VSCode is not able
      * to overwrite commands and would throw an error._
      */
-    protected registerCommands(): void {
+    protected override registerCommands(): void {
         this.context.subscriptions.push(
             commands.registerCommand(command.diagramOpen, async (...commandArgs: any[]) => {
                 const identifier = await this.createDiagramIdentifier(commandArgs);
