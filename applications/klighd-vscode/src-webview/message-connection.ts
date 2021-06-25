@@ -41,6 +41,13 @@ export class MessageConnection implements Connection {
         });
     }
 
+    onReady(): Promise<void> {
+        // A message connection is created in a webview. When a webview is created,
+        // it is able to send messages to the extension, and the extension should
+        // already have a initialized language client. So onReady is able to always resolve directly.
+        return new Promise((resolve) => resolve());
+    }
+
     private notifyHandlers(message: ActionMessage) {
         for (const handler of this.messageHandlers) {
             handler(message);

@@ -12,7 +12,7 @@
  */
 
 // Services provide infrastructure functionality to the KLighD Sprotty container.
-// A service shall not implemented by this core package. Each service has to be
+// A service shall not be implemented by this core package. Each service has to be
 // provided by an application that integrates `klighd-core`, as their implementation
 // might be plattform dependent.
 
@@ -52,6 +52,8 @@ export const enum NotificationType {
     SetLayoutOption = "keith/diagramOptions/setLayoutOptions",
     /** Perform an actionOption. Do not confuse this with the PerformActionAction with is send with the Accept type! */
     PerformAction = "keith/diagramOptions/performAction",
+    /** Notifies the server about the current user preferences. */
+    SetPreferences = "keith/preferences/setPreferences",
 }
 
 /** An abstract connection to a server. */
@@ -64,6 +66,9 @@ export interface Connection {
 
     /** Registers a callback that is executed when a {@link ActionMessage} is received from the server. */
     onMessageReceived(handler: (message: ActionMessage) => void): void;
+
+    /** Returns a promise that resolves when the connection is able to send and receive messages. */
+    onReady(): Promise<void>;
 }
 export const Connection = Symbol("Connection");
 

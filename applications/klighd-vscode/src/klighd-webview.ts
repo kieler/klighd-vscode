@@ -38,8 +38,10 @@ export class KLighDWebview extends SprottyLspWebview {
         const config = workspace.getConfiguration(extensionId);
         this.dispatch(
             new SetPreferencesAction({
-                resizeToFit: config.get<boolean>("initialResizeToFit") ?? true,
-                forceLightBackground: config.get<boolean>("useLightBackground") ?? false,
+                resizeToFit: config.get<boolean>("initialResizeToFit"),
+                forceLightBackground: config.get<boolean>("useLightBackground"),
+                shouldSelectDiagram: config.get<boolean>("initialShouldSelectDiagram"),
+                shouldSelectText: config.get<boolean>("initialShouldSelectText"),
             })
         );
     }
