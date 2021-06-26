@@ -273,7 +273,7 @@ export class OptionsRenderer {
                             minValue={(option as RangeOptionData).range.first}
                             maxValue={(option as RangeOptionData).range.second}
                             stepSize={(option as RangeOptionData).stepSize}
-                            onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                            onChange={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );
                 default:
