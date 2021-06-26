@@ -52,7 +52,7 @@ export class SKGraphView extends SGraphView {
         const smartZoomOption = this.renderOptionsRegistry.getValueForId(UseSmartZoom.ID)
 
         // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ? smartZoomOption.currentValue : false
+        const useSmartZoom = smartZoomOption ? true : false
 
         if (useSmartZoom) {
             DepthMap.init(model.root)
