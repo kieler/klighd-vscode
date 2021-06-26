@@ -496,11 +496,11 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     // Replace text with rectangle, if the text is too small.
     const region = context.depthMap?.getRegion(parent.id)
     const simplifySmallTextOption = context.renderingOptions.getValueForId(SimplifySmallText.ID)
-    const simplifySmallText = simplifySmallTextOption ? simplifySmallTextOption.currentValue : false // Only enable, if option is found.
+    const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
     if (simplifySmallText && (!region || region.expansionState === Visibility.Expanded)) {
         const simplificationThresholdOption = context.renderingOptions.getValueForId(TextSimplificationThreshold.ID)
         const defaultThreshold = 3
-        const simplificationThreshold = simplificationThresholdOption ? simplificationThresholdOption.currentValue : defaultThreshold
+        const simplificationThreshold = simplificationThresholdOption ?? defaultThreshold
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.calculatedTextBounds
             && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {

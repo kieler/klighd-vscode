@@ -236,7 +236,7 @@ export class DepthMap {
 
         const thresholdOption = renderingOptions.getValueForId(ExpandCollapseThreshold.ID)
         const defaultThreshold = 0.2
-        const expandCollapseThreshold = thresholdOption ? thresholdOption.currentValue : defaultThreshold
+        const expandCollapseThreshold = thresholdOption ?? defaultThreshold
 
         if (this.viewport?.scroll === viewport.scroll
             && this.viewport?.zoom === viewport.zoom

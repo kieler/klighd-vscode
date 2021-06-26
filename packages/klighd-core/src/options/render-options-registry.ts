@@ -165,11 +165,15 @@ export class RenderOptionsRegistry extends Registry {
         super();
         // Add available render options to this registry
         this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
+
         this._renderOptions.set(UseSmartZoom.ID, new UseSmartZoom());
         this._renderOptions.set(ExpandCollapseThreshold.ID, new ExpandCollapseThreshold());
+
         this._renderOptions.set(SimplifySmallText.ID, new SimplifySmallText());
         this._renderOptions.set(TextSimplificationThreshold.ID, new TextSimplificationThreshold());
+        
         this._renderOptions.set(TitleScalingFactor.ID, new TitleScalingFactor());
+        
         this._renderOptions.set(UseConstantLineWidth.ID, new UseConstantLineWidth());
         this._renderOptions.set(ConstantLineWidth.ID, new ConstantLineWidth());
     }
