@@ -59,6 +59,7 @@ import { PopupModelProvider } from "./hover/popup-provider";
 import { PreferencesRegistry } from "./preferences-registry";
 import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
+import { UpdateDepthmapModelAction } from "./update/update-depthmap-model";
 
 /**
  * This class extends {@link DiagramServer} to handle different `klighd-core` specific
@@ -92,6 +93,7 @@ export class KlighdDiagramServer extends DiagramServer {
 
         if (wasDiagramModelUpdated && this.preferencesRegistry.preferences.resizeToFit) {
             this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
+            this.actionDispatcher.dispatch(new UpdateDepthmapModelAction((message.action as any).newRoot));
         }
     }
 

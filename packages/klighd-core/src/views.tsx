@@ -55,7 +55,6 @@ export class SKGraphView extends SGraphView {
         const useSmartZoom = smartZoomOption ?? false
 
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
-            DepthMap.init(model.root)
             ctx.depthMap = DepthMap.getDM()
             if (ctx.viewport && ctx.depthMap) {
                 ctx.depthMap.expandCollapse(ctx.viewport, this.renderOptionsRegistry)
