@@ -263,6 +263,19 @@ export class OptionsRenderer {
                             onChange={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );
+                case TransformationOptionType.RANGE:
+                    return (
+                        <RangeOption
+                            key={option.id}
+                            id={option.id}
+                            name={option.name}
+                            value={option.currentValue}
+                            minValue={(option as RangeOptionData).range.first}
+                            maxValue={(option as RangeOptionData).range.second}
+                            stepSize={(option as RangeOptionData).stepSize}
+                            onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                        />
+                    );
                 default:
                     console.error("Unsupported option type for option:", option.name);
                     return "";
