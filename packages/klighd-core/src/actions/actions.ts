@@ -15,18 +15,6 @@ import {
     Action, CommandExecutionContext, CommandResult, ElementAndBounds, generateRequestId, HiddenCommand, RequestAction, ResponseAction, SModelRootSchema, TYPES, Match, UpdateModelAction, FitToScreenAction
 } from 'sprotty/lib';
 import { KImage } from '../skgraph-models';
-import { SetSynthesesActionData } from '../syntheses/synthesis-message-data';
-
-/**
- * Sent from the server to the client to send a list of all available syntheses for the current model.
- */
-export class SetSynthesesAction implements Action {
-    static readonly KIND: string = 'setSyntheses'
-    readonly kind = SetSynthesesAction.KIND
-
-    constructor(public readonly syntheses: SetSynthesesActionData[]) {
-    }
-}
 
 /**
  * Sent from the server to the client to store images in base64 format needed for rendering on the client.
@@ -71,17 +59,6 @@ export class CheckedImagesAction implements ResponseAction {
 
     constructor(public readonly notCached: Pair<string, string>[],
         public readonly responseId = '') {
-    }
-}
-
-/**
- * Sent from the client to the server to request a new diagram with the given synthesis.
- */
-export class SetSynthesisAction implements Action {
-    static readonly KIND: string = 'setSynthesis'
-    readonly kind = SetSynthesisAction.KIND
-
-    constructor(public readonly id: string) {
     }
 }
 
