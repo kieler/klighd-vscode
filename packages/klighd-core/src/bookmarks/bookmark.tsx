@@ -20,7 +20,7 @@ export class CreateBookmarkCommand extends Command {
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        let model = context.root
+        const model = context.root
         if (isViewport(model)) {
             BookmarkPanel.addBookmark("MakeBookmark" + BookmarkPanel.getLenghtBookmarks(), <
                                         div>Bookmark {BookmarkPanel.getLenghtBookmarks()}</div>, 
@@ -61,7 +61,7 @@ export class GetBookmarkCommand extends Command {
 
     execute(context: CommandExecutionContext): CommandReturn {
 
-        let model = context.root
+        const model = context.root
         if (isViewport(model)) {
             if (ANIMATE_BOOKMARK) {
                 context.duration = 1000;
