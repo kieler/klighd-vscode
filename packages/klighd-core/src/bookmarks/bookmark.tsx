@@ -7,7 +7,7 @@ import { BookmarkPanel } from "./bookmark-panel";
 
 
 export class CreateBookmarkAction implements Action {
-    static readonly KIND = 'bookmark';
+    static readonly KIND = 'create-bookmark';
     readonly kind = CreateBookmarkAction.KIND;
 }
 
@@ -22,7 +22,7 @@ export class CreateBookmarkCommand extends Command {
         // for now its simply a save restore
         let model = context.root
         if (isViewport(model)) {
-            BookmarkPanel.addBookmark("MakeBookmark", <div>Bookmark</div>, new CreateBookmarkAction())
+            BookmarkPanel.addBookmark("MakeBookmark", <div>Bookmark</div>, new GetBookmarkAction())
             // if (!(BookmarkCommand.scroll && BookmarkCommand.zoom)) {
             //     BookmarkCommand.scroll = model.scroll;
             //     BookmarkCommand.zoom = model.zoom;
@@ -55,3 +55,29 @@ export class CreateBookmarkCommand extends Command {
     }
 }
 
+
+export class GetBookmarkAction implements Action {
+    static readonly KIND = 'get-bookmark';
+    readonly kind = GetBookmarkAction.KIND;
+}
+
+export class GetBookmarkCommand extends Command {
+    static readonly KIND = GetBookmarkAction.KIND;
+
+    constructor(@inject(TYPES.Action) protected action: GetBookmarkAction) {
+        super();
+    }
+
+    execute(context: CommandExecutionContext): CommandReturn {
+        console.log("getBookmark")
+        return context.root;
+    }
+
+    undo(context: CommandExecutionContext): CommandReturn {
+        return context.root;
+    }
+
+    redo(context: CommandExecutionContext): CommandReturn {
+        return context.root;
+    }
+}

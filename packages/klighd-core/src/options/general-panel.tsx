@@ -31,7 +31,7 @@ import { CheckOption } from "./components/option-inputs";
 import { CreateBookmarkAction } from "../bookmarks/bookmark";
 
 /** Type for available quick actions. */
-type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "bookmark";
+type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -64,7 +64,7 @@ export class GeneralPanel extends SidebarPanel {
             ["layout", "Layout diagram", <LayoutIcon />, new RefreshLayoutAction()],
             ["refresh", "Refresh diagram", <RefreshIcon />, new RefreshDiagramAction()],
             ["export", "Export as SVG", <ExportIcon />, new RequestExportSvgAction()],
-            ["bookmark", "Bookmark", <BookmarkIcon />, new CreateBookmarkAction()],
+            ["create-bookmark", "Bookmark", <BookmarkIcon />, new CreateBookmarkAction()],
         ];
     }
 
