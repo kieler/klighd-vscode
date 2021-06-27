@@ -586,7 +586,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
                         const defaultFactor = 1
-                        let maxScale = titleScalingFactorOption ? titleScalingFactorOption.currentValue : defaultFactor
+                        let maxScale = titleScalingFactorOption ?? defaultFactor
                         // Indentation used in the layouting in pixels.
                         const indentation = 14
                         if (context.viewport) {
