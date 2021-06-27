@@ -9,7 +9,9 @@ import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { PreferencesRegistry } from "../preferences-registry";
 import { SidebarPanel } from "../sidebar";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-
+// import { TYPES, IActionDispatcher } from "sprotty";
+// import { BookmarkAction } from "./bookmark";
+// import { ButtonOption } from "../options/components/option-inputs";
 
 @injectable()
 export class BookmarkPanel extends SidebarPanel {
@@ -18,7 +20,6 @@ export class BookmarkPanel extends SidebarPanel {
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
-    // @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
     @postConstruct()
     init(): void {
@@ -39,8 +40,20 @@ export class BookmarkPanel extends SidebarPanel {
     }
     render(): VNode {
         return (
-            <span>No options provided by the diagram server.</span>
+            <div>
+                <div>
+                    
+                </div>
+                <div classNames="BookmarkSection">
+                    {this.renderAllBookmarks()}
+                </div>
+            </div>
+        );
+    } 
+
+    renderAllBookmarks(): VNode {
+        return (
+            <div>gogo</div>
         );
     }
-
 }

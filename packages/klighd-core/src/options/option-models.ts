@@ -16,6 +16,8 @@ export interface RenderOption {
     id: string;
     name: string;
     type: TransformationOptionType;
+    /** Whether the LS needs to regenerate the Diagramm */
+    updateNeeded: boolean;
     initialValue: any;
     currentValue: any;
 }

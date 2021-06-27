@@ -24,6 +24,7 @@ export class ShowConstraintOption implements RenderOption {
     readonly id: string = ShowConstraintOption.ID;
     readonly name: string = ShowConstraintOption.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly updateNeeded: boolean = true;
     readonly initialValue: boolean = false;
     currentValue = false;
 }
@@ -187,7 +188,9 @@ export class RenderOptionsRegistry extends Registry {
             option.currentValue = action.value;
             this.notifyListeners();
 
-            return new RefreshDiagramAction();
+            if (option.updateNeeded) {
+                return new RefreshDiagramAction();
+            }
         }
     }
 

@@ -23,14 +23,15 @@ import { SynthesisPicker } from "./components/synthesis-picker";
 import { SidebarPanel } from "../sidebar";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { CenterIcon, ExportIcon, FitIcon, LayoutIcon, RefreshIcon } from "./components/icons";
+import { BookmarkIcon, CenterIcon, ExportIcon, FitIcon, LayoutIcon, RefreshIcon } from "./components/icons";
 import { RenderOptionsRegistry } from "./render-options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
 import { CheckOption } from "./components/option-inputs";
+import { BookmarkAction } from "../bookmarks/bookmark";
 
 /** Type for available quick actions. */
-type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export";
+type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "bookmark";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -63,6 +64,7 @@ export class GeneralPanel extends SidebarPanel {
             ["layout", "Layout diagram", <LayoutIcon />, new RefreshLayoutAction()],
             ["refresh", "Refresh diagram", <RefreshIcon />, new RefreshDiagramAction()],
             ["export", "Export as SVG", <ExportIcon />, new RequestExportSvgAction()],
+            ["bookmark", "Bookmark", <BookmarkIcon />, new BookmarkAction()],
         ];
     }
 
