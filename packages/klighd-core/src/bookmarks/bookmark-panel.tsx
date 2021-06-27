@@ -2,9 +2,7 @@
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom/vnode";
-// import { TYPES, IActionDispatcher } from "sprotty";
 import { DISymbol } from "../di.symbols";
-// import { OptionsRenderer } from "../options/options-renderer";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { PreferencesRegistry } from "../preferences-registry";
 import { SidebarPanel } from "../sidebar";
@@ -43,14 +41,14 @@ export class BookmarkPanel extends SidebarPanel {
         return (
                 <div>
                 {BookmarkPanel.bookmarkActions.map((action) => (
-                        <div>
-                            <button 
-                                on-click={() => this.handleBookmarkActionClick(action[0])}
-                            >
-                                {action[1]}
-                            </button>
-                        </div>
-                        ))}
+                    <div>
+                        <button 
+                            on-click={() => this.handleBookmarkActionClick(action[0])}
+                        >
+                            {action[1]}
+                        </button>
+                    </div>
+                    ))}
                 </div>
         );
     } 
@@ -64,6 +62,10 @@ export class BookmarkPanel extends SidebarPanel {
     }
 
     public static addBookmark(key: string, icon: VNode, action: Action): void{
-        BookmarkPanel.bookmarkActions.push([key, icon, action])
+        BookmarkPanel.bookmarkActions.push([key, icon, action]);
+    }
+
+    public static getLenghtBookmarks():number{
+        return BookmarkPanel.bookmarkActions.length
     }
 }

@@ -1,10 +1,11 @@
 /** @jsx html */
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Command, CommandExecutionContext, CommandReturn, isViewport, TYPES } from "sprotty";
+import { Command, CommandExecutionContext, CommandReturn, isViewport, Point, TYPES, ViewportAnimation } from "sprotty";
 import { Action } from "sprotty/lib/base/actions/action";
 import { inject } from "inversify";
 import { BookmarkPanel } from "./bookmark-panel";
 
+const ANIMATE_BOOKMARK = true;
 
 export class CreateBookmarkAction implements Action {
     static readonly KIND = 'create-bookmark';
@@ -19,29 +20,11 @@ export class CreateBookmarkCommand extends Command {
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        // for now its simply a save restore
         let model = context.root
         if (isViewport(model)) {
-            BookmarkPanel.addBookmark("MakeBookmark", <div>Bookmark</div>, new GetBookmarkAction())
-            // if (!(BookmarkCommand.scroll && BookmarkCommand.zoom)) {
-            //     BookmarkCommand.scroll = model.scroll;
-            //     BookmarkCommand.zoom = model.zoom;
-            // } else {
-            //     let oldScroll = BookmarkCommand.scroll;
-            //     let oldZoom = BookmarkCommand.zoom;
-            //     BookmarkCommand.scroll = model.scroll;
-            //     BookmarkCommand.zoom = model.zoom;
-
-            //     if (ANIMATE_BOOKMARK) {
-            //         let oldViewport = { scroll: model.scroll, zoom: model.zoom };
-            //         let newViewport = { scroll: oldScroll, zoom: oldZoom }
-            //         context.duration = 1000;
-            //         return new ViewportAnimation(model, oldViewport, newViewport, context).start();
-            //     } else {
-            //         model.zoom = oldZoom;
-            //         model.scroll = oldScroll;
-            //     }
-            // }
+            BookmarkPanel.addBookmark("MakeBookmark" + BookmarkPanel.getLenghtBookmarks(), <
+                                        div>Bookmark {BookmarkPanel.getLenghtBookmarks()}</div>, 
+                                        new GetBookmarkAction(model.zoom, model.scroll))
         }
         return model;
     }
@@ -59,6 +42,14 @@ export class CreateBookmarkCommand extends Command {
 export class GetBookmarkAction implements Action {
     static readonly KIND = 'get-bookmark';
     readonly kind = GetBookmarkAction.KIND;
+    
+    zoom: number;
+    scroll: Point;
+    
+    constructor(zoom: number, scroll: Point){
+        this.zoom = zoom;
+        this.scroll = scroll
+    }
 }
 
 export class GetBookmarkCommand extends Command {
@@ -69,7 +60,20 @@ export class GetBookmarkCommand extends Command {
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        console.log("getBookmark")
+
+        let model = context.root
+        if (isViewport(model)) {
+            if (ANIMATE_BOOKMARK) {
+                context.duration = 1000;
+                return new ViewportAnimation(model, 
+                    { scroll: model.scroll, zoom: model.zoom }, 
+                    { scroll: this.action.scroll, zoom: this.action.zoom }, 
+                    context).start();
+            } else {
+                model.zoom = this.action.zoom;
+                model.scroll = this.action.scroll;
+            }
+        }
         return context.root;
     }
 
