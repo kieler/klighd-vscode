@@ -28,7 +28,7 @@ import { RenderOptionsRegistry } from "./render-options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
 import { CheckOption } from "./components/option-inputs";
-import { BookmarkAction } from "../bookmarks/bookmark";
+import { CreateBookmarkAction } from "../bookmarks/bookmark";
 
 /** Type for available quick actions. */
 type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "bookmark";
@@ -64,7 +64,7 @@ export class GeneralPanel extends SidebarPanel {
             ["layout", "Layout diagram", <LayoutIcon />, new RefreshLayoutAction()],
             ["refresh", "Refresh diagram", <RefreshIcon />, new RefreshDiagramAction()],
             ["export", "Export as SVG", <ExportIcon />, new RequestExportSvgAction()],
-            ["bookmark", "Bookmark", <BookmarkIcon />, new BookmarkAction()],
+            ["bookmark", "Bookmark", <BookmarkIcon />, new CreateBookmarkAction()],
         ];
     }
 

@@ -9,17 +9,17 @@ import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { PreferencesRegistry } from "../preferences-registry";
 import { SidebarPanel } from "../sidebar";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-// import { TYPES, IActionDispatcher } from "sprotty";
-// import { BookmarkAction } from "./bookmark";
-// import { ButtonOption } from "../options/components/option-inputs";
+import { TYPES, IActionDispatcher, Action } from "sprotty";
 
 @injectable()
 export class BookmarkPanel extends SidebarPanel {
     
-    // @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+
+    private static bookmarkActions: [key: string, icon: VNode, action: Action][]
 
     @postConstruct()
     init(): void {
@@ -27,6 +27,7 @@ export class BookmarkPanel extends SidebarPanel {
         this.synthesesRegistry.onChange(() => this.update());
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
+        BookmarkPanel.bookmarkActions = []
     }
 
     get id(): string {
@@ -40,20 +41,29 @@ export class BookmarkPanel extends SidebarPanel {
     }
     render(): VNode {
         return (
-            <div>
                 <div>
-                    
+                {BookmarkPanel.bookmarkActions.map((action) => (
+                        <div>
+                            <button 
+                                on-click={() => this.handleBookmarkActionClick(action[0])}
+                            >
+                                {action[1]}
+                            </button>
+                        </div>
+                        ))}
                 </div>
-                <div classNames="BookmarkSection">
-                    {this.renderAllBookmarks()}
-                </div>
-            </div>
         );
     } 
 
-    renderAllBookmarks(): VNode {
-        return (
-            <div>gogo</div>
-        );
+    private handleBookmarkActionClick(type: string) {
+        const action = BookmarkPanel.bookmarkActions.find((a) => a[0] === type)?.[2];
+
+        if (!action) return;
+
+        this.actionDispatcher.dispatch(action);
+    }
+
+    public static addBookmark(key: string, icon: VNode, action: Action): void{
+        BookmarkPanel.bookmarkActions.push([key, icon, action])
     }
 }
