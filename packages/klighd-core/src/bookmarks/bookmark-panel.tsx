@@ -35,7 +35,7 @@ export class BookmarkPanel extends SidebarPanel {
                     <button on-click={() => this.handleBookmarkActionClick(bookmark)}>{bookmark.name ?? ("Bookmark " + index)}</button>
                 </div>
             )
-        })}</div>;
+        )}</div>;
     } 
 
     private handleBookmarkActionClick(bookmark: Bookmark) {
