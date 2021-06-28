@@ -23,4 +23,5 @@ export const DISymbol = {
     OptionsRegistry: Symbol("OptionsRegistry"),
     RenderOptionsRegistry: Symbol("RenderOptionsRegistry"),
     SynthesesRegistry: Symbol("SynthesesRegistry"),
+    BookmarkRegistry: Symbol("BookmarkRegistry"),
 };
