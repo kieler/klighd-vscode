@@ -18,7 +18,7 @@ import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
 import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
 
 /**
- * Message based {@link Connection} to the VSCode extension. `sprotty-vscode` is used in
+ * Message based {@link Connection} to the VS Code extension. `sprotty-vscode` is used in
  * the extension to forward the messages to the server and sends server messages as
  * message events.
  */
@@ -33,7 +33,7 @@ export class MessageConnection implements Connection {
         this.messageHandlers.push(this.statusMessageHandler);
         this.messageHandlers.push(this.logHandler);
 
-        // Messages from a VSCode extension arrive as a message event on the window object
+        // Messages from a VS Code extension arrive as a message event on the window object
         window.addEventListener("message", (msg) => {
             if ("data" in msg && isActionMessage(msg.data)) {
                 this.notifyHandlers(msg.data);
