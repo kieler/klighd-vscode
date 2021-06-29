@@ -16,7 +16,7 @@
     outline: none;
 }
 
-/** Apply VSCode theme to klighd-core semantic theme tokens */
+/** Apply VS Code theme to klighd-core semantic theme tokens */
 body {
     --kdc-color-sidebar-background: var(--vscode-sideBar-background);
     --kdc-color-sidebar-trigger-background: var(--vscode-sideBar-background);

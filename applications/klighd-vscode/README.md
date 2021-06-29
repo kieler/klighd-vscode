@@ -1,4 +1,4 @@
-# KLighD Diagrams
+# KLighD Diagrams for Visual Studio Code
 
 <figure style="text-align: center;">
 <img style="width: 75%;" src="./media/banner.png" alt="Example with a visualized SCChart"/>

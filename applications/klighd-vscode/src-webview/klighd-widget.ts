@@ -16,7 +16,7 @@ import { VscodeDiagramWidget } from "sprotty-vscode-webview";
 import { requestModel } from "klighd-core";
 
 /**
- * Overwrite the VSCodeDiagramWidget to dispatch a RequestModelAction instead
+ * Overwrite the {@link VscodeDiagramWidget} to dispatch a RequestModelAction instead
  * of requesting it.
  *
  * This is inline with the behavior of KLighD, where the LS expects an

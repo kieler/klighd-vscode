@@ -55,7 +55,7 @@ const extensionConfig = {
 
 /**
  * Config that is used to bundle the webview part of the codebase. In contrast
- * to the extension, the webview runs in an iframe inside VSCode. Therefore,
+ * to the extension, the webview runs in an iframe inside VS Code. Therefore,
  * it has to target the web as the name suggests. Otherwise the produced code
  * contains `module.exports` (commonJS Modules) calls which are only defined in Node.
  * @type {import('webpack').Configuration}
