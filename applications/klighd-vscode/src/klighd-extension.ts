@@ -135,7 +135,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
      * Overwrite register from {@link SprottyLspVscodeExtension} commands to
      * fix zooming problems with diagram.fit when an element is selected.
      *
-     * _Note: This can not call the super implementation since VSCode is not able
+     * _Note: This can not call the super implementation since VS Code is not able
      * to overwrite commands and would throw an error._
      */
     protected override registerCommands(): void {
