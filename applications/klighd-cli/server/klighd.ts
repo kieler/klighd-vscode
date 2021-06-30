@@ -71,7 +71,7 @@ program
         const preferences = `${!resizeToFit ? "&resizeToFit=false" : ""}`;
 
         const fileUrl = pathToFileURL(file);
-        const server = createServer({ lsPort, lsPath });
+        const server = createServer({ logging: "warn", lsPort, lsPath });
 
         // Listen on a random, available port
         server.listen(0, (err, addr) => {

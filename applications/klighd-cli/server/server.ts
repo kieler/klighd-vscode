@@ -38,8 +38,13 @@ const webSocketHandler: FastifyPluginAsync<WebSocketOptions> = async (fastify, o
 
 /** Options required to create a server instance. */
 interface SetupOptions extends WebSocketOptions {
-    /** Activate logging with the given level if this property is defined. */
-    logging?: "info" | "debug";
+    /**
+     * Change the level for logged messages. Depending on the level certain messages
+     * will not be logged. For example, choosing "warn" will not log info or debug messages.
+     * If you want to disable logging, choose the level "silent".
+     * @see https://github.com/pinojs/pino/blob/master/docs/api.md#loggerlevel-string-gettersetter
+     */
+    logging: "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "silent";
 }
 
 /**
@@ -49,7 +54,7 @@ interface SetupOptions extends WebSocketOptions {
  */
 export function createServer(opts: SetupOptions): FastifyInstance {
     const server = fastify({
-        logger: opts.logging ? { prettyPrint: true, level: opts.logging } : undefined,
+        logger: { prettyPrint: true, level: opts.logging },
         disableRequestLogging: true,
     });
 
