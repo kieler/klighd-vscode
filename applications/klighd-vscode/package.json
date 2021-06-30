@@ -1,7 +1,7 @@
 {
     "name": "klighd-vscode",
     "displayName": "KLighD Diagrams",
-    "description": "KLighD diagram support in VSCode",
+    "description": "KLighD diagram support for Visual Studio Code",
     "version": "0.0.1",
     "publisher": "kieler",
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",

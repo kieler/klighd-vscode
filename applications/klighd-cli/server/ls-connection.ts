@@ -13,7 +13,7 @@
 
 import { FastifyLoggerInstance } from "fastify";
 import { Socket } from "net";
-import { IWebSocket } from "vscode-ws-jsonrpc";
+import { IWebSocket, Message } from "vscode-ws-jsonrpc";
 import * as rpcServer from "vscode-ws-jsonrpc/lib/server";
 // _fastify-websocket_ typing for their conn.socket object. _ws_ is a dependency of _fastify-websocket_.
 import * as WebSocket from "ws";
@@ -46,29 +46,28 @@ export function connectToLanguageServer(
             socket.end();
         });
 
-        rpcServer.forward(clientConnection, lsConn, (msg) => {
-            logger.debug(msg, "Forwarding message");
-            return msg;
-        });
-
         logger.info("Forwarding to language server socket.");
         socket.connect(lsPort);
     } else if (lsPath) {
         const args = ["-jar", "-Djava.awt.headless=true", lsPath];
         lsConn = rpcServer.createServerProcess("Language Server", "java", args);
 
-        rpcServer.forward(clientConnection, lsConn, (msg) => {
-            logger.debug(msg, "Forwarding message");
-            return msg;
-        });
-
         logger.info("Forwarding to language server process.");
     } else {
-        logger.error("No options provided to start a language server.");
+        logger.fatal("No options provided to start a language server.");
+        logger.fatal("Canceling client request.")
+        clientConnection.dispose();
+        return () => {
+            // empty cleanup
+        };
     }
 
-    webSocket.onClose(() => {
+    // Log methods names that are forward between the server and client
+    rpcServer.forward(clientConnection, lsConn, logMessage.bind(undefined, logger));
+
+    clientConnection.onClose(() => {
         logger.info("Client closed. Shutting down language server.");
+        clientConnection.dispose();
         lsConn.dispose();
     });
 
@@ -96,4 +95,19 @@ function transformWebSocketToIWebSocket(socket: WebSocket): IWebSocket {
         onClose: (cb) => (socket.onclose = (ev) => cb(ev.code, ev.reason)),
         dispose: () => socket.close(),
     };
+}
+
+/** Creates a debug log for a forwarded message. */
+function logMessage(logger: FastifyLoggerInstance, msg: Message): Message {
+    // Sadly, we are unable to identify the direction of the message...
+    const methodName: string = (msg as any)?.method ?? "unknown";
+
+    if (methodName.startsWith("diagram/accept")) {
+        const actionKind: string = (msg as any)?.params?.action?.kind ?? "unknown";
+        logger.debug(`Forwarding "${methodName}" method with action "${actionKind}".`);
+        return msg;
+    }
+
+    logger.debug(`Forwarding ${methodName} method.`);
+    return msg;
 }

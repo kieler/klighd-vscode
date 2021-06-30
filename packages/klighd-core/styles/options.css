@@ -132,6 +132,15 @@ snabbdom-jsx for svg does not add them to the created html elements. */
     vertical-align: baseline;
 }
 
+/* Dont' show outlines when a user interacts with different options... */
+.options__input,
+.options__category > summary,
+.options__button,
+.options__icon-button {
+    outline: none;
+}
+
+/* ...only show an outline if the user interacts with the options using a keyboard */
 .options__input:focus-visible,
 .options__category > summary:focus-visible,
 .options__button:focus-visible,
