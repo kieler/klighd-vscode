@@ -6,24 +6,44 @@
 * SPDX-License-Identifier: EPL-2.0
 */
 
-import { Command, CommandExecutionContext, CommandReturn, isViewport, TYPES, Viewport, ViewportAnimation } from "sprotty";
+import { Command, CommandExecutionContext, CommandReturn, isViewport, TYPES, Viewport } from "sprotty";
 import { Action } from "sprotty/lib/base/actions/action";
 import { inject } from "inversify";
 import { DISymbol } from "../di.symbols";
 import { BookmarkRegistry } from "./bookmark-registry";
 
-const ANIMATE_BOOKMARK = true;
-
+/**
+ * A Bookmark
+ */
 export class Bookmark {
+    /**
+     * Optional a user defined display name for the bookmark
+     */
     name?: string;
+
+    /**
+     * The Viewport which the Bookmark marks
+     */
     place: Viewport;
+
+    /**
+     * The id of the viewport
+     */
+    elementId: string;
 }
 
+/**
+ * An action to create a new Bookmark at the current Viewport
+ */
 export class CreateBookmarkAction implements Action {
     static readonly KIND = 'create-bookmark';
     readonly kind = CreateBookmarkAction.KIND;
 }
 
+/**
+ * The Command corresponding to the CreateBookmarkAction,
+ * this is what actually causes the Bookmark to be added to the {@link BookmarkRegistry}
+ */
 export class CreateBookmarkCommand extends Command {
     static readonly KIND = CreateBookmarkAction.KIND;
 
@@ -35,7 +55,9 @@ export class CreateBookmarkCommand extends Command {
         const model = context.root
         if (isViewport(model)) {
             const bookmark = new Bookmark();
+            // copy the viewport as we don't want the Bookmark to stay where we are now
             bookmark.place = { scroll: model.scroll, zoom: model.zoom }
+            bookmark.elementId = model.id
             this.bookmarkRegistry.addBookmark(bookmark)
         }
         return model;
@@ -51,47 +73,16 @@ export class CreateBookmarkCommand extends Command {
 }
 
 
+/**
+ * An action to return to a bookmarked Viewport
+ */
 export class GoToBookmarkAction implements Action {
     static readonly KIND = 'get-bookmark';
     readonly kind = GoToBookmarkAction.KIND;
 
-    viewport: Viewport;
+    readonly bookmark: Bookmark;
 
     constructor(bookmark: Bookmark) {
-        this.viewport = bookmark.place;
-    }
-}
-
-export class GoToBookmarkCommand extends Command {
-    static readonly KIND = GoToBookmarkAction.KIND;
-
-    constructor(@inject(TYPES.Action) protected action: GoToBookmarkAction) {
-        super();
-    }
-
-    execute(context: CommandExecutionContext): CommandReturn {
-
-        const model = context.root
-        if (isViewport(model)) {
-            if (ANIMATE_BOOKMARK) {
-                context.duration = 1000;
-                return new ViewportAnimation(model,
-                    { scroll: model.scroll, zoom: model.zoom },
-                    { scroll: this.action.viewport.scroll, zoom: this.action.viewport.zoom },
-                    context).start();
-            } else {
-                model.zoom = this.action.viewport.zoom;
-                model.scroll = this.action.viewport.scroll;
-            }
-        }
-        return context.root;
-    }
-
-    undo(context: CommandExecutionContext): CommandReturn {
-        return context.root;
-    }
-
-    redo(context: CommandExecutionContext): CommandReturn {
-        return context.root;
+        this.bookmark = { ...bookmark };
     }
 }

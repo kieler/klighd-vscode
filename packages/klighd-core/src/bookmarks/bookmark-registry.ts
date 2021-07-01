@@ -7,9 +7,9 @@
 */
 
 import { injectable } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { Action, ICommand, SetViewportAction } from "sprotty";
 import { Registry } from "../base/registry";
-import { Bookmark } from "./bookmark";
+import { Bookmark, GoToBookmarkAction } from "./bookmark";
 
 /**
  * A simple {@link Registry} that holds a list of all added Bookmarks
@@ -22,8 +22,12 @@ export class BookmarkRegistry extends Registry {
 
     private _bookmarks: Bookmark[] = [];
 
-    handle(_action: Action): void | Action | ICommand {
-        // empty
+    handle(action: Action): void | Action | ICommand {
+        if (action.kind === GoToBookmarkAction.KIND) {
+            const bookmarkAction: GoToBookmarkAction = action as GoToBookmarkAction;
+            // TODO add preference for whether GoToBookmark actions should be animated
+            return new SetViewportAction(bookmarkAction.bookmark.elementId, bookmarkAction.bookmark.place, true)
+        }
     }
 
     addBookmark(bookmark: Bookmark): void {
