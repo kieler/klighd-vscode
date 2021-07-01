@@ -7,15 +7,18 @@
 * SPDX-License-Identifier: EPL-2.0
 */
 
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom/vnode";
+import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { IActionDispatcher, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import { SidebarPanel } from "../sidebar";
 import { BookmarkRegistry } from "./bookmark-registry";
 import { Bookmark, GoToBookmarkAction } from "./bookmark";
-import { IActionDispatcher, TYPES } from "sprotty";
 
+/**
+ * Sidebar panel that displays previousely set bookmarks
+ */
 @injectable()
 export class BookmarkPanel extends SidebarPanel {
 
