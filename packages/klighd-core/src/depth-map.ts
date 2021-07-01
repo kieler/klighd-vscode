@@ -1,8 +1,15 @@
+/*
+* This program and the accompanying materials are made available under the
+* terms of the Eclipse Public License 2.0 which is available at
+* http://www.eclipse.org/legal/epl-2.0.
+*
+* SPDX-License-Identifier: EPL-2.0
+*/
 
 import { KNode } from "klighd-interactive/lib/constraint-classes";
 import { VNode } from "snabbdom/vnode";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
-import { RenderOptionsRegistry , ExpandCollapseThreshold} from "./options/render-options-registry";
+import { RenderOptionsRegistry, ExpandCollapseThreshold } from "./options/render-options-registry";
 import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
 
 /**
@@ -83,7 +90,7 @@ export class DepthMap {
         this.zoomActionsSinceRenders = 0
     }
 
-    protected reset(model_root: SModelRoot) : void {
+    protected reset(model_root: SModelRoot): void {
         this.rootElement = model_root
         // rootRegions are reset below as we also want to remove the edges from the graph spaned by the regions
         this.regionMap.clear()
@@ -124,7 +131,7 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static init(rootElement: SModelRoot) : void {
+    public static init(rootElement: SModelRoot): void {
         let needsInit = false;
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
@@ -158,7 +165,7 @@ export class DepthMap {
      * @param depth The current nesting depth of regions.
      * @param region The current region being constructed.
      */
-    protected initHelper(node: KNode, depth: number, region: Region, offsetX: number, offsetY: number) : void {
+    protected initHelper(node: KNode, depth: number, region: Region, offsetX: number, offsetY: number): void {
         // Go through child nodes until there are no child nodes left.
         for (const child of node.children) {
             // Add the current node as element of region.
@@ -193,7 +200,7 @@ export class DepthMap {
      * @param depth The nesting depth the region is put into. 
      * @param region The region to add. 
      */
-    protected addRegionToMap(region: Region) : void {
+    protected addRegionToMap(region: Region): void {
         this.regionMap.set(region.boundingRectangle.id, region)
     }
 
@@ -232,7 +239,7 @@ export class DepthMap {
      * 
      * @param viewport The current viewport. 
      */
-    expandCollapse(viewport: Viewport, renderingOptions: RenderOptionsRegistry) : void {
+    expandCollapse(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
 
         const thresholdOption = renderingOptions.getValueForId(ExpandCollapseThreshold.ID)
         const defaultThreshold = 0.2
@@ -245,8 +252,8 @@ export class DepthMap {
             return
         }
 
-        if (viewport.zoom !== this.viewport?.zoom) this.zoomActionsSinceRenders +=1
-        if (this.zoomActionsSinceRenders > this.MaxZoomActionsUntillRender){
+        if (viewport.zoom !== this.viewport?.zoom) this.zoomActionsSinceRenders += 1
+        if (this.zoomActionsSinceRenders > this.MaxZoomActionsUntillRender) {
             this.zoomActionsSinceRenders = 0
             this.lastRender = undefined
         }
@@ -273,7 +280,7 @@ export class DepthMap {
      * @param viewport The curent viewport
      * @param threshold The expand/collapse threshold
      */
-    searchUntilCollapse(region: Region, viewport: Viewport, threshold: number) : void {
+    searchUntilCollapse(region: Region, viewport: Viewport, threshold: number): void {
         region.setExpansionState(Visibility.Expanded)
         region.children.forEach(childRegion => {
             const vis = this.getExpansionState(childRegion, viewport, threshold);
@@ -289,7 +296,7 @@ export class DepthMap {
     /** 
      * Collapses the region and all chldren recursively or sets it OutOfBounds
      * */
-    recursiveCollapseRegion(region: Region, vis: Visibility.Collapsed | Visibility.OutOfBounds) : void {
+    recursiveCollapseRegion(region: Region, vis: Visibility.Collapsed | Visibility.OutOfBounds): void {
         region.setExpansionState(vis)
         this.criticalRegions.delete(region)
         region.children.forEach(childRegion => {
@@ -307,7 +314,7 @@ export class DepthMap {
      * @param viewport The current viewport
      * @param threshold The expand/collapse threshold
      */
-    checkCriticalRegions(viewport: Viewport, threshold: number) : void {
+    checkCriticalRegions(viewport: Viewport, threshold: number): void {
         // Use set of child regions to avoid multiple checks.
         const childSet: Set<Region> = new Set()
 

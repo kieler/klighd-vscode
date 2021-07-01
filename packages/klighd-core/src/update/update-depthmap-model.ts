@@ -1,3 +1,11 @@
+/*
+* This program and the accompanying materials are made available under the
+* terms of the Eclipse Public License 2.0 which is available at
+* http://www.eclipse.org/legal/epl-2.0.
+*
+* SPDX-License-Identifier: EPL-2.0
+*/
+
 import { inject, injectable } from 'inversify';
 import { Command, TYPES } from 'sprotty'
 import { SModelRootSchema } from 'sprotty';
@@ -10,7 +18,7 @@ import { DepthMap } from '../depth-map';
  * Simple UpdateDepthmapAction Fires the UpdateDepthmapModelCommand
  * is created whenever a updateModelAction or a setModelAction is present
  */
- export class UpdateDepthmapModelAction implements Action {
+export class UpdateDepthmapModelAction implements Action {
     static readonly KIND = 'updateDepthmapModel';
     readonly kind = UpdateDepthmapModelAction.KIND;
 
@@ -18,8 +26,8 @@ import { DepthMap } from '../depth-map';
     public readonly matches?: Match[];
 
     constructor(input: SModelRootSchema,
-                public readonly animate: boolean = true,
-                public readonly cause?: Action) {
+        public readonly animate: boolean = true,
+        public readonly cause?: Action) {
         if ((input as SModelRootSchema).id !== undefined)
             this.newRoot = input as SModelRootSchema;
     }
@@ -29,10 +37,10 @@ import { DepthMap } from '../depth-map';
  * UpdateModelCommand gets fired whenever a setModel or updateModel was executed
  */
 @injectable()
-export class UpdateDepthmapModelCommand extends Command{
+export class UpdateDepthmapModelCommand extends Command {
     static readonly KIND = UpdateDepthmapModelAction.KIND;
 
-    constructor(@inject(TYPES.Action) protected readonly action: UpdateDepthmapModelAction) {super()}
+    constructor(@inject(TYPES.Action) protected readonly action: UpdateDepthmapModelAction) { super() }
 
 
     execute(context: CommandExecutionContext): CommandReturn {

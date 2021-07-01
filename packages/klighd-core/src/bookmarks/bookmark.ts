@@ -1,3 +1,11 @@
+/*
+* This program and the accompanying materials are made available under the
+* terms of the Eclipse Public License 2.0 which is available at
+* http://www.eclipse.org/legal/epl-2.0.
+*
+* SPDX-License-Identifier: EPL-2.0
+*/
+
 import { Command, CommandExecutionContext, CommandReturn, isViewport, TYPES, Viewport, ViewportAnimation } from "sprotty";
 import { Action } from "sprotty/lib/base/actions/action";
 import { inject } from "inversify";
@@ -27,7 +35,7 @@ export class CreateBookmarkCommand extends Command {
         const model = context.root
         if (isViewport(model)) {
             const bookmark = new Bookmark();
-            bookmark.place = {scroll: model.scroll, zoom: model.zoom}
+            bookmark.place = { scroll: model.scroll, zoom: model.zoom }
             this.bookmarkRegistry.addBookmark(bookmark)
         }
         return model;
@@ -46,10 +54,10 @@ export class CreateBookmarkCommand extends Command {
 export class GoToBookmarkAction implements Action {
     static readonly KIND = 'get-bookmark';
     readonly kind = GoToBookmarkAction.KIND;
-    
+
     viewport: Viewport;
-    
-    constructor(bookmark: Bookmark){
+
+    constructor(bookmark: Bookmark) {
         this.viewport = bookmark.place;
     }
 }
@@ -67,9 +75,9 @@ export class GoToBookmarkCommand extends Command {
         if (isViewport(model)) {
             if (ANIMATE_BOOKMARK) {
                 context.duration = 1000;
-                return new ViewportAnimation(model, 
-                    { scroll: model.scroll, zoom: model.zoom }, 
-                    { scroll: this.action.viewport.scroll, zoom: this.action.viewport.zoom }, 
+                return new ViewportAnimation(model,
+                    { scroll: model.scroll, zoom: model.zoom },
+                    { scroll: this.action.viewport.scroll, zoom: this.action.viewport.zoom },
                     context).start();
             } else {
                 model.zoom = this.action.viewport.zoom;
