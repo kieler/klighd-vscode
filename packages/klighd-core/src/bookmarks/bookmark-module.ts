@@ -14,7 +14,7 @@ import { BookmarkPanel } from "./bookmark-panel";
 import { BookmarkRegistry } from "./bookmark-registry";
 
 /**
- * Module for updateing the depthmap whenever needed. 
+ * Module for creating and going to bookmarks 
  */
 const bookmarkModule = new ContainerModule((bind, unbind, isBound, rebind) => {
 
@@ -32,9 +32,6 @@ const bookmarkModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     configureActionHandler(context, CreateBookmarkAction.KIND, DISymbol.BookmarkRegistry);
     configureActionHandler(context, GoToBookmarkAction.KIND, DISymbol.BookmarkRegistry);
 
-
-
 });
-
 
 export default bookmarkModule;
