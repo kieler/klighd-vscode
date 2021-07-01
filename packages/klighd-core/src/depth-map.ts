@@ -40,23 +40,23 @@ export class DepthMap {
     /**
      * The region for immediate children of the SModelRoot, 
      * aka. the root regions
-     *  */
+     */
     rootRegions: Region[];
 
 
     /**
-     * Stores the lastRendered VNode Such that in case of pan / zoom actions the vnode is not redrawn
+     * Stores the last rendered VNode such that in case of pan / zoom actions the {@link VNode} is not redrawn
      */
     lastRender?: VNode | VNode[];
 
     /** 
-     * The model for which the DephtMap is generated 
-     * */
+     * The model for which the DepthMap is generated 
+     */
     rootElement: SModelRoot;
 
     /**  
      * A quick lookup map with the id of the bounding child area of a region as key.
-     * */
+     */
     regionMap: Map<string, Region>;
 
     /**
@@ -76,12 +76,12 @@ export class DepthMap {
     /** 
      * Set for handling regions, that need to be checked for detail level changes.
      * Consists of the region that contain at least one child with a lower detail level.
-    */
+     */
     criticalRegions: Set<Region>;
 
     /**
      *  Lookup set for quickly checking macro and super state titles. 
-     * */
+     */
     titleMap: Set<KText>
 
     /** Singleton pattern */
@@ -145,12 +145,10 @@ export class DepthMap {
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement)
-            console.log("Starting inizialization of DepthMap new Root")
             needsInit = true
         } else if (DepthMap.instance.rootElement !== rootElement) {
             // Reset and reinitialize if the model changed
             DepthMap.instance.reset(rootElement)
-            console.log("Starting reinizialization of DepthMap changed root")
             needsInit = true
         }
 
@@ -163,7 +161,7 @@ export class DepthMap {
                 DepthMap.instance.addRegionToMap(region)
                 DepthMap.instance.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
             }
-            console.log("(Re-)Inizialized DepthMap")
+
         }
     }
 
@@ -219,7 +217,7 @@ export class DepthMap {
     /** 
      * Find the region that contains the node,
      *  this should be the first ancestor that is a region
-   * @param node The KNode to search for. 
+     * @param node The KNode to search for. 
      */
     findRegionWithElement(node: KNode): Region | undefined {
         let current = node.parent as KNode;
@@ -400,7 +398,7 @@ export class DepthMap {
         } else if (!region.parent) {
             // Regions without parents should always be full detail if they are visible
             return DetailLevel.FullDetails
-        } {
+        } else {
             const viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
             // change to full detail when relative size threshold is reached
             if (viewportSize >= threshold) {
@@ -437,7 +435,7 @@ export class DepthMap {
      * 
      * @param node The KNode in question
      * @param viewport The curent viewport
-     * @returns  
+     * @returns the relative size of the KNodes shortest dimension
      */
     sizeInViewport(node: KNode, viewport: Viewport): number {
         const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
