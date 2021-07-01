@@ -12,11 +12,10 @@ import { Registry } from "../base/registry";
 import { Bookmark } from "./bookmark";
 
 /**
- * A simple {@link Registry} that holds a list of all available syntheses
- * as well as the currently selected synthesis.
+ * A simple {@link Registry} that holds a list of all added Bookmarks
  *
- * Handles SetSyntheses and SetSynthesis actions to keep the state in sync which
- * new events.
+ * Handles CreateBookmark and GoToBookmark actions
+ * 
  */
 @injectable()
 export class BookmarkRegistry extends Registry {
