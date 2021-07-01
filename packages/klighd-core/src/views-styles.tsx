@@ -346,7 +346,6 @@ export function applyKStyle(style: KStyle, styles: KStyles, stylesToPropagage?: 
  * @param from The KStyles to copy from.
  * @param to The KStyles to copy to.
  */
-
 export function copyStyles(from: KStyles, to: KStyles): void {
     to.kBackground = from.kBackground
     to.kForeground = from.kForeground
@@ -625,8 +624,10 @@ export function isInvisible(styles: KStyles): boolean {
  * 'stroke-dasharray' has to be set to the dashArray style,
  * 'stroke-miterlimit' has to be set to the miterLimit style. (This is not a string, but a number.)
  * @param styles The KStyles of the rendering.
+ * @param target The target of the line
+ * @param context The current rendering context 
  */
-export function getSvgLineStyles(styles: KStyles, target:SKGraphElement, context: SKGraphModelRenderer): LineStyles {
+export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, context: SKGraphModelRenderer): LineStyles {
     let lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
     const useLineWidthOption = context.renderingOptions.getValueForId(UseConstantLineWidth.ID)
     // Only enable, if option is found.
