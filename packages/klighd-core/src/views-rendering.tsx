@@ -95,7 +95,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const lineStyles = getSvgLineStyles(styles,parent,context)
+    const lineStyles = getSvgLineStyles(styles, parent, context)
 
     // Create the svg element for this rendering.
     let element : VNode|undefined = undefined
@@ -266,28 +266,27 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                 const titleSVG = renderKText(region.macroStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
                 element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
                 // If there is no title draw placeholder.
-            } else {
-                const size = 50
-                const scaleX = region.boundingRectangle.bounds.width / size
-                const scaleY = region.boundingRectangle.bounds.height / size
-                let scalingFactor = scaleX > scaleY ? scaleY : scaleX
-                // Use zoom for constant size in viewport.
-                if (context.viewport) {
-                    scalingFactor = scalingFactor > 1 / context.viewport.zoom ? 1 / context.viewport.zoom : scalingFactor
-                }
-                const placeholder = <g
-                    id="ZoomPlaceholder"
-                    height={size}
-                    width={size} >
-                    <g transform={`scale(${scalingFactor},${scalingFactor})`}>
-                        <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
-                        <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
-                        <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
-                        <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
-                    </g>
-                </g>
-                element.children ? element.children.push(placeholder) : element.children = [placeholder]
             }
+            const size = 50
+            const scaleX = region.boundingRectangle.bounds.width / size
+            const scaleY = region.boundingRectangle.bounds.height / size
+            let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+            // Use zoom for constant size in viewport.
+            if (context.viewport) {
+                scalingFactor = scalingFactor > 1 / context.viewport.zoom ? 1 / context.viewport.zoom : scalingFactor
+            }
+            const placeholder = <g
+                id="ZoomPlaceholder"
+                height={size}
+                width={size} >
+                <g transform={`scale(${scalingFactor},${scalingFactor})`}>
+                    <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
+                    <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
+                    <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
+                    <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
+                </g>
+            </g>
+            element.children ? element.children.push(placeholder) : element.children = [placeholder]
         }
     }
     return element as VNode
