@@ -99,7 +99,7 @@ export function ExportIcon(): VNode {
     );
 }
 
-export function  BookmarkIcon(): VNode {
+export function BookmarkIcon(): VNode {
     return (
         <svg 
             xmlns="http://www.w3.org/2000/svg" 
