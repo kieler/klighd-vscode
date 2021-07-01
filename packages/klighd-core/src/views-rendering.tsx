@@ -13,7 +13,7 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
-import { KGraphData } from 'klighd-interactive/lib/constraint-classes';
+import { KGraphData, DetailLevel } from 'klighd-interactive/lib/constraint-classes';
 import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/klighd-interactive-mouselistener';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
@@ -25,7 +25,6 @@ import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, g
 import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
-import { Visibility } from './depth-map';
 import { KNode } from '../../klighd-interactive/lib/constraint-classes';
 import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 
@@ -62,7 +61,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
  * @param context The rendering context for this element.
  */
 export function renderRectangularShape(rendering: KContainerRendering, parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -98,7 +97,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
     // Create the svg element for this rendering.
-    let element : VNode|undefined = undefined
+    let element: VNode | undefined = undefined
     switch (rendering.type) {
         case K_ARC: {
             const kArcRendering = rendering as KArc
@@ -257,7 +256,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     if (element && context.depthMap) {
         const region = context.depthMap.getRegion((parent as KNode).id)
-        if (region && region.expansionState !== Visibility.Expanded && !region.hasTitle) {
+        if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails && !region.hasTitle) {
             // Render indirect region titles.
             if (region.superStateTitle) {
                 const titleSVG = renderKText(region.superStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
@@ -301,7 +300,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
  * @param context The rendering context for this element.
  */
 export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -456,7 +455,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
  * @param mListener The mouse listener.
  */
 export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -496,7 +495,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const region = context.depthMap?.getRegion(parent.id)
     const simplifySmallTextOption = context.renderingOptions.getValueForId(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && (!region || region.expansionState === Visibility.Expanded)) {
+    if (simplifySmallText && (!region || region.detailReference.detailLevel === DetailLevel.FullDetails)) {
         const simplificationThresholdOption = context.renderingOptions.getValueForId(TextSimplificationThreshold.ID)
         const defaultThreshold = 3
         const simplificationThreshold = simplificationThresholdOption ?? defaultThreshold
@@ -533,8 +532,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         ...{ 'font-weight': textStyles.fontWeight },
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
         ...{ 'text-decoration-style': textStyles.textDecorationStyle },
-        ...{ 'opacity': opacity},
-        ...(colorStyle ? {'fill-opacity': colorStyle.opacity } : {})
+        ...{ 'opacity': opacity },
+        ...(colorStyle ? { 'fill-opacity': colorStyle.opacity } : {})
     }
 
     // The children to be contained in the returned text node.
@@ -544,7 +543,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const attrs = {
         x: boundsAndTransformation.bounds.x,
         style: style,
-        ...(colorStyle ? {fill: colorStyle.color} : {}),
+        ...(colorStyle ? { fill: colorStyle.color } : {}),
         filter: shadowStyles,
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size estimation include any trailing white spaces.
     } as any
@@ -581,7 +580,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                     if (!context.depthMap.titleMap.has(rendering)) {
                         region.hasTitle = true
                     }
-                    if (region.expansionState !== Visibility.Expanded) {
+                    if (region.detailReference.detailLevel !== DetailLevel.FullDetails) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
                         const defaultFactor = 1
@@ -628,7 +627,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             }
             const currentElement = <text
                 {...attrs}
-                y = {currentY}
+                y={currentY}
                 {...(calculatedTextLineWidths ? { textLength: calculatedTextLineWidths[index] } : {})}
             >{line}</text>
 
@@ -728,7 +727,7 @@ export function renderError(rendering: KRendering): VNode {
  * @param mListener The mouse listener.
  */
 export function getRendering(datas: KGraphData[], parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -754,9 +753,9 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
  * @param mListener The mouse listener.
  */
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
 
-    if (context.depthMap && (parent as KNode).expansionState === false) {
+    if (context.depthMap && (parent as KNode).detailReference.detailLevel !== DetailLevel.FullDetails) {
         return undefined
     }
 
@@ -859,7 +858,7 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
         }
         default: {
             console.error('The rendering of an edge has to be a KPolyline or a sub type of KPolyline except KPolygon, ' +
-            'or a KCustomRendering providing a KCustomConnectionFigureNode, but is ' + kRendering.type)
+                'or a KCustomRendering providing a KCustomConnectionFigureNode, but is ' + kRendering.type)
             return []
         }
     }
@@ -875,7 +874,7 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
 
     const renderings: VNode[] = []
     edge.junctionPoints.forEach(junctionPoint => {
-        const junctionPointVNode = <g transform = {`translate(${junctionPoint.x},${junctionPoint.y})`}>
+        const junctionPointVNode = <g transform={`translate(${junctionPoint.x},${junctionPoint.y})`}>
             {vNode}
         </g>
         renderings.push(junctionPointVNode)

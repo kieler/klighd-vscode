@@ -31,10 +31,10 @@ export class ShowConstraintOption implements RenderOption {
 
 /**
  * Boolean option to enable and disable the smart zoom feature.
- * This corresponds to the automatic expansion and collapsing of regions and states
+ * This corresponds to the automatic detail level of regions and states
  * as well as limiting visible elements.
  */
- export class UseSmartZoom implements RenderOption {
+export class UseSmartZoom implements RenderOption {
     static readonly ID: string = 'use-smart-zoom'
     static readonly NAME: string = 'Smart Zoom'
     readonly id: string = UseSmartZoom.ID
@@ -46,14 +46,14 @@ export class ShowConstraintOption implements RenderOption {
 }
 
 /**
- * Threshold for expansion as well as collapse of states.
+ * Threshold for full detail level.
  * Corresponds to the regions size compared to the current viewport.
  */
- export class ExpandCollapseThreshold implements RangeOption {
-    static readonly ID: string = 'expand-collapse-threshold'
-    static readonly NAME: string = 'Expand Collapse Threshold'
-    readonly id: string = ExpandCollapseThreshold.ID
-    readonly name: string = ExpandCollapseThreshold.NAME
+export class FullDetailThreshold implements RangeOption {
+    static readonly ID: string = 'dull-detail-threshold'
+    static readonly NAME: string = 'Full Detail Threshold'
+    readonly id: string = FullDetailThreshold.ID
+    readonly name: string = FullDetailThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
     readonly updateNeeded: boolean = false
     readonly values: any[] = []
@@ -70,7 +70,7 @@ export class ShowConstraintOption implements RenderOption {
 /**
  * Boolean option toggling the use of text element replacement with rectangles.
  */
- export class SimplifySmallText implements RenderOption {
+export class SimplifySmallText implements RenderOption {
     static readonly ID: string = 'simplify-small-text'
     static readonly NAME: string = 'Simplify Small Text'
     readonly id: string = SimplifySmallText.ID
@@ -84,7 +84,7 @@ export class ShowConstraintOption implements RenderOption {
 /**
  * Threshold under which text element simplification occurs in pixels.
  */
- export class TextSimplificationThreshold implements RangeOption {
+export class TextSimplificationThreshold implements RangeOption {
     static readonly ID: string = 'text-simplification-threshold'
     static readonly NAME: string = 'Text Simplification Threshold'
     readonly id: string = TextSimplificationThreshold.ID
@@ -105,7 +105,7 @@ export class ShowConstraintOption implements RenderOption {
  * The factor by which titles of colapsed regions get scaled by
  * in relation to their size at native resolution.
  */
- export class TitleScalingFactor implements RangeOption {
+export class TitleScalingFactor implements RangeOption {
     static readonly ID: string = 'title-scaling-factor'
     static readonly NAME: string = 'Title Scaling Factor'
     readonly id: string = TitleScalingFactor.ID
@@ -126,7 +126,7 @@ export class ShowConstraintOption implements RenderOption {
 /**
  * Boolean option to toggle the scaling of lines based on zoom level.
  */
- export class UseConstantLineWidth implements RenderOption {
+export class UseConstantLineWidth implements RenderOption {
     static readonly ID: string = 'use-constant-line-width'
     static readonly NAME: string = 'Constant Line Width'
     readonly id: string = UseConstantLineWidth.ID
@@ -168,13 +168,13 @@ export class RenderOptionsRegistry extends Registry {
         this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
 
         this._renderOptions.set(UseSmartZoom.ID, new UseSmartZoom());
-        this._renderOptions.set(ExpandCollapseThreshold.ID, new ExpandCollapseThreshold());
+        this._renderOptions.set(FullDetailThreshold.ID, new FullDetailThreshold());
 
         this._renderOptions.set(SimplifySmallText.ID, new SimplifySmallText());
         this._renderOptions.set(TextSimplificationThreshold.ID, new TextSimplificationThreshold());
-        
+
         this._renderOptions.set(TitleScalingFactor.ID, new TitleScalingFactor());
-        
+
         this._renderOptions.set(UseConstantLineWidth.ID, new UseConstantLineWidth());
         this._renderOptions.set(ConstantLineWidth.ID, new ConstantLineWidth());
     }

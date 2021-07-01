@@ -19,7 +19,7 @@ import { renderConstraints, renderInteractiveLayout } from 'klighd-interactive/l
 import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
-import { RenderOptionsRegistry, ShowConstraintOption,UseSmartZoom } from './options/render-options-registry';
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';
 import { DepthMap } from './depth-map';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
@@ -46,7 +46,7 @@ export class SKGraphView extends SGraphView {
             ctx.viewport = viewport
         }
 
-        
+
 
         // Add depthMap to context for rendering, when required.
         const smartZoomOption = this.renderOptionsRegistry.getValueForId(UseSmartZoom.ID)
@@ -57,7 +57,7 @@ export class SKGraphView extends SGraphView {
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
             ctx.depthMap = DepthMap.getDM()
             if (ctx.viewport && ctx.depthMap) {
-                ctx.depthMap.expandCollapse(ctx.viewport, this.renderOptionsRegistry)
+                ctx.depthMap.updateDetailLevels(ctx.viewport, this.renderOptionsRegistry)
             }
         }
 
@@ -67,7 +67,7 @@ export class SKGraphView extends SGraphView {
         const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`;
 
         let childsRedered;
-        
+
         if (ctx.targetKind !== 'hidden' && ctx.depthMap?.lastRender) {
             childsRedered = ctx.depthMap.lastRender
         } else {
@@ -302,10 +302,10 @@ export class KEdgeView implements IView {
 
         const s = edge.source
         const t = edge.target
-        
+
         // Do not draw edges without a source or target.
         if (s === undefined || t === undefined) {
-            return <g/>
+            return <g />
         }
         // edge should be greyed out if the source or target is moved
         if (s !== undefined && t !== undefined && s instanceof SKNode && t instanceof SKNode) {

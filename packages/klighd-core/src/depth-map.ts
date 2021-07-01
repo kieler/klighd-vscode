@@ -6,25 +6,34 @@
 * SPDX-License-Identifier: EPL-2.0
 */
 
-import { KNode } from "klighd-interactive/lib/constraint-classes";
+import { KNode, DetailLevel, DetailReference } from "klighd-interactive/lib/constraint-classes";
 import { VNode } from "snabbdom/vnode";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
-import { RenderOptionsRegistry, ExpandCollapseThreshold } from "./options/render-options-registry";
+import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
 import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
 
+
 /**
- * Every Region is either of the enums
+ * All DetailLevel where the children are visible
  */
-export enum Visibility {
-    Expanded,
-    Collapsed,
-    OutOfBounds,
+type DetailWithChildren = DetailLevel.FullDetails
+
+/**
+ * Type predicate to determine wheter a DetailLevel is a DetailWithChilderen level
+ */
+function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
+    return detail === DetailLevel.FullDetails
 }
 
 /**
- * Divides Model KNodes into regions. On these expand and collapse actions
- * are defined via the expansionState. Also holds additional information to determine
- * the appropriate expansion state, visibility and title for regions.
+ * All DetailLevel where the children are not visible
+ */
+type DetailWithoutChildren = Exclude<DetailLevel, DetailWithChildren>
+
+/**
+ * Divides Model KNodes into regions. On these detail level actions
+ * are defined via the detailLevel. Also holds additional information to determine
+ * the appropriate detail level, visibility and title for regions.
  */
 export class DepthMap {
 
@@ -57,7 +66,7 @@ export class DepthMap {
 
     zoomActionsSinceRenders: number;
 
-    MaxZoomActionsUntillRender = 5;
+    maxZoomActionsUntilRender = 5;
 
     /**
      * The threshold for which we updated the state of KNodes
@@ -65,8 +74,8 @@ export class DepthMap {
     lastThreshold?: number;
 
     /** 
-     * Set for handling regions, that need to be checked for expansion state.
-     * Consists of the last expanded regions in the hierarchy.
+     * Set for handling regions, that need to be checked for detail level changes.
+     * Consists of the region that contain at least one child with a lower detail level.
     */
     criticalRegions: Set<Region>;
 
@@ -169,7 +178,10 @@ export class DepthMap {
         // Go through child nodes until there are no child nodes left.
         for (const child of node.children) {
             // Add the current node as element of region.
-            region.elements.push(child as KNode)
+            region.elements.push(child as KNode);
+
+            (child as KNode).detailReference = region.detailReference
+
             // When the bounding rectangle of a new child area is reached, a new region is created.
             if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
                 && ((child as KNode).data[0] as unknown as KContainerRendering).children[0]) {
@@ -233,92 +245,97 @@ export class DepthMap {
     }
 
     /** 
-     * Decides the appropriate collapsed or expanded state for region based on their size in the viewport and applies that state.
-     * When the native resolution of the graph is reached, all visible regions will be expanded.
-     * Also collapses all invisible states.
+     * Decides the appropriate detail level for regions based on their size in the viewport and applies that state.
      * 
      * @param viewport The current viewport. 
      */
-    expandCollapse(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
+    updateDetailLevels(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
 
-        const thresholdOption = renderingOptions.getValueForId(ExpandCollapseThreshold.ID)
+        const thresholdOption = renderingOptions.getValueForId(FullDetailThreshold.ID)
         const defaultThreshold = 0.2
-        const expandCollapseThreshold = thresholdOption ?? defaultThreshold
+        const fullDetailThreshold = thresholdOption ?? defaultThreshold
 
         if (this.viewport?.scroll === viewport.scroll
             && this.viewport?.zoom === viewport.zoom
-            && this.lastThreshold === expandCollapseThreshold) {
+            && this.lastThreshold === fullDetailThreshold) {
             // the viewport did not change, no need to update
             return
         }
 
         if (viewport.zoom !== this.viewport?.zoom) this.zoomActionsSinceRenders += 1
-        if (this.zoomActionsSinceRenders > this.MaxZoomActionsUntillRender) {
+        if (this.zoomActionsSinceRenders > this.maxZoomActionsUntilRender) {
             this.zoomActionsSinceRenders = 0
             this.lastRender = undefined
         }
 
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
-        this.lastThreshold = expandCollapseThreshold;
+        this.lastThreshold = fullDetailThreshold;
 
-        // Initialize expansion states on first run.
+        // Initialize detail level on first run.
         if (this.criticalRegions.size == 0) {
             for (const region of this.rootRegions) {
-                if (this.getExpansionState(region, viewport, expandCollapseThreshold) === Visibility.Expanded) {
-                    this.searchUntilCollapse(region, viewport, expandCollapseThreshold)
+                const vis = this.computeDetailLevel(region, viewport, fullDetailThreshold)
+                if (vis === DetailLevel.FullDetails) {
+                    this.updateRegionDetailLevel(region, vis, viewport, fullDetailThreshold)
                 }
             }
         } else {
-            this.checkCriticalRegions(viewport, expandCollapseThreshold)
+            this.checkCriticalRegions(viewport, fullDetailThreshold)
         }
     }
 
     /**
-     * Expand the given region and recursively determine and update the chilrens expansion state
+     * Set detail level for the given region and recursively determine and update the chilrens detail level
      * 
      * @param region The root region
      * @param viewport The curent viewport
-     * @param threshold The expand/collapse threshold
+     * @param threshold The detail level threshold
      */
-    searchUntilCollapse(region: Region, viewport: Viewport, threshold: number): void {
-        region.setExpansionState(Visibility.Expanded)
+    updateRegionDetailLevel(region: Region, vis: DetailWithChildren, viewport: Viewport, threshold: number): void {
+        region.setDetailLevel(vis)
+        let isCritical = false;
+
         region.children.forEach(childRegion => {
-            const vis = this.getExpansionState(childRegion, viewport, threshold);
-            if (vis !== Visibility.Expanded) {
-                this.criticalRegions.add(region)
-                this.recursiveCollapseRegion(childRegion, vis)
+            const childVis = this.computeDetailLevel(childRegion, viewport, threshold);
+            if (childVis < vis) {
+                isCritical = true
+            }
+            if (isDetailWithChildren(childVis)) {
+                this.updateRegionDetailLevel(childRegion, childVis, viewport, threshold)
             } else {
-                this.searchUntilCollapse(childRegion, viewport, threshold)
+                this.recursiveSetOOB(childRegion, childVis)
             }
         })
+
+        if (isCritical) {
+            this.criticalRegions.add(region)
+        }
     }
 
-    /** 
-     * Collapses the region and all chldren recursively or sets it OutOfBounds
-     * */
-    recursiveCollapseRegion(region: Region, vis: Visibility.Collapsed | Visibility.OutOfBounds): void {
-        region.setExpansionState(vis)
+    recursiveSetOOB(region: Region, vis: DetailWithoutChildren): void {
+        region.setDetailLevel(vis)
+        // region is not/no longer the parent of a detail level boundary as such it is not critical
         this.criticalRegions.delete(region)
         region.children.forEach(childRegion => {
-            // bail early when child is already collapsed
-            if (childRegion.expansionState === Visibility.Expanded) {
-                this.recursiveCollapseRegion(childRegion, vis)
+            // bail early when child is less or equally detailed already
+            if (vis < childRegion.detailReference.detailLevel) {
+                this.recursiveSetOOB(childRegion, vis)
             }
         })
     }
 
     /**
-     * Looks for a change in expansion state for all critical regions.
-     * Applies this state and manages the critical regions.
+     * Looks for a change in detail level for all critical regions.
+     * Applies the level change and manages the critical regions.
      * 
      * @param viewport The current viewport
-     * @param threshold The expand/collapse threshold
+     * @param threshold The full detail threshold
      */
     checkCriticalRegions(viewport: Viewport, threshold: number): void {
         // Use set of child regions to avoid multiple checks.
         const childSet: Set<Region> = new Set()
 
-        // All regions here are currently expanded and have a collapsed child and have not yet been checked.
+        // All regions that are at a detail level boundary (child has lower detail level and parent is at a DetailWithChildren level).
         let toBeProcessed: Set<Region> = new Set(this.criticalRegions)
 
         // The regions that have become critical and therfore need to be checked as well
@@ -326,42 +343,42 @@ export class DepthMap {
 
         while (toBeProcessed.size !== 0) {
             toBeProcessed.forEach(region => {
-                // Collapse either if the parent region is collapsed or the expansion state changes.
-                if (region.parent && region.parent.expansionState !== Visibility.Expanded) {
-                    this.recursiveCollapseRegion(region, region.parent.expansionState)
-                } else {
-                    const vis = this.getExpansionState(region, viewport, threshold);
-                    if (vis !== Visibility.Expanded) {
-                        if (region.parent) {
-                            nextToBeProcessed.add(region.parent)
-                            this.criticalRegions.add(region.parent)
-                        }
-                        this.recursiveCollapseRegion(region, vis)
-                    } else {
-                        // Add children to check for expansion state change.
-                        region.children.forEach(childRegion => {
-                            childSet.add(childRegion)
-                        })
+                const vis = this.computeDetailLevel(region, viewport, threshold);
+
+                if (region.parent && vis !== region.parent.detailReference.detailLevel) {
+                    if (region.parent) {
+                        nextToBeProcessed.add(region.parent)
+                        this.criticalRegions.add(region.parent)
                     }
+                    if (isDetailWithChildren(vis)) {
+                        this.updateRegionDetailLevel(region, vis, viewport, threshold)
+                    } else {
+                        this.recursiveSetOOB(region, vis)
+                    }
+                } else {
+                    // Add children to check for detail level change.
+                    region.children.forEach(childRegion => {
+                        childSet.add(childRegion)
+                    })
                 }
+
             })
 
             toBeProcessed = nextToBeProcessed;
             nextToBeProcessed = new Set();
         }
 
-        // Check all collected child regions of expanded states.
+        // Check all collected child regions of detail level.
         childSet.forEach(childRegion => {
-            const vis = this.getExpansionState(childRegion, viewport, threshold);
-            if (vis === Visibility.Expanded) {
-                this.searchUntilCollapse(childRegion, viewport, threshold)
+            const vis = this.computeDetailLevel(childRegion, viewport, threshold);
+            if (childRegion.parent && childRegion.parent.detailReference.detailLevel !== vis) {
+                this.criticalRegions.add(childRegion.parent)
+            }
+
+            if (isDetailWithChildren(vis)) {
+                this.updateRegionDetailLevel(childRegion, vis, viewport, threshold)
             } else {
-                if (childRegion.parent) {
-                    // our parent is expanded and we are not, 
-                    // this meand our parent is a critical region
-                    this.criticalRegions.add(childRegion.parent)
-                }
-                this.recursiveCollapseRegion(childRegion, vis)
+                this.recursiveSetOOB(childRegion, vis)
             }
         })
 
@@ -369,29 +386,27 @@ export class DepthMap {
     }
 
     /**
-     * Decides the appropriate collapsed or expanded state for a region
+     * Decides the appropriate detail level for a region
      * based on their size in the viewport and visibility
      * 
      * @param region The region in question
      * @param viewport The currenr viewport
-     * @param threshold The expand/collapse threshold
-     * @returns The appropriate expansion state.
+     * @param threshold The full detail threshold
+     * @returns The appropriate detail level
      */
-    getExpansionState(region: Region, viewport: Viewport, threshold: number): Visibility {
-        // Collapse all invisible states and regions.
-        if (!this.isVisible(region, viewport)) {
-            return Visibility.OutOfBounds
+    computeDetailLevel(region: Region, viewport: Viewport, threshold: number): DetailLevel {
+        if (!this.isInBounds(region, viewport)) {
+            return DetailLevel.OutOfBounds
         } else if (!region.parent) {
-            // Regions without parents should always be expanded if they are visible
-            return Visibility.Expanded
+            // Regions without parents should always be full detail if they are visible
+            return DetailLevel.FullDetails
         } {
             const viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
-            // Expand when reached relative size threshold or native resolution.
-            if (viewportSize >= threshold || viewport.zoom >= 1) {
-                return Visibility.Expanded
-                // Collapse when reached relative size threshold.
+            // change to full detail when relative size threshold is reached
+            if (viewportSize >= threshold) {
+                return DetailLevel.FullDetails
             } else {
-                return Visibility.Collapsed
+                return DetailLevel.MinimalDetails
             }
         }
     }
@@ -403,7 +418,7 @@ export class DepthMap {
      * @param viewport The current viewport.
      * @returns Boolean value indicating the visibility of the region in the current viewport. 
      */
-    isVisible(region: Region, viewport: Viewport): boolean {
+    isInBounds(region: Region, viewport: Viewport): boolean {
         if (region.absoluteBounds) {
             const canvasBounds = this.rootElement.canvasBounds
 
@@ -431,10 +446,12 @@ export class DepthMap {
     }
 }
 
+
+
 /**
  * Combines KNodes into regions. These correspond to child areas. A region can correspond to 
  * a region or a super state in the model. Also manages the boundaries, title candidates, 
- * tree structure of the model and application of expansion state of its KNodes.
+ * tree structure of the model and application of detail level of its KNodes.
  */
 export class Region {
     /** All KNodes specifically in the region. */
@@ -443,8 +460,8 @@ export class Region {
     boundingRectangle: KNode
     /** Gained using browser position and rescaling and are therefore not perfect. */
     absoluteBounds: Bounds
-    /** Determines if the region is expanded (true) or collapsed (false). */
-    expansionState: Visibility
+    /** the refernce to the regions current detail level that is shared with all children */
+    detailReference: DetailReference
     /** The immediate parent region of this region. */
     parent?: Region
     /** All immediate child regions of this region */
@@ -466,25 +483,23 @@ export class Region {
         this.elements = []
         this.children = []
         this.hasTitle = false
-        this.expansionState = Visibility.Expanded
+        this.detailReference = { detailLevel: DetailLevel.FullDetails }
     }
 
     /** 
-     * Applies the expansion state to all elements of a region.
-     * @param state True for expanded and false for collapsed. 
+     * Applies the detail level to all elements of a region.
+     * @param level the detail leveel to apply
      */
-    setExpansionState(state: Visibility): void {
-        if (state !== Visibility.OutOfBounds && state !== this.expansionState) {
+    setDetailLevel(level: DetailLevel): void {
+        if (level !== DetailLevel.OutOfBounds && level !== this.detailReference.detailLevel) {
             const dm = DepthMap.getDM();
             if (dm) {
+                // clear the lastRender as we need to rerender
                 dm.lastRender = undefined
                 dm.zoomActionsSinceRenders = 0
             }
         }
 
-        this.expansionState = state
-        for (const elem of this.elements) {
-            elem.expansionState = state === Visibility.Expanded
-        }
+        this.detailReference.detailLevel = level
     }
 }

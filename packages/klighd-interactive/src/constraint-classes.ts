@@ -58,8 +58,7 @@ export class KNode extends RectangularNode implements KGraphElement {
     shadowX: number
     shadowY: number
 
-    /** Wheter the DepthMap Region this KNode is contained in is collapsed (false) or expanded (true) */
-    expansionState: boolean
+    detailReference: DetailReference
 }
 
 export enum Direction {
@@ -68,6 +67,22 @@ export enum Direction {
     LEFT,
     DOWN,
     UP
+}
+
+/**
+ * The possible detail level of a KNode as determined by the DepthMap
+ */
+export enum DetailLevel {
+    FullDetails = 2,
+    MinimalDetails = 1,
+    OutOfBounds = 0
+}
+
+/**
+ * Something we can get a DetailLevel from
+ */
+export interface DetailReference {
+    detailLevel: DetailLevel
 }
 
 /**

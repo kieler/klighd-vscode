@@ -36,8 +36,8 @@ export class SKNode extends KNode {
     tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
-        || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
-        || feature === popupFeature
+            || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
+            || feature === popupFeature
     }
 }
 
