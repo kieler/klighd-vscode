@@ -18,14 +18,18 @@
             "name": "Start CLI Webserver",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/application/klighd-cli/lib/main.js",
+            "address": "127.0.0.1:8000",
+            "outputCapture": "std",
+            "program": "${workspaceFolder}/applications/klighd-cli/lib/main.js",
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
             "name": "Start CLI Webserver (Port)",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/application/klighd-cli/lib/main.js",
+            "address": "127.0.0.1:8000",
+            "outputCapture": "std",
+            "program": "${workspaceFolder}/applications/klighd-cli/lib/main.js",
             "args": ["--ls_port=5007"],
             "preLaunchTask": "${defaultBuildTask}"
         }
