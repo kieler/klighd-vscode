@@ -81,7 +81,7 @@ async function initDiagramView(sourceUri: string) {
     await requestModel(actionDispatcher, sourceUri);
 }
 
-/** Communicates preferences to the diagram container which are red from the url search params. */
+/** Communicates preferences to the diagram container which are read from the url search params. */
 function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     actionDispatcher.dispatch(
         new SetPreferencesAction({
