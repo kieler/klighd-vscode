@@ -63,12 +63,12 @@ export class Sidebar extends AbstractUIExtension {
     }
 
     update(): void {
-        console.time("sidebar-update");
-        const currentPanel = this.sidebarPanelRegistry.currentPanel;
-
         // Only update if the content was initialized, which is the case if a
         // VNode Root for the panel content is created.
         if (!this.oldPanelContentRoot) return;
+
+        console.time("sidebar-update");
+        const currentPanel = this.sidebarPanelRegistry.currentPanel;
 
         const content: VNode = (
             <div classNames="sidebar__content">
