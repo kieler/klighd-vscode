@@ -14,7 +14,6 @@
 /** @jsx html */
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
-import { icons } from "feather-icons";
 import { SidebarPanel } from "./sidebar-panel";
 
 /**
@@ -60,7 +59,7 @@ export class CounterPanel extends SidebarPanel {
         this.update();
     }
 
-    get icon(): string {
-        return icons.percent.toSvg();
+    get icon(): VNode {
+        return <i attrs={{ "data-feather": "percent" }}></i>;
     }
 }

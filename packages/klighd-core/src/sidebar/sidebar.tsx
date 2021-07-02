@@ -65,57 +65,47 @@ export class Sidebar extends AbstractUIExtension {
     update(): void {
         console.time("sidebar-update");
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
-        const title = this.containerElement.querySelector<HTMLHeadingElement>(".sidebar__title");
 
         // Only update if the content was initialized, which is the case if a
         // VNode Root for the panel content is created.
         if (!this.oldPanelContentRoot) return;
-        if (!title) {
-            console.error(
-                "Unable to find the sidebar title! No element with the class sidebar__title has been found."
-            );
-            return;
-        }
 
-        if (!currentPanel) {
-            // close the sidebar
-            this.containerElement.classList.remove("sidebar--open");
+        const content: VNode = (
+            <div classNames="sidebar__content">
+                <div classNames="sidebar__toggle-container">
+                    {this.sidebarPanelRegistry.allPanels.map((panel) => (
+                        <button
+                            classNames="sidebar__toggle-button"
+                            class-sidebar__toggle-button--active={
+                                this.sidebarPanelRegistry.currentPanelID === panel.id
+                            }
+                            title={panel.title}
+                            on-click={this.handlePanelButtonClick.bind(this, panel.id)}
+                        >
+                            {panel.icon}
+                        </button>
+                    ))}
+                </div>
+                <h3 classNames="sidebar__title">{currentPanel?.title ?? ""}</h3>
+                <div classNames="sidebar__panel-content">{currentPanel?.render() ?? ""}</div>
+            </div>
+        );
 
-            const activeBtn = this.containerElement.querySelector(
-                ".sidebar__toggle-button--active"
-            );
-            activeBtn?.classList.remove("sidebar__toggle-button--active");
-        } else {
-            // show and update the sidebar
+        // Update panel content with efficient VDOM patching.
+        this.oldPanelContentRoot = this.patcher(this.oldPanelContentRoot, content);
 
-            // Update the panel title to the current title. Only change the DOM if the titles are not equal.
-            if (title.innerHTML !== currentPanel.title) title.innerHTML = currentPanel.title;
+        // The feather icon package is not able to return VNode. Therefore,
+        // the icons can not be directly rendered by Snabbdom. To avoid this,
+        // icons in the V-DOM can be placed with a <i data-feather="..."></> tag.
+        // This call replaces the icons after the V-DOM has been patched into the DOM.
+        // See: https://github.com/feathericons/feather#featherreplaceattrs
+        featherReplace();
 
-            // Mark current panel button active. Only triggers a DOM change if the class is not already set.
-            const buttons = this.containerElement.querySelectorAll<HTMLButtonElement>(
-                ".sidebar__toggle-button"
-            );
-            buttons.forEach((btn) => {
-                if (btn.dataset.panelId === currentPanel.id) {
-                    btn.classList.add("sidebar__toggle-button--active");
-                } else {
-                    btn.classList.remove("sidebar__toggle-button--active");
-                }
-            });
-
-            // Update panel content with efficient VDOM patching.
-            this.oldPanelContentRoot = this.patcher(
-                this.oldPanelContentRoot,
-                currentPanel.render()
-            );
+        // Show or hide the panel
+        if (currentPanel) {
             this.containerElement.classList.add("sidebar--open");
-
-            // The feather icon package is not able to return VNode. Therefore,
-            // the icons can not be directly rendered by Snabbdom. To avoid this,
-            // icons in the V-DOM can be placed with a <i data-feather="..."></> tag.
-            // This call replaces the icons after the V-DOM has been patched into the DOM.
-            // See: https://github.com/feathericons/feather#featherreplaceattrs
-            featherReplace()
+        } else {
+            this.containerElement.classList.remove("sidebar--open");
         }
         console.timeEnd("sidebar-update");
     }
@@ -125,44 +115,12 @@ export class Sidebar extends AbstractUIExtension {
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
-        // Create buttons vanilla style. I (cfr) had problems to get svg icons
-        // in snabbdom-jsx to work. They did not include all attributes and can not be part of
-        // a html jsx pragma, which is the pragma used for all other panel content.
-        // See: https://github.com/snabbdom-jsx/snabbdom-jsx/issues/21
-        // and: https://github.com/snabbdom-jsx/snabbdom-jsx/issues/20
-        const toggleContainer = document.createElement("div");
-        toggleContainer.classList.add("sidebar__toggle-container");
-
-        const panelButtons = this.sidebarPanelRegistry.allPanels.map((panel) => {
-            const button = document.createElement("button");
-            button.classList.add("sidebar__toggle-button");
-            button.setAttribute("title", panel.title);
-            button.dataset.panelId = panel.id;
-            button.addEventListener("click", this.handlePanelButtonClick.bind(this, panel.id));
-            button.innerHTML = panel.icon;
-
-            return button;
-        });
-        panelButtons.forEach((button) => toggleContainer.appendChild(button));
-        containerElement.appendChild(toggleContainer);
-
-        // Create panel title
-        const title = document.createElement("h3");
-        title.classList.add("sidebar__title");
-        title.innerText = "Sidebar";
-        containerElement.appendChild(title);
-
-        // Create content container which provides an overflow scrollbar for the content
-        const contentContainer = document.createElement("div");
-        contentContainer.classList.add("sidebar__content");
-        containerElement.appendChild(contentContainer);
-
         // Prepare the virtual DOM. Snabbdom requires an empty element.
         // Furthermore, the element is completely replaced by the panel on every update,
         // so we use an extra, empty element to ensure that we do not loose important attributes (such as classes).
         const panelContentRoot = document.createElement("div");
         this.oldPanelContentRoot = this.patcher(panelContentRoot, <div />);
-        contentContainer.appendChild(panelContentRoot);
+        containerElement.appendChild(panelContentRoot);
 
         // Notice that an AbstractUIExtension only calls initializeContents once,
         // so this handler is also only registered once.

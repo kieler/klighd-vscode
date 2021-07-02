@@ -17,7 +17,6 @@ import { inject, injectable, postConstruct } from "inversify";
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { Action, CenterAction, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
-import { icons } from "feather-icons";
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { SynthesisPicker } from "./components/synthesis-picker";
@@ -165,7 +164,7 @@ export class GeneralPanel extends SidebarPanel {
         this.actionDispatcher.dispatch(action);
     }
 
-    get icon(): string {
-        return icons.settings.toSvg();
+    get icon(): VNode {
+        return <i attrs={{ "data-feather": "settings" }}></i>;
     }
 }

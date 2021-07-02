@@ -18,11 +18,6 @@
     right: 0;
     bottom: 0;
 
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-
     /* Sidebar should consume at least ~1/3th of the screen but not forced to be wider than 400px. */
     min-width: min(400px, 35vw);
     /* Sidebar should consume at max 3/4th of the screen. */
@@ -44,6 +39,18 @@
 }
 
 .sidebar__content {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+
+    width: 100%;
+    height: 100%;
+}
+
+/* Overflow container for the content provided by panels */
+.sidebar__panel-content {
     box-sizing: border-box;
     overflow-y: auto;
 
@@ -83,7 +90,8 @@
     transition: background var(--kdc-transition);
 }
 
-.sidebar__toggle-button:hover, .sidebar__toggle-button:focus-visible {
+.sidebar__toggle-button:hover,
+.sidebar__toggle-button:focus-visible {
     --background: var(--kdc-color-sidebar-trigger-background-hover);
 }
 

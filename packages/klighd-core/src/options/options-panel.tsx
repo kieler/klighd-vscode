@@ -15,7 +15,6 @@
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
 import { inject, injectable, postConstruct } from "inversify";
-import {icons} from "feather-icons";
 import { OptionsRegistry } from "./options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { DISymbol } from "../di.symbols";
@@ -52,7 +51,7 @@ export class OptionsPanel extends SidebarPanel {
         );
     }
 
-    get icon(): string {
-        return icons.sliders.toSvg();
+    get icon(): VNode {
+        return <i attrs={{ "data-feather": "sliders" }}></i>
     }
 }
