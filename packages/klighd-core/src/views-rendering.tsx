@@ -186,8 +186,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             } else {
                 // Fallthrough to KEllipse case.
             }
-            break
         }
+        // eslint-disable-next-line
         case K_ELLIPSE: {
             element = <g id={rendering.renderingId} {...gAttrs}>
                 <ellipse

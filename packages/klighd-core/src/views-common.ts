@@ -145,7 +145,8 @@ export function textDecorationStyleText(underline: KTextUnderline): 'solid' | 'd
     }
 }
 
-export function textDecorationColor(): string | undefined {
+// eslint-disable-next-line
+export function textDecorationColor(underline: KTextUnderline): string | undefined {
     return undefined // TODO:
 }
 
