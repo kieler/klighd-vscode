@@ -1,6 +1,6 @@
 {
-  "Lisence shortcut": {
-    "prefix": "lisence",
+  "License shortcut": {
+    "prefix": "license",
     "body": [
       "/*",
       " * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient",
@@ -16,6 +16,6 @@
       " */",
       "$0"
     ],
-    "description": "Inserts lisence header"
+    "description": "Inserts a license header"
   }
 }
