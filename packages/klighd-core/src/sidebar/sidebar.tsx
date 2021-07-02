@@ -14,6 +14,7 @@
 /** @jsx html */
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { inject, postConstruct } from "inversify";
+import { replace as featherReplace } from "feather-icons";
 import { VNode } from "snabbdom/vnode";
 import { AbstractUIExtension, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
@@ -108,6 +109,13 @@ export class Sidebar extends AbstractUIExtension {
                 currentPanel.render()
             );
             this.containerElement.classList.add("sidebar--open");
+
+            // The feather icon package is not able to return VNode. Therefore,
+            // the icons can not be directly rendered by Snabbdom. To avoid this,
+            // icons in the V-DOM can be placed with a <i data-feather="..."></> tag.
+            // This call replaces the icons after the V-DOM has been patched into the DOM.
+            // See: https://github.com/feathericons/feather#featherreplaceattrs
+            featherReplace()
         }
         console.timeEnd("sidebar-update");
     }
@@ -118,7 +126,7 @@ export class Sidebar extends AbstractUIExtension {
 
     protected initializeContents(containerElement: HTMLElement): void {
         // Create buttons vanilla style. I (cfr) had problems to get svg icons
-        // in snabbdom-jsx to work. They did not include all attributed and can not be part of
+        // in snabbdom-jsx to work. They did not include all attributes and can not be part of
         // a html jsx pragma, which is the pragma used for all other panel content.
         // See: https://github.com/snabbdom-jsx/snabbdom-jsx/issues/21
         // and: https://github.com/snabbdom-jsx/snabbdom-jsx/issues/20

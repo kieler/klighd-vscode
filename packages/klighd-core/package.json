@@ -1,29 +1,33 @@
 {
-  "name": "klighd-core",
-  "version": "0.1.0",
-  "description": "Core KLighD diagram visualization with Sprotty",
-  "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
-  "license": "EPL-2.0",
-  "keywords": [
-    "klighd",
-    "sprotty",
-    "diagrams"
-  ],
-  "main": "./lib/index.js",
-  "scripts": {
-    "clean": "rm -rf lib",
-    "lint": "eslint .",
-    "build": "tsc",
-    "watch": "tsc -w"
-  },
-  "dependencies": {
-    "klighd-interactive": "0.1.0",
-    "inversify": "5.0.1",
-    "sprotty": "0.9.0"
-  },
-  "files": [
-    "lib",
-    "src",
-    "styles"
-  ]
+    "name": "klighd-core",
+    "version": "0.1.0",
+    "description": "Core KLighD diagram visualization with Sprotty",
+    "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
+    "license": "EPL-2.0",
+    "keywords": [
+        "klighd",
+        "sprotty",
+        "diagrams"
+    ],
+    "main": "./lib/index.js",
+    "scripts": {
+        "clean": "rm -rf lib",
+        "lint": "eslint .",
+        "build": "tsc",
+        "watch": "tsc -w"
+    },
+    "dependencies": {
+        "feather-icons": "^4.28.0",
+        "inversify": "5.0.1",
+        "klighd-interactive": "0.1.0",
+        "sprotty": "0.9.0"
+    },
+    "devDependencies": {
+        "@types/feather-icons": "^4.7.0"
+    },
+    "files": [
+        "lib",
+        "src",
+        "styles"
+    ]
 }
