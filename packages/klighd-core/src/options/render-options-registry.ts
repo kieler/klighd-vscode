@@ -54,7 +54,7 @@ export class UseSmartZoom implements RenderOption {
  * Corresponds to the regions size compared to the current viewport.
  */
 export class FullDetailThreshold implements RangeOption {
-    static readonly ID: string = 'dull-detail-threshold'
+    static readonly ID: string = 'full-detail-threshold'
     static readonly NAME: string = 'Full Detail Threshold'
     readonly id: string = FullDetailThreshold.ID
     readonly name: string = FullDetailThreshold.NAME
@@ -67,7 +67,7 @@ export class FullDetailThreshold implements RangeOption {
     }
     readonly stepSize = 0.01
     readonly initialValue: number = 0.2
-    currentValue = 0.17
+    currentValue = 0.2
 }
 
 
