@@ -27,7 +27,7 @@ Development of this project requires [Node.js _v14.x_](https://nodejs.org) and
 
 Developing the `klighd-vscode` extension requires an extension that has a dependency on
 `klighd-vscode` and provides a language client with KLighD synthesis capabilities. A good candidate
-for development is the `kieler.keith-vscode` extension.
+for development is the `kieler.keith-vscode` ([under development](https://git.rtsys.informatik.uni-kiel.de/projects/KIELER/repos/keith/browse?at=cfr/monorepo-restructure)) extension.
 
 Furthermore, development of the `klighd-cli` requires a language server with KLighD synthesis
 capabilities. The server can either be started separately, using a socket for communication, or
