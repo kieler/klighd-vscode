@@ -18,7 +18,7 @@
 /** @jsx html */
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
-import { SidebarPanel } from "./sidebar-panel";
+import { SidebarPanel } from "../src/sidebar/sidebar-panel";
 
 /**
  * Example for a simple reactive {@link SidebarPanel}. Fell free to use this as an
