@@ -17,7 +17,7 @@
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { Connection, NotificationType, ActionMessage } from "klighd-core";
+import { Connection, NotificationType, ActionMessage } from "@kieler/klighd-core";
 import { showPopup } from "../popup";
 
 type GeneralMessageParams = [string, "info" | "warn" | "error"];

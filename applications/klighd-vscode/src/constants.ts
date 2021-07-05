@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { diagramType as originalDiagramType } from "klighd-core";
+import { diagramType as originalDiagramType } from "@kieler/klighd-core";
 
 /** Extension ID corresponding to the name property in the package.json */
 export const extensionId = "klighd-vscode";

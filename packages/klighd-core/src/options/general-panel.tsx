@@ -16,7 +16,7 @@
  */
 
 /** @jsx html */
-import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
+import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";

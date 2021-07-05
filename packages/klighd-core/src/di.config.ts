@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { interactiveModule } from 'klighd-interactive/lib/interactive-module';
+import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,

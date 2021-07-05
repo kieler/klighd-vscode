@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Connection, NotificationType } from "klighd-core";
+import { Connection, NotificationType } from "@kieler/klighd-core";
 import { inject, injectable } from "inversify";
 import { ActionMessage, isActionMessage, ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";

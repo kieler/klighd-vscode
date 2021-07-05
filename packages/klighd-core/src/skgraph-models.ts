@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KEdge, KGraphData, KGraphElement, KNode } from 'klighd-interactive/lib/constraint-classes';
+import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty/lib';
 
 /**

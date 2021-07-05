@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SetPreferencesAction } from "klighd-core";
+import { SetPreferencesAction } from "@kieler/klighd-core";
 import { SprottyWebviewOptions } from "sprotty-vscode";
 import { SprottyLspWebview } from "sprotty-vscode/lib/lsp";
 import { workspace } from "vscode";

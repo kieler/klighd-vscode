@@ -17,8 +17,8 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
-import { KGraphData } from 'klighd-interactive/lib/constraint-classes';
-import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/klighd-interactive-mouselistener';
+import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
+import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,

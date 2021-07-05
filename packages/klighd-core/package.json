@@ -1,5 +1,5 @@
 {
-    "name": "klighd-core",
+    "name": "@kieler/klighd-core",
     "version": "0.1.0",
     "description": "Core KLighD diagram visualization with Sprotty",
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
@@ -17,9 +17,9 @@
         "watch": "tsc -w"
     },
     "dependencies": {
+        "@kieler/klighd-interactive": "0.1.0",
         "feather-icons": "^4.28.0",
         "inversify": "5.0.1",
-        "klighd-interactive": "0.1.0",
         "sprotty": "0.9.0"
     },
     "devDependencies": {

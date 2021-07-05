@@ -17,7 +17,7 @@
 
 import { ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidget } from "sprotty-vscode-webview";
-import { requestModel } from "klighd-core";
+import { requestModel } from "@kieler/klighd-core";
 
 /**
  * Overwrite the {@link VscodeDiagramWidget} to dispatch a RequestModelAction instead
