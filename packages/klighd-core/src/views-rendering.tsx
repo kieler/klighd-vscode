@@ -759,7 +759,7 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
 
-    if (context.depthMap && (parent as KNode).detailReference.detailLevel !== DetailLevel.FullDetails) {
+    if (context.depthMap && (parent as KNode).detailReference?.detailLevel !== DetailLevel.FullDetails) {
         return undefined
     }
 
