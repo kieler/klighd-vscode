@@ -92,7 +92,7 @@ export function RangeOption(props: RangeOptionProps): VNode {
                 id={props.id}
                 min={props.minValue}
                 max={props.maxValue}
-                value={props.value}
+                attrs={{ "value": props.value }}
                 step={props.stepSize}
                 on-change={(e: any) => props.onChange(e.target.value)}
             />
