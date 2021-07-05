@@ -16,7 +16,6 @@
  */
 
 import { KNode, DetailLevel, DetailReference } from "klighd-interactive/lib/constraint-classes";
-import { VNode } from "snabbdom/vnode";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
 import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
@@ -52,12 +51,6 @@ export class DepthMap {
      */
     rootRegions: Region[];
 
-
-    /**
-     * Stores the last rendered VNode such that in case of pan / zoom actions the {@link VNode} is not redrawn
-     */
-    lastRender?: VNode | VNode[];
-
     /** 
      * The model for which the DepthMap is generated 
      */
@@ -72,10 +65,6 @@ export class DepthMap {
      * The last viewport for which we updated the state of KNodes
      */
     viewport?: Viewport;
-
-    zoomActionsSinceRenders: number;
-
-    maxZoomActionsUntilRender = 5;
 
     /**
      * The threshold for which we updated the state of KNodes
@@ -105,7 +94,6 @@ export class DepthMap {
         this.regionMap = new Map()
         this.titleMap = new Set()
         this.criticalRegions = new Set()
-        this.zoomActionsSinceRenders = 0
     }
 
     protected reset(model_root: SModelRoot): void {
@@ -116,8 +104,6 @@ export class DepthMap {
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
-        this.lastRender = undefined
-        this.zoomActionsSinceRenders = 0
 
         let current_regions = this.rootRegions
         let remaining_regions: Region[] = []
@@ -267,12 +253,6 @@ export class DepthMap {
             && this.lastThreshold === fullDetailThreshold) {
             // the viewport did not change, no need to update
             return
-        }
-
-        if (viewport.zoom !== this.viewport?.zoom) this.zoomActionsSinceRenders += 1
-        if (this.zoomActionsSinceRenders > this.maxZoomActionsUntilRender) {
-            this.zoomActionsSinceRenders = 0
-            this.lastRender = undefined
         }
 
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
@@ -498,15 +478,6 @@ export class Region {
      * @param level the detail leveel to apply
      */
     setDetailLevel(level: DetailLevel): void {
-        if (level !== DetailLevel.OutOfBounds && level !== this.detailReference.detailLevel) {
-            const dm = DepthMap.getDM();
-            if (dm) {
-                // clear the lastRender as we need to rerender
-                dm.lastRender = undefined
-                dm.zoomActionsSinceRenders = 0
-            }
-        }
-
         this.detailReference.detailLevel = level
     }
 }
