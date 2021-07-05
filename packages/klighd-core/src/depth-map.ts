@@ -211,7 +211,9 @@ export class DepthMap {
 
     /** 
      * Find the region that contains the node,
-     *  this should be the first ancestor that is a region
+     *  this should be the first ancestor that is a region.
+     *  Only the root nodes should not have an ancesstor that is a region 
+     *  and therefore result in undefined.
      * @param node The KNode to search for. 
      */
     findRegionWithElement(node: KNode): Region | undefined {
