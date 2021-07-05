@@ -78,9 +78,12 @@ async function initDiagramView(sourceUri: string) {
     await connection.connect(socketUrl);
     await connection.sendInitialize();
     connection.sendDocumentDidOpen(sourceUri, languageId);
-    // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions.
-    // Properly because the document changes from the open notification. However, there is no way to await
-    // notification in the vscode-languageclient api.
+    // If this does not sleep for bit, the LS send two requestTextBounds and updateOptions actions.
+    // Properly because the document changes, when the server still reads the document from "openDocument".
+    // There is no way to await a sent notification in the vscode-languageclient api, so we can not wait until
+    // the document is opened.
+    // This tries to find a sweet-spot between not sacrificing user experience and
+    // giving the server an opportunity to fully read the file before a model is requested.
     await sleep(500);
     await requestModel(actionDispatcher, sourceUri);
 }
