@@ -8,7 +8,11 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 /** @jsx html */
@@ -23,7 +27,6 @@ import { SynthesisPicker } from "./components/synthesis-picker";
 import { SidebarPanel } from "../sidebar";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { BookmarkIcon, CenterIcon, ExportIcon, FitIcon, LayoutIcon, RefreshIcon } from "./components/icons";
 import { RenderOptionsRegistry } from "./render-options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
@@ -59,12 +62,42 @@ export class GeneralPanel extends SidebarPanel {
         this.renderOptionsRegistry.onChange(() => this.update());
 
         this.quickActions = [
-            ["center", "Center diagram", <CenterIcon />, new CenterAction([], true)],
-            ["fit", "Fit to screen", <FitIcon />, new KlighdFitToScreenAction(true)],
-            ["layout", "Layout diagram", <LayoutIcon />, new RefreshLayoutAction()],
-            ["refresh", "Refresh diagram", <RefreshIcon />, new RefreshDiagramAction()],
-            ["export", "Export as SVG", <ExportIcon />, new RequestExportSvgAction()],
-            ["create-bookmark", "Bookmark", <BookmarkIcon />, new CreateBookmarkAction()],
+            [
+                "center",
+                "Center diagram",
+                <i attrs={{ "data-feather": "maximize" }}></i>,
+                new CenterAction([], true),
+            ],
+            [
+                "fit",
+                "Fit to screen",
+                <i attrs={{ "data-feather": "maximize-2" }}></i>,
+                new KlighdFitToScreenAction(true),
+            ],
+            [
+                "layout",
+                "Layout diagram",
+                <i attrs={{ "data-feather": "layout" }}></i>,
+                new RefreshLayoutAction(),
+            ],
+            [
+                "refresh",
+                "Refresh diagram",
+                <i attrs={{ "data-feather": "refresh-cw" }}></i>,
+                new RefreshDiagramAction(),
+            ],
+            [
+                "export",
+                "Export as SVG",
+                <i attrs={{ "data-feather": "save" }}></i>,
+                new RequestExportSvgAction(),
+            ],
+            [
+                "create-bookmark",
+                "Bookmark",
+                <i attrs={{ "data-feather": "bookmark" }} />,
+                new CreateBookmarkAction()
+            ],
         ];
     }
 
@@ -142,8 +175,7 @@ export class GeneralPanel extends SidebarPanel {
         this.actionDispatcher.dispatch(action);
     }
 
-    get icon(): string {
-        // Icon-source: https://feathericons.com/?query=settings
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+    get icon(): VNode {
+        return <i attrs={{ "data-feather": "settings" }}></i>;
     }
 }

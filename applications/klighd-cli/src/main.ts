@@ -8,7 +8,11 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 import "reflect-metadata";
@@ -81,7 +85,7 @@ async function initDiagramView(sourceUri: string) {
     await requestModel(actionDispatcher, sourceUri);
 }
 
-/** Communicates preferences to the diagram container which are red from the url search params. */
+/** Communicates preferences to the diagram container which are read from the url search params. */
 function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     actionDispatcher.dispatch(
         new SetPreferencesAction({

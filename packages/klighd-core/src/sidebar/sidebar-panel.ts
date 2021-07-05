@@ -8,7 +8,11 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 import { injectable } from "inversify";
@@ -24,14 +28,15 @@ export interface ISidebarPanel {
     /** Title that should be used if this panel is shown. */
     readonly title: string;
     /**
-     * SVG icon string that is used as the icon for the corresponding panel toggle.
-     * For an icon source we recommend feather-icons (https://feathericons.com).
+     * Icon used for the corresponding panel toggle.
+     * For an icon source you should use feather-icons (https://feathericons.com).
      *
-     * _It has to be an SVG string because JSX SVGs did not work properly if they
-     * are part of a file that uses snabbdom-jsx `html` as the JSX pragma, which
-     * mostly is the case for files containing SidebarPanels._
+     * Usage example: `<i attrs={{ "data-feather": "settings" }}></i>` where
+     * settings is the name of the icon.
+     *
+     * The `<i>` tag will be replaced with the corresponding svg by feather.
      */
-    readonly icon: string;
+    readonly icon: VNode;
 
     /**
      * A sidebar panel can provide a position for its trigger in the trigger stack.
@@ -60,10 +65,10 @@ export interface ISidebarPanel {
 @injectable()
 export abstract class SidebarPanel implements ISidebarPanel {
     private _updateCallbacks: (() => void)[] = [];
-    
+
     abstract get id(): string;
     abstract get title(): string;
-    abstract get icon(): string;
+    abstract get icon(): VNode;
 
     readonly position: number = 0;
 
