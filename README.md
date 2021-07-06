@@ -47,6 +47,7 @@ placed as a jar named `language-server.jar` in the _applications/klighd-cli_ fol
 | build       | Builds all packages for production.                                                                                                        |
 | watch       | Builds all packages for development in watch mode.                                                                                         |
 | package     | Builds and packages supported packages for distribution. E.g. creates a `klighd-vscode.vsix` file and creates self-contained CLI binaries. |
+| distribute  | Builds and publishes configured application builds. (Script name "publish" is preserved for publishing packages )                          |
 
 ### Developing using the `klighd-cli`
 

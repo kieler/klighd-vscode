@@ -122,7 +122,8 @@
         "lint": "eslint .",
         "build": "webpack --mode production --devtool hidden-source-map",
         "watch": "webpack --watch",
-        "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix"
+        "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix",
+        "distribute": "vsce publish --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode"
     },
     "devDependencies": {
         "@types/vscode": "^1.56.0",
