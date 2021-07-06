@@ -8,7 +8,11 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 // Distributable CLI script that starts a standalone diagram view and provides a
 // link to view the diagram for a given file.
@@ -71,7 +75,7 @@ program
         const preferences = `${!resizeToFit ? "&resizeToFit=false" : ""}`;
 
         const fileUrl = pathToFileURL(file);
-        const server = createServer({ lsPort, lsPath });
+        const server = createServer({ logging: "warn", lsPort, lsPath });
 
         // Listen on a random, available port
         server.listen(0, (err, addr) => {

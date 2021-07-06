@@ -8,12 +8,16 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { Connection, NotificationType, ActionMessage } from "klighd-core";
+import { Connection, NotificationType, ActionMessage } from "@kieler/klighd-core";
 import { showPopup } from "../popup";
 
 type GeneralMessageParams = [string, "info" | "warn" | "error"];

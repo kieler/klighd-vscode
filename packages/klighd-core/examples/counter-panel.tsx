@@ -8,13 +8,17 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 /** @jsx html */
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
-import { SidebarPanel } from "./sidebar-panel";
+import { SidebarPanel } from "../src/sidebar/sidebar-panel";
 
 /**
  * Example for a simple reactive {@link SidebarPanel}. Fell free to use this as an
@@ -59,23 +63,7 @@ export class CounterPanel extends SidebarPanel {
         this.update();
     }
 
-    get icon(): string {
-        return `
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="feather feather-percent"
-          >
-            <line x1="19" y1="5" x2="5" y2="19"></line>
-            <circle cx="6.5" cy="6.5" r="2.5"></circle>
-            <circle cx="17.5" cy="17.5" r="2.5"></circle>
-          </svg>`;
+    get icon(): VNode {
+        return <i attrs={{ "data-feather": "percent" }}></i>;
     }
 }

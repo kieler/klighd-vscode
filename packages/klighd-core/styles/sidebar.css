@@ -8,7 +8,11 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 .sidebar {
@@ -17,11 +21,6 @@
     top: 0;
     right: 0;
     bottom: 0;
-
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
 
     /* Sidebar should consume at least ~1/3th of the screen but not forced to be wider than 400px. */
     min-width: min(400px, 35vw);
@@ -44,6 +43,18 @@
 }
 
 .sidebar__content {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+
+    width: 100%;
+    height: 100%;
+}
+
+/* Overflow container for the content provided by panels */
+.sidebar__panel-content {
     box-sizing: border-box;
     overflow-y: auto;
 
@@ -83,7 +94,8 @@
     transition: background var(--kdc-transition);
 }
 
-.sidebar__toggle-button:hover, .sidebar__toggle-button:focus-visible {
+.sidebar__toggle-button:hover,
+.sidebar__toggle-button:focus-visible {
     --background: var(--kdc-color-sidebar-trigger-background-hover);
 }
 

@@ -112,6 +112,6 @@ vscode.commands.executeCommand("klighd-vscode.addActionHandler", refId: string, 
 
 -   Currently, only at most one extension that depends on `kieler.klighd-vscode` can be activated at
     the same time. This causes problems if a workspace opens multiple files that are handled by
-    different KLighD dependent extensions.
+    different KLighD dependent extensions. This issue is tracked [here](https://github.com/kieler/klighd-vscode/issues/6).
 -   Exported SVG are currently not displayed properly. This issue is tracked
     [here](https://github.com/eclipse/sprotty/issues/149).

@@ -8,14 +8,18 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 import "reflect-metadata";
 // Load styles to make the diagram pretty
 import "sprotty-vscode-webview/css/sprotty-vscode.css";
 import "./main.css";
-import "klighd-core/styles/main.css";
+import "@kieler/klighd-core/styles/main.css";
 
 import { Container } from "inversify";
 import {
@@ -25,7 +29,7 @@ import {
     VscodeDiagramWidgetFactory,
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { createKlighdDiagramContainer, bindServices } from "klighd-core";
+import { createKlighdDiagramContainer, bindServices } from "@kieler/klighd-core";
 import { MessageConnection } from "./message-connection";
 import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
 import { KlighdDiagramWidget } from "./klighd-widget";

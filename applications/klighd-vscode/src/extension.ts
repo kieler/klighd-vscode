@@ -8,7 +8,11 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 import "reflect-metadata";
 import { nanoid } from "nanoid/non-secure";
@@ -30,14 +34,10 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.commands.registerCommand(
             command.setLanguageClient,
-            (client: LanguageClient, fileEndings: any) => {
-                // TODO: Check if client is really a LanguageClient. Instanceof checks do not work,
-                // since the LanguageClient class from the host extension is not the same as this LanguageClient class.
-                // Both classes are part of different bundles and thus module system. Therefore, they are two different
-                // classes internally.
-                if (!isFileEndingsArray(fileEndings)) {
+            (client: unknown, fileEndings: unknown) => {
+                if (!isLanguageClient(client) || !isFileEndingsArray(fileEndings)) {
                     vscode.window.showErrorMessage(
-                        "setLanguageClient must be executed with an array of supported file endings as the second argument."
+                        `${command.setLanguageClient} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
                     );
                     return;
                 }
@@ -78,7 +78,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
                 if (typeof kind !== "string" || typeof actionHandler !== "function") {
                     vscode.window.showErrorMessage(
-                        "AddActionHandler command called with invalid arguments. Please refer to the documentation for reference about the correct usage."
+                        `${command.addActionHandler} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
                     );
                 }
 
@@ -86,6 +86,31 @@ export function activate(context: vscode.ExtensionContext): void {
             }
         )
     );
+}
+
+function isLanguageClient(client: unknown): client is LanguageClient {
+    // Instanceof checks do not work, since the LanguageClient class from the
+    // host extension is not the same as this LanguageClient class.
+    // Both classes are part of different bundles and thus module system.
+    // Therefore, they are two different classes internally.
+
+    // To work around this, we ensure that it is an object and check the object
+    // for the existence of a few methods.
+
+    const wantedMethod = [
+        "onReady",
+        "sendNotification",
+        "onNotification",
+        "sendRequest",
+        "onRequest",
+    ];
+
+    const isObject = typeof client === "object" && client !== null;
+    const hasWantedMethods = wantedMethod.every(
+        (method) => typeof (client as Record<string, any>)[method] === "function"
+    );
+
+    return isObject && hasWantedMethods;
 }
 
 function isFileEndingsArray(array: unknown): array is string[] {

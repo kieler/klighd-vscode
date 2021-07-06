@@ -8,13 +8,17 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
-import { KGraphData } from 'klighd-interactive/lib/constraint-classes';
-import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/klighd-interactive-mouselistener';
+import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
+import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -186,8 +190,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             } else {
                 // Fallthrough to KEllipse case.
             }
-            break
         }
+        // eslint-disable-next-line
         case K_ELLIPSE: {
             element = <g id={rendering.renderingId} {...gAttrs}>
                 <ellipse

@@ -8,19 +8,23 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 import "reflect-metadata";
 import "./styles/main.css";
-import "klighd-core/styles/main.css";
+import "@kieler/klighd-core/styles/main.css";
 import {
     createKlighdDiagramContainer,
     requestModel,
     getActionDispatcher,
     SetPreferencesAction,
     bindServices,
-} from "klighd-core";
+} from "@kieler/klighd-core";
 import { LSPConnection } from "./services/connection";
 import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
@@ -74,14 +78,17 @@ async function initDiagramView(sourceUri: string) {
     await connection.connect(socketUrl);
     await connection.sendInitialize();
     connection.sendDocumentDidOpen(sourceUri, languageId);
-    // TODO: If this does not sleep, the LS send two requestTextBounds and updateOptions actions.
-    // Properly because the document changes from the open notification. However, there is no way to await
-    // notification in the vscode-languageclient api.
+    // If this does not sleep for bit, the LS send two requestTextBounds and updateOptions actions.
+    // Properly because the document changes, when the server still reads the document from "openDocument".
+    // There is no way to await a sent notification in the vscode-languageclient api, so we can not wait until
+    // the document is opened.
+    // This tries to find a sweet-spot between not sacrificing user experience and
+    // giving the server an opportunity to fully read the file before a model is requested.
     await sleep(500);
     await requestModel(actionDispatcher, sourceUri);
 }
 
-/** Communicates preferences to the diagram container which are red from the url search params. */
+/** Communicates preferences to the diagram container which are read from the url search params. */
 function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     actionDispatcher.dispatch(
         new SetPreferencesAction({

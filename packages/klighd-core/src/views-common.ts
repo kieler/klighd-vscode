@@ -8,7 +8,11 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
 import { Bounds, Point, toDegrees } from 'sprotty/lib';
@@ -145,7 +149,8 @@ export function textDecorationStyleText(underline: KTextUnderline): 'solid' | 'd
     }
 }
 
-export function textDecorationColor(): string | undefined {
+// eslint-disable-next-line
+export function textDecorationColor(underline: KTextUnderline): string | undefined {
     return undefined // TODO:
 }
 

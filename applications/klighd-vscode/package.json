@@ -135,7 +135,7 @@
         "webpack": "^4.44.1"
     },
     "dependencies": {
-        "klighd-core": "0.1.0",
+        "@kieler/klighd-core": "0.1.0",
         "inversify": "5.0.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",

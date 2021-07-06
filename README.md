@@ -11,12 +11,12 @@ related, web-based packages. The packages are seperated in two types:
 -   Packages that produce **usable applications** are placed in the `applications` folder.
 -   Packages that serve as **library code** are placed in the `packages` folder.
 
-| Package name                                        | Type        | Description                                                                                                                                                              |
-| :-------------------------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [klighd-core](./packages/klighd-core)               | library     | Core package to visualize KLighD generated diagrams. Based on [Sprotty](https://github.com/eclipse/sprotty).                                                             |
-| [klighd-interactive](./packages/klighd-interactive) | library     | Support module for `klighd-core` to interactively apply constraints to the diagram.                                                                                      |
-| [klighd-cli](./applications/klighd-cli)             | application | CLI and web-server to visualize diagrams in the browser using klighd-core`.                                                                                              |
-| [klighd-vscode](./applications/klighd-vscode)       | application | Visual Studio Code extension that uses `klighd-core` to add diagram support to VS Code. Should be used by other extensions to visualize their KLighD generated diagrams. |
+| Package name                                                | Type        | Description                                                                                                                                                              |
+| :---------------------------------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [@kieler/klighd-core](./packages/klighd-core)               | library     | Core package to visualize KLighD generated diagrams. Based on [Sprotty](https://github.com/eclipse/sprotty).                                                             |
+| [@kieler/klighd-interactive](./packages/klighd-interactive) | library     | Support module for `klighd-core` to interactively apply constraints to the diagram.                                                                                      |
+| [@kieler/klighd-cli](./applications/klighd-cli)             | application | CLI and web-server to visualize diagrams in the browser using klighd-core`.                                                                                              |
+| [klighd-vscode](./applications/klighd-vscode)               | application | Visual Studio Code extension that uses `klighd-core` to add diagram support to VS Code. Should be used by other extensions to visualize their KLighD generated diagrams. |
 
 ## Contributing
 
@@ -27,7 +27,9 @@ Development of this project requires [Node.js _v14.x_](https://nodejs.org) and
 
 Developing the `klighd-vscode` extension requires an extension that has a dependency on
 `klighd-vscode` and provides a language client with KLighD synthesis capabilities. A good candidate
-for development is the `kieler.keith-vscode` extension.
+for development is the `kieler.keith-vscode`
+([under development](https://git.rtsys.informatik.uni-kiel.de/projects/KIELER/repos/keith/browse?at=cfr/monorepo-restructure))
+extension.
 
 Furthermore, development of the `klighd-cli` requires a language server with KLighD synthesis
 capabilities. The server can either be started separately, using a socket for communication, or
@@ -78,7 +80,8 @@ following steps have are required to start developing.
 1. Install all
    [workspace recommended extensions](https://code.visualstudio.com/docs/editor/extension-marketplace#_recommended-extensions).
 1. Run `yarn` in the monorepo root to install all dependencies (if not already done).
-1. Run the "Launch VS Code Extension" launch configuration. This also runs a task to watch all packages.
+1. Run the "Launch VS Code Extension" launch configuration. This also runs a task to watch all
+   packages.
 1. A VS Code instance with the `klighd-vscode` extension should be started.
 1. After changes to your files, run the "Reload Window" command in your dev VS Code instance.
 

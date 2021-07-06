@@ -8,10 +8,14 @@
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
  *
- * This code is provided under the terms of the Eclipse Public License (EPL).
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
  */
 
-import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
+import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import {
     DeleteLayerConstraintAction,
     DeletePositionConstraintAction,
@@ -19,12 +23,12 @@ import {
     SetLayerConstraintAction,
     SetPositionConstraintAction,
     SetStaticConstraintAction,
-} from "klighd-interactive/lib/layered/actions";
+} from "@kieler/klighd-interactive/lib/layered/actions";
 import {
     RectPackDeletePositionConstraintAction,
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
-} from "klighd-interactive/lib/rect-packing/actions";
+} from "@kieler/klighd-interactive/lib/rect-packing/actions";
 import { inject, injectable } from "inversify";
 import {
     Action,
