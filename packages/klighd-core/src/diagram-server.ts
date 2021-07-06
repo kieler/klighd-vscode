@@ -40,6 +40,7 @@ import {
     findElement,
     ICommand,
     RequestPopupModelAction,
+    SelectAction,
     SetModelCommand,
     SetPopupModelAction,
     SwitchEditModeAction,
@@ -148,6 +149,7 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(SetSynthesisAction.KIND, this);
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
+        registry.register(SelectAction.KIND, this);
     }
 
     handle(action: Action): void | ICommand | Action {
