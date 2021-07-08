@@ -32,6 +32,16 @@
             "program": "${workspaceFolder}/applications/klighd-cli/lib/main.js",
             "args": ["--ls_port=5007"],
             "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
+            "name": "Launch in Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:8000",
+            "webRoot": "${workspaceFolder}",
+            "sourceMapPathOverrides": {
+                "webpack:///../*": "${webRoot}/*"
+            }
         }
     ]
 }
