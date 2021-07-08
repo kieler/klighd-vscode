@@ -638,49 +638,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             elements.push(currentElement)
             currentY = calculatedTextLineHeights ? currentY + calculatedTextLineHeights[index] : currentY
         });
-    }
 
-    // If there is a super state use the name as a title.
-    // If there is one macro state in a child area, change the area title to the name of the macro state.
-    // If there are multiple macro states set the flag.
-    if (rendering.isNodeTitle && context.depthMap && !context.depthMap.titleMap.has(rendering)) {
-        context.depthMap.titleMap.add(rendering)
-        const region = context.depthMap.findRegionWithElement(parent as KNode)
-        if (region) {
-            // Handle super states
-            // If there is just one child region apply super state title.
-            if (region.children.length == 1) {
-                region.children.forEach(childRegion => {
-                    if (!childRegion.superStateTitle) {
-                        childRegion.superStateTitle = rendering
-                    }
-                });
-                // Otherwise find correct region via id.
-            } else {
-                region.children.forEach(childRegion => {
-                    let position = -1
-                    const curPos = childRegion.boundingRectangle.id.indexOf(rendering.text)
-                    if (curPos > position) {
-                        position = curPos
-                        childRegion.superStateTitle = rendering
-                    }
-                });
-            }
-            // Handle macro states
-            if (region.hasMacroState && region.macroStateTitle !== rendering) {
-                region.hasMultipleMacroStates = true
-                // Needed if macro states are searched more than once.
-                // Check for title in child regions as macro state titles get lifted one node.
-                region.children.forEach((child) => {
-                    if (region && child.macroStateTitle && region.macroStateTitle && child.macroStateTitle === rendering) {
-                        region.hasMultipleMacroStates = false
-                    }
-                });
-            } else if (!region.hasMacroState) {
-                region.macroStateTitle = rendering
-                region.hasMacroState = true
-            }
-        }
     }
 
     const gAttrs = {
