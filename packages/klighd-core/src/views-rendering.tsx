@@ -572,8 +572,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         }
 
         if (context.depthMap) {
-            if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height
-                && (rendering.isNodeTitle || (text !== '-' && text !== '+'))) {
+            if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && rendering.isNodeTitle) {
+
                 // Check whether or not the parent node is a child area.
                 // If the parent is a child area, the text is a title of the region.
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
