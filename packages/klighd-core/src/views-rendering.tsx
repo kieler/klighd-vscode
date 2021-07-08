@@ -260,29 +260,37 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     if (element && context.depthMap) {
         const region = context.depthMap.getRegion((parent as KNode).id)
-        if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails && !region.hasTitle) {
+        let offset = 0
+        if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
+            if (region.regionTitleHeight) {
+                offset = region.regionTitleHeight
             // Render indirect region titles.
-            if (region.superStateTitle) {
+            } else if (region.superStateTitle) {
+                if (region.superStateTitle.calculatedBounds) {
+                    offset = region.superStateTitle.calculatedBounds.height
+                }
                 const titleSVG = renderKText(region.superStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
                 element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
             } else if (region.macroStateTitle && !region.hasMultipleMacroStates) {
+                if (region.macroStateTitle.calculatedBounds) {
+                    offset = region.macroStateTitle.calculatedBounds.height
+                }
                 const titleSVG = renderKText(region.macroStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
                 element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
-                // If there is no title draw placeholder.
             }
+        }
+        if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
+            const bounds = region.boundingRectangle.bounds
+            const minBounds = bounds.height > bounds.width ? bounds.width : bounds.height
             const size = 50
-            const scaleX = region.boundingRectangle.bounds.width / size
-            const scaleY = region.boundingRectangle.bounds.height / size
-            let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+            let scalingFactor = minBounds / (size + offset) 
             // Use zoom for constant size in viewport.
             if (context.viewport) {
-                scalingFactor = scalingFactor > 1 / context.viewport.zoom ? 1 / context.viewport.zoom : scalingFactor
+                scalingFactor = scalingFactor * size + offset > minBounds ?  (minBounds - offset) / size  : scalingFactor
             }
-            const placeholder = <g
-                id="ZoomPlaceholder"
-                height={size}
-                width={size} >
-                <g transform={`scale(${scalingFactor},${scalingFactor})`}>
+            const placeholder = <g id="ZoomPlaceholder" 
+                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${offset / scalingFactor})`}>
+                <g height={size} width={size}>
                     <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
                     <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
                     <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
@@ -602,6 +610,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
                         // Remove spacing to the left for region titles.
                         boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
+                        // Calculate exact height of title text
+                        region.regionTitleHeight = scalingFactor * (boundsAndTransformation.bounds.height)
                     }
                 }
             }

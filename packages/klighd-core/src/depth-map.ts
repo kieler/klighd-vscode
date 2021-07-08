@@ -465,6 +465,8 @@ export class Region {
     hasMacroState: boolean
     /** Determines if there are more than one macro state in the region. */
     hasMultipleMacroStates: boolean
+    /** Contains the height of the title of the region, if there is one. */
+    regionTitleHeight?: number
 
     /** Constructor initializes element array for region. */
     constructor(boundingRectangle: KNode) {
