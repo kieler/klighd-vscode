@@ -264,7 +264,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
             if (region.regionTitleHeight) {
                 offset = region.regionTitleHeight
-            // Render indirect region titles.
+                // Render indirect region titles.
             } else if (region.superStateTitle) {
                 if (region.superStateTitle.calculatedBounds) {
                     offset = region.superStateTitle.calculatedBounds.height
@@ -283,12 +283,12 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             const bounds = region.boundingRectangle.bounds
             const minBounds = bounds.height > bounds.width ? bounds.width : bounds.height
             const size = 50
-            let scalingFactor = minBounds / (size + offset) 
+            let scalingFactor = minBounds / (size + offset)
             // Use zoom for constant size in viewport.
             if (context.viewport) {
-                scalingFactor = scalingFactor * size + offset > minBounds ?  (minBounds - offset) / size  : scalingFactor
+                scalingFactor = scalingFactor * size + offset > minBounds ? (minBounds - offset) / size : scalingFactor
             }
-            const placeholder = <g id="ZoomPlaceholder" 
+            const placeholder = <g id="ZoomPlaceholder"
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${offset / scalingFactor})`}>
                 <g height={size} width={size}>
                     <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />

@@ -94,8 +94,8 @@ export class KlighdDiagramServer extends DiagramServer {
         const wasDiagramModelUpdated =
             message.action.kind === SetModelCommand.KIND ||
             message.action.kind === KlighdUpdateModelAction.KIND;
-        if (wasDiagramModelUpdated){
-            this.actionDispatcher.dispatch(new UpdateDepthmapModelAction((message.action as any).newRoot)); 
+        if (wasDiagramModelUpdated) {
+            this.actionDispatcher.dispatch(new UpdateDepthmapModelAction((message.action as any).newRoot));
             if (this.preferencesRegistry.preferences.resizeToFit) {
                 this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
             }

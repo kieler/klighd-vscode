@@ -442,9 +442,9 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
             result='offsetblur'
         />
         <feFlood
-            // TODO: these colors
-            // flood-color = 'flood-color-of-feDropShadow'
-            // flood-opacity = 'flood-opacity-of-feDropShadow'
+        // TODO: these colors
+        // flood-color = 'flood-color-of-feDropShadow'
+        // flood-opacity = 'flood-opacity-of-feDropShadow'
         />
         <feComposite
             in2='offsetblur'
@@ -526,7 +526,7 @@ export function getSvgShadowStyles(styles: KStyles, context: SKGraphModelRendere
 export function getSvgColorStyles(styles: KStyles, context: SKGraphModelRenderer, parent: SKGraphElement | SKEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
-    const grayedOutColor = {color: 'grey', opacity: '255'}
+    const grayedOutColor = { color: 'grey', opacity: '255' }
 
     if (parent instanceof SKEdge && parent.moved) {
         // edge should be greyed out
@@ -541,7 +541,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphModelRenderer
         // colors of the shadow node
         return {
             foreground: grayedOutColor,
-            background: background === undefined ? DEFAULT_FILL : {color: 'gainsboro', opacity: '255'},
+            background: background === undefined ? DEFAULT_FILL : { color: 'gainsboro', opacity: '255' },
             opacity: parent.opacity
         }
     }
@@ -640,7 +640,7 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         const lineWidthOption = context.renderingOptions.getValueForId(ConstantLineWidth.ID)
         const scaling = lineWidthOption ?? 1
         lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH * scaling / getZoom(target)
-                                                    : styles.kLineWidth.lineWidth * scaling / getZoom(target)
+            : styles.kLineWidth.lineWidth * scaling / getZoom(target)
         if (styles.kLineWidth.lineWidth == 0) {
             lineWidth = 0
         } else if (lineWidth < DEFAULT_LINE_WIDTH) {

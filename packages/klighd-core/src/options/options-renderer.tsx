@@ -72,7 +72,7 @@ export class OptionsRenderer {
                     <div classNames="options__section">
                         <h5 classNames="options__heading">Actions</h5>
                         <div classNames="options__button-group">
-                        {this.renderActions(options.actions)}
+                            {this.renderActions(options.actions)}
                         </div>
                     </div>
                 )}
