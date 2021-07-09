@@ -265,18 +265,6 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             if (region.regionTitleHeight) {
                 offset = region.regionTitleHeight
                 // Render indirect region titles.
-            } else if (region.superStateTitle) {
-                if (region.superStateTitle.calculatedBounds) {
-                    offset = region.superStateTitle.calculatedBounds.height
-                }
-                const titleSVG = renderKText(region.superStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
-                element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
-            } else if (region.macroStateTitle && !region.hasMultipleMacroStates) {
-                if (region.macroStateTitle.calculatedBounds) {
-                    offset = region.macroStateTitle.calculatedBounds.height
-                }
-                const titleSVG = renderKText(region.macroStateTitle, region.boundingRectangle, propagatedStyles, context, mListener)
-                element.children ? element.children.push(titleSVG) : element.children = [titleSVG]
             }
         }
         if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
@@ -587,11 +575,6 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
                 const region = context.depthMap.getRegion((parent as KNode).id)
                 if (region) {
-                    // To avoid drawing a placeholder, when there is a region title.
-                    // Avoid setting when called with macro or super state title.
-                    if (!context.depthMap.titleMap.has(rendering)) {
-                        region.hasTitle = true
-                    }
                     if (region.detailReference.detailLevel !== DetailLevel.FullDetails) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)

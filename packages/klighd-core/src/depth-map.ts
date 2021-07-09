@@ -455,16 +455,6 @@ export class Region {
     parent?: Region
     /** All immediate child regions of this region */
     children: Region[]
-    /** Determines if the region has a title by default. */
-    hasTitle: boolean
-    /** Contains a macro state title, if there is at least one in the region. */
-    macroStateTitle?: KText
-    /** Contains a super state title, if there is one. */
-    superStateTitle?: KText
-    /** Determines if there is at least one macro state in the region. */
-    hasMacroState: boolean
-    /** Determines if there are more than one macro state in the region. */
-    hasMultipleMacroStates: boolean
     /** Contains the height of the title of the region, if there is one. */
     regionTitleHeight?: number
 
@@ -473,7 +463,6 @@ export class Region {
         this.boundingRectangle = boundingRectangle
         this.elements = []
         this.children = []
-        this.hasTitle = false
         this.detailReference = { detailLevel: DetailLevel.FullDetails }
     }
 
