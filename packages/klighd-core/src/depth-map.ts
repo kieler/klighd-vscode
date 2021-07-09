@@ -18,7 +18,7 @@
 import { KNode, DetailLevel, DetailReference } from "klighd-interactive/lib/constraint-classes";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
-import { KContainerRendering, KText, K_RECTANGLE } from "./skgraph-models";
+import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
 
 
 /**
@@ -77,11 +77,6 @@ export class DepthMap {
      */
     criticalRegions: Set<Region>;
 
-    /**
-     *  Lookup set for quickly checking macro and super state titles. 
-     */
-    titleMap: Set<KText>
-
     /** Singleton pattern */
     private static instance?: DepthMap;
 
@@ -92,7 +87,6 @@ export class DepthMap {
         this.rootElement = rootElement
         this.rootRegions = []
         this.regionMap = new Map()
-        this.titleMap = new Set()
         this.criticalRegions = new Set()
     }
 
@@ -100,7 +94,6 @@ export class DepthMap {
         this.rootElement = model_root
         // rootRegions are reset below as we also want to remove the edges from the graph spaned by the regions
         this.regionMap.clear()
-        this.titleMap.clear()
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
