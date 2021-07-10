@@ -14,7 +14,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { KlighdFitToScreenAction, RefreshDiagramAction, RefreshLayoutAction } from "klighd-core";
+import { KlighdFitToScreenAction, RefreshDiagramAction, RefreshLayoutAction } from "@kieler/klighd-core";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { Action, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";

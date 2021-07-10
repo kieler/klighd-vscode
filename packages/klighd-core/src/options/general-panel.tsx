@@ -16,7 +16,7 @@
  */
 
 /** @jsx html */
-import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
+import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
 import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from "snabbdom/vnode";
@@ -153,6 +153,18 @@ export class GeneralPanel extends SidebarPanel {
                         name="Use Light Background"
                         value={this.preferencesRegistry.preferences.forceLightBackground}
                         onChange={this.handlePreferenceChange.bind(this, "forceLightBackground")}
+                    />
+                    <CheckOption
+                        id="shouldSelectDiagram"
+                        name="Text Selects Diagram"
+                        value={this.preferencesRegistry.preferences.shouldSelectDiagram}
+                        onChange={this.handlePreferenceChange.bind(this, "shouldSelectDiagram")}
+                    />
+                    <CheckOption
+                        id="shouldSelectText"
+                        name="Diagram Selects Text"
+                        value={this.preferencesRegistry.preferences.shouldSelectText}
+                        onChange={this.handlePreferenceChange.bind(this, "shouldSelectText")}
                     />
                 </div>
             </div>

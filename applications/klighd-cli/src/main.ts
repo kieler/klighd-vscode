@@ -17,14 +17,14 @@
 
 import "reflect-metadata";
 import "./styles/main.css";
-import "klighd-core/styles/main.css";
+import "@kieler/klighd-core/styles/main.css";
 import {
     createKlighdDiagramContainer,
     requestModel,
     getActionDispatcher,
     SetPreferencesAction,
     bindServices,
-} from "klighd-core";
+} from "@kieler/klighd-core";
 import { LSPConnection } from "./services/connection";
 import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";

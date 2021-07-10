@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
+import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import {
     DeleteLayerConstraintAction,
     DeletePositionConstraintAction,
@@ -23,12 +23,12 @@ import {
     SetLayerConstraintAction,
     SetPositionConstraintAction,
     SetStaticConstraintAction,
-} from "klighd-interactive/lib/layered/actions";
+} from "@kieler/klighd-interactive/lib/layered/actions";
 import {
     RectPackDeletePositionConstraintAction,
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
-} from "klighd-interactive/lib/rect-packing/actions";
+} from "@kieler/klighd-interactive/lib/rect-packing/actions";
 import { inject, injectable } from "inversify";
 import {
     Action,
@@ -40,6 +40,7 @@ import {
     findElement,
     ICommand,
     RequestPopupModelAction,
+    SelectAction,
     SetModelCommand,
     SetPopupModelAction,
     SwitchEditModeAction,
@@ -151,6 +152,7 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(SetSynthesisAction.KIND, this);
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
+        registry.register(SelectAction.KIND, this);
     }
 
     handle(action: Action): void | ICommand | Action {

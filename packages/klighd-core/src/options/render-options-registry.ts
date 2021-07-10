@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { RefreshDiagramAction } from "klighd-interactive/lib/actions";
+import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { injectable } from "inversify";
 import { Action, ICommand } from "sprotty";
 import { Registry } from "../base/registry";

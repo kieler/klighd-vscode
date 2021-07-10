@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KNode, DetailLevel, DetailReference } from "klighd-interactive/lib/constraint-classes";
+import { KNode, DetailLevel, DetailReference } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
 import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";

@@ -19,7 +19,7 @@ import "reflect-metadata";
 // Load styles to make the diagram pretty
 import "sprotty-vscode-webview/css/sprotty-vscode.css";
 import "./main.css";
-import "klighd-core/styles/main.css";
+import "@kieler/klighd-core/styles/main.css";
 
 import { Container } from "inversify";
 import {
@@ -29,7 +29,7 @@ import {
     VscodeDiagramWidgetFactory,
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { createKlighdDiagramContainer, bindServices } from "klighd-core";
+import { createKlighdDiagramContainer, bindServices } from "@kieler/klighd-core";
 import { MessageConnection } from "./message-connection";
 import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
 import { KlighdDiagramWidget } from "./klighd-widget";

@@ -18,9 +18,9 @@
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
 
-import { isChildSelected } from 'klighd-interactive/lib/helper-methods';
-import { renderConstraints, renderInteractiveLayout } from 'klighd-interactive/lib/interactive-view';
-import { KlighdInteractiveMouseListener } from 'klighd-interactive/lib/klighd-interactive-mouselistener';
+import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods';
+import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view';
+import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';

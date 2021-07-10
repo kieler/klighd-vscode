@@ -50,7 +50,7 @@ import {
     getActionDispatcher,
     SetPreferencesAction,
     bindServices,
-} from "klighd-core";
+} from "@kieler/klighd-core";
 // Your implementation of the `Connection` interface.
 import { ConnectionImpl } from "./services/connection";
 

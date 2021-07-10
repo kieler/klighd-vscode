@@ -17,7 +17,7 @@
 
 import * as rpc from "vscode-ws-jsonrpc";
 import * as lsp from "vscode-languageserver-protocol";
-import { Connection, NotificationType, ActionMessage } from "klighd-core";
+import { Connection, NotificationType, ActionMessage } from "@kieler/klighd-core";
 import { showPopup } from "../popup";
 
 type GeneralMessageParams = [string, "info" | "warn" | "error"];
@@ -39,6 +39,9 @@ export class LSPConnection implements Connection {
     private socket?: WebSocket;
     private connection?: rpc.MessageConnection;
     private messageHandlers: ((message: ActionMessage) => void)[] = [];
+    /** Listeners that will be informed, once a connection is initialized */
+    private _onInitializedListeners: (() => void)[] = [];
+    private isInitialized = false;
 
     sendMessage(message: ActionMessage): void {
         this.connection?.sendNotification(acceptMessageType, message);
@@ -52,10 +55,29 @@ export class LSPConnection implements Connection {
         this.messageHandlers.push(handler);
     }
 
+    onReady(): Promise<void> {
+        return new Promise((resolve) => {
+            // Resolve directly if a connection is already initialized
+            if (this.isInitialized) {
+                resolve();
+                return;
+            }
+
+            // ...else add this Promise to the waiting list
+            this._onInitializedListeners.push(resolve);
+        });
+    }
+
     private notifyHandlers(message: ActionMessage) {
         for (const handler of this.messageHandlers) {
             handler(message);
         }
+    }
+
+    /** Notify listeners that are waiting for an initialized connection */
+    private notifyInitializedListeners() {
+        this._onInitializedListeners.forEach((cb) => cb());
+        this._onInitializedListeners = [];
     }
 
     /** Connect to a given websocket url using `vscode-ws-jsonrpc`. */
@@ -66,7 +88,7 @@ export class LSPConnection implements Connection {
         return new Promise((resolve) => {
             const socket = new WebSocket(websocketUrl);
             this.socket = socket;
-            console.log("Connecting to language server.");
+            console.time("lsp-connect");
 
             rpc.listen({
                 webSocket: socket,
@@ -74,7 +96,7 @@ export class LSPConnection implements Connection {
                 onConnection: (conn) => {
                     conn.listen();
 
-                    console.log("Connected to language server.");
+                    console.timeEnd("lsp-connect");
                     this.connection = conn;
 
                     this.setupErrorHandlers(conn);
@@ -149,12 +171,13 @@ export class LSPConnection implements Connection {
             capabilities: {},
         };
 
-        console.log("initialize LSP.");
         console.time("lsp-init");
         await this.connection.sendRequest(method, initParams);
         this.connection.sendNotification(lsp.InitializedNotification.type.method);
         console.timeEnd("lsp-init");
-        console.log("initialized LSP.");
+
+        this.isInitialized = true;
+        this.notifyInitializedListeners();
     }
 
     /**

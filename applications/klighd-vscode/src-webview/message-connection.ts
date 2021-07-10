@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Connection, NotificationType } from "klighd-core";
+import { Connection, NotificationType } from "@kieler/klighd-core";
 import { inject, injectable } from "inversify";
 import { ActionMessage, isActionMessage, ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
@@ -43,6 +43,13 @@ export class MessageConnection implements Connection {
                 this.notifyHandlers(msg.data);
             }
         });
+    }
+
+    onReady(): Promise<void> {
+        // A message connection is created in a webview. When a webview is created,
+        // it is able to send messages to the extension, and the extension should
+        // already have a initialized language client. So onReady is able to always resolve directly.
+        return new Promise((resolve) => resolve());
     }
 
     private notifyHandlers(message: ActionMessage) {

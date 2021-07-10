@@ -96,12 +96,21 @@
                 "title": "KLighD Diagram",
                 "properties": {
                     "klighd-vscode.initialResizeToFit": {
-                        "description": "Initial value for new web-views about resizing the diagram to fit the viewport when it is redrawn.",
+                        "description": "Initial value for new diagram views about resizing the diagram to fit the viewport when it is redrawn.",
                         "type": "boolean",
                         "default": "true"
                     },
                     "klighd-vscode.useLightBackground": {
-                        "description": "Use a light color as the initial webview background color. By default, the webview uses the current theme for the background color. However, this can make some diagrams hard to read.",
+                        "description": "Use a light color as the initial diagram view background color. By default, the diagram view uses the current theme for the background color. However, this can make some diagrams hard to read.",
+                        "type": "boolean"
+                    },
+                    "klighd-vscode.initialShouldSelectDiagram": {
+                        "description": "Initial value for new diagram views determining if selecting a text segment should select the corresponding element in the displayed diagram.",
+                        "type": "boolean",
+                        "default": "true"
+                    },
+                    "klighd-vscode.initialShouldSelectText": {
+                        "description": "Initial value for new diagram views determining if selecting an element in the displayed diagram should also select the corresponding text segment. Warning: this option currently increases all diagram generation times by up to 50%.",
                         "type": "boolean"
                     }
                 }
@@ -113,7 +122,8 @@
         "lint": "eslint .",
         "build": "webpack --mode production --devtool hidden-source-map",
         "watch": "webpack --watch",
-        "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix"
+        "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix",
+        "distribute": "vsce publish --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode"
     },
     "devDependencies": {
         "@types/vscode": "^1.56.0",
@@ -126,7 +136,7 @@
         "webpack": "^4.44.1"
     },
     "dependencies": {
-        "klighd-core": "0.1.0",
+        "@kieler/klighd-core": "0.1.0",
         "inversify": "5.0.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",

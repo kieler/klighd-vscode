@@ -27,5 +27,5 @@ export * from "./options/actions";
 export { ToggleSidebarPanelAction } from "./sidebar/actions";
 export { SetSynthesesAction, SetSynthesisAction } from "./syntheses/actions";
 export { SetPreferencesAction } from "./preferences-registry";
-export { RefreshDiagramAction } from "klighd-interactive/lib/actions";
+export { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 export { ActionMessage } from "sprotty";
