@@ -269,13 +269,15 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         }
         if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
             const bounds = region.boundingRectangle.bounds
-            const minBounds = bounds.height > bounds.width ? bounds.width : bounds.height
+            const minBounds = Math.min(bounds.height, bounds.width)
             const size = 50
-            let scalingFactor = minBounds / (size + offset)
+            let scalingFactor = (minBounds - offset) / size 
             // Use zoom for constant size in viewport.
             if (context.viewport) {
-                scalingFactor = scalingFactor * size + offset > minBounds ? (minBounds - offset) / size : scalingFactor
+                scalingFactor =  Math.min(1 / context.viewport.zoom, scalingFactor)
             }
+            //scalingFactor = Math.min(2, scalingFactor)
+
             const placeholder = <g id="ZoomPlaceholder"
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${offset / scalingFactor})`}>
                 <g height={size} width={size}>
