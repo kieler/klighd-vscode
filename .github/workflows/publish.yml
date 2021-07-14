@@ -21,6 +21,7 @@ jobs:
             - run: yarn distribute
               env:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
+                  OVSX_PAT: ${{ secrets.OVSX_PAT }}
     release-assets:
         name: "Add assets to release"
         runs-on: ubuntu-latest
