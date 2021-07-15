@@ -137,10 +137,26 @@ export class DepthMap {
             for (const root_child of rootElement.children) {
                 const node = root_child as KNode
                 DepthMap.instance.initKNode(node)
-                DepthMap.instance.initHelper(node, node.providingRegion as Region, node.bounds.x, node.bounds.y)
+                DepthMap.instance.initHelper(node)
             }
 
         }
+    }
+
+    /** 
+     * Recursively finds all regions in model and initializes them.
+     * 
+     * @param node The current KNode checked.
+     * @param region The current region being constructed.
+     */
+    protected initHelper(node: KNode): void {
+        // Go through child nodes until there are no child nodes left.
+        for (const child of node.children) {
+            const childNode = child as KNode
+            this.initKNode(childNode)
+            this.initHelper(childNode)
+        }
+
     }
 
     /**
@@ -164,6 +180,7 @@ export class DepthMap {
             if (node.data.length > 0 && node.data[0].type == K_RECTANGLE && (node.data[0] as KContainerRendering).children[0]) {
                 const providedRegion = new Region(node);
 
+                // node should always have a containingRegion as we are not a direct SModelRoot child                
                 providedRegion.parent = node.containingRegion ?? undefined;
                 node.containingRegion?.children.push(providedRegion);
 
@@ -191,22 +208,6 @@ export class DepthMap {
             }
 
         }
-    }
-
-    /** 
-     * Recursively finds all regions in model and initializes them.
-     * 
-     * @param node The current KNode checked.
-     * @param region The current region being constructed.
-     */
-    protected initHelper(node: KNode, region: Region, offsetX: number, offsetY: number): void {
-        // Go through child nodes until there are no child nodes left.
-        for (const child of node.children) {
-            const childNode = child as KNode
-            this.initKNode(childNode)
-            this.initHelper(childNode, childNode.providingRegion ?? childNode.containingRegion as Region, offsetX + (child as KNode).bounds.x, offsetY + (child as KNode).bounds.y)
-        }
-
     }
 
     /** 
