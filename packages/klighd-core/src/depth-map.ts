@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KNode, DetailLevel, DetailReference } from "@kieler/klighd-interactive/lib/constraint-classes";
-import { Bounds, SModelRoot, Viewport } from "sprotty";
+import { KNode, DetailLevel, Region } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
 import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
 
@@ -166,7 +166,7 @@ export class DepthMap {
             // Add the current node as element of region.
             region.elements.push(child as KNode);
 
-            (child as KNode).detailReference = region.detailReference
+            (child as KNode).containingRegion = region
 
             // When the bounding rectangle of a new child area is reached, a new region is created.
             if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
@@ -200,36 +200,6 @@ export class DepthMap {
      */
     protected addRegionToMap(region: Region): void {
         this.regionMap.set(region.boundingRectangle.id, region)
-    }
-
-    /** 
-     * Find the region that contains the node,
-     *  this should be the first ancestor that is a region.
-     *  Only the root nodes should not have an ancesstor that is a region 
-     *  and therefore result in undefined.
-     * @param node The KNode to search for. 
-     */
-    findRegionWithElement(node: KNode): Region | undefined {
-        let current = node.parent as KNode;
-        while (current) {
-
-            const region = this.getRegion(current.id);
-
-            if (region) {
-                return region
-            }
-
-            current = current.parent as KNode
-        }
-        return undefined
-    }
-
-    /** 
-     * Finds region with corresponding rectangle id of a child area.
-     * @param id ID of the rectangle the child area is in. 
-     */
-    getRegion(id: string): Region | undefined {
-        return this.regionMap.get(id)
     }
 
     /** 
@@ -300,7 +270,7 @@ export class DepthMap {
         this.criticalRegions.delete(region)
         region.children.forEach(childRegion => {
             // bail early when child is less or equally detailed already
-            if (vis < childRegion.detailReference.detailLevel) {
+            if (vis < childRegion.detail) {
                 this.recursiveSetOOB(childRegion, vis)
             }
         })
@@ -327,7 +297,7 @@ export class DepthMap {
             toBeProcessed.forEach(region => {
                 const vis = this.computeDetailLevel(region, viewport, threshold);
 
-                if (region.parent && vis !== region.parent.detailReference.detailLevel) {
+                if (region.parent && vis !== region.parent.detail) {
                     if (region.parent) {
                         nextToBeProcessed.add(region.parent)
                         this.criticalRegions.add(region.parent)
@@ -353,7 +323,7 @@ export class DepthMap {
         // Check all collected child regions of detail level.
         childSet.forEach(childRegion => {
             const vis = this.computeDetailLevel(childRegion, viewport, threshold);
-            if (childRegion.parent && childRegion.parent.detailReference.detailLevel !== vis) {
+            if (childRegion.parent && childRegion.parent.detail !== vis) {
                 this.criticalRegions.add(childRegion.parent)
             }
 
@@ -428,42 +398,3 @@ export class DepthMap {
     }
 }
 
-
-
-/**
- * Combines KNodes into regions. These correspond to child areas. A region can correspond to 
- * a region or a super state in the model. Also manages the boundaries, title candidates, 
- * tree structure of the model and application of detail level of its KNodes.
- */
-export class Region {
-    /** All KNodes specifically in the region. */
-    elements: KNode[]
-    /** The rectangle of the child area in which the region lies. */
-    boundingRectangle: KNode
-    /** Gained using browser position and rescaling and are therefore not perfect. */
-    absoluteBounds: Bounds
-    /** the refernce to the regions current detail level that is shared with all children */
-    detailReference: DetailReference
-    /** The immediate parent region of this region. */
-    parent?: Region
-    /** All immediate child regions of this region */
-    children: Region[]
-    /** Contains the height of the title of the region, if there is one. */
-    regionTitleHeight?: number
-
-    /** Constructor initializes element array for region. */
-    constructor(boundingRectangle: KNode) {
-        this.boundingRectangle = boundingRectangle
-        this.elements = []
-        this.children = []
-        this.detailReference = { detailLevel: DetailLevel.FullDetails }
-    }
-
-    /** 
-     * Applies the detail level to all elements of a region.
-     * @param level the detail leveel to apply
-     */
-    setDetailLevel(level: DetailLevel): void {
-        this.detailReference.detailLevel = level
-    }
-}

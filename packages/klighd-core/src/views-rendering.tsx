@@ -259,9 +259,9 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     }
 
     if (element && context.depthMap) {
-        const region = context.depthMap.getRegion((parent as KNode).id)
+        const region = (parent as KNode).providingRegion
 
-        if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
+        if (region && region.detail !== DetailLevel.FullDetails) {
             const offset = region.regionTitleHeight ?? 0
 
             const bounds = region.boundingRectangle.bounds
@@ -490,10 +490,11 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
-    const region = context.depthMap?.getRegion(parent.id)
+    const region = (parent as KNode).providingRegion
+
     const simplifySmallTextOption = context.renderingOptions.getValueForId(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && (!region || region.detailReference.detailLevel === DetailLevel.FullDetails)) {
+    if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails)) {
         const simplificationThresholdOption = context.renderingOptions.getValueForId(TextSimplificationThreshold.ID)
         const defaultThreshold = 3
         const simplificationThreshold = simplificationThresholdOption ?? defaultThreshold
@@ -571,9 +572,9 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // Check whether or not the parent node is a child area.
                 // If the parent is a child area, the text is a title of the region.
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
-                const region = context.depthMap.getRegion((parent as KNode).id)
+                const region = (parent as KNode).providingRegion
                 if (region) {
-                    if (region.detailReference.detailLevel !== DetailLevel.FullDetails) {
+                    if (region.detail !== DetailLevel.FullDetails) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
                         const defaultFactor = 1
@@ -708,7 +709,7 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
 
-    if (context.depthMap && (parent as KNode).detailReference?.detailLevel !== DetailLevel.FullDetails) {
+    if (context.depthMap && (parent as KNode).containingRegion?.detail !== DetailLevel.FullDetails) {
         return undefined
     }
 
