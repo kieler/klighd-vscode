@@ -260,21 +260,17 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     if (element && context.depthMap) {
         const region = context.depthMap.getRegion((parent as KNode).id)
-        let offset = 0
+
         if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
-            if (region.regionTitleHeight) {
-                offset = region.regionTitleHeight
-                // Render indirect region titles.
-            }
-        }
-        if (region && region.detailReference.detailLevel !== DetailLevel.FullDetails) {
+            const offset = region.regionTitleHeight ?? 0
+
             const bounds = region.boundingRectangle.bounds
             const minBounds = Math.min(bounds.height, bounds.width)
             const size = 50
-            let scalingFactor = (minBounds - offset) / size 
+            let scalingFactor = (minBounds - offset) / size
             // Use zoom for constant size in viewport.
             if (context.viewport) {
-                scalingFactor =  Math.min(1 / context.viewport.zoom, scalingFactor)
+                scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
             }
             //scalingFactor = Math.min(2, scalingFactor)
 
