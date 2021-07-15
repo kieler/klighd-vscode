@@ -136,11 +136,58 @@ export class DepthMap {
         if (needsInit) {
             for (const root_child of rootElement.children) {
                 const node = root_child as KNode
-                const region = new Region(node)
-                region.absoluteBounds = node.bounds
-                node.containingRegion = null
-                DepthMap.instance.rootRegions.push(region)
-                DepthMap.instance.initHelper(node, region, node.bounds.x, node.bounds.y)
+                DepthMap.instance.initKNode(node)
+                DepthMap.instance.initHelper(node, node.providingRegion as Region, node.bounds.x, node.bounds.y)
+            }
+
+        }
+    }
+
+    /**
+     * All the ancestor KNodes of node should already be initialized 
+     * 
+     * @param node The KNode to initialize for DepthMap usage
+     */
+    public initKNode(node: KNode): void {
+        if (node.containingRegion !== undefined && node.providingRegion !== undefined) {
+            // KNode already initialized
+            return
+        } else if (node.parent === node.root) {
+            node.containingRegion = null
+            const providedRegion = new Region(node)
+            providedRegion.absoluteBounds = node.bounds
+            this.rootRegions.push(providedRegion)
+        } else {
+            node.containingRegion = (node.parent as KNode).providingRegion ?? (node.parent as KNode).containingRegion
+            node.containingRegion?.elements.push(node)
+
+            if (node.data.length > 0 && node.data[0].type == K_RECTANGLE && (node.data[0] as KContainerRendering).children[0]) {
+                const providedRegion = new Region(node);
+
+                providedRegion.parent = node.containingRegion ?? undefined;
+                node.containingRegion?.children.push(providedRegion);
+
+                let current = node.parent as KNode;
+                let offsetX = 0;
+                let offsetY = 0;
+
+                while (current && !current.providingRegion) {
+                    offsetX += current.bounds.x
+                    offsetY += current.bounds.y
+                    current = current.parent as KNode
+                }
+
+                offsetX += current?.providingRegion?.absoluteBounds?.x ?? 0
+                offsetY += current?.providingRegion?.absoluteBounds?.y ?? 0
+
+                providedRegion.absoluteBounds = {
+                    x: offsetX + node.bounds.x,
+                    y: offsetY + node.bounds.y,
+                    width: node.bounds.width,
+                    height: node.bounds.height
+                }
+            } else {
+                node.providingRegion == null
             }
 
         }
@@ -155,30 +202,9 @@ export class DepthMap {
     protected initHelper(node: KNode, region: Region, offsetX: number, offsetY: number): void {
         // Go through child nodes until there are no child nodes left.
         for (const child of node.children) {
-            // Add the current node as element of region.
-            region.elements.push(child as KNode);
-
-            (child as KNode).containingRegion = region
-
-            // When the bounding rectangle of a new child area is reached, a new region is created.
-            if ((child as KNode).data.length > 0 && (child as KNode).data[0].type === K_RECTANGLE
-                && ((child as KNode).data[0] as unknown as KContainerRendering).children[0]) {
-                const nextRegion = new Region(child as KNode)
-                nextRegion.absoluteBounds = {
-                    x: offsetX + (child as KNode).bounds.x,
-                    y: offsetY + (child as KNode).bounds.y,
-                    width: (child as KNode).bounds.width,
-                    height: (child as KNode).bounds.height
-                }
-                nextRegion.parent = region
-                region.children.push(nextRegion)
-                // Continue with the children of the new region.
-                this.initHelper((child as KNode), nextRegion, nextRegion.absoluteBounds.x, nextRegion.absoluteBounds.y)
-            } else {
-                (child as KNode).providingRegion = null
-                // Continue with the other children on the current depth level.
-                this.initHelper((child as KNode), region, offsetX + (child as KNode).bounds.x, offsetY + (child as KNode).bounds.y)
-            }
+            const childNode = child as KNode
+            this.initKNode(childNode)
+            this.initHelper(childNode, childNode.providingRegion ?? childNode.containingRegion as Region, offsetX + (child as KNode).bounds.x, offsetY + (child as KNode).bounds.y)
         }
 
     }
