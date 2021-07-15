@@ -574,6 +574,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
                 const region = (parent as KNode).providingRegion
                 if (region) {
+                    parent.tooltip = text
                     if (region.detail !== DetailLevel.FullDetails) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
