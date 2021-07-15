@@ -56,11 +56,6 @@ export class DepthMap {
      */
     rootElement: SModelRoot;
 
-    /**  
-     * A quick lookup map with the id of the bounding child area of a region as key.
-     */
-    regionMap: Map<string, Region>;
-
     /**
      * The last viewport for which we updated the state of KNodes
      */
@@ -86,14 +81,12 @@ export class DepthMap {
     private constructor(rootElement: SModelRoot) {
         this.rootElement = rootElement
         this.rootRegions = []
-        this.regionMap = new Map()
         this.criticalRegions = new Set()
     }
 
     protected reset(model_root: SModelRoot): void {
         this.rootElement = model_root
         // rootRegions are reset below as we also want to remove the edges from the graph spaned by the regions
-        this.regionMap.clear()
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
@@ -145,9 +138,9 @@ export class DepthMap {
                 const node = root_child as KNode
                 const region = new Region(node)
                 region.absoluteBounds = node.bounds
+                node.containingRegion = null
                 DepthMap.instance.rootRegions.push(region)
-                DepthMap.instance.addRegionToMap(region)
-                DepthMap.instance.initHelper(node, 0, region, node.bounds.x, node.bounds.y)
+                DepthMap.instance.initHelper(node, region, node.bounds.x, node.bounds.y)
             }
 
         }
@@ -157,10 +150,9 @@ export class DepthMap {
      * Recursively finds all regions in model and initializes them.
      * 
      * @param node The current KNode checked.
-     * @param depth The current nesting depth of regions.
      * @param region The current region being constructed.
      */
-    protected initHelper(node: KNode, depth: number, region: Region, offsetX: number, offsetY: number): void {
+    protected initHelper(node: KNode, region: Region, offsetX: number, offsetY: number): void {
         // Go through child nodes until there are no child nodes left.
         for (const child of node.children) {
             // Add the current node as element of region.
@@ -180,26 +172,15 @@ export class DepthMap {
                 }
                 nextRegion.parent = region
                 region.children.push(nextRegion)
-                // In the models parent child structure a child can occur multiple times.
-                this.addRegionToMap(nextRegion)
                 // Continue with the children of the new region.
-                this.initHelper((child as KNode), (depth + 1), nextRegion, nextRegion.absoluteBounds.x, nextRegion.absoluteBounds.y)
+                this.initHelper((child as KNode), nextRegion, nextRegion.absoluteBounds.x, nextRegion.absoluteBounds.y)
             } else {
+                (child as KNode).providingRegion = null
                 // Continue with the other children on the current depth level.
-                this.initHelper((child as KNode), depth, region, offsetX + (child as KNode).bounds.x, offsetY + (child as KNode).bounds.y)
+                this.initHelper((child as KNode), region, offsetX + (child as KNode).bounds.x, offsetY + (child as KNode).bounds.y)
             }
         }
 
-    }
-
-    /** 
-     * Adds a region to the depth map.
-     * 
-     * @param depth The nesting depth the region is put into. 
-     * @param region The region to add. 
-     */
-    protected addRegionToMap(region: Region): void {
-        this.regionMap.set(region.boundingRectangle.id, region)
     }
 
     /** 
