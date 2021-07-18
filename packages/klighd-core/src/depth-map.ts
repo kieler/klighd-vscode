@@ -292,8 +292,6 @@ export class DepthMap {
      * @param threshold The full detail threshold
      */
     checkCriticalRegions(viewport: Viewport, threshold: number): void {
-        // Use set of child regions to avoid multiple checks.
-        const childSet: Set<Region> = new Set()
 
         // All regions that are at a detail level boundary (child has lower detail level and parent is at a DetailWithChildren level).
         let toBeProcessed: Set<Region> = new Set(this.criticalRegions)
@@ -304,22 +302,19 @@ export class DepthMap {
         while (toBeProcessed.size !== 0) {
             toBeProcessed.forEach(region => {
                 const vis = this.computeDetailLevel(region, viewport, threshold);
+                region.setDetailLevel(vis)
 
                 if (region.parent && vis !== region.parent.detail) {
-                    if (region.parent) {
-                        nextToBeProcessed.add(region.parent)
-                        this.criticalRegions.add(region.parent)
-                    }
-                    if (isDetailWithChildren(vis)) {
-                        this.updateRegionDetailLevel(region, vis, viewport, threshold)
-                    } else {
-                        this.recursiveSetOOB(region, vis)
-                    }
+
+                    nextToBeProcessed.add(region.parent)
+                    this.criticalRegions.add(region.parent)
+
+                }
+
+                if (isDetailWithChildren(vis)) {
+                    this.updateRegionDetailLevel(region, vis, viewport, threshold)
                 } else {
-                    // Add children to check for detail level change.
-                    region.children.forEach(childRegion => {
-                        childSet.add(childRegion)
-                    })
+                    this.recursiveSetOOB(region, vis)
                 }
 
             })
@@ -328,21 +323,6 @@ export class DepthMap {
             nextToBeProcessed = new Set();
         }
 
-        // Check all collected child regions of detail level.
-        childSet.forEach(childRegion => {
-            const vis = this.computeDetailLevel(childRegion, viewport, threshold);
-            if (childRegion.parent && childRegion.parent.detail !== vis) {
-                this.criticalRegions.add(childRegion.parent)
-            }
-
-            if (isDetailWithChildren(vis)) {
-                this.updateRegionDetailLevel(childRegion, vis, viewport, threshold)
-            } else {
-                this.recursiveSetOOB(childRegion, vis)
-            }
-        })
-
-        childSet.clear()
     }
 
     /**
