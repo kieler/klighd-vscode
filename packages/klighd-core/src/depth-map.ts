@@ -164,21 +164,42 @@ export class DepthMap {
      * 
      * @param node The KNode to initialize for DepthMap usage
      */
-    public initKNode(node: KNode): void {
+    public initKNode(node: KNode, viewport?: Viewport, renderingOptions?: RenderOptionsRegistry): void {
+
         if (node.containingRegion !== undefined && node.providingRegion !== undefined) {
             // KNode already initialized
             return
-        } else if (node.parent === node.root) {
+        }
+
+        const thresholdOption = renderingOptions?.getValueForId(FullDetailThreshold.ID)
+        const defaultThreshold = 0.2
+        const fullDetailThreshold = thresholdOption ?? defaultThreshold
+
+        if (node.parent === node.root) {
             node.containingRegion = null
             const providedRegion = new Region(node)
             providedRegion.absoluteBounds = node.bounds
+
+            if (viewport) {
+                providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, fullDetailThreshold)
+            } else {
+                this.criticalRegions.add(providedRegion)
+            }
+
             this.rootRegions.push(providedRegion)
+
         } else {
             node.containingRegion = (node.parent as KNode).providingRegion ?? (node.parent as KNode).containingRegion
             node.containingRegion?.elements.push(node)
 
             if (node.data.length > 0 && node.data[0].type == K_RECTANGLE && (node.data[0] as KContainerRendering).children[0]) {
                 const providedRegion = new Region(node);
+
+                if (viewport) {
+                    providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, fullDetailThreshold)
+                } else {
+                    this.criticalRegions.add(providedRegion)
+                }
 
                 // node should always have a containingRegion as we are not a direct SModelRoot child                
                 providedRegion.parent = node.containingRegion ?? undefined;
