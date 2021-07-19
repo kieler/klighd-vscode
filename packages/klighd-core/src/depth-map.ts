@@ -114,7 +114,6 @@ export class DepthMap {
             for (const region of current_regions) {
                 remaining_regions.concat(region.children)
                 region.children = []
-                region.elements = []
                 region.parent = undefined
             }
             current_regions = remaining_regions
@@ -177,8 +176,6 @@ export class DepthMap {
             const parentEntry = this.initKNode(node.parent as KNode, viewport, renderingOptions);
 
             entry = { containingRegion: parentEntry.providingRegion ?? parentEntry.containingRegion, providingRegion: undefined }
-
-            entry.containingRegion.elements.push(node)
 
             if (node.data.length > 0 && node.data[0].type == K_RECTANGLE && (node.data[0] as KContainerRendering).children[0]) {
 
@@ -412,8 +409,6 @@ export class DepthMap {
  * tree structure of the model and application of detail level of its KNodes.
  */
 export class Region {
-    /** All KNodes specifically in the region. */
-    elements: KNode[]
     /** The rectangle of the child area in which the region lies. */
     boundingRectangle: KNode
     /** Gained using browser position and rescaling and are therefore not perfect. */
@@ -430,7 +425,6 @@ export class Region {
     /** Constructor initializes element array for region. */
     constructor(boundingRectangle: KNode) {
         this.boundingRectangle = boundingRectangle
-        this.elements = []
         this.children = []
         this.detail = DetailLevel.FullDetails
     }
