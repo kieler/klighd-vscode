@@ -272,7 +272,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             if (context.viewport) {
                 scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
             }
-            //scalingFactor = Math.min(2, scalingFactor)
+
             const y = scalingFactor > 0 ? offset / scalingFactor : 0
             const placeholder = <g id="ZoomPlaceholder"
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${y})`}>
