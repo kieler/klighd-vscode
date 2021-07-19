@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KNode, DetailLevel, Region } from "@kieler/klighd-interactive/lib/constraint-classes";
-import { SModelRoot, Viewport } from "sprotty";
+import { KNode, DetailLevel } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
 import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
 
@@ -38,6 +38,10 @@ function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren
  */
 type DetailWithoutChildren = Exclude<DetailLevel, DetailWithChildren>
 
+type RegionIndexEntry = { containingRegion: Region, providingRegion: undefined }
+    | { containingRegion: undefined, providingRegion: Region }
+    | { containingRegion: Region, providingRegion: Region }
+
 /**
  * Divides Model KNodes into regions. On these detail level actions
  * are defined via the detailLevel. Also holds additional information to determine
@@ -55,6 +59,13 @@ export class DepthMap {
      * The model for which the DepthMap is generated 
      */
     rootElement: SModelRoot;
+
+    /**
+     * Maps a given node id to the containing/providing Region
+     * Root Child Nodes will have a provding region and no containing Region, while all
+     * other nodes will have at least a containing region
+     */
+    protected regionIndexMap: Map<string, RegionIndexEntry>;
 
     /**
      * The last viewport for which we updated the state of KNodes
@@ -82,6 +93,7 @@ export class DepthMap {
         this.rootElement = rootElement
         this.rootRegions = []
         this.criticalRegions = new Set()
+        this.regionIndexMap = new Map()
     }
 
     protected reset(model_root: SModelRoot): void {
@@ -90,8 +102,11 @@ export class DepthMap {
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
+        this.regionIndexMap = new Map()
 
         let current_regions = this.rootRegions
+        this.rootRegions = []
+
         let remaining_regions: Region[] = []
 
         // Go through all regions and clear the references to other Regions and KNodes
@@ -106,7 +121,6 @@ export class DepthMap {
             remaining_regions = []
         }
 
-        this.rootRegions = []
     }
 
     /**
@@ -122,53 +136,26 @@ export class DepthMap {
      * @param rootElement The model root element.
      */
     public static init(rootElement: SModelRoot): void {
-        let needsInit = false;
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement)
-            needsInit = true
         } else if (DepthMap.instance.rootElement !== rootElement) {
             // Reset and reinitialize if the model changed
             DepthMap.instance.reset(rootElement)
-            needsInit = true
         }
-
-        if (needsInit) {
-            for (const root_child of rootElement.children) {
-                const node = root_child as KNode
-                DepthMap.instance.initKNode(node)
-                DepthMap.instance.initHelper(node)
-            }
-
-        }
-    }
-
-    /** 
-     * Recursively finds all regions in model and initializes them.
-     * 
-     * @param node The current KNode checked.
-     * @param region The current region being constructed.
-     */
-    protected initHelper(node: KNode): void {
-        // Go through child nodes until there are no child nodes left.
-        for (const child of node.children) {
-            const childNode = child as KNode
-            this.initKNode(childNode)
-            this.initHelper(childNode)
-        }
-
     }
 
     /**
-     * All the ancestor KNodes of node should already be initialized 
+     * It is generally advised to initialize the nodes from root to leaf
      * 
      * @param node The KNode to initialize for DepthMap usage
      */
-    public initKNode(node: KNode, viewport?: Viewport, renderingOptions?: RenderOptionsRegistry): void {
+    public initKNode(node: KNode, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
 
-        if (node.containingRegion !== undefined && node.providingRegion !== undefined) {
+        let entry = this.regionIndexMap.get(node.id)
+        if (entry) {
             // KNode already initialized
-            return
+            return entry
         }
 
         const thresholdOption = renderingOptions?.getValueForId(FullDetailThreshold.ID)
@@ -176,59 +163,70 @@ export class DepthMap {
         const fullDetailThreshold = thresholdOption ?? defaultThreshold
 
         if (node.parent === node.root) {
-            node.containingRegion = null
             const providedRegion = new Region(node)
             providedRegion.absoluteBounds = node.bounds
 
-            if (viewport) {
-                providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, fullDetailThreshold)
-            } else {
-                this.criticalRegions.add(providedRegion)
-            }
+            entry = { providingRegion: providedRegion, containingRegion: undefined }
+
+            providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, fullDetailThreshold)
 
             this.rootRegions.push(providedRegion)
 
         } else {
-            node.containingRegion = (node.parent as KNode).providingRegion ?? (node.parent as KNode).containingRegion
-            node.containingRegion?.elements.push(node)
+
+            const parentEntry = this.initKNode(node.parent as KNode, viewport, renderingOptions);
+
+            entry = { containingRegion: parentEntry.providingRegion ?? parentEntry.containingRegion, providingRegion: undefined }
+
+            entry.containingRegion.elements.push(node)
 
             if (node.data.length > 0 && node.data[0].type == K_RECTANGLE && (node.data[0] as KContainerRendering).children[0]) {
-                const providedRegion = new Region(node);
 
-                if (viewport) {
-                    providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, fullDetailThreshold)
-                } else {
-                    this.criticalRegions.add(providedRegion)
-                }
+                entry = { containingRegion: entry.containingRegion, providingRegion: new Region(node) }
 
-                // node should always have a containingRegion as we are not a direct SModelRoot child                
-                providedRegion.parent = node.containingRegion ?? undefined;
-                node.containingRegion?.children.push(providedRegion);
+                entry.providingRegion.detail = this.computeDetailLevel(entry.providingRegion, viewport, fullDetailThreshold)
+
+                entry.providingRegion.parent = entry.containingRegion
+                entry.containingRegion.children.push(entry.providingRegion);
 
                 let current = node.parent as KNode;
                 let offsetX = 0;
                 let offsetY = 0;
 
-                while (current && !current.providingRegion) {
+                let currentEntry = this.regionIndexMap.get(current.id)
+
+                while (current && currentEntry && !currentEntry.providingRegion) {
                     offsetX += current.bounds.x
                     offsetY += current.bounds.y
                     current = current.parent as KNode
+                    currentEntry = this.regionIndexMap.get(current.id)
                 }
 
-                offsetX += current?.providingRegion?.absoluteBounds?.x ?? 0
-                offsetY += current?.providingRegion?.absoluteBounds?.y ?? 0
+                offsetX += currentEntry?.providingRegion?.absoluteBounds?.x ?? 0
+                offsetY += currentEntry?.providingRegion?.absoluteBounds?.y ?? 0
 
-                providedRegion.absoluteBounds = {
+                entry.providingRegion.absoluteBounds = {
                     x: offsetX + node.bounds.x,
                     y: offsetY + node.bounds.y,
                     width: node.bounds.width,
                     height: node.bounds.height
                 }
-            } else {
-                node.providingRegion == null
             }
 
         }
+
+        this.regionIndexMap.set(node.id, entry)
+        return entry
+    }
+
+    public getContainingRegion(node: KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+        // initKnode already checks if it is already initialized and if it is returns the existing value
+        return this.initKNode(node, viewport, renderOptions).containingRegion
+    }
+
+    public getProvidingRegion(node: KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+        // initKnode already checks if it is already initialized and if it is returns the existing value
+        return this.initKNode(node, viewport, renderOptions).providingRegion
     }
 
     /** 
@@ -407,3 +405,41 @@ export class DepthMap {
     }
 }
 
+
+/**
+ * Combines KNodes into regions. These correspond to child areas. A region can correspond to 
+ * a region or a super state in the model. Also manages the boundaries, title candidates, 
+ * tree structure of the model and application of detail level of its KNodes.
+ */
+export class Region {
+    /** All KNodes specifically in the region. */
+    elements: KNode[]
+    /** The rectangle of the child area in which the region lies. */
+    boundingRectangle: KNode
+    /** Gained using browser position and rescaling and are therefore not perfect. */
+    absoluteBounds: Bounds
+    /** the regions current detail level that is used by all children */
+    detail: DetailLevel
+    /** The immediate parent region of this region. */
+    parent?: Region
+    /** All immediate child regions of this region */
+    children: Region[]
+    /** Contains the height of the title of the region, if there is one. */
+    regionTitleHeight?: number
+
+    /** Constructor initializes element array for region. */
+    constructor(boundingRectangle: KNode) {
+        this.boundingRectangle = boundingRectangle
+        this.elements = []
+        this.children = []
+        this.detail = DetailLevel.FullDetails
+    }
+
+    /** 
+     * Applies the detail level to all elements of a region.
+     * @param level the detail leveel to apply
+     */
+    setDetailLevel(level: DetailLevel): void {
+        this.detail = level
+    }
+}

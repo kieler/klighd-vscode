@@ -259,7 +259,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     }
 
     if (element && context.depthMap) {
-        const region = (parent as KNode).providingRegion
+        const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
 
         if (region && region.detail !== DetailLevel.FullDetails) {
             const offset = region.regionTitleHeight ?? 0
@@ -490,7 +490,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
-    const region = (parent as KNode).providingRegion
+    const region = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
 
     const simplifySmallTextOption = context.renderingOptions.getValueForId(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
@@ -572,7 +572,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // Check whether or not the parent node is a child area.
                 // If the parent is a child area, the text is a title of the region.
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
-                const region = (parent as KNode).providingRegion
+                const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
                 if (region) {
                     parent.tooltip = text
                     if (region.detail !== DetailLevel.FullDetails) {
@@ -710,7 +710,7 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
 
-    if (context.depthMap && (parent as KNode).containingRegion?.detail !== DetailLevel.FullDetails) {
+    if (context.depthMap && context.depthMap.getContainingRegion(parent as KNode, context.viewport, context.renderingOptions)?.detail !== DetailLevel.FullDetails) {
         return undefined
     }
 
