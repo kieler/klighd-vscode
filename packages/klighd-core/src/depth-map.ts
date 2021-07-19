@@ -421,7 +421,8 @@ export class Region {
     children: Region[]
     /** Contains the height of the title of the region, if there is one. */
     regionTitleHeight?: number
-
+    /** The title of the region used for tooltips */
+    regionTitle?: string
     /** Constructor initializes element array for region. */
     constructor(boundingRectangle: KNode) {
         this.boundingRectangle = boundingRectangle
