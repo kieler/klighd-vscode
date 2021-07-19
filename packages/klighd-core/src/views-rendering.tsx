@@ -273,9 +273,9 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                 scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
             }
             //scalingFactor = Math.min(2, scalingFactor)
-
+            const y = scalingFactor > 0 ? offset / scalingFactor : 0
             const placeholder = <g id="ZoomPlaceholder"
-                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${offset / scalingFactor})`}>
+                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${y})`}>
                 <g height={size} width={size}>
                     <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
                     <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
