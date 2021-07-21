@@ -21,7 +21,7 @@ export interface RenderOption {
     name: string;
     type: TransformationOptionType;
     /** Whether the LS needs to regenerate the Diagramm */
-    updateNeeded: boolean;
+    refreshNeeded: boolean;
     initialValue: any;
     currentValue: any;
 }
@@ -38,11 +38,11 @@ export enum TransformationOptionType {
     CATEGORY = 5,
 }
 
- /**
-  * Holds an option defined by the diagram synthesis.
-  * This is the counterpart to the KLighD's java implementation of the SynthesisOption.
-  * Also adds a sourceHash that contains the hash code of the corresponding java instance for this option.
-  */
+/**
+ * Holds an option defined by the diagram synthesis.
+ * This is the counterpart to the KLighD's java implementation of the SynthesisOption.
+ * Also adds a sourceHash that contains the hash code of the corresponding java instance for this option.
+ */
 export interface SynthesisOption extends RenderOption {
     values: any[]
     category?: SynthesisOption

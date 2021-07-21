@@ -28,7 +28,7 @@ export class ShowConstraintOption implements RenderOption {
     readonly id: string = ShowConstraintOption.ID;
     readonly name: string = ShowConstraintOption.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly updateNeeded: boolean = true;
+    readonly refreshNeeded: boolean = true;
     readonly initialValue: boolean = false;
     currentValue = false;
 }
@@ -44,7 +44,7 @@ export class UseSmartZoom implements RenderOption {
     readonly id: string = UseSmartZoom.ID
     readonly name: string = UseSmartZoom.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
-    readonly updateNeeded: boolean = false
+    readonly refreshNeeded: boolean = false
     readonly initialValue: boolean = true
     currentValue = true
 }
@@ -59,7 +59,7 @@ export class FullDetailThreshold implements RangeOption {
     readonly id: string = FullDetailThreshold.ID
     readonly name: string = FullDetailThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
-    readonly updateNeeded: boolean = false
+    readonly refreshNeeded: boolean = false
     readonly values: any[] = []
     readonly range = {
         first: 0.01,
@@ -80,7 +80,7 @@ export class SimplifySmallText implements RenderOption {
     readonly id: string = SimplifySmallText.ID
     readonly name: string = SimplifySmallText.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
-    readonly updateNeeded: boolean = false
+    readonly refreshNeeded: boolean = false
     readonly initialValue: boolean = true
     currentValue = true
 }
@@ -94,7 +94,7 @@ export class TextSimplificationThreshold implements RangeOption {
     readonly id: string = TextSimplificationThreshold.ID
     readonly name: string = TextSimplificationThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
-    readonly updateNeeded: boolean = false
+    readonly refreshNeeded: boolean = false
     readonly values: any[] = []
     readonly range = {
         first: 1,
@@ -115,7 +115,7 @@ export class TitleScalingFactor implements RangeOption {
     readonly id: string = TitleScalingFactor.ID
     readonly name: string = TitleScalingFactor.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
-    readonly updateNeeded: boolean = false
+    readonly refreshNeeded: boolean = false
     readonly values: any[] = []
     readonly range = {
         first: 0.5,
@@ -136,7 +136,7 @@ export class UseConstantLineWidth implements RenderOption {
     readonly id: string = UseConstantLineWidth.ID
     readonly name: string = UseConstantLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
-    readonly updateNeeded: boolean = false
+    readonly refreshNeeded: boolean = false
     readonly initialValue: boolean = true
     currentValue = true
 }
@@ -150,7 +150,7 @@ export class ConstantLineWidth implements RangeOption {
     readonly id: string = ConstantLineWidth.ID
     readonly name: string = ConstantLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
-    readonly updateNeeded: boolean = false
+    readonly refreshNeeded: boolean = false
     readonly values: any[] = []
     readonly range = {
         first: 0.1,
@@ -192,7 +192,7 @@ export class RenderOptionsRegistry extends Registry {
             option.currentValue = action.value;
             this.notifyListeners();
 
-            if (option.updateNeeded) {
+            if (option.refreshNeeded) {
                 return new RefreshDiagramAction();
             } else {
                 return new UpdateModelAction([], false, action)
