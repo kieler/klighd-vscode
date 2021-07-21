@@ -17,7 +17,7 @@
 
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { injectable } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { Action, ICommand, UpdateModelAction } from "sprotty";
 import { Registry } from "../base/registry";
 import { SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
@@ -194,6 +194,8 @@ export class RenderOptionsRegistry extends Registry {
 
             if (option.updateNeeded) {
                 return new RefreshDiagramAction();
+            } else {
+                return new UpdateModelAction([], false, action)
             }
         }
     }
