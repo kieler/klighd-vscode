@@ -27,6 +27,7 @@ export interface Preferences {
      * or a viewport resize.
      */
     resizeToFit: boolean;
+
     /** Uses a light background instead of an applied theme. */
     forceLightBackground: boolean;
 
@@ -35,6 +36,9 @@ export interface Preferences {
 
     /** Indicates whether or nat a selection in the diagram should also highlight the corresponding text. */
     shouldSelectText: boolean;
+
+    /** Wheter going to a Bookmark should be animated */
+    animateGoToBookmark: boolean;
 }
 
 /** {@link Registry} that stores user preferences which change the behavior of the diagram view. */
@@ -56,6 +60,7 @@ export class PreferencesRegistry extends Registry {
             forceLightBackground: false,
             shouldSelectDiagram: true,
             shouldSelectText: false,
+            animateGoToBookmark: true,
         };
     }
 
@@ -77,6 +82,7 @@ export class PreferencesRegistry extends Registry {
                     action.preferences.shouldSelectDiagram ?? this._preferences.shouldSelectDiagram,
                 shouldSelectText:
                     action.preferences.shouldSelectText ?? this._preferences.shouldSelectText,
+                animateGoToBookmark: action.preferences.animateGoToBookmark ?? this._preferences.animateGoToBookmark,
             };
             this.notifyListeners();
             this.notifyServer();
@@ -99,7 +105,7 @@ export class SetPreferencesAction implements Action {
     static readonly KIND = "setPreferences";
     readonly kind = SetPreferencesAction.KIND;
 
-    constructor(readonly preferences: Partial<Preferences>) {}
+    constructor(readonly preferences: Partial<Preferences>) { }
 
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetPreferencesAction {

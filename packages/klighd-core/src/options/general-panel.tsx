@@ -166,6 +166,12 @@ export class GeneralPanel extends SidebarPanel {
                         value={this.preferencesRegistry.preferences.shouldSelectText}
                         onChange={this.handlePreferenceChange.bind(this, "shouldSelectText")}
                     />
+                    <CheckOption
+                        id="animateGoToBookmark"
+                        name="Animate GoTo Bookmark"
+                        value={this.preferencesRegistry.preferences.animateGoToBookmark}
+                        onChange={this.handlePreferenceChange.bind(this, "animateGoToBookmark")}
+                    />
                 </div>
             </div>
         );

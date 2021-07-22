@@ -15,9 +15,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable } from "inversify";
+import { injectable, inject } from "inversify";
 import { Action, ICommand, SetViewportAction } from "sprotty";
 import { Registry } from "../base/registry";
+import { DISymbol } from "../di.symbols";
+import { PreferencesRegistry } from "../preferences-registry";
 import { Bookmark, GoToBookmarkAction } from "./bookmark";
 
 /**
@@ -29,13 +31,14 @@ import { Bookmark, GoToBookmarkAction } from "./bookmark";
 @injectable()
 export class BookmarkRegistry extends Registry {
 
+    @inject(DISymbol.PreferencesRegistry) private preferenceRegistry: PreferencesRegistry;
+
     private _bookmarks: Bookmark[] = [];
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === GoToBookmarkAction.KIND) {
             const bookmarkAction: GoToBookmarkAction = action as GoToBookmarkAction;
-            // TODO add preference for whether GoToBookmark actions should be animated
-            return new SetViewportAction(bookmarkAction.bookmark.elementId, bookmarkAction.bookmark.place, true)
+            return new SetViewportAction(bookmarkAction.bookmark.elementId, bookmarkAction.bookmark.place, this.preferenceRegistry.preferences.animateGoToBookmark)
         }
     }
 
