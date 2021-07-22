@@ -63,6 +63,8 @@ export class SKGraphView extends SGraphView {
             if (ctx.viewport && ctx.depthMap) {
                 ctx.depthMap.updateDetailLevels(ctx.viewport, this.renderOptionsRegistry)
             }
+        } else {
+            ctx.depthMap = undefined
         }
 
         //  do the same as return super.render(model, context)
