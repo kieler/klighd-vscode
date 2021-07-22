@@ -15,6 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { Viewport } from "sprotty";
+
 /** Returns a promise that resolves after a specific amount of milliseconds. */
 export function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => {
@@ -44,4 +46,15 @@ export function getLanguageId(documentUri: string): string {
     }
 
     return matches[0];
+}
+
+export function getBookmarkViewport(): Viewport | null {
+    const x = readSearchParam("bookmarkX");
+    const y = readSearchParam("bookmarkY");
+    const z = readSearchParam("bookmarkZoom");
+    if (x !== null && y !== null && z !== null) {
+        return { scroll: { x: parseFloat(x), y: parseFloat(y) }, zoom: parseFloat(z) }
+    } else {
+        return null
+    }
 }

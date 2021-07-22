@@ -19,7 +19,7 @@
 
 export { default as createKlighdDiagramContainer } from "./di.config";
 export { bindServices, Connection, SessionStorage, NotificationType } from "./services";
-export { diagramType, getActionDispatcher, requestModel } from "./base/external-helpers";
+export { diagramType, getActionDispatcher, requestModel, gotoBookmark } from "./base/external-helpers";
 
 // Export actions
 export * from "./actions/actions";

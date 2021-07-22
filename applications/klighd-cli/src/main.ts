@@ -24,9 +24,10 @@ import {
     getActionDispatcher,
     SetPreferencesAction,
     bindServices,
+    gotoBookmark,
 } from "@kieler/klighd-core";
 import { LSPConnection } from "./services/connection";
-import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
+import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
 import { showPopup } from "./popup";
 
@@ -86,6 +87,11 @@ async function initDiagramView(sourceUri: string) {
     // giving the server an opportunity to fully read the file before a model is requested.
     await sleep(500);
     await requestModel(actionDispatcher, sourceUri);
+
+    const bookmark = getBookmarkViewport();
+    if (bookmark) {
+        await gotoBookmark(actionDispatcher, bookmark)
+    }
 }
 
 /** Communicates preferences to the diagram container which are read from the url search params. */
