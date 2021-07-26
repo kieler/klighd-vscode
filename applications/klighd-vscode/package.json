@@ -7,7 +7,10 @@
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
     "icon": "icon.png",
     "license": "EPL-2.0",
-    "repository": {"type": "git", "url": "https://github.com/kieler/klighd-vscode"},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kieler/klighd-vscode"
+    },
     "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
     "engines": {
         "vscode": "^1.56.0"
@@ -118,21 +121,25 @@
         ]
     },
     "scripts": {
-        "clean": "rm -rf dist",
+        "clean": "rm -rf dist klighd-vscode.vsix",
         "lint": "eslint .",
         "build": "webpack --mode production --devtool hidden-source-map",
         "watch": "webpack --watch",
         "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix",
-        "distribute": "vsce publish --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode"
+        "predistribute": "yarn run package",
+        "distribute": "yarn run distribute:vsce && yarn run distribute:ovsx",
+        "distribute:vsce": "vsce publish --yarn --packagePath klighd-vscode.vsix",
+        "distribute:ovsx": "ovsx publish --yarn --packagePath klighd-vscode.vsix"
     },
     "devDependencies": {
-        "@types/vscode": "^1.56.0",
         "@types/node": "^12.11.7",
+        "@types/vscode": "^1.56.0",
         "css-loader": "^5.2.4",
+        "ovsx": "^0.2.0",
         "style-loader": "2.0.0",
-        "typescript": "^4.1.3",
         "ts-loader": "^8.0.14",
-        "vsce": "1.88.0",
+        "typescript": "^4.1.3",
+        "vsce": "^1.95.1",
         "webpack": "^4.44.1"
     },
     "dependencies": {
