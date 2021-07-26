@@ -21,6 +21,20 @@ Instead, it should be used as a dependency by other extensions to easily support
 visualization with KLighD. Your host extension is responsible for configuring a language client,
 while the KLighD extension handles everything related to diagrams.
 
+### Disclaimer
+
+Developing a language server for your extension that uses [KLighD](https://github.com/kieler/KLighD)
+to fulfill all requirements to be usable with this extension is no easy task. Until the distribution of
+[KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
+is improved, feel free to seek advice from a member of the KIELER working group.
+
+An example for a simple language server with KLighD synthesis support can be found
+[here](https://github.com/kieler/osgiviz/tree/master/plugins/de.cau.cs.kieler.osgiviz.language.server).
+Configuration for the build process using Maven Tycho can be found
+[here](https://github.com/kieler/osgiviz/tree/master/build/de.cau.cs.kieler.osgiviz.language.server.cli).
+The VS Code extension for this language server can be found
+[here](https://github.com/kieler/osgiviz/tree/master/extension/osgiviz).
+
 ### Usage in your extension
 
 1. Add an extension dependency to your extension's `package.json`.
