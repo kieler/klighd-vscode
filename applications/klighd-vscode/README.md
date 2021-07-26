@@ -28,6 +28,13 @@ to fulfill all requirements to be usable with this extension is no easy tasks. U
 [KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
 is improved, feel free to seek advise from a member of the KIELER working group.
 
+An example for a simple language server with KLighD synthesis support can be found
+[here](https://github.com/kieler/osgiviz/tree/master/plugins/de.cau.cs.kieler.osgiviz.language.server).
+Configuration for the build process using Maven Tycho can be found
+[here](https://github.com/kieler/osgiviz/tree/master/plugins/de.cau.cs.kieler.osgiviz.language.server).
+The VS Code extension for this language server can be found
+[here](https://github.com/kieler/osgiviz/tree/master/extension/osgiviz).
+
 ### Usage in your extension
 
 1. Add an extension dependency to your extension's `package.json`.
