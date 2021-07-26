@@ -35,6 +35,7 @@ export class BookmarkRegistry extends Registry {
 
     private _bookmarks: Bookmark[] = [];
     private _initialBookmark?: Bookmark;
+    private count = 0;
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === GoToBookmarkAction.KIND) {
@@ -45,6 +46,7 @@ export class BookmarkRegistry extends Registry {
     }
 
     addBookmark(bookmark: Bookmark): void {
+        bookmark.bookmarkIndex = this.count++;
         this._bookmarks.push(bookmark)
         this.notifyListeners();
     }

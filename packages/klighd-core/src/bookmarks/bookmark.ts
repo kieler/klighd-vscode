@@ -35,6 +35,12 @@ export class Bookmark {
      */
     place: Viewport;
 
+    /**
+     * Bookmark Index
+     * Assigned by BookmarkRegistry
+     */
+    bookmarkIndex?: number;
+
     public static isBookmark(value: any): value is Bookmark {
 
         if ('zoom' in value.place
