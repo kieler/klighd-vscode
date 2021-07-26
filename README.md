@@ -39,9 +39,9 @@ _applications/klighd-cli_ folder.
 #### Disclaimer
 
 Developing a language server that uses [KLighD](https://github.com/kieler/KLighD) to fulfill all
-requirements to be usable with these clients is no easy tasks. Until the distribution of
+requirements to be usable with these applications is no easy task. Until the distribution of
 [KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
-is improved, feel free to seek advise from a member of the KIELER working group.
+is improved, feel free to seek advice from a member of the KIELER working group.
 
 An example for a simple language server with KLighD synthesis support can be found
 [here](https://github.com/kieler/osgiviz/tree/master/plugins/de.cau.cs.kieler.osgiviz.language.server).
