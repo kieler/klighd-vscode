@@ -41,7 +41,7 @@ _applications/klighd-cli_ folder.
 Developing a language server that uses [KLighD](https://github.com/kieler/KLighD) to fulfill all
 requirements to be usable with these applications is no easy task. Until the distribution of
 [KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
-is improved, feel free to seek advise from a member of the KIELER working group.
+is improved, feel free to seek advice from a member of the KIELER working group.
 
 ### Scripts
 
