@@ -20,7 +20,7 @@ import { Action, ICommand, SetViewportAction } from "sprotty";
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
 import { PreferencesRegistry } from "../preferences-registry";
-import { Bookmark, GoToBookmarkAction } from "./bookmark";
+import { Bookmark, GoToBookmarkAction, SetInitialBookmark } from "./bookmark";
 
 /**
  * A simple {@link Registry} that holds a list of all added Bookmarks
@@ -34,17 +34,25 @@ export class BookmarkRegistry extends Registry {
     @inject(DISymbol.PreferencesRegistry) private preferenceRegistry: PreferencesRegistry;
 
     private _bookmarks: Bookmark[] = [];
+    private _initialBookmark?: Bookmark;
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === GoToBookmarkAction.KIND) {
             const bookmarkAction: GoToBookmarkAction = action as GoToBookmarkAction;
             return new SetViewportAction(bookmarkAction.bookmark.elementId, bookmarkAction.bookmark.place, this.preferenceRegistry.preferences.animateGoToBookmark)
+        } else if (action.kind === SetInitialBookmark.KIND) {
+            this._initialBookmark = (action as SetInitialBookmark).bookmark
         }
     }
 
     addBookmark(bookmark: Bookmark): void {
         this._bookmarks.push(bookmark)
+        console.log(bookmark.elementId)
         this.notifyListeners();
+    }
+
+    get initialBookmark(): Bookmark | undefined {
+        return this._initialBookmark
     }
 
     get bookmarks(): Bookmark[] {

@@ -19,7 +19,7 @@
 
 export { default as createKlighdDiagramContainer } from "./di.config";
 export { bindServices, Connection, SessionStorage, NotificationType } from "./services";
-export { diagramType, getActionDispatcher, requestModel, gotoBookmark } from "./base/external-helpers";
+export { diagramType, getActionDispatcher, requestModel } from "./base/external-helpers";
 
 // Export actions
 export * from "./actions/actions";
@@ -27,5 +27,6 @@ export * from "./options/actions";
 export { ToggleSidebarPanelAction } from "./sidebar/actions";
 export { SetSynthesesAction, SetSynthesisAction } from "./syntheses/actions";
 export { SetPreferencesAction } from "./preferences-registry";
+export { SetInitialBookmark } from "./bookmarks/bookmark"
 export { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 export { ActionMessage } from "sprotty";

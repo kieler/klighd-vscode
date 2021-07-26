@@ -24,7 +24,7 @@ import {
     getActionDispatcher,
     SetPreferencesAction,
     bindServices,
-    gotoBookmark,
+    SetInitialBookmark,
 } from "@kieler/klighd-core";
 import { LSPConnection } from "./services/connection";
 import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
@@ -74,6 +74,7 @@ async function initDiagramView(sourceUri: string) {
     const actionDispatcher = getActionDispatcher(diagramContainer);
 
     sendUrlSearchParamPreferences(actionDispatcher);
+    setInitialBookmark(actionDispatcher, sourceUri)
 
     // Connect to a language server and request a diagram.
     await connection.connect(socketUrl);
@@ -88,10 +89,6 @@ async function initDiagramView(sourceUri: string) {
     await sleep(500);
     await requestModel(actionDispatcher, sourceUri);
 
-    const bookmark = getBookmarkViewport();
-    if (bookmark) {
-        await gotoBookmark(actionDispatcher, bookmark)
-    }
 }
 
 /** Communicates preferences to the diagram container which are read from the url search params. */
@@ -101,4 +98,18 @@ function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getAc
             resizeToFit: readSearchParam("resizeToFit") === "false" ? false : true,
         })
     );
+}
+
+/** Set an initial Position based on the bookmark Parameters. */
+function setInitialBookmark(actionDispatcher: ReturnType<typeof getActionDispatcher>, sourceUri: string) {
+    const bookmark = getBookmarkViewport();
+    if (bookmark) {
+        actionDispatcher.dispatch(
+            new SetInitialBookmark({
+                name: "From URI",
+                place: bookmark,
+                elementId: sourceUri
+            })
+        );
+    }
 }

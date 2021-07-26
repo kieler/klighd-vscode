@@ -95,3 +95,14 @@ export class GoToBookmarkAction implements Action {
         this.bookmark = { ...bookmark };
     }
 }
+
+export class SetInitialBookmark implements Action {
+    static readonly KIND = 'init-bookkmark';
+    readonly kind = SetInitialBookmark.KIND;
+
+    readonly bookmark: Bookmark;
+
+    constructor(bookmark: Bookmark) {
+        this.bookmark = bookmark
+    }
+}
