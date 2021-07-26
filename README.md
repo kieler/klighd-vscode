@@ -39,7 +39,7 @@ _applications/klighd-cli_ folder.
 #### Disclaimer
 
 Developing a language server that uses [KLighD](https://github.com/kieler/KLighD) to fulfill all
-requirements to be usable with these clients is no easy tasks. Until the distribution of
+requirements to be usable with these applications is no easy task. Until the distribution of
 [KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
 is improved, feel free to seek advise from a member of the KIELER working group.
 
