@@ -24,7 +24,7 @@ while the KLighD extension handles everything related to diagrams.
 ### Disclaimer
 
 Developing a language server for your extension that uses [KLighD](https://github.com/kieler/KLighD)
-to fulfill all requirements to be usable with this extension is no easy tasks. Until the distribution of
+to fulfill all requirements to be usable with this extension is no easy task. Until the distribution of
 [KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
 is improved, feel free to seek advise from a member of the KIELER working group.
 
