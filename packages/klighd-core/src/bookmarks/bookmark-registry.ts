@@ -49,6 +49,12 @@ export class BookmarkRegistry extends Registry {
         this.notifyListeners();
     }
 
+    deleteBookmark(bookmark: Bookmark): void {
+        const index = this._bookmarks.findIndex((value) => value === bookmark);
+        this._bookmarks.splice(index, 1)
+        this.notifyListeners();
+    }
+
     get initialBookmark(): Bookmark | undefined {
         return this._initialBookmark
     }

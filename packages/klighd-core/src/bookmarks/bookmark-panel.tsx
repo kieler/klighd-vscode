@@ -23,7 +23,7 @@ import { IActionDispatcher, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import { SidebarPanel } from "../sidebar";
 import { BookmarkRegistry } from "./bookmark-registry";
-import { Bookmark, GoToBookmarkAction } from "./bookmark";
+import { Bookmark, GoToBookmarkAction, CreateBookmarkAction } from "./bookmark";
 
 /**
  * Sidebar panel that displays previousely set bookmarks
@@ -50,32 +50,147 @@ export class BookmarkPanel extends SidebarPanel {
         return <i attrs={{ "data-feather": "bookmark" }}></i>
     }
     render(): VNode {
-        return <div>{this.bookmarkRegistry.bookmarks.map((bookmark, index) => (
-            <div key={index}>
-                <fieldset>
-                    <legend>{bookmark.name ?? ("Bookmark " + index)}</legend>
-                    <button
-                        title="GoTo"
-                        classNames="options__icon-button"
-                        on-click={() => this.handleBookmarkActionClick(bookmark)}
-                    >
-                        <i attrs={{ "data-feather": "map-pin" }} />
-                    </button>
-                    <button
-                        title="Copy to Clipboard"
-                        classNames="options__icon-button"
-                        on-click={() => { return }}
-                    >
-                        <i attrs={{ "data-feather": "copy" }} />
-                    </button>
-                </fieldset>
+        return <div>
+            <div>
+                <button
+                    title="Load from Clipboard"
+                    classNames="options__icon-button"
+                    on-click={() => this.newBookmark()}
+                >
+                    <i attrs={{ "data-feather": "bookmark" }} />
+                </button>
+                <button
+                    title="Load from Clipboard"
+                    classNames="options__icon-button"
+                    on-click={() => this.handleBookmarkPast()}
+                >
+                    <i attrs={{ "data-feather": "upload" }} />
+                </button>
             </div>
-        )
-        )}</div>;
+            {this.renderBookmarkList()}
+        </div>;
     }
 
-    private handleBookmarkActionClick(bookmark: Bookmark) {
+    private renderBookmarkList(): VNode {
+        return <div>
+            {
+                this.bookmarkRegistry.bookmarks.map((bookmark, index) => (
+                    this.renderBookmarkEntry(bookmark, index)
+                ))
+            }
+        </div>
+    }
+
+    private renderBookmarkEntry(bookmark: Bookmark, index: number): VNode {
+        return <div key={index}>
+            <fieldset>
+                <legend>{bookmark.name ?? ("Bookmark " + index)}</legend>
+                <button
+                    title="Goto"
+                    classNames="options__icon-button"
+                    on-click={() => this.handleBookmarkGoto(bookmark)}
+                >
+                    <i attrs={{ "data-feather": "map-pin" }} />
+                </button>
+                <button
+                    title="Save to Clipboard"
+                    classNames="options__icon-button"
+                    on-click={() => this.handleBookmarkCopy(bookmark)}
+                >
+                    <i attrs={{ "data-feather": "download" }} />
+                </button>
+                <button
+                    title="Delete Bookmark"
+                    classNames="options__icon-button"
+                    on-click={() => this.deleteBookmark(bookmark)}
+                >
+                    <i attrs={{ "data-feather": "trash-2" }} />
+                </button>
+            </fieldset>
+        </div>
+    }
+
+    private handleBookmarkGoto(bookmark: Bookmark) {
         this.actionDispatcher.dispatch(new GoToBookmarkAction(bookmark));
+    }
+
+    private newBookmark() {
+        this.actionDispatcher.dispatch(new CreateBookmarkAction());
+    }
+
+    private deleteBookmark(bookmark: Bookmark) {
+        this.bookmarkRegistry.deleteBookmark(bookmark)
+    }
+
+    private loadBookmark(bookmarkString: string) {
+        let bookmark = JSON.parse(bookmarkString);
+
+        if (Bookmark.isBookmark(bookmark)) {
+            // make a copy of only the fields a bookmark has
+            bookmark = {
+                name: bookmark.name,
+                place: {
+                    zoom: bookmark.place.zoom,
+                    scroll: {
+                        x: bookmark.place.scroll.x,
+                        y: bookmark.place.scroll.y
+                    }
+                }
+            }
+            this.bookmarkRegistry.addBookmark(bookmark)
+        } else {
+            console.log("Clipboard does not contain a valid Bookmark")
+        }
+
+    }
+
+    private handleBookmarkPast() {
+
+        if (navigator.clipboard) {
+            navigator.clipboard.readText().then((value) => this.loadBookmark(value), (err) => console.error("Couldn't load Bookmark from clipboards", err))
+        } else {
+            const textarea = document.createElement("textarea");
+            document.body.appendChild(textarea)
+            textarea.focus()
+            textarea.select();
+
+            try {
+                const successfull = document.execCommand('paste');
+                if (!successfull) {
+                    console.log("Failed to past text from clipboard");
+                } else {
+                    this.loadBookmark(textarea.value)
+                }
+            } catch (err) {
+                console.log("Unable paste text from clipboard");
+            }
+            document.body.removeChild(textarea);
+        }
+
+    }
+
+    private handleBookmarkCopy(bookmark: Bookmark) {
+
+        const bookmarkString = JSON.stringify(bookmark);
+
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(bookmarkString).then(() => { /* noop */ }, (err) => console.error("Couldn't save Bookmark to clipboard", err))
+        } else {
+            const textarea = document.createElement("textarea");
+            textarea.value = bookmarkString;
+            document.body.appendChild(textarea)
+            textarea.focus()
+            textarea.select();
+
+            try {
+                const successfull = document.execCommand('copy');
+                if (!successfull)
+                    console.log("Failed to copy text to clipboard");
+            } catch (err) {
+                console.log("Unable to copy text to clipboard");
+            }
+            document.body.removeChild(textarea);
+        }
     }
 
 }

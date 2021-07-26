@@ -34,6 +34,17 @@ export class Bookmark {
      * The Viewport which the Bookmark marks
      */
     place: Viewport;
+
+    public static isBookmark(value: any): value is Bookmark {
+
+        if ('zoom' in value.place
+            && 'scroll' in value.place
+            && 'x' in value.place.scroll
+            && 'y' in value.place.scroll) {
+            return true
+        }
+        return false
+    }
 }
 
 /**
