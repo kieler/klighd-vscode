@@ -129,7 +129,7 @@
         "predistribute": "yarn run package",
         "distribute": "yarn run distribute:vsce && yarn run distribute:ovsx",
         "distribute:vsce": "vsce publish --yarn --packagePath klighd-vscode.vsix",
-        "distribute:ovsx": "ovsx publish --yarn --packagePath klighd-vscode.vsix"
+        "distribute:ovsx": "ovsx publish --yarn klighd-vscode.vsix"
     },
     "devDependencies": {
         "@types/node": "^12.11.7",
