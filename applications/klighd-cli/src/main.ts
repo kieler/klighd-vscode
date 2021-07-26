@@ -74,7 +74,7 @@ async function initDiagramView(sourceUri: string) {
     const actionDispatcher = getActionDispatcher(diagramContainer);
 
     sendUrlSearchParamPreferences(actionDispatcher);
-    setInitialBookmark(actionDispatcher, sourceUri)
+    setInitialBookmark(actionDispatcher)
 
     // Connect to a language server and request a diagram.
     await connection.connect(socketUrl);
@@ -101,14 +101,13 @@ function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getAc
 }
 
 /** Set an initial Position based on the bookmark Parameters. */
-function setInitialBookmark(actionDispatcher: ReturnType<typeof getActionDispatcher>, sourceUri: string) {
+function setInitialBookmark(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     const bookmark = getBookmarkViewport();
     if (bookmark) {
         actionDispatcher.dispatch(
             new SetInitialBookmark({
                 name: "From URI",
-                place: bookmark,
-                elementId: sourceUri
+                place: bookmark
             })
         );
     }

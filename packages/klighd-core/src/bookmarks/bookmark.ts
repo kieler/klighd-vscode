@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Command, CommandExecutionContext, CommandReturn, isViewport, TYPES, Viewport } from "sprotty";
+import { Command, CommandExecutionContext, CommandReturn, isViewport, SetViewportAction, SetViewportCommand, TYPES, Viewport } from "sprotty";
 import { Action } from "sprotty/lib/base/actions/action";
 import { inject } from "inversify";
 import { DISymbol } from "../di.symbols";
@@ -34,11 +34,6 @@ export class Bookmark {
      * The Viewport which the Bookmark marks
      */
     place: Viewport;
-
-    /**
-     * The id of the viewport
-     */
-    elementId: string;
 }
 
 /**
@@ -64,9 +59,8 @@ export class CreateBookmarkCommand extends Command {
         const model = context.root
         if (isViewport(model)) {
             const bookmark = new Bookmark();
-            // copy the viewport as we don't want the Bookmark to stay where we are now
+            // copy the viewport as we do want the Bookmark to stay where we are now
             bookmark.place = { scroll: model.scroll, zoom: model.zoom }
-            bookmark.elementId = model.id
             this.bookmarkRegistry.addBookmark(bookmark)
         }
         return model;
@@ -94,6 +88,32 @@ export class GoToBookmarkAction implements Action {
     constructor(bookmark: Bookmark) {
         this.bookmark = { ...bookmark };
     }
+}
+
+export class GoToBookmarkCommand implements Command {
+
+    action: GoToBookmarkAction
+    animate: boolean
+    setCommand: SetViewportCommand
+
+    constructor(action: GoToBookmarkAction, animate: boolean) {
+        this.action = action
+        this.animate = animate
+    }
+
+    execute(context: CommandExecutionContext): CommandReturn {
+        const viewAction = new SetViewportAction(context.root.id, this.action.bookmark.place, this.animate)
+        this.setCommand = new SetViewportCommand(viewAction)
+
+        return this.setCommand.execute(context)
+    }
+    undo(context: CommandExecutionContext): CommandReturn {
+        return this.setCommand.undo(context)
+    }
+    redo(context: CommandExecutionContext): CommandReturn {
+        return this.setCommand.redo(context)
+    }
+
 }
 
 export class SetInitialBookmark implements Action {
