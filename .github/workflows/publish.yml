@@ -37,28 +37,28 @@ jobs:
             - run: yarn package
 
             - name: Upload VSIX
-              uses: JasonEtco/upload-to-release
+              uses: JasonEtco/upload-to-release@master
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   args: ./applications/klighd-vscode/klighd-vscode.vsix application/octet-stream
 
             - name: Upload CLI Linux
-              uses: JasonEtco/upload-to-release
+              uses: JasonEtco/upload-to-release@master
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   args: ./applications/klighd-cli/bin/klighd-linux application/octet-stream
 
             - name: Upload CLI MacOS
-              uses: JasonEtco/upload-to-release
+              uses: JasonEtco/upload-to-release@master
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   args: ./applications/klighd-cli/bin/klighd-macos application/octet-stream
 
             - name: Upload CLI Windows
-              uses: JasonEtco/upload-to-release
+              uses: JasonEtco/upload-to-release@master
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
