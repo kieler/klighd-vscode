@@ -52,7 +52,23 @@ export class BookmarkPanel extends SidebarPanel {
     render(): VNode {
         return <div>{this.bookmarkRegistry.bookmarks.map((bookmark, index) => (
             <div key={index}>
-                <button on-click={() => this.handleBookmarkActionClick(bookmark)}>{bookmark.name ?? ("Bookmark " + index)}</button>
+                <fieldset>
+                    <legend>{bookmark.name ?? ("Bookmark " + index)}</legend>
+                    <button
+                        title="GoTo"
+                        classNames="options__icon-button"
+                        on-click={() => this.handleBookmarkActionClick(bookmark)}
+                    >
+                        <i attrs={{ "data-feather": "map-pin" }} />
+                    </button>
+                    <button
+                        title="Copy to Clipboard"
+                        classNames="options__icon-button"
+                        on-click={() => { return }}
+                    >
+                        <i attrs={{ "data-feather": "copy" }} />
+                    </button>
+                </fieldset>
             </div>
         )
         )}</div>;
