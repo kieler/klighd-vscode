@@ -20,8 +20,6 @@ export interface RenderOption {
     id: string;
     name: string;
     type: TransformationOptionType;
-    /** Whether the LS needs to regenerate the Diagramm */
-    refreshNeeded: boolean;
     initialValue: any;
     currentValue: any;
 }
