@@ -37,8 +37,8 @@ export class UpdateDepthmapModelAction implements Action {
     constructor(input: SModelRootSchema,
         public readonly animate: boolean = true,
         public readonly cause?: Action) {
-        if ((input as SModelRootSchema).id !== undefined)
-            this.newRoot = input as SModelRootSchema;
+        if (input.id !== undefined)
+            this.newRoot = input;
     }
 }
 
