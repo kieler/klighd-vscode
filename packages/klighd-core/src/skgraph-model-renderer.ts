@@ -34,7 +34,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
     decorationMap: any
     depthMap?: DepthMap
     renderingOptions: RenderOptionsRegistry
-    kRenderingLibrary: KRenderingLibrary
+    kRenderingLibrary?: KRenderingLibrary
     renderingDefs: Map<string, VNode>
     viewport: Viewport
 

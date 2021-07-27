@@ -765,13 +765,17 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
         if (data === null)
             continue
         if (data.type === K_RENDERING_REF) {
-            const id = (data as KRenderingRef).renderingId
-            for (const rendering of context.kRenderingLibrary.renderings) {
-                if ((rendering as KRendering).renderingId === id) {
-                    context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
-                    context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
-                    return rendering as KRendering
+            if (context.kRenderingLibrary) {
+                const id = (data as KRenderingRef).renderingId
+                for (const rendering of context.kRenderingLibrary.renderings) {
+                    if ((rendering as KRendering).renderingId === id) {
+                        context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
+                        context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
+                        return rendering as KRendering
+                    }
                 }
+            } else {
+                console.log("No KRenderingLibrary for KRenderingRef in context");
             }
         }
         if (isRendering(data)) {
