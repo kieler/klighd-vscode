@@ -15,11 +15,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KNode, DetailLevel } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { Bounds, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
 import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
 
+/**
+ * The possible detail level of a KNode as determined by the DepthMap
+ */
+export enum DetailLevel {
+    FullDetails = 2,
+    MinimalDetails = 1,
+    OutOfBounds = 0
+}
 
 /**
  * All DetailLevel where the children are visible

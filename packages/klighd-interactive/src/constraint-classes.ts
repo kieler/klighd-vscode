@@ -72,23 +72,6 @@ export enum Direction {
 }
 
 /**
- * The possible detail level of a KNode as determined by the DepthMap
- */
-export enum DetailLevel {
-    FullDetails = 2,
-    MinimalDetails = 1,
-    OutOfBounds = 0
-}
-
-/**
- * Something we can get a DetailLevel from
- */
-export interface DetailReference {
-    detailLevel: DetailLevel
-}
-
-
-/**
  * Properties needed for client side layout or visualization.
  * Send together with the nodes from server to client.
  * They correspond to properties on the server.
