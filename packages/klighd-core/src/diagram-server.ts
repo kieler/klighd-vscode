@@ -100,7 +100,7 @@ export class KlighdDiagramServer extends DiagramServer {
             message.action.kind === SetModelCommand.KIND ||
             message.action.kind === KlighdUpdateModelAction.KIND;
         if (wasDiagramModelUpdated) {
-            this.actionDispatcher.dispatch(new UpdateDepthmapModelAction((message.action as any).newRoot));
+            this.actionDispatcher.dispatch(new UpdateDepthmapModelAction());
 
             if (this.bookmarkRegistry.initialBookmark) {
                 this.actionDispatcher.dispatch(new GoToBookmarkAction(this.bookmarkRegistry.initialBookmark))

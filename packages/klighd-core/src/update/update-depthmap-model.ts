@@ -17,8 +17,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Command, TYPES } from 'sprotty'
-import { SModelRootSchema } from 'sprotty';
-import { Match } from 'sprotty';
 import { Action } from 'sprotty';
 import { CommandExecutionContext, CommandReturn } from 'sprotty';
 import { DepthMap } from '../depth-map';
@@ -30,16 +28,6 @@ import { DepthMap } from '../depth-map';
 export class UpdateDepthmapModelAction implements Action {
     static readonly KIND = 'updateDepthmapModel';
     readonly kind = UpdateDepthmapModelAction.KIND;
-
-    public readonly newRoot?: SModelRootSchema;
-    public readonly matches?: Match[];
-
-    constructor(input: SModelRootSchema,
-        public readonly animate: boolean = true,
-        public readonly cause?: Action) {
-        if (input.id !== undefined)
-            this.newRoot = input;
-    }
 }
 
 /**
