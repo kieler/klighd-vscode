@@ -67,19 +67,7 @@ export class SKGraphView extends SGraphView {
             ctx.depthMap = undefined
         }
 
-        //  do the same as return super.render(model, context)
-        // but reuse the child rendering if nothing changed there
-
-        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`;
-
-        const childsRedered = context.renderChildren(model)
-
-        return <svg class-sprotty-graph={true}>
-            <g transform={transform}>
-                {childsRedered}
-            </g>
-        </svg>;
-
+        return super.render(model, context)
     }
 }
 
