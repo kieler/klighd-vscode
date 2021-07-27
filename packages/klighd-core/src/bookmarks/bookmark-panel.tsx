@@ -53,7 +53,7 @@ export class BookmarkPanel extends SidebarPanel {
         return <div>
             <div>
                 <button
-                    title="Load from Clipboard"
+                    title="Create new Bookmark"
                     classNames="options__icon-button"
                     on-click={() => this.newBookmark()}
                 >
