@@ -42,6 +42,7 @@ export class BookmarkRegistry extends Registry {
             return new GoToBookmarkCommand(action as GoToBookmarkAction, this.preferenceRegistry.preferences.animateGoToBookmark)
         } else if (action.kind === SetInitialBookmark.KIND) {
             this._initialBookmark = (action as SetInitialBookmark).bookmark
+            this.addBookmark(this._initialBookmark)
         }
     }
 
