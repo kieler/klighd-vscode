@@ -90,34 +90,20 @@ export class KNodeView implements IView {
         const result: VNode[] = []
 
         const isShadow = node.shadow
+        let shadow = undefined
         let interactiveNodes = undefined
+        let interactiveConstraints = undefined
 
+        if (isShadow) {
+            // Render shadow of the node
+            shadow = getRendering(node.data, node, new KStyles, ctx, this.mListener)
+        }
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
                 interactiveNodes = renderInteractiveLayout(node as SKNode)
             }
         }
-
-        if (node.id === '$root') {
-            // The root node should not be rendered, only its children should.
-            const children = ctx.renderChildren(node)
-            // Add all color and shadow definitions put into the context by the child renderings.
-            const defs = <defs></defs>
-            ctx.renderingDefs.forEach((value: VNode, key: string) => {
-                (defs.children as (string | VNode)[]).push(value)
-            })
-
-            result.push(defs)
-            if (interactiveNodes) {
-                result.push(interactiveNodes)
-            }
-            result.push(...children)
-
-            return <g>{...result}</g>
-        }
-
-        let interactiveConstraints = undefined
 
         // Render nodes and constraint icon. All nodes that are not moved do not have a shadow and have their opacity set to 0.1.
         node.shadow = false
@@ -153,14 +139,24 @@ export class KNodeView implements IView {
             node.opacity = 0.1
             rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
         }
-
         node.shadow = isShadow
 
-        let shadow = undefined
+        if (node.id === '$root') {
+            // The root node should not be rendered, only its children should.
+            const children = ctx.renderChildren(node)
+            // Add all color and shadow definitions put into the context by the child renderings.
+            const defs = <defs></defs>
+            ctx.renderingDefs.forEach((value: VNode, key: String) => {
+                (defs.children as (string | VNode)[]).push(value)
+            })
 
-        if (isShadow) {
-            // Render shadow of the node
-            shadow = getRendering(node.data, node, new KStyles, ctx, this.mListener)
+            result.push(defs)
+            if (interactiveNodes) {
+                result.push(interactiveNodes)
+            }
+            result.push(...children)
+
+            return <g>{...result}</g>
         }
 
         // Add renderings that are not undefined
