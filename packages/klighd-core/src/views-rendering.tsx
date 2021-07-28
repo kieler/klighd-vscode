@@ -260,37 +260,31 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     if (element && context.depthMap) {
         const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
-        if (region) {
-            if (region.parent && region.parent.regionTitle) {
-                rendering.tooltip = "\"" + region.parent.regionTitle + "\" > \"" + region.regionTitle + "\""
-            } else {
-                rendering.tooltip = "\"" + region.regionTitle + "\""
+        if (region && region.detail !== DetailLevel.FullDetails) {
+            const offset = region.regionTitleHeight ?? 0
+            const bounds = region.boundingRectangle.bounds
+            const minBounds = Math.min(bounds.height, bounds.width)
+            const size = 50
+            let scalingFactor = Math.max(minBounds / 2 - offset, 0) / size
+            // Use zoom for constant size in viewport.
+            if (context.viewport) {
+                scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
             }
-            if (region.detail !== DetailLevel.FullDetails) {
-                const offset = region.regionTitleHeight ?? 0
-                const bounds = region.boundingRectangle.bounds
-                const minBounds = Math.min(bounds.height, bounds.width)
-                const size = 50
-                let scalingFactor = Math.max(minBounds / 2 - offset, 0) / size
-                // Use zoom for constant size in viewport.
-                if (context.viewport) {
-                    scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
-                }
 
-                const y = scalingFactor > 0 ? offset / scalingFactor : 0
-                const placeholder = <g id="ZoomPlaceholder"
-                    transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${y})`}>
-                    <g height={size} width={size}>
-                        <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
-                        <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
-                        <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
-                        <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
-                    </g>
+            const y = scalingFactor > 0 ? offset / scalingFactor : 0
+            const placeholder = <g id="ZoomPlaceholder"
+                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${y})`}>
+                <g height={size} width={size}>
+                    <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
+                    <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
+                    <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
+                    <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
                 </g>
-                element.children ? element.children.push(placeholder) : element.children = [placeholder]
-            }
+            </g>
+            element.children ? element.children.push(placeholder) : element.children = [placeholder]
         }
     }
+
     return element as VNode
 }
 
@@ -579,7 +573,6 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
                 const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
                 if (region) {
-                    region.regionTitle = text
                     if (region.detail !== DetailLevel.FullDetails) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
