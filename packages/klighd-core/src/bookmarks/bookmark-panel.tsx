@@ -155,7 +155,9 @@ export class BookmarkPanel extends SidebarPanel {
 
     private startBookmarkNameEdit(bookmark: Bookmark) {
         document.getElementById(bookmark.editId)?.classList.toggle("options__hidden", true)
-        document.getElementById(bookmark.saveId)?.classList.toggle("options__hidden", false)
+        const save = document.getElementById(bookmark.saveId);
+        save?.classList.toggle("options__hidden", false)
+        save?.getElementsByTagName("input")[0].focus()
     }
 
     private inputSaveBookmarkName(bookmark: Bookmark, event: KeyboardEvent) {
