@@ -493,7 +493,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
 
     const simplifySmallTextOption = context.renderingOptions.getValueForId(SimplifySmallText.ID)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails)) {
+    if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails) && !rendering.isNodeTitle) {
         const simplificationThresholdOption = context.renderingOptions.getValueForId(TextSimplificationThreshold.ID)
         const defaultThreshold = 3
         const simplificationThreshold = simplificationThresholdOption ?? defaultThreshold
@@ -564,7 +564,6 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
-
         if (context.depthMap) {
             if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && rendering.isNodeTitle) {
 
@@ -573,22 +572,25 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
                 const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
                 if (region) {
-                    if (region.detail !== DetailLevel.FullDetails) {
+                    if (region.detail !== DetailLevel.FullDetails
+                        || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= 4)) { // Hardcoded for now
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
                         const defaultFactor = 1
                         let maxScale = titleScalingFactorOption ?? defaultFactor
                         // Indentation used in the layouting in pixels.
-                        const indentation = 14
                         if (context.viewport) {
                             maxScale = maxScale / context.viewport.zoom
-                            // Rescale indentation as this is applied before the scaling.
-                            attrs.x = indentation * context.viewport.zoom / maxScale
                         }
-                        const scaleX = (region.boundingRectangle.bounds.width - indentation) / boundsAndTransformation.bounds.width
+                        const scaleX = (region.boundingRectangle.bounds.width - attrs.x) / boundsAndTransformation.bounds.width
                         const scaleY = region.boundingRectangle.bounds.height / boundsAndTransformation.bounds.height
                         let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+                        // Don't let scalingfactor get too big.
                         scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
+                        // Make sure scalingfactor is not below 1.
+                        scalingFactor = scalingFactor > 1 ? scalingFactor : 1
+                        // Set the indentation.
+                        attrs.x /= scalingFactor
                         // Remove spacing to the left for region titles.
                         boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
                         // Calculate exact height of title text
@@ -597,12 +599,32 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 }
             }
         }
-
-        elements = [
-            <text {...attrs}>
-                {...children}
-            </text>
-        ]
+        if (rendering.isNodeTitle && region && region.detail === DetailLevel.FullDetails
+            && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= 3) {
+            // Adapt y value to place the rectangle on the top of the text. 
+            attrs.y -= (boundsAndTransformation.bounds.height ?? 0) / 2
+            // Addapt position of text in rectangle to place text in center
+            const attrs2 = { ...attrs }
+            attrs2.x += (boundsAndTransformation.bounds.width ?? 0) / 2
+            attrs2.y += (boundsAndTransformation.bounds.height ?? 0) / 2
+            attrs2.style["dominant-baseline"] = "middle"
+            attrs2.attrs = { "text-anchor": "middle" }
+            // Add a rectangle behind the title
+            elements = [
+                <g>
+                    <rect x={attrs.x} y={attrs.y} width={boundsAndTransformation.bounds.width} height={boundsAndTransformation.bounds.height} fill="white" stroke="black"> </rect>
+                    <text {...attrs2}>
+                        {...children}
+                    </text>
+                </g>
+            ]
+        } else {
+            elements = [
+                <text {...attrs}>
+                    {...children}
+                </text>
+            ]
+        }
     } else {
         // Otherwise, put each line of text in a separate <text> element.
         const calculatedTextLineWidths = rendering.calculatedTextLineWidths
