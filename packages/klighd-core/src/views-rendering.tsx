@@ -261,24 +261,25 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     if (element && context.depthMap) {
         const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
         if (region && region.detail !== DetailLevel.FullDetails) {
-            const offset = region.regionTitleHeight ?? 0
+            const offsetY = region.regionTitleHeight ?? 0
+            const offsetX = region.regionTitleIndentation ?? 0
             const bounds = region.boundingRectangle.bounds
-            const minBounds = Math.min(bounds.height, bounds.width)
             const size = 50
-            let scalingFactor = Math.max(minBounds / 2 - offset, 0) / size
+            let scalingFactor = Math.max(bounds.height - offsetY, 0) / size
             // Use zoom for constant size in viewport.
             if (context.viewport) {
                 scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
             }
 
-            const y = scalingFactor > 0 ? offset / scalingFactor : 0
+            const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
+            const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
             const placeholder = <g id="ZoomPlaceholder"
-                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(0, ${y})`}>
+                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
                 <g height={size} width={size}>
-                    <circle cx="25" cy="25" r="20" stroke="#000000" fill="none" />
-                    <line x1="25" x2="25" y1="10" y2="40" stroke="#000000" stroke-linecap="round" />
-                    <line x1="10" x2="40" y1="25" y2="25" stroke="#000000" stroke-linecap="round" />
-                    <line x1="39" x2="50" y1="39" y2="50" stroke="#000000" stroke-linecap="round" />
+                    <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
+                    <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" stroke-linecap="round" />
+                    <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
+                    <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
                 </g>
             </g>
             element.children ? element.children.push(placeholder) : element.children = [placeholder]
@@ -595,6 +596,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
                         // Calculate exact height of title text
                         region.regionTitleHeight = scalingFactor * (boundsAndTransformation.bounds.height)
+                        region.regionTitleIndentation = boundsAndTransformation.bounds.x ?? 0
                     }
                 }
             }

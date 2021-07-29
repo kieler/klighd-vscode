@@ -429,6 +429,8 @@ export class Region {
     children: Region[]
     /** Contains the height of the title of the region, if there is one. */
     regionTitleHeight?: number
+    /** Indentation of region title. */
+    regionTitleIndentation?: number
     /** Constructor initializes element array for region. */
     constructor(boundingRectangle: KNode) {
         this.boundingRectangle = boundingRectangle
