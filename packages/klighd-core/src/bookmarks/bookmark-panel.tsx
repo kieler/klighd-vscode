@@ -144,6 +144,7 @@ export class BookmarkPanel extends SidebarPanel {
         let bookmark = JSON.parse(bookmarkString);
 
         if (Bookmark.isBookmark(bookmark)) {
+            bookmark.clone = Bookmark.prototype.clone
             bookmark =
                 this.bookmarkRegistry.addBookmark(bookmark.clone())
         } else {
