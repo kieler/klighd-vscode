@@ -159,3 +159,7 @@
     outline: none;
     border-color: var(--kdc-color-primary);
 }
+
+.options__hidden {
+    display: none;
+}

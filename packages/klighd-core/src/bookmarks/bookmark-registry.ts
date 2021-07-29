@@ -58,6 +58,19 @@ export class BookmarkRegistry extends Registry {
         this.notifyListeners();
     }
 
+    updateBookmarkName(bookmark_index: number, new_name: string): void {
+        const bm = this._bookmarks.find((bm) => bm.bookmarkIndex === bookmark_index)
+        if (bm) {
+            if (new_name === "") {
+                bm.name = undefined
+            } else {
+                bm.name = new_name
+            }
+            this.notifyListeners();
+        }
+
+    }
+
     get initialBookmark(): Bookmark | undefined {
         return this._initialBookmark
     }

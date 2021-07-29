@@ -74,15 +74,15 @@ export class BookmarkPanel extends SidebarPanel {
     private renderBookmarkList(): VNode {
         return <div>
             {
-                this.bookmarkRegistry.bookmarks.map((bookmark, index) => (
-                    this.renderBookmarkEntry(bookmark, index)
+                this.bookmarkRegistry.bookmarks.map((bookmark) => (
+                    this.renderBookmarkEntry(bookmark)
                 ))
             }
         </div>
     }
 
-    private renderBookmarkEntry(bookmark: Bookmark, index: number): VNode {
-        return <div key={index}>
+    private renderBookmarkEntry(bookmark: Bookmark): VNode {
+        return <div key={bookmark.bookmarkIndex}>
             <fieldset>
                 <legend>{bookmark.name ?? ("Bookmark " + bookmark.bookmarkIndex)}</legend>
                 <button
@@ -106,6 +106,24 @@ export class BookmarkPanel extends SidebarPanel {
                 >
                     <i attrs={{ "data-feather": "trash-2" }} />
                 </button>
+                <button
+                    id={bookmark.editId}
+                    title="Edit Bookmark Name"
+                    classNames="options__icon-button"
+                    on-click={() => this.startBookmarkNameEdit(bookmark)}
+                >
+                    <i attrs={{ "data-feather": "edit-3" }} />
+                </button>
+                <span id={bookmark.saveId} classNames="options__hidden">
+                    <button
+                        title="Save Bookmark Name"
+                        classNames="options__icon-button"
+                        on-click={() => this.saveBookmarkName(bookmark)}
+                    >
+                        <i attrs={{ "data-feather": "check" }} />
+                    </button>
+                    <input type="text" value={bookmark.name ?? ""} placeholder="Enter Bookmark Name" on-keypress={(event: KeyboardEvent) => this.inputSaveBookmarkName(bookmark, event)} />
+                </span>
             </fieldset>
         </div>
     }
@@ -127,24 +145,31 @@ export class BookmarkPanel extends SidebarPanel {
 
         if (Bookmark.isBookmark(bookmark)) {
             bookmark =
-                this.bookmarkRegistry.addBookmark(BookmarkPanel.copyBookmark(bookmark))
+                this.bookmarkRegistry.addBookmark(bookmark.clone())
         } else {
             console.log("Clipboard does not contain a valid Bookmark")
         }
 
     }
 
-    private static copyBookmark(bookmark: Bookmark): Bookmark {
-        // make a copy of only the fields a bookmark has and without the bookmarkIndex
-        return {
-            name: bookmark.name,
-            place: {
-                zoom: bookmark.place.zoom,
-                scroll: {
-                    x: bookmark.place.scroll.x,
-                    y: bookmark.place.scroll.y
-                }
-            }
+    private startBookmarkNameEdit(bookmark: Bookmark) {
+        document.getElementById(bookmark.editId)?.classList.toggle("options__hidden", true)
+        document.getElementById(bookmark.saveId)?.classList.toggle("options__hidden", false)
+    }
+
+    private inputSaveBookmarkName(bookmark: Bookmark, event: KeyboardEvent) {
+        if (event.key === "Enter") {
+            this.saveBookmarkName(bookmark)
+        }
+    }
+
+    private saveBookmarkName(bookmark: Bookmark) {
+        document.getElementById(bookmark.editId)?.classList.toggle("options__hidden", false)
+        const save = document.getElementById(bookmark.saveId);
+        if (save && bookmark.bookmarkIndex !== undefined) {
+            save.classList.toggle("options__hidden", true)
+            const new_name = save.getElementsByTagName("input")[0].value ?? undefined;
+            this.bookmarkRegistry.updateBookmarkName(bookmark.bookmarkIndex, new_name)
         }
     }
 
@@ -175,7 +200,7 @@ export class BookmarkPanel extends SidebarPanel {
 
     private handleBookmarkCopy(bookmark: Bookmark) {
 
-        const bookmarkString = JSON.stringify(BookmarkPanel.copyBookmark(bookmark));
+        const bookmarkString = JSON.stringify(bookmark.clone());
 
         if (navigator.clipboard) {
             navigator.clipboard.writeText(bookmarkString).then(() => { /* noop */ }, (err) => console.error("Couldn't save Bookmark to clipboard", err))

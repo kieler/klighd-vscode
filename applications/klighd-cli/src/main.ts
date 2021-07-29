@@ -30,6 +30,7 @@ import { LSPConnection } from "./services/connection";
 import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
 import { showPopup } from "./popup";
+import { Bookmark } from "../../../packages/klighd-core/lib/bookmarks/bookmark";
 
 // IIFE booting the application
 (async function main() {
@@ -102,13 +103,10 @@ function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getAc
 
 /** Set an initial Position based on the bookmark Parameters. */
 function setInitialBookmark(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
-    const bookmark = getBookmarkViewport();
-    if (bookmark) {
+    const viewport = getBookmarkViewport();
+    if (viewport) {
         actionDispatcher.dispatch(
-            new SetInitialBookmark({
-                name: "From URI",
-                place: bookmark
-            })
+            new SetInitialBookmark(new Bookmark(viewport, "From URI"))
         );
     }
 }

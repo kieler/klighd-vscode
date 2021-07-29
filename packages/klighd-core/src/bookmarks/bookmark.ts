@@ -41,6 +41,11 @@ export class Bookmark {
      */
     bookmarkIndex?: number;
 
+    constructor(place: Viewport, name?: string) {
+        this.place = place;
+        this.name = name;
+    }
+
     public static isBookmark(value: any): value is Bookmark {
 
         if ('zoom' in value.place
@@ -50,6 +55,22 @@ export class Bookmark {
             return true
         }
         return false
+    }
+
+    public clone(): Bookmark {
+        const place = {
+            zoom: this.place.zoom,
+            scroll: { x: this.place.scroll.x, y: this.place.scroll.y }
+        }
+        return new Bookmark(place, this.name);
+    }
+
+    public get saveId(): string {
+        return "bookmark-save-" + this.bookmarkIndex
+    }
+
+    public get editId(): string {
+        return "bookmark-edit-" + this.bookmarkIndex
     }
 }
 
@@ -75,9 +96,8 @@ export class CreateBookmarkCommand extends Command {
     execute(context: CommandExecutionContext): CommandReturn {
         const model = context.root
         if (isViewport(model)) {
-            const bookmark = new Bookmark();
             // copy the viewport as we do want the Bookmark to stay where we are now
-            bookmark.place = { scroll: model.scroll, zoom: model.zoom }
+            const bookmark = new Bookmark({ scroll: model.scroll, zoom: model.zoom });
             this.bookmarkRegistry.addBookmark(bookmark)
         }
         return model;
@@ -103,7 +123,7 @@ export class GoToBookmarkAction implements Action {
     readonly bookmark: Bookmark;
 
     constructor(bookmark: Bookmark) {
-        this.bookmark = { ...bookmark };
+        this.bookmark = bookmark.clone();
     }
 }
 
