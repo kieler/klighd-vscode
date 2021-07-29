@@ -600,7 +600,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             }
         }
         if (rendering.isNodeTitle && region && region.detail === DetailLevel.FullDetails
-            && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= 3) {
+            && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= 4) {
             // Adapt y value to place the rectangle on the top of the text. 
             attrs.y -= (boundsAndTransformation.bounds.height ?? 0) / 2
             // Addapt position of text in rectangle to place text in center
