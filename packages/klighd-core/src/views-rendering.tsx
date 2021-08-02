@@ -617,7 +617,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             // Add a rectangle behind the title
             elements = [
                 <g>
-                    <rect x={attrs.x} y={attrs.y} width={boundsAndTransformation.bounds.width} height={boundsAndTransformation.bounds.height} fill="white" stroke="black"> </rect>
+                    <rect x={attrs.x} y={attrs.y} width={boundsAndTransformation.bounds.width} height={boundsAndTransformation.bounds.height} fill="white" opacity="0.8" stroke="black"> </rect>
                     <text {...attrs2}>
                         {...children}
                     </text>
