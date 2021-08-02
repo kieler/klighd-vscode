@@ -30,7 +30,7 @@ import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
 import { KNode } from '../../klighd-interactive/lib/constraint-classes';
-import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
+import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, TitleOverlayThreshold } from './options/render-options-registry';
 import { DetailLevel } from './depth-map';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
@@ -263,9 +263,9 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         if (region && region.detail !== DetailLevel.FullDetails) {
             const offsetY = region.regionTitleHeight ?? 0
             const offsetX = region.regionTitleIndentation ?? 0
-            const bounds = region.boundingRectangle.bounds
+            const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
             const size = 50
-            let scalingFactor = Math.max(bounds.height - offsetY, 0) / size
+            let scalingFactor = Math.max(bounds, 0) / size
             // Use zoom for constant size in viewport.
             if (context.viewport) {
                 scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
@@ -565,6 +565,9 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
+        const deafultOverlayTreshold = 4
+        const overlayThresholdOption = context.renderingOptions.getValueForId(TitleOverlayThreshold.ID)
+        const overlayThreshold = overlayThresholdOption ?? deafultOverlayTreshold
         if (context.depthMap) {
             if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && rendering.isNodeTitle) {
 
@@ -574,7 +577,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
                 if (region) {
                     if (region.detail !== DetailLevel.FullDetails
-                        || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= 4)) { // Hardcoded for now
+                        || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold)) { // Hardcoded for now
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
                         const defaultFactor = 1
@@ -602,7 +605,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             }
         }
         if (rendering.isNodeTitle && region && region.detail === DetailLevel.FullDetails
-            && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= 4) {
+            && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
             // Adapt y value to place the rectangle on the top of the text. 
             attrs.y -= (boundsAndTransformation.bounds.height ?? 0) / 2
             // Addapt position of text in rectangle to place text in center

@@ -118,8 +118,24 @@ export class TitleScalingFactor implements RangeOption {
     readonly initialValue: number = 1
     currentValue = 1
 }
-
-
+/**
+ * The threshold at which the title will no longer overlay  
+ */
+export class TitleOverlayThreshold implements RangeOption {
+    static readonly ID: string = 'title-overlay-threshold'
+    static readonly NAME: string = 'Title Overlay Threshold'
+    readonly id: string = TitleOverlayThreshold.ID
+    readonly name: string = TitleOverlayThreshold.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range = {
+        first: 1,
+        second: 7
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = 4
+    currentValue = 4
+}
 /**
  * Boolean option to toggle the scaling of lines based on zoom level.
  */
@@ -169,6 +185,7 @@ export class RenderOptionsRegistry extends Registry {
         this._renderOptions.set(TextSimplificationThreshold.ID, new TextSimplificationThreshold());
 
         this._renderOptions.set(TitleScalingFactor.ID, new TitleScalingFactor());
+        this._renderOptions.set(TitleOverlayThreshold.ID, new TitleOverlayThreshold());
 
         this._renderOptions.set(UseConstantLineWidth.ID, new UseConstantLineWidth());
         this._renderOptions.set(ConstantLineWidth.ID, new ConstantLineWidth());
