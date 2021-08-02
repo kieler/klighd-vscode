@@ -170,7 +170,7 @@ export class KStyles {
  * Calculates the renderings for all styles contained in styleList into an object.
  * @param styleList The list of all styles that should have their rendering calculated.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
- * @param stylesToPropagage The optional styles object that should be propagated further to childern. It is modified in this method.
+ * @param stylesToPropagage The optional styles object that should be propagated further to children. It is modified in this method.
  */
 export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
     // TODO: not all of these are implemented yet
@@ -413,7 +413,7 @@ export function colorDefinition(colorId: string, start: ColorStyle, end: ColorSt
  * SVG element for a shadow definition.
  * @param shadowId The unique identifying string for this shadow.
  * @param color The color of the shadow.
- * @param blur The amound of blur of the shadow.
+ * @param blur The amount of blur of the shadow.
  * @param xOffset The x-offset of the shadow.
  * @param yOffset The y-offset of the shadow.
  */

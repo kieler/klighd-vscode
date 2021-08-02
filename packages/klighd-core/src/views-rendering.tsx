@@ -565,9 +565,9 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
-        const deafultOverlayTreshold = 4
+        const defaultOverlayThreshold = 4
         const overlayThresholdOption = context.renderingOptions.getValueForId(TitleOverlayThreshold.ID)
-        const overlayThreshold = overlayThresholdOption ?? deafultOverlayTreshold
+        const overlayThreshold = overlayThresholdOption ?? defaultOverlayThreshold
         if (context.depthMap) {
             if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && rendering.isNodeTitle) {
 
@@ -608,7 +608,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
             // Adapt y value to place the rectangle on the top of the text. 
             attrs.y -= (boundsAndTransformation.bounds.height ?? 0) / 2
-            // Addapt position of text in rectangle to place text in center
+            // Adapt position of text in rectangle to place text in center
             const attrs2 = { ...attrs }
             attrs2.x += (boundsAndTransformation.bounds.width ?? 0) / 2
             attrs2.y += (boundsAndTransformation.bounds.height ?? 0) / 2
