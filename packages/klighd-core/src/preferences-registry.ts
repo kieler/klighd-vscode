@@ -37,7 +37,7 @@ export interface Preferences {
     /** Indicates whether or nat a selection in the diagram should also highlight the corresponding text. */
     shouldSelectText: boolean;
 
-    /** Wheter going to a Bookmark should be animated */
+    /** Whether going to a Bookmark should be animated */
     animateGoToBookmark: boolean;
 }
 

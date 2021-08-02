@@ -131,8 +131,8 @@ export class DepthMap {
     }
 
     /**
-     * Returns the current Depthmap instance or undefined if its not initialized
-     * @returns Depthmap | undefined 
+     * Returns the current DepthMap instance or undefined if its not initialized
+     * @returns DepthMap | undefined 
      */
     public static getDM(): DepthMap | undefined {
         return DepthMap.instance

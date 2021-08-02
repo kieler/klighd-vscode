@@ -66,7 +66,7 @@ import { PopupModelProvider } from "./hover/popup-provider";
 import { PreferencesRegistry } from "./preferences-registry";
 import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
-import { UpdateDepthmapModelAction } from "./update/update-depthmap-model";
+import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
 
 /**
  * This class extends {@link DiagramServer} to handle different `klighd-core` specific
@@ -100,7 +100,7 @@ export class KlighdDiagramServer extends DiagramServer {
             message.action.kind === SetModelCommand.KIND ||
             message.action.kind === KlighdUpdateModelAction.KIND;
         if (wasDiagramModelUpdated) {
-            this.actionDispatcher.dispatch(new UpdateDepthmapModelAction());
+            this.actionDispatcher.dispatch(new UpdateDepthMapModelAction());
 
             if (this.bookmarkRegistry.initialBookmark) {
                 this.actionDispatcher.dispatch(new GoToBookmarkAction(this.bookmarkRegistry.initialBookmark))

@@ -22,22 +22,22 @@ import { CommandExecutionContext, CommandReturn } from 'sprotty';
 import { DepthMap } from '../depth-map';
 
 /**
- * Simple UpdateDepthmapAction Fires the UpdateDepthmapModelCommand
+ * Simple UpdateDepthMapAction Fires the UpdateDepthMapModelCommand
  * is created whenever a updateModelAction or a setModelAction is present
  */
-export class UpdateDepthmapModelAction implements Action {
-    static readonly KIND = 'updateDepthmapModel';
-    readonly kind = UpdateDepthmapModelAction.KIND;
+export class UpdateDepthMapModelAction implements Action {
+    static readonly KIND = 'updateDepthMapModel';
+    readonly kind = UpdateDepthMapModelAction.KIND;
 }
 
 /**
  * UpdateModelCommand gets fired whenever a setModel or updateModel was executed
  */
 @injectable()
-export class UpdateDepthmapModelCommand extends Command {
-    static readonly KIND = UpdateDepthmapModelAction.KIND;
+export class UpdateDepthMapModelCommand extends Command {
+    static readonly KIND = UpdateDepthMapModelAction.KIND;
 
-    constructor(@inject(TYPES.Action) protected readonly action: UpdateDepthmapModelAction) { super() }
+    constructor(@inject(TYPES.Action) protected readonly action: UpdateDepthMapModelAction) { super() }
 
 
     execute(context: CommandExecutionContext): CommandReturn {

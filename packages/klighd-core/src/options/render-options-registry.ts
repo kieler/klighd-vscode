@@ -100,7 +100,7 @@ export class TextSimplificationThreshold implements RangeOption {
 }
 
 /**
- * The factor by which titles of colapsed regions get scaled by
+ * The factor by which titles of collapsed regions get scaled by
  * in relation to their size at native resolution.
  */
 export class TitleScalingFactor implements RangeOption {

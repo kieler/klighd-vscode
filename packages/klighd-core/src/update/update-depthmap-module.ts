@@ -17,13 +17,13 @@
 
 import { ContainerModule } from "inversify";
 import { configureCommand } from "sprotty";
-import { UpdateDepthmapModelCommand } from './update-depthmap-model';
+import { UpdateDepthMapModelCommand } from './update-depthmap-model';
 
 /**
- * Module for updateing the depthmap whenever needed.
+ * Module for updating the DepthMap whenever needed.
  */
-const updateDepthmapModule = new ContainerModule((bind, _unbind, isBound) => {
-    configureCommand({ bind, isBound }, UpdateDepthmapModelCommand);
+const updateDepthMapModule = new ContainerModule((bind, _unbind, isBound) => {
+    configureCommand({ bind, isBound }, UpdateDepthMapModelCommand);
 });
 
-export default updateDepthmapModule;
+export default updateDepthMapModule;
