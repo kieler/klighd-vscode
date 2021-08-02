@@ -154,7 +154,7 @@ export class GoToBookmarkCommand implements Command {
 }
 
 export class SetInitialBookmark implements Action {
-    static readonly KIND = 'init-bookkmark';
+    static readonly KIND = 'init-bookmark';
     readonly kind = SetInitialBookmark.KIND;
 
     readonly bookmark: Bookmark;

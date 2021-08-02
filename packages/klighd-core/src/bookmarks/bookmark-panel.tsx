@@ -26,7 +26,7 @@ import { BookmarkRegistry } from "./bookmark-registry";
 import { Bookmark, GoToBookmarkAction, CreateBookmarkAction } from "./bookmark";
 
 /**
- * Sidebar panel that displays previousely set bookmarks
+ * Sidebar panel that displays previously set bookmarks
  */
 @injectable()
 export class BookmarkPanel extends SidebarPanel {
@@ -187,8 +187,8 @@ export class BookmarkPanel extends SidebarPanel {
             textarea.select();
 
             try {
-                const successfull = document.execCommand('paste');
-                if (!successfull) {
+                const successful = document.execCommand('paste');
+                if (!successful) {
                     console.log("Failed to past text from clipboard");
                 } else {
                     this.loadBookmark(textarea.value)
@@ -215,8 +215,8 @@ export class BookmarkPanel extends SidebarPanel {
             textarea.select();
 
             try {
-                const successfull = document.execCommand('copy');
-                if (!successfull)
+                const successful = document.execCommand('copy');
+                if (!successful)
                     console.log("Failed to copy text to clipboard");
             } catch (err) {
                 console.log("Unable to copy text to clipboard");

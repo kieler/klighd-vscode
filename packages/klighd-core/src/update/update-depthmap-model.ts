@@ -46,7 +46,7 @@ export class UpdateDepthmapModelCommand extends Command {
     }
 
     /**
-     * For undo and redo we dont want any changes to the model
+     * For undo and redo we don't want any changes to the model
      */
     undo(context: CommandExecutionContext): CommandReturn {
         return context.root

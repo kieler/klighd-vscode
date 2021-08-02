@@ -35,7 +35,7 @@ export enum DetailLevel {
 type DetailWithChildren = DetailLevel.FullDetails
 
 /**
- * Type predicate to determine wheter a DetailLevel is a DetailWithChilderen level
+ * Type predicate to determine whether a DetailLevel is a DetailWithChildren level
  */
 function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
     return detail === DetailLevel.FullDetails
@@ -70,7 +70,7 @@ export class DepthMap {
 
     /**
      * Maps a given node id to the containing/providing Region
-     * Root Child Nodes will have a provding region and no containing Region, while all
+     * Root Child Nodes will have a providing region and no containing Region, while all
      * other nodes will have at least a containing region
      */
     protected regionIndexMap: Map<string, RegionIndexEntry>;
@@ -106,7 +106,7 @@ export class DepthMap {
 
     protected reset(model_root: SModelRoot): void {
         this.rootElement = model_root
-        // rootRegions are reset below as we also want to remove the edges from the graph spaned by the regions
+        // rootRegions are reset below as we also want to remove the edges from the graph spanned by the regions
         this.criticalRegions.clear()
         this.viewport = undefined
         this.lastThreshold = undefined
@@ -131,7 +131,7 @@ export class DepthMap {
     }
 
     /**
-     * Returns the current Depthmap instance or nothing if its not initilized
+     * Returns the current Depthmap instance or undefined if its not initialized
      * @returns Depthmap | undefined 
      */
     public static getDM(): DepthMap | undefined {
@@ -225,12 +225,12 @@ export class DepthMap {
     }
 
     public getContainingRegion(node: KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
-        // initKnode already checks if it is already initialized and if it is returns the existing value
+        // initKNode already checks if it is already initialized and if it is returns the existing value
         return this.initKNode(node, viewport, renderOptions).containingRegion
     }
 
     public getProvidingRegion(node: KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
-        // initKnode already checks if it is already initialized and if it is returns the existing value
+        // initKNode already checks if it is already initialized and if it is returns the existing value
         return this.initKNode(node, viewport, renderOptions).providingRegion
     }
 
@@ -269,10 +269,10 @@ export class DepthMap {
     }
 
     /**
-     * Set detail level for the given region and recursively determine and update the chilrens detail level
+     * Set detail level for the given region and recursively determine and update the children's detail level
      * 
      * @param region The root region
-     * @param viewport The curent viewport
+     * @param viewport The current viewport
      * @param threshold The detail level threshold
      */
     updateRegionDetailLevel(region: Region, vis: DetailWithChildren, viewport: Viewport, threshold: number): void {
@@ -320,7 +320,7 @@ export class DepthMap {
         // All regions that are at a detail level boundary (child has lower detail level and parent is at a DetailWithChildren level).
         let toBeProcessed: Set<Region> = new Set(this.criticalRegions)
 
-        // The regions that have become critical and therfore need to be checked as well
+        // The regions that have become critical and therefore need to be checked as well
         let nextToBeProcessed: Set<Region> = new Set()
 
         while (toBeProcessed.size !== 0) {
@@ -354,7 +354,7 @@ export class DepthMap {
      * based on their size in the viewport and visibility
      * 
      * @param region The region in question
-     * @param viewport The currenr viewport
+     * @param viewport The current viewport
      * @param threshold The full detail threshold
      * @returns The appropriate detail level
      */
@@ -378,7 +378,7 @@ export class DepthMap {
     /** 
      * Checks visibility of a region with position from browser coordinates in current viewport.
      * 
-     * @param region The region in question for visiblity.
+     * @param region The region in question for visibility.
      * @param viewport The current viewport.
      * @returns Boolean value indicating the visibility of the region in the current viewport. 
      */
@@ -400,7 +400,7 @@ export class DepthMap {
      * Compares the size of a node to the viewport and returns the smallest fraction of either height or width.
      * 
      * @param node The KNode in question
-     * @param viewport The curent viewport
+     * @param viewport The current viewport
      * @returns the relative size of the KNodes shortest dimension
      */
     sizeInViewport(node: KNode, viewport: Viewport): number {
@@ -440,7 +440,7 @@ export class Region {
 
     /** 
      * Applies the detail level to all elements of a region.
-     * @param level the detail leveel to apply
+     * @param level the detail level to apply
      */
     setDetailLevel(level: DetailLevel): void {
         this.detail = level
