@@ -577,7 +577,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
                 if (region) {
                     if (region.detail !== DetailLevel.FullDetails
-                        || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold)) { // Hardcoded for now
+                        || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold)) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
                         const defaultFactor = 1
@@ -595,6 +595,13 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         scalingFactor = scalingFactor > 1 ? scalingFactor : 1
                         // Set the indentation.
                         attrs.x /= scalingFactor
+                        // smooth transition between overlay title and normal title
+                        if (rendering.calculatedTextBounds) {
+                            const t = overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom / 3
+                            if (t <= 1) {
+                                scalingFactor = (1 - t) * 1 + t * scalingFactor
+                            }
+                        }
                         // Remove spacing to the left for region titles.
                         boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
                         // Calculate exact height of title text
