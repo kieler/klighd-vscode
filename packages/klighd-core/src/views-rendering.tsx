@@ -260,7 +260,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     if (element && context.depthMap) {
         const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
-        if (region && region.detail !== DetailLevel.FullDetails) {
+        if (region && region.detail !== DetailLevel.FullDetails && parent.children.length > 1) {
             const offsetY = region.regionTitleHeight ?? 0
             const offsetX = region.regionTitleIndentation ?? 0
             const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
@@ -576,7 +576,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
                 const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
                 if (region) {
-                    if (region.detail !== DetailLevel.FullDetails
+                    if (region.detail !== DetailLevel.FullDetails && parent.children.length > 1
                         || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold)) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
