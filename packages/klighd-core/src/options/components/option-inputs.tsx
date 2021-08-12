@@ -108,7 +108,7 @@ export function TextOption(props: TextOptionProps): VNode {
         <div classNames="options__column">
             <label htmlFor={props.id}>{props.name}</label>
             <input
-                classNames="options__input"
+                classNames="options__input options__text-field"
                 type="text"
                 id={props.id}
                 value={props.value}
