@@ -593,15 +593,16 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
                         // Make sure scalingfactor is not below 1.
                         scalingFactor = scalingFactor > 1 ? scalingFactor : 1
-                        // Set the indentation.
-                        attrs.x /= scalingFactor
-                        // smooth transition between overlay title and normal title
+
+                        // Smooth transition between overlay title and normal title.
                         if (rendering.calculatedTextBounds) {
-                            const t = overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom / 3
+                            const t = (overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom) / 3
                             if (t <= 1) {
                                 scalingFactor = (1 - t) * 1 + t * scalingFactor
                             }
                         }
+                        // Set the indentation.
+                        attrs.x /= scalingFactor
                         // Remove spacing to the left for region titles.
                         boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
                         // Calculate exact height of title text
