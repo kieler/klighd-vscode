@@ -105,16 +105,16 @@ type TextOptionProps = BaseProps<string>;
 /** Renders a labeled text input. */
 export function TextOption(props: TextOptionProps): VNode {
     return (
-        <label htmlFor={props.id}>
+        <div classNames="options__column">
+            <label htmlFor={props.id}>{props.name}</label>
             <input
-                classNames="options__input"
+                classNames="options__input options__text-field"
                 type="text"
                 id={props.id}
                 value={props.value}
                 on-change={(e: any) => props.onChange(e.target.value)}
             />
-            {props.name}
-        </label>
+        </div>
     );
 }
 
