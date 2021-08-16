@@ -596,7 +596,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
 
                         // Smooth transition between overlay title and normal title.
                         if (rendering.calculatedTextBounds) {
-                            const t = (overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom) / 3
+                            const t = Math.max((overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom), 0) / 3
                             if (t <= 1) {
                                 scalingFactor = (1 - t) * 1 + t * scalingFactor
                             }
