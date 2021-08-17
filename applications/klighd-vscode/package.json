@@ -30,6 +30,12 @@
     "contributes": {
         "commands": [
             {
+                "command": "klighd-vscode.data.clear",
+                "title": "Clear Persisted Data",
+                "icon": "$(clear-all)",
+                "category": "KLighD Diagram"
+            },
+            {
                 "command": "klighd-vscode.diagram.open",
                 "title": "Open in Diagram",
                 "icon": "$(symbol-structure)",
@@ -68,6 +74,9 @@
         ],
         "menus": {
             "commandPalette": [
+                {
+                    "command": "klighd-vscode.data.clear"
+                },
                 {
                     "when": "false",
                     "command": "klighd-vscode.diagram.open"

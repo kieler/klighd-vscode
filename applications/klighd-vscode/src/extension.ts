@@ -21,6 +21,7 @@ import { LanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
 import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { LspHandler } from "./lsp-handler";
+import { StorageService } from "./storage/storage-service";
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
@@ -43,9 +44,11 @@ export function activate(context: vscode.ExtensionContext): void {
                 }
 
                 try {
+                    const storageService = new StorageService(context, client);
                     const extension = new KLighDExtension(context, {
                         lsClient: client,
                         supportedFileEnding: fileEndings,
+                        storageService,
                     });
                     // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
                     new LspHandler(client);
@@ -61,6 +64,16 @@ export function activate(context: vscode.ExtensionContext): void {
                 }
             }
         )
+    );
+
+    // Command for the user to remove all data stored by this extension. Allows
+    // the user to reset changed synthesis options etc.
+    context.subscriptions.push(
+        vscode.commands.registerCommand(command.clearData, () => {
+            StorageService.clearAll(context);
+            // Inform the user that the deletion does not effect previously initialized options on the LS.
+            vscode.window.showInformationMessage("Stored data has been deleted. Diagram options will be reset to default after a reload.")
+        })
     );
 
     // Command provided for other extensions to add an action handler to their created diagram extension instance.

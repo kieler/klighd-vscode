@@ -42,6 +42,7 @@ const withPrefix = (name: string) => `${extensionId}.${name}`;
 export const command = {
     setLanguageClient: withPrefix("setLanguageClient"),
     addActionHandler: withPrefix("addActionHandler"),
+    clearData: withPrefix("data.clear"),
     // The following commands are registered by `sprotty-vscode`
     diagramOpen: withPrefix("diagram.open"),
     diagramExport: withPrefix("diagram.export"),
