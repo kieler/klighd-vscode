@@ -158,7 +158,7 @@ export class LSPConnection implements Connection {
     /**
      * Initializes the connection according to the LSP specification.
      */
-    async sendInitialize(): Promise<void> {
+    async sendInitialize(persistedData: Record<string, any>): Promise<void> {
         if (!this.connection) return;
 
         const method = lsp.InitializeRequest.type.method;
@@ -169,6 +169,9 @@ export class LSPConnection implements Connection {
             rootUri: null,
             clientInfo: { name: "webview" },
             capabilities: {},
+            initializationOptions: {
+                clientDiagramOptions: persistedData,
+            }
         };
 
         console.time("lsp-init");
