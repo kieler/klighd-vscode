@@ -16,7 +16,7 @@
  */
 
 import { ContainerModule } from "inversify";
-import { configureActionHandler } from "sprotty";
+import { configureActionHandler, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import {
     UpdateOptionsAction,
@@ -30,6 +30,7 @@ import { OptionsRegistry } from "./options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { GeneralPanel } from "./general-panel";
 import { RenderOptionsRegistry } from "./render-options-registry";
+import { OptionsPersistence } from "./options-persistence";
 
 /** Module that configures option related panels and registries. */
 export const optionsModule = new ContainerModule((bind, _, isBound) => {
@@ -42,6 +43,9 @@ export const optionsModule = new ContainerModule((bind, _, isBound) => {
     bind(DISymbol.OptionsRenderer).to(OptionsRenderer);
     bind(DISymbol.OptionsRegistry).to(OptionsRegistry).inSingletonScope();
     bind(DISymbol.RenderOptionsRegistry).to(RenderOptionsRegistry).inSingletonScope();
+
+    bind(OptionsPersistence).toSelf().inSingletonScope();
+    bind(TYPES.IActionHandlerInitializer).toService(OptionsPersistence);
 
     const ctx = { bind, isBound };
     configureActionHandler(ctx, UpdateOptionsAction.KIND, DISymbol.OptionsRegistry);

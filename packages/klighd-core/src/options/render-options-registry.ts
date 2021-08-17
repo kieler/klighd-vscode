@@ -16,9 +16,10 @@
  */
 
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
-import { injectable } from "inversify";
+import { inject, injectable, postConstruct } from "inversify";
 import { Action, ICommand } from "sprotty";
 import { Registry } from "../base/registry";
+import { PersistenceStorage } from "../services";
 import { SetRenderOptionAction } from "./actions";
 import { RenderOption, TransformationOptionType } from "./option-models";
 
@@ -37,10 +38,33 @@ export class ShowConstraintOption implements RenderOption {
 export class RenderOptionsRegistry extends Registry {
     private _renderOptions: Map<string, RenderOption> = new Map();
 
+    @inject(PersistenceStorage) private storage: PersistenceStorage;
+
     constructor() {
         super();
         // Add available render options to this registry
         this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
+    }
+
+    @postConstruct()
+    init(): void {
+        this.storage.getItem<Record<string, unknown>>("render").then((data) => {
+            if (data) this.loadPersistedData(data);
+        });
+    }
+
+    /**
+     * Restores options that where previously persisted in storage. Since render
+     * options are not provided by the server, they have to be retrieved from storage.
+     */
+    private loadPersistedData(data: Record<string, unknown>) {
+        for (const entry of Object.entries(data)) {
+            const option = this._renderOptions.get(entry[0]);
+            if (!option) continue;
+
+            option.currentValue = entry[1];
+        }
+        this.notifyListeners();
     }
 
     handle(action: Action): void | Action | ICommand {
