@@ -31,6 +31,10 @@ export { command };
 export function activate(context: vscode.ExtensionContext): void {
     const extensionMap: Map<string, KLighDExtension> = new Map();
 
+    // This extension should persist data in workspace state, so it is different for
+    // each project a user opens. To change this, assign another Memento to this constant.
+    const mementoForPersistence = context.workspaceState;
+
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
         vscode.commands.registerCommand(
@@ -44,7 +48,7 @@ export function activate(context: vscode.ExtensionContext): void {
                 }
 
                 try {
-                    const storageService = new StorageService(context, client);
+                    const storageService = new StorageService(mementoForPersistence, client);
                     const extension = new KLighDExtension(context, {
                         lsClient: client,
                         supportedFileEnding: fileEndings,
@@ -70,9 +74,11 @@ export function activate(context: vscode.ExtensionContext): void {
     // the user to reset changed synthesis options etc.
     context.subscriptions.push(
         vscode.commands.registerCommand(command.clearData, () => {
-            StorageService.clearAll(context);
+            StorageService.clearAll(mementoForPersistence);
             // Inform the user that the deletion does not effect previously initialized options on the LS.
-            vscode.window.showInformationMessage("Stored data has been deleted. Diagram options will be reset to default after a reload.")
+            vscode.window.showInformationMessage(
+                "Stored data has been deleted. Diagram options will be reset to default after a reload."
+            );
         })
     );
 

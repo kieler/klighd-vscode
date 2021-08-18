@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { ExtensionContext } from "vscode";
+import { Memento } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { KLighDWebview } from "../klighd-webview";
 import { PersistenceMessage } from "./messages";
@@ -29,10 +29,10 @@ type Send = (msg: PersistenceMessage) => void;
  */
 export class StorageService {
     private static readonly key = "klighdPersistence";
-    private context: ExtensionContext;
+    private memento: Memento;
 
-    constructor(context: ExtensionContext, client: LanguageClient) {
-        this.context = context;
+    constructor(memento: Memento, client: LanguageClient) {
+        this.memento = memento;
 
         const data = this.getData();
         console.log("Persisted data:", data);
@@ -53,16 +53,16 @@ export class StorageService {
     }
 
     /** Removes all persisted data. Useful to nuke persisted data to a fresh state. */
-    static clearAll(ctx: ExtensionContext): void {
-        ctx.workspaceState.update(StorageService.key, {});
+    static clearAll(memento: Memento): void {
+        memento.update(StorageService.key, {});
     }
 
     private getData() {
-        return this.context.workspaceState.get<Record<string, any>>(StorageService.key) ?? {};
+        return this.memento.get<Record<string, any>>(StorageService.key) ?? {};
     }
 
     private updateData(data: Record<string, any>) {
-        this.context.workspaceState.update(StorageService.key, data);
+        this.memento.update(StorageService.key, data);
     }
 
     /** 
