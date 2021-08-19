@@ -49,4 +49,10 @@ export const command = {
     diagramFit: withPrefix("diagram.fit"),
     diagramLayout: withPrefix("diagram.layout"),
     diagramRefresh: withPrefix("diagram.refresh"),
+    diagramSync: withPrefix("diagram.sync"),
+    diagramNoSync: withPrefix("diagram.noSync"),
+};
+
+export const contextKeys = {
+    syncWithEditor: withPrefix("syncWithEditor"),
 };
