@@ -49,12 +49,20 @@ export function getLanguageId(documentUri: string): string {
 }
 
 export function getBookmarkViewport(): Viewport | null {
-    const x = readSearchParam("bookmarkX");
-    const y = readSearchParam("bookmarkY");
-    const z = readSearchParam("bookmarkZoom");
-    if (x !== null && y !== null && z !== null) {
-        return { scroll: { x: parseFloat(x), y: parseFloat(y) }, zoom: parseFloat(z) }
-    } else {
-        return null
+    const xParam = readSearchParam("bookmarkX");
+    const yParam = readSearchParam("bookmarkY");
+    const zoomParam = readSearchParam("bookmarkZoom");
+
+    if (xParam !== null && yParam !== null && zoomParam !== null) {
+        const x = parseFloat(xParam);
+        const y = parseFloat(yParam);
+        const zoom = parseFloat(zoomParam);
+
+        if (!(isNaN(x) || isNaN(y) || isNaN(zoom))) {
+            return { scroll: { x: x, y: y }, zoom: zoom }
+        }
     }
+
+    return null
+
 }
