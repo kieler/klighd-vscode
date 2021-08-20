@@ -26,14 +26,29 @@ Development of this project requires [Node.js _v14.x_](https://nodejs.org) and
 [yarn _v1.x_](https://classic.yarnpkg.com/).
 
 Developing the `klighd-vscode` extension requires an extension that has a dependency on
-`klighd-vscode` and provides a language client with KLighD synthesis capabilities. A good candidate
-for development is the `kieler.keith-vscode`
+`klighd-vscode` and provides a language client with [KLighD](https://github.com/kieler/KLighD)
+synthesis capabilities. A good candidate for development is the `kieler.keith-vscode`
 ([under development](https://git.rtsys.informatik.uni-kiel.de/projects/KIELER/repos/keith/browse?at=cfr/monorepo-restructure))
 extension.
 
-Furthermore, development of the `klighd-cli` requires a language server with KLighD synthesis
-capabilities. The server can either be started separately, using a socket for communication, or
-placed as a jar named `language-server.jar` in the _applications/klighd-cli_ folder.
+Furthermore, development of the `klighd-cli` requires a language server with
+[KLighD](https://github.com/kieler/KLighD) synthesis capabilities. The server can either be started
+separately, using a socket for communication, or placed as a jar named `language-server.jar` in the
+_applications/klighd-cli_ folder.
+
+#### Disclaimer
+
+Developing a language server that uses [KLighD](https://github.com/kieler/KLighD) to fulfill all
+requirements to be usable with these applications is no easy task. Until the distribution of
+[KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
+is improved, feel free to seek advice from a member of the KIELER working group.
+
+An example for a simple language server with KLighD synthesis support can be found
+[here](https://github.com/kieler/osgiviz/tree/master/plugins/de.cau.cs.kieler.osgiviz.language.server).
+Configuration for the build process using Maven Tycho can be found
+[here](https://github.com/kieler/osgiviz/tree/master/build/de.cau.cs.kieler.osgiviz.language.server.cli).
+The VS Code extension for this language server can be found
+[here](https://github.com/kieler/osgiviz/tree/master/extension/osgiviz).
 
 ### Scripts
 

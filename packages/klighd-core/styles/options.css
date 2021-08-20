@@ -126,7 +126,28 @@
     vertical-align: baseline;
 }
 
-/* Don't' show outlines when a user interacts with different options... */
+.options__text-field {
+    padding: 2px 4px;
+    font-size: 1rem;
+
+    border: 2px solid var(--kdc-color-sidebar-trigger-background-hover);
+    border-radius: var(--kdc-border-radius-default);
+    background: var(--kdc-color-sidebar-trigger-background-active);
+    color: var(--kdc-color-sidebar-font-primary);
+}
+
+.options__text-field:focus,
+.options__text-field:focus-visible {
+    /* 
+    Text Field should use their border as their focus indicator. Without "!important"
+    the rule for all inputs ".options__input:focus-visible" takes precedence when the
+    styles are applied.
+    */
+    outline: none !important;
+    border-color: var(--kdc-color-primary);
+}
+
+/* Don't show outlines when a user interacts with different options... */
 .options__input,
 .options__category > summary,
 .options__button,
@@ -147,7 +168,8 @@
 
 .options__selection {
     padding: 4px 6px;
-    border-width: 2px;
+
+    border: 2px solid var(--kdc-color-sidebar-trigger-background-hover);
     border-radius: var(--kdc-border-radius-default);
     background: var(--kdc-color-sidebar-trigger-background-active);
     color: var(--kdc-color-sidebar-font-primary);
