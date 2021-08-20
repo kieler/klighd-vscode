@@ -71,7 +71,7 @@ export class BookmarkPanel extends SidebarPanel {
         </div>;
     }
 
-    private renderBookmarkList(): VNode {
+    protected renderBookmarkList(): VNode {
         return <div>
             {
                 this.bookmarkRegistry.bookmarks.map((bookmark) => (
@@ -81,7 +81,7 @@ export class BookmarkPanel extends SidebarPanel {
         </div>
     }
 
-    private renderBookmarkEntry(bookmark: Bookmark): VNode {
+    protected renderBookmarkEntry(bookmark: Bookmark): VNode {
         return <div key={bookmark.bookmarkIndex}>
             <fieldset>
                 <legend>{bookmark.name ?? ("Bookmark " + bookmark.bookmarkIndex)}</legend>
@@ -128,19 +128,19 @@ export class BookmarkPanel extends SidebarPanel {
         </div>
     }
 
-    private handleBookmarkGoto(bookmark: Bookmark) {
+    protected handleBookmarkGoto(bookmark: Bookmark): void {
         this.actionDispatcher.dispatch(new GoToBookmarkAction(bookmark));
     }
 
-    private newBookmark() {
+    protected newBookmark(): void {
         this.actionDispatcher.dispatch(new CreateBookmarkAction());
     }
 
-    private deleteBookmark(bookmark: Bookmark) {
+    protected deleteBookmark(bookmark: Bookmark): void {
         this.bookmarkRegistry.deleteBookmark(bookmark)
     }
 
-    private loadBookmark(bookmarkString: string) {
+    protected loadBookmark(bookmarkString: string): void {
         let bookmark = JSON.parse(bookmarkString);
 
         if (Bookmark.isBookmark(bookmark)) {
@@ -153,20 +153,20 @@ export class BookmarkPanel extends SidebarPanel {
 
     }
 
-    private startBookmarkNameEdit(bookmark: Bookmark) {
+    protected startBookmarkNameEdit(bookmark: Bookmark): void {
         document.getElementById(bookmark.editId)?.classList.toggle("options__hidden", true)
         const save = document.getElementById(bookmark.saveId);
         save?.classList.toggle("options__hidden", false)
         save?.getElementsByTagName("input")[0].focus()
     }
 
-    private inputSaveBookmarkName(bookmark: Bookmark, event: KeyboardEvent) {
+    protected inputSaveBookmarkName(bookmark: Bookmark, event: KeyboardEvent): void {
         if (event.key === "Enter") {
             this.saveBookmarkName(bookmark)
         }
     }
 
-    private saveBookmarkName(bookmark: Bookmark) {
+    protected saveBookmarkName(bookmark: Bookmark): void {
         document.getElementById(bookmark.editId)?.classList.toggle("options__hidden", false)
         const save = document.getElementById(bookmark.saveId);
         if (save && bookmark.bookmarkIndex !== undefined) {
@@ -176,7 +176,7 @@ export class BookmarkPanel extends SidebarPanel {
         }
     }
 
-    private handleBookmarkPast() {
+    protected handleBookmarkPast(): void {
 
         if (navigator.clipboard) {
             navigator.clipboard.readText().then((value) => this.loadBookmark(value), (err) => console.error("Couldn't load Bookmark from clipboards", err))
@@ -201,7 +201,7 @@ export class BookmarkPanel extends SidebarPanel {
 
     }
 
-    private handleBookmarkCopy(bookmark: Bookmark) {
+    protected handleBookmarkCopy(bookmark: Bookmark): void {
 
         const bookmarkString = JSON.stringify(bookmark.clone());
 
