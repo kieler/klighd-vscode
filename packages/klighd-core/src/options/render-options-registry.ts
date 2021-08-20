@@ -53,6 +53,7 @@ export class UseSmartZoom implements RenderOption {
 export class FullDetailThreshold implements RangeOption {
     static readonly ID: string = 'full-detail-threshold'
     static readonly NAME: string = 'Full Detail Threshold'
+    static readonly DEFAULT: number = 0.2
     readonly id: string = FullDetailThreshold.ID
     readonly name: string = FullDetailThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
@@ -62,7 +63,7 @@ export class FullDetailThreshold implements RangeOption {
         second: 1
     }
     readonly stepSize = 0.01
-    readonly initialValue: number = 0.2
+    readonly initialValue: number = FullDetailThreshold.DEFAULT
     currentValue = 0.2
 }
 
@@ -86,6 +87,7 @@ export class SimplifySmallText implements RenderOption {
 export class TextSimplificationThreshold implements RangeOption {
     static readonly ID: string = 'text-simplification-threshold'
     static readonly NAME: string = 'Text Simplification Threshold'
+    static readonly DEFAULT: number = 3
     readonly id: string = TextSimplificationThreshold.ID
     readonly name: string = TextSimplificationThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
@@ -95,7 +97,7 @@ export class TextSimplificationThreshold implements RangeOption {
         second: 10
     }
     readonly stepSize = 0.1
-    readonly initialValue: number = 3
+    readonly initialValue: number = TextSimplificationThreshold.DEFAULT
     currentValue = 3
 }
 
@@ -106,6 +108,7 @@ export class TextSimplificationThreshold implements RangeOption {
 export class TitleScalingFactor implements RangeOption {
     static readonly ID: string = 'title-scaling-factor'
     static readonly NAME: string = 'Title Scaling Factor'
+    static readonly DEFAULT: number = 1
     readonly id: string = TitleScalingFactor.ID
     readonly name: string = TitleScalingFactor.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
@@ -115,7 +118,7 @@ export class TitleScalingFactor implements RangeOption {
         second: 3
     }
     readonly stepSize = 0.01
-    readonly initialValue: number = 1
+    readonly initialValue: number = TitleScalingFactor.DEFAULT
     currentValue = 1
 }
 /**
@@ -124,6 +127,7 @@ export class TitleScalingFactor implements RangeOption {
 export class TitleOverlayThreshold implements RangeOption {
     static readonly ID: string = 'title-overlay-threshold'
     static readonly NAME: string = 'Title Overlay Threshold'
+    static readonly DEFAULT: number = 4
     readonly id: string = TitleOverlayThreshold.ID
     readonly name: string = TitleOverlayThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
@@ -133,7 +137,7 @@ export class TitleOverlayThreshold implements RangeOption {
         second: 7
     }
     readonly stepSize = 0.01
-    readonly initialValue: number = 4
+    readonly initialValue: number = TitleOverlayThreshold.DEFAULT
     currentValue = 4
 }
 /**

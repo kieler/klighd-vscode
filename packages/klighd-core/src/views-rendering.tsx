@@ -496,8 +496,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
     if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails) && !rendering.isNodeTitle) {
         const simplificationThresholdOption = context.renderingOptions.getValueForId(TextSimplificationThreshold.ID)
-        const defaultThreshold = 3
-        const simplificationThreshold = simplificationThresholdOption ?? defaultThreshold
+        const simplificationThreshold = simplificationThresholdOption ?? TextSimplificationThreshold.DEFAULT
+
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.calculatedTextBounds
             && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {
@@ -565,9 +565,10 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
-        const defaultOverlayThreshold = 4
+
         const overlayThresholdOption = context.renderingOptions.getValueForId(TitleOverlayThreshold.ID)
-        const overlayThreshold = overlayThresholdOption ?? defaultOverlayThreshold
+        const overlayThreshold = overlayThresholdOption ?? TitleOverlayThreshold.DEFAULT
+
         if (context.depthMap) {
             if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && rendering.isNodeTitle) {
 
@@ -580,8 +581,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold)) {
                         // Scale to limit of bounding box or max size.
                         const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
-                        const defaultFactor = 1
-                        let maxScale = titleScalingFactorOption ?? defaultFactor
+                        let maxScale = titleScalingFactorOption ?? TitleScalingFactor.DEFAULT
                         // Indentation used in the layouting in pixels.
                         if (context.viewport) {
                             maxScale = maxScale / context.viewport.zoom

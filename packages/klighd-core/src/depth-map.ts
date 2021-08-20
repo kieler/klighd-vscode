@@ -165,9 +165,8 @@ export class DepthMap {
             return entry
         }
 
-        const thresholdOption = renderingOptions?.getValueForId(FullDetailThreshold.ID)
-        const defaultThreshold = 0.2
-        const fullDetailThreshold = thresholdOption ?? defaultThreshold
+        const thresholdOption = renderingOptions.getValueForId(FullDetailThreshold.ID)
+        const fullDetailThreshold = thresholdOption ?? FullDetailThreshold.DEFAULT
 
         if (node.parent === node.root) {
             const providedRegion = new Region(node)
@@ -242,8 +241,7 @@ export class DepthMap {
     updateDetailLevels(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
 
         const thresholdOption = renderingOptions.getValueForId(FullDetailThreshold.ID)
-        const defaultThreshold = 0.2
-        const fullDetailThreshold = thresholdOption ?? defaultThreshold
+        const fullDetailThreshold = thresholdOption ?? FullDetailThreshold.DEFAULT
 
         if (this.viewport?.scroll === viewport.scroll
             && this.viewport?.zoom === viewport.zoom
