@@ -20,7 +20,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { Action, ICommand } from "sprotty";
 import { Registry } from "../base/registry";
 import { PersistenceStorage } from "../services";
-import { SetRenderOptionAction } from "./actions";
+import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RenderOption, TransformationOptionType } from "./option-models";
 
 export class ShowConstraintOption implements RenderOption {
@@ -76,6 +76,13 @@ export class RenderOptionsRegistry extends Registry {
             option.currentValue = action.value;
             this.notifyListeners();
 
+            return new RefreshDiagramAction();
+        } else if (ResetRenderOptionsAction.isThisAction(action)) {
+            this._renderOptions.forEach((option) => {
+                option.currentValue = option.initialValue;
+            });
+            this.notifyListeners();
+            
             return new RefreshDiagramAction();
         }
     }

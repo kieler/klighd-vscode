@@ -22,6 +22,7 @@ import { command } from "./constants";
 import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { LspHandler } from "./lsp-handler";
 import { StorageService } from "./storage/storage-service";
+import { ReportChangeMessage } from "./storage/messages";
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
@@ -75,10 +76,17 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.commands.registerCommand(command.clearData, () => {
             StorageService.clearAll(mementoForPersistence);
-            // Inform the user that the deletion does not effect previously initialized options on the LS.
-            vscode.window.showInformationMessage(
-                "Stored data has been deleted. Diagram options will be reset to default after a reload."
-            );
+            // webviews are manages by the SprottyExtensions which in return are stored by this extension in a lookup map
+            for (const extension of extensionMap.values()) {
+                for (const webview of extension.webviews) {
+                    webview.sendMessage<ReportChangeMessage>({
+                        type: "persistence/reportChange",
+                        payload: { type: "clear" },
+                    });
+                }
+            }
+
+            vscode.window.showInformationMessage("Stored data has been deleted.");
         })
     );
 

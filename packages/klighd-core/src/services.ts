@@ -100,11 +100,17 @@ export interface PersistenceStorage {
      * This saves an additional read that would otherwise be required for an update.
      */
     setItem<T>(key: string, setter: (prev?: T) => T): void;
+
     /** Returns an item for the given key. Resolves to `undefined` if the key does not exist. */
     getItem<T>(key: string): Promise<T | undefined>;
+
     /** Removes an item for a given key. */
     removeItem(key: string): void;
+
     /** Clears the storage. Removes all stored items. */
     clear(): void;
+
+    /** Attaches a listener that is notified when the storage gets cleared. */
+    onClear(cb: () => void): void;
 }
 export const PersistenceStorage = Symbol("PersistenceStorage");

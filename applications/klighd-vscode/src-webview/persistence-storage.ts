@@ -36,6 +36,9 @@ export class MessagePersistenceStorage implements PersistenceStorage {
     /** Listeners that will be informed once the cache is ready. */
     private onReadyListeners: (() => void)[] = [];
 
+    /** Callbacks which will be called when a clear change is reported by the extension */
+    private onClearListeners: (() => void)[] = [];
+
     constructor() {
         this.cache = {};
         this.state = "initializing";
@@ -65,6 +68,10 @@ export class MessagePersistenceStorage implements PersistenceStorage {
 
     clear(): void {
         this.sendToExtension({ type: "persistence/clear" });
+    }
+
+    onClear(cb: () => void): void {
+        this.onClearListeners.push(cb);
     }
 
     /** Resolves when the storage is ready to use for reads. */
@@ -99,6 +106,8 @@ export class MessagePersistenceStorage implements PersistenceStorage {
             } else {
                 this.cache = event.data.payload.items;
             }
+        } else if (event.data.type === "persistence/reportChange") {
+            if (event.data.payload.type === "clear") this.onClearListeners.forEach((cb) => cb());
         }
     }
 }

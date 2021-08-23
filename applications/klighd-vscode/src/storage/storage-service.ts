@@ -65,12 +65,29 @@ export class StorageService {
         this.memento.update(StorageService.key, data);
     }
 
-    /** 
+    /**
      * Reports the data changes back to the webview.
      * The data in this service should be the source of truth.
      */
     private reportData(send: Send, data: Record<string, any>) {
         send({ type: "persistence/reportItems", payload: { items: data } });
+    }
+
+    /**
+     * Reports a clear back to the webview.
+     *
+     * _NOTE_: At the moment, this will never be reported as it can only reports for
+     * clears that are triggered by the webview. Currently, clears are only triggered
+     * by the extension, which also reports the change as it is able to access all open webviews.
+     * Because this service does not cache added webviews to avoid
+     * storing closed webviews, it can only respond to messages handled by a webview.
+     * It is not able to actively send a message.
+     *
+     * This functionality only exists to be conform with "clears are reported back to the webview",
+     * in case a webview implements and triggers clear messages.
+     * */
+    private reportChange(send: Send, type: "clear") {
+        send({ type: "persistence/reportChange", payload: { type } });
     }
 
     private handleMessage(origin: KLighDWebview, msg: PersistenceMessage): void {
@@ -102,6 +119,7 @@ export class StorageService {
             case "persistence/clear": {
                 this.updateData({});
                 this.reportData(send, {});
+                this.reportChange(send, "clear");
                 break;
             }
             default:

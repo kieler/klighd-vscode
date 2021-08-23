@@ -27,6 +27,7 @@ type MessageType<T extends string> = `persistence/${T}`;
  */
 export type PersistenceMessage<T = any> =
     | ReportItemsMessage
+    | ReportChangeMessage
     | GetItemsMessage
     | SetItemMessage<T>
     | RemoveItemMessage
@@ -41,6 +42,20 @@ export interface ReportItemsMessage {
     type: MessageType<"reportItems">;
     payload: {
         items: Record<string, any>;
+    };
+}
+
+/**
+ * Report a change to the currently stored data.
+ * _Note:_ Currently, only clear is reported.
+ *
+ * Direction: Extension --> Webview
+ */
+export interface ReportChangeMessage {
+    type: MessageType<"reportChange">;
+    payload: {
+        type: "set" | "remove" | "clear";
+        affectedKeys?: string[];
     };
 }
 

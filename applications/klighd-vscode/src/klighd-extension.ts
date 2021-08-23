@@ -14,7 +14,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { KlighdFitToScreenAction, RefreshDiagramAction, RefreshLayoutAction } from "@kieler/klighd-core";
+import {
+    KlighdFitToScreenAction,
+    RefreshDiagramAction,
+    RefreshLayoutAction,
+} from "@kieler/klighd-core";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { Action, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
@@ -116,6 +120,13 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         }
 
         return webview;
+    }
+
+    /** All {@link KLighDWebview}s that are created by this {@link SprottyLspVscodeExtension}. */
+    get webviews(): KLighDWebview[] {
+        // Casting is alright since we only spawn a KLighDWebview. However, sprotty-vscode
+        // doesn't know it and the webviewMap is managed by sprotty-vscode.
+        return Array.from(this.webviewMap.values()) as KLighDWebview[];
     }
 
     /**

@@ -15,16 +15,21 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable } from "inversify";
+import { inject, injectable, postConstruct } from "inversify";
 import {
     Action,
     ActionHandlerRegistry,
+    IActionDispatcher,
     IActionHandler,
     IActionHandlerInitializer,
     ICommand,
+    TYPES,
 } from "sprotty";
 import { PersistenceStorage } from "../services";
 import {
+    ResetLayoutOptionsAction,
+    ResetRenderOptionsAction,
+    ResetSynthesisOptionsAction,
     SetLayoutOptionsAction,
     SetRenderOptionAction,
     SetSynthesisOptionsAction,
@@ -38,6 +43,12 @@ import {
 @injectable()
 export class OptionsPersistence implements IActionHandler, IActionHandlerInitializer {
     @inject(PersistenceStorage) private storage: PersistenceStorage;
+    @inject(TYPES.IActionDispatcher) private dispatcher: IActionDispatcher;
+
+    @postConstruct()
+    init(): void {
+        this.storage.onClear(this.handleClear.bind(this));
+    }
 
     initialize(registry: ActionHandlerRegistry): void {
         registry.register(SetRenderOptionAction.KIND, this);
@@ -69,5 +80,12 @@ export class OptionsPersistence implements IActionHandler, IActionHandlerInitial
                 return obj;
             });
         }
+    }
+
+    /** Reset all stored options when the storage gets cleared from outside. */
+    private handleClear() {
+        this.dispatcher.dispatch(new ResetRenderOptionsAction());
+        this.dispatcher.dispatch(new ResetSynthesisOptionsAction());
+        this.dispatcher.dispatch(new ResetLayoutOptionsAction());
     }
 }

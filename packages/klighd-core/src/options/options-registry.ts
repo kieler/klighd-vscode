@@ -16,11 +16,13 @@
  */
 
 import { inject, injectable } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { Action, ActionHandlerRegistry, IActionHandlerInitializer, ICommand } from "sprotty";
 import { Registry } from "../base/registry";
 import { Connection, NotificationType } from "../services";
 import {
     PerformOptionsActionAction,
+    ResetLayoutOptionsAction,
+    ResetSynthesisOptionsAction,
     SetLayoutOptionsAction,
     SetSynthesisOptionsAction,
     UpdateOptionsAction,
@@ -40,77 +42,13 @@ import { optionsBlacklist } from "./options-blacklist";
  * to the Options. Changes are synchronized with the server.
  */
 @injectable()
-export class OptionsRegistry extends Registry {
+export class OptionsRegistry extends Registry implements IActionHandlerInitializer {
     @inject(Connection) connection: Connection;
 
     private _modelUri = "";
     private _synthesisOptions: SynthesisOption[] = [];
     private _layoutOptions: LayoutOptionUIData[] = [];
     private _displayedActions: DisplayedActionData[] = [];
-
-    handle(action: Action): void | Action | ICommand {
-        if (UpdateOptionsAction.isThisAction(action)) {
-            this._modelUri = action.modelUri;
-            this._displayedActions = action.actions;
-
-            // Transform valued synthesis options to synthesis options by setting their current value and remove blacklisted options
-            this._synthesisOptions = action.valuedSynthesisOptions
-                .filter((opt) => !optionsBlacklist.includes(opt.synthesisOption.id))
-                .map<SynthesisOption>((valuedOption) => ({
-                    ...valuedOption.synthesisOption,
-                    currentValue:
-                        valuedOption.currentValue ?? valuedOption.synthesisOption.initialValue,
-                }));
-
-            // Transform layout options to ensure that they have a current value.
-            // Fallback to an already stored currentValue, since the server does not provide a current value for layout options.
-            this._layoutOptions = action.layoutOptions.map<LayoutOptionUIData>((option, i) => ({
-                ...option,
-                currentValue:
-                    option.currentValue ??
-                    this._layoutOptions[i]?.currentValue ??
-                    option.defaultValue.k,
-            }));
-
-            this.notifyListeners();
-        } else if (PerformOptionsActionAction.isThisAction(action)) {
-            this.connection.sendNotification(NotificationType.PerformAction, {
-                actionId: action.actionId,
-                uri: this.modelUri,
-            });
-        } else if (SetSynthesisOptionsAction.isThisAction(action)) {
-            // Optimistic update. Replaces all changed options with the new options
-            this.updateSynthesisOptions(action.options);
-
-            this.connection.sendNotification(NotificationType.SetSynthesisOption, {
-                synthesisOptions: action.options,
-                uri: this.modelUri,
-            });
-        } else if (SetLayoutOptionsAction.isThisAction(action)) {
-            // Optimistic update. Replaces all changed options with the new options
-            this.updateLayoutOptions(action.options);
-
-            this.connection.sendNotification(NotificationType.SetLayoutOption, {
-                layoutOptions: action.options,
-                uri: this.modelUri,
-            });
-        }
-    }
-
-    private updateSynthesisOptions(newOptions: SynthesisOption[]): void {
-        this._synthesisOptions = this._synthesisOptions.map(
-            (option) => newOptions.find((newOpt) => newOpt.id === option.id) ?? option
-        );
-        this.notifyListeners();
-    }
-
-    private updateLayoutOptions(newValues: LayoutOptionValue[]): void {
-        this._layoutOptions = this._layoutOptions.map((option) => {
-            const newValue = newValues.find((newOpt) => newOpt.optionId === option.optionId);
-            return newValue ? { ...option, currentValue: newValue.value } : option;
-        });
-        this.notifyListeners();
-    }
 
     get modelUri(): string {
         return this._modelUri;
@@ -135,5 +73,119 @@ export class OptionsRegistry extends Registry {
             this._synthesisOptions.length !== 0 ||
             this._layoutOptions.length !== 0
         );
+    }
+
+    initialize(registry: ActionHandlerRegistry): void {
+        registry.register(UpdateOptionsAction.KIND, this);
+        registry.register(PerformOptionsActionAction.KIND, this);
+        registry.register(SetSynthesisOptionsAction.KIND, this);
+        registry.register(SetLayoutOptionsAction.KIND, this);
+        registry.register(ResetSynthesisOptionsAction.KIND, this);
+        registry.register(ResetLayoutOptionsAction.KIND, this);
+    }
+
+    handle(action: Action): void | Action | ICommand {
+        if (UpdateOptionsAction.isThisAction(action)) {
+            this.handleUpdateOptions(action);
+        } else if (PerformOptionsActionAction.isThisAction(action)) {
+            this.handlePerformOptionsAction(action);
+        } else if (SetSynthesisOptionsAction.isThisAction(action)) {
+            this.handleSetSynthesisOptions(action);
+        } else if (SetLayoutOptionsAction.isThisAction(action)) {
+            this.handleSetLayoutOptions(action);
+        } else if (ResetSynthesisOptionsAction.isThisAction(action)) {
+            this.handleResetSynthesisOptions();
+        } else if (ResetLayoutOptionsAction.isThisAction(action)) {
+            this.handleResetLayoutOptions();
+        }
+    }
+
+    private handleUpdateOptions(action: UpdateOptionsAction): void {
+        this._modelUri = action.modelUri;
+        this._displayedActions = action.actions;
+
+        // Transform valued synthesis options to synthesis options by setting their current value and remove blacklisted options
+        this._synthesisOptions = action.valuedSynthesisOptions
+            .filter((opt) => !optionsBlacklist.includes(opt.synthesisOption.id))
+            .map<SynthesisOption>((valuedOption) => ({
+                ...valuedOption.synthesisOption,
+                currentValue:
+                    valuedOption.currentValue ?? valuedOption.synthesisOption.initialValue,
+            }));
+
+        // Transform layout options to ensure that they have a current value.
+        // Fallback to an already stored currentValue, since the server does not provide a current value for layout options.
+        this._layoutOptions = action.layoutOptions.map<LayoutOptionUIData>((option, i) => ({
+            ...option,
+            currentValue:
+                option.currentValue ??
+                this._layoutOptions[i]?.currentValue ??
+                option.defaultValue.k,
+        }));
+
+        this.notifyListeners();
+    }
+
+    private handlePerformOptionsAction(action: PerformOptionsActionAction) {
+        this.connection.sendNotification(NotificationType.PerformAction, {
+            actionId: action.actionId,
+            uri: this.modelUri,
+        });
+    }
+
+    private handleSetSynthesisOptions(action: SetSynthesisOptionsAction) {
+        // Optimistic update. Replaces all changed options with the new options
+        this._synthesisOptions = this._synthesisOptions.map(
+            (option) => action.options.find((newOpt) => newOpt.id === option.id) ?? option
+        );
+        this.notifyListeners();
+
+        this.connection.sendNotification(NotificationType.SetSynthesisOption, {
+            synthesisOptions: action.options,
+            uri: this.modelUri,
+        });
+    }
+
+    private handleSetLayoutOptions(action: SetLayoutOptionsAction) {
+        // Optimistic update. Replaces all changed options with the new options
+        this._layoutOptions = this._layoutOptions.map((option) => {
+            const newValue = action.options.find((newOpt) => newOpt.optionId === option.optionId);
+            return newValue ? { ...option, currentValue: newValue.value } : option;
+        });
+        this.notifyListeners();
+
+        this.connection.sendNotification(NotificationType.SetLayoutOption, {
+            layoutOptions: action.options,
+            uri: this.modelUri,
+        });
+    }
+
+    private handleResetSynthesisOptions() {
+        this._synthesisOptions = this._synthesisOptions.map((option) => ({
+            ...option,
+            currentValue: option.initialValue,
+        }));
+        this.notifyListeners();
+
+        this.connection.sendNotification(NotificationType.SetSynthesisOption, {
+            synthesisOptions: this._synthesisOptions,
+            uri: this.modelUri,
+        });
+    }
+
+    private handleResetLayoutOptions() {
+        this._layoutOptions = this._layoutOptions.map((option) => ({
+            ...option,
+            currentValue: option.defaultValue.k,
+        }));
+        this.notifyListeners();
+
+        this.connection.sendNotification(NotificationType.SetLayoutOption, {
+            layoutOptions: this._layoutOptions.map<LayoutOptionValue>((o) => ({
+                optionId: o.optionId,
+                value: o.currentValue,
+            })),
+            uri: this.modelUri,
+        });
     }
 }

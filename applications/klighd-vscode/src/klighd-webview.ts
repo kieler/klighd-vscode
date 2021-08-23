@@ -70,7 +70,7 @@ export class KLighDWebview extends SprottyLspWebview {
      * Aside: SprottyWebview only sends action messages and webview initialization messages.
      * So we have to build our own mechanism on top.
      */
-    sendMessage(msg: unknown): void {
+    sendMessage<T>(msg: T): void {
         if (this.diagramPanel.visible) {
             this.diagramPanel.webview.postMessage(msg);
         } else {

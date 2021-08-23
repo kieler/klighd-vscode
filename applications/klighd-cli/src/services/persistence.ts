@@ -59,7 +59,13 @@ export class LocalStorage implements PersistenceStorage {
         localStorage.removeItem(LocalStorage.key);
     }
 
+    onClear(): void {
+        // Do nothing. This storage will only ever be cleared by the website
+        // before the container and connection to the server is initialized.
+        // Implement this callback registration in case that changes.
+    }
+
     getAllData(): Record<string, any> {
-      return this.cache;
+        return this.cache;
     }
 }
