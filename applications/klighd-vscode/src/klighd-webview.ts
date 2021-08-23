@@ -38,7 +38,7 @@ export class KLighDWebview extends SprottyLspWebview {
         super(options);
 
         this.trackedIdentifier = options.identifier;
-        this.toggleSyncWithEditor(true);
+        this.setSyncWithEditor(true);
 
         // Dispatch preferences when the webview is ready. The current configuration
         // should only dispatched initially and not sync the current webview with changes.
@@ -82,8 +82,8 @@ export class KLighDWebview extends SprottyLspWebview {
         );
     }
 
-    /** Toggles "sync with editor". If disabled, the diagram view will not update when the active editor changes. */
-    toggleSyncWithEditor(sync: boolean): void {
+    /** Changes the behavior of "sync with editor". If disabled, the diagram view will not update when the active editor changes. */
+    setSyncWithEditor(sync: boolean): void {
         this.syncWithEditor = sync;
         commands.executeCommand("setContext", contextKeys.syncWithEditor, sync);
 

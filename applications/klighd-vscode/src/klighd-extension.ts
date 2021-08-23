@@ -212,7 +212,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramSync, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview && "toggleEditorSync" in activeWebview) {
-                    (activeWebview as KLighDWebview).toggleSyncWithEditor(true);
+                    (activeWebview as KLighDWebview).setSyncWithEditor(true);
                 }
             })
         );
@@ -220,7 +220,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramNoSync, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview && "toggleEditorSync" in activeWebview) {
-                    (activeWebview as KLighDWebview).toggleSyncWithEditor(false);
+                    (activeWebview as KLighDWebview).setSyncWithEditor(false);
                 }
             })
         );
