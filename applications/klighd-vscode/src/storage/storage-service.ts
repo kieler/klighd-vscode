@@ -66,7 +66,7 @@ export class StorageService {
     }
 
     /**
-     * Reports the data changes back to the webview.
+     * Report the data changes back to the webview.
      * The data in this service should be the source of truth.
      */
     private reportData(send: Send, data: Record<string, any>) {
@@ -74,7 +74,7 @@ export class StorageService {
     }
 
     /**
-     * Reports a clear back to the webview.
+     * Report a clear back to the webview.
      *
      * _NOTE_: At the moment, this will never be reported as it can only reports for
      * clears that are triggered by the webview. Currently, clears are only triggered

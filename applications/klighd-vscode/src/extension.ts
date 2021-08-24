@@ -76,7 +76,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.commands.registerCommand(command.clearData, () => {
             StorageService.clearAll(mementoForPersistence);
-            // webviews are manages by the SprottyExtensions which in return are stored by this extension in a lookup map
+            // webviews are managed by the SprottyExtensions which in return are stored by this extension in a lookup map
             for (const extension of extensionMap.values()) {
                 for (const webview of extension.webviews) {
                     webview.sendMessage<ReportChangeMessage>({
