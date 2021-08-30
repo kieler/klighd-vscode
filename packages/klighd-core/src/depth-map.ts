@@ -417,7 +417,7 @@ export class DepthMap {
 export class Region {
     /** The rectangle of the child area in which the region lies. */
     boundingRectangle: KNode
-    /** Gained using browser position and rescaling and are therefore not perfect. */
+    /** The absolute position of the boundingRectangle based on the layout information of the SModel. */
     absoluteBounds: Bounds
     /** the regions current detail level that is used by all children */
     detail: DetailLevel
