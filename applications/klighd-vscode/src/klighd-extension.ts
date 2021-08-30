@@ -170,7 +170,9 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
                     const key = this.getKey(identifier);
                     let webView = this.singleton || this.webviewMap.get(key);
                     if (webView) {
-                        webView.reloadContent(identifier);
+                        // Force reloading allows the user to update the diagram view
+                        // even if "sync with editor" is disabled
+                        (webView as KLighDWebview).forceReloadContent(identifier);
                         webView.diagramPanel.reveal(webView.diagramPanel.viewColumn);
                     } else {
                         webView = this.createWebView(identifier);
@@ -202,7 +204,6 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramLayout, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    console.log("Called!!!");
                     activeWebview.dispatch(new RefreshLayoutAction());
                 }
             })
@@ -211,7 +212,6 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramRefresh, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    console.log("Called!!!");
                     activeWebview.dispatch(new RefreshDiagramAction());
                 }
             })
@@ -221,6 +221,22 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
                     activeWebview.dispatch(new RequestExportSvgAction());
+                }
+            })
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(command.diagramSync, () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview && "toggleEditorSync" in activeWebview) {
+                    (activeWebview as KLighDWebview).setSyncWithEditor(true);
+                }
+            })
+        );
+        this.context.subscriptions.push(
+            commands.registerCommand(command.diagramNoSync, () => {
+                const activeWebview = this.findActiveWebview();
+                if (activeWebview && "toggleEditorSync" in activeWebview) {
+                    (activeWebview as KLighDWebview).setSyncWithEditor(false);
                 }
             })
         );
