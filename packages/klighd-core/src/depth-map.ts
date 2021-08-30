@@ -16,7 +16,7 @@
  */
 
 import { KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
-import { Bounds, SModelRoot, Viewport } from "sprotty";
+import { Point, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
 import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
 
@@ -170,7 +170,7 @@ export class DepthMap {
 
         if (node.parent === node.root) {
             const providedRegion = new Region(node)
-            providedRegion.absoluteBounds = node.bounds
+            providedRegion.absolutePosition = node.bounds
 
             entry = { providingRegion: providedRegion, containingRegion: undefined }
 
@@ -206,14 +206,12 @@ export class DepthMap {
                     currentEntry = this.regionIndexMap.get(current.id)
                 }
 
-                offsetX += currentEntry?.providingRegion?.absoluteBounds?.x ?? 0
-                offsetY += currentEntry?.providingRegion?.absoluteBounds?.y ?? 0
+                offsetX += currentEntry?.providingRegion?.absolutePosition?.x ?? 0
+                offsetY += currentEntry?.providingRegion?.absolutePosition?.y ?? 0
 
-                entry.providingRegion.absoluteBounds = {
+                entry.providingRegion.absolutePosition = {
                     x: offsetX + node.bounds.x,
-                    y: offsetY + node.bounds.y,
-                    width: node.bounds.width,
-                    height: node.bounds.height
+                    y: offsetY + node.bounds.y
                 }
             }
 
@@ -381,13 +379,13 @@ export class DepthMap {
      * @returns Boolean value indicating the visibility of the region in the current viewport. 
      */
     isInBounds(region: Region, viewport: Viewport): boolean {
-        if (region.absoluteBounds) {
+        if (region.absolutePosition) {
             const canvasBounds = this.rootElement.canvasBounds
 
-            return region.absoluteBounds.x + region.absoluteBounds.width - viewport.scroll.x >= 0
-                && region.absoluteBounds.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom)
-                && region.absoluteBounds.y + region.absoluteBounds.height - viewport.scroll.y >= 0
-                && region.absoluteBounds.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom)
+            return region.absolutePosition.x + region.boundingRectangle.bounds.width - viewport.scroll.x >= 0
+                && region.absolutePosition.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom)
+                && region.absolutePosition.y + region.boundingRectangle.bounds.height - viewport.scroll.y >= 0
+                && region.absolutePosition.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom)
         } else {
             // Better to assume it is visible, if information are not sufficient
             return true
@@ -418,7 +416,7 @@ export class Region {
     /** The rectangle of the child area in which the region lies. */
     boundingRectangle: KNode
     /** The absolute position of the boundingRectangle based on the layout information of the SModel. */
-    absoluteBounds: Bounds
+    absolutePosition: Point
     /** the regions current detail level that is used by all children */
     detail: DetailLevel
     /** The immediate parent region of this region. */
