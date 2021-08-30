@@ -33,6 +33,10 @@ export class KLighDWebview extends SprottyLspWebview {
      * is disabled.
      */
     private trackedIdentifier: SprottyDiagramIdentifier;
+    
+    // `SprottyWebview` is only able to queue ActionMessages and Sprotty initialization messages.
+    // Therefore, we have to use our own queue for custom messages.
+    private queuedMessages: any[] = [];
 
     constructor(options: SprottyWebviewOptions) {
         super(options);
@@ -47,6 +51,16 @@ export class KLighDWebview extends SprottyLspWebview {
         this.ready().then(() => {
             this.sendConfiguration();
         });
+
+        // Clear our own message queue every time the webview is visible
+        this.disposables.push(
+            this.diagramPanel.onDidChangeViewState((event) => {
+                if (event.webviewPanel.visible) {
+                    this.queuedMessages.forEach((message) => this.sendMessage(message));
+                    this.queuedMessages = [];
+                }
+            })
+        );
     }
 
     /**
@@ -94,5 +108,24 @@ export class KLighDWebview extends SprottyLspWebview {
         // 3. Change the active editor and toggle sync with editor on
         // 4. Go back to the first editor. The diagram model will be requested four times. _WHO KNOWS WHY..._
         this.reloadContent(this.trackedIdentifier);
+    }
+
+    /**
+     * Send an arbitrary message to the webview.
+     *
+     * Aside: SprottyWebview only sends action messages and webview initialization messages.
+     * So we have to build our own mechanism on top.
+     */
+    sendMessage<T>(msg: T): void {
+        if (this.diagramPanel.visible) {
+            this.diagramPanel.webview.postMessage(msg);
+        } else {
+            this.queuedMessages.push(msg);
+        }
+    }
+
+    /** Registers a message listener to handle received messages */
+    onMessage(handler: (msg: any) => void): void {
+        this.disposables.push(this.diagramPanel.webview.onDidReceiveMessage(handler));
     }
 }

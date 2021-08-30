@@ -16,20 +16,15 @@
  */
 
 import { ContainerModule } from "inversify";
-import { configureActionHandler } from "sprotty";
+import { configureActionHandler, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
-import {
-    UpdateOptionsAction,
-    PerformOptionsActionAction,
-    SetSynthesisOptionsAction,
-    SetLayoutOptionsAction,
-    SetRenderOptionAction,
-} from "./actions";
+import { SetRenderOptionAction, ResetRenderOptionsAction } from "./actions";
 import { OptionsPanel } from "./options-panel";
 import { OptionsRegistry } from "./options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { GeneralPanel } from "./general-panel";
 import { RenderOptionsRegistry } from "./render-options-registry";
+import { OptionsPersistence } from "./options-persistence";
 
 /** Module that configures option related panels and registries. */
 export const optionsModule = new ContainerModule((bind, _, isBound) => {
@@ -41,12 +36,14 @@ export const optionsModule = new ContainerModule((bind, _, isBound) => {
 
     bind(DISymbol.OptionsRenderer).to(OptionsRenderer);
     bind(DISymbol.OptionsRegistry).to(OptionsRegistry).inSingletonScope();
+    bind(TYPES.IActionHandlerInitializer).toService(DISymbol.OptionsRegistry);
+
     bind(DISymbol.RenderOptionsRegistry).to(RenderOptionsRegistry).inSingletonScope();
 
+    bind(OptionsPersistence).toSelf().inSingletonScope();
+    bind(TYPES.IActionHandlerInitializer).toService(OptionsPersistence);
+
     const ctx = { bind, isBound };
-    configureActionHandler(ctx, UpdateOptionsAction.KIND, DISymbol.OptionsRegistry);
-    configureActionHandler(ctx, PerformOptionsActionAction.KIND, DISymbol.OptionsRegistry);
-    configureActionHandler(ctx, SetSynthesisOptionsAction.KIND, DISymbol.OptionsRegistry);
-    configureActionHandler(ctx, SetLayoutOptionsAction.KIND, DISymbol.OptionsRegistry);
     configureActionHandler(ctx, SetRenderOptionAction.KIND, DISymbol.RenderOptionsRegistry);
+    configureActionHandler(ctx, ResetRenderOptionsAction.KIND, DISymbol.RenderOptionsRegistry);
 });

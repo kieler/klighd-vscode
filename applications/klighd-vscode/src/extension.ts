@@ -21,6 +21,8 @@ import { LanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
 import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { LspHandler } from "./lsp-handler";
+import { StorageService } from "./storage/storage-service";
+import { ReportChangeMessage } from "./storage/messages";
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
@@ -29,6 +31,10 @@ export { command };
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext): void {
     const extensionMap: Map<string, KLighDExtension> = new Map();
+
+    // This extension should persist data in workspace state, so it is different for
+    // each project a user opens. To change this, assign another Memento to this constant.
+    const mementoForPersistence = context.workspaceState;
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
@@ -43,9 +49,11 @@ export function activate(context: vscode.ExtensionContext): void {
                 }
 
                 try {
+                    const storageService = new StorageService(mementoForPersistence, client);
                     const extension = new KLighDExtension(context, {
                         lsClient: client,
                         supportedFileEnding: fileEndings,
+                        storageService,
                     });
                     // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
                     new LspHandler(client);
@@ -61,6 +69,25 @@ export function activate(context: vscode.ExtensionContext): void {
                 }
             }
         )
+    );
+
+    // Command for the user to remove all data stored by this extension. Allows
+    // the user to reset changed synthesis options etc.
+    context.subscriptions.push(
+        vscode.commands.registerCommand(command.clearData, () => {
+            StorageService.clearAll(mementoForPersistence);
+            // webviews are managed by the SprottyExtensions which in return are stored by this extension in a lookup map
+            for (const extension of extensionMap.values()) {
+                for (const webview of extension.webviews) {
+                    webview.sendMessage<ReportChangeMessage>({
+                        type: "persistence/reportChange",
+                        payload: { type: "clear" },
+                    });
+                }
+            }
+
+            vscode.window.showInformationMessage("Stored data has been deleted.");
+        })
     );
 
     // Command provided for other extensions to add an action handler to their created diagram extension instance.

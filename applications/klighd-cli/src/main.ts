@@ -26,6 +26,7 @@ import {
     bindServices,
 } from "@kieler/klighd-core";
 import { LSPConnection } from "./services/connection";
+import { LocalStorage } from "./services/persistence";
 import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
 import { showPopup } from "./popup";
@@ -68,15 +69,20 @@ async function initDiagramView(sourceUri: string) {
     const socketUrl = `ws://${location.host}/socket`;
 
     const connection = new LSPConnection();
+    const persistenceStorage = new LocalStorage();
+
+    if (readSearchParam("clearData") === "true") persistenceStorage.clear();
+
     const diagramContainer = createKlighdDiagramContainer("sprotty");
-    bindServices(diagramContainer, { connection, sessionStorage });
+    bindServices(diagramContainer, { connection, sessionStorage, persistenceStorage });
+
     const actionDispatcher = getActionDispatcher(diagramContainer);
 
     sendUrlSearchParamPreferences(actionDispatcher);
 
     // Connect to a language server and request a diagram.
     await connection.connect(socketUrl);
-    await connection.sendInitialize();
+    await connection.sendInitialize(persistenceStorage.getAllData());
     connection.sendDocumentDidOpen(sourceUri, languageId);
     // If this does not sleep for bit, the LS send two requestTextBounds and updateOptions actions.
     // Properly because the document changes, when the server still reads the document from "openDocument".
