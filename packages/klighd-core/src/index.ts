@@ -18,7 +18,7 @@
 // Main package entry point. Exports the public API
 
 export { default as createKlighdDiagramContainer } from "./di.config";
-export { bindServices, Connection, SessionStorage, NotificationType } from "./services";
+export * from "./services";
 export { diagramType, getActionDispatcher, requestModel } from "./base/external-helpers";
 
 // Export actions

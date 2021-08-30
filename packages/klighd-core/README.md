@@ -20,7 +20,7 @@ capabilities.
 Each service has to implement the `Connection` interface exported by the core container. Refer to
 the exported interface for more information about the required methods.
 
-#### SessionStorage
+#### Session Storage
 
 The session storage service is used to cache data in a key-value store. The duration of persistence
 should be short-lived and no longer than a user session.
@@ -31,6 +31,16 @@ interface. Refer to the exported interface for more information about the requir
 
 A good candidate for an implementation might be the `sessionStorage` web API if it is available on
 the implementing platform.
+
+#### Persistence Storage
+
+The persistence storage is used to persist data over long periods. The data should still be available
+after an application reload.
+
+Each service has to implement the `PersistenceStorage` interface exported by the core container.
+It is similar to the web [Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage)
+interface, but allows asynchronous data access.
+Refer to the exported interface for more information about the required methods.
 
 ### Using `klighd-core`
 
@@ -51,16 +61,19 @@ import {
     SetPreferencesAction,
     bindServices,
 } from "@kieler/klighd-core";
-// Your implementation of the `Connection` interface.
+// Your implementation of the `Connection` interface
 import { ConnectionImpl } from "./services/connection";
+// Your implementation of the `PersistenceStorage` interface
+import { PersistenceStorageImpl } from "./services/persistence";
 
 async function init() {
     const connection = new ConnectionImpl();
+    const persistenceStorage = new PersistenceStorageImpl();
 
     // container-id should be the id of the html element that is used as the root for diagrams.
     const diagramContainer = createKlighdDiagramContainer("container-id");
     // Provides required services to the container. Uses the native sessionStorage in this case.
-    bindServices(diagramContainer, { connection, sessionStorage });
+    bindServices(diagramContainer, { connection, sessionStorage, persistenceStorage });
 
     // The action dispatcher can be used to send actions to the container.
     const actionDispatcher = getActionDispatcher(diagramContainer);

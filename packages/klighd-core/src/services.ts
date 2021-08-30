@@ -32,12 +32,14 @@ import { ActionMessage } from "sprotty";
 interface Services {
     connection: Connection;
     sessionStorage: SessionStorage;
+    persistenceStorage: PersistenceStorage;
 }
 
 /** Helper function to bind all required services to the given DI Container. */
 export function bindServices(container: Container, services: Services): void {
     container.bind(Connection).toConstantValue(services.connection);
     container.bind(SessionStorage).toConstantValue(services.sessionStorage);
+    container.bind(PersistenceStorage).toConstantValue(services.persistenceStorage);
 }
 
 /**
@@ -82,3 +84,33 @@ export const Connection = Symbol("Connection");
  */
 export type SessionStorage = Storage;
 export const SessionStorage = Symbol("SessionStorage");
+
+/**
+ * Key/Value Storage for items that should be persisted long term.
+ * API is similar to the {@link Storage} API but is asynchronous, since not every
+ * platform is able to provide synchronous storage access.
+ *
+ * The stored keys/items should be send to the server during initialization
+ * as an object property of the `clientDiagramOptions` key.
+ */
+export interface PersistenceStorage {
+    /**
+     * Sets the item for a given key. Uses a setter function to update the value
+     * based on the previous value, which is often desired.
+     * This saves an additional read that would otherwise be required for an update.
+     */
+    setItem<T>(key: string, setter: (prev?: T) => T): void;
+
+    /** Returns an item for the given key. Resolves to `undefined` if the key does not exist. */
+    getItem<T>(key: string): Promise<T | undefined>;
+
+    /** Removes an item for a given key. */
+    removeItem(key: string): void;
+
+    /** Clears the storage. Removes all stored items. */
+    clear(): void;
+
+    /** Attaches a listener that is notified when the storage gets cleared. */
+    onClear(cb: () => void): void;
+}
+export const PersistenceStorage = Symbol("PersistenceStorage");

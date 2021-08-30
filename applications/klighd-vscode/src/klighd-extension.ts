@@ -14,7 +14,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { KlighdFitToScreenAction, RefreshDiagramAction, RefreshLayoutAction } from "@kieler/klighd-core";
+import {
+    KlighdFitToScreenAction,
+    RefreshDiagramAction,
+    RefreshLayoutAction,
+} from "@kieler/klighd-core";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
 import { Action, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
@@ -22,12 +26,14 @@ import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vsc
 import { commands, ExtensionContext, Uri } from "vscode";
 import { LanguageClient } from "vscode-languageclient";
 import { command, diagramType, extensionId } from "./constants";
+import { StorageService } from "./storage/storage-service";
 import { KLighDWebview } from "./klighd-webview";
 
 /** Options required to construct a KLighDExtension */
 interface KLighDExtensionOptions {
     lsClient: LanguageClient;
     supportedFileEnding: string[];
+    storageService: StorageService;
 }
 
 /**
@@ -64,6 +70,9 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     private static lsClient: LanguageClient;
     private supportedFileEndings: string[];
 
+    // This service is required here, so it can be hooked into created webviews.
+    private storageService: StorageService;
+
     /**
      * Stored action handlers that where registered by another extension.
      * They are added to the web views created for their languageclient.
@@ -76,6 +85,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         KLighDExtension.lsClient = options.lsClient;
         super(extensionId, context);
 
+        this.storageService = options.storageService;
         this.supportedFileEndings = options.supportedFileEnding;
         this.actionHandlers = [];
     }
@@ -101,12 +111,22 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             singleton: true,
         });
 
+        // Hook up the new webview so it can report data for persistence.
+        this.storageService.addWebview(webview);
+
         // Attach all action handlers, registered in this instance, to the created Sprotty webview.
         for (const handler of this.actionHandlers) {
             webview.addActionHandler(handler);
         }
 
         return webview;
+    }
+
+    /** All {@link KLighDWebview}s that are created by this {@link SprottyLspVscodeExtension}. */
+    get webviews(): KLighDWebview[] {
+        // Casting is alright since we only spawn a KLighDWebview. However, sprotty-vscode
+        // doesn't know it and the webviewMap is managed by sprotty-vscode.
+        return Array.from(this.webviewMap.values()) as KLighDWebview[];
     }
 
     /**

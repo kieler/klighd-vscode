@@ -33,6 +33,7 @@ import { createKlighdDiagramContainer, bindServices } from "@kieler/klighd-core"
 import { MessageConnection } from "./message-connection";
 import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
 import { KlighdDiagramWidget } from "./klighd-widget";
+import { MessagePersistenceStorage } from "./persistence-storage";
 
 /** Uses `klighd-core` and {@link SprottyStarter} to create a diagram container in a webview. */
 export class KLighDSprottyStarter extends SprottyStarter {
@@ -70,8 +71,9 @@ export class KLighDSprottyStarter extends SprottyStarter {
 
     protected override createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
         const connection = new MessageConnection();
+        const persistenceStorage = new MessagePersistenceStorage();
         const container = createKlighdDiagramContainer(diagramIdentifier.clientId);
-        bindServices(container, { connection, sessionStorage });
+        bindServices(container, { connection, sessionStorage, persistenceStorage });
 
         // Send stored actions to the container, which is no able to receive them
         this.replayCapturedActionMessages();
