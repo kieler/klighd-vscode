@@ -23,7 +23,7 @@ import { IActionDispatcher, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import { SidebarPanel } from "../sidebar";
 import { BookmarkRegistry } from "./bookmark-registry";
-import { Bookmark, GoToBookmarkAction, CreateBookmarkAction } from "./bookmark";
+import { Bookmark, GoToBookmarkAction, CreateBookmarkAction, DeleteBookmarkAction, AddBookmarkAction, RenameBookmarkAction } from "./bookmark";
 
 /**
  * Sidebar panel that displays previously set bookmarks
@@ -137,16 +137,17 @@ export class BookmarkPanel extends SidebarPanel {
     }
 
     protected deleteBookmark(bookmark: Bookmark): void {
-        this.bookmarkRegistry.deleteBookmark(bookmark)
+        if (bookmark.bookmarkIndex !== undefined) {
+            this.actionDispatcher.dispatch(new DeleteBookmarkAction(bookmark.bookmarkIndex))
+        }
     }
 
     protected loadBookmark(bookmarkString: string): void {
-        let bookmark = JSON.parse(bookmarkString);
+        const bookmark = JSON.parse(bookmarkString);
 
         if (Bookmark.isBookmark(bookmark)) {
             bookmark.clone = Bookmark.prototype.clone
-            bookmark =
-                this.bookmarkRegistry.addBookmark(bookmark.clone())
+            this.actionDispatcher.dispatch(new AddBookmarkAction(bookmark.clone()))
         } else {
             console.log("Clipboard does not contain a valid Bookmark")
         }
@@ -172,7 +173,7 @@ export class BookmarkPanel extends SidebarPanel {
         if (save && bookmark.bookmarkIndex !== undefined) {
             save.classList.toggle("options__hidden", true)
             const new_name = save.getElementsByTagName("input")[0].value ?? undefined;
-            this.bookmarkRegistry.updateBookmarkName(bookmark.bookmarkIndex, new_name)
+            this.actionDispatcher.dispatch(new RenameBookmarkAction(bookmark.bookmarkIndex, new_name));
         }
     }
 

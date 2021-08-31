@@ -15,11 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Command, CommandExecutionContext, CommandReturn, isViewport, SetViewportAction, SetViewportCommand, TYPES, Viewport } from "sprotty";
+import { Command, CommandExecutionContext, CommandReturn, isViewport, SetViewportAction, SetViewportCommand, Viewport } from "sprotty";
 import { Action } from "sprotty/lib/base/actions/action";
-import { inject } from "inversify";
-import { DISymbol } from "../di.symbols";
-import { BookmarkRegistry } from "./bookmark-registry";
 
 /**
  * A Bookmark
@@ -89,16 +86,19 @@ export class CreateBookmarkAction implements Action {
 export class CreateBookmarkCommand extends Command {
     static readonly KIND = CreateBookmarkAction.KIND;
 
-    constructor(@inject(TYPES.Action) protected action: CreateBookmarkAction, @inject(DISymbol.BookmarkRegistry) protected bookmarkRegistry: BookmarkRegistry) {
+    constructor(protected action: CreateBookmarkAction, protected addBookmark: (bookmark: Bookmark) => void) {
         super();
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
         const model = context.root
+
+        console.log("Create Bookmark Command")
+
         if (isViewport(model)) {
             // copy the viewport as we do want the Bookmark to stay where we are now
             const bookmark = new Bookmark({ scroll: model.scroll, zoom: model.zoom });
-            this.bookmarkRegistry.addBookmark(bookmark)
+            this.addBookmark(bookmark)
         }
         return model;
     }
@@ -112,6 +112,32 @@ export class CreateBookmarkCommand extends Command {
     }
 }
 
+/**
+ * An action to add a Bookmark to the BookmarkRegistry
+ */
+export class AddBookmarkAction implements Action {
+    static readonly KIND = 'add-bookmark';
+    readonly kind = AddBookmarkAction.KIND;
+
+    constructor(public bookmark: Bookmark) { }
+}
+
+/**
+ * An action to delete a Bookmark from the BookmarkRegistry
+ */
+export class DeleteBookmarkAction implements Action {
+    static readonly KIND = 'delete-bookmark';
+    readonly kind = DeleteBookmarkAction.KIND;
+
+    constructor(public bookmark_index: number) { }
+}
+
+export class RenameBookmarkAction implements Action {
+    static readonly KIND = 'rename-bookmark';
+    readonly kind = RenameBookmarkAction.KIND;
+
+    constructor(public bookmark_index: number, public new_name: string) { }
+}
 
 /**
  * An action to return to a bookmarked Viewport
@@ -128,6 +154,7 @@ export class GoToBookmarkAction implements Action {
 }
 
 export class GoToBookmarkCommand implements Command {
+    static readonly KIND = GoToBookmarkAction.KIND;
 
     action: GoToBookmarkAction
     animate: boolean

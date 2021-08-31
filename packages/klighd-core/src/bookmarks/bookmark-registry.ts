@@ -20,7 +20,7 @@ import { Action, ICommand } from "sprotty";
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
 import { PreferencesRegistry } from "../preferences-registry";
-import { Bookmark, GoToBookmarkAction, GoToBookmarkCommand, SetInitialBookmark } from "./bookmark";
+import { AddBookmarkAction, Bookmark, CreateBookmarkAction, CreateBookmarkCommand, DeleteBookmarkAction, GoToBookmarkAction, GoToBookmarkCommand, RenameBookmarkAction, SetInitialBookmark } from "./bookmark";
 
 /**
  * A simple {@link Registry} that holds a list of all added Bookmarks
@@ -39,26 +39,53 @@ export class BookmarkRegistry extends Registry {
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === GoToBookmarkAction.KIND) {
-            return new GoToBookmarkCommand(action as GoToBookmarkAction, this.preferenceRegistry.preferences.animateGoToBookmark)
+
+            const goto_action = action as GoToBookmarkAction
+            return new GoToBookmarkCommand(goto_action, this.preferenceRegistry.preferences.animateGoToBookmark)
+
         } else if (action.kind === SetInitialBookmark.KIND) {
-            this._initialBookmark = (action as SetInitialBookmark).bookmark
+
+            const init_action = action as SetInitialBookmark;
+            this._initialBookmark = init_action.bookmark
             this.addBookmark(this._initialBookmark)
+
+        } else if (action.kind === DeleteBookmarkAction.KIND) {
+
+            const delete_action = action as DeleteBookmarkAction;
+            this.deleteBookmark(delete_action.bookmark_index)
+
+        } else if (action.kind === RenameBookmarkAction.KIND) {
+
+            const rename_action = action as RenameBookmarkAction;
+            this.updateBookmarkName(rename_action.bookmark_index, rename_action.new_name)
+
+        } else if (action.kind === CreateBookmarkAction.KIND) {
+
+            console.log("Create Bookmark Action")
+
+            const create_action = action as CreateBookmarkAction;
+            return new CreateBookmarkCommand(create_action, (bookmark: Bookmark) => this.addBookmark(bookmark))
+
+        } else if (action.kind === AddBookmarkAction.KIND) {
+
+            const add_action = action as AddBookmarkAction;
+            this.addBookmark(add_action.bookmark)
         }
     }
 
-    addBookmark(bookmark: Bookmark): void {
+    protected addBookmark(bookmark: Bookmark): void {
         bookmark.bookmarkIndex = this.count++;
         this._bookmarks.push(bookmark)
         this.notifyListeners();
     }
 
-    deleteBookmark(bookmark: Bookmark): void {
-        const index = this._bookmarks.findIndex((value) => value === bookmark);
+    protected deleteBookmark(bookmark_index: number): void {
+        const index = this._bookmarks.findIndex((value) => value.bookmarkIndex === bookmark_index);
         this._bookmarks.splice(index, 1)
         this.notifyListeners();
     }
 
-    updateBookmarkName(bookmark_index: number, new_name: string): void {
+    protected updateBookmarkName(bookmark_index: number, new_name: string): void {
         const bm = this._bookmarks.find((bm) => bm.bookmarkIndex === bookmark_index)
         if (bm) {
             if (new_name === "") {
