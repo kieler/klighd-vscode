@@ -71,6 +71,17 @@ export class SetSynthesisOptionsAction implements Action {
     }
 }
 
+/** Resets all synthesis options to default for both server and client. */
+export class ResetSynthesisOptionsAction implements Action {
+    static readonly KIND = "resetSynthesisOptions";
+    readonly kind = ResetSynthesisOptionsAction.KIND;
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is ResetSynthesisOptionsAction {
+        return action.kind === ResetSynthesisOptionsAction.KIND;
+    }
+}
+
 /** Change the value of one or multiple layout options. */
 export class SetLayoutOptionsAction implements Action {
     static readonly KIND = "setLayoutOptions";
@@ -84,6 +95,17 @@ export class SetLayoutOptionsAction implements Action {
     }
 }
 
+/** Resets all layout options to default for both server and client. */
+export class ResetLayoutOptionsAction implements Action {
+    static readonly KIND = "resetLayoutOptions";
+    readonly kind = ResetLayoutOptionsAction.KIND;
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is ResetLayoutOptionsAction {
+        return action.kind === ResetLayoutOptionsAction.KIND;
+    }
+}
+
 /** Change the value of one or multiple render options. */
 export class SetRenderOptionAction implements Action {
     static readonly KIND = "setRenderOption";
@@ -94,5 +116,16 @@ export class SetRenderOptionAction implements Action {
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetRenderOptionAction {
         return action.kind === SetRenderOptionAction.KIND;
+    }
+}
+
+/** Resets all render options to default. */
+export class ResetRenderOptionsAction implements Action {
+    static readonly KIND = "resetRenderOptions";
+    readonly kind = ResetRenderOptionsAction.KIND;
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is ResetRenderOptionsAction {
+        return action.kind === ResetRenderOptionsAction.KIND;
     }
 }

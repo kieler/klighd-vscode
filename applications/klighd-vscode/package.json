@@ -30,6 +30,12 @@
     "contributes": {
         "commands": [
             {
+                "command": "klighd-vscode.data.clear",
+                "title": "Clear Persisted Data",
+                "icon": "$(clear-all)",
+                "category": "KLighD Diagram"
+            },
+            {
                 "command": "klighd-vscode.diagram.open",
                 "title": "Open in Diagram",
                 "icon": "$(symbol-structure)",
@@ -64,10 +70,25 @@
                 "title": "Export diagram to SVG",
                 "icon": "$(clone)",
                 "category": "KLighD Diagram"
+            },
+            {
+                "command": "klighd-vscode.diagram.sync",
+                "title": "Enable Sync With Editor",
+                "icon": "$(sync-ignored)",
+                "enablement": "!klighd-vscode.syncWithEditor"
+            },
+            {
+                "command": "klighd-vscode.diagram.noSync",
+                "title": "Disable Sync With Editor",
+                "icon": "$(sync)",
+                "enablement": "klighd-vscode.syncWithEditor"
             }
         ],
         "menus": {
             "commandPalette": [
+                {
+                    "command": "klighd-vscode.data.clear"
+                },
                 {
                     "when": "false",
                     "command": "klighd-vscode.diagram.open"
@@ -91,6 +112,26 @@
                 {
                     "when": "keith-diagram-focused",
                     "command": "klighd-vscode.diagram.export"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-vscode.diagram.sync"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-vscode.diagram.noSync"
+                }
+            ],
+            "editor/title": [
+                {
+                    "when": "keith-diagram-focused && !klighd-vscode.syncWithEditor",
+                    "command": "klighd-vscode.diagram.sync",
+                    "group": "navigation"
+                },
+                {
+                    "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
+                    "command": "klighd-vscode.diagram.noSync",
+                    "group": "navigation"
                 }
             ]
         },

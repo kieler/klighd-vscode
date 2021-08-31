@@ -42,6 +42,7 @@ const withPrefix = (name: string) => `${extensionId}.${name}`;
 export const command = {
     setLanguageClient: withPrefix("setLanguageClient"),
     addActionHandler: withPrefix("addActionHandler"),
+    clearData: withPrefix("data.clear"),
     // The following commands are registered by `sprotty-vscode`
     diagramOpen: withPrefix("diagram.open"),
     diagramExport: withPrefix("diagram.export"),
@@ -49,4 +50,10 @@ export const command = {
     diagramFit: withPrefix("diagram.fit"),
     diagramLayout: withPrefix("diagram.layout"),
     diagramRefresh: withPrefix("diagram.refresh"),
+    diagramSync: withPrefix("diagram.sync"),
+    diagramNoSync: withPrefix("diagram.noSync"),
+};
+
+export const contextKeys = {
+    syncWithEditor: withPrefix("syncWithEditor"),
 };
