@@ -25,12 +25,12 @@ import {
     SetPreferencesAction,
     bindServices,
     SetInitialBookmark,
+    Bookmark,
 } from "@kieler/klighd-core";
 import { LSPConnection } from "./services/connection";
 import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
 import { showPopup } from "./popup";
-import { Bookmark } from "../../../packages/klighd-core/lib/bookmarks/bookmark";
 
 // IIFE booting the application
 (async function main() {

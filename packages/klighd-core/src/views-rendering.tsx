@@ -17,7 +17,7 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
-import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
+import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
@@ -29,7 +29,6 @@ import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, g
 import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
-import { KNode } from '../../klighd-interactive/lib/constraint-classes';
 import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, TitleOverlayThreshold } from './options/render-options-registry';
 import { DetailLevel } from './depth-map';
 

@@ -27,6 +27,6 @@ export * from "./options/actions";
 export { ToggleSidebarPanelAction } from "./sidebar/actions";
 export { SetSynthesesAction, SetSynthesisAction } from "./syntheses/actions";
 export { SetPreferencesAction } from "./preferences-registry";
-export { SetInitialBookmark } from "./bookmarks/bookmark"
+export { SetInitialBookmark, Bookmark } from "./bookmarks/bookmark"
 export { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 export { ActionMessage } from "sprotty";
