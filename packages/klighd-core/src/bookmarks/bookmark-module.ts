@@ -16,9 +16,9 @@
  */
 
 import { ContainerModule } from "inversify";
-import { configureActionHandler } from "sprotty";
+import { configureActionHandler, configureCommand } from "sprotty";
 import { DISymbol } from "../di.symbols";
-import { AddBookmarkAction, CreateBookmarkAction, DeleteBookmarkAction, GoToBookmarkAction, RenameBookmarkAction, SetInitialBookmark } from "./bookmark"
+import { AddBookmarkAction, CreateBookmarkAction, CreateBookmarkCommand, DeleteBookmarkAction, GoToBookmarkAction, RenameBookmarkAction, SetInitialBookmark } from "./bookmark"
 import { BookmarkPanel } from "./bookmark-panel";
 import { BookmarkRegistry } from "./bookmark-registry";
 
@@ -33,6 +33,8 @@ const bookmarkModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(DISymbol.SidebarPanel).toService(BookmarkPanel);
 
     bind(DISymbol.BookmarkRegistry).to(BookmarkRegistry).inSingletonScope();
+
+    configureCommand(context, CreateBookmarkCommand);
 
     configureActionHandler(context, CreateBookmarkAction.KIND, DISymbol.BookmarkRegistry);
     configureActionHandler(context, AddBookmarkAction.KIND, DISymbol.BookmarkRegistry);

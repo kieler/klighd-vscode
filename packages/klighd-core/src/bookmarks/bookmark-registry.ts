@@ -20,7 +20,7 @@ import { Action, ICommand } from "sprotty";
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
 import { PreferencesRegistry } from "../preferences-registry";
-import { AddBookmarkAction, Bookmark, CreateBookmarkAction, CreateBookmarkCommand, DeleteBookmarkAction, GoToBookmarkAction, GoToBookmarkCommand, RenameBookmarkAction, SetInitialBookmark } from "./bookmark";
+import { AddBookmarkAction, Bookmark, DeleteBookmarkAction, GoToBookmarkAction, GoToBookmarkCommand, RenameBookmarkAction, SetInitialBookmark } from "./bookmark";
 
 /**
  * A simple {@link Registry} that holds a list of all added Bookmarks
@@ -54,12 +54,6 @@ export class BookmarkRegistry extends Registry {
         } else if (RenameBookmarkAction.isThisAction(action)) {
 
             this.updateBookmarkName(action.bookmark_index, action.new_name)
-
-        } else if (CreateBookmarkAction.isThisAction(action)) {
-
-            console.log("Create Bookmark Action")
-
-            return new CreateBookmarkCommand(action, (bookmark: Bookmark) => this.addBookmark(bookmark))
 
         } else if (AddBookmarkAction.isThisAction(action)) {
 

@@ -15,7 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Command, CommandExecutionContext, CommandReturn, isViewport, SetViewportAction, SetViewportCommand, Viewport } from "sprotty";
+import { inject, injectable } from "inversify";
+import { ActionDispatcher, Command, CommandExecutionContext, CommandReturn, isViewport, SetViewportAction, SetViewportCommand, TYPES, Viewport } from "sprotty";
 import { Action } from "sprotty/lib/base/actions/action";
 
 /**
@@ -88,31 +89,43 @@ export class CreateBookmarkAction implements Action {
  * The Command corresponding to the CreateBookmarkAction,
  * this is what actually causes the Bookmark to be added to the {@link BookmarkRegistry}
  */
+@injectable()
 export class CreateBookmarkCommand extends Command {
     static readonly KIND = CreateBookmarkAction.KIND;
 
-    constructor(protected action: CreateBookmarkAction, protected addBookmark: (bookmark: Bookmark) => void) {
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: ActionDispatcher;
+
+    // the created bookmark for us to be able to perform the undo/redo
+    // undo relies on the fact that this is the same object that is stored in the registry
+    // and we are able to observe the assigned id through this reference
+    private bookmark?: Bookmark;
+
+    constructor(@inject(TYPES.Action) protected action: CreateBookmarkAction) {
         super();
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
         const model = context.root
 
-        console.log("Create Bookmark Command")
-
         if (isViewport(model)) {
             // copy the viewport as we do want the Bookmark to stay where we are now
-            const bookmark = new Bookmark({ scroll: model.scroll, zoom: model.zoom });
-            this.addBookmark(bookmark)
+            this.bookmark = new Bookmark({ scroll: model.scroll, zoom: model.zoom });
+            this.actionDispatcher.dispatch(new AddBookmarkAction(this.bookmark))
         }
         return model;
     }
 
     undo(context: CommandExecutionContext): CommandReturn {
+        if (this.bookmark?.bookmarkIndex) {
+            this.actionDispatcher.dispatch(new DeleteBookmarkAction(this.bookmark.bookmarkIndex))
+        }
         return context.root;
     }
 
     redo(context: CommandExecutionContext): CommandReturn {
+        if (this.bookmark) {
+            this.actionDispatcher.dispatch(new AddBookmarkAction(this.bookmark))
+        }
         return context.root;
     }
 }
