@@ -16,6 +16,7 @@
  */
 
 import { Viewport } from "sprotty";
+import { getBookmarkViewport as getViewport } from "@kieler/klighd-core";
 
 /** Returns a promise that resolves after a specific amount of milliseconds. */
 export function sleep(ms: number): Promise<void> {
@@ -58,9 +59,7 @@ export function getBookmarkViewport(): Viewport | null {
         const y = parseFloat(yParam);
         const zoom = parseFloat(zoomParam);
 
-        if (!(isNaN(x) || isNaN(y) || isNaN(zoom))) {
-            return { scroll: { x: x, y: y }, zoom: zoom }
-        }
+        return getViewport(x, y, zoom)
     }
 
     return null
