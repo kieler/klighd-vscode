@@ -77,6 +77,11 @@ export class Bookmark {
 export class CreateBookmarkAction implements Action {
     static readonly KIND = 'create-bookmark';
     readonly kind = CreateBookmarkAction.KIND;
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is CreateBookmarkAction {
+        return action.kind === CreateBookmarkAction.KIND;
+    }
 }
 
 /**
@@ -120,6 +125,11 @@ export class AddBookmarkAction implements Action {
     readonly kind = AddBookmarkAction.KIND;
 
     constructor(public bookmark: Bookmark) { }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is AddBookmarkAction {
+        return action.kind === AddBookmarkAction.KIND;
+    }
 }
 
 /**
@@ -130,6 +140,11 @@ export class DeleteBookmarkAction implements Action {
     readonly kind = DeleteBookmarkAction.KIND;
 
     constructor(public bookmark_index: number) { }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is DeleteBookmarkAction {
+        return action.kind === DeleteBookmarkAction.KIND;
+    }
 }
 
 export class RenameBookmarkAction implements Action {
@@ -137,6 +152,11 @@ export class RenameBookmarkAction implements Action {
     readonly kind = RenameBookmarkAction.KIND;
 
     constructor(public bookmark_index: number, public new_name: string) { }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is RenameBookmarkAction {
+        return action.kind === RenameBookmarkAction.KIND;
+    }
 }
 
 /**
@@ -150,6 +170,11 @@ export class GoToBookmarkAction implements Action {
 
     constructor(bookmark: Bookmark) {
         this.bookmark = bookmark.clone();
+    }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is GoToBookmarkAction {
+        return action.kind === GoToBookmarkAction.KIND;
     }
 }
 
@@ -188,5 +213,10 @@ export class SetInitialBookmark implements Action {
 
     constructor(bookmark: Bookmark) {
         this.bookmark = bookmark
+    }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetInitialBookmark {
+        return action.kind === SetInitialBookmark.KIND;
     }
 }
