@@ -33,7 +33,10 @@ import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, Tit
 import { DetailLevel } from './depth-map';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
-
+// For saving the transfromations and titles for correct title overlay
+//TODO: Move to context
+export const titles: VNode[][] = [];
+export const positions: string[] = [];
 /**
  * Translates a KChildArea rendering into an SVG rendering.
  * @param rendering The rendering.
@@ -73,6 +76,8 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
+    // Add the transformations to be able to positon the title correctly and above other elements
+    positions[positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
         return renderError(rendering)
@@ -609,10 +614,40 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                         region.regionTitleIndentation = boundsAndTransformation.bounds.x ?? 0
                     }
                 }
+                else {
+                    if (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
+                        const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
+                        const defaultFactor = 1
+                        let maxScale = titleScalingFactorOption ?? defaultFactor
+                        // Indentation used in the layouting in pixels.
+                        if (context.viewport) {
+                            maxScale = maxScale / context.viewport.zoom
+                        }
+                        const scaleX = ((parent as KNode).bounds.width - attrs.x) / boundsAndTransformation.bounds.width
+                        const scaleY = (parent as KNode).bounds.height / boundsAndTransformation.bounds.height
+                        let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+                        // Don't let scalingfactor get too big.
+                        scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
+                        // Make sure scalingfactor is not below 1.
+                        scalingFactor = scalingFactor > 1 ? scalingFactor : 1
+                        // Smooth transition between overlay title and normal title.
+                        if (rendering.calculatedTextBounds) {
+                            const t = (overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom) / 3
+                            if (t <= 1) {
+                                scalingFactor = (1 - t) * 1 + t * scalingFactor
+                            }
+                        }
+                        // Keep the scaled title centered by moving it to the left by the half of the growth in width.
+                        attrs.x -= (scalingFactor * boundsAndTransformation.bounds.width - boundsAndTransformation.bounds.width) / (2 * scalingFactor)
+
+                        // Remove spacing to the left for region titles.
+                        boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
+                    }
+                }
             }
         }
         // Draw white background for overlaying titles
-        if (rendering.isNodeTitle && region && region.detail === DetailLevel.FullDetails
+        if (rendering.isNodeTitle && ((region && region.detail === DetailLevel.FullDetails) || !region)
             && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
             // Adapt y value to place the rectangle on the top of the text. 
             attrs.y -= (boundsAndTransformation.bounds.height ?? 0) / 2
@@ -670,11 +705,19 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
-
-    // build the element from the above defined attributes and children
-    return <g id={rendering.renderingId} {...gAttrs}>
-        {...elements}
-    </g>
+    if (region || !rendering.isNodeTitle) {
+        // build the element from the above defined attributes and children
+        return <g id={rendering.renderingId} {...gAttrs}>
+            {...elements}
+        </g>
+    } else {
+        // Add the transformations necessary for correct placement
+        gAttrs.transform = gAttrs.transform != undefined ? positions.pop() + gAttrs.transform : positions.pop()
+        titles[titles.length - 1].push(<g id={rendering.renderingId} {...gAttrs}>
+            {...elements}
+        </g>)
+        return <g></g>
+    }
 }
 
 /**
