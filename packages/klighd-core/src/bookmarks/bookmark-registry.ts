@@ -38,38 +38,33 @@ export class BookmarkRegistry extends Registry {
     private count = 0;
 
     handle(action: Action): void | Action | ICommand {
-        if (action.kind === GoToBookmarkAction.KIND) {
+        if (GoToBookmarkAction.isThisAction(action)) {
 
-            const goto_action = action as GoToBookmarkAction
-            return new GoToBookmarkCommand(goto_action, this.preferenceRegistry.preferences.animateGoToBookmark)
+            return new GoToBookmarkCommand(action, this.preferenceRegistry.preferences.animateGoToBookmark)
 
-        } else if (action.kind === SetInitialBookmark.KIND) {
+        } else if (SetInitialBookmark.isThisAction(action)) {
 
-            const init_action = action as SetInitialBookmark;
-            this._initialBookmark = init_action.bookmark
+            this._initialBookmark = action.bookmark
             this.addBookmark(this._initialBookmark)
 
-        } else if (action.kind === DeleteBookmarkAction.KIND) {
+        } else if (DeleteBookmarkAction.isThisAction(action)) {
 
-            const delete_action = action as DeleteBookmarkAction;
-            this.deleteBookmark(delete_action.bookmark_index)
+            this.deleteBookmark(action.bookmark_index)
 
-        } else if (action.kind === RenameBookmarkAction.KIND) {
+        } else if (RenameBookmarkAction.isThisAction(action)) {
 
-            const rename_action = action as RenameBookmarkAction;
-            this.updateBookmarkName(rename_action.bookmark_index, rename_action.new_name)
+            this.updateBookmarkName(action.bookmark_index, action.new_name)
 
-        } else if (action.kind === CreateBookmarkAction.KIND) {
+        } else if (CreateBookmarkAction.isThisAction(action)) {
 
             console.log("Create Bookmark Action")
 
-            const create_action = action as CreateBookmarkAction;
-            return new CreateBookmarkCommand(create_action, (bookmark: Bookmark) => this.addBookmark(bookmark))
+            return new CreateBookmarkCommand(action, (bookmark: Bookmark) => this.addBookmark(bookmark))
 
-        } else if (action.kind === AddBookmarkAction.KIND) {
+        } else if (AddBookmarkAction.isThisAction(action)) {
 
-            const add_action = action as AddBookmarkAction;
-            this.addBookmark(add_action.bookmark)
+            this.addBookmark(action.bookmark)
+
         }
     }
 
