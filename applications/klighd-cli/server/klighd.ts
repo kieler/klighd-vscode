@@ -76,7 +76,7 @@ const serve = new Command("serve")
     });
 
 const open = new Command("open")
-    .description("start and open diagram view with the given file")
+    .description("start and open a diagram view for the given file")
     .arguments("<file>")
     .option("--clear", "clear persisted data")
     .option("--no-fit", "do not resize the diagram to fit the viewport")
