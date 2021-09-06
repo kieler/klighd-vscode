@@ -33,10 +33,7 @@ import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, Tit
 import { DetailLevel } from './depth-map';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
-// For saving the transfromations and titles for correct title overlay
-//TODO: Move to context
-export const titles: VNode[][] = [];
-export const positions: string[] = [];
+
 /**
  * Translates a KChildArea rendering into an SVG rendering.
  * @param rendering The rendering.
@@ -77,7 +74,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
     // Add the transformations to be able to positon the title correctly and above other elements
-    positions[positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
+    context.positions[context.positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
         return renderError(rendering)
@@ -712,8 +709,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         </g>
     } else {
         // Add the transformations necessary for correct placement
-        gAttrs.transform = gAttrs.transform != undefined ? positions.pop() + gAttrs.transform : positions.pop()
-        titles[titles.length - 1].push(<g id={rendering.renderingId} {...gAttrs}>
+        gAttrs.transform = gAttrs.transform != undefined ? context.positions.pop() + gAttrs.transform : context.positions.pop()
+        context.titles[context.titles.length - 1].push(<g id={rendering.renderingId} {...gAttrs}>
             {...elements}
         </g>)
         return <g></g>

@@ -37,6 +37,8 @@ export class SKGraphModelRenderer extends ModelRenderer {
     kRenderingLibrary?: KRenderingLibrary
     renderingDefs: Map<string, VNode>
     viewport: Viewport
+    titles: VNode[][]
+    positions: string[]
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.

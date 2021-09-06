@@ -27,7 +27,7 @@ import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './opt
 import { DepthMap } from './depth-map';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
-import { getJunctionPointRenderings, getRendering, positions, titles } from './views-rendering';
+import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 import { DISymbol } from './di.symbols';
 
@@ -49,6 +49,8 @@ export class SKGraphView extends SGraphView {
         if (viewport) {
             ctx.viewport = viewport
         }
+        ctx.titles = []
+        ctx.positions = []
 
 
 
@@ -82,9 +84,9 @@ export class KNodeView implements IView {
 
     render(node: SKNode, context: RenderingContext): VNode {
         // Add new level to title and position array for correct placement of titles
-        titles.push([])
-        positions.push("")
         const ctx = context as SKGraphModelRenderer
+        ctx.titles.push([])
+        ctx.positions.push("")
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -157,7 +159,7 @@ export class KNodeView implements IView {
                 result.push(interactiveNodes)
             }
             result.push(...children)
-            result.push(...(titles.pop() ?? []))
+            result.push(...(ctx.titles.pop() ?? []))
             return <g>{...result}</g>
         }
 
@@ -169,7 +171,7 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             return <g>
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(node)}
             </g>
         }
@@ -185,7 +187,7 @@ export class KNodeView implements IView {
         } else if (!node.areNonChildAreaChildrenRendered) {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
-        result.push(...(titles.pop() ?? []))
+        result.push(...(ctx.titles.pop() ?? []))
         return <g>{...result}</g>
     }
 }
@@ -200,16 +202,16 @@ export class KPortView implements IView {
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode {
         // Add new level to title and position array for correct placement of titles
-        titles.push([])
-        positions.push("")
         const ctx = context as SKGraphModelRenderer
+        ctx.titles.push([])
+        ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
         const rendering = getRendering(port.data, port, new KStyles, ctx, this.mListener)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
         }
@@ -217,19 +219,19 @@ export class KPortView implements IView {
         if (!port.areChildAreaChildrenRendered) {
             return <g>
                 {rendering}
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
         } else if (!port.areNonChildAreaChildrenRendered) {
             return <g>
                 {rendering}
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderNonChildAreaChildren(port)}
             </g>
         } else {
             return <g>
                 {rendering}
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
             </g>
         }
     }
@@ -244,9 +246,9 @@ export class KLabelView implements IView {
 
     render(label: SKLabel, context: RenderingContext): VNode {
         // Add new level to title and position array for correct placement of titles
-        titles.push([])
-        positions.push("")
         const ctx = context as SKGraphModelRenderer
+        ctx.titles.push([])
+        ctx.positions.push("")
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -260,26 +262,26 @@ export class KLabelView implements IView {
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
-                {ctx.renderChildren(label).push(...titles.pop() ?? [])}
+                {ctx.renderChildren(label).push(...ctx.titles.pop() ?? [])}
             </g>
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!label.areChildAreaChildrenRendered) {
             return <g>
                 {rendering}
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(label)}
             </g>
         } else if (!label.areNonChildAreaChildrenRendered) {
             return <g>
                 {rendering}
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderNonChildAreaChildren(label)}
             </g>
         } else {
             return <g>
                 {rendering}
-                {titles.pop() ?? []}
+                {ctx.titles.pop() ?? []}
             </g>
         }
     }
