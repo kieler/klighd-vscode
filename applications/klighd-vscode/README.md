@@ -125,14 +125,14 @@ vscode.commands.executeCommand("klighd-vscode.addActionHandler", refId: string, 
 ### Dispatching Actions
 
 The KLighD diagram extension provides the ability to send an action to all open diagram views that
-belong to the host extension. The action will be handled by the diagram core and potentially send to
+belong to the host extension. The action will be handled by the diagram core and potentially sent to
 the language server if it is handled that way.
 
 To send an action to a `klighd-vscode` webview, execute the following command:
 
 ```typescript
 // - refId: your registration id returned from the setLanguageClient command
-// - action: a valid Sprotty action that is send to open diagram views.
+// - action: a valid Sprotty action that is sent to open diagram views.
 vscode.commands.executeCommand("klighd-vscode.dispatchAction", refId: string, action: Action);
 ```
 
