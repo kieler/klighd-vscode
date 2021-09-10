@@ -108,6 +108,7 @@ export function activate(context: vscode.ExtensionContext): void {
                     vscode.window.showErrorMessage(
                         `${command.addActionHandler} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
                     );
+                    return;
                 }
 
                 extension.addActionHandler(kind, actionHandler);
@@ -130,6 +131,7 @@ export function activate(context: vscode.ExtensionContext): void {
                 vscode.window.showErrorMessage(
                     `${command.addActionHandler} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
                 );
+                return;
             }
 
             extension.webviews.forEach((webview) => webview.dispatch(action));
