@@ -24,9 +24,9 @@ while the KLighD extension handles everything related to diagrams.
 ### Disclaimer
 
 Developing a language server for your extension that uses [KLighD](https://github.com/kieler/KLighD)
-to fulfill all requirements to be usable with this extension is no easy task. Until the distribution of
-[KLighD](https://github.com/kieler/KLighD) and documentation about building your own language server
-is improved, feel free to seek advice from a member of the KIELER working group.
+to fulfill all requirements to be usable with this extension is no easy task. Until the distribution
+of [KLighD](https://github.com/kieler/KLighD) and documentation about building your own language
+server is improved, feel free to seek advice from a member of the KIELER working group.
 
 An example for a simple language server with KLighD synthesis support can be found
 [here](https://github.com/kieler/osgiviz/tree/master/plugins/de.cau.cs.kieler.osgiviz.language.server).
@@ -100,7 +100,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-### Intercepting messages
+### Intercepting Messages
 
 The KLighD diagram extension provides the option to intercept diagram actions that are about to be
 sent to the language server. Each action has an identifier named `kind`.
@@ -122,10 +122,25 @@ To register your action handler with the `klighd-vscode` extension call the foll
 vscode.commands.executeCommand("klighd-vscode.addActionHandler", refId: string, kind: string, handler: ActionHandler);
 ```
 
+### Dispatching Actions
+
+The KLighD diagram extension provides the ability to send an action to all open diagram views that
+belong to the host extension. The action will be handled by the diagram core and potentially send to
+the language server if it is handled that way.
+
+To send an action to a `klighd-vscode` webview, execute the following command:
+
+```typescript
+// - refId: your registration id returned from the setLanguageClient command
+// - action: a valid Sprotty action that is send to open diagram views.
+vscode.commands.executeCommand("klighd-vscode.dispatchAction", refId: string, action: Action);
+```
+
 ## Known Issues
 
 -   Currently, only at most one extension that depends on `kieler.klighd-vscode` can be activated at
     the same time. This causes problems if a workspace opens multiple files that are handled by
-    different KLighD dependent extensions. This issue is tracked [here](https://github.com/kieler/klighd-vscode/issues/6).
+    different KLighD dependent extensions. This issue is tracked
+    [here](https://github.com/kieler/klighd-vscode/issues/6).
 -   Exported SVG are currently not displayed properly. This issue is tracked
     [here](https://github.com/eclipse/sprotty/issues/149).
