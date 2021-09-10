@@ -23,6 +23,7 @@ import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { LspHandler } from "./lsp-handler";
 import { StorageService } from "./storage/storage-service";
 import { ReportChangeMessage } from "./storage/messages";
+import { Action, isAction } from "sprotty-vscode-protocol";
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
@@ -107,11 +108,34 @@ export function activate(context: vscode.ExtensionContext): void {
                     vscode.window.showErrorMessage(
                         `${command.addActionHandler} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
                     );
+                    return;
                 }
 
                 extension.addActionHandler(kind, actionHandler);
             }
         )
+    );
+
+    // Command provided for other extensions to dispatch an action if a webview is open
+    context.subscriptions.push(
+        vscode.commands.registerCommand(command.dispatchAction, (id: string, action: Action) => {
+            const extension = extensionMap.get(id);
+            if (!extension) {
+                vscode.window.showErrorMessage(
+                    `${command.dispatchAction} command called with unknown reference id: ${id}`
+                );
+                return;
+            }
+
+            if (!isAction(action)) {
+                vscode.window.showErrorMessage(
+                    `${command.addActionHandler} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
+                );
+                return;
+            }
+
+            extension.webviews.forEach((webview) => webview.dispatch(action));
+        })
     );
 }
 
