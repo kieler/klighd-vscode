@@ -1,0 +1,24 @@
+node a {
+    layout [size: 70, 20]
+    label "Node A"
+}
+node b {
+    layout [size: 70, 20]
+    label "Node B"
+}
+node c {
+    layout [size: 70, 20]
+    label "Node C"
+}
+
+edge a -> b {
+    label "Transition 1"
+}
+
+edge b -> a {
+    label "Transition 2"
+}
+
+edge b -> c {
+    label "Transition 3"
+}
