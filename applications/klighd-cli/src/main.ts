@@ -15,9 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import "reflect-metadata";
+import "../assets/fonts/overpass-regular.otf";
 import "./styles/main.css";
 import "@kieler/klighd-core/styles/main.css";
+import "reflect-metadata";
 import {
     createKlighdDiagramContainer,
     requestModel,
@@ -25,11 +26,11 @@ import {
     SetPreferencesAction,
     bindServices,
 } from "@kieler/klighd-core";
+import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
+import { showPopup } from "./popup";
 import { LSPConnection } from "./services/connection";
 import { LocalStorage } from "./services/persistence";
-import { getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
-import { showPopup } from "./popup";
 
 // IIFE booting the application
 (async function main() {

@@ -477,8 +477,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const shadowStyles = getSvgShadowStyles(styles, context)
     const textStyles = getSvgTextStyles(styles)
 
-    // The svg style of the resulting text element. If the text is only 1 line, the alignment-baseline attribute has to be
-    // contained in the general style, otherwise it has to be repeated in every contained <tspan> element.
+    // The svg style of the resulting text element.
     const opacity = mListener.hasDragged ? 0.1 : parent.opacity
     const style = {
         ...{ 'dominant-baseline': textStyles.dominantBaseline },
@@ -492,30 +491,20 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         ...(colorStyle ? {'fill-opacity': colorStyle.opacity } : {})
     }
 
-    // The children to be contained in the returned text node.
-    let children: any[]
-
     // The attributes to be contained in the returned text node.
     const attrs = {
         x: boundsAndTransformation.bounds.x,
         style: style,
         ...(colorStyle ? {fill: colorStyle.color} : {}),
         filter: shadowStyles,
-        ...{ 'xml:space': 'preserve' } // This attribute makes the text size estimation include any trailing white spaces.
+        ...{ 'xml:space': 'preserve' } // This attribute makes the text size adjustment include any trailing white spaces.
     } as any
 
     let elements: VNode[]
     if (lines.length === 1) {
         // If the text has only one line, just put the text in the text node directly.
         attrs.y = boundsAndTransformation.bounds.y;
-        // Render a space character for size estimation if the string is empty
-        let line = lines[0]
-        if (line === '') {
-            line = ' '
-        }
-
-        children = [line]
-        // Force any SVG renderer rendering this text to use the exact width calculated by this renderer.
+        // Force any SVG renderer rendering this text to use the exact width calculated for it.
         // This avoids overlapping texts or too big gaps at the cost of slightly bigger/tighter glyph spacings
         // when viewed in a different SVG viewer after exporting.
         if (rendering.calculatedTextLineWidths) {
@@ -524,7 +513,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         }
         elements = [
             <text {...attrs}>
-                {...children}
+                {...lines}
             </text>
         ]
     } else {
@@ -538,12 +527,6 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
 
         elements = []
         lines.forEach((line, index) => {
-            // If the line is just a blank line, add a dummy space character so the size estimation will
-            // include this character without rendering anything further visible to the screen.
-            // Also, the <tspan> attribute dy needs at least one character per text so the offset is correctly applied.
-            if (line === '') {
-                line = ' '
-            }
             const currentElement = <text
                 {...attrs}
                 y = {currentY}

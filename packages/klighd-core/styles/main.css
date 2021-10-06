@@ -21,6 +21,7 @@
 @import "sprotty/css/sprotty.css";
 
 .sprotty {
+    font-family: 'Overpass', sans-serif;
     /* Disable text selection in diagrams and sidebar panels. */
     user-select: none;
 }

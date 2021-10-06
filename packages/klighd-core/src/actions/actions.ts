@@ -14,9 +14,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { inject, injectable } from 'inversify';
 import {
-    Action, CommandExecutionContext, CommandResult, ElementAndBounds, generateRequestId, HiddenCommand, RequestAction, ResponseAction, SModelRootSchema, TYPES, Match, UpdateModelAction, FitToScreenAction
+    Action, RequestAction, ResponseAction, SModelRootSchema, Match, UpdateModelAction, FitToScreenAction
 } from 'sprotty/lib';
 import { KImage } from '../skgraph-models';
 
@@ -63,60 +62,6 @@ export class CheckedImagesAction implements ResponseAction {
 
     constructor(public readonly notCached: Pair<string, string>[],
         public readonly responseId = '') {
-    }
-}
-
-/**
- * Sent from the client to the model source (e.g. a DiagramServer) to transmit the result of text bounds
- * computation as a response to a RequestTextBoundsAction.
- */
-export class ComputedTextBoundsAction implements ResponseAction {
-    static readonly KIND = 'computedTextBounds'
-    readonly kind = ComputedTextBoundsAction.KIND
-
-    constructor(public readonly bounds: ElementAndBounds[],
-                public readonly responseId = '') {
-    }
-}
-
-/**
- * Sent from the model source to the client to request bounds for the given texts. The texts are
- * rendered invisibly so the bounds can derived from the DOM. The response is a ComputedTextBoundsAction.
- */
-export class RequestTextBoundsAction implements RequestAction<ComputedTextBoundsAction> {
-    static readonly KIND: string = 'requestTextBounds'
-    readonly kind = RequestTextBoundsAction.KIND
-
-    constructor(public readonly textDiagram: SModelRootSchema,
-                public readonly requestId: string = '') {}
-
-    /** Factory function to dispatch a request with the `IActionDispatcher` */
-    static create(newRoot: SModelRootSchema): Action {
-        return new RequestTextBoundsAction(newRoot, generateRequestId());
-    }
-}
-
-/**
- * The command triggered to perform a hidden rendering of the text diagram defined in the constructor's RequestTextBoundsAction.
- */
-@injectable()
-export class RequestTextBoundsCommand extends HiddenCommand {
-    static readonly KIND: string = RequestTextBoundsAction.KIND
-
-    constructor(@inject(TYPES.Action) protected action: RequestTextBoundsAction) {
-        super()
-    }
-
-    execute(context: CommandExecutionContext): CommandResult {
-        return {
-            model: context.modelFactory.createRoot(this.action.textDiagram),
-            modelChanged: true,
-            cause: this.action
-        }
-    }
-
-    get blockUntil(): (action: Action) => boolean {
-        return action => action.kind === ComputedTextBoundsAction.KIND
     }
 }
 

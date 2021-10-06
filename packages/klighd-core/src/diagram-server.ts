@@ -35,7 +35,6 @@ import {
     ActionHandlerRegistry,
     ActionMessage,
     BringToFrontAction,
-    ComputedBoundsAction,
     DiagramServer,
     findElement,
     ICommand,
@@ -49,13 +48,11 @@ import {
 import {
     CheckedImagesAction,
     CheckImagesAction,
-    ComputedTextBoundsAction,
     KlighdFitToScreenAction,
     KlighdUpdateModelAction,
     Pair,
     PerformActionAction,
     RefreshLayoutAction,
-    RequestTextBoundsCommand,
     StoreImagesAction,
 } from "./actions/actions";
 import { DISymbol } from "./di.symbols";
@@ -104,16 +101,8 @@ export class KlighdDiagramServer extends DiagramServer {
         // In contract to the name, this should return true, if the actions should be
         // sent to the server. Don't know what the Sprotty folks where thinking when they named it...
         switch (action.kind) {
-            case ComputedBoundsAction.KIND:
-                // TODO: remove sending of a computedBoundsAction as well
-                // (not possible until https://github.com/inversify/InversifyJS/issues/1035).
-                return false;
-            case ComputedTextBoundsAction.KIND:
-                return true;
             case PerformActionAction.KIND:
                 return true;
-            case RequestTextBoundsCommand.KIND:
-                return false;
             case SetSynthesisAction.KIND:
                 return true;
             case RefreshLayoutAction.KIND:
@@ -131,7 +120,6 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(BringToFrontAction.KIND, this);
         registry.register(CheckImagesAction.KIND, this);
         registry.register(CheckedImagesAction.KIND, this);
-        registry.register(ComputedTextBoundsAction.KIND, this);
         registry.register(DeleteLayerConstraintAction.KIND, this);
         registry.register(DeletePositionConstraintAction.KIND, this);
         registry.register(DeleteStaticConstraintAction.KIND, this);
@@ -141,7 +129,6 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(RefreshDiagramAction.KIND, this);
         registry.register(RefreshLayoutAction.KIND, this);
         registry.register(RequestKlighdPopupModelAction.KIND, this);
-        registry.register(RequestTextBoundsCommand.KIND, this);
         registry.register(SetAspectRatioAction.KIND, this);
         registry.register(SetLayerConstraintAction.KIND, this);
         registry.register(SetPositionConstraintAction.KIND, this);
@@ -224,15 +211,5 @@ export class KlighdDiagramServer extends DiagramServer {
             }
         }
         return false;
-    }
-
-    handleComputedBounds(): boolean {
-        // ComputedBounds actions should not be generated and forwarded anymore,
-        // since only the computedTextBounds action is used by kgraph diagrams
-        if (this.viewerOptions.needsServerLayout) {
-            return true;
-        } else {
-            return false;
-        }
     }
 }

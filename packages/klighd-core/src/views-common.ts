@@ -450,7 +450,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
     }
 
 
-    // If still no bounds are found, set all by default to 0. This will be the case when the texts are drawn first to estimate their sizes.
+    // If still no bounds are found, set all by default to 0.
     if (bounds.x === undefined) {
         bounds = {
             x: 0,
@@ -459,7 +459,6 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             height: 0
         }
         // Do not apply any rotation style in that case either, as the bounds estimation may get confused then.
-        // TODO: really, the rotation style should not even be sent as a style on texts when estimating their sizes.
         styles.kRotation = undefined
     }
     // Calculate the svg transformation function string for this element given the bounds and decoration.

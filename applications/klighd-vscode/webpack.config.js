@@ -90,6 +90,13 @@ const webviewConfig = {
                 test: /\.css$/,
                 use: ["style-loader", "css-loader"],
             },
+            {
+                test: /\.(otf|ttf|woff)$/i,
+                loader: "file-loader",
+                options: {
+                    name: "[path][name].[ext]",
+                }
+            },
         ],
     },
     plugins: [new webpack.WatchIgnorePlugin([/\.d\.ts$/])],
