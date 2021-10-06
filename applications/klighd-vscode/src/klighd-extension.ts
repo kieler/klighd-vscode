@@ -20,7 +20,7 @@ import {
     RefreshLayoutAction,
 } from "@kieler/klighd-core";
 import { CenterAction, RequestExportSvgAction } from "sprotty";
-import { Action, SprottyWebview } from "sprotty-vscode";
+import { Action, serializeUri, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
 import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
 import { commands, ExtensionContext, Uri } from "vscode";
@@ -120,6 +120,20 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         }
 
         return webview;
+    }
+    
+    /** @override */
+    protected override async createDiagramIdentifier(commandArgs: any[]): Promise<SprottyDiagramIdentifier | undefined> {
+        const uri = await this.getURI(commandArgs);
+        const diagramType = await this.getDiagramType(commandArgs);
+        if (!uri || !diagramType)
+            return undefined;
+        const clientId = diagramType + '_sprotty';
+        return {
+            diagramType,
+            uri: serializeUri(uri),
+            clientId
+        };
     }
 
     /** All {@link KLighDWebview}s that are created by this {@link SprottyLspVscodeExtension}. */
