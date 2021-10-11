@@ -1,6 +1,6 @@
 {
     "name": "klighd",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "private": true,
     "description": "KIELER Lightweight Diagams in the web",
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
