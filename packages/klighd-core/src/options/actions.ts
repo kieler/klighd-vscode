@@ -34,7 +34,7 @@ export class UpdateOptionsAction implements Action {
         public readonly layoutOptions: LayoutOptionUIData[],
         public readonly actions: DisplayedActionData[],
         public readonly modelUri: string
-    ) {}
+    ) { }
 
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is UpdateOptionsAction {
@@ -50,7 +50,7 @@ export class PerformOptionsActionAction implements Action {
     static readonly KIND = "performOptionsAction";
     readonly kind = PerformOptionsActionAction.KIND;
 
-    constructor(readonly actionId: string) {}
+    constructor(readonly actionId: string) { }
 
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is PerformOptionsActionAction {
@@ -63,7 +63,7 @@ export class SetSynthesisOptionsAction implements Action {
     static readonly KIND = "setSynthesisOptions";
     readonly kind = SetSynthesisOptionsAction.KIND;
 
-    constructor(readonly options: SynthesisOption[]) {}
+    constructor(readonly options: SynthesisOption[]) { }
 
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetSynthesisOptionsAction {
@@ -87,7 +87,7 @@ export class SetLayoutOptionsAction implements Action {
     static readonly KIND = "setLayoutOptions";
     readonly kind = SetLayoutOptionsAction.KIND;
 
-    constructor(readonly options: LayoutOptionValue[]) {}
+    constructor(readonly options: LayoutOptionValue[]) { }
 
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetLayoutOptionsAction {
@@ -111,7 +111,7 @@ export class SetRenderOptionAction implements Action {
     static readonly KIND = "setRenderOption";
     readonly kind = SetRenderOptionAction.KIND;
 
-    constructor(readonly id: string, readonly value: unknown) {}
+    constructor(readonly id: string, readonly value: unknown) { }
 
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetRenderOptionAction {

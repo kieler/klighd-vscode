@@ -72,7 +72,7 @@ export class OptionsRenderer {
                     <div classNames="options__section">
                         <h5 classNames="options__heading">Actions</h5>
                         <div classNames="options__button-group">
-                        {this.renderActions(options.actions)}
+                            {this.renderActions(options.actions)}
                         </div>
                     </div>
                 )}
@@ -264,6 +264,19 @@ export class OptionsRenderer {
                             id={option.id}
                             name={option.name}
                             value={option.currentValue}
+                            onChange={this.handleRenderOptionChange.bind(this, option)}
+                        />
+                    );
+                case TransformationOptionType.RANGE:
+                    return (
+                        <RangeOption
+                            key={option.id}
+                            id={option.id}
+                            name={option.name}
+                            value={option.currentValue}
+                            minValue={(option as RangeOptionData).range.first}
+                            maxValue={(option as RangeOptionData).range.second}
+                            stepSize={(option as RangeOptionData).stepSize}
                             onChange={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );

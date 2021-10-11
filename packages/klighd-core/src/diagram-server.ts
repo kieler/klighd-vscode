@@ -58,12 +58,15 @@ import {
     RequestTextBoundsCommand,
     StoreImagesAction,
 } from "./actions/actions";
+import { GoToBookmarkAction } from "./bookmarks/bookmark";
+import { BookmarkRegistry } from "./bookmarks/bookmark-registry";
 import { DISymbol } from "./di.symbols";
 import { RequestKlighdPopupModelAction } from "./hover/hover";
 import { PopupModelProvider } from "./hover/popup-provider";
 import { PreferencesRegistry } from "./preferences-registry";
 import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
+import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
 
 /**
  * This class extends {@link DiagramServer} to handle different `klighd-core` specific
@@ -77,6 +80,8 @@ export class KlighdDiagramServer extends DiagramServer {
     @inject(SessionStorage) private sessionStorage: SessionStorage;
     @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
+    @inject(DISymbol.BookmarkRegistry) private bookmarkRegistry: BookmarkRegistry;
+
 
     constructor(@inject(Connection) connection: Connection) {
         super();
@@ -94,9 +99,14 @@ export class KlighdDiagramServer extends DiagramServer {
         const wasDiagramModelUpdated =
             message.action.kind === SetModelCommand.KIND ||
             message.action.kind === KlighdUpdateModelAction.KIND;
+        if (wasDiagramModelUpdated) {
+            this.actionDispatcher.dispatch(new UpdateDepthMapModelAction());
 
-        if (wasDiagramModelUpdated && this.preferencesRegistry.preferences.resizeToFit) {
-            this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
+            if (this.bookmarkRegistry.initialBookmark) {
+                this.actionDispatcher.dispatch(new GoToBookmarkAction(this.bookmarkRegistry.initialBookmark))
+            } else if (this.preferencesRegistry.preferences.resizeToFit) {
+                this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
+            }
         }
     }
 
@@ -153,6 +163,7 @@ export class KlighdDiagramServer extends DiagramServer {
     }
 
     handle(action: Action): void | ICommand | Action {
+
         if (action.kind === BringToFrontAction.KIND || action.kind === SwitchEditModeAction.KIND) {
             // Actions that should be ignored and not further handled by this diagram server
             return;

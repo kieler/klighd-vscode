@@ -20,7 +20,7 @@ import { RequestTextBoundsCommand } from '../actions/actions';
 import { HiddenTextBoundsUpdater } from './hidden-text-bounds-updater';
 
 /**
- * Dependency injection module that adds functionality to handle the hidden text bounds estimation for the RequestTextBoudndsAction.
+ * Dependency injection module that adds functionality to handle the hidden text bounds estimation for the RequestTextBoundsAction.
  */
 const textBoundsModule = new ContainerModule((bind, _unbind, isBound) => {
     // TODO:

@@ -22,8 +22,9 @@ import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
-import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
-import { RenderOptionsRegistry, ShowConstraintOption } from './options/render-options-registry';
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';
+import { DepthMap } from './depth-map';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
@@ -36,9 +37,37 @@ import { DISymbol } from './di.symbols';
  */
 @injectable()
 export class SKGraphView extends SGraphView {
+
+    @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
+
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
         ctx.renderingDefs = new Map
+        ctx.renderingOptions = this.renderOptionsRegistry;
+
+        const viewport = findParentByFeature(model, isViewport)
+        if (viewport) {
+            ctx.viewport = viewport
+        }
+        ctx.titles = []
+        ctx.positions = []
+
+
+
+        // Add depthMap to context for rendering, when required.
+        const smartZoomOption = this.renderOptionsRegistry.getValueForId(UseSmartZoom.ID)
+
+        // Only enable, if option is found.
+        const useSmartZoom = smartZoomOption ?? false
+
+        if (useSmartZoom && ctx.targetKind !== 'hidden') {
+            ctx.depthMap = DepthMap.getDM()
+            if (ctx.viewport && ctx.depthMap) {
+                ctx.depthMap.updateDetailLevels(ctx.viewport, this.renderOptionsRegistry)
+            }
+        } else {
+            ctx.depthMap = undefined
+        }
         return super.render(model, context)
     }
 }
@@ -54,7 +83,10 @@ export class KNodeView implements IView {
     @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
     render(node: SKNode, context: RenderingContext): VNode {
+        // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
+        ctx.titles.push([])
+        ctx.positions.push("")
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -127,7 +159,7 @@ export class KNodeView implements IView {
                 result.push(interactiveNodes)
             }
             result.push(...children)
-
+            result.push(...(ctx.titles.pop() ?? []))
             return <g>{...result}</g>
         }
 
@@ -139,6 +171,7 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             return <g>
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(node)}
             </g>
         }
@@ -154,6 +187,7 @@ export class KNodeView implements IView {
         } else if (!node.areNonChildAreaChildrenRendered) {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
+        result.push(...(ctx.titles.pop() ?? []))
         return <g>{...result}</g>
     }
 }
@@ -167,13 +201,17 @@ export class KPortView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode {
+        // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
+        ctx.titles.push([])
+        ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
         const rendering = getRendering(port.data, port, new KStyles, ctx, this.mListener)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
         }
@@ -181,16 +219,19 @@ export class KPortView implements IView {
         if (!port.areChildAreaChildrenRendered) {
             return <g>
                 {rendering}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
         } else if (!port.areNonChildAreaChildrenRendered) {
             return <g>
                 {rendering}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderNonChildAreaChildren(port)}
             </g>
         } else {
             return <g>
                 {rendering}
+                {ctx.titles.pop() ?? []}
             </g>
         }
     }
@@ -204,7 +245,10 @@ export class KLabelView implements IView {
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
     render(label: SKLabel, context: RenderingContext): VNode {
+        // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
+        ctx.titles.push([])
+        ctx.positions.push("")
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -218,23 +262,26 @@ export class KLabelView implements IView {
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             return <g>
-                {ctx.renderChildren(label)}
+                {ctx.renderChildren(label).push(...ctx.titles.pop() ?? [])}
             </g>
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!label.areChildAreaChildrenRendered) {
             return <g>
                 {rendering}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(label)}
             </g>
         } else if (!label.areNonChildAreaChildrenRendered) {
             return <g>
                 {rendering}
+                {ctx.titles.pop() ?? []}
                 {ctx.renderNonChildAreaChildren(label)}
             </g>
         } else {
             return <g>
                 {rendering}
+                {ctx.titles.pop() ?? []}
             </g>
         }
     }
@@ -255,10 +302,10 @@ export class KEdgeView implements IView {
 
         const s = edge.source
         const t = edge.target
-        
+
         // Do not draw edges without a source or target.
         if (s === undefined || t === undefined) {
-            return <g/>
+            return <g />
         }
         // edge should be greyed out if the source or target is moved
         if (s !== undefined && t !== undefined && s instanceof SKNode && t instanceof SKNode) {

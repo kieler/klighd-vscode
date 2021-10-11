@@ -22,9 +22,10 @@ export const DISymbol = {
     SidebarPanelRegistry: Symbol("SidebarPanelRegistry"),
 
     PreferencesRegistry: Symbol("PreferencesRegistry"),
-    
+
     OptionsRenderer: Symbol("OptionsRenderer"),
     OptionsRegistry: Symbol("OptionsRegistry"),
     RenderOptionsRegistry: Symbol("RenderOptionsRegistry"),
     SynthesesRegistry: Symbol("SynthesesRegistry"),
+    BookmarkRegistry: Symbol("BookmarkRegistry"),
 };

@@ -31,9 +31,10 @@ import { RenderOptionsRegistry } from "./render-options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
 import { CheckOption } from "./components/option-inputs";
+import { CreateBookmarkAction } from "../bookmarks/bookmark";
 
 /** Type for available quick actions. */
-type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export";
+type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -90,6 +91,12 @@ export class GeneralPanel extends SidebarPanel {
                 "Export as SVG",
                 <i attrs={{ "data-feather": "save" }}></i>,
                 new RequestExportSvgAction(),
+            ],
+            [
+                "create-bookmark",
+                "Bookmark",
+                <i attrs={{ "data-feather": "bookmark" }} />,
+                new CreateBookmarkAction()
             ],
         ];
     }
@@ -158,6 +165,12 @@ export class GeneralPanel extends SidebarPanel {
                         name="Diagram Selects Text"
                         value={this.preferencesRegistry.preferences.shouldSelectText}
                         onChange={this.handlePreferenceChange.bind(this, "shouldSelectText")}
+                    />
+                    <CheckOption
+                        id="animateGoToBookmark"
+                        name="Animate GoTo Bookmark"
+                        value={this.preferencesRegistry.preferences.animateGoToBookmark}
+                        onChange={this.handlePreferenceChange.bind(this, "animateGoToBookmark")}
                     />
                 </div>
             </div>

@@ -192,7 +192,7 @@ export function calculateX(x: number, width: number, horizontalAlignment: KHoriz
 }
 
 /**
- * Calculates the y-coordinate of the text's potitioning box when considering its alignment.
+ * Calculates the y-coordinate of the text's positioning box when considering its alignment.
  * @param y The calculated y-coordinate pointing to the top coordinate of the text rendering box.
  * @param height The available height for the text.
  * @param verticalAlignment The KVerticalAlignment.

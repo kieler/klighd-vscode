@@ -15,6 +15,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { Viewport } from "sprotty";
+import { getBookmarkViewport as getViewport } from "@kieler/klighd-core";
+
 /** Returns a promise that resolves after a specific amount of milliseconds. */
 export function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => {
@@ -44,4 +47,21 @@ export function getLanguageId(documentUri: string): string {
     }
 
     return matches[0];
+}
+
+export function getBookmarkViewport(): Viewport | null {
+    const xParam = readSearchParam("bookmarkX");
+    const yParam = readSearchParam("bookmarkY");
+    const zoomParam = readSearchParam("bookmarkZoom");
+
+    if (xParam !== null && yParam !== null && zoomParam !== null) {
+        const x = parseFloat(xParam);
+        const y = parseFloat(yParam);
+        const zoom = parseFloat(zoomParam);
+
+        return getViewport(x, y, zoom)
+    }
+
+    return null
+
 }
