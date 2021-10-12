@@ -16,8 +16,11 @@
  */
 import { inject, injectable } from 'inversify';
 import {
-    Action, CommandExecutionContext, CommandResult, ElementAndBounds, generateRequestId, HiddenCommand, RequestAction, ResponseAction, SModelRootSchema, TYPES, Match, UpdateModelAction, FitToScreenAction
-} from 'sprotty/lib';
+    Action, CommandExecutionContext, CommandResult, ElementAndBounds, FitToScreenAction,
+    generateRequestId, HiddenCommand, Match, RequestAction, ResetCommand, ResponseAction,
+    SModelElementSchema, SModelRoot, SModelRootSchema, TYPES, UpdateModelAction,
+} from 'sprotty';
+import { insertSModelElementIntoModel } from '../diagram-pieces/smodel-util';
 import { KImage } from '../skgraph-models';
 
 /**
@@ -166,5 +169,113 @@ export class KlighdUpdateModelAction extends UpdateModelAction {
 export class KlighdFitToScreenAction extends FitToScreenAction {
     constructor(animate?: boolean) {
         super(["$root"], 10, undefined, animate)
+    }
+}
+
+/**
+ * Sent from client to request a certain piece of the diagram.
+ */
+export class RequestDiagramPieceAction implements RequestAction<SetDiagramPieceAction> {
+    static readonly KIND: string = 'requestDiagramPiece'
+    readonly kind = RequestDiagramPieceAction.KIND
+
+    constructor(public readonly requestId: string = '',
+                public readonly modelElementId: string) {}
+}
+
+/**
+ * Response to {@link RequestDiagramPieceAction}. Contains the requested SModelElement.
+ */
+export class SetDiagramPieceAction implements ResponseAction {
+    static readonly KIND: string = 'setDiagramPiece'
+    readonly kind = SetDiagramPieceAction.KIND
+
+    constructor(public readonly responseId: string = '',
+                public readonly diagramPiece: SModelElementSchema) {}
+}
+
+/**
+ * Command to trigger re-rendering of diagram when new pieces arrive.
+ */
+@injectable()
+export class SetDiagramPieceCommand extends ResetCommand {
+    static readonly KIND: string = 'setDiagramPiece'
+
+    root: SModelRoot
+
+    constructor(@inject(TYPES.Action) protected action: SetDiagramPieceAction) {
+        super()
+    }
+
+    execute(context: CommandExecutionContext): CommandResult {
+        this.root = context.modelFactory.createRoot(context.root)
+        insertSModelElementIntoModel(
+            this.root, 
+            context.modelFactory.createElement(this.action.diagramPiece))
+        return {
+            model: this.root,
+            modelChanged: true,
+            cause: this.action
+        }
+    }
+
+    undo(context: CommandExecutionContext): SModelRoot {
+        return this.root
+    }
+
+    redo(context: CommandExecutionContext): SModelRoot {
+        return this.root
+    }
+}
+
+/**
+ * Incremental version of { @link ComputedTextBoundsAction }
+ */
+ export class IncrementalComputedTextBoundsAction implements ResponseAction {
+    static readonly KIND = 'incrementalComputedTextBounds'
+    readonly kind = IncrementalComputedTextBoundsAction.KIND
+
+    constructor(public readonly bounds: ElementAndBounds[],
+                public readonly responseId = '') {
+    }
+}
+
+/**
+ * Incremental version of { @link RequestTextBoundsAction }
+ */
+export class IncrementalRequestTextBoundsAction implements RequestAction<IncrementalComputedTextBoundsAction> {
+    static readonly KIND: string = 'incrementalRequestTextBounds'
+    readonly kind = IncrementalRequestTextBoundsAction.KIND
+
+    constructor(public readonly textDiagram: SModelRootSchema,
+                public readonly requestId: string = '') {}
+
+    /** Factory function to dispatch a request with the `IActionDispatcher` */
+    static create(newRoot: SModelRootSchema): Action {
+        return new IncrementalRequestTextBoundsAction(newRoot, generateRequestId());
+    }
+}
+
+/**
+ * The command triggered to perform a hidden rendering of the text diagram defined in the constructor's RequestTextBoundsAction.
+ */
+@injectable()
+export class IncrementalRequestTextBoundsCommand extends HiddenCommand {
+    static readonly KIND: string = IncrementalRequestTextBoundsAction.KIND
+
+    constructor(@inject(TYPES.Action) protected action: IncrementalRequestTextBoundsAction) {
+        super()
+    }
+
+    execute(context: CommandExecutionContext): CommandResult {
+        return {
+            model: context.modelFactory.createRoot(this.action.textDiagram),
+            modelChanged: true,
+            cause: this.action
+        }
+    }
+
+    get blockUntil(): (action: Action) => boolean {
+        return action => action.kind === IncrementalComputedTextBoundsAction.KIND
     }
 }

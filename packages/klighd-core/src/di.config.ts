@@ -24,6 +24,7 @@ import {
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
 import { DISymbol } from './di.symbols';
+import diagramPieceModule from './diagram-pieces/diagram-pieces-module';
 import { KlighdDiagramServer } from './diagram-server';
 import { KlighdHoverMouseListener } from './hover/hover';
 import { PopupModelProvider } from './hover/popup-provider';
@@ -95,7 +96,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
-        textBoundsModule, actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule)
+        textBoundsModule, actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,

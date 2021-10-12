@@ -16,7 +16,7 @@
  */
 import { ContainerModule } from 'inversify';
 import { configureCommand, TYPES } from 'sprotty/lib';
-import { RequestTextBoundsCommand } from '../actions/actions';
+import { IncrementalRequestTextBoundsCommand, RequestTextBoundsCommand } from '../actions/actions';
 import { HiddenTextBoundsUpdater } from './hidden-text-bounds-updater';
 
 /**
@@ -35,6 +35,8 @@ const textBoundsModule = new ContainerModule((bind, _unbind, isBound) => {
     // which is currently only ignored by the overwritten handle method for that action in the KlighdDiagramServer.
     configureCommand({ bind, isBound }, RequestTextBoundsCommand);
     bind(TYPES.HiddenVNodePostprocessor).to(HiddenTextBoundsUpdater).inSingletonScope()
+    // incremental pendant
+    configureCommand({ bind, isBound }, IncrementalRequestTextBoundsCommand)
 });
 
 export default textBoundsModule

@@ -156,6 +156,11 @@
                     "klighd-vscode.initialShouldSelectText": {
                         "description": "Initial value for new diagram views determining if selecting an element in the displayed diagram should also select the corresponding text segment. Warning: this option currently increases all diagram generation times by up to 50%.",
                         "type": "boolean"
+                    },
+                    "klighd-vscode.initialDiagramGenerator": {
+                        "description": "Initial value for new diagram views determining the diagram generator, either 'full' for the entire diagram at once or 'iterative' for piece-wise diagram generation (faster feedback, slower total time).",
+                        "type": "string",
+                        "default": "iterative"
                     }
                 }
             }

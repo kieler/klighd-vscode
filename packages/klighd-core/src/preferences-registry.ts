@@ -39,6 +39,12 @@ export interface Preferences {
 
     /** Whether going to a Bookmark should be animated */
     animateGoToBookmark: boolean;
+
+    /** 
+     * Instructs the server how the diagram should be sent. Full sends the entire graph at once
+     * and iterative sends the diagram in sequentially in pieces. 
+     */
+    diagramGenerator: "full" | "iterative";
 }
 
 /** {@link Registry} that stores user preferences which change the behavior of the diagram view. */
@@ -61,6 +67,7 @@ export class PreferencesRegistry extends Registry {
             shouldSelectDiagram: true,
             shouldSelectText: false,
             animateGoToBookmark: true,
+            diagramGenerator: "iterative",
         };
     }
 
@@ -83,6 +90,7 @@ export class PreferencesRegistry extends Registry {
                 shouldSelectText:
                     action.preferences.shouldSelectText ?? this._preferences.shouldSelectText,
                 animateGoToBookmark: action.preferences.animateGoToBookmark ?? this._preferences.animateGoToBookmark,
+                diagramGenerator: action.preferences.diagramGenerator ?? this._preferences.diagramGenerator,
             };
             this.notifyListeners();
             this.notifyServer();
@@ -95,6 +103,7 @@ export class PreferencesRegistry extends Registry {
             this.connection.sendNotification(NotificationType.SetPreferences, {
                 "diagram.shouldSelectDiagram": this._preferences.shouldSelectDiagram,
                 "diagram.shouldSelectText": this.preferences.shouldSelectText,
+                "diagram.diagramGenerator": this.preferences.diagramGenerator,
             });
         });
     }

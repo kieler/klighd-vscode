@@ -20,7 +20,7 @@ import {
     Action, almostEquals, BoundsAware, ElementAndBounds, EMPTY_BOUNDS, IActionDispatcher, ILogger, isSizeable, IVNodePostprocessor,
     SModelElement, SModelRoot, TYPES, Dimension
 } from 'sprotty/lib';
-import { ComputedTextBoundsAction, RequestTextBoundsAction } from '../actions/actions';
+import { ComputedTextBoundsAction, IncrementalComputedTextBoundsAction, IncrementalRequestTextBoundsAction, RequestTextBoundsAction } from '../actions/actions';
 
 export class TextBoundsData {
     vnode?: VNode
@@ -63,10 +63,16 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
     }
 
     postUpdate(cause?: Action): void {
-        if (cause === undefined || cause.kind !== RequestTextBoundsAction.KIND) {
+        if (cause === undefined || (cause.kind !== RequestTextBoundsAction.KIND && cause.kind !== IncrementalRequestTextBoundsAction.KIND)) {
             return;
         }
-        const request = cause as RequestTextBoundsAction
+        let req
+        if (cause.kind === IncrementalRequestTextBoundsAction.KIND) {
+            req = cause as IncrementalRequestTextBoundsAction
+        } else {
+            req = cause as RequestTextBoundsAction
+        }
+        const request = req
         this.getBoundsFromDOM()
         const resizes: ElementAndBounds[] = []
         this.element2boundsData.forEach(
@@ -82,7 +88,11 @@ export class HiddenTextBoundsUpdater implements IVNodePostprocessor {
                     resizes.push(resize)
                 }
             })
-        this.actionDispatcher.dispatch(new ComputedTextBoundsAction(resizes, request.requestId))
+        if (cause.kind === IncrementalRequestTextBoundsAction.KIND) {
+            this.actionDispatcher.dispatch(new IncrementalComputedTextBoundsAction(resizes, request.requestId))
+        } else {
+            this.actionDispatcher.dispatch(new ComputedTextBoundsAction(resizes, request.requestId))
+        }
         this.element2boundsData.clear()
     }
 
