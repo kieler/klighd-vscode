@@ -16,7 +16,7 @@
  */
 
 import { Container } from "inversify";
-import { IActionDispatcher, RequestModelAction, TYPES } from "sprotty";
+import { IActionDispatcher, RequestModelAction, TYPES, Viewport } from "sprotty";
 
 // This module contains helper methods that can simplify the interaction with the Sprotty container from outside this package.
 // The main goal of each helper is to abstract Sprotty internal implementations.
@@ -35,4 +35,11 @@ export async function requestModel(
     sourceUri: string
 ): Promise<void> {
     await actionDispatcher.dispatch(new RequestModelAction({ sourceUri, diagramType }));
+}
+
+export function getBookmarkViewport(x: number, y: number, zoom: number): Viewport | null {
+    if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(zoom)) {
+        return { scroll: { x: x, y: y }, zoom: zoom }
+    }
+    return null
 }

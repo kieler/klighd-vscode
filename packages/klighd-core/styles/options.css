@@ -147,7 +147,7 @@
     border-color: var(--kdc-color-primary);
 }
 
-/* Dont' show outlines when a user interacts with different options... */
+/* Don't show outlines when a user interacts with different options... */
 .options__input,
 .options__category > summary,
 .options__button,
@@ -180,4 +180,8 @@
 .options__selection:focus {
     outline: none;
     border-color: var(--kdc-color-primary);
+}
+
+.options__hidden {
+    display: none;
 }

@@ -17,7 +17,7 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
-import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
+import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
@@ -29,6 +29,8 @@ import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, g
 import {
     DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
 } from './views-styles';
+import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, TitleOverlayThreshold } from './options/render-options-registry';
+import { DetailLevel } from './depth-map';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -47,21 +49,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
     // remember, that this parent's children are now already rendered
     parent.areChildAreaChildrenRendered = true
 
-    // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(parent, rendering.styles, propagatedStyles)
-
-    // Determine the bounds of the rendering first and where it has to be placed.
-    const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
-    if (boundsAndTransformation === undefined) {
-        // If no bounds are found, the rendering can not be drawn.
-        return renderError(rendering)
-    }
-
-    const gAttrs = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
-    }
-
-    const element = <g id={rendering.renderingId} {...gAttrs}>
+    const element = <g id={rendering.renderingId}>
         {context.renderChildAreaChildren(parent)}
     </g>
 
@@ -77,15 +65,16 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
  * @param context The rendering context for this element.
  */
 export function renderRectangularShape(rendering: KContainerRendering, parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
-
     // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(parent, rendering.styles, propagatedStyles, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const boundsAndTransformation = findBoundsAndTransformationData(rendering, styles.kRotation, parent, context)
+    // Add the transformations to be able to positon the title correctly and above other elements
+    context.positions[context.positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
         return renderError(rendering)
@@ -110,7 +99,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const lineStyles = getSvgLineStyles(styles)
+    const lineStyles = getSvgLineStyles(styles, parent, context)
 
     // Create the svg element for this rendering.
     let element: VNode | undefined = undefined
@@ -270,6 +259,34 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         }
     }
 
+    if (element && context.depthMap) {
+        const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
+        if (region && region.detail !== DetailLevel.FullDetails && parent.children.length > 1) {
+            const offsetY = region.regionTitleHeight ?? 0
+            const offsetX = region.regionTitleIndentation ?? 0
+            const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
+            const size = 50
+            let scalingFactor = Math.max(bounds, 0) / size
+            // Use zoom for constant size in viewport.
+            if (context.viewport) {
+                scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
+            }
+
+            const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
+            const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
+            const placeholder = <g id="ZoomPlaceholder"
+                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
+                <g height={size} width={size}>
+                    <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
+                    <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" stroke-linecap="round" />
+                    <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
+                    <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
+                </g>
+            </g>
+            element.children ? element.children.push(placeholder) : element.children = [placeholder]
+        }
+    }
+
     return element as VNode
 }
 
@@ -282,7 +299,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
  * @param context The rendering context for this element.
  */
 export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
 
@@ -312,7 +329,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent)
     const shadowStyles = getSvgShadowStyles(styles, context)
-    const lineStyles = getSvgLineStyles(styles)
+    const lineStyles = getSvgLineStyles(styles, parent, context)
 
     const points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
@@ -437,7 +454,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
  * @param mListener The mouse listener.
  */
 export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -462,10 +479,6 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         return renderError(rendering)
     }
 
-    const gAttrs = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
-    }
-
     // Check the invisibility first. If this rendering is supposed to be invisible, do not render it,
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
@@ -477,6 +490,37 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     const shadowStyles = getSvgShadowStyles(styles, context)
     const textStyles = getSvgTextStyles(styles)
 
+    // Replace text with rectangle, if the text is too small.
+    const region = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
+
+    const simplifySmallTextOption = context.renderingOptions.getValueForId(SimplifySmallText.ID)
+    const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
+    if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails) && !rendering.isNodeTitle) {
+        const simplificationThresholdOption = context.renderingOptions.getValueForId(TextSimplificationThreshold.ID)
+        const simplificationThreshold = simplificationThresholdOption ?? TextSimplificationThreshold.DEFAULT
+
+        const proportionalHeight = 0.5 // height of replacement compared to full text height
+        if (context.viewport && rendering.calculatedTextBounds
+            && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {
+            const replacements: VNode[] = []
+            lines.forEach((line, index) => {
+                const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
+                const yPos = boundsAndTransformation && boundsAndTransformation.bounds.y && rendering.calculatedTextLineHeights && boundsAndTransformation.bounds.height ?
+                    boundsAndTransformation.bounds.y - boundsAndTransformation.bounds.height / 2 + rendering.calculatedTextLineHeights[index] / 2 * proportionalHeight : 0
+                const width = rendering.calculatedTextLineWidths ? rendering.calculatedTextLineWidths[index] : 0
+                const height = rendering.calculatedTextLineHeights ? rendering.calculatedTextLineHeights[index] * proportionalHeight : 0
+                // Generate rectangle for each line with color style.
+                const curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
+                    : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
+                replacements.push(curLine)
+            });
+            return <g id={rendering.renderingId} {...{}}>
+                {...replacements}
+            </g>
+        }
+
+    }
+
     // The svg style of the resulting text element.
     const opacity = mListener.hasDragged ? 0.1 : parent.opacity
     const style = {
@@ -487,15 +531,15 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         ...{ 'font-weight': textStyles.fontWeight },
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
         ...{ 'text-decoration-style': textStyles.textDecorationStyle },
-        ...{ 'opacity': opacity},
-        ...(colorStyle ? {'fill-opacity': colorStyle.opacity } : {})
+        ...{ 'opacity': opacity },
+        ...(colorStyle ? { 'fill-opacity': colorStyle.opacity } : {})
     }
 
     // The attributes to be contained in the returned text node.
     const attrs = {
         x: boundsAndTransformation.bounds.x,
         style: style,
-        ...(colorStyle ? {fill: colorStyle.color} : {}),
+        ...(colorStyle ? { fill: colorStyle.color } : {}),
         filter: shadowStyles,
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size adjustment include any trailing white spaces.
     } as any
@@ -511,11 +555,110 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
-        elements = [
-            <text {...attrs}>
-                {...lines}
-            </text>
-        ]
+
+        const overlayThresholdOption = context.renderingOptions.getValueForId(TitleOverlayThreshold.ID)
+        const overlayThreshold = overlayThresholdOption ?? TitleOverlayThreshold.DEFAULT
+
+        if (context.depthMap) {
+            if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && rendering.isNodeTitle) {
+
+                // Check whether or not the parent node is a child area.
+                // If the parent is a child area, the text is a title of the region.
+                // For macro states this is reached via explicit call to renderKText with the parent being the correct child area.
+                const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
+                if (region) {
+                    if (region.detail !== DetailLevel.FullDetails && parent.children.length > 1
+                        || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold)) {
+                        // Scale to limit of bounding box or max size.
+                        const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
+                        let maxScale = titleScalingFactorOption ?? TitleScalingFactor.DEFAULT
+                        // Indentation used in the layouting in pixels.
+                        if (context.viewport) {
+                            maxScale = maxScale / context.viewport.zoom
+                        }
+                        const scaleX = (region.boundingRectangle.bounds.width - attrs.x) / boundsAndTransformation.bounds.width
+                        const scaleY = region.boundingRectangle.bounds.height / boundsAndTransformation.bounds.height
+                        let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+                        // Don't let scalingfactor get too big.
+                        scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
+                        // Make sure scalingfactor is not below 1.
+                        scalingFactor = scalingFactor > 1 ? scalingFactor : 1
+
+                        // Smooth transition between overlay title and normal title.
+                        if (rendering.calculatedTextBounds) {
+                            const t = Math.max((overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom), 0) / 3
+                            if (t <= 1) {
+                                scalingFactor = (1 - t) * 1 + t * scalingFactor
+                            }
+                        }
+                        // Set the indentation.
+                        attrs.x /= scalingFactor
+                        // Remove spacing to the left for region titles.
+                        boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
+                        // Calculate exact height of title text
+                        region.regionTitleHeight = scalingFactor * (boundsAndTransformation.bounds.height)
+                        region.regionTitleIndentation = boundsAndTransformation.bounds.x ?? 0
+                    }
+                }
+                else {
+                    if (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
+                        const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
+                        const defaultFactor = 1
+                        let maxScale = titleScalingFactorOption ?? defaultFactor
+                        // Indentation used in the layouting in pixels.
+                        if (context.viewport) {
+                            maxScale = maxScale / context.viewport.zoom
+                        }
+                        const scaleX = ((parent as KNode).bounds.width - attrs.x) / boundsAndTransformation.bounds.width
+                        const scaleY = (parent as KNode).bounds.height / boundsAndTransformation.bounds.height
+                        let scalingFactor = scaleX > scaleY ? scaleY : scaleX
+                        // Don't let scalingfactor get too big.
+                        scalingFactor = scalingFactor > maxScale ? maxScale : scalingFactor
+                        // Make sure scalingfactor is not below 1.
+                        scalingFactor = scalingFactor > 1 ? scalingFactor : 1
+                        // Smooth transition between overlay title and normal title.
+                        if (rendering.calculatedTextBounds) {
+                            const t = (overlayThreshold - rendering.calculatedTextBounds.height * context.viewport.zoom) / 3
+                            if (t <= 1) {
+                                scalingFactor = (1 - t) * 1 + t * scalingFactor
+                            }
+                        }
+                        // Keep the scaled title centered by moving it to the left by the half of the growth in width.
+                        attrs.x -= (scalingFactor * boundsAndTransformation.bounds.width - boundsAndTransformation.bounds.width) / (2 * scalingFactor)
+
+                        // Remove spacing to the left for region titles.
+                        boundsAndTransformation.transformation = `scale(${scalingFactor},${scalingFactor})`
+                    }
+                }
+            }
+        }
+        // Draw white background for overlaying titles
+        if (rendering.isNodeTitle && ((region && region.detail === DetailLevel.FullDetails) || !region)
+            && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
+            // Adapt y value to place the rectangle on the top of the text. 
+            attrs.y -= (boundsAndTransformation.bounds.height ?? 0) / 2
+            // Adapt position of text in rectangle to place text in center
+            const attrs2 = { ...attrs }
+            attrs2.x += (boundsAndTransformation.bounds.width ?? 0) / 2
+            attrs2.y += (boundsAndTransformation.bounds.height ?? 0) / 2
+            attrs2.style["dominant-baseline"] = "middle"
+            attrs2.attrs = { "text-anchor": "middle" }
+            // Add a rectangle behind the title
+            elements = [
+                <g>
+                    <rect x={attrs.x} y={attrs.y} width={boundsAndTransformation.bounds.width} height={boundsAndTransformation.bounds.height} fill="white" opacity="0.8" stroke="black"> </rect>
+                    <text {...attrs2}>
+                        {...lines}
+                    </text>
+                </g>
+            ]
+        } else {
+            elements = [
+                <text {...attrs}>
+                    {...lines}
+                </text>
+            ]
+        }
     } else {
         // Otherwise, put each line of text in a separate <text> element.
         const calculatedTextLineWidths = rendering.calculatedTextLineWidths
@@ -529,19 +672,32 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         lines.forEach((line, index) => {
             const currentElement = <text
                 {...attrs}
-                y = {currentY}
+                y={currentY}
                 {...(calculatedTextLineWidths ? { textLength: calculatedTextLineWidths[index] } : {})}
             >{line}</text>
 
             elements.push(currentElement)
             currentY = calculatedTextLineHeights ? currentY + calculatedTextLineHeights[index] : currentY
         });
+
     }
 
-    // build the element from the above defined attributes and children
-    return <g id={rendering.renderingId} {...gAttrs}>
-        {...elements}
-    </g>
+    const gAttrs = {
+        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
+    }
+    if (region || !rendering.isNodeTitle) {
+        // build the element from the above defined attributes and children
+        return <g id={rendering.renderingId} {...gAttrs}>
+            {...elements}
+        </g>
+    } else {
+        // Add the transformations necessary for correct placement
+        gAttrs.transform = gAttrs.transform != undefined ? context.positions.pop() + gAttrs.transform : context.positions.pop()
+        context.titles[context.titles.length - 1].push(<g id={rendering.renderingId} {...gAttrs}>
+            {...elements}
+        </g>)
+        return <g></g>
+    }
 }
 
 /**
@@ -582,7 +738,7 @@ export function renderError(rendering: KRendering): VNode {
  * @param mListener The mouse listener.
  */
 export function getRendering(datas: KGraphData[], parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -608,7 +764,12 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
  * @param mListener The mouse listener.
  */
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
-        context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
+
+    if (context.depthMap && context.depthMap.getContainingRegion(parent as KNode, context.viewport, context.renderingOptions)?.detail !== DetailLevel.FullDetails) {
+        return undefined
+    }
+
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
@@ -655,13 +816,17 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
         if (data === null)
             continue
         if (data.type === K_RENDERING_REF) {
-            const id = (data as KRenderingRef).renderingId
-            for (const rendering of context.kRenderingLibrary.renderings) {
-                if ((rendering as KRendering).renderingId === id) {
-                    context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
-                    context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
-                    return rendering as KRendering
+            if (context.kRenderingLibrary) {
+                const id = (data as KRenderingRef).renderingId
+                for (const rendering of context.kRenderingLibrary.renderings) {
+                    if ((rendering as KRendering).renderingId === id) {
+                        context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
+                        context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
+                        return rendering as KRendering
+                    }
                 }
+            } else {
+                console.log("No KRenderingLibrary for KRenderingRef in context");
             }
         }
         if (isRendering(data)) {
@@ -708,7 +873,7 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
         }
         default: {
             console.error('The rendering of an edge has to be a KPolyline or a sub type of KPolyline except KPolygon, ' +
-            'or a KCustomRendering providing a KCustomConnectionFigureNode, but is ' + kRendering.type)
+                'or a KCustomRendering providing a KCustomConnectionFigureNode, but is ' + kRendering.type)
             return []
         }
     }
@@ -724,7 +889,7 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
 
     const renderings: VNode[] = []
     edge.junctionPoints.forEach(junctionPoint => {
-        const junctionPointVNode = <g transform = {`translate(${junctionPoint.x},${junctionPoint.y})`}>
+        const junctionPointVNode = <g transform={`translate(${junctionPoint.x},${junctionPoint.y})`}>
             {vNode}
         </g>
         renderings.push(junctionPointVNode)

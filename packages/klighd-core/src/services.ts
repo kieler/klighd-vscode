@@ -18,7 +18,7 @@
 // Services provide infrastructure functionality to the KLighD Sprotty container.
 // A service shall not be implemented by this core package. Each service has to be
 // provided by an application that integrates `klighd-core`, as their implementation
-// might be plattform dependent.
+// might be platform dependent.
 
 // Notice how a symbol with the same name as the service interface is exported.
 // Typescript is smart enough to differentiate between each type. Therefore,

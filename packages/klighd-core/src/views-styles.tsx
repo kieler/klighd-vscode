@@ -17,7 +17,8 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
-import { isSelectable } from 'sprotty';
+import { getZoom, isSelectable } from 'sprotty';
+import { ConstantLineWidth, UseConstantLineWidth } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
@@ -169,7 +170,7 @@ export class KStyles {
  * Calculates the renderings for all styles contained in styleList into an object.
  * @param styleList The list of all styles that should have their rendering calculated.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
- * @param stylesToPropagage The optional styles object that should be propagated further to childern. It is modified in this method.
+ * @param stylesToPropagage The optional styles object that should be propagated further to children. It is modified in this method.
  */
 export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
     // TODO: not all of these are implemented yet
@@ -412,7 +413,7 @@ export function colorDefinition(colorId: string, start: ColorStyle, end: ColorSt
  * SVG element for a shadow definition.
  * @param shadowId The unique identifying string for this shadow.
  * @param color The color of the shadow.
- * @param blur The amound of blur of the shadow.
+ * @param blur The amount of blur of the shadow.
  * @param xOffset The x-offset of the shadow.
  * @param yOffset The y-offset of the shadow.
  */
@@ -441,9 +442,9 @@ export function shadowDefinition(shadowId: string, color: string | undefined, bl
             result='offsetblur'
         />
         <feFlood
-            // TODO: these colors
-            // flood-color = 'flood-color-of-feDropShadow'
-            // flood-opacity = 'flood-opacity-of-feDropShadow'
+        // TODO: these colors
+        // flood-color = 'flood-color-of-feDropShadow'
+        // flood-opacity = 'flood-opacity-of-feDropShadow'
         />
         <feComposite
             in2='offsetblur'
@@ -525,7 +526,7 @@ export function getSvgShadowStyles(styles: KStyles, context: SKGraphModelRendere
 export function getSvgColorStyles(styles: KStyles, context: SKGraphModelRenderer, parent: SKGraphElement | SKEdge): ColorStyles {
     const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
     const background = getSvgColorStyle(styles.kBackground as KBackground, context)
-    const grayedOutColor = {color: 'grey', opacity: '255'}
+    const grayedOutColor = { color: 'grey', opacity: '255' }
 
     if (parent instanceof SKEdge && parent.moved) {
         // edge should be greyed out
@@ -540,7 +541,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphModelRenderer
         // colors of the shadow node
         return {
             foreground: grayedOutColor,
-            background: background === undefined ? DEFAULT_FILL : {color: 'gainsboro', opacity: '255'},
+            background: background === undefined ? DEFAULT_FILL : { color: 'gainsboro', opacity: '255' },
             opacity: parent.opacity
         }
     }
@@ -627,9 +628,25 @@ export function isInvisible(styles: KStyles): boolean {
  * 'stroke-dasharray' has to be set to the dashArray style,
  * 'stroke-miterlimit' has to be set to the miterLimit style. (This is not a string, but a number.)
  * @param styles The KStyles of the rendering.
+ * @param target The target of the line
+ * @param context The current rendering context 
  */
-export function getSvgLineStyles(styles: KStyles): LineStyles {
-    const lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, context: SKGraphModelRenderer): LineStyles {
+    let lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
+    const useLineWidthOption = context.renderingOptions.getValueForId(UseConstantLineWidth.ID)
+    // Only enable, if option is found.
+    const useConstantLineWidth = useLineWidthOption ?? false
+    if (useConstantLineWidth) {
+        const lineWidthOption = context.renderingOptions.getValueForId(ConstantLineWidth.ID)
+        const scaling = lineWidthOption ?? 1
+        lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH * scaling / getZoom(target)
+            : styles.kLineWidth.lineWidth * scaling / getZoom(target)
+        if (styles.kLineWidth.lineWidth == 0) {
+            lineWidth = 0
+        } else if (lineWidth < DEFAULT_LINE_WIDTH) {
+            lineWidth = DEFAULT_LINE_WIDTH
+        }
+    }
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)
     const lineJoin = styles.kLineJoin === undefined ? undefined : lineJoinText(styles.kLineJoin)
     const miterLimit = styles.kLineJoin.miterLimit === undefined ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit

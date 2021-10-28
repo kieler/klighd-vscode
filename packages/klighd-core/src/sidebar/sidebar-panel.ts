@@ -40,7 +40,7 @@ export interface ISidebarPanel {
 
     /**
      * A sidebar panel can provide a position for its trigger in the trigger stack.
-     * The trigger at the top has the smallest postion. If two panels specify the
+     * The trigger at the top has the smallest position. If two panels specify the
      * same position, the panel that is resolved first by the DI container is placed on top.
      */
     readonly position: number;
