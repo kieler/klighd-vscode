@@ -44,13 +44,6 @@ module.exports = {
                 test: /\.css$/,
                 use: [MiniCssExtractPlugin.loader, "css-loader"],
             },
-            {
-                test: /\.(otf|ttf|woff)$/i,
-                loader: "file-loader",
-                options: {
-                    name: "[path][name].[ext]",
-                }
-            },
         ],
     },
     plugins: [

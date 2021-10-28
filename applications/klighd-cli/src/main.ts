@@ -15,7 +15,6 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import "../assets/fonts/overpass-regular.otf";
 import "./styles/main.css";
 import "@kieler/klighd-core/styles/main.css";
 import "reflect-metadata";

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -23,12 +23,13 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
+import { DISymbol } from './di.symbols';
+import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
 import { RenderOptionsRegistry, ShowConstraintOption } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
-import { DISymbol } from './di.symbols';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -307,24 +308,9 @@ export class KEdgeView implements IView {
 }
 
 function fontDefinition(): VNode {
-    // This solution depends on a local file. Works in CLI, does not (yet) in VS Code.
-    // If exported, .otf font file needs to exist relative to the diagram OR (probably) installed on the machine.
-    // exporting to pdf works by
-    // 1. exporting the SVG
-    // 2. fixing the SVG by C&P the content in the webview SVG into the generated file
-    // (this fixes some styles that are overwritten by the sprotty export)
-    // 3. printing the svg to pdf via Inkscape
+    // TODO: maybe find a way to only include the font if it is used in the SVG.
     return <style>
-        {"@font-face {font-family: Overpass; src: url('assets/fonts/overpass-regular.otf');}"}
+        {overpass_regular_style}
+        {overpass_mono_regular_style}
     </style>
-
-    // This solution depends on an internet connection to Google Fonts services.
-    // Does not work in Inkscape or pdf generated from that.
-    // Style links generated from https://fonts.google.com/specimen/Overpass#standard-styles
-    // return <style>
-    //     {"/* latin-ext */@font-face { font-family: 'Overpass'; font-style: italic; font-weight: 400; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdB35WCmI96Ajtm81GgY9fqxycJ.woff2) format('woff2'); unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;}/* latin */@font-face { font-family: 'Overpass'; font-style: italic; font-weight: 400; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdB35WCmI96Ajtm81GgY9nqxw.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}/* latin-ext */@font-face { font-family: 'Overpass'; font-style: italic; font-weight: 700; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdC35WCmI96Ajtm81Gga2LP0hYojmI7.woff2) format('woff2'); unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;}/* latin */@font-face { font-family: 'Overpass'; font-style: italic; font-weight: 700; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdC35WCmI96Ajtm81Gga2LP0hgojg.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}/* latin-ext */@font-face { font-family: 'Overpass'; font-style: normal; font-weight: 400; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdH35WCmI96Ajtm81GrU9vyww.woff2) format('woff2'); unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;}/* latin */@font-face { font-family: 'Overpass'; font-style: normal; font-weight: 400; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdH35WCmI96Ajtm81GlU9s.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}/* latin-ext */@font-face { font-family: 'Overpass'; font-style: normal; font-weight: 700; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdA35WCmI96Ajtm81keds7D4howig.woff2) format('woff2'); unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;}/* latin */@font-face { font-family: 'Overpass'; font-style: normal; font-weight: 700; font-display: swap; src: url(https://fonts.gstatic.com/s/overpass/v5/qFdA35WCmI96Ajtm81keds7N4ho.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}"}"
-    // </style>
-
-    // Finally, there is a third solution, which includes the font definition in the SVG directly as an SVG font.
-    // Only has the 'problem' of bigger SVG sizes. Not shown here yet. TODO: try to implement this
 }
