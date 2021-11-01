@@ -173,6 +173,21 @@ export class ConstantLineWidth implements RangeOption {
     currentValue = 0.5
 }
 
+/**
+ * The style shadows should be drawn in, either the paper mode shadows (nice, but slow in
+ * performance) or in default KIELER-style (fast, not as nice looking).
+ */
+export class PaperShadows implements RenderOption {
+    static readonly ID: string = 'paper-shadows'
+    static readonly NAME: string = 'Paper Mode Shadows'
+    static readonly DEFAULT: boolean = false
+    readonly id: string = PaperShadows.ID
+    readonly name: string = PaperShadows.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = PaperShadows.DEFAULT
+    currentValue = PaperShadows.DEFAULT
+}
+
 /** {@link Registry} that stores and updates different render options. */
 @injectable()
 export class RenderOptionsRegistry extends Registry {
@@ -196,6 +211,8 @@ export class RenderOptionsRegistry extends Registry {
 
         this._renderOptions.set(UseConstantLineWidth.ID, new UseConstantLineWidth());
         this._renderOptions.set(ConstantLineWidth.ID, new ConstantLineWidth());
+
+        this._renderOptions.set(PaperShadows.ID, new PaperShadows());
     }
 
     @postConstruct()
