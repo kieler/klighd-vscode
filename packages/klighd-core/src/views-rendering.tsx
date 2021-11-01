@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,20 +17,22 @@
 /** @jsx svg */
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
+import { Bounds } from 'sprotty';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
+import { DetailLevel } from './depth-map';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, TitleOverlayThreshold } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
-    KRoundedRectangle, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
+    KRoundedRectangle, KShadow, KText, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
     K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode
 } from './skgraph-models';
 import { findBoundsAndTransformationData, findTextBoundsAndTransformationData, getPoints } from './views-common';
 import {
-    DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible, KStyles
+    ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
+    KStyles, LineStyles
 } from './views-styles';
-import { SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, TitleOverlayThreshold } from './options/render-options-registry';
-import { DetailLevel } from './depth-map';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -98,7 +100,10 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
-    const shadowStyles = getSvgShadowStyles(styles, context)
+    const paperShadowsOption: boolean = context.renderingOptions.getValueForId(PaperShadows.ID)
+    const paperShadows = paperShadowsOption ?? PaperShadows.DEFAULT
+    const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
+
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
     // Create the svg element for this rendering.
@@ -157,22 +162,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
                 }
 
                 element = <g id={rendering.renderingId} {...gAttrs}>
-                    <path
-                        d={d}
-                        style={{
-                            'stroke-linecap': lineStyles.lineCap,
-                            'stroke-linejoin': lineStyles.lineJoin,
-                            'stroke-width': lineStyles.lineWidth,
-                            'stroke-dasharray': lineStyles.dashArray,
-                            'stroke-miterlimit': lineStyles.miterLimit,
-                            'opacity': colorStyles.opacity,
-                            'stroke-opacity': colorStyles.foreground.opacity,
-                            'fill-opacity': colorStyles.background.opacity
-                        }}
-                        stroke={colorStyles.foreground.color}
-                        fill={colorStyles.background.color}
-                        filter={shadowStyles}
-                    />
+                    {...renderSVGArc(lineStyles, colorStyles, shadowStyles, d, styles.kShadow)}
                     {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
                 </g>
                 break
@@ -183,25 +173,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
         // eslint-disable-next-line
         case K_ELLIPSE: {
             element = <g id={rendering.renderingId} {...gAttrs}>
-                <ellipse
-                    cx={boundsAndTransformation.bounds.width / 2}
-                    cy={boundsAndTransformation.bounds.height / 2}
-                    rx={boundsAndTransformation.bounds.width / 2}
-                    ry={boundsAndTransformation.bounds.height / 2}
-                    style={{
-                        'stroke-linecap': lineStyles.lineCap,
-                        'stroke-linejoin': lineStyles.lineJoin,
-                        'stroke-width': lineStyles.lineWidth,
-                        'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit,
-                        'opacity': colorStyles.opacity,
-                        'stroke-opacity': colorStyles.foreground.opacity,
-                        'fill-opacity': colorStyles.background.opacity
-                    }}
-                    stroke={colorStyles.foreground.color}
-                    fill={colorStyles.background.color}
-                    filter={shadowStyles}
-                />
+                {...renderSVGEllipse(boundsAndTransformation.bounds, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
             </g>
             break
@@ -216,25 +188,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
             element = <g id={rendering.renderingId} {...gAttrs}>
-                <rect
-                    width={boundsAndTransformation.bounds.width}
-                    height={boundsAndTransformation.bounds.height}
-                    {...(rx ? { rx: rx } : {})}
-                    {...(ry ? { ry: ry } : {})}
-                    style={{
-                        'stroke-linecap': lineStyles.lineCap,
-                        'stroke-linejoin': lineStyles.lineJoin,
-                        'stroke-width': lineStyles.lineWidth,
-                        'stroke-dasharray': lineStyles.dashArray,
-                        'stroke-miterlimit': lineStyles.miterLimit,
-                        'opacity': colorStyles.opacity,
-                        'stroke-opacity': colorStyles.foreground.opacity,
-                        'fill-opacity': colorStyles.background.opacity
-                    }}
-                    stroke={colorStyles.foreground.color}
-                    fill={colorStyles.background.color}
-                    filter={shadowStyles}
-                />
+                {...renderSVGRect(boundsAndTransformation.bounds, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
             </g>
             break
@@ -245,11 +199,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
             const extension = id.slice(id.lastIndexOf('.') + 1)
             const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(id)
             element = <g id={rendering.renderingId} {...gAttrs}>
-                <image
-                    width={boundsAndTransformation.bounds.width}
-                    height={boundsAndTransformation.bounds.height}
-                    href={image}
-                />
+                {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
             </g>
             break
         }
@@ -328,7 +278,10 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent)
-    const shadowStyles = getSvgShadowStyles(styles, context)
+
+    const paperShadowsOption: boolean = context.renderingOptions.getValueForId(PaperShadows.ID)
+    const paperShadows = paperShadowsOption ?? PaperShadows.DEFAULT
+    const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
     const points = getPoints(parent, rendering, boundsAndTransformation)
@@ -423,23 +376,9 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
     }
 
     // Create the svg element for this rendering.
+    // Only apply the fast shadow to KPolygons, other shadows are not allowed there.
     const element = <g id={rendering.renderingId} {...gAttrs}>
-        <path
-            d={path}
-            style={{
-                'stroke-linecap': lineStyles.lineCap,
-                'stroke-linejoin': lineStyles.lineJoin,
-                'stroke-width': lineStyles.lineWidth,
-                'stroke-dasharray': lineStyles.dashArray,
-                'stroke-miterlimit': lineStyles.miterLimit,
-                'opacity': colorStyles.opacity,
-                'stroke-opacity': colorStyles.foreground.opacity,
-                'fill-opacity': colorStyles.background.opacity
-            }}
-            stroke={colorStyles.foreground.color}
-            fill={colorStyles.background.color}
-            filter={shadowStyles}
-        />
+        {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
         {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
     </g>
     return element
@@ -487,7 +426,10 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
-    const shadowStyles = getSvgShadowStyles(styles, context)
+
+    const paperShadowsOption: boolean = context.renderingOptions.getValueForId(PaperShadows.ID)
+    const paperShadows = paperShadowsOption ?? PaperShadows.DEFAULT
+    const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
@@ -544,7 +486,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         x: boundsAndTransformation.bounds.x,
         style: style,
         ...(colorStyle ? { fill: colorStyle.color } : {}),
-        filter: shadowStyles,
+        ...(shadowStyles ? {filter: shadowStyles} : {}),
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size estimation include any trailing white spaces.
     } as any
 
@@ -745,6 +687,297 @@ export function renderError(rendering: KRendering): VNode {
             'ID: ' + rendering.renderingId}
     </text>
 }
+
+/**
+ * Renders some SVG shape, possibly with an added shadow, as given by the svgFunction. If a simple shadow
+ * should be added, it is added as four copies of the SVG shape with rgba(0,0,0,0.1) and the
+ * offsets defined by the kShadow, if a nice shadow should be added, it is added via SVG filter.
+ * 
+ * @param kShadow The shadow definition for the rendering, or undefined if no shadow should be added
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param svgFunction The callback function rendering the wanted SVG shape. x and y are the offsets
+ *  for the renderings additional to any other offsets, here for the shadows, kShadow is the shadow
+ *  definition as given to this function as well and the params are the other params given to this
+ *  function.
+ * @param params The further parameters needed to call the svgFunction other than an x, y, shadowStyles, and
+ *  kShadow.
+ * @returns the svg shapes generated by the svg function, with the correct shadow.
+ */
+export function renderWithShadow<T extends any[]>(
+    kShadow: KShadow | undefined,
+    shadowStyles: string | undefined,
+    svgFunction: (x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, ...params: T) => VNode,
+    ...params: T): VNode[] {
+    // If a shadowStyle is given to this function, we want 'nice' shadows using the filter string.
+    if (shadowStyles !== undefined) {
+        return [svgFunction(undefined, undefined, shadowStyles, undefined, ...params)]
+    }
+
+    // Otherwise see if there is a shadow definition and render it the 'fast' KIELER-style.
+    if (kShadow) {
+        // Shadow rendered as four copies of the SVG shape with some defaults set due to the shadow and the original rectangle.
+        return [
+            svgFunction(4 * kShadow.xOffset / 4, 4 * kShadow.yOffset / 4, undefined, kShadow, ...params),
+            svgFunction(3 * kShadow.xOffset / 4, 3 * kShadow.yOffset / 4, undefined, kShadow, ...params),
+            svgFunction(2 * kShadow.xOffset / 4, 2 * kShadow.yOffset / 4, undefined, kShadow, ...params),
+            svgFunction(1 * kShadow.xOffset / 4, 1 * kShadow.yOffset / 4, undefined, kShadow, ...params),
+            svgFunction(undefined, undefined, undefined, undefined, ...params)
+        ]
+    } else {
+        return [svgFunction(undefined, undefined, undefined, undefined, ...params)]
+    }
+}
+
+// ------- All functions turning the rendering data into an SVG with potential shadow style. ---------- //
+
+/**
+ * Renders a rectangle with all given information.
+ * 
+ * @param bounds bounds data calculated for this rectangle.
+ * @param rx rx parameter of SVG rect
+ * @param ry ry parameter of SVG rect
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param kShadow general shadow information.
+ * @returns An array of SVG <rects> resulting from this. Only multiple <rect>s if a simple shadow effect should be applied.
+ */
+export function renderSVGRect(bounds: Bounds, rx: number, ry: number, lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, kShadow: KShadow | undefined): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGRect, bounds, rx, ry, lineStyles, colorStyles)
+}
+
+/**
+ * Renders a rectangle with all given information.
+ * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
+ * black fill with 0.1 alpha is returned.
+ * 
+ * @param x x offset of the rectangle, to be used for shadows only.
+ * @param y y offset of the rectangle, to be used for shadows only.
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param kShadow shadow information. Controls what this method does.
+ * @param bounds bounds data calculated for this rectangle.
+ * @param rx rx parameter of SVG rect
+ * @param ry ry parameter of SVG rect
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @returns A single SVG <rect>.
+ */
+export function renderSingleSVGRect(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, bounds: Bounds, rx: number, ry: number, lineStyles: LineStyles, colorStyles: ColorStyles): VNode {
+    return <rect
+        width={bounds.width}
+        height={bounds.height}
+        {...(x ? { x: x } : {})}
+        {...(y ? { y: y } : {})}
+        {...(rx ? { rx: rx } : {})}
+        {...(ry ? { ry: ry } : {})}
+        style={{
+            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
+            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
+            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
+            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
+            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
+            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+        }}
+        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
+        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
+        {...(shadowStyles ? {filter: shadowStyles} : {})}
+    />
+}
+
+/**
+ * Renders an image with all given information.
+ * 
+ * @param bounds bounds data calculated for this image.
+ * @param image The image href string
+ * @param kShadow shadow information.
+ * @returns An array of SVG elements, here <image>s and <rect>s resulting from this. <rect>s are added if a shadow effect should be applied.
+ */
+export function renderSVGImage(bounds: Bounds, shadowStyles: string | undefined, image: string, kShadow: KShadow | undefined): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGImage, bounds, image)
+}
+
+/**
+ * Renders an image with all given information.
+ * If the rendering is a shadow, a shadow rect is drawn instead.
+ * 
+ * @param x x offset of the image, to be used for shadows only.
+ * @param y y offset of the image, to be used for shadows only.
+ * @param kShadow shadow information. Controls what this method does.
+ * @param bounds bounds data calculated for this image.
+ * @param image The image href string
+ * @returns A single SVG <rect>.
+ */
+export function renderSingleSVGImage(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, bounds: Bounds, image: string): VNode {
+    // A shadow of an image is just a rectangle.
+    if (kShadow) {
+        return <rect
+            {...(x ? { x: x } : {})}
+            {...(y ? { y: y } : {})}
+            width={bounds.width}
+            height={bounds.height}
+            style={{
+                'opacity': 0.1
+            }}
+            fill='rgb(0,0,0)'
+        />
+    } else {
+        return <image
+            width={bounds.width}
+            height={bounds.height}
+            href={image}
+            {...(shadowStyles ? {filter: shadowStyles} : {})}
+        />
+    }
+}
+
+/**
+ * Renders an arc with all given information.
+ * 
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param path The 'd' attribute for SVG <path>
+ * @param kShadow general shadow information.
+ * @returns An array of SVG <path>s resulting from this. Only multiple <path>s if a simple shadow effect should be applied.
+ */
+export function renderSVGArc(lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, path: string, kShadow: KShadow | undefined): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGArc, lineStyles, colorStyles, path)
+} 
+
+/**
+ * Renders an arc with all given information.
+ * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
+ * black fill with 0.1 alpha is returned.
+ * 
+ * @param x x offset of the arc, to be used for shadows only.
+ * @param y y offset of the arc, to be used for shadows only.
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param kShadow shadow information. Controls what this method does.
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @param path The 'd' attribute for the SVG <path>
+ * @returns A single SVG <path>.
+ */
+export function renderSingleSVGArc(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, lineStyles: LineStyles, colorStyles: ColorStyles, path: string): VNode {
+    return <path
+        {...(x && y ? { transform: `translate(${x},${y})` } : {})}
+        d={path}
+        style={{
+            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
+            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
+            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
+            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
+            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
+            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+        }}
+        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
+        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
+        {...(shadowStyles ? {filter: shadowStyles} : {})}
+    />
+}
+
+/**
+ * Renders an ellipse with all given information.
+ * 
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param kShadow general shadow information.
+ * @returns An array of SVG <ellipse>s resulting from this. Only multiple <ellipse>s if a simple shadow effect should be applied.
+ */
+export function renderSVGEllipse(bounds: Bounds, lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, kShadow: KShadow | undefined): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGEllipse, bounds, lineStyles, colorStyles)
+}
+
+/**
+ * Renders an ellipse with all given information.
+ * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
+ * black fill with 0.1 alpha is returned.
+ * 
+ * @param x x offset of the ellipse, to be used for shadows only.
+ * @param y y offset of the ellipse, to be used for shadows only.
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param kShadow shadow information. Controls what this method does.
+ * @param bounds bounds data calculated for this ellipse.
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @returns A single SVG <ellipse>.
+ */
+export function renderSingleSVGEllipse(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, bounds: Bounds, lineStyles: LineStyles, colorStyles: ColorStyles): VNode {
+    return <ellipse
+        {...(x && y ? { transform: `translate(${x},${y})` } : {})}
+        cx={bounds.width / 2}
+        cy={bounds.height / 2}
+        rx={bounds.width / 2}
+        ry={bounds.height / 2}
+        style={{
+            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
+            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
+            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
+            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
+            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
+            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+        }}
+        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
+        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
+        {...(shadowStyles ? {filter: shadowStyles} : {})}
+    />
+}
+
+/**
+ * Renders a rendering with a specific path (polyline, polygon, etc.) with all given information.
+ * 
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param path The 'd' attribute for the SVG <path>
+ * @param kShadow general shadow information.
+ * @returns An array of SVG <path>s resulting from this. Only multiple <path>s if a simple shadow effect should be applied.
+ */
+export function renderSVGLine(lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, path: string, kShadow: KShadow | undefined): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGLine, lineStyles, colorStyles, path)
+}
+
+/**
+ * Renders a rendering with a specific path (polyline, polygon, etc.) with all given information.
+ * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
+ * black fill with 0.1 alpha is returned.
+ * 
+ * @param x x offset of the line, to be used for shadows only.
+ * @param y y offset of the line, to be used for shadows only.
+ * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
+ * @param kShadow shadow information. Controls what this method does.
+ * @param lineStyles style information for lines (stroke etc.)
+ * @param colorStyles style information for color
+ * @param path The 'd' attribute for the SVG <path>.
+ * @returns A single SVG <path>.
+ */
+export function renderSingleSVGLine(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, lineStyles: LineStyles, colorStyles: ColorStyles, path: string): VNode {
+    return <path
+        {...(x && y ? { transform: `translate(${x},${y})` } : {})}
+        d={path}
+        style={{
+            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
+            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
+            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
+            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
+            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
+            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+        }}
+        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
+        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
+        {...(shadowStyles ? {filter: shadowStyles} : {})}
+    />
+}
+
 
 /**
  * Looks up the KRendering in the given data pool and generates a SVG rendering from that.
