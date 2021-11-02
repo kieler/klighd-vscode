@@ -144,24 +144,24 @@ export class TitleOverlayThreshold implements RangeOption {
 /**
  * Boolean option to toggle the scaling of lines based on zoom level.
  */
-export class UseConstantLineWidth implements RenderOption {
-    static readonly ID: string = 'use-constant-line-width'
-    static readonly NAME: string = 'Constant Line Width'
-    readonly id: string = UseConstantLineWidth.ID
-    readonly name: string = UseConstantLineWidth.NAME
+export class UseMinimumLineWidth implements RenderOption {
+    static readonly ID: string = 'use-minimum-line-width'
+    static readonly NAME: string = 'Minimum Line Width'
+    readonly id: string = UseMinimumLineWidth.ID
+    readonly name: string = UseMinimumLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
     currentValue = true
 }
 
 /**
- * The size scaled lines should have at any zoom level in pixels.
+ * The size scaled lines should have as a minimum at any zoom level in pixels.
  */
-export class ConstantLineWidth implements RangeOption {
-    static readonly ID: string = 'constant-line-width'
-    static readonly NAME: string = 'Constant Line Width'
-    readonly id: string = ConstantLineWidth.ID
-    readonly name: string = ConstantLineWidth.NAME
+export class MinimumLineWidth implements RangeOption {
+    static readonly ID: string = 'minimum-line-width'
+    static readonly NAME: string = 'Minimum Line Width'
+    readonly id: string = MinimumLineWidth.ID
+    readonly name: string = MinimumLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
     readonly values: any[] = []
     readonly range = {
@@ -209,8 +209,8 @@ export class RenderOptionsRegistry extends Registry {
         this._renderOptions.set(TitleScalingFactor.ID, new TitleScalingFactor());
         this._renderOptions.set(TitleOverlayThreshold.ID, new TitleOverlayThreshold());
 
-        this._renderOptions.set(UseConstantLineWidth.ID, new UseConstantLineWidth());
-        this._renderOptions.set(ConstantLineWidth.ID, new ConstantLineWidth());
+        this._renderOptions.set(UseMinimumLineWidth.ID, new UseMinimumLineWidth());
+        this._renderOptions.set(MinimumLineWidth.ID, new MinimumLineWidth());
 
         this._renderOptions.set(PaperShadows.ID, new PaperShadows());
     }
