@@ -586,7 +586,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             }
         }
         // Draw white background for overlaying titles
-        if (rendering.isNodeTitle && ((region && region.detail === DetailLevel.FullDetails) || !region)
+        if (context.depthMap && rendering.isNodeTitle && ((region && region.detail === DetailLevel.FullDetails) || !region)
             && rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
             // Adapt y value to place the rectangle on the top of the text. 
             attrs.y -= (boundsAndTransformation.bounds.height ?? 0) / 2
