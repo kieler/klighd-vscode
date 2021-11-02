@@ -51,12 +51,12 @@ export class UseSmartZoom implements RenderOption {
  * Threshold for full detail level.
  * Corresponds to the regions size compared to the current viewport.
  */
-export class FullDetailThreshold implements RangeOption {
-    static readonly ID: string = 'full-detail-threshold'
-    static readonly NAME: string = 'Full Detail Threshold'
+export class FullDetailRelativeThreshold implements RangeOption {
+    static readonly ID: string = 'full-detail-relative-threshold'
+    static readonly NAME: string = 'Full Detail Relative Threshold'
     static readonly DEFAULT: number = 0.2
-    readonly id: string = FullDetailThreshold.ID
-    readonly name: string = FullDetailThreshold.NAME
+    readonly id: string = FullDetailRelativeThreshold.ID
+    readonly name: string = FullDetailRelativeThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
     readonly values: any[] = []
     readonly range = {
@@ -64,8 +64,29 @@ export class FullDetailThreshold implements RangeOption {
         second: 1
     }
     readonly stepSize = 0.01
-    readonly initialValue: number = FullDetailThreshold.DEFAULT
+    readonly initialValue: number = FullDetailRelativeThreshold.DEFAULT
     currentValue = 0.2
+}
+
+/**
+ * Threshold for full detail level.
+ * Corresponds to the regions scale using the current viewport.
+ */
+export class FullDetailScaleThreshold implements RangeOption {
+    static readonly ID: string = 'full-detail-scale-threshold'
+    static readonly NAME: string = 'Full Detail Scale Threshold'
+    static readonly DEFAULT: number = 0.25
+    readonly id: string = FullDetailScaleThreshold.ID
+    readonly name: string = FullDetailScaleThreshold.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range = {
+        first: 0.01,
+        second: 1
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = FullDetailScaleThreshold.DEFAULT
+    currentValue = 0.25
 }
 
 
@@ -201,7 +222,8 @@ export class RenderOptionsRegistry extends Registry {
         this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
 
         this._renderOptions.set(UseSmartZoom.ID, new UseSmartZoom());
-        this._renderOptions.set(FullDetailThreshold.ID, new FullDetailThreshold());
+        this._renderOptions.set(FullDetailRelativeThreshold.ID, new FullDetailRelativeThreshold());
+        this._renderOptions.set(FullDetailScaleThreshold.ID, new FullDetailScaleThreshold());
 
         this._renderOptions.set(SimplifySmallText.ID, new SimplifySmallText());
         this._renderOptions.set(TextSimplificationThreshold.ID, new TextSimplificationThreshold());

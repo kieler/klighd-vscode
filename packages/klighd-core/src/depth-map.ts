@@ -17,7 +17,7 @@
 
 import { KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { Point, SModelRoot, Viewport } from "sprotty";
-import { RenderOptionsRegistry, FullDetailThreshold } from "./options/render-options-registry";
+import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
 import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
 
 /**
@@ -165,8 +165,11 @@ export class DepthMap {
             return entry
         }
 
-        const thresholdOption = renderingOptions.getValueForId(FullDetailThreshold.ID)
-        const fullDetailThreshold = thresholdOption ?? FullDetailThreshold.DEFAULT
+        const relativeThresholdOption = renderingOptions.getValueForId(FullDetailRelativeThreshold.ID)
+        const relativeThreshold = relativeThresholdOption ?? FullDetailRelativeThreshold.DEFAULT
+
+        const scaleThresholdOption = renderingOptions.getValueForId(FullDetailScaleThreshold.ID)
+        const scaleThreshold = scaleThresholdOption ?? FullDetailScaleThreshold.DEFAULT
 
         if (node.parent === node.root) {
             const providedRegion = new Region(node)
@@ -174,7 +177,7 @@ export class DepthMap {
 
             entry = { providingRegion: providedRegion, containingRegion: undefined }
 
-            providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, fullDetailThreshold)
+            providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, relativeThreshold, scaleThreshold)
 
             this.rootRegions.push(providedRegion)
 
@@ -188,7 +191,7 @@ export class DepthMap {
 
                 entry = { containingRegion: entry.containingRegion, providingRegion: new Region(node) }
 
-                entry.providingRegion.detail = this.computeDetailLevel(entry.providingRegion, viewport, fullDetailThreshold)
+                entry.providingRegion.detail = this.computeDetailLevel(entry.providingRegion, viewport, relativeThreshold, scaleThreshold)
 
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion);
@@ -238,29 +241,32 @@ export class DepthMap {
      */
     updateDetailLevels(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
 
-        const thresholdOption = renderingOptions.getValueForId(FullDetailThreshold.ID)
-        const fullDetailThreshold = thresholdOption ?? FullDetailThreshold.DEFAULT
+        const relativeThresholdOption = renderingOptions.getValueForId(FullDetailRelativeThreshold.ID)
+        const relativeThreshold = relativeThresholdOption ?? FullDetailRelativeThreshold.DEFAULT
+
+        const scaleThresholdOption = renderingOptions.getValueForId(FullDetailScaleThreshold.ID)
+        const scaleThreshold = scaleThresholdOption ?? FullDetailScaleThreshold.DEFAULT
 
         if (this.viewport?.scroll === viewport.scroll
             && this.viewport?.zoom === viewport.zoom
-            && this.lastThreshold === fullDetailThreshold) {
+            && this.lastThreshold === relativeThreshold) {
             // the viewport did not change, no need to update
             return
         }
 
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
-        this.lastThreshold = fullDetailThreshold;
+        this.lastThreshold = relativeThreshold;
 
         // Initialize detail level on first run.
         if (this.criticalRegions.size == 0) {
             for (const region of this.rootRegions) {
-                const vis = this.computeDetailLevel(region, viewport, fullDetailThreshold)
+                const vis = this.computeDetailLevel(region, viewport, relativeThreshold, scaleThreshold)
                 if (vis === DetailLevel.FullDetails) {
-                    this.updateRegionDetailLevel(region, vis, viewport, fullDetailThreshold)
+                    this.updateRegionDetailLevel(region, vis, viewport, relativeThreshold, scaleThreshold)
                 }
             }
         } else {
-            this.checkCriticalRegions(viewport, fullDetailThreshold)
+            this.checkCriticalRegions(viewport, relativeThreshold, scaleThreshold)
         }
     }
 
@@ -269,19 +275,19 @@ export class DepthMap {
      * 
      * @param region The root region
      * @param viewport The current viewport
-     * @param threshold The detail level threshold
+     * @param relativeThreshold The detail level threshold
      */
-    updateRegionDetailLevel(region: Region, vis: DetailWithChildren, viewport: Viewport, threshold: number): void {
+    updateRegionDetailLevel(region: Region, vis: DetailWithChildren, viewport: Viewport, relativeThreshold: number, scaleThreshold: number): void {
         region.setDetailLevel(vis)
         let isCritical = false;
 
         region.children.forEach(childRegion => {
-            const childVis = this.computeDetailLevel(childRegion, viewport, threshold);
+            const childVis = this.computeDetailLevel(childRegion, viewport, relativeThreshold, scaleThreshold);
             if (childVis < vis) {
                 isCritical = true
             }
             if (isDetailWithChildren(childVis)) {
-                this.updateRegionDetailLevel(childRegion, childVis, viewport, threshold)
+                this.updateRegionDetailLevel(childRegion, childVis, viewport, relativeThreshold, scaleThreshold)
             } else {
                 this.recursiveSetOOB(childRegion, childVis)
             }
@@ -309,9 +315,9 @@ export class DepthMap {
      * Applies the level change and manages the critical regions.
      * 
      * @param viewport The current viewport
-     * @param threshold The full detail threshold
+     * @param relativeThreshold The full detail threshold
      */
-    checkCriticalRegions(viewport: Viewport, threshold: number): void {
+    checkCriticalRegions(viewport: Viewport, relativeThreshold: number, scaleThreshold: number): void {
 
         // All regions that are at a detail level boundary (child has lower detail level and parent is at a DetailWithChildren level).
         let toBeProcessed: Set<Region> = new Set(this.criticalRegions)
@@ -321,7 +327,7 @@ export class DepthMap {
 
         while (toBeProcessed.size !== 0) {
             toBeProcessed.forEach(region => {
-                const vis = this.computeDetailLevel(region, viewport, threshold);
+                const vis = this.computeDetailLevel(region, viewport, relativeThreshold, scaleThreshold);
                 region.setDetailLevel(vis)
 
                 if (region.parent && vis !== region.parent.detail) {
@@ -332,7 +338,7 @@ export class DepthMap {
                 }
 
                 if (isDetailWithChildren(vis)) {
-                    this.updateRegionDetailLevel(region, vis, viewport, threshold)
+                    this.updateRegionDetailLevel(region, vis, viewport, relativeThreshold, scaleThreshold)
                 } else {
                     this.recursiveSetOOB(region, vis)
                 }
@@ -351,10 +357,10 @@ export class DepthMap {
      * 
      * @param region The region in question
      * @param viewport The current viewport
-     * @param threshold The full detail threshold
+     * @param relativeThreshold The full detail threshold
      * @returns The appropriate detail level
      */
-    computeDetailLevel(region: Region, viewport: Viewport, threshold: number): DetailLevel {
+    computeDetailLevel(region: Region, viewport: Viewport, relativeThreshold: number, scaleThreshold: number): DetailLevel {
         if (!this.isInBounds(region, viewport)) {
             return DetailLevel.OutOfBounds
         } else if (!region.parent) {
@@ -362,8 +368,9 @@ export class DepthMap {
             return DetailLevel.FullDetails
         } else {
             const viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
-            // change to full detail when relative size threshold is reached
-            if (viewportSize >= threshold) {
+            const scale = viewport.zoom
+            // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
+            if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
                 return DetailLevel.FullDetails
             } else {
                 return DetailLevel.MinimalDetails
