@@ -1016,10 +1016,6 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
 export function renderKRendering(kRendering: KRendering, parent: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
 
-    if (context.depthMap && context.depthMap.getContainingRegion(parent as KNode, context.viewport, context.renderingOptions)?.detail !== DetailLevel.FullDetails) {
-        return undefined
-    }
-
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')

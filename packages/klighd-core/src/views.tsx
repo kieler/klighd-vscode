@@ -24,7 +24,7 @@ import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/k
 import { inject, injectable } from 'inversify';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';
-import { DepthMap } from './depth-map';
+import { DepthMap, DetailLevel } from './depth-map';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
@@ -85,6 +85,17 @@ export class KNodeView implements IView {
     render(node: SKNode, context: RenderingContext): VNode {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
+
+        if (ctx.depthMap) {
+            const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderingOptions)
+            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
+                // Make sure this node and its children are not drawn as long as it is not on full details.
+                node.areChildAreaChildrenRendered = true
+                node.areNonChildAreaChildrenRendered = true
+                return <g/>
+            }
+        }
+
         ctx.titles.push([])
         ctx.positions.push("")
         // reset these properties, if the diagram is drawn a second time
@@ -203,6 +214,16 @@ export class KPortView implements IView {
     render(port: SKPort, context: RenderingContext): VNode {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
+
+        if (ctx.depthMap) {
+            const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderingOptions)
+            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
+                port.areChildAreaChildrenRendered = true
+                port.areNonChildAreaChildrenRendered = true
+                return <g/>
+            }
+        }
+
         ctx.titles.push([])
         ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
@@ -247,6 +268,15 @@ export class KLabelView implements IView {
     render(label: SKLabel, context: RenderingContext): VNode {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
+
+        if (ctx.depthMap) {
+            const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderingOptions)
+            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
+                label.areChildAreaChildrenRendered = true
+                label.areNonChildAreaChildrenRendered = true
+                return <g/>
+            }
+        }
         ctx.titles.push([])
         ctx.positions.push("")
         label.areChildAreaChildrenRendered = false
@@ -297,6 +327,16 @@ export class KEdgeView implements IView {
 
     render(edge: SKEdge, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
+
+        if (ctx.depthMap) {
+            const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderingOptions)
+            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
+                edge.areChildAreaChildrenRendered = true
+                edge.areNonChildAreaChildrenRendered = true
+                return <g/>
+            }
+        }
+
         edge.areChildAreaChildrenRendered = false
         edge.areNonChildAreaChildrenRendered = false
 

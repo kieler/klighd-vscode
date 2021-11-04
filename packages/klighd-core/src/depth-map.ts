@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
-import { Point, SModelRoot, Viewport } from "sprotty";
+import { KGraphElement, KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { Point, SChildElement, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
 import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
 
@@ -153,13 +153,13 @@ export class DepthMap {
     }
 
     /**
-     * It is generally advised to initialize the nodes from root to leaf
+     * It is generally advised to initialize the elements from root to leaf
      * 
-     * @param node The KNode to initialize for DepthMap usage
+     * @param element The KGraphElement to initialize for DepthMap usage
      */
-    public initKNode(node: KNode, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
+    public initKGraphElement(element: SChildElement & KGraphElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
 
-        let entry = this.regionIndexMap.get(node.id)
+        let entry = this.regionIndexMap.get(element.id)
         if (entry) {
             // KNode already initialized
             return entry
@@ -171,9 +171,9 @@ export class DepthMap {
         const scaleThresholdOption = renderingOptions.getValueForId(FullDetailScaleThreshold.ID)
         const scaleThreshold = scaleThresholdOption ?? FullDetailScaleThreshold.DEFAULT
 
-        if (node.parent === node.root) {
-            const providedRegion = new Region(node)
-            providedRegion.absolutePosition = node.bounds
+        if (element.parent === element.root && element instanceof KNode) {
+            const providedRegion = new Region(element)
+            providedRegion.absolutePosition = element.bounds
 
             entry = { providingRegion: providedRegion, containingRegion: undefined }
 
@@ -183,20 +183,20 @@ export class DepthMap {
 
         } else {
 
-            const parentEntry = this.initKNode(node.parent as KNode, viewport, renderingOptions);
+            const parentEntry = this.initKGraphElement(element.parent as KNode, viewport, renderingOptions);
 
             entry = { containingRegion: parentEntry.providingRegion ?? parentEntry.containingRegion, providingRegion: undefined }
 
-            if (node.data.length > 0 && node.data[0].type == K_RECTANGLE && (node.data[0] as KContainerRendering).children[0]) {
+            if (element.data.length > 0 && element.data[0].type == K_RECTANGLE && (element.data[0] as KContainerRendering).children[0] && element instanceof KNode) {
 
-                entry = { containingRegion: entry.containingRegion, providingRegion: new Region(node) }
+                entry = { containingRegion: entry.containingRegion, providingRegion: new Region(element) }
 
                 entry.providingRegion.detail = this.computeDetailLevel(entry.providingRegion, viewport, relativeThreshold, scaleThreshold)
 
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion);
 
-                let current = node.parent as KNode;
+                let current = element.parent as KNode;
                 let offsetX = 0;
                 let offsetY = 0;
 
@@ -213,25 +213,25 @@ export class DepthMap {
                 offsetY += currentEntry?.providingRegion?.absolutePosition?.y ?? 0
 
                 entry.providingRegion.absolutePosition = {
-                    x: offsetX + node.bounds.x,
-                    y: offsetY + node.bounds.y
+                    x: offsetX + element.bounds.x,
+                    y: offsetY + element.bounds.y
                 }
             }
 
         }
 
-        this.regionIndexMap.set(node.id, entry)
+        this.regionIndexMap.set(element.id, entry)
         return entry
     }
 
-    public getContainingRegion(node: KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
-        // initKNode already checks if it is already initialized and if it is returns the existing value
-        return this.initKNode(node, viewport, renderOptions).containingRegion
+    public getContainingRegion(element: SChildElement & KGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+        // initKGraphELement already checks if it is already initialized and if it is returns the existing value
+        return this.initKGraphElement(element, viewport, renderOptions).containingRegion
     }
 
-    public getProvidingRegion(node: KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
-        // initKNode already checks if it is already initialized and if it is returns the existing value
-        return this.initKNode(node, viewport, renderOptions).providingRegion
+    public getProvidingRegion(node: SChildElement & KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+        // initKGraphElement already checks if it is already initialized and if it is returns the existing value
+        return this.initKGraphElement(node, viewport, renderOptions).providingRegion
     }
 
     /** 
