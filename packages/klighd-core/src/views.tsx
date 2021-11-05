@@ -82,7 +82,7 @@ export class KNodeView implements IView {
     @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
     @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
-    render(node: SKNode, context: RenderingContext): VNode {
+    render(node: SKNode, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
@@ -92,7 +92,7 @@ export class KNodeView implements IView {
                 // Make sure this node and its children are not drawn as long as it is not on full details.
                 node.areChildAreaChildrenRendered = true
                 node.areNonChildAreaChildrenRendered = true
-                return <g/>
+                return undefined
             }
         }
 
@@ -211,7 +211,7 @@ export class KNodeView implements IView {
 export class KPortView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
-    render(port: SKPort, context: RenderingContext): VNode {
+    render(port: SKPort, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
@@ -220,7 +220,7 @@ export class KPortView implements IView {
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 port.areChildAreaChildrenRendered = true
                 port.areNonChildAreaChildrenRendered = true
-                return <g/>
+                return undefined
             }
         }
 
@@ -265,7 +265,7 @@ export class KPortView implements IView {
 export class KLabelView implements IView {
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
-    render(label: SKLabel, context: RenderingContext): VNode {
+    render(label: SKLabel, context: RenderingContext): VNode | undefined{
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
@@ -274,7 +274,7 @@ export class KLabelView implements IView {
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 label.areChildAreaChildrenRendered = true
                 label.areNonChildAreaChildrenRendered = true
-                return <g/>
+                return undefined
             }
         }
         ctx.titles.push([])
@@ -325,7 +325,7 @@ export class KEdgeView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
-    render(edge: SKEdge, context: RenderingContext): VNode {
+    render(edge: SKEdge, context: RenderingContext): VNode | undefined {
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
@@ -333,7 +333,7 @@ export class KEdgeView implements IView {
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 edge.areChildAreaChildrenRendered = true
                 edge.areNonChildAreaChildrenRendered = true
-                return <g/>
+                return undefined
             }
         }
 

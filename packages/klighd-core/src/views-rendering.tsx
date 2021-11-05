@@ -224,14 +224,12 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
 
             const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
             const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
-            const placeholder = <g id="ZoomPlaceholder"
+            const placeholder = <g
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
-                <g height={size} width={size}>
-                    <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
-                    <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" stroke-linecap="round" />
-                    <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
-                    <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
-                </g>
+                <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
+                <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{'stroke-linecap': 'round', 'stroke-width': '2'}}/>
+                <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
+                <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
             </g>
             element.children ? element.children.push(placeholder) : element.children = [placeholder]
         }
@@ -598,12 +596,10 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs2.attrs = { "text-anchor": "middle" }
             // Add a rectangle behind the title
             elements = [
-                <g>
-                    <rect x={attrs.x} y={attrs.y} width={boundsAndTransformation.bounds.width} height={boundsAndTransformation.bounds.height} fill="white" opacity="0.8" stroke="black"> </rect>
-                    <text {...attrs2}>
-                        {...children}
-                    </text>
-                </g>
+                <rect x={attrs.x} y={attrs.y} width={boundsAndTransformation.bounds.width} height={boundsAndTransformation.bounds.height} fill="white" opacity="0.8" stroke="black"> </rect>,
+                <text {...attrs2}>
+                    {...children}
+                </text>
             ]
         } else {
             elements = [
