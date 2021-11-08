@@ -6,6 +6,7 @@ name: package
 on:
     push:
         branches: [main]
+    workflow_dispatch: # enables manual triggering
 
 jobs:
     package:
