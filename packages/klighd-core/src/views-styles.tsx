@@ -634,12 +634,12 @@ export function isInvisible(styles: KStyles): boolean {
 export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, context: SKGraphModelRenderer): LineStyles {
     // The line width as requested by the element
     let lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const useLineWidthOption = context.renderingOptions.getValueForId(UseMinimumLineWidth.ID)
+    const useLineWidthOption = context.renderingOptions.getValue(UseMinimumLineWidth)
     // Only enable, if option is found.
     const useMinimumLineWidth = useLineWidthOption ?? false
     if (useMinimumLineWidth) {
         // The line witdh in px that the drawn line should not be less than.
-        const minimumLineWidth = context.renderingOptions.getValueForId(MinimumLineWidth.ID) ?? 1
+        const minimumLineWidth = context.renderingOptions.getValueOrDefault(MinimumLineWidth)
         // The line width the requested one would have when rendered in the current zoom level.
         const realLineWidth = lineWidth * getZoom(target)
         if (styles.kLineWidth.lineWidth == 0) {

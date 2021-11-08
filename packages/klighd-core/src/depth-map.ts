@@ -165,11 +165,9 @@ export class DepthMap {
             return entry
         }
 
-        const relativeThresholdOption = renderingOptions.getValueForId(FullDetailRelativeThreshold.ID)
-        const relativeThreshold = relativeThresholdOption ?? FullDetailRelativeThreshold.DEFAULT
+        const relativeThreshold = renderingOptions.getValueOrDefault(FullDetailRelativeThreshold)
 
-        const scaleThresholdOption = renderingOptions.getValueForId(FullDetailScaleThreshold.ID)
-        const scaleThreshold = scaleThresholdOption ?? FullDetailScaleThreshold.DEFAULT
+        const scaleThreshold = renderingOptions.getValueOrDefault(FullDetailScaleThreshold)
 
         if (element.parent === element.root && element instanceof KNode) {
             const providedRegion = new Region(element)
@@ -241,11 +239,9 @@ export class DepthMap {
      */
     updateDetailLevels(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
 
-        const relativeThresholdOption = renderingOptions.getValueForId(FullDetailRelativeThreshold.ID)
-        const relativeThreshold = relativeThresholdOption ?? FullDetailRelativeThreshold.DEFAULT
+        const relativeThreshold = renderingOptions.getValueOrDefault(FullDetailRelativeThreshold)
 
-        const scaleThresholdOption = renderingOptions.getValueForId(FullDetailScaleThreshold.ID)
-        const scaleThreshold = scaleThresholdOption ?? FullDetailScaleThreshold.DEFAULT
+        const scaleThreshold = renderingOptions.getValueOrDefault(FullDetailScaleThreshold)
 
         if (this.viewport?.scroll === viewport.scroll
             && this.viewport?.zoom === viewport.zoom

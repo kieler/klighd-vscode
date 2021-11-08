@@ -100,8 +100,7 @@ export function renderRectangularShape(rendering: KContainerRendering, parent: S
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
-    const paperShadowsOption: boolean = context.renderingOptions.getValueForId(PaperShadows.ID)
-    const paperShadows = paperShadowsOption ?? PaperShadows.DEFAULT
+    const paperShadows: boolean = context.renderingOptions.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
 
     const lineStyles = getSvgLineStyles(styles, parent, context)
@@ -277,8 +276,7 @@ export function renderLine(rendering: KPolyline, parent: SKGraphElement | SKEdge
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent)
 
-    const paperShadowsOption: boolean = context.renderingOptions.getValueForId(PaperShadows.ID)
-    const paperShadows = paperShadowsOption ?? PaperShadows.DEFAULT
+    const paperShadows: boolean = context.renderingOptions.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
@@ -425,19 +423,17 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
 
-    const paperShadowsOption: boolean = context.renderingOptions.getValueForId(PaperShadows.ID)
-    const paperShadows = paperShadowsOption ?? PaperShadows.DEFAULT
+    const paperShadows: boolean = context.renderingOptions.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
     const region = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
 
-    const simplifySmallTextOption = context.renderingOptions.getValueForId(SimplifySmallText.ID)
+    const simplifySmallTextOption = context.renderingOptions.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
     if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails) && !rendering.isNodeTitle) {
-        const simplificationThresholdOption = context.renderingOptions.getValueForId(TextSimplificationThreshold.ID)
-        const simplificationThreshold = simplificationThresholdOption ?? TextSimplificationThreshold.DEFAULT
+        const simplificationThreshold = context.renderingOptions.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.calculatedTextBounds
@@ -496,8 +492,7 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
-        const overlayThresholdOption = context.renderingOptions.getValueForId(TitleOverlayThreshold.ID)
-        const overlayThreshold = overlayThresholdOption ?? TitleOverlayThreshold.DEFAULT
+        const overlayThreshold = context.renderingOptions.getValueOrDefault(TitleOverlayThreshold)
 
         if (context.depthMap) {
             if (boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && rendering.isNodeTitle) {
@@ -510,8 +505,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                     if (region.detail !== DetailLevel.FullDetails && parent.children.length > 1
                         || (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold)) {
                         // Scale to limit of bounding box or max size.
-                        const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
-                        let maxScale = titleScalingFactorOption ?? TitleScalingFactor.DEFAULT
+                        const titleScalingFactorOption = context.renderingOptions.getValueOrDefault(TitleScalingFactor)
+                        let maxScale = titleScalingFactorOption
                         // Indentation used in the layouting in pixels.
                         if (context.viewport) {
                             maxScale = maxScale / context.viewport.zoom
@@ -542,9 +537,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
                 }
                 else {
                     if (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.viewport.zoom <= overlayThreshold) {
-                        const titleScalingFactorOption = context.renderingOptions.getValueForId(TitleScalingFactor.ID)
-                        const defaultFactor = 1
-                        let maxScale = titleScalingFactorOption ?? defaultFactor
+                        const titleScalingFactorOption = context.renderingOptions.getValueOrDefault(TitleScalingFactor)
+                        let maxScale = titleScalingFactorOption
                         // Indentation used in the layouting in pixels.
                         if (context.viewport) {
                             maxScale = maxScale / context.viewport.zoom

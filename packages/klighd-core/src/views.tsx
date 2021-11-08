@@ -57,7 +57,7 @@ export class SKGraphView extends SGraphView {
 
 
         // Add depthMap to context for rendering, when required.
-        const smartZoomOption = this.renderOptionsRegistry.getValueForId(UseSmartZoom.ID)
+        const smartZoomOption = this.renderOptionsRegistry.getValue(UseSmartZoom)
 
         // Only enable, if option is found.
         const useSmartZoom = smartZoomOption ?? false
@@ -129,7 +129,7 @@ export class KNodeView implements IView {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
 
-            if (this.renderOptionsRegistry.getValueForId(ShowConstraintOption.ID) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
+            if (this.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }
