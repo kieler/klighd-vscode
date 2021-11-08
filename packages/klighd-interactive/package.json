@@ -2,20 +2,29 @@
   "name": "@kieler/klighd-interactive",
   "version": "0.2.1",
   "description": "A module for klighd-core to interactively apply constraints to the diagram",
-  "author": "Kiel University https://rtsys.informatik.uni-kiel.de/kieler",
+  "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
   "license": "EPL-2.0",
   "keywords": [
     "klighd",
     "interactive"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kieler/klighd-vscode",
+    "directory": "packages/klighd-core"
+  },
   "scripts": {
     "clean": "rm -rf lib",
     "lint": "eslint .",
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next"
   },
   "dependencies": {
     "sprotty": "0.9.0"
+  },
+  "devDependencies": {
+    "semver": "^7.3.5"
   },
   "files": [
     "lib",
