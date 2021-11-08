@@ -32,6 +32,7 @@ jobs:
                   name: klighd-vsix
                   path: applications/klighd-vscode/klighd-vscode.vsix
                   if-no-files-found: error
+            - run: npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
             - run: yarn publish:next
               working-directory: ./packages/klighd-interactive
               env: 
