@@ -22,6 +22,15 @@ jobs:
                   always-auth: true
             - run: yarn
             - run: yarn package
+            - run: npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+            - run: yarn publish:next
+              working-directory: ./packages/klighd-interactive
+              env: 
+                NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+            - run: yarn publish:next
+              working-directory: ./packages/klighd-core
+              env: 
+                NPM_TOKEN: ${{secrets.NPM_TOKEN}}
             # Artifacts have a few limitation and will always be zips. See: https://github.com/actions/upload-artifact#zipped-artifact-downloads
             - uses: actions/upload-artifact@v2
               with:
@@ -33,12 +42,3 @@ jobs:
                   name: klighd-vsix
                   path: applications/klighd-vscode/klighd-vscode.vsix
                   if-no-files-found: error
-            - run: npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
-            - run: yarn publish:next
-              working-directory: ./packages/klighd-interactive
-              env: 
-                NPM_TOKEN: ${{secrets.NPM_TOKEN}}
-            - run: yarn publish:next
-              working-directory: ./packages/klighd-core
-              env: 
-                NPM_TOKEN: ${{secrets.NPM_TOKEN}}
