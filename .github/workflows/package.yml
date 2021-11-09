@@ -21,11 +21,15 @@ jobs:
                   scope: '@kieler'
             - run: yarn
             - run: yarn package
-            - run: yarn publish:next
+            - name: Publish next klighd-interactive
+              if: github.repository == 'kieler/klighd-vscode' # only publish next version on the main repo
+              run: yarn publish:next
               working-directory: ./packages/klighd-interactive
               env: 
                 NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-            - run: yarn publish:next
+            - name: Publish next klighd-core
+              if: github.repository == 'kieler/klighd-vscode' # only publish next version on the main repo
+              run: yarn publish:next
               working-directory: ./packages/klighd-core
               env: 
                 NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
