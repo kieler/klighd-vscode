@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019, 2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -23,13 +23,14 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
-import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';
 import { DepthMap, DetailLevel } from './depth-map';
+import { DISymbol } from './di.symbols';
+import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
-import { DISymbol } from './di.symbols';
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -43,6 +44,7 @@ export class SKGraphView extends SGraphView {
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
         ctx.renderingDefs = new Map
+        ctx.renderingDefs.set("font", fontDefinition())
         ctx.renderingOptions = this.renderOptionsRegistry;
 
         const viewport = findParentByFeature(model, isViewport)
@@ -390,4 +392,12 @@ export class KEdgeView implements IView {
             </g>
         }
     }
+}
+
+function fontDefinition(): VNode {
+    // TODO: maybe find a way to only include the font if it is used in the SVG.
+    return <style>
+        {overpass_regular_style}
+        {overpass_mono_regular_style}
+    </style>
 }

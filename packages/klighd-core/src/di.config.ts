@@ -23,6 +23,7 @@ import {
     TYPES, updateModule, viewportModule, ViewRegistry, configureActionHandler
 } from 'sprotty/lib';
 import actionModule from './actions/actions-module';
+import bookmarkModule from './bookmarks/bookmark-module'
 import { DISymbol } from './di.symbols';
 import { KlighdDiagramServer } from './diagram-server';
 import { KlighdHoverMouseListener } from './hover/hover';
@@ -35,10 +36,8 @@ import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions';
 import { SynthesesRegistry } from './syntheses/syntheses-registry';
-import textBoundsModule from './textbounds/textbounds-module';
 import updateDepthMapModule from './update/update-depthmap-module';
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views';
-import bookmarkModule from './bookmarks/bookmark-module'
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
@@ -95,7 +94,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
-        textBoundsModule, actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule)
+        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,

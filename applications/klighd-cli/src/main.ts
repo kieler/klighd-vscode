@@ -15,9 +15,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import "reflect-metadata";
 import "./styles/main.css";
 import "@kieler/klighd-core/styles/main.css";
+import "reflect-metadata";
 import {
     createKlighdDiagramContainer,
     requestModel,
@@ -27,11 +27,11 @@ import {
     SetInitialBookmark,
     Bookmark,
 } from "@kieler/klighd-core";
+import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
+import { showPopup } from "./popup";
 import { LSPConnection } from "./services/connection";
 import { LocalStorage } from "./services/persistence";
-import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showSpinner, hideSpinner } from "./spinner";
-import { showPopup } from "./popup";
 
 // IIFE booting the application
 (async function main() {

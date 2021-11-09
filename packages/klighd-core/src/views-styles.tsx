@@ -67,7 +67,7 @@ const URL_END = ')'
 // Default values for most Styles, that are used if no style is given Default values taken from PNodeController.java
 export const DEFAULT_FONT_BOLD = false
 export const DEFAULT_FONT_ITALIC = false
-export const DEFAULT_FONT_NAME = 'sans-serif' // TODO: on windows this is 'arial' (if server or if client is windows?)
+export const DEFAULT_FONT_NAME = 'Overpass, sans-serif'
 export const DEFAULT_FONT_SIZE = 10
 export const DEFAULT_HORIZONTAL_ALIGNMENT = HorizontalAlignment.CENTER
 export const DEFAULT_INVISIBILITY = false
