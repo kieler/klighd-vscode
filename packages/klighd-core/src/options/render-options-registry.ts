@@ -51,12 +51,12 @@ export class UseSmartZoom implements RenderOption {
  * Threshold for full detail level.
  * Corresponds to the regions size compared to the current viewport.
  */
-export class FullDetailThreshold implements RangeOption {
-    static readonly ID: string = 'full-detail-threshold'
-    static readonly NAME: string = 'Full Detail Threshold'
+export class FullDetailRelativeThreshold implements RangeOption {
+    static readonly ID: string = 'full-detail-relative-threshold'
+    static readonly NAME: string = 'Full Detail Relative Threshold'
     static readonly DEFAULT: number = 0.2
-    readonly id: string = FullDetailThreshold.ID
-    readonly name: string = FullDetailThreshold.NAME
+    readonly id: string = FullDetailRelativeThreshold.ID
+    readonly name: string = FullDetailRelativeThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
     readonly values: any[] = []
     readonly range = {
@@ -64,8 +64,29 @@ export class FullDetailThreshold implements RangeOption {
         second: 1
     }
     readonly stepSize = 0.01
-    readonly initialValue: number = FullDetailThreshold.DEFAULT
+    readonly initialValue: number = FullDetailRelativeThreshold.DEFAULT
     currentValue = 0.2
+}
+
+/**
+ * Threshold for full detail level.
+ * Corresponds to the regions scale using the current viewport.
+ */
+export class FullDetailScaleThreshold implements RangeOption {
+    static readonly ID: string = 'full-detail-scale-threshold'
+    static readonly NAME: string = 'Full Detail Scale Threshold'
+    static readonly DEFAULT: number = 0.25
+    readonly id: string = FullDetailScaleThreshold.ID
+    readonly name: string = FullDetailScaleThreshold.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range = {
+        first: 0.01,
+        second: 1
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = FullDetailScaleThreshold.DEFAULT
+    currentValue = 0.25
 }
 
 
@@ -144,24 +165,24 @@ export class TitleOverlayThreshold implements RangeOption {
 /**
  * Boolean option to toggle the scaling of lines based on zoom level.
  */
-export class UseConstantLineWidth implements RenderOption {
-    static readonly ID: string = 'use-constant-line-width'
-    static readonly NAME: string = 'Constant Line Width'
-    readonly id: string = UseConstantLineWidth.ID
-    readonly name: string = UseConstantLineWidth.NAME
+export class UseMinimumLineWidth implements RenderOption {
+    static readonly ID: string = 'use-minimum-line-width'
+    static readonly NAME: string = 'Minimum Line Width'
+    readonly id: string = UseMinimumLineWidth.ID
+    readonly name: string = UseMinimumLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
     currentValue = true
 }
 
 /**
- * The size scaled lines should have at any zoom level in pixels.
+ * The size scaled lines should have as a minimum at any zoom level in pixels.
  */
-export class ConstantLineWidth implements RangeOption {
-    static readonly ID: string = 'constant-line-width'
-    static readonly NAME: string = 'Constant Line Width'
-    readonly id: string = ConstantLineWidth.ID
-    readonly name: string = ConstantLineWidth.NAME
+export class MinimumLineWidth implements RangeOption {
+    static readonly ID: string = 'minimum-line-width'
+    static readonly NAME: string = 'Minimum Line Width'
+    readonly id: string = MinimumLineWidth.ID
+    readonly name: string = MinimumLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
     readonly values: any[] = []
     readonly range = {
@@ -171,6 +192,21 @@ export class ConstantLineWidth implements RangeOption {
     readonly stepSize = 0.01
     readonly initialValue: number = 0.5
     currentValue = 0.5
+}
+
+/**
+ * The style shadows should be drawn in, either the paper mode shadows (nice, but slow in
+ * performance) or in default KIELER-style (fast, not as nice looking).
+ */
+export class PaperShadows implements RenderOption {
+    static readonly ID: string = 'paper-shadows'
+    static readonly NAME: string = 'Paper Mode Shadows'
+    static readonly DEFAULT: boolean = false
+    readonly id: string = PaperShadows.ID
+    readonly name: string = PaperShadows.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = PaperShadows.DEFAULT
+    currentValue = PaperShadows.DEFAULT
 }
 
 /** {@link Registry} that stores and updates different render options. */
@@ -186,7 +222,8 @@ export class RenderOptionsRegistry extends Registry {
         this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
 
         this._renderOptions.set(UseSmartZoom.ID, new UseSmartZoom());
-        this._renderOptions.set(FullDetailThreshold.ID, new FullDetailThreshold());
+        this._renderOptions.set(FullDetailRelativeThreshold.ID, new FullDetailRelativeThreshold());
+        this._renderOptions.set(FullDetailScaleThreshold.ID, new FullDetailScaleThreshold());
 
         this._renderOptions.set(SimplifySmallText.ID, new SimplifySmallText());
         this._renderOptions.set(TextSimplificationThreshold.ID, new TextSimplificationThreshold());
@@ -194,8 +231,10 @@ export class RenderOptionsRegistry extends Registry {
         this._renderOptions.set(TitleScalingFactor.ID, new TitleScalingFactor());
         this._renderOptions.set(TitleOverlayThreshold.ID, new TitleOverlayThreshold());
 
-        this._renderOptions.set(UseConstantLineWidth.ID, new UseConstantLineWidth());
-        this._renderOptions.set(ConstantLineWidth.ID, new ConstantLineWidth());
+        this._renderOptions.set(UseMinimumLineWidth.ID, new UseMinimumLineWidth());
+        this._renderOptions.set(MinimumLineWidth.ID, new MinimumLineWidth());
+
+        this._renderOptions.set(PaperShadows.ID, new PaperShadows());
     }
 
     @postConstruct()
