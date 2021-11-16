@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Bounds, Point, toDegrees } from 'sprotty/lib';
+import { Bounds, Point, toDegrees } from 'sprotty';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Decoration, HorizontalAlignment, KColoring, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering,

@@ -20,6 +20,7 @@ import "reflect-metadata";
 import "sprotty-vscode-webview/css/sprotty-vscode.css";
 import "./main.css";
 import "@kieler/klighd-core/styles/main.css";
+import '@vscode/codicons/dist/codicon.css';
 
 import { Container } from "inversify";
 import {

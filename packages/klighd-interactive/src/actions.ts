@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Action } from 'sprotty/lib/base/actions/action';
+import { Action } from 'sprotty';
 import { DeleteConstraint } from './layered/constraint-types';
 
 /**

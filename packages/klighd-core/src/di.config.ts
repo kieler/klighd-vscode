@@ -21,7 +21,7 @@ import {
     configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
     LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
     TYPES, updateModule, viewportModule, ViewRegistry, configureActionHandler
-} from 'sprotty/lib';
+} from 'sprotty';
 import actionModule from './actions/actions-module';
 import bookmarkModule from './bookmarks/bookmark-module'
 import { DISymbol } from './di.symbols';

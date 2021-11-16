@@ -15,9 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import {
-    Action
-} from 'sprotty/lib';
+import { Action } from 'sprotty';
 import { AspectRatio, RectPackDeletePositionConstraint, RectPackSetPositionConstraint } from './constraint-types';
 
 /**

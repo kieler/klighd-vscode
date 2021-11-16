@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { moveFeature, Point, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty/lib';
+import { moveFeature, Point, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,

@@ -15,13 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from "snabbdom/vnode";
+import { VNode } from "snabbdom";
+import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { KNode } from './constraint-classes';
 import { filterKNodes } from './helper-methods';
 import { renderHierarchyLevel as renderHierarchyLevelLayered, renderLayeredConstraint } from './layered/layered-interactive-view';
 import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
-import { isUndefined } from 'util';
 
 /**
  * Visualize the layers and available positions in the graph
@@ -31,7 +30,7 @@ export function renderInteractiveLayout(root: KNode): VNode {
     // Filter KNodes
     const nodes = filterKNodes(root.children)
     let result = undefined
-    if (isUndefined(root.properties.algorithm) || root.properties.algorithm.endsWith('layered')) {
+    if (root.properties.algorithm === undefined || root.properties.algorithm.endsWith('layered')) {
         result = renderHierarchyLevelLayered(nodes)
     } else if (root.properties.algorithm.endsWith('rectpacking')) {
         result = renderHierarchyLevelRectPacking(nodes)
@@ -51,7 +50,7 @@ export function renderInteractiveLayout(root: KNode): VNode {
 export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
     const algorithm = (node.parent as KNode).properties.algorithm
-    if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
+    if (algorithm === undefined || algorithm.endsWith('layered')) {
         result = renderLayeredConstraint(node)
     } else if (algorithm.endsWith( 'rectpacking')) {
         if (node.properties.desiredPosition !== -1) {

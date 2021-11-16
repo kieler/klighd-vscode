@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import { ContainerModule } from 'inversify';
-import { TYPES } from 'sprotty/lib';
+import { TYPES } from 'sprotty';
 import { ActionListener } from './action-listener';
 
 /**

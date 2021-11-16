@@ -15,9 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from 'snabbdom/vnode';
-import { getZoom, isSelectable } from 'sprotty';
+import { VNode } from 'snabbdom';
+import { getZoom, isSelectable, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
@@ -93,7 +92,7 @@ export const DEFAULT_CORNER_WIDTH = 0
 export const DEFAULT_CORNER_HEIGHT = 0
 export const DEFAULT_LINE_CAP_SVG = 'butt'
 export const DEFAULT_LINE_JOIN_SVG = 'miter'
-export const DEFAULT_MITER_LIMIT_SVG = 4
+export const DEFAULT_MITER_LIMIT_SVG = '4'
 /**
  * Data class to hold each possible KStyle of any rendering. Defaults each style to undefined or its default value from PNodeController.java
  */
@@ -385,14 +384,14 @@ export function colorDefinition(colorId: string, start: ColorStyle, end: ColorSt
         offset={0}
         style={{
             'stop-color': start.color,
-            'stop-opacity': start.opacity
+            ...(start.opacity ? {'stop-opacity': start.opacity} : {})
         }}
     />
     const endColorStop = <stop
         offset={1}
         style={{
             'stop-color': end.color,
-            'stop-opacity': end.opacity
+            ...(end.opacity ? {'stop-opacity': end.opacity} : {})
         }}
     />
     const angleFloat = angle === undefined ? 0 : angle
@@ -533,7 +532,7 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphModelRenderer
         return {
             foreground: grayedOutColor,
             background: background === undefined ? DEFAULT_FILL : grayedOutColor,
-            opacity: parent.opacity
+            opacity: String(parent.opacity)
         }
     }
 
@@ -542,14 +541,14 @@ export function getSvgColorStyles(styles: KStyles, context: SKGraphModelRenderer
         return {
             foreground: grayedOutColor,
             background: background === undefined ? DEFAULT_FILL : { color: 'gainsboro', opacity: '255' },
-            opacity: parent.opacity
+            opacity: String(parent.opacity)
         }
     }
 
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
         background: background === undefined ? DEFAULT_FILL : background,
-        opacity: parent.opacity
+        opacity: String(parent.opacity)
     }
 }
 
@@ -661,7 +660,7 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         // always contain the miterLimit style to be set to 10, even though it is not intended by the creator of the KGraph model and it would not
         // even make any difference in the rendering. Here I cannot distinguish if the model creator really wanted to have the specific miter limit of 10
         // or if he just does not care. As the first case seems rare, I prefer a cleaner resulting svg here.
-        miterLimit: lineJoin !== 'miter' || miterLimit === DEFAULT_MITER_LIMIT_SVG || miterLimit === DEFAULT_MITER_LIMIT ? undefined : miterLimit
+        miterLimit: lineJoin !== 'miter' || String(miterLimit) === DEFAULT_MITER_LIMIT_SVG || miterLimit === DEFAULT_MITER_LIMIT ? undefined : String(miterLimit)
     }
 }
 
@@ -706,7 +705,7 @@ export interface ColorStyle {
 export interface ColorStyles {
     foreground: ColorStyle,
     background: ColorStyle,
-    opacity: number
+    opacity: string
 }
 
 /**
@@ -717,7 +716,7 @@ export interface LineStyles {
     lineCap: 'butt' | 'round' | 'square' | undefined,
     lineJoin: 'bevel' | 'miter' | 'round' | undefined,
     dashArray: string | undefined,
-    miterLimit: number | undefined
+    miterLimit: string | undefined
 }
 
 /**

@@ -18,9 +18,8 @@
 /** @jsx html */
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from "snabbdom/vnode";
-import { Action, CenterAction, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
+import { VNode } from "snabbdom";
+import { Action, CenterAction, html, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { SynthesisPicker } from "./components/synthesis-picker";

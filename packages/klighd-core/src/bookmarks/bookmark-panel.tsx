@@ -17,9 +17,8 @@
  */
 
 import { inject, injectable, postConstruct } from "inversify";
-import { VNode } from "snabbdom/vnode";
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { IActionDispatcher, TYPES } from "sprotty";
+import { VNode } from "snabbdom";
+import { html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DISymbol } from "../di.symbols";
 import { SidebarPanel } from "../sidebar";
 import { BookmarkRegistry } from "./bookmark-registry";

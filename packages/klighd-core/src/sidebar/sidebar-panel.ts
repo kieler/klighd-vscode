@@ -16,7 +16,7 @@
  */
 
 import { injectable } from "inversify";
-import { VNode } from "snabbdom/vnode";
+import { VNode } from "snabbdom";
 
 /**
  * A sidebar panel provides content that is shown by the sidebar.
@@ -52,7 +52,8 @@ export interface ISidebarPanel {
      * Renders this panel content and returns the content as a snabbdom VNode.
      * Learn more about snabbdom and how to use it here:
      * - https://www.npmjs.com/package/snabbdom
-     * - https://www.npmjs.com/package/snabbdom-jsx
+     * - https://www.npmjs.com/package/snabbdom-jsx (package not used anymore, but concept is still
+     * the same)
      */
     render(): VNode;
 }

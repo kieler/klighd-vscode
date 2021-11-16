@@ -14,7 +14,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { Action, MouseListener, SModelElement } from 'sprotty/lib';
+import { Action, MouseListener, SModelElement } from 'sprotty';
 import { KAction, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
 import { findRendering, getSemanticElement } from '../skgraph-utils';
 import { PerformActionAction } from './actions';

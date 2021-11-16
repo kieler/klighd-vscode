@@ -16,13 +16,12 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { inject, postConstruct } from "inversify";
 import { replace as featherReplace } from "feather-icons";
-import { VNode } from "snabbdom/vnode";
-import { AbstractUIExtension, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty";
-import { DISymbol } from "../di.symbols";
+import { inject, postConstruct } from "inversify";
+import { VNode } from "snabbdom";
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
+import { DISymbol } from "../di.symbols";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
 /**

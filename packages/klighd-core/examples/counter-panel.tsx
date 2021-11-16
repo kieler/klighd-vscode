@@ -16,8 +16,8 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from "snabbdom/vnode";
+import { VNode } from "snabbdom";
+import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { SidebarPanel } from "../src/sidebar/sidebar-panel";
 
 /**

@@ -32,7 +32,7 @@ export class KlighdDiagramWidget extends VscodeDiagramWidget {
             await requestModel(this.actionDispatcher, this.diagramIdentifier.uri);
         } catch (err) {
             const status = new ServerStatusAction();
-            status.message = err instanceof Error ? err.message : err.toString();
+            status.message = err instanceof Error ? err.message : (err as any).toString();
             status.severity = "FATAL";
             this.setStatus(status);
         }

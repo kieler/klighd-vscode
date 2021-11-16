@@ -15,9 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from 'snabbdom/vnode';
-import { Bounds } from 'sprotty';
+import { VNode } from 'snabbdom';
+import { Bounds, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { DetailLevel } from './depth-map';
@@ -755,9 +754,9 @@ export function renderSingleSVGRect(x: number | undefined, y: number | undefined
             ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
             ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
             ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
-            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
             ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
         }}
         {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
         {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
@@ -797,7 +796,7 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
             width={bounds.width}
             height={bounds.height}
             style={{
-                'opacity': 0.1
+                'opacity': '0.1'
             }}
             fill='rgb(0,0,0)'
         />
@@ -849,9 +848,9 @@ export function renderSingleSVGArc(x: number | undefined, y: number | undefined,
             ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
             ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
             ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
-            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
             ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
         }}
         {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
         {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
@@ -899,9 +898,9 @@ export function renderSingleSVGEllipse(x: number | undefined, y: number | undefi
             ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
             ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
             ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
-            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
             ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
         }}
         {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
         {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
@@ -947,9 +946,9 @@ export function renderSingleSVGLine(x: number | undefined, y: number | undefined
             ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
             ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
             ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
-            'opacity': kShadow ? colorStyles.opacity ? colorStyles.opacity * 0.1 : 0.1 : colorStyles.opacity,
+            'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
             ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            'fill-opacity': kShadow ? 1 : colorStyles.background.opacity
+            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
         }}
         {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
         {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}

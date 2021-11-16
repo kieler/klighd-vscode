@@ -16,7 +16,7 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty/lib';
+import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,

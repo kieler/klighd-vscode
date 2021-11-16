@@ -17,7 +17,7 @@
 
 import { inject, injectable } from "inversify";
 import { ActionDispatcher, Command, CommandExecutionContext, CommandReturn, isViewport, SetViewportAction, SetViewportCommand, TYPES, Viewport } from "sprotty";
-import { Action } from "sprotty/lib/base/actions/action";
+import { Action } from "sprotty";
 
 /**
  * A Bookmark

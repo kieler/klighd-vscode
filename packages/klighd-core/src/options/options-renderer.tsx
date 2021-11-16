@@ -16,19 +16,9 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from "snabbdom/vnode";
 import { inject, injectable } from "inversify";
-import {
-    DisplayedActionData,
-    LayoutOptionUIData,
-    SynthesisOption,
-    RangeOption as RangeOptionData,
-    Type,
-    RenderOption,
-    TransformationOptionType
-} from "./option-models";
-import { IActionDispatcher, TYPES } from "sprotty";
+import { VNode } from "snabbdom";
+import { html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {
     PerformOptionsActionAction,
     SetLayoutOptionsAction,
@@ -43,6 +33,15 @@ import {
     SeparatorOption,
     CategoryOption,
 } from "./components/option-inputs";
+import {
+    DisplayedActionData,
+    LayoutOptionUIData,
+    SynthesisOption,
+    RangeOption as RangeOptionData,
+    Type,
+    RenderOption,
+    TransformationOptionType
+} from "./option-models";
 
 // Note: Skipping a JSX children by rendering null or undefined for that child does not work the same way
 // as it works in React. It will render the literals as words. To skip a child return an empty string "".

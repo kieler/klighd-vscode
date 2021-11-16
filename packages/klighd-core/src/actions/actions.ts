@@ -16,7 +16,7 @@
  */
 import {
     Action, RequestAction, ResponseAction, SModelRootSchema, Match, UpdateModelAction, FitToScreenAction
-} from 'sprotty/lib';
+} from 'sprotty';
 import { KImage } from '../skgraph-models';
 
 /**
