@@ -30,7 +30,7 @@ import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { RenderOptionsRegistry } from "./render-options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
-import { CheckOption, TextOption } from "./components/option-inputs";
+import { CheckOption } from "./components/option-inputs";
 import { CreateBookmarkAction } from "../bookmarks/bookmark";
 
 /** Type for available quick actions. */
@@ -172,11 +172,11 @@ export class GeneralPanel extends SidebarPanel {
                         value={this.preferencesRegistry.preferences.animateGoToBookmark}
                         onChange={this.handlePreferenceChange.bind(this, "animateGoToBookmark")}
                     />
-                    <TextOption
+                    <CheckOption
                         id="diagramGenerator"
-                        name="Diagram Generator"
-                        value={this.preferencesRegistry.preferences.diagramGenerator}
-                        onChange={this.handlePreferenceChange.bind(this, "diagramGenerator")}
+                        name="Incremental Diagram Generator"
+                        value={this.preferencesRegistry.preferences.incrementalDiagramGenerator}
+                        onChange={this.handlePreferenceChange.bind(this, "incrementalDiagramGenerator")}
                     />
                 </div>
             </div>
