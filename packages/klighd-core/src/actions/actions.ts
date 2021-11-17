@@ -16,9 +16,9 @@
  */
 import { inject, injectable } from 'inversify';
 import {
-    Action, CommandExecutionContext, CommandResult, ElementAndBounds, FitToScreenAction,
-    generateRequestId, HiddenCommand, Match, RequestAction, ResetCommand, ResponseAction,
-    SModelElementSchema, SModelRoot, SModelRootSchema, TYPES, UpdateModelAction,
+    Action, CommandExecutionContext, CommandResult, FitToScreenAction, Match, RequestAction,
+    ResetCommand, ResponseAction, SModelElementSchema, SModelRoot, SModelRootSchema, TYPES,
+    UpdateModelAction,
 } from 'sprotty';
 import { insertSModelElementIntoModel } from '../diagram-pieces/smodel-util';
 import { KImage } from '../skgraph-models';
@@ -66,60 +66,6 @@ export class CheckedImagesAction implements ResponseAction {
 
     constructor(public readonly notCached: Pair<string, string>[],
         public readonly responseId = '') {
-    }
-}
-
-/**
- * Sent from the client to the model source (e.g. a DiagramServer) to transmit the result of text bounds
- * computation as a response to a RequestTextBoundsAction.
- */
-export class ComputedTextBoundsAction implements ResponseAction {
-    static readonly KIND = 'computedTextBounds'
-    readonly kind = ComputedTextBoundsAction.KIND
-
-    constructor(public readonly bounds: ElementAndBounds[],
-                public readonly responseId = '') {
-    }
-}
-
-/**
- * Sent from the model source to the client to request bounds for the given texts. The texts are
- * rendered invisibly so the bounds can derived from the DOM. The response is a ComputedTextBoundsAction.
- */
-export class RequestTextBoundsAction implements RequestAction<ComputedTextBoundsAction> {
-    static readonly KIND: string = 'requestTextBounds'
-    readonly kind = RequestTextBoundsAction.KIND
-
-    constructor(public readonly textDiagram: SModelRootSchema,
-                public readonly requestId: string = '') {}
-
-    /** Factory function to dispatch a request with the `IActionDispatcher` */
-    static create(newRoot: SModelRootSchema): Action {
-        return new RequestTextBoundsAction(newRoot, generateRequestId());
-    }
-}
-
-/**
- * The command triggered to perform a hidden rendering of the text diagram defined in the constructor's RequestTextBoundsAction.
- */
-@injectable()
-export class RequestTextBoundsCommand extends HiddenCommand {
-    static readonly KIND: string = RequestTextBoundsAction.KIND
-
-    constructor(@inject(TYPES.Action) protected action: RequestTextBoundsAction) {
-        super()
-    }
-
-    execute(context: CommandExecutionContext): CommandResult {
-        return {
-            model: context.modelFactory.createRoot(this.action.textDiagram),
-            modelChanged: true,
-            cause: this.action
-        }
-    }
-
-    get blockUntil(): (action: Action) => boolean {
-        return action => action.kind === ComputedTextBoundsAction.KIND
     }
 }
 
@@ -219,63 +165,11 @@ export class SetDiagramPieceCommand extends ResetCommand {
         }
     }
 
-    undo(context: CommandExecutionContext): SModelRoot {
+    undo(_context: CommandExecutionContext): SModelRoot {
         return this.root
     }
 
-    redo(context: CommandExecutionContext): SModelRoot {
+    redo(_context: CommandExecutionContext): SModelRoot {
         return this.root
-    }
-}
-
-/**
- * Incremental version of { @link ComputedTextBoundsAction }
- */
- export class IncrementalComputedTextBoundsAction implements ResponseAction {
-    static readonly KIND = 'incrementalComputedTextBounds'
-    readonly kind = IncrementalComputedTextBoundsAction.KIND
-
-    constructor(public readonly bounds: ElementAndBounds[],
-                public readonly responseId = '') {
-    }
-}
-
-/**
- * Incremental version of { @link RequestTextBoundsAction }
- */
-export class IncrementalRequestTextBoundsAction implements RequestAction<IncrementalComputedTextBoundsAction> {
-    static readonly KIND: string = 'incrementalRequestTextBounds'
-    readonly kind = IncrementalRequestTextBoundsAction.KIND
-
-    constructor(public readonly textDiagram: SModelRootSchema,
-                public readonly requestId: string = '') {}
-
-    /** Factory function to dispatch a request with the `IActionDispatcher` */
-    static create(newRoot: SModelRootSchema): Action {
-        return new IncrementalRequestTextBoundsAction(newRoot, generateRequestId());
-    }
-}
-
-/**
- * The command triggered to perform a hidden rendering of the text diagram defined in the constructor's RequestTextBoundsAction.
- */
-@injectable()
-export class IncrementalRequestTextBoundsCommand extends HiddenCommand {
-    static readonly KIND: string = IncrementalRequestTextBoundsAction.KIND
-
-    constructor(@inject(TYPES.Action) protected action: IncrementalRequestTextBoundsAction) {
-        super()
-    }
-
-    execute(context: CommandExecutionContext): CommandResult {
-        return {
-            model: context.modelFactory.createRoot(this.action.textDiagram),
-            modelChanged: true,
-            cause: this.action
-        }
-    }
-
-    get blockUntil(): (action: Action) => boolean {
-        return action => action.kind === IncrementalComputedTextBoundsAction.KIND
     }
 }

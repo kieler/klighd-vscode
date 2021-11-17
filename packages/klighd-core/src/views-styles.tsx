@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,7 +18,7 @@
 import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { VNode } from 'snabbdom/vnode';
 import { getZoom, isSelectable } from 'sprotty';
-import { ConstantLineWidth, UseConstantLineWidth } from './options/render-options-registry';
+import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
@@ -67,7 +67,7 @@ const URL_END = ')'
 // Default values for most Styles, that are used if no style is given Default values taken from PNodeController.java
 export const DEFAULT_FONT_BOLD = false
 export const DEFAULT_FONT_ITALIC = false
-export const DEFAULT_FONT_NAME = 'sans-serif' // TODO: on windows this is 'arial' (if server or if client is windows?)
+export const DEFAULT_FONT_NAME = 'Overpass, sans-serif'
 export const DEFAULT_FONT_SIZE = 10
 export const DEFAULT_HORIZONTAL_ALIGNMENT = HorizontalAlignment.CENTER
 export const DEFAULT_INVISIBILITY = false
@@ -632,19 +632,21 @@ export function isInvisible(styles: KStyles): boolean {
  * @param context The current rendering context 
  */
 export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, context: SKGraphModelRenderer): LineStyles {
+    // The line width as requested by the element
     let lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const useLineWidthOption = context.renderingOptions.getValueForId(UseConstantLineWidth.ID)
+    const useLineWidthOption = context.renderingOptions.getValueForId(UseMinimumLineWidth.ID)
     // Only enable, if option is found.
-    const useConstantLineWidth = useLineWidthOption ?? false
-    if (useConstantLineWidth) {
-        const lineWidthOption = context.renderingOptions.getValueForId(ConstantLineWidth.ID)
-        const scaling = lineWidthOption ?? 1
-        lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH * scaling / getZoom(target)
-            : styles.kLineWidth.lineWidth * scaling / getZoom(target)
+    const useMinimumLineWidth = useLineWidthOption ?? false
+    if (useMinimumLineWidth) {
+        // The line witdh in px that the drawn line should not be less than.
+        const minimumLineWidth = context.renderingOptions.getValueForId(MinimumLineWidth.ID) ?? 1
+        // The line width the requested one would have when rendered in the current zoom level.
+        const realLineWidth = lineWidth * getZoom(target)
         if (styles.kLineWidth.lineWidth == 0) {
             lineWidth = 0
-        } else if (lineWidth < DEFAULT_LINE_WIDTH) {
-            lineWidth = DEFAULT_LINE_WIDTH
+        } else if (realLineWidth < minimumLineWidth) {
+            // scale the used line width up to appear as big as the minimum line width requested.
+            lineWidth = lineWidth * (minimumLineWidth / realLineWidth)
         }
     }
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)

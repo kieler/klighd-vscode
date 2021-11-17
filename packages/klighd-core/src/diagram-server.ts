@@ -35,7 +35,6 @@ import {
     ActionHandlerRegistry,
     ActionMessage,
     BringToFrontAction,
-    ComputedBoundsAction,
     DiagramServer,
     findElement,
     generateRequestId,
@@ -52,16 +51,12 @@ import {
 import {
     CheckedImagesAction,
     CheckImagesAction,
-    ComputedTextBoundsAction,
-    IncrementalComputedTextBoundsAction,
-    IncrementalRequestTextBoundsCommand,
     KlighdFitToScreenAction,
     KlighdUpdateModelAction,
     Pair,
     PerformActionAction,
     RefreshLayoutAction,
     RequestDiagramPieceAction,
-    RequestTextBoundsCommand,
     SetDiagramPieceAction,
     StoreImagesAction,
 } from "./actions/actions";
@@ -149,16 +144,6 @@ export class KlighdDiagramServer extends DiagramServer {
         // In contract to the name, this should return true, if the actions should be
         // sent to the server. Don't know what the Sprotty folks where thinking when they named it...
         switch (action.kind) {
-            case ComputedBoundsAction.KIND:
-                // TODO: remove sending of a computedBoundsAction as well
-                // (not possible until https://github.com/inversify/InversifyJS/issues/1035).
-                return false;
-            case ComputedTextBoundsAction.KIND:
-                return true;
-            case IncrementalRequestTextBoundsCommand.KIND:
-                return false;
-            case IncrementalComputedTextBoundsAction.KIND:
-                return true;
             case PerformActionAction.KIND:
                 return true;
             case RefreshDiagramAction.KIND:
@@ -167,8 +152,6 @@ export class KlighdDiagramServer extends DiagramServer {
                 return true;
             case RequestDiagramPieceAction.KIND:
                 return true;
-            case RequestTextBoundsCommand.KIND:
-                return false;
             case SetSynthesisAction.KIND:
                 return true;
         }
@@ -182,12 +165,9 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(BringToFrontAction.KIND, this);
         registry.register(CheckImagesAction.KIND, this);
         registry.register(CheckedImagesAction.KIND, this);
-        registry.register(ComputedTextBoundsAction.KIND, this);
         registry.register(DeleteLayerConstraintAction.KIND, this);
         registry.register(DeletePositionConstraintAction.KIND, this);
         registry.register(DeleteStaticConstraintAction.KIND, this);
-        registry.register(IncrementalComputedTextBoundsAction.KIND, this);
-        registry.register(IncrementalRequestTextBoundsCommand.KIND, this);
         registry.register(PerformActionAction.KIND, this);
         registry.register(RectPackSetPositionConstraintAction.KIND, this);
         registry.register(RectPackDeletePositionConstraintAction.KIND, this);
@@ -195,7 +175,6 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(RefreshLayoutAction.KIND, this);
         registry.register(RequestKlighdPopupModelAction.KIND, this);
         registry.register(RequestDiagramPieceAction.KIND, this);
-        registry.register(RequestTextBoundsCommand.KIND, this);
         registry.register(SetAspectRatioAction.KIND, this);
         registry.register(SetLayerConstraintAction.KIND, this);
         registry.register(SetPositionConstraintAction.KIND, this);
