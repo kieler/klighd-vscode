@@ -92,6 +92,7 @@ export class KLighDWebview extends SprottyLspWebview {
                 forceLightBackground: config.get<boolean>("useLightBackground"),
                 shouldSelectDiagram: config.get<boolean>("initialShouldSelectDiagram"),
                 shouldSelectText: config.get<boolean>("initialShouldSelectText"),
+                incrementalDiagramGenerator: config.get<boolean>("initialIncrementalDiagramGenerator"),
             })
         );
     }

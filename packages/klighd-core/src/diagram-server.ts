@@ -37,6 +37,8 @@ import {
     BringToFrontAction,
     DiagramServer,
     findElement,
+    generateRequestId,
+    GetViewportAction,
     ICommand,
     RequestPopupModelAction,
     SelectAction,
@@ -44,6 +46,7 @@ import {
     SetPopupModelAction,
     SwitchEditModeAction,
     TYPES,
+    ViewportResult,
 } from "sprotty";
 import {
     CheckedImagesAction,
@@ -53,11 +56,14 @@ import {
     Pair,
     PerformActionAction,
     RefreshLayoutAction,
+    RequestDiagramPieceAction,
+    SetDiagramPieceAction,
     StoreImagesAction,
 } from "./actions/actions";
 import { GoToBookmarkAction } from "./bookmarks/bookmark";
 import { BookmarkRegistry } from "./bookmarks/bookmark-registry";
 import { DISymbol } from "./di.symbols";
+import { GridDiagramPieceRequestManager, IDiagramPieceRequestManager } from './diagram-piece-request-manager';
 import { RequestKlighdPopupModelAction } from "./hover/hover";
 import { PopupModelProvider } from "./hover/popup-provider";
 import { PreferencesRegistry } from "./preferences-registry";
@@ -73,6 +79,9 @@ import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
 export class KlighdDiagramServer extends DiagramServer {
     /** Generic connection to the server used to send and receive actions. */
     private _connection: Connection;
+
+    childrenToRequestQueue: IDiagramPieceRequestManager = new GridDiagramPieceRequestManager
+    // childrenToRequestQueue: IDiagramPieceRequestManager = new QueueDiagramPieceRequestManager
 
     @inject(SessionStorage) private sessionStorage: SessionStorage;
     @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider;
@@ -99,10 +108,35 @@ export class KlighdDiagramServer extends DiagramServer {
         if (wasDiagramModelUpdated) {
             this.actionDispatcher.dispatch(new UpdateDepthMapModelAction());
 
+            if (this.preferencesRegistry.preferences.incrementalDiagramGenerator) {
+                // After model is received request first piece.
+
+                // TODO: Here some state aware process should handle requesting pieces
+                //       This needs to be initialized here, probably also do this stuff
+                //       with commands
+                // get root diagram piece
+                this.childrenToRequestQueue.reset()
+                this.actionDispatcher.dispatch(new RequestDiagramPieceAction(generateRequestId(), '$root'))
+            }
             if (this.bookmarkRegistry.initialBookmark) {
                 this.actionDispatcher.dispatch(new GoToBookmarkAction(this.bookmarkRegistry.initialBookmark))
             } else if (this.preferencesRegistry.preferences.resizeToFit) {
                 this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
+            }
+        } else if (message.action.kind === SetDiagramPieceAction.KIND) {
+            // add any children of the requested piece as stubs into queue
+            if ((message.action as SetDiagramPieceAction).diagramPiece.children !== undefined) {
+                const children = (message.action as SetDiagramPieceAction).diagramPiece.children!
+                children.forEach(element => {
+                    // FIXME: not all types of children should be added here, edges for example are already
+                    //        complete as they can't have any own children
+                    this.childrenToRequestQueue.enqueue((message.action as SetDiagramPieceAction).diagramPiece.id, element)
+                });
+            }
+            if (this.childrenToRequestQueue.front() !== undefined) {
+
+                // get viewport
+                this.actionDispatcher.dispatch(GetViewportAction.create())
             }
         }
     }
@@ -113,11 +147,13 @@ export class KlighdDiagramServer extends DiagramServer {
         switch (action.kind) {
             case PerformActionAction.KIND:
                 return true;
-            case SetSynthesisAction.KIND:
+            case RefreshDiagramAction.KIND:
                 return true;
             case RefreshLayoutAction.KIND:
                 return true;
-            case RefreshDiagramAction.KIND:
+            case RequestDiagramPieceAction.KIND:
+                return true;
+            case SetSynthesisAction.KIND:
                 return true;
         }
         return super.handleLocally(action);
@@ -139,6 +175,7 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(RefreshDiagramAction.KIND, this);
         registry.register(RefreshLayoutAction.KIND, this);
         registry.register(RequestKlighdPopupModelAction.KIND, this);
+        registry.register(RequestDiagramPieceAction.KIND, this);
         registry.register(SetAspectRatioAction.KIND, this);
         registry.register(SetLayerConstraintAction.KIND, this);
         registry.register(SetPositionConstraintAction.KIND, this);
@@ -147,6 +184,8 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
         registry.register(SelectAction.KIND, this);
+        registry.register(SetDiagramPieceAction.KIND, this);
+        registry.register(ViewportResult.KIND, this);
     }
 
     handle(action: Action): void | ICommand | Action {
@@ -165,6 +204,10 @@ export class KlighdDiagramServer extends DiagramServer {
             // Other PopupModel requests are simply ignored.
             if (action instanceof RequestKlighdPopupModelAction)
                 this.handleRequestKlighdPopupModel(action as RequestKlighdPopupModelAction);
+        } else if (action.kind === RequestDiagramPieceAction.KIND) {
+            this.handleRequestDiagramPiece(action as RequestDiagramPieceAction)
+        } else if (action.kind === ViewportResult.KIND) {
+            this.handleViewportResult(action as ViewportResult)
         } else {
             super.handle(action);
         }
@@ -222,5 +265,15 @@ export class KlighdDiagramServer extends DiagramServer {
             }
         }
         return false;
+    }
+
+    handleRequestDiagramPiece(action: RequestDiagramPieceAction): void {
+        this.forwardToServer(action)
+    }
+
+    handleViewportResult(action: ViewportResult): void {
+        this.childrenToRequestQueue.setViewport(action)
+        const child = this.childrenToRequestQueue.dequeue()!
+        this.actionDispatcher.dispatch(new RequestDiagramPieceAction(generateRequestId(), child.id))
     }
 }
