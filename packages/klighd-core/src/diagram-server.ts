@@ -276,14 +276,4 @@ export class KlighdDiagramServer extends DiagramServer {
         const child = this.childrenToRequestQueue.dequeue()!
         this.actionDispatcher.dispatch(new RequestDiagramPieceAction(generateRequestId(), child.id))
     }
-
-    handleComputedBounds(): boolean {
-        // ComputedBounds actions should not be generated and forwarded anymore,
-        // since only the computedTextBounds action is used by kgraph diagrams
-        if (this.viewerOptions.needsServerLayout) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 }
