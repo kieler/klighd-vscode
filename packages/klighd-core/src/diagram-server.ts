@@ -108,15 +108,16 @@ export class KlighdDiagramServer extends DiagramServer {
         if (wasDiagramModelUpdated) {
             this.actionDispatcher.dispatch(new UpdateDepthMapModelAction());
 
-            // After model is received request first piece.
+            if (this.preferencesRegistry.preferences.incrementalDiagramGenerator) {
+                // After model is received request first piece.
 
-            // TODO: Here some state aware process should handle requesting pieces
-            //       This needs to be initialized here, probably also do this stuff
-            //       with commands
-            // get root diagram piece
-            this.childrenToRequestQueue.reset()
-            this.actionDispatcher.dispatch(new RequestDiagramPieceAction(generateRequestId(), '$root'))
-
+                // TODO: Here some state aware process should handle requesting pieces
+                //       This needs to be initialized here, probably also do this stuff
+                //       with commands
+                // get root diagram piece
+                this.childrenToRequestQueue.reset()
+                this.actionDispatcher.dispatch(new RequestDiagramPieceAction(generateRequestId(), '$root'))
+            }
             if (this.bookmarkRegistry.initialBookmark) {
                 this.actionDispatcher.dispatch(new GoToBookmarkAction(this.bookmarkRegistry.initialBookmark))
             } else if (this.preferencesRegistry.preferences.resizeToFit) {
