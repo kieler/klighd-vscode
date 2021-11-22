@@ -14,9 +14,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+import { inject, injectable } from 'inversify';
 import {
-    Action, RequestAction, ResponseAction, SModelRootSchema, Match, UpdateModelAction, FitToScreenAction
+    Action, CommandExecutionContext, CommandResult, FitToScreenAction, Match, RequestAction,
+    ResetCommand, ResponseAction, SModelElementSchema, SModelRoot, SModelRootSchema, TYPES,
+    UpdateModelAction,
 } from 'sprotty';
+import { insertSModelElementIntoModel } from '../diagram-pieces/smodel-util';
 import { KImage } from '../skgraph-models';
 
 /**
@@ -111,5 +115,61 @@ export class KlighdUpdateModelAction extends UpdateModelAction {
 export class KlighdFitToScreenAction extends FitToScreenAction {
     constructor(animate?: boolean) {
         super(["$root"], 10, undefined, animate)
+    }
+}
+
+/**
+ * Sent from client to request a certain piece of the diagram.
+ */
+export class RequestDiagramPieceAction implements RequestAction<SetDiagramPieceAction> {
+    static readonly KIND: string = 'requestDiagramPiece'
+    readonly kind = RequestDiagramPieceAction.KIND
+
+    constructor(public readonly requestId: string = '',
+                public readonly modelElementId: string) {}
+}
+
+/**
+ * Response to {@link RequestDiagramPieceAction}. Contains the requested SModelElement.
+ */
+export class SetDiagramPieceAction implements ResponseAction {
+    static readonly KIND: string = 'setDiagramPiece'
+    readonly kind = SetDiagramPieceAction.KIND
+
+    constructor(public readonly responseId: string = '',
+                public readonly diagramPiece: SModelElementSchema) {}
+}
+
+/**
+ * Command to trigger re-rendering of diagram when new pieces arrive.
+ */
+@injectable()
+export class SetDiagramPieceCommand extends ResetCommand {
+    static readonly KIND: string = 'setDiagramPiece'
+
+    root: SModelRoot
+
+    constructor(@inject(TYPES.Action) protected action: SetDiagramPieceAction) {
+        super()
+    }
+
+    execute(context: CommandExecutionContext): CommandResult {
+        this.root = context.modelFactory.createRoot(context.root)
+        insertSModelElementIntoModel(
+            this.root, 
+            context.modelFactory.createElement(this.action.diagramPiece))
+        return {
+            model: this.root,
+            modelChanged: true,
+            cause: this.action
+        }
+    }
+
+    undo(_context: CommandExecutionContext): SModelRoot {
+        return this.root
+    }
+
+    redo(_context: CommandExecutionContext): SModelRoot {
+        return this.root
     }
 }

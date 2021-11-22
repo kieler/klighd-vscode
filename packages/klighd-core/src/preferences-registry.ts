@@ -39,6 +39,11 @@ export interface Preferences {
 
     /** Whether going to a Bookmark should be animated */
     animateGoToBookmark: boolean;
+
+    /** 
+     * Instructs the server if the diagram should be sent incrementally in pieces. 
+     */
+    incrementalDiagramGenerator: boolean;
 }
 
 /** {@link Registry} that stores user preferences which change the behavior of the diagram view. */
@@ -61,6 +66,7 @@ export class PreferencesRegistry extends Registry {
             shouldSelectDiagram: true,
             shouldSelectText: false,
             animateGoToBookmark: true,
+            incrementalDiagramGenerator: false,
         };
     }
 
@@ -83,6 +89,7 @@ export class PreferencesRegistry extends Registry {
                 shouldSelectText:
                     action.preferences.shouldSelectText ?? this._preferences.shouldSelectText,
                 animateGoToBookmark: action.preferences.animateGoToBookmark ?? this._preferences.animateGoToBookmark,
+                incrementalDiagramGenerator: action.preferences.incrementalDiagramGenerator ?? this._preferences.incrementalDiagramGenerator,
             };
             this.notifyListeners();
             this.notifyServer();
@@ -95,6 +102,7 @@ export class PreferencesRegistry extends Registry {
             this.connection.sendNotification(NotificationType.SetPreferences, {
                 "diagram.shouldSelectDiagram": this._preferences.shouldSelectDiagram,
                 "diagram.shouldSelectText": this.preferences.shouldSelectText,
+                "diagram.incrementalDiagramGenerator": this.preferences.incrementalDiagramGenerator,
             });
         });
     }

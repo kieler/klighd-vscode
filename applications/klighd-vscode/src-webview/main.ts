@@ -101,7 +101,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
     }
 
     protected addCustomBindings(container: Container): void {
-        container.rebind(VscodeDiagramWidget).to(KlighdDiagramWidget);
+        container.rebind(VscodeDiagramWidget).to(KlighdDiagramWidget).inSingletonScope();
     }
 }
 

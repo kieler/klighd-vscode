@@ -171,6 +171,12 @@ export class GeneralPanel extends SidebarPanel {
                         value={this.preferencesRegistry.preferences.animateGoToBookmark}
                         onChange={this.handlePreferenceChange.bind(this, "animateGoToBookmark")}
                     />
+                    <CheckOption
+                        id="diagramGenerator"
+                        name="Incremental Diagram Generator"
+                        value={this.preferencesRegistry.preferences.incrementalDiagramGenerator}
+                        onChange={this.handlePreferenceChange.bind(this, "incrementalDiagramGenerator")}
+                    />
                 </div>
             </div>
         );
