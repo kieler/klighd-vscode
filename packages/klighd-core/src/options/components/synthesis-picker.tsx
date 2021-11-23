@@ -26,10 +26,12 @@ interface SynthesisPickerProps {
 }
 
 export function SynthesisPicker(props: SynthesisPickerProps): VNode {
+    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: SynthesisPickerProps}).props
     return (
-        <div classNames="options__column">
+        <div class-options__column="true">
             <label htmlFor="synthesisSelect">Current synthesis:</label>
-            <select id="synthesisSelect" classNames="options__selection" on-change={(e: any) => props.onChange(e.target.value)}>
+            <select id="synthesisSelect" class-options__selection="true" on-change={(e: any) => props.onChange(e.target.value)}>
                 {props.syntheses.map((synthesis) => (
                     <option value={synthesis.id} selected={synthesis.id === props.currentId}>
                         {synthesis.displayName}

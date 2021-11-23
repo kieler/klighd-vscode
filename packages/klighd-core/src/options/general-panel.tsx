@@ -111,13 +111,13 @@ export class GeneralPanel extends SidebarPanel {
     render(): VNode {
         return (
             <div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Quick Actions</h5>
-                    <div classNames="options__button-group">
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Quick Actions</h5>
+                    <div class-options__button-group="true">
                         {this.quickActions.map((action) => (
                             <button
                                 title={action[1]}
-                                classNames="options__icon-button"
+                                class-options__icon-button="true"
                                 on-click={() => this.handleQuickActionClick(action[0])}
                             >
                                 {action[2]}
@@ -125,22 +125,22 @@ export class GeneralPanel extends SidebarPanel {
                         ))}
                     </div>
                 </div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Synthesis</h5>
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Synthesis</h5>
                     <SynthesisPicker
                         currentId={this.synthesesRegistry.currentSynthesisID}
                         syntheses={this.synthesesRegistry.syntheses}
                         onChange={this.handleSynthesisPickerChange.bind(this)}
                     />
                 </div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Render Options</h5>
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Render Options</h5>
                     {this.optionsRenderer.renderRenderOptions(
                         this.renderOptionsRegistry.allRenderOptions
                     )}
                 </div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Preferences</h5>
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Preferences</h5>
                     <CheckOption
                         id="resizeToFit"
                         name="Resize To Fit"

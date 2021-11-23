@@ -64,13 +64,13 @@ export class OptionsRenderer {
      */
     renderServerOptions(options: AllOptions): VNode {
         return (
-            <div classNames="options">
+            <div class-options="true">
                 {options.actions.length === 0 ? (
                     ""
                 ) : (
-                    <div classNames="options__section">
-                        <h5 classNames="options__heading">Actions</h5>
-                        <div classNames="options__button-group">
+                    <div class-options__section="true">
+                        <h5 class-options__heading="true">Actions</h5>
+                        <div class-options__button-group="true">
                             {this.renderActions(options.actions)}
                         </div>
                     </div>
@@ -78,16 +78,16 @@ export class OptionsRenderer {
                 {options.synthesisOptions.length === 0 ? (
                     ""
                 ) : (
-                    <div classNames="options__section">
-                        <h5 classNames="options__heading">Synthesis Options</h5>
+                    <div class-options__section="true">
+                        <h5 class-options__heading="true">Synthesis Options</h5>
                         {this.renderSynthesisOptions(options.synthesisOptions, null)}
                     </div>
                 )}
                 {options.layoutOptions.length === 0 ? (
                     ""
                 ) : (
-                    <div classNames="options__section">
-                        <h5 classNames="options__heading">Layout Options</h5>
+                    <div class-options__section="true">
+                        <h5 class-options__heading="true">Layout Options</h5>
                         {this.renderLayoutOptions(options.layoutOptions)}
                     </div>
                 )}
@@ -98,7 +98,7 @@ export class OptionsRenderer {
     private renderActions(actions: DisplayedActionData[]): (VNode | "")[] | "" {
         return actions.map((action) => (
             <button
-                classNames="options__button"
+                class-options__button="true"
                 key={action.actionId}
                 title={action.tooltipText}
                 on-click={this.handleActionClick.bind(this, action.actionId)}

@@ -33,10 +33,12 @@ type CheckOptionProps = BaseProps<boolean>;
 
 /** Render a labeled checkbox input. */
 export function CheckOption(props: CheckOptionProps): VNode {
+    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: CheckOptionProps}).props
     return (
         <label htmlFor={props.id}>
             <input
-                classNames="options__input"
+                class-options__input="true"
                 type="checkbox"
                 id={props.id}
                 checked={props.value}
@@ -54,13 +56,15 @@ interface ChoiceOptionProps extends BaseProps<string> {
 
 /** Render a labeled group of radio inputs. */
 export function ChoiceOption(props: ChoiceOptionProps): VNode {
+    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: ChoiceOptionProps}).props
     return (
-        <div classNames="options__input-container">
+        <div class-options__input-container="true">
             <legend>{props.name}</legend>
             {props.availableValues.map((value, i) => (
                 <label key={value} htmlFor={props.availableValuesLabels?.[i] ?? value}>
                     <input
-                        classNames="options__input"
+                        class-options__input="true"
                         type="radio"
                         id={props.availableValuesLabels?.[i] ?? value}
                         checked={props.value === value}
@@ -81,13 +85,15 @@ interface RangeOptionProps extends BaseProps<number> {
 
 /** Render a labeled range slider as input. */
 export function RangeOption(props: RangeOptionProps): VNode {
+    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: RangeOptionProps}).props
     return (
-        <div classNames="options__column">
+        <div class-options__column="true">
             <label htmlFor={props.id}>
                 {props.name}: {props.value}
             </label>
             <input
-                classNames="options__input"
+                class-options__input="true"
                 type="range"
                 id={props.id}
                 min={props.minValue}
@@ -104,11 +110,13 @@ type TextOptionProps = BaseProps<string>;
 
 /** Renders a labeled text input. */
 export function TextOption(props: TextOptionProps): VNode {
+    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: TextOptionProps}).props
     return (
-        <div classNames="options__column">
+        <div class-options__column="true">
             <label htmlFor={props.id}>{props.name}</label>
             <input
-                classNames="options__input options__text-field"
+                class-options__input options__text-field="true"
                 type="text"
                 id={props.id}
                 value={props.value}
@@ -120,7 +128,9 @@ export function TextOption(props: TextOptionProps): VNode {
 
 /** Renders a named separator. */
 export function SeparatorOption(props: { name: string; key?: string }): VNode {
-    return <span classNames="options__separator">{props.name}</span>;
+    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: { name: string; key?: string }}).props
+    return <span class-options__separator="true">{props.name}</span>;
 }
 
 interface CategoryOptionProps extends BaseProps<boolean> {
@@ -130,6 +140,8 @@ interface CategoryOptionProps extends BaseProps<boolean> {
 
 /** Renders a labeled options group. */
 export function CategoryOption(props: CategoryOptionProps, children: VNode[]): VNode {
+    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: CategoryOptionProps}).props
     function handleToggle(e: any) {
         // The toggle event is also fired if the details are rendered default open.
         // To prevent an infinite toggle loop, change is only called if the state has really changed.
@@ -137,7 +149,7 @@ export function CategoryOption(props: CategoryOptionProps, children: VNode[]): V
     }
 
     return (
-        <details open={props.value} classNames="options__category" on-toggle={handleToggle}>
+        <details open={props.value} class-options__category="true" on-toggle={handleToggle}>
             <summary>{props.name}</summary>
             {children}
         </details>

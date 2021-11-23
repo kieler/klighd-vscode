@@ -53,14 +53,14 @@ export class BookmarkPanel extends SidebarPanel {
             <div>
                 <button
                     title="Create new Bookmark"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.newBookmark()}
                 >
                     <i attrs={{ "data-feather": "bookmark" }} />
                 </button>
                 <button
                     title="Load from Clipboard"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.handleBookmarkPast()}
                 >
                     <i attrs={{ "data-feather": "upload" }} />
@@ -86,21 +86,21 @@ export class BookmarkPanel extends SidebarPanel {
                 <legend>{bookmark.name ?? ("Bookmark " + bookmark.bookmarkIndex)}</legend>
                 <button
                     title="Goto"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.handleBookmarkGoto(bookmark)}
                 >
                     <i attrs={{ "data-feather": "map-pin" }} />
                 </button>
                 <button
                     title="Save to Clipboard"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.handleBookmarkCopy(bookmark)}
                 >
                     <i attrs={{ "data-feather": "download" }} />
                 </button>
                 <button
                     title="Delete Bookmark"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.deleteBookmark(bookmark)}
                 >
                     <i attrs={{ "data-feather": "trash-2" }} />
@@ -108,15 +108,15 @@ export class BookmarkPanel extends SidebarPanel {
                 <button
                     id={bookmark.editId}
                     title="Edit Bookmark Name"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.startBookmarkNameEdit(bookmark)}
                 >
                     <i attrs={{ "data-feather": "edit-3" }} />
                 </button>
-                <span id={bookmark.saveId} classNames="options__hidden">
+                <span id={bookmark.saveId} class-options__hidden="true">
                     <button
                         title="Save Bookmark Name"
-                        classNames="options__icon-button"
+                        class-options__icon-button="true"
                         on-click={() => this.saveBookmarkName(bookmark)}
                     >
                         <i attrs={{ "data-feather": "check" }} />

@@ -74,11 +74,11 @@ export class Sidebar extends AbstractUIExtension {
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
 
         const content: VNode = (
-            <div classNames="sidebar__content">
-                <div classNames="sidebar__toggle-container">
+            <div class-sidebar__content="true">
+                <div class-sidebar__toggle-container="true">
                     {this.sidebarPanelRegistry.allPanels.map((panel) => (
                         <button
-                            classNames="sidebar__toggle-button"
+                            class-sidebar__toggle-button="true"
                             class-sidebar__toggle-button--active={
                                 this.sidebarPanelRegistry.currentPanelID === panel.id
                             }
@@ -89,8 +89,8 @@ export class Sidebar extends AbstractUIExtension {
                         </button>
                     ))}
                 </div>
-                <h3 classNames="sidebar__title">{currentPanel?.title ?? ""}</h3>
-                <div classNames="sidebar__panel-content">{currentPanel?.render() ?? ""}</div>
+                <h3 class-sidebar__title="true">{currentPanel?.title ?? ""}</h3>
+                <div class-sidebar__panel-content="true">{currentPanel?.render() ?? ""}</div>
             </div>
         );
 
