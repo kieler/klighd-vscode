@@ -20,7 +20,7 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, svg, TYPES } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, svg, TYPES } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DepthMap, DetailLevel } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
@@ -35,11 +35,11 @@ import { KStyles } from './views-styles';
  * Extends the SGraphView by initializing the context for KGraph rendering.
  */
 @injectable()
-export class SKGraphView<IRenderingArgs> extends SGraphView<IRenderingArgs> {
+export class SKGraphView implements IView {
 
     @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
 
-    render(model: Readonly<SGraph>, context: RenderingContext, args?: IRenderingArgs): VNode {
+    render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
         ctx.renderingDefs = new Map
         ctx.renderingDefs.set("font", fontDefinition())
@@ -68,7 +68,13 @@ export class SKGraphView<IRenderingArgs> extends SGraphView<IRenderingArgs> {
         } else {
             ctx.depthMap = undefined
         }
-        return super.render(model, context, args)
+
+        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`;
+        return <svg class-sprotty-graph={true}>
+            <g transform={transform}>
+                {context.renderChildren(model)}
+            </g>
+        </svg>;
     }
 }
 
