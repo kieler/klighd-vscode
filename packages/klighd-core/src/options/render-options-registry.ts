@@ -181,6 +181,7 @@ export class UseMinimumLineWidth implements RenderOption {
 export class MinimumLineWidth implements RangeOption {
     static readonly ID: string = 'minimum-line-width'
     static readonly NAME: string = 'Minimum Line Width'
+    static readonly DEFAULT: number = 1
     readonly id: string = MinimumLineWidth.ID
     readonly name: string = MinimumLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
@@ -209,6 +210,17 @@ export class PaperShadows implements RenderOption {
     currentValue = PaperShadows.DEFAULT
 }
 
+
+export interface RenderOptionType {
+    readonly ID: string,
+    readonly NAME: string,
+    new(): RenderOption,
+}
+
+export interface RenderOptionDefault extends RenderOptionType {
+    readonly DEFAULT: any,
+}
+
 /** {@link Registry} that stores and updates different render options. */
 @injectable()
 export class RenderOptionsRegistry extends Registry {
@@ -219,22 +231,22 @@ export class RenderOptionsRegistry extends Registry {
     constructor() {
         super();
         // Add available render options to this registry
-        this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
+        this.register(ShowConstraintOption);
 
-        this._renderOptions.set(UseSmartZoom.ID, new UseSmartZoom());
-        this._renderOptions.set(FullDetailRelativeThreshold.ID, new FullDetailRelativeThreshold());
-        this._renderOptions.set(FullDetailScaleThreshold.ID, new FullDetailScaleThreshold());
+        this.register(UseSmartZoom);
+        this.register(FullDetailRelativeThreshold)
+        this.register(FullDetailScaleThreshold)
 
-        this._renderOptions.set(SimplifySmallText.ID, new SimplifySmallText());
-        this._renderOptions.set(TextSimplificationThreshold.ID, new TextSimplificationThreshold());
+        this.register(SimplifySmallText);
+        this.register(TextSimplificationThreshold);
 
-        this._renderOptions.set(TitleScalingFactor.ID, new TitleScalingFactor());
-        this._renderOptions.set(TitleOverlayThreshold.ID, new TitleOverlayThreshold());
+        this.register(TitleScalingFactor);
+        this.register(TitleOverlayThreshold);
 
-        this._renderOptions.set(UseMinimumLineWidth.ID, new UseMinimumLineWidth());
-        this._renderOptions.set(MinimumLineWidth.ID, new MinimumLineWidth());
+        this.register(UseMinimumLineWidth);
+        this.register(MinimumLineWidth);
 
-        this._renderOptions.set(PaperShadows.ID, new PaperShadows());
+        this.register(PaperShadows)
     }
 
     @postConstruct()
@@ -256,6 +268,10 @@ export class RenderOptionsRegistry extends Registry {
             option.currentValue = entry[1];
         }
         this.notifyListeners();
+    }
+
+    register(Option: RenderOptionType): void {
+        this._renderOptions.set(Option.ID, new Option())
     }
 
     handle(action: Action): void | Action | ICommand {
@@ -281,7 +297,11 @@ export class RenderOptionsRegistry extends Registry {
         return Array.from(this._renderOptions.values());
     }
 
-    getValueForId(id: string): any | undefined {
-        return this._renderOptions.get(id)?.currentValue;
+    getValue(Option: RenderOptionType): any | undefined {
+        return this._renderOptions.get(Option.ID)?.currentValue;
+    }
+
+    getValueOrDefault(Option: RenderOptionDefault): any {
+        return this.getValue(Option) ?? Option.DEFAULT
     }
 }
