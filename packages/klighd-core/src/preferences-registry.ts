@@ -63,8 +63,8 @@ export class PreferencesRegistry extends Registry {
         this._preferences = {
             resizeToFit: true,
             forceLightBackground: false,
-            shouldSelectDiagram: true,
-            shouldSelectText: false,
+            shouldSelectDiagram: false,
+            shouldSelectText: true,
             animateGoToBookmark: true,
             incrementalDiagramGenerator: false,
         };
