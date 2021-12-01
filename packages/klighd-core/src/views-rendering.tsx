@@ -630,7 +630,8 @@ export function renderKText(rendering: KText, parent: SKGraphElement | SKLabel, 
         </g>
     } else {
         // Add the transformations necessary for correct placement
-        gAttrs.transform = gAttrs.transform != undefined ? context.positions.pop() + gAttrs.transform : context.positions.pop()
+        const positionOffset = context.positions[context.positions.length - 1]
+        gAttrs.transform = gAttrs.transform != undefined ? positionOffset + gAttrs.transform : positionOffset
         context.titles[context.titles.length - 1].push(<g id={rendering.renderingId} {...gAttrs}>
             {...elements}
         </g>)
