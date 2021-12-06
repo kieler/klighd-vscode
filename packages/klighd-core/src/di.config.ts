@@ -30,7 +30,7 @@ import { KlighdDiagramServer } from './diagram-server';
 import { KlighdHoverMouseListener } from './hover/hover';
 import { PopupModelProvider } from './hover/popup-provider';
 import { KlighdModelViewer } from './model-viewer';
-import { SetPreferencesAction } from './options/actions';
+import { ResetPreferencesAction, SetPreferencesAction } from './options/actions';
 import { optionsModule } from './options/options-module';
 import { PreferencesRegistry } from './preferences-registry';
 import { sidebarModule } from './sidebar';
@@ -87,6 +87,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
 
     bind(DISymbol.PreferencesRegistry).to(PreferencesRegistry).inSingletonScope();
     configureActionHandler(context, SetPreferencesAction.KIND, DISymbol.PreferencesRegistry);
+    configureActionHandler(context, ResetPreferencesAction.KIND, DISymbol.PreferencesRegistry);
 })
 
 /**

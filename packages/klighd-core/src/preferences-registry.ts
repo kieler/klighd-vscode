@@ -16,9 +16,9 @@
  */
 
 import { inject, injectable, postConstruct } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { Action, IActionDispatcher, ICommand, TYPES } from "sprotty";
 import { Registry } from "./base/registry";
-import { SetPreferencesAction } from "./options/actions";
+import { ResetPreferencesAction, SetPreferencesAction } from "./options/actions";
 import { Preference, TransformationOptionType } from "./options/option-models";
 import { Connection, NotificationType, PersistenceStorage } from "./services";
 
@@ -82,6 +82,7 @@ export class PreferencesRegistry extends Registry {
 
     @inject(Connection) private connection: Connection;
     @inject(PersistenceStorage) private storage: PersistenceStorage;
+    @inject(TYPES.IActionDispatcher) private dispatcher: IActionDispatcher;
 
     constructor() {
         super();
@@ -93,6 +94,7 @@ export class PreferencesRegistry extends Registry {
 
     @postConstruct()
     init(): void {
+        this.storage.onClear(this.handleClear.bind(this));
         this.storage.getItem<Record<string, unknown>>("preference").then((data) => {
             if (data) this.loadPersistedData(data);
 
@@ -138,6 +140,12 @@ export class PreferencesRegistry extends Registry {
             });
             this.notifyListeners();
             this.notifyServer();
+        } else if (ResetPreferencesAction.isThisAction(action)) {
+            this._preferences.forEach((option) => {
+                option.currentValue = option.initialValue;
+            });
+            this.notifyListeners();
+
         }
     }
 
@@ -155,5 +163,10 @@ export class PreferencesRegistry extends Registry {
 
     getValue(option: PreferenceType): any | undefined {
         return this._preferences.get(option.ID)?.currentValue
+    }
+
+    /** Reset all stored options when the storage gets cleared from outside. */
+    private handleClear() {
+        this.dispatcher.dispatch(new ResetPreferencesAction());
     }
 }

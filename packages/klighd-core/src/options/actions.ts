@@ -59,20 +59,6 @@ export class PerformOptionsActionAction implements Action {
     }
 }
 
-/** Change the value of one or multiple synthesis options. */
-export class SetSynthesisOptionsAction implements Action {
-    static readonly KIND = "setSynthesisOptions";
-    readonly kind = SetSynthesisOptionsAction.KIND;
-
-    constructor(readonly options: SynthesisOption[]) { }
-
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is SetSynthesisOptionsAction {
-        return action.kind === SetSynthesisOptionsAction.KIND;
-    }
-}
-
-
 /** Change the user preferences stored in the `klighd-core` container. */
 export class SetPreferencesAction implements Action {
     static readonly KIND = "setPreferences";
@@ -83,6 +69,30 @@ export class SetPreferencesAction implements Action {
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is SetPreferencesAction {
         return action.kind === SetPreferencesAction.KIND;
+    }
+}
+
+/** Resets all render options to default. */
+export class ResetPreferencesAction implements Action {
+    static readonly KIND = "resetPreferences";
+    readonly kind = ResetPreferencesAction.KIND;
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is ResetPreferencesAction {
+        return action.kind === ResetPreferencesAction.KIND;
+    }
+}
+
+/** Change the value of one or multiple synthesis options. */
+export class SetSynthesisOptionsAction implements Action {
+    static readonly KIND = "setSynthesisOptions";
+    readonly kind = SetSynthesisOptionsAction.KIND;
+
+    constructor(readonly options: SynthesisOption[]) { }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetSynthesisOptionsAction {
+        return action.kind === SetSynthesisOptionsAction.KIND;
     }
 }
 
