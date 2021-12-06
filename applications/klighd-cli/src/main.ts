@@ -22,11 +22,11 @@ import {
     createKlighdDiagramContainer,
     requestModel,
     getActionDispatcher,
-    SetPreferencesAction,
     bindServices,
     SetInitialBookmark,
     Bookmark,
 } from "@kieler/klighd-core";
+import { SetPreferencesAction } from "@kieler/klighd-core/lib/options/actions"
 import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showPopup } from "./popup";
 import { LSPConnection } from "./services/connection";
@@ -101,9 +101,7 @@ async function initDiagramView(sourceUri: string) {
 /** Communicates preferences to the diagram container which are read from the url search params. */
 function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     actionDispatcher.dispatch(
-        new SetPreferencesAction({
-            resizeToFit: readSearchParam("resizeToFit") === "false" ? false : true,
-        })
+        new SetPreferencesAction([{id:"diagram.resizeToFit", value:(readSearchParam("resizeToFit") === "false" ? false : true)}])
     );
 }
 

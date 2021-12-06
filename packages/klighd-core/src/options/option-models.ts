@@ -24,6 +24,10 @@ export interface RenderOption {
     currentValue: any;
 }
 
+export interface Preference extends RenderOption {
+    notifyServer: boolean
+}
+
 /**
  * The different types a SynthesisOption can have.
  */
@@ -123,6 +127,11 @@ export interface LayoutOptionValue {
     /**
      * The new value of this option.
      */
+    value: any
+}
+
+export interface PreferenceValue {
+    id: string
     value: any
 }
 

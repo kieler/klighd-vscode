@@ -29,9 +29,10 @@ import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { RenderOptionsRegistry } from "./render-options-registry";
 import { OptionsRenderer } from "./options-renderer";
-import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
+import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
 import { CheckOption } from "./components/option-inputs";
 import { CreateBookmarkAction } from "../bookmarks/bookmark";
+import { SetPreferencesAction } from "./actions";
 
 /** Type for available quick actions. */
 type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
@@ -143,40 +144,22 @@ export class GeneralPanel extends SidebarPanel {
                 <div classNames="options__section">
                     <h5 classNames="options__heading">Preferences</h5>
                     <CheckOption
-                        id="resizeToFit"
-                        name="Resize To Fit"
-                        value={this.preferencesRegistry.preferences.resizeToFit}
-                        onChange={this.handlePreferenceChange.bind(this, "resizeToFit")}
+                        id={ShouldSelectDiagramOption.ID}
+                        name={ShouldSelectDiagramOption.NAME}
+                        value={this.preferencesRegistry.getValue(ShouldSelectDiagramOption)}
+                        onChange={this.handlePreferenceChange.bind(this, ShouldSelectDiagramOption.ID)}
                     />
                     <CheckOption
-                        id="forceLightBackground"
-                        name="Use Light Background"
-                        value={this.preferencesRegistry.preferences.forceLightBackground}
-                        onChange={this.handlePreferenceChange.bind(this, "forceLightBackground")}
+                        id={ShouldSelectTextOption.ID}
+                        name={ShouldSelectTextOption.NAME}
+                        value={this.preferencesRegistry.getValue(ShouldSelectTextOption)}
+                        onChange={this.handlePreferenceChange.bind(this, ShouldSelectTextOption.ID)}
                     />
                     <CheckOption
-                        id="shouldSelectDiagram"
-                        name="Text Selects Diagram"
-                        value={this.preferencesRegistry.preferences.shouldSelectDiagram}
-                        onChange={this.handlePreferenceChange.bind(this, "shouldSelectDiagram")}
-                    />
-                    <CheckOption
-                        id="shouldSelectText"
-                        name="Diagram Selects Text"
-                        value={this.preferencesRegistry.preferences.shouldSelectText}
-                        onChange={this.handlePreferenceChange.bind(this, "shouldSelectText")}
-                    />
-                    <CheckOption
-                        id="animateGoToBookmark"
-                        name="Animate GoTo Bookmark"
-                        value={this.preferencesRegistry.preferences.animateGoToBookmark}
-                        onChange={this.handlePreferenceChange.bind(this, "animateGoToBookmark")}
-                    />
-                    <CheckOption
-                        id="diagramGenerator"
-                        name="Incremental Diagram Generator"
-                        value={this.preferencesRegistry.preferences.incrementalDiagramGenerator}
-                        onChange={this.handlePreferenceChange.bind(this, "incrementalDiagramGenerator")}
+                        id={IncrementalDiagramGeneratorOption.ID}
+                        name={IncrementalDiagramGeneratorOption.NAME}
+                        value={this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)}
+                        onChange={this.handlePreferenceChange.bind(this, IncrementalDiagramGeneratorOption.ID)}
                     />
                 </div>
             </div>
@@ -188,7 +171,7 @@ export class GeneralPanel extends SidebarPanel {
     }
 
     private handlePreferenceChange(key: string, newValue: any) {
-        this.actionDispatcher.dispatch(new SetPreferencesAction({ [key]: newValue }));
+        this.actionDispatcher.dispatch(new SetPreferencesAction([{id:key, value:newValue}]));
     }
 
     private handleQuickActionClick(type: PossibleAction) {
