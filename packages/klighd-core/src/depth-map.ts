@@ -18,7 +18,7 @@
 import { KGraphElement, KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { Point, SChildElement, SModelRoot, Viewport } from "sprotty";
 import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
-import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
+import { isContainerRendering, isRendering, KRendering } from "./skgraph-models";
 
 /**
  * The possible detail level of a KNode as determined by the DepthMap
@@ -185,7 +185,8 @@ export class DepthMap {
 
             entry = { containingRegion: parentEntry.providingRegion ?? parentEntry.containingRegion, providingRegion: undefined }
 
-            if (element.data.length > 0 && element.data[0].type == K_RECTANGLE && (element.data[0] as KContainerRendering).children[0] && element instanceof KNode) {
+            const kRendering = this.findRendering(element)
+            if (element instanceof KNode && kRendering && isContainerRendering(kRendering) && kRendering.children.length !== 0) {
 
                 entry = { containingRegion: entry.containingRegion, providingRegion: new Region(element) }
 
@@ -220,6 +221,22 @@ export class DepthMap {
 
         this.regionIndexMap.set(element.id, entry)
         return entry
+    }
+    
+    /**
+     * Finds the KRendering in the given graph element.
+     * @param element The graph element to look up the rendering for.
+     * @returns The KRendering.
+     */
+    findRendering(element: KGraphElement): KRendering | undefined {
+        for (const data of element.data) {
+            if (data === null)
+                continue
+            if (isRendering(data)) {
+                return data
+            }
+        }
+        return undefined
     }
 
     public getContainingRegion(element: SChildElement & KGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {

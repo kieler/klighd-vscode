@@ -425,8 +425,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             const foundBounds = rendering.calculatedBounds
             bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
             bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
-            bounds.width = foundBounds.width
-            bounds.height = foundBounds.height
+            bounds.width = textWidth
+            bounds.height = textHeight
         }
         // if no bounds have been found yet, they should be in the boundsMap
         if (bounds.x === undefined && context.boundsMap !== undefined) {
@@ -434,8 +434,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             if (bounds !== undefined) {
                 bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
                 bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
-                bounds.width = foundBounds.width
-                bounds.height = foundBounds.height
+                bounds.width = textWidth
+                bounds.height = textHeight
             }
         }
         // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
