@@ -84,7 +84,7 @@ export class UseSmartZoom implements RenderOption {
 export class FullDetailRelativeThreshold implements RangeOption {
     static readonly ID: string = 'full-detail-relative-threshold'
     static readonly NAME: string = 'Full Detail Relative Threshold'
-    static readonly DEFAULT: number = 0.2
+    static readonly DEFAULT: number = 0.15
     readonly id: string = FullDetailRelativeThreshold.ID
     readonly name: string = FullDetailRelativeThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE

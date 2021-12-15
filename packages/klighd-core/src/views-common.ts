@@ -19,7 +19,7 @@ import { Bounds, Point, toDegrees } from 'sprotty/lib';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Decoration, HorizontalAlignment, KColoring, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering,
-    KRotation, KText, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, SKNode, Underline, VerticalAlignment
+    KRotation, KText, KTextUnderline, KVerticalAlignment, K_TEXT, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, SKLabel, SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
 import { KStyles, ColorStyle } from './views-styles';
 
@@ -308,10 +308,17 @@ export function camelToKebab(string: string): string {
  * @param kRotation The KRotation style of the rendering.
  * @param parent The parent SKGraphElement this rendering is contained in.
  * @param context The rendering context used to render this element.
+ * @param boundingBox If this method should not return the values to be applied to the SVG but the
+ *  box coordinates instead. Required to find the true bounding box of text renderings.
  * @param isEdge If the rendering is for an edge.
  */
-export function findBoundsAndTransformationData(rendering: KRendering, kRotation: KRotation | undefined, parent: SKGraphElement,
-    context: SKGraphModelRenderer, isEdge?: boolean): BoundsAndTransformation | undefined {
+export function findBoundsAndTransformationData(rendering: KRendering, styles: KStyles, parent: SKGraphElement,
+    context: SKGraphModelRenderer, isEdge?: boolean, boundingBox?: boolean): BoundsAndTransformation | undefined {
+    
+    if (rendering.type === K_TEXT && !boundingBox) {
+        return findTextBoundsAndTransformationData(rendering as KText, styles, parent, context)
+    }
+
     let bounds
     let decoration
 
@@ -369,7 +376,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
     }
 
     // Calculate the svg transformation function string for this element and all its child elements given the bounds and decoration.
-    const transformation = getTransformation(bounds, decoration, kRotation, isEdge)
+    const transformation = getTransformation(bounds, decoration, styles.kRotation, isEdge)
 
     return {
         bounds: bounds,
@@ -383,9 +390,8 @@ export function findBoundsAndTransformationData(rendering: KRendering, kRotation
  * @param styles The styles for this text rendering
  * @param parent The parent SKGraphElement this rendering is contained in.
  * @param context The rendering context used to render this element.
- * @param lines The number of lines the text rendering spans across.
  */
-export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement, context: SKGraphModelRenderer, lines: number) { // eslint-disable-line
+export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement | SKLabel, context: SKGraphModelRenderer): BoundsAndTransformation | undefined {
     let bounds: {
         x: number | undefined,
         y: number | undefined,
@@ -398,6 +404,19 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         height: undefined
     }
     let decoration
+
+    // Find the text to write first.
+    let text = undefined
+    // KText elements as renderings of labels have their text in the KLabel, not the KText
+    if ('text' in parent) { // if parent is KLabel
+        text = parent.text
+    } else {
+        text = rendering.text
+    }
+
+    // The text split into an array for each individual line
+    const lines = text?.split('\n')?.length ?? 1
+
     if (rendering.calculatedTextBounds !== undefined) {
         const textWidth = rendering.calculatedTextBounds.width
         const textHeight = rendering.calculatedTextBounds.height
@@ -406,8 +425,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             const foundBounds = rendering.calculatedBounds
             bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
             bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
-            bounds.width = foundBounds.width
-            bounds.height = foundBounds.height
+            bounds.width = textWidth
+            bounds.height = textHeight
         }
         // if no bounds have been found yet, they should be in the boundsMap
         if (bounds.x === undefined && context.boundsMap !== undefined) {
@@ -415,8 +434,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             if (bounds !== undefined) {
                 bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
                 bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
-                bounds.width = foundBounds.width
-                bounds.height = foundBounds.height
+                bounds.width = textWidth
+                bounds.height = textHeight
             }
         }
         // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
@@ -464,7 +483,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
     // Calculate the svg transformation function string for this element given the bounds and decoration.
     const transformation = getTransformation(bounds as Bounds, decoration, styles.kRotation, false, true)
     return {
-        bounds: bounds,
+        bounds: bounds as Bounds,
         transformation: transformation
     }
 }
