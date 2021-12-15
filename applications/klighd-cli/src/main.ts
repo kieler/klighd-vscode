@@ -25,8 +25,8 @@ import {
     bindServices,
     SetInitialBookmark,
     Bookmark,
+    SetPreferencesAction
 } from "@kieler/klighd-core";
-import { SetPreferencesAction } from "@kieler/klighd-core/lib/options/actions"
 import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
 import { showPopup } from "./popup";
 import { LSPConnection } from "./services/connection";
