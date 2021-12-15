@@ -19,7 +19,7 @@ import { injectable, inject } from "inversify";
 import { Action, ICommand } from "sprotty";
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
-import { PreferencesRegistry } from "../preferences-registry";
+import { AnimateGoToBookmark, RenderOptionsRegistry } from "../options/render-options-registry";
 import { AddBookmarkAction, Bookmark, DeleteBookmarkAction, GoToBookmarkAction, GoToBookmarkCommand, RenameBookmarkAction, SetInitialBookmark } from "./bookmark";
 
 /**
@@ -31,7 +31,7 @@ import { AddBookmarkAction, Bookmark, DeleteBookmarkAction, GoToBookmarkAction, 
 @injectable()
 export class BookmarkRegistry extends Registry {
 
-    @inject(DISymbol.PreferencesRegistry) private preferenceRegistry: PreferencesRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
 
     private _bookmarks: Bookmark[] = [];
     private _initialBookmark?: Bookmark;
@@ -40,7 +40,7 @@ export class BookmarkRegistry extends Registry {
     handle(action: Action): void | Action | ICommand {
         if (GoToBookmarkAction.isThisAction(action)) {
 
-            return new GoToBookmarkCommand(action, this.preferenceRegistry.preferences.animateGoToBookmark)
+            return new GoToBookmarkCommand(action, this.renderOptionsRegistry.getValue(AnimateGoToBookmark))
 
         } else if (SetInitialBookmark.isThisAction(action)) {
 

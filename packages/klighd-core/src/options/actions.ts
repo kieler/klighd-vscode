@@ -20,6 +20,7 @@ import {
     DisplayedActionData,
     LayoutOptionUIData,
     LayoutOptionValue,
+    PreferenceValue,
     SynthesisOption,
     ValuedSynthesisOption,
 } from "./option-models";
@@ -55,6 +56,30 @@ export class PerformOptionsActionAction implements Action {
     /** Type predicate to narrow an action to this action. */
     static isThisAction(action: Action): action is PerformOptionsActionAction {
         return action.kind === PerformOptionsActionAction.KIND;
+    }
+}
+
+/** Change the user preferences stored in the `klighd-core` container. */
+export class SetPreferencesAction implements Action {
+    static readonly KIND = "setPreferences";
+    readonly kind = SetPreferencesAction.KIND;
+
+    constructor(readonly options: PreferenceValue[]) { }
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is SetPreferencesAction {
+        return action.kind === SetPreferencesAction.KIND;
+    }
+}
+
+/** Resets all render options to default. */
+export class ResetPreferencesAction implements Action {
+    static readonly KIND = "resetPreferences";
+    readonly kind = ResetPreferencesAction.KIND;
+
+    /** Type predicate to narrow an action to this action. */
+    static isThisAction(action: Action): action is ResetPreferencesAction {
+        return action.kind === ResetPreferencesAction.KIND;
     }
 }
 
