@@ -25,7 +25,7 @@
     "watch": "run-p --print-label \"watch:*\"",
     "watch:app": "webpack --watch",
     "watch:server": "tsc -w -p ./tsconfig.server.json",
-    "prepackage": "echo 'exports.VERSION = \"'\"$npm_package_version\"'\";' > ./lib/version.js",
+    "prepackage": "echo 'exports.VERSION = \"\"$npm_package_version\"\";' > ./lib/version.js",
     "package": "pkg -c pkg.json ./lib/klighd.js",
     "start": "node ./lib/main.js",
     "socket": "node ./lib/main.js --ls_port=5007"
