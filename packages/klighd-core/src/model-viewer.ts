@@ -19,7 +19,7 @@ import { injectable, inject, postConstruct } from "inversify";
 import { InitializeCanvasBoundsAction, ModelViewer } from "sprotty";
 import { KlighdFitToScreenAction } from "./actions/actions";
 import { DISymbol } from "./di.symbols";
-import { PreferencesRegistry } from "./preferences-registry";
+import { ForceLightBackground, RenderOptionsRegistry, ResizeToFit } from "./options/render-options-registry";
 
 /**
  * Extend the {@link ModelViewer} to also dispatch a FitToScreenAction when the
@@ -34,17 +34,17 @@ export class KlighdModelViewer extends ModelViewer {
     // @ts-ignore
     @inject(DISymbol.Sidebar) private sidebar: unknown;
 
-    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
 
     @postConstruct()
     init(): void {
         // Most diagrams are not rendered with different themes in mind. In case
         // a diagram is hard to read, the user can force a light background.
         // This toggles such background if the user selects it.
-        this.preferencesRegistry.onChange(() => {
+        this.renderOptionsRegistry.onChange(() => {
             const baseDiv = document.querySelector(`#${this.options.baseDiv}`);
 
-            if (this.preferencesRegistry.preferences.forceLightBackground) {
+            if (this.renderOptionsRegistry.getValue(ForceLightBackground)) {
                 baseDiv?.classList.add("light-bg");
             } else {
                 baseDiv?.classList.remove("light-bg");
@@ -63,7 +63,7 @@ export class KlighdModelViewer extends ModelViewer {
             this.actiondispatcher.dispatch(InitializeCanvasBoundsAction.create(newBounds));
 
             // Fit the diagram to the new window size, if the user enabled this behavior
-            if (this.preferencesRegistry.preferences.resizeToFit)
+            if (this.renderOptionsRegistry.getValue(ResizeToFit))
                 this.actiondispatcher.dispatch(KlighdFitToScreenAction.create(false));
         }
     };

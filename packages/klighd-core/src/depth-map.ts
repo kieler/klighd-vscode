@@ -19,7 +19,7 @@ import { KGraphElement, KNode } from "@kieler/klighd-interactive/lib/constraint-
 import { SChildElement, SModelRoot } from "sprotty";
 import { Point, Viewport } from "sprotty-protocol";
 import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
-import { KContainerRendering, K_RECTANGLE } from "./skgraph-models";
+import { isContainerRendering, isRendering, KRendering } from "./skgraph-models";
 
 /**
  * The possible detail level of a KNode as determined by the DepthMap
@@ -166,11 +166,9 @@ export class DepthMap {
             return entry
         }
 
-        const relativeThresholdOption = renderingOptions.getValueForId(FullDetailRelativeThreshold.ID)
-        const relativeThreshold = relativeThresholdOption ?? FullDetailRelativeThreshold.DEFAULT
+        const relativeThreshold = renderingOptions.getValueOrDefault(FullDetailRelativeThreshold)
 
-        const scaleThresholdOption = renderingOptions.getValueForId(FullDetailScaleThreshold.ID)
-        const scaleThreshold = scaleThresholdOption ?? FullDetailScaleThreshold.DEFAULT
+        const scaleThreshold = renderingOptions.getValueOrDefault(FullDetailScaleThreshold)
 
         if (element.parent === element.root && element instanceof KNode) {
             const providedRegion = new Region(element)
@@ -188,7 +186,8 @@ export class DepthMap {
 
             entry = { containingRegion: parentEntry.providingRegion ?? parentEntry.containingRegion, providingRegion: undefined }
 
-            if (element.data.length > 0 && element.data[0].type == K_RECTANGLE && (element.data[0] as KContainerRendering).children[0] && element instanceof KNode) {
+            const kRendering = this.findRendering(element)
+            if (element instanceof KNode && kRendering && isContainerRendering(kRendering) && kRendering.children.length !== 0) {
 
                 entry = { containingRegion: entry.containingRegion, providingRegion: new Region(element) }
 
@@ -224,6 +223,22 @@ export class DepthMap {
         this.regionIndexMap.set(element.id, entry)
         return entry
     }
+    
+    /**
+     * Finds the KRendering in the given graph element.
+     * @param element The graph element to look up the rendering for.
+     * @returns The KRendering.
+     */
+    findRendering(element: KGraphElement): KRendering | undefined {
+        for (const data of element.data) {
+            if (data === null)
+                continue
+            if (isRendering(data)) {
+                return data
+            }
+        }
+        return undefined
+    }
 
     public getContainingRegion(element: SChildElement & KGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
         // initKGraphELement already checks if it is already initialized and if it is returns the existing value
@@ -242,11 +257,9 @@ export class DepthMap {
      */
     updateDetailLevels(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
 
-        const relativeThresholdOption = renderingOptions.getValueForId(FullDetailRelativeThreshold.ID)
-        const relativeThreshold = relativeThresholdOption ?? FullDetailRelativeThreshold.DEFAULT
+        const relativeThreshold = renderingOptions.getValueOrDefault(FullDetailRelativeThreshold)
 
-        const scaleThresholdOption = renderingOptions.getValueForId(FullDetailScaleThreshold.ID)
-        const scaleThreshold = scaleThresholdOption ?? FullDetailScaleThreshold.DEFAULT
+        const scaleThreshold = renderingOptions.getValueOrDefault(FullDetailScaleThreshold)
 
         if (this.viewport?.scroll === viewport.scroll
             && this.viewport?.zoom === viewport.zoom

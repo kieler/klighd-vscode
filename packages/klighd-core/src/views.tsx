@@ -55,7 +55,7 @@ export class SKGraphView implements IView {
 
 
         // Add depthMap to context for rendering, when required.
-        const smartZoomOption = this.renderOptionsRegistry.getValueForId(UseSmartZoom.ID)
+        const smartZoomOption = this.renderOptionsRegistry.getValue(UseSmartZoom)
 
         // Only enable, if option is found.
         const useSmartZoom = smartZoomOption ?? false
@@ -132,7 +132,7 @@ export class KNodeView implements IView {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
 
-            if (this.renderOptionsRegistry.getValueForId(ShowConstraintOption.ID) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
+            if (this.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }
@@ -176,6 +176,7 @@ export class KNodeView implements IView {
             }
             result.push(...children)
             result.push(...(ctx.titles.pop() ?? []))
+            ctx.positions.pop()
             return <g>{...result}</g>
         }
 
@@ -186,6 +187,7 @@ export class KNodeView implements IView {
         if (rendering !== undefined) {
             result.push(rendering)
         } else {
+            ctx.positions.pop()
             return <g>
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(node)}
@@ -204,6 +206,7 @@ export class KNodeView implements IView {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
         result.push(...(ctx.titles.pop() ?? []))
+        ctx.positions.pop()
         return <g>{...result}</g>
     }
 }
@@ -236,30 +239,37 @@ export class KPortView implements IView {
         const rendering = getRendering(port.data, port, new KStyles, ctx, this.mListener)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            return <g>
+            const element =  <g>
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
+
+            ctx.positions.pop()
+            return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
+        let element: VNode
         if (!port.areChildAreaChildrenRendered) {
-            return <g>
+            element = <g>
                 {rendering}
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
         } else if (!port.areNonChildAreaChildrenRendered) {
-            return <g>
+            element = <g>
                 {rendering}
                 {ctx.titles.pop() ?? []}
                 {ctx.renderNonChildAreaChildren(port)}
             </g>
         } else {
-            return <g>
+            element = <g>
                 {rendering}
                 {ctx.titles.pop() ?? []}
             </g>
         }
+
+        ctx.positions.pop()
+        return element
     }
 }
 
@@ -296,29 +306,36 @@ export class KLabelView implements IView {
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            return <g>
+            const element = <g>
                 {ctx.renderChildren(label).push(...ctx.titles.pop() ?? [])}
             </g>
+
+            ctx.positions.pop()
+            return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
+        let element: VNode
         if (!label.areChildAreaChildrenRendered) {
-            return <g>
+            element = <g>
                 {rendering}
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(label)}
             </g>
         } else if (!label.areNonChildAreaChildrenRendered) {
-            return <g>
+            element = <g>
                 {rendering}
                 {ctx.titles.pop() ?? []}
                 {ctx.renderNonChildAreaChildren(label)}
             </g>
         } else {
-            return <g>
+            element = <g>
                 {rendering}
                 {ctx.titles.pop() ?? []}
             </g>
         }
+
+        ctx.positions.pop()
+        return element
     }
 }
 

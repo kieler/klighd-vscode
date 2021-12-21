@@ -16,117 +16,158 @@
  */
 
 import { inject, injectable, postConstruct } from "inversify";
-import { ICommand } from "sprotty";
+import { IActionDispatcher, ICommand, TYPES } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { Registry } from "./base/registry";
-import { Connection, NotificationType } from "./services";
+import { ResetPreferencesAction, SetPreferencesAction } from "./options/actions";
+import { Preference, TransformationOptionType } from "./options/option-models";
+import { Connection, NotificationType, PersistenceStorage } from "./services";
 
-/** User preferences that change how the diagram view behaves. */
-export interface Preferences {
-    /**
-     * Resize the diagram to fit the viewport if it is redrawn after a model update
-     * or a viewport resize.
-     */
-    resizeToFit: boolean;
-
-    /** Uses a light background instead of an applied theme. */
-    forceLightBackground: boolean;
-
-    /** Indicates whether or not a text selection should select the corresponding diagram part. */
-    shouldSelectDiagram: boolean;
-
-    /** Indicates whether or nat a selection in the diagram should also highlight the corresponding text. */
-    shouldSelectText: boolean;
-
-    /** Whether going to a Bookmark should be animated */
-    animateGoToBookmark: boolean;
-
-    /** 
-     * Instructs the server if the diagram should be sent incrementally in pieces. 
-     */
-    incrementalDiagramGenerator: boolean;
+/**
+ * Indicates whether or not a text selection should select the corresponding diagram part. */
+export class ShouldSelectDiagramOption implements Preference {
+    static readonly ID: string = "diagram.shouldSelectDiagram";
+    static readonly NAME: string = "Text Selects Diagram";
+    readonly id: string = ShouldSelectDiagramOption.ID;
+    readonly name: string = ShouldSelectDiagramOption.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = false;
+    currentValue = false;
+    notifyServer = true;
 }
 
-/** {@link Registry} that stores user preferences which change the behavior of the diagram view. */
+/**
+ * Indicates whether or nat a selection in the diagram should also highlight the corresponding text.
+ */
+export class ShouldSelectTextOption implements Preference {
+    static readonly ID: string = "diagram.shouldSelectText";
+    static readonly NAME: string = "Diagram Selects Text";
+    readonly id: string = ShouldSelectTextOption.ID;
+    readonly name: string = ShouldSelectTextOption.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = true;
+    currentValue = true;
+    notifyServer = true;
+}
+
+/** 
+ * Instructs the server if the diagram should be sent incrementally in pieces. 
+ */
+export class IncrementalDiagramGeneratorOption implements Preference {
+    static readonly ID: string = "diagram.incrementalDiagramGenerator";
+    static readonly NAME: string = "Incremental Diagram Generator";
+    readonly id: string = IncrementalDiagramGeneratorOption.ID;
+    readonly name: string = IncrementalDiagramGeneratorOption.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = false;
+    currentValue = false;
+    notifyServer = true;
+}
+
+export interface PreferenceType {
+    readonly ID: string,
+    readonly NAME: string,
+    new(): Preference,
+}
+
+/**
+ * {@link Registry} that stores user preferences which change the behavior of the diagram view.
+ * 
+ * This registry should store options or preferences that are not provided by the Synthesis as LayoutOptions but that also
+ * should be send to the server.
+ * In contrast to RenderOptions they are cannot be solely handled by the client.
+ */
 @injectable()
 export class PreferencesRegistry extends Registry {
-    private _preferences: Preferences;
+    private _preferences: Map<string, Preference> = new Map();
 
     @inject(Connection) private connection: Connection;
-
-    get preferences(): Preferences {
-        return this._preferences;
-    }
+    @inject(PersistenceStorage) private storage: PersistenceStorage;
+    @inject(TYPES.IActionDispatcher) private dispatcher: IActionDispatcher;
 
     constructor() {
         super();
-        // Initialize default settings
-        this._preferences = {
-            resizeToFit: true,
-            forceLightBackground: false,
-            shouldSelectDiagram: true,
-            shouldSelectText: false,
-            animateGoToBookmark: true,
-            incrementalDiagramGenerator: false,
-        };
+        // Add available preferences
+        this.register(ShouldSelectDiagramOption);
+        this.register(ShouldSelectTextOption);
+        this.register(IncrementalDiagramGeneratorOption);
     }
 
     @postConstruct()
     init(): void {
-        // Notify the server about initial preferences.
-        this.notifyServer();
+        this.storage.onClear(this.handleClear.bind(this));
+        this.storage.getItem<Record<string, unknown>>("preference").then((data) => {
+            if (data) this.loadPersistedData(data);
+
+        }).then(() => {
+            // Wait until values are loaded before notifying.
+            this.notifyListeners();
+            // Notify the server about initial preferences.
+            this.notifyServer();
+        });
+    }
+
+    /**
+     * Restores options that where previously persisted in storage.
+     * Since preferences are not provided by the server, they have to be retrieved from storage.
+     */
+    private loadPersistedData(data: Record<string, unknown>) {
+        for (const entry of Object.entries(data)) {
+            const option = this._preferences.get(entry[0]);
+            if (!option) continue;
+            option.currentValue = entry[1];
+        }
+    }
+
+    register(Option: PreferenceType): void {
+        this._preferences.set(Option.ID, new Option())
     }
 
     handle(action: Action): void | Action | ICommand {
         if (SetPreferencesAction.isThisAction(action)) {
-            this._preferences = {
-                ...this._preferences,
-                resizeToFit: action.preferences.resizeToFit ?? this._preferences.resizeToFit,
-                forceLightBackground:
-                    action.preferences.forceLightBackground ??
-                    this.preferences.forceLightBackground,
-                shouldSelectDiagram:
-                    action.preferences.shouldSelectDiagram ?? this._preferences.shouldSelectDiagram,
-                shouldSelectText:
-                    action.preferences.shouldSelectText ?? this._preferences.shouldSelectText,
-                animateGoToBookmark: action.preferences.animateGoToBookmark ?? this._preferences.animateGoToBookmark,
-                incrementalDiagramGenerator: action.preferences.incrementalDiagramGenerator ?? this._preferences.incrementalDiagramGenerator,
-            };
+
+            // Update storage values
+            this.storage.setItem<Record<string, boolean>>("preference", (prev) => {
+                const obj: Record<string, boolean>  = prev ?? {};
+                for (const option of action.options) {
+                    obj[option.id] = option.value;
+                    // Update local value from storage
+                    const localPreference = this._preferences.get(option.id)
+                    if (localPreference) {
+                        localPreference.currentValue = option.value
+                    }
+                }
+                return obj;
+            });
             this.notifyListeners();
             this.notifyServer();
+        } else if (ResetPreferencesAction.isThisAction(action)) {
+            this._preferences.forEach((option) => {
+                option.currentValue = option.initialValue;
+            });
+            this.notifyListeners();
+
         }
     }
 
     /** Notifies the server about changed preferences that are supported by the server. */
     private notifyServer() {
-        this.connection.onReady().then(() => {
-            this.connection.sendNotification(NotificationType.SetPreferences, {
-                "diagram.shouldSelectDiagram": this._preferences.shouldSelectDiagram,
-                "diagram.shouldSelectText": this.preferences.shouldSelectText,
-                "diagram.incrementalDiagramGenerator": this.preferences.incrementalDiagramGenerator,
-            });
+        this.connection.onReady().then(async () => {
+            const obj = {
+                "diagram.shouldSelectDiagram": this.getValue(ShouldSelectDiagramOption),
+                "diagram.shouldSelectText": this.getValue(ShouldSelectTextOption),
+                "diagram.incrementalDiagramGenerator": this.getValue(IncrementalDiagramGeneratorOption),
+            }
+            this.connection.sendNotification(NotificationType.SetPreferences, obj);
         });
     }
-}
 
-/** Change the user preferences stored in the `klighd-core` container. */
-export interface SetPreferencesAction extends Action {
-    kind: typeof SetPreferencesAction.KIND
-    preferences: Partial<Preferences>
-}
-
-export namespace SetPreferencesAction {
-    export const KIND = "setPreferences"
-
-    export function create(preferences: Partial<Preferences>): SetPreferencesAction {
-        return {
-            kind: KIND,
-            preferences,
-        }
+    getValue(option: PreferenceType): any | undefined {
+        return this._preferences.get(option.ID)?.currentValue
     }
 
-    /** Type predicate to narrow an action to this action. */
-    export function isThisAction(action: Action): action is SetPreferencesAction {
-        return action.kind === SetPreferencesAction.KIND;
+    /** Reset all stored options when the storage gets cleared from outside. */
+    private handleClear() {
+        this.dispatcher.dispatch(ResetPreferencesAction.create());
     }
 }

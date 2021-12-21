@@ -114,6 +114,11 @@ export interface KRendering extends KGraphData, KStyleHolder {
      * A possible tooltip that can be shown for this rendering.
      */
     tooltip?: string
+
+    /**
+     * Whether the server pre-determined this KRendering to be the title of a node or not. 
+     */
+    isNodeTitle?: boolean
     /**
      * The unique identifier of this rendering.
      */
@@ -250,11 +255,6 @@ export interface KText extends KRendering {
      * The server pre-calculated line heights for each individual line.
      */
     calculatedTextLineHeights?: number[]
-
-    /**
-     * Whether the server pre-determined this KText to be the title of a node or not. 
-     */
-    isNodeTitle: boolean
 }
 
 /**

@@ -15,11 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SetPreferencesAction } from "@kieler/klighd-core";
 import { SprottyDiagramIdentifier, SprottyWebviewOptions } from "sprotty-vscode";
 import { SprottyLspWebview } from "sprotty-vscode/lib/lsp";
-import { workspace, commands } from "vscode";
-import { extensionId, contextKeys } from "./constants";
+import { commands } from "vscode";
+import { contextKeys } from "./constants";
 
 /**
  * Extends the SprottyLspWebview to communicate user preferences to the container,
@@ -43,14 +42,6 @@ export class KLighDWebview extends SprottyLspWebview {
 
         this.trackedIdentifier = options.identifier;
         this.setSyncWithEditor(true);
-
-        // Dispatch preferences when the webview is ready. The current configuration
-        // should only dispatched initially and not sync the current webview with changes.
-        // If this changes in the future, use `workspace.onDidChangeConfiguration`
-        // to sync changes that should be updated after initialization.
-        this.ready().then(() => {
-            this.sendConfiguration();
-        });
 
         // Clear our own message queue every time the webview is visible
         this.disposables.push(
@@ -82,19 +73,6 @@ export class KLighDWebview extends SprottyLspWebview {
     async forceReloadContent(newId: SprottyDiagramIdentifier): Promise<void> {
         this.trackedIdentifier = newId;
         super.reloadContent(newId);
-    }
-
-    private sendConfiguration() {
-        const config = workspace.getConfiguration(extensionId);
-        this.dispatch(
-            SetPreferencesAction.create({
-                resizeToFit: config.get<boolean>("initialResizeToFit"),
-                forceLightBackground: config.get<boolean>("useLightBackground"),
-                shouldSelectDiagram: config.get<boolean>("initialShouldSelectDiagram"),
-                shouldSelectText: config.get<boolean>("initialShouldSelectText"),
-                incrementalDiagramGenerator: config.get<boolean>("initialIncrementalDiagramGenerator"),
-            })
-        );
     }
 
     /** Changes the behavior of "sync with editor". If disabled, the diagram view will not update when the active editor changes. */

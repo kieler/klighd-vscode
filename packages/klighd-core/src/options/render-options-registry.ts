@@ -23,9 +23,39 @@ import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
 
+
+/**
+ * Resize the diagram to fit the viewport if it is redrawn after a model update
+ * or a viewport resize.
+ */
+ export class ResizeToFit implements RenderOption {
+    static readonly ID: string = 'resize-to-fit';
+    static readonly NAME: string = 'Resize To Fit';
+    static readonly DEFAULT: boolean = true
+    readonly id: string = ResizeToFit.ID;
+    readonly name: string = ResizeToFit.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ResizeToFit.DEFAULT;
+    currentValue = ResizeToFit.DEFAULT;
+}
+
+/**
+ * Uses a light background instead of an applied theme.
+ */
+export class ForceLightBackground implements RenderOption {
+    static readonly ID: string = 'force-light-background';
+    static readonly NAME: string = 'Use Light Background';
+    static readonly DEFAULT: boolean = false
+    readonly id: string = ForceLightBackground.ID;
+    readonly name: string = ForceLightBackground.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ForceLightBackground.DEFAULT;
+    currentValue = ForceLightBackground.DEFAULT;
+}
+
 export class ShowConstraintOption implements RenderOption {
-    static readonly ID: string = "show-constraints";
-    static readonly NAME: string = "Show Constraint";
+    static readonly ID: string = 'show-constraints';
+    static readonly NAME: string = 'Show Constraint';
     readonly id: string = ShowConstraintOption.ID;
     readonly name: string = ShowConstraintOption.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
@@ -55,7 +85,7 @@ export class UseSmartZoom implements RenderOption {
 export class FullDetailRelativeThreshold implements RangeOption {
     static readonly ID: string = 'full-detail-relative-threshold'
     static readonly NAME: string = 'Full Detail Relative Threshold'
-    static readonly DEFAULT: number = 0.2
+    static readonly DEFAULT: number = 0.15
     readonly id: string = FullDetailRelativeThreshold.ID
     readonly name: string = FullDetailRelativeThreshold.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
@@ -182,6 +212,7 @@ export class UseMinimumLineWidth implements RenderOption {
 export class MinimumLineWidth implements RangeOption {
     static readonly ID: string = 'minimum-line-width'
     static readonly NAME: string = 'Minimum Line Width'
+    static readonly DEFAULT: number = 1
     readonly id: string = MinimumLineWidth.ID
     readonly name: string = MinimumLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
@@ -210,6 +241,31 @@ export class PaperShadows implements RenderOption {
     currentValue = PaperShadows.DEFAULT
 }
 
+/**
+ * Whether going to a Bookmark should be animated
+ */
+export class AnimateGoToBookmark implements RenderOption {
+    static readonly ID: string = 'animate-go-to-bookmark';
+    static readonly NAME: string = 'Animate Go To Bookmark';
+    static readonly DEFAULT: boolean = true
+    readonly id: string = AnimateGoToBookmark.ID;
+    readonly name: string = AnimateGoToBookmark.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = AnimateGoToBookmark.DEFAULT;
+    currentValue = true;
+}
+
+
+export interface RenderOptionType {
+    readonly ID: string,
+    readonly NAME: string,
+    new(): RenderOption,
+}
+
+export interface RenderOptionDefault extends RenderOptionType {
+    readonly DEFAULT: any,
+}
+
 /** {@link Registry} that stores and updates different render options. */
 @injectable()
 export class RenderOptionsRegistry extends Registry {
@@ -220,27 +276,30 @@ export class RenderOptionsRegistry extends Registry {
     constructor() {
         super();
         // Add available render options to this registry
-        this._renderOptions.set(ShowConstraintOption.ID, new ShowConstraintOption());
+        this.register(ResizeToFit);
+        this.register(ForceLightBackground);
+        this.register(ShowConstraintOption);
 
-        this._renderOptions.set(UseSmartZoom.ID, new UseSmartZoom());
-        this._renderOptions.set(FullDetailRelativeThreshold.ID, new FullDetailRelativeThreshold());
-        this._renderOptions.set(FullDetailScaleThreshold.ID, new FullDetailScaleThreshold());
+        this.register(UseSmartZoom);
+        this.register(FullDetailRelativeThreshold)
+        this.register(FullDetailScaleThreshold)
 
-        this._renderOptions.set(SimplifySmallText.ID, new SimplifySmallText());
-        this._renderOptions.set(TextSimplificationThreshold.ID, new TextSimplificationThreshold());
+        this.register(SimplifySmallText);
+        this.register(TextSimplificationThreshold);
 
-        this._renderOptions.set(TitleScalingFactor.ID, new TitleScalingFactor());
-        this._renderOptions.set(TitleOverlayThreshold.ID, new TitleOverlayThreshold());
+        this.register(TitleScalingFactor);
+        this.register(TitleOverlayThreshold);
 
-        this._renderOptions.set(UseMinimumLineWidth.ID, new UseMinimumLineWidth());
-        this._renderOptions.set(MinimumLineWidth.ID, new MinimumLineWidth());
+        this.register(UseMinimumLineWidth);
+        this.register(MinimumLineWidth);
 
-        this._renderOptions.set(PaperShadows.ID, new PaperShadows());
+        this.register(PaperShadows)
+        this.register(AnimateGoToBookmark);
     }
 
     @postConstruct()
     init(): void {
-        this.storage.getItem<Record<string, unknown>>("render").then((data) => {
+        this.storage.getItem<Record<string, unknown>>('render').then((data) => {
             if (data) this.loadPersistedData(data);
         });
     }
@@ -257,6 +316,10 @@ export class RenderOptionsRegistry extends Registry {
             option.currentValue = entry[1];
         }
         this.notifyListeners();
+    }
+
+    register(Option: RenderOptionType): void {
+        this._renderOptions.set(Option.ID, new Option())
     }
 
     handle(action: Action): void | Action | ICommand {
@@ -282,7 +345,11 @@ export class RenderOptionsRegistry extends Registry {
         return Array.from(this._renderOptions.values());
     }
 
-    getValueForId(id: string): any | undefined {
-        return this._renderOptions.get(id)?.currentValue;
+    getValue(Option: RenderOptionType): any | undefined {
+        return this._renderOptions.get(Option.ID)?.currentValue;
+    }
+
+    getValueOrDefault(Option: RenderOptionDefault): any {
+        return this.getValue(Option) ?? Option.DEFAULT
     }
 }

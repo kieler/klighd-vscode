@@ -134,37 +134,7 @@
                     "group": "navigation"
                 }
             ]
-        },
-        "configuration": [
-            {
-                "title": "KLighD Diagram",
-                "properties": {
-                    "klighd-vscode.initialResizeToFit": {
-                        "description": "Initial value for new diagram views about resizing the diagram to fit the viewport when it is redrawn.",
-                        "type": "boolean",
-                        "default": "true"
-                    },
-                    "klighd-vscode.useLightBackground": {
-                        "description": "Use a light color as the initial diagram view background color. By default, the diagram view uses the current theme for the background color. However, this can make some diagrams hard to read.",
-                        "type": "boolean"
-                    },
-                    "klighd-vscode.initialShouldSelectDiagram": {
-                        "description": "Initial value for new diagram views determining if selecting a text segment should select the corresponding element in the displayed diagram.",
-                        "type": "boolean",
-                        "default": "true"
-                    },
-                    "klighd-vscode.initialShouldSelectText": {
-                        "description": "Initial value for new diagram views determining if selecting an element in the displayed diagram should also select the corresponding text segment. Warning: this option currently increases all diagram generation times by up to 50%.",
-                        "type": "boolean"
-                    },
-                    "klighd-vscode.initialIncrementalDiagramGenerator": {
-                        "description": "Initial value for new diagram views determining if the incremental diagram generator should be used. This generator is experimental for piece-wise diagram generation (faster feedback, slower total time).",
-                        "type": "boolean",
-                        "default": "false"
-                    }
-                }
-            }
-        ]
+        }
     },
     "scripts": {
         "clean": "rm -rf dist klighd-vscode.vsix",

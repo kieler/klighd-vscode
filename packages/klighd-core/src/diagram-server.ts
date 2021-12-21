@@ -68,7 +68,8 @@ import { DISymbol } from "./di.symbols";
 import { GridDiagramPieceRequestManager, IDiagramPieceRequestManager } from './diagram-piece-request-manager';
 import { RequestKlighdPopupModelAction } from "./hover/hover";
 import { PopupModelProvider } from "./hover/popup-provider";
-import { PreferencesRegistry } from "./preferences-registry";
+import { RenderOptionsRegistry, ResizeToFit } from "./options/render-options-registry";
+import { IncrementalDiagramGeneratorOption, PreferencesRegistry } from "./preferences-registry";
 import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
 import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
@@ -88,6 +89,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     @inject(SessionStorage) private sessionStorage: SessionStorage;
     @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
     @inject(DISymbol.BookmarkRegistry) private bookmarkRegistry: BookmarkRegistry;
 
 
@@ -110,7 +112,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         if (wasDiagramModelUpdated) {
             this.actionDispatcher.dispatch(UpdateDepthMapModelAction.create());
 
-            if (this.preferencesRegistry.preferences.incrementalDiagramGenerator) {
+            if (this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)) {
                 // After model is received request first piece.
 
                 // TODO: Here some state aware process should handle requesting pieces
@@ -122,7 +124,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
             }
             if (this.bookmarkRegistry.initialBookmark) {
                 this.actionDispatcher.dispatch(GoToBookmarkAction.create(this.bookmarkRegistry.initialBookmark))
-            } else if (this.preferencesRegistry.preferences.resizeToFit) {
+            } else if (this.renderOptionsRegistry.getValue(ResizeToFit)) {
                 this.actionDispatcher.dispatch(KlighdFitToScreenAction.create(true));
             }
         } else if (message.action.kind === SetDiagramPieceAction.KIND) {
