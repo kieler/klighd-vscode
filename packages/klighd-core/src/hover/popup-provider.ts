@@ -17,13 +17,15 @@
 
 import { injectable } from "inversify";
 import {
-    HtmlRootSchema,
     IPopupModelProvider,
-    PreRenderedElementSchema,
-    RequestPopupModelAction,
-    SModelElementSchema,
-    SModelRootSchema,
 } from "sprotty";
+import {
+    HtmlRoot as HtmlRootSchema,
+    PreRenderedElement as PreRenderedElementSchema,
+    RequestPopupModelAction,
+    SModelElement as SModelElementSchema,
+    SModelRoot as SModelRootSchema,
+} from "sprotty-protocol";
 import { isSKGraphElement, SKGraphElement } from "../skgraph-models";
 import { findRendering } from "../skgraph-utils";
 import { RequestKlighdPopupModelAction } from "./hover";
@@ -37,7 +39,7 @@ export class PopupModelProvider implements IPopupModelProvider {
     ): SModelRootSchema | undefined {
         if (
             elementSchema &&
-            request instanceof RequestKlighdPopupModelAction &&
+            RequestKlighdPopupModelAction.isThisAction(request) &&
             isSKGraphElement(request.parent) &&
             request.element !== undefined
         ) {

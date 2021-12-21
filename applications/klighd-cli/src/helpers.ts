@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Viewport } from "sprotty";
+import { Viewport } from "sprotty-protocol";
 import { getBookmarkViewport as getViewport } from "@kieler/klighd-core";
 
 /** Returns a promise that resolves after a specific amount of milliseconds. */

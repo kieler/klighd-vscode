@@ -9,7 +9,8 @@
     "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
     "rules": {
         "@typescript-eslint/no-explicit-any": "off",
-        "@typescript-eslint/ban-ts-comment": "off"
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-namespace": "off"
     },
     "ignorePatterns": ["**/*.d.ts", "lib", "dist", "webpack.config.js"]
 }

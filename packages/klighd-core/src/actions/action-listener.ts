@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2019 by
+ * Copyright 2018-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,7 +14,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { Action, MouseListener, SModelElement } from 'sprotty';
+import { MouseListener, SModelElement } from 'sprotty';
+import { Action } from "sprotty-protocol";
 import { KAction, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
 import { findRendering, getSemanticElement } from '../skgraph-utils';
 import { PerformActionAction } from './actions';
@@ -78,7 +79,7 @@ export class ActionListener extends MouseListener {
                 && this.modifierStateMatches(action.ctrlCmdPressed, event.ctrlKey)
                 && this.modifierStateMatches(action.shiftPressed, event.shiftKey)
                 && this.eventsMatch(event, eventType, action.trigger)) {
-                actions.push(new PerformActionAction(action.actionId, target.id, semanticElementId, target.root.revision))
+                actions.push(PerformActionAction.create(action.actionId, target.id, semanticElementId, target.root.revision))
             }
         })
         return actions

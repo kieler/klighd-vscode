@@ -87,7 +87,7 @@ export class KLighDWebview extends SprottyLspWebview {
     private sendConfiguration() {
         const config = workspace.getConfiguration(extensionId);
         this.dispatch(
-            new SetPreferencesAction({
+            SetPreferencesAction.create({
                 resizeToFit: config.get<boolean>("initialResizeToFit"),
                 forceLightBackground: config.get<boolean>("useLightBackground"),
                 shouldSelectDiagram: config.get<boolean>("initialShouldSelectDiagram"),

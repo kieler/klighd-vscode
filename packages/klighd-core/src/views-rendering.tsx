@@ -16,7 +16,8 @@
  */
 /** @jsx svg */
 import { VNode } from 'snabbdom';
-import { Bounds, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Bounds } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { DetailLevel } from './depth-map';

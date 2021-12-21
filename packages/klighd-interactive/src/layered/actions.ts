@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,28 +15,44 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Action } from 'sprotty';
+import { Action } from 'sprotty-protocol';
 import { DeleteConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types';
 
 /**
  * Sent from client to server to set a position and layer constraint.
  */
-export class SetStaticConstraintAction implements Action {
-    static readonly KIND: string = 'setStaticConstraint'
-    readonly kind = SetStaticConstraintAction.KIND
+export interface SetStaticConstraintAction extends Action {
+    kind: typeof SetStaticConstraintAction.KIND
+    constraint: StaticConstraint
+}
 
-    constructor(public readonly constraint: StaticConstraint) {
+export namespace SetStaticConstraintAction {
+    export const KIND = 'setStaticConstraint'
+
+    export function create(constraint: StaticConstraint): SetStaticConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
 /**
  * Sent from client to server to delete position and layer constraint on a node.
  */
-export class DeleteStaticConstraintAction implements Action {
-    static readonly KIND: string = 'deleteStaticConstraint'
-    readonly kind = DeleteStaticConstraintAction.KIND
+export interface DeleteStaticConstraintAction extends Action {
+    kind: typeof DeleteStaticConstraintAction.KIND
+    constraint: DeleteConstraint
+}
 
-    constructor(public readonly constraint: DeleteConstraint) {
+export namespace DeleteStaticConstraintAction {
+    export const KIND = 'deleteStaticConstraint'
+
+    export function create(constraint: DeleteConstraint): DeleteStaticConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
@@ -44,11 +60,19 @@ export class DeleteStaticConstraintAction implements Action {
  * Sent from client to server to delete position constraint on a node.
  * Currently unused.
  */
-export class DeletePositionConstraintAction implements Action {
-    static readonly KIND: string = 'deletePositionConstraint'
-    readonly kind = DeletePositionConstraintAction.KIND
+export interface DeletePositionConstraintAction extends Action {
+    kind: typeof DeletePositionConstraintAction.KIND
+    constraint: DeleteConstraint
+}
 
-    constructor(public readonly constraint: DeleteConstraint) {
+export namespace DeletePositionConstraintAction {
+    export const KIND = 'deletePositionConstraint'
+
+    export function create(constraint: DeleteConstraint): DeletePositionConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
@@ -56,32 +80,56 @@ export class DeletePositionConstraintAction implements Action {
  * Sent from client to server to delete layer constraint on a node.
  * Currently unused.
  */
-export class DeleteLayerConstraintAction implements Action {
-    static readonly KIND: string = 'deleteLayerConstraint'
-    readonly kind = DeleteLayerConstraintAction.KIND
+export interface DeleteLayerConstraintAction extends Action {
+    kind: typeof DeleteLayerConstraintAction.KIND
+    constraint: DeleteConstraint
+}
 
-    constructor(public readonly constraint: DeleteConstraint) {
+export namespace DeleteLayerConstraintAction {
+    export const KIND = 'deleteLayerConstraint'
+
+    export function create(constraint: DeleteConstraint): DeleteLayerConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
 /**
  * Sent from client to server to set a layer constraint on a node.
  */
-export class SetLayerConstraintAction implements Action {
-    static readonly KIND: string = 'setLayerConstraint'
-    readonly kind = SetLayerConstraintAction.KIND
+export interface SetLayerConstraintAction extends Action {
+    kind: typeof SetLayerConstraintAction.KIND
+    constraint: LayerConstraint
+}
 
-    constructor(public readonly constraint: LayerConstraint) {
+export namespace SetLayerConstraintAction {
+    export const KIND = 'setLayerConstraint'
+
+    export function create(constraint: LayerConstraint): SetLayerConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
 /**
  * Sent from client to server to set a position constraint on a node.
  */
-export class SetPositionConstraintAction implements Action {
-    static readonly KIND: string = 'setPositionConstraint'
-    readonly kind = SetPositionConstraintAction.KIND
+export interface SetPositionConstraintAction extends Action {
+    kind: typeof SetPositionConstraintAction.KIND
+    constraint: PositionConstraint
+}
 
-    constructor(public readonly constraint: PositionConstraint) {
+export namespace SetPositionConstraintAction {
+    export const KIND = 'setPositionConstraint'
+
+    export function create(constraint: PositionConstraint): SetPositionConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }

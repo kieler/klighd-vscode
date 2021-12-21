@@ -20,7 +20,7 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, svg, TYPES } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DepthMap, DetailLevel } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
@@ -86,7 +86,6 @@ export class KNodeView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
-    @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
     render(node: SKNode, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles

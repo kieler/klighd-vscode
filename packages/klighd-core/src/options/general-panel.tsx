@@ -19,18 +19,20 @@
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
-import { Action, CenterAction, html, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { html, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Action, CenterAction } from "sprotty-protocol";
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
+import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { DISymbol } from "../di.symbols";
-import { SynthesisPicker } from "./components/synthesis-picker";
+import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
+import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
 import { SidebarPanel } from "../sidebar";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { RenderOptionsRegistry } from "./render-options-registry";
-import { OptionsRenderer } from "./options-renderer";
-import { PreferencesRegistry, SetPreferencesAction } from "../preferences-registry";
 import { CheckOption } from "./components/option-inputs";
-import { CreateBookmarkAction } from "../bookmarks/bookmark";
+import { SynthesisPicker } from "./components/synthesis-picker";
+import { OptionsRenderer } from "./options-renderer";
+import { RenderOptionsRegistry } from "./render-options-registry";
 
 /** Type for available quick actions. */
 type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
@@ -45,7 +47,7 @@ export class GeneralPanel extends SidebarPanel {
     readonly position = -10;
 
     /** Quick actions reference for this panel */
-    private quickActions: [key: PossibleAction, title: string, icon: VNode, action: Action][];
+    private quickActions: [key: PossibleAction, title: string, iconId: string, action: Action][];
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
@@ -64,38 +66,38 @@ export class GeneralPanel extends SidebarPanel {
             [
                 "center",
                 "Center diagram",
-                <i attrs={{ "data-feather": "maximize" }}></i>,
-                new CenterAction([], true),
+                "maximize",
+                CenterAction.create([], { animate: true }),
             ],
             [
                 "fit",
                 "Fit to screen",
-                <i attrs={{ "data-feather": "maximize-2" }}></i>,
-                new KlighdFitToScreenAction(true),
+                "maximize-2",
+                KlighdFitToScreenAction.create(true),
             ],
             [
                 "layout",
                 "Layout diagram",
-                <i attrs={{ "data-feather": "layout" }}></i>,
-                new RefreshLayoutAction(),
+                "layout",
+                RefreshLayoutAction.create(),
             ],
             [
                 "refresh",
                 "Refresh diagram",
-                <i attrs={{ "data-feather": "refresh-cw" }}></i>,
-                new RefreshDiagramAction(),
+                "refresh-cw",
+                RefreshDiagramAction.create(),
             ],
             [
                 "export",
                 "Export as SVG",
-                <i attrs={{ "data-feather": "save" }}></i>,
-                new RequestExportSvgAction(),
+                "save",
+                RequestExportSvgAction.create(),
             ],
             [
                 "create-bookmark",
                 "Bookmark",
-                <i attrs={{ "data-feather": "bookmark" }} />,
-                new CreateBookmarkAction()
+                "bookmark",
+                CreateBookmarkAction.create()
             ],
         ];
     }
@@ -120,7 +122,7 @@ export class GeneralPanel extends SidebarPanel {
                                 class-options__icon-button="true"
                                 on-click={() => this.handleQuickActionClick(action[0])}
                             >
-                                {action[2]}
+                                <FeatherIcon iconId={action[2]}/>
                             </button>
                         ))}
                     </div>
@@ -183,11 +185,11 @@ export class GeneralPanel extends SidebarPanel {
     }
 
     private handleSynthesisPickerChange(newId: string) {
-        this.actionDispatcher.dispatch(new SetSynthesisAction(newId));
+        this.actionDispatcher.dispatch(SetSynthesisAction.create(newId));
     }
 
     private handlePreferenceChange(key: string, newValue: any) {
-        this.actionDispatcher.dispatch(new SetPreferencesAction({ [key]: newValue }));
+        this.actionDispatcher.dispatch(SetPreferencesAction.create({ [key]: newValue }));
     }
 
     private handleQuickActionClick(type: PossibleAction) {
@@ -199,6 +201,6 @@ export class GeneralPanel extends SidebarPanel {
     }
 
     get icon(): VNode {
-        return <i attrs={{ "data-feather": "settings" }}></i>;
+        return <FeatherIcon iconId={"settings"}/>;
     }
 }

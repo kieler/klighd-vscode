@@ -29,12 +29,11 @@ export interface ISidebarPanel {
     readonly title: string;
     /**
      * Icon used for the corresponding panel toggle.
-     * For an icon source you should use feather-icons (https://feathericons.com).
+     * For an icon source you should use feather-icons (https://feathericons.com)
+     * and the FeatherIcon method from the folder feather-icons-snabbdom.
      *
-     * Usage example: `<i attrs={{ "data-feather": "settings" }}></i>` where
+     * Usage example: `<FeatherIcon iconId={"settings"}/>` where
      * settings is the name of the icon.
-     *
-     * The `<i>` tag will be replaced with the corresponding svg by feather.
      */
     readonly icon: VNode;
 

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020 by
+ * Copyright 2019-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,8 +16,8 @@
  */
 
 import { injectable } from 'inversify';
-import { Action, MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
-import { isUndefined } from 'util';
+import { MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
+import { Action } from "sprotty-protocol"
 import { RefreshDiagramAction } from './actions';
 import { KNode } from './constraint-classes';
 import { filterKNodes } from './helper-methods';
@@ -88,7 +88,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
 
                 const algorithm = ((targetNode as KNode).parent as KNode).properties.algorithm
                 // Set algorithm specific data
-                if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
+                if (algorithm === undefined || algorithm.endsWith('layered')) {
                     this.data.set('layered', getLayers(this.nodes, this.target.direction))
                 } else if (algorithm.endsWith('rectpacking')) {
                     // Do nothing
@@ -100,12 +100,12 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
                 if (event.altKey) {
-                    if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
-                        return [new DeleteStaticConstraintAction({
+                    if (algorithm === undefined || algorithm.endsWith('layered')) {
+                        return [DeleteStaticConstraintAction.create({
                             id: this.target.id
                         })]
                     } else if (algorithm.endsWith('rectpacking')) {
-                        return [new RectPackDeletePositionConstraintAction({
+                        return [RectPackDeletePositionConstraintAction.create({
                             id: this.target.id
                         })]
                     }
@@ -131,7 +131,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             this.target.shadow = false
             let result = super.mouseUp(this.target, event)
             const algorithm = (this.target.parent as KNode).properties.algorithm
-            if (isUndefined(algorithm) || algorithm.endsWith('layered')) {
+            if (algorithm === undefined || algorithm.endsWith('layered')) {
                 result = [setProperty(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
             } else if (algorithm.endsWith('rectpacking')) {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
@@ -147,11 +147,11 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             if (result.some(action => action.kind === RefreshDiagramAction.KIND)) {
                 return result
             } else {
-                return result.concat([new RefreshDiagramAction()])
+                return result.concat([RefreshDiagramAction.create()])
             }
         } else if (this.target) {
             this.target.selected = false
-            const result = super.mouseUp(this.target, event).concat([new RefreshDiagramAction()]);
+            const result = super.mouseUp(this.target, event).concat([RefreshDiagramAction.create()]);
             this.target = undefined
             return result
         }

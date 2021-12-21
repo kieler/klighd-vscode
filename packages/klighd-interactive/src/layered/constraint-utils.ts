@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020 by
+ * Copyright 2019-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Action, SModelElement } from 'sprotty';
+import { SModelElement } from 'sprotty';
+import { Action } from 'sprotty-protocol';
 import { RefreshDiagramAction } from '../actions';
 import { Direction, KEdge, KNode } from '../constraint-classes';
 import { SetLayerConstraintAction, SetPositionConstraintAction, SetStaticConstraintAction } from './actions';
@@ -367,19 +368,19 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
 
     if (forbidden) {
         // If layer is forbidden just refresh
-        return new RefreshDiagramAction()
+        return RefreshDiagramAction.create()
     } else if (targetNode.properties.layerId !== layerOfTarget) {
         // layer constraint should only be set if the layer index changed
         if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
             // only the layer constraint should be set
-            return new SetLayerConstraintAction({
+            return SetLayerConstraintAction.create({
                 id: targetNode.id,
                 layer: layerOfTarget,
                 layerCons: newLayerCons
             })
         } else {
             // If layer and position constraint should be set - send them both in one StaticConstraint
-            return new SetStaticConstraintAction({
+            return SetStaticConstraintAction.create({
                 id: targetNode.id,
                 layer: layerOfTarget,
                 layerCons: newLayerCons,
@@ -392,7 +393,7 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
         // position constraint should only be set if the position of the node changed
         if (targetNode.properties.positionId !== positionOfTarget) {
             // set the position Constraint
-            return new SetPositionConstraintAction({
+            return SetPositionConstraintAction.create({
                 id: targetNode.id,
                 position: positionOfTarget,
                 posCons: newPositionCons
@@ -400,5 +401,5 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
         }
     }
     // If the node was moved without setting a constraint - let it snap back
-    return new RefreshDiagramAction()
+    return RefreshDiagramAction.create()
 }

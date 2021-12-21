@@ -16,7 +16,8 @@
  */
 
 import { inject, injectable, postConstruct } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { ICommand } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { Registry } from "./base/registry";
 import { Connection, NotificationType } from "./services";
 
@@ -109,14 +110,23 @@ export class PreferencesRegistry extends Registry {
 }
 
 /** Change the user preferences stored in the `klighd-core` container. */
-export class SetPreferencesAction implements Action {
-    static readonly KIND = "setPreferences";
-    readonly kind = SetPreferencesAction.KIND;
+export interface SetPreferencesAction extends Action {
+    kind: typeof SetPreferencesAction.KIND
+    preferences: Partial<Preferences>
+}
 
-    constructor(readonly preferences: Partial<Preferences>) { }
+export namespace SetPreferencesAction {
+    export const KIND = "setPreferences"
+
+    export function create(preferences: Partial<Preferences>): SetPreferencesAction {
+        return {
+            kind: KIND,
+            preferences,
+        }
+    }
 
     /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is SetPreferencesAction {
+    export function isThisAction(action: Action): action is SetPreferencesAction {
         return action.kind === SetPreferencesAction.KIND;
     }
 }

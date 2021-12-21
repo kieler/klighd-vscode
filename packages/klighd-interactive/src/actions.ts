@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020 by
+ * Copyright 2020-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,24 +15,41 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Action } from 'sprotty';
+import { Action } from 'sprotty-protocol';
 import { DeleteConstraint } from './layered/constraint-types';
 
 /**
  * A sprotty action to refresh the diagram. Send from client to server.
  */
-export class RefreshDiagramAction implements Action {
-    static readonly KIND: string = 'refreshDiagram'
-    readonly kind = RefreshDiagramAction.KIND
+export interface RefreshDiagramAction extends Action {
+    kind: typeof RefreshDiagramAction.KIND
+}
+
+export namespace RefreshDiagramAction {
+    export const KIND = 'refreshDiagram'
+
+    export function create(): RefreshDiagramAction {
+        return {
+            kind: KIND,
+        }
+    }
 }
 
 /**
  * A sprotty action to delete a constraint on a specific node.
  */
-export class DeleteConstraintAction implements Action {
-    static readonly KIND: string = 'deleteStaticConstraint'
-    readonly kind = DeleteConstraintAction.KIND
+export interface DeleteConstraintAction extends Action {
+    kind: typeof DeleteConstraintAction.KIND
+    constraint: DeleteConstraint
+}
 
-    constructor(public readonly constraint: DeleteConstraint) {
+export namespace DeleteConstraintAction {
+    export const KIND = 'deleteStaticConstraint'
+
+    export function create(constraint: DeleteConstraint): DeleteConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }

@@ -15,13 +15,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SetUIExtensionVisibilityAction, Action } from "sprotty";
+import { SetUIExtensionVisibilityAction } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { Sidebar } from "./sidebar";
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the sidebar. */
-export class ShowSidebarAction extends SetUIExtensionVisibilityAction {
-    constructor() {
-        super(Sidebar.ID, true);
+export type ShowSidebarAction = SetUIExtensionVisibilityAction
+
+export namespace ShowSidebarAction {
+    export function create():  ShowSidebarAction {
+        return SetUIExtensionVisibilityAction.create({
+            extensionId: Sidebar.ID,
+            visible: true,
+        })
     }
 }
 
@@ -31,9 +37,14 @@ export class ShowSidebarAction extends SetUIExtensionVisibilityAction {
  * panel that should be toggled. If the panel is already shown, it is hidden and
  * the sidebar is closed.
  */
-export class ToggleSidebarPanelAction implements Action {
-    static readonly KIND = "toggleSidebarPanel";
-    readonly kind = ToggleSidebarPanelAction.KIND;
+export interface ToggleSidebarPanelAction extends Action {
+    kind: typeof ToggleSidebarPanelAction.KIND
+    id: string
+    state?: "show" | "hide"
+}
+
+export namespace ToggleSidebarPanelAction {
+    export const KIND = "toggleSidebarPanel";
 
     /**
      * Creates a new {@link ToggleSidebarPanelAction}.
@@ -41,10 +52,16 @@ export class ToggleSidebarPanelAction implements Action {
      * @param state Explicitly sets the new state for the panel. If this parameter is
      * absent, the current state is toggled.
      */
-    constructor(readonly id: string, readonly state?: "show" | "hide") {}
+    export function create(id: string, state?: "show" | "hide"): ToggleSidebarPanelAction {
+        return {
+            kind: KIND,
+            id: id,
+            state: state
+        }
+    }
 
     /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is ToggleSidebarPanelAction {
-      return action.kind === ToggleSidebarPanelAction.KIND;
+    export function isThisAction(action: Action): action is ToggleSidebarPanelAction {
+        return action.kind === ToggleSidebarPanelAction.KIND;
     }
 }

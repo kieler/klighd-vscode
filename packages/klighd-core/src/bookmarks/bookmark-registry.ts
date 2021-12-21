@@ -16,11 +16,12 @@
  */
 
 import { injectable, inject } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { ICommand } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
 import { PreferencesRegistry } from "../preferences-registry";
-import { AddBookmarkAction, Bookmark, DeleteBookmarkAction, GoToBookmarkAction, GoToBookmarkCommand, RenameBookmarkAction, SetInitialBookmark } from "./bookmark";
+import { AddBookmarkAction, Bookmark, DeleteBookmarkAction, GoToBookmarkAction, GoToBookmarkCommand, RenameBookmarkAction, SetInitialBookmarkAction } from "./bookmark";
 
 /**
  * A simple {@link Registry} that holds a list of all added Bookmarks
@@ -42,7 +43,7 @@ export class BookmarkRegistry extends Registry {
 
             return new GoToBookmarkCommand(action, this.preferenceRegistry.preferences.animateGoToBookmark)
 
-        } else if (SetInitialBookmark.isThisAction(action)) {
+        } else if (SetInitialBookmarkAction.isThisAction(action)) {
 
             this._initialBookmark = action.bookmark
             this.addBookmark(this._initialBookmark)

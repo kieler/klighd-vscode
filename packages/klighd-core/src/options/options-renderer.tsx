@@ -109,7 +109,7 @@ export class OptionsRenderer {
     }
 
     private handleActionClick(actionId: string) {
-        this.actionDispatcher.dispatch(new PerformOptionsActionAction(actionId));
+        this.actionDispatcher.dispatch(PerformOptionsActionAction.create(actionId));
     }
 
     /**
@@ -194,7 +194,7 @@ export class OptionsRenderer {
 
     private handleSynthesisOptionChange(option: SynthesisOption, newValue: any) {
         this.actionDispatcher.dispatch(
-            new SetSynthesisOptionsAction([{ ...option, currentValue: newValue }])
+            SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }])
         );
     }
 
@@ -246,7 +246,7 @@ export class OptionsRenderer {
 
     private handleLayoutOptionChange(option: LayoutOptionUIData, newValue: any) {
         this.actionDispatcher.dispatch(
-            new SetLayoutOptionsAction([{ optionId: option.optionId, value: newValue }])
+            SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }])
         );
     }
 
@@ -287,6 +287,6 @@ export class OptionsRenderer {
     }
 
     private handleRenderOptionChange(option: RenderOption, newValue: any) {
-        this.actionDispatcher.dispatch(new SetRenderOptionAction(option.id, newValue));
+        this.actionDispatcher.dispatch(SetRenderOptionAction.create(option.id, newValue));
     }
 }

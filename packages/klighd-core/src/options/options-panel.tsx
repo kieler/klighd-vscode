@@ -22,6 +22,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { OptionsRegistry } from "./options-registry";
 import { OptionsRenderer } from "./options-renderer";
 import { DISymbol } from "../di.symbols";
+import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SidebarPanel } from "../sidebar";
 
 /** Sidebar panel that displays server provided KLighD options.  */
@@ -56,6 +57,6 @@ export class OptionsPanel extends SidebarPanel {
     }
 
     get icon(): VNode {
-        return <i attrs={{ "data-feather": "sliders" }}></i>
+        return <FeatherIcon iconId={"sliders"}/>
     }
 }

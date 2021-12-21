@@ -26,7 +26,7 @@
         "@kieler/klighd-interactive": "^0.2.1",
         "feather-icons": "^4.28.0",
         "inversify": "^5.0.1",
-        "sprotty": "0.10.0"
+        "sprotty": "0.11.1"
     },
     "devDependencies": {
         "@types/feather-icons": "^4.7.0",

@@ -194,9 +194,9 @@
         "inversify": "^5.0.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",
-        "sprotty": "0.10.0",
-        "sprotty-vscode": "^0.1.4",
-        "sprotty-vscode-webview": "^0.1.4",
-        "vscode-languageclient": "^5.2.1"
+        "sprotty": "0.11.1",
+        "sprotty-vscode": "^0.2.0",
+        "sprotty-vscode-webview": "^0.2.0",
+        "vscode-languageclient": "^7.0.0"
     }
 }

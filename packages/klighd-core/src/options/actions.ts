@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Action } from "sprotty";
+import { Action } from "sprotty-protocol";
 import {
     DisplayedActionData,
     LayoutOptionUIData,
@@ -25,19 +25,33 @@ import {
 } from "./option-models";
 
 /** Request message from the server to update the diagram options widget on the client. */
-export class UpdateOptionsAction implements Action {
-    static readonly KIND = "updateOptions";
-    readonly kind = UpdateOptionsAction.KIND;
+export interface UpdateOptionsAction extends Action {
+    kind: typeof UpdateOptionsAction.KIND
+    valuedSynthesisOptions: ValuedSynthesisOption[]
+    layoutOptions: LayoutOptionUIData[]
+    actions: DisplayedActionData[]
+    modelUri: string
+}
 
-    constructor(
-        public readonly valuedSynthesisOptions: ValuedSynthesisOption[],
-        public readonly layoutOptions: LayoutOptionUIData[],
-        public readonly actions: DisplayedActionData[],
-        public readonly modelUri: string
-    ) { }
+export namespace UpdateOptionsAction {
+    export const KIND = "updateOptions"
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is UpdateOptionsAction {
+    export function create(
+        valuedSynthesisOptions: ValuedSynthesisOption[],
+        layoutOptions: LayoutOptionUIData[],
+        actions: DisplayedActionData[],
+        modelUri: string,
+    ): UpdateOptionsAction {
+        return {
+            kind: KIND,
+            valuedSynthesisOptions,
+            layoutOptions, 
+            actions,
+            modelUri,
+        }
+    }
+
+    export function isThisAction(action: Action): action is UpdateOptionsAction {
         return action.kind === UpdateOptionsAction.KIND;
     }
 }
@@ -46,86 +60,144 @@ export class UpdateOptionsAction implements Action {
  * Triggers a action from the options that should be performed.
  * Do not confuse this with PerformActionAction!
  */
-export class PerformOptionsActionAction implements Action {
-    static readonly KIND = "performOptionsAction";
-    readonly kind = PerformOptionsActionAction.KIND;
+export interface PerformOptionsActionAction extends Action {
+    kind: typeof PerformOptionsActionAction.KIND
+    actionId: string
+}
 
-    constructor(readonly actionId: string) { }
+export namespace PerformOptionsActionAction {
+    export const KIND = "performOptionsAction"
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is PerformOptionsActionAction {
+    export function create(actionId: string): PerformOptionsActionAction {
+        return {
+            kind: KIND,
+            actionId,
+        }
+    }
+
+    export function isThisAction(action: Action): action is PerformOptionsActionAction {
         return action.kind === PerformOptionsActionAction.KIND;
     }
 }
 
 /** Change the value of one or multiple synthesis options. */
-export class SetSynthesisOptionsAction implements Action {
-    static readonly KIND = "setSynthesisOptions";
-    readonly kind = SetSynthesisOptionsAction.KIND;
+export interface SetSynthesisOptionsAction extends Action {
+    kind: typeof SetSynthesisOptionsAction.KIND
+    options: SynthesisOption[]
+}
 
-    constructor(readonly options: SynthesisOption[]) { }
+export namespace SetSynthesisOptionsAction {
+    export const KIND = "setSynthesisOptions"
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is SetSynthesisOptionsAction {
+    export function create(options: SynthesisOption[]): SetSynthesisOptionsAction {
+        return {
+            kind: KIND,
+            options,
+        }
+    }
+
+    export function isThisAction(action: Action): action is SetSynthesisOptionsAction {
         return action.kind === SetSynthesisOptionsAction.KIND;
     }
 }
 
 /** Resets all synthesis options to default for both server and client. */
-export class ResetSynthesisOptionsAction implements Action {
-    static readonly KIND = "resetSynthesisOptions";
-    readonly kind = ResetSynthesisOptionsAction.KIND;
+export interface ResetSynthesisOptionsAction extends Action {
+    kind: typeof ResetSynthesisOptionsAction.KIND
+}
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is ResetSynthesisOptionsAction {
+export namespace ResetSynthesisOptionsAction {
+    export const KIND = "resetSynthesisOptions"
+
+    export function create(): ResetSynthesisOptionsAction {
+        return {
+            kind: KIND,
+        }
+    }
+
+    export function isThisAction(action: Action): action is ResetSynthesisOptionsAction {
         return action.kind === ResetSynthesisOptionsAction.KIND;
     }
 }
 
 /** Change the value of one or multiple layout options. */
-export class SetLayoutOptionsAction implements Action {
-    static readonly KIND = "setLayoutOptions";
-    readonly kind = SetLayoutOptionsAction.KIND;
+export interface SetLayoutOptionsAction extends Action {
+    kind: typeof SetLayoutOptionsAction.KIND
+    options: LayoutOptionValue[]
+}
 
-    constructor(readonly options: LayoutOptionValue[]) { }
+export namespace SetLayoutOptionsAction {
+    export const KIND = 'setLayoutOptions'
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is SetLayoutOptionsAction {
+    export function create(options: LayoutOptionValue[]): SetLayoutOptionsAction {
+        return {
+            kind: KIND,
+            options
+        }
+    }
+
+    export function isThisAction(action: Action): action is SetLayoutOptionsAction {
         return action.kind === SetLayoutOptionsAction.KIND;
     }
 }
 
 /** Resets all layout options to default for both server and client. */
-export class ResetLayoutOptionsAction implements Action {
-    static readonly KIND = "resetLayoutOptions";
-    readonly kind = ResetLayoutOptionsAction.KIND;
+export interface ResetLayoutOptionsAction extends Action {
+    kind: typeof ResetLayoutOptionsAction.KIND
+}
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is ResetLayoutOptionsAction {
+export namespace ResetLayoutOptionsAction {
+    export const KIND = "resetLayoutOptions"
+
+    export function create(): ResetLayoutOptionsAction {
+        return {
+            kind: KIND,
+        }
+    }
+
+    export function isThisAction(action: Action): action is ResetLayoutOptionsAction {
         return action.kind === ResetLayoutOptionsAction.KIND;
     }
 }
 
 /** Change the value of one or multiple render options. */
-export class SetRenderOptionAction implements Action {
-    static readonly KIND = "setRenderOption";
-    readonly kind = SetRenderOptionAction.KIND;
+export interface SetRenderOptionAction extends Action {
+    kind: typeof SetRenderOptionAction.KIND
+    id: string
+    value: unknown
+}
 
-    constructor(readonly id: string, readonly value: unknown) { }
+export namespace SetRenderOptionAction {
+    export const KIND = "setRenderOption"
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is SetRenderOptionAction {
+    export function create(id: string, value: unknown): SetRenderOptionAction {
+        return {
+            kind: KIND,
+            id,
+            value
+        }
+    }
+
+    export function isThisAction(action: Action): action is SetRenderOptionAction {
         return action.kind === SetRenderOptionAction.KIND;
     }
 }
 
 /** Resets all render options to default. */
-export class ResetRenderOptionsAction implements Action {
-    static readonly KIND = "resetRenderOptions";
-    readonly kind = ResetRenderOptionsAction.KIND;
+export interface ResetRenderOptionsAction extends Action {
+    kind: typeof ResetRenderOptionsAction.KIND
+}
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is ResetRenderOptionsAction {
+export namespace ResetRenderOptionsAction {
+    export const KIND = "resetRenderOptions"
+
+    export function create(): ResetRenderOptionsAction {
+        return {
+            kind: KIND,
+        }
+    }
+
+    export function isThisAction(action: Action): action is ResetRenderOptionsAction {
         return action.kind === ResetRenderOptionsAction.KIND;
     }
 }

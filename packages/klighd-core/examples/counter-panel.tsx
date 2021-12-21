@@ -18,6 +18,7 @@
 /** @jsx html */
 import { VNode } from "snabbdom";
 import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { FeatherIcon } from "../src/feather-icons-snabbdom/feather-icons-snabbdom";
 import { SidebarPanel } from "../src/sidebar/sidebar-panel";
 
 /**
@@ -64,6 +65,6 @@ export class CounterPanel extends SidebarPanel {
     }
 
     get icon(): VNode {
-        return <i attrs={{ "data-feather": "percent" }}></i>;
+        return <FeatherIcon iconId={"percent"}/>;
     }
 }

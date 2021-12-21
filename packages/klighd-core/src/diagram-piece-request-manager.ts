@@ -11,7 +11,8 @@
  * This code is provided under the terms of the Eclipse Public License 2.0 (EPL-2.0).
  */
 
-import { add, Point, SModelElementSchema, ViewportResult } from "sprotty"
+import { ViewportResult } from "sprotty"
+import { Point, SModelElement as SModelElementSchema} from "sprotty-protocol";
 
 /**
  * A IDiagramPieceRequestGenerator manages the ordering of diagram piece
@@ -204,7 +205,7 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
             if (this.idToAbsolutePositions.get(parentId) !== undefined) {
                 // if parent is already known, child position is calculated relative to its parent
                 const parentPos = this.idToAbsolutePositions.get(parentId)!
-                this.idToAbsolutePositions.set(diagramPiece.id, add(parentPos, castPiece.position))
+                this.idToAbsolutePositions.set(diagramPiece.id, Point.add(parentPos, castPiece.position))
             } else {
                 // otherwise the element must be a top level element
                 this.idToAbsolutePositions.set(diagramPiece.id, castPiece.position)
@@ -245,7 +246,7 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
             for (let i = 1; i <= this.maxRingCount; i++) {
                 const ring = this.ringCoords(i)
                 for (let j = 0; j < ring.length; j++) {
-                    const value = this.gridToPieces.get(this.getKey(add(this.currentGridPosition, ring[j])))!
+                    const value = this.gridToPieces.get(this.getKey(Point.add(this.currentGridPosition, ring[j])))!
                     if (value !== undefined && value.length > 0) {
                         piece = value.shift()!
                         return piece
