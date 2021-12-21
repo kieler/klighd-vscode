@@ -18,21 +18,22 @@
 /** @jsx html */
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from "snabbdom/vnode";
-import { Action, CenterAction, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
+import { VNode } from "snabbdom";
+import { html, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Action, CenterAction } from "sprotty-protocol";
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
+import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { DISymbol } from "../di.symbols";
-import { SynthesisPicker } from "./components/synthesis-picker";
+import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
+import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
 import { SidebarPanel } from "../sidebar";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { RenderOptionsRegistry } from "./render-options-registry";
-import { OptionsRenderer } from "./options-renderer";
-import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
-import { CheckOption } from "./components/option-inputs";
-import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { SetPreferencesAction } from "./actions";
+import { CheckOption } from "./components/option-inputs";
+import { SynthesisPicker } from "./components/synthesis-picker";
+import { OptionsRenderer } from "./options-renderer";
+import { RenderOptionsRegistry } from "./render-options-registry";
 
 /** Type for available quick actions. */
 type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
@@ -47,7 +48,7 @@ export class GeneralPanel extends SidebarPanel {
     readonly position = -10;
 
     /** Quick actions reference for this panel */
-    private quickActions: [key: PossibleAction, title: string, icon: VNode, action: Action][];
+    private quickActions: [key: PossibleAction, title: string, iconId: string, action: Action][];
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
@@ -66,38 +67,38 @@ export class GeneralPanel extends SidebarPanel {
             [
                 "center",
                 "Center diagram",
-                <i attrs={{ "data-feather": "maximize" }}></i>,
-                new CenterAction([], true),
+                "maximize",
+                CenterAction.create([], { animate: true }),
             ],
             [
                 "fit",
                 "Fit to screen",
-                <i attrs={{ "data-feather": "maximize-2" }}></i>,
-                new KlighdFitToScreenAction(true),
+                "maximize-2",
+                KlighdFitToScreenAction.create(true),
             ],
             [
                 "layout",
                 "Layout diagram",
-                <i attrs={{ "data-feather": "layout" }}></i>,
-                new RefreshLayoutAction(),
+                "layout",
+                RefreshLayoutAction.create(),
             ],
             [
                 "refresh",
                 "Refresh diagram",
-                <i attrs={{ "data-feather": "refresh-cw" }}></i>,
-                new RefreshDiagramAction(),
+                "refresh-cw",
+                RefreshDiagramAction.create(),
             ],
             [
                 "export",
                 "Export as SVG",
-                <i attrs={{ "data-feather": "save" }}></i>,
-                new RequestExportSvgAction(),
+                "save",
+                RequestExportSvgAction.create(),
             ],
             [
                 "create-bookmark",
                 "Bookmark",
-                <i attrs={{ "data-feather": "bookmark" }} />,
-                new CreateBookmarkAction()
+                "bookmark",
+                CreateBookmarkAction.create()
             ],
         ];
     }
@@ -113,36 +114,36 @@ export class GeneralPanel extends SidebarPanel {
     render(): VNode {
         return (
             <div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Quick Actions</h5>
-                    <div classNames="options__button-group">
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Quick Actions</h5>
+                    <div class-options__button-group="true">
                         {this.quickActions.map((action) => (
                             <button
                                 title={action[1]}
-                                classNames="options__icon-button"
+                                class-options__icon-button="true"
                                 on-click={() => this.handleQuickActionClick(action[0])}
                             >
-                                {action[2]}
+                                <FeatherIcon iconId={action[2]}/>
                             </button>
                         ))}
                     </div>
                 </div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Synthesis</h5>
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Synthesis</h5>
                     <SynthesisPicker
                         currentId={this.synthesesRegistry.currentSynthesisID}
                         syntheses={this.synthesesRegistry.syntheses}
                         onChange={this.handleSynthesisPickerChange.bind(this)}
                     />
                 </div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Render Options</h5>
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Render Options</h5>
                     {this.optionsRenderer.renderRenderOptions(
                         this.renderOptionsRegistry.allRenderOptions
                     )}
                 </div>
-                <div classNames="options__section">
-                    <h5 classNames="options__heading">Preferences</h5>
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Preferences</h5>
                     <CheckOption
                         id={ShouldSelectDiagramOption.ID}
                         name={ShouldSelectDiagramOption.NAME}
@@ -167,11 +168,11 @@ export class GeneralPanel extends SidebarPanel {
     }
 
     private handleSynthesisPickerChange(newId: string) {
-        this.actionDispatcher.dispatch(new SetSynthesisAction(newId));
+        this.actionDispatcher.dispatch(SetSynthesisAction.create(newId));
     }
 
     private handlePreferenceChange(key: string, newValue: any) {
-        this.actionDispatcher.dispatch(new SetPreferencesAction([{id:key, value:newValue}]));
+        this.actionDispatcher.dispatch(SetPreferencesAction.create([{id:key, value:newValue}]));
     }
 
     private handleQuickActionClick(type: PossibleAction) {
@@ -183,6 +184,6 @@ export class GeneralPanel extends SidebarPanel {
     }
 
     get icon(): VNode {
-        return <i attrs={{ "data-feather": "settings" }}></i>;
+        return <FeatherIcon iconId={"settings"}/>;
     }
 }

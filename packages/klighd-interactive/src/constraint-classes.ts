@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020 by
+ * Copyright 2019-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { moveFeature, Point, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty/lib';
+import { moveFeature, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty';
+import { Point } from 'sprotty-protocol';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,

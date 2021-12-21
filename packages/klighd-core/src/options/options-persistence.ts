@@ -17,7 +17,6 @@
 
 import { inject, injectable, postConstruct } from "inversify";
 import {
-    Action,
     ActionHandlerRegistry,
     IActionDispatcher,
     IActionHandler,
@@ -25,6 +24,7 @@ import {
     ICommand,
     TYPES,
 } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { PersistenceStorage } from "../services";
 import {
     ResetLayoutOptionsAction,
@@ -84,8 +84,8 @@ export class OptionsPersistence implements IActionHandler, IActionHandlerInitial
 
     /** Reset all stored options when the storage gets cleared from outside. */
     private handleClear() {
-        this.dispatcher.dispatch(new ResetRenderOptionsAction());
-        this.dispatcher.dispatch(new ResetSynthesisOptionsAction());
-        this.dispatcher.dispatch(new ResetLayoutOptionsAction());
+        this.dispatcher.dispatch(ResetRenderOptionsAction.create());
+        this.dispatcher.dispatch(ResetSynthesisOptionsAction.create());
+        this.dispatcher.dispatch(ResetLayoutOptionsAction.create());
     }
 }

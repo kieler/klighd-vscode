@@ -16,7 +16,8 @@
  */
 
 import { inject, injectable } from "inversify";
-import { Action, ActionHandlerRegistry, IActionHandlerInitializer, ICommand } from "sprotty";
+import { ActionHandlerRegistry, IActionHandlerInitializer, ICommand } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { Connection, NotificationType } from "../services";
 import {

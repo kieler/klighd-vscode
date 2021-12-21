@@ -16,7 +16,8 @@
  */
 
 import { injectable, multiInject, optional } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { ICommand } from "sprotty";
+import { Action } from "sprotty-protocol"
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
 import { ToggleSidebarPanelAction } from "./actions";

@@ -15,14 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from 'snabbdom/vnode';
-
 import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SGraphFactory, SGraphView, TYPES } from 'sprotty/lib';
+import { VNode } from 'snabbdom';
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DepthMap, DetailLevel } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
@@ -37,7 +35,7 @@ import { KStyles } from './views-styles';
  * Extends the SGraphView by initializing the context for KGraph rendering.
  */
 @injectable()
-export class SKGraphView extends SGraphView {
+export class SKGraphView implements IView {
 
     @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
 
@@ -70,7 +68,13 @@ export class SKGraphView extends SGraphView {
         } else {
             ctx.depthMap = undefined
         }
-        return super.render(model, context)
+
+        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`;
+        return <svg class-sprotty-graph={true}>
+            <g transform={transform}>
+                {context.renderChildren(model)}
+            </g>
+        </svg>;
     }
 }
 
@@ -82,7 +86,6 @@ export class KNodeView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
-    @inject(TYPES.IModelFactory) protected graphFactory: SGraphFactory
 
     render(node: SKNode, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles

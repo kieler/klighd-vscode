@@ -15,11 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SetPreferencesAction } from "@kieler/klighd-core";
 import { SprottyDiagramIdentifier, SprottyWebviewOptions } from "sprotty-vscode";
 import { SprottyLspWebview } from "sprotty-vscode/lib/lsp";
-import { workspace, commands } from "vscode";
-import { extensionId, contextKeys } from "./constants";
+import { commands } from "vscode";
+import { contextKeys } from "./constants";
 
 /**
  * Extends the SprottyLspWebview to communicate user preferences to the container,

@@ -19,19 +19,20 @@ import {
     RefreshDiagramAction,
     RefreshLayoutAction,
 } from "@kieler/klighd-core";
-import { CenterAction, RequestExportSvgAction } from "sprotty";
-import { Action, serializeUri, SprottyWebview } from "sprotty-vscode";
+import { RequestExportSvgAction } from "sprotty";
+import { Action, CenterAction } from "sprotty-protocol";
+import { serializeUri, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
 import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
 import { commands, ExtensionContext, Uri } from "vscode";
-import { LanguageClient } from "vscode-languageclient";
+import { CommonLanguageClient } from "vscode-languageclient";
 import { command, diagramType, extensionId } from "./constants";
 import { StorageService } from "./storage/storage-service";
 import { KLighDWebview } from "./klighd-webview";
 
 /** Options required to construct a KLighDExtension */
 interface KLighDExtensionOptions {
-    lsClient: LanguageClient;
+    lsClient: CommonLanguageClient;
     supportedFileEnding: string[];
     storageService: StorageService;
 }
@@ -67,7 +68,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     // before modifications to the instance. The only possible hack around this
     // problem is a static property.
     // PS. This hack is approved by "als".
-    private static lsClient: LanguageClient;
+    private static lsClient: CommonLanguageClient;
     private supportedFileEndings: string[];
 
     // This service is required here, so it can be hooked into created webviews.
@@ -163,7 +164,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         return this.supportedFileEndings.some((ending) => path.endsWith(ending));
     }
 
-    protected override activateLanguageClient(): LanguageClient {
+    protected override activateLanguageClient(): CommonLanguageClient {
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.
         return KLighDExtension.lsClient;
@@ -202,7 +203,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramCenter, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(new CenterAction([], true));
+                    activeWebview.dispatch(CenterAction.create([], { animate: true }));
                 }
             })
         );
@@ -210,7 +211,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramFit, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(new KlighdFitToScreenAction(true));
+                    activeWebview.dispatch(KlighdFitToScreenAction.create(true));
                 }
             })
         );
@@ -218,7 +219,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramLayout, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(new RefreshLayoutAction());
+                    activeWebview.dispatch(RefreshLayoutAction.create());
                 }
             })
         );
@@ -226,7 +227,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramRefresh, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(new RefreshDiagramAction());
+                    activeWebview.dispatch(RefreshDiagramAction.create());
                 }
             })
         );
@@ -234,7 +235,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramExport, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(new RequestExportSvgAction());
+                    activeWebview.dispatch(RequestExportSvgAction.create());
                 }
             })
         );

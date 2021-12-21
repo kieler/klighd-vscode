@@ -17,7 +17,8 @@
 
 import { Connection, NotificationType } from "@kieler/klighd-core";
 import { inject, injectable } from "inversify";
-import { ActionMessage, isActionMessage, ServerStatusAction } from "sprotty";
+import { ServerStatusAction } from "sprotty";
+import { ActionMessage, isActionMessage } from "sprotty-protocol";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
 import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
 

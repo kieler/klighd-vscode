@@ -16,7 +16,7 @@
  */
 
 import { injectable } from "inversify";
-import { VNode } from "snabbdom/vnode";
+import { VNode } from "snabbdom";
 
 /**
  * A sidebar panel provides content that is shown by the sidebar.
@@ -29,12 +29,11 @@ export interface ISidebarPanel {
     readonly title: string;
     /**
      * Icon used for the corresponding panel toggle.
-     * For an icon source you should use feather-icons (https://feathericons.com).
+     * For an icon source you should use feather-icons (https://feathericons.com)
+     * and the FeatherIcon method from the folder feather-icons-snabbdom.
      *
-     * Usage example: `<i attrs={{ "data-feather": "settings" }}></i>` where
+     * Usage example: `<FeatherIcon iconId={"settings"}/>` where
      * settings is the name of the icon.
-     *
-     * The `<i>` tag will be replaced with the corresponding svg by feather.
      */
     readonly icon: VNode;
 
@@ -52,7 +51,8 @@ export interface ISidebarPanel {
      * Renders this panel content and returns the content as a snabbdom VNode.
      * Learn more about snabbdom and how to use it here:
      * - https://www.npmjs.com/package/snabbdom
-     * - https://www.npmjs.com/package/snabbdom-jsx
+     * - https://www.npmjs.com/package/snabbdom-jsx (package not used anymore, but concept is still
+     * the same)
      */
     render(): VNode;
 }

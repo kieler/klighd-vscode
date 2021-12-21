@@ -16,13 +16,11 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { inject, postConstruct } from "inversify";
-import { replace as featherReplace } from "feather-icons";
-import { VNode } from "snabbdom/vnode";
-import { AbstractUIExtension, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty";
-import { DISymbol } from "../di.symbols";
+import { VNode } from "snabbdom";
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
+import { DISymbol } from "../di.symbols";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
 /**
@@ -44,7 +42,7 @@ export class Sidebar extends AbstractUIExtension {
 
     @postConstruct()
     init(): void {
-        this.actionDispatcher.dispatch(new ShowSidebarAction());
+        this.actionDispatcher.dispatch(ShowSidebarAction.create());
         this.patcher = this.patcherProvider.patcher;
 
         // Update the panel if the registry state changes
@@ -75,11 +73,11 @@ export class Sidebar extends AbstractUIExtension {
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
 
         const content: VNode = (
-            <div classNames="sidebar__content">
-                <div classNames="sidebar__toggle-container">
+            <div class-sidebar__content="true">
+                <div class-sidebar__toggle-container="true">
                     {this.sidebarPanelRegistry.allPanels.map((panel) => (
                         <button
-                            classNames="sidebar__toggle-button"
+                            class-sidebar__toggle-button="true"
                             class-sidebar__toggle-button--active={
                                 this.sidebarPanelRegistry.currentPanelID === panel.id
                             }
@@ -90,20 +88,13 @@ export class Sidebar extends AbstractUIExtension {
                         </button>
                     ))}
                 </div>
-                <h3 classNames="sidebar__title">{currentPanel?.title ?? ""}</h3>
-                <div classNames="sidebar__panel-content">{currentPanel?.render() ?? ""}</div>
+                <h3 class-sidebar__title="true">{currentPanel?.title ?? ""}</h3>
+                <div class-sidebar__panel-content="true">{currentPanel?.render() ?? ""}</div>
             </div>
         );
 
         // Update panel content with efficient VDOM patching.
         this.oldPanelContentRoot = this.patcher(this.oldPanelContentRoot, content);
-
-        // The feather icon package is not able to return VNode. Therefore,
-        // the icons can not be directly rendered by Snabbdom. To avoid this,
-        // icons in the V-DOM can be placed with a <i data-feather="..."></> tag.
-        // This call replaces the icons after the V-DOM has been patched into the DOM.
-        // See: https://github.com/feathericons/feather#featherreplaceattrs
-        featherReplace();
 
         // Show or hide the panel
         if (currentPanel) {
@@ -132,7 +123,7 @@ export class Sidebar extends AbstractUIExtension {
     }
 
     private handlePanelButtonClick(id: string) {
-        this.actionDispatcher.dispatch(new ToggleSidebarPanelAction(id));
+        this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(id));
     }
 
     /**
@@ -147,7 +138,7 @@ export class Sidebar extends AbstractUIExtension {
             // See for information on detecting "click outside": https://stackoverflow.com/a/64665817/7569889
             if (!currentPanelID || e.composedPath().includes(containerElement)) return;
 
-            this.actionDispatcher.dispatch(new ToggleSidebarPanelAction(currentPanelID, "hide"));
+            this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
         });
     }
 }

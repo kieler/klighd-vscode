@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import { injectable } from 'inversify';
-import { Action, Bounds, HoverMouseListener, RequestPopupModelAction, SModelElement } from 'sprotty';
+import { HoverMouseListener, SModelElement } from 'sprotty';
+import { Action, Bounds, generateRequestId, RequestPopupModelAction } from "sprotty-protocol";
 import { getSemanticElement } from '../skgraph-utils';
 
 /**
@@ -23,14 +24,30 @@ import { getSemanticElement } from '../skgraph-utils';
  * that element. This action is sent from the client to the model source, e.g. a DiagramServer.
  * The response is a SetPopupModelAction.
  */
-export class RequestKlighdPopupModelAction extends RequestPopupModelAction {
+export interface RequestKlighdPopupModelAction extends RequestPopupModelAction {
+    element: SVGElement
+    parent: SModelElement
+}
 
-    constructor(public readonly element: SVGElement,
-                public readonly parent: SModelElement,
-                public readonly bounds: Bounds,
-                public readonly requestId = '') {
-                    super(parent.id, bounds, requestId)
-                }
+export namespace RequestKlighdPopupModelAction {
+    export function create(
+        element: SVGElement,
+        parent: SModelElement,
+        bounds: Bounds): RequestKlighdPopupModelAction {
+        return {
+            kind: RequestPopupModelAction.KIND,
+            parent,
+            element,
+            elementId: parent.id,
+            bounds,
+            requestId: generateRequestId(),
+        };
+    }
+
+    /** Type predicate to narrow an action to this action. */
+    export function isThisAction(action: Action): action is RequestKlighdPopupModelAction {
+        return action.kind === RequestPopupModelAction.KIND && 'parent' in action && 'element' in action;
+    }
 }
 
 @injectable()
@@ -43,7 +60,7 @@ export class KlighdHoverMouseListener extends HoverMouseListener {
                 const semanticElement = getSemanticElement(event.target)
 
                 if (semanticElement) {
-                    resolve(new RequestKlighdPopupModelAction(semanticElement, target, popupBounds))
+                    resolve(RequestKlighdPopupModelAction.create(semanticElement, target, popupBounds))
 
                     this.state.popupOpen = true;
                     this.state.previousPopupElement = target;

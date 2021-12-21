@@ -23,7 +23,7 @@ import {
     requestModel,
     getActionDispatcher,
     bindServices,
-    SetInitialBookmark,
+    SetInitialBookmarkAction,
     Bookmark,
     SetPreferencesAction
 } from "@kieler/klighd-core";
@@ -101,7 +101,10 @@ async function initDiagramView(sourceUri: string) {
 /** Communicates preferences to the diagram container which are read from the url search params. */
 function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     actionDispatcher.dispatch(
-        new SetPreferencesAction([{id:"diagram.resizeToFit", value:(readSearchParam("resizeToFit") === "false" ? false : true)}])
+        SetPreferencesAction.create([{
+            id:"diagram.resizeToFit",
+            value:(readSearchParam("resizeToFit") === "false" ? false : true)
+        }])
     );
 }
 
@@ -110,7 +113,7 @@ function setInitialBookmark(actionDispatcher: ReturnType<typeof getActionDispatc
     const viewport = getBookmarkViewport();
     if (viewport) {
         actionDispatcher.dispatch(
-            new SetInitialBookmark(new Bookmark(viewport, "From URI"))
+            SetInitialBookmarkAction.create(new Bookmark(viewport, "From URI"))
         );
     }
 }

@@ -17,17 +17,26 @@
 
 import { inject, injectable } from 'inversify';
 import { Command, TYPES } from 'sprotty'
-import { Action } from 'sprotty';
 import { CommandExecutionContext, CommandReturn } from 'sprotty';
+import { Action } from 'sprotty-protocol';
 import { DepthMap } from '../depth-map';
 
 /**
- * Simple UpdateDepthMapAction Fires the UpdateDepthMapModelCommand
+ * Simple UpdateDepthMapAction fires the UpdateDepthMapModelCommand
  * is created whenever a updateModelAction or a setModelAction is present
  */
-export class UpdateDepthMapModelAction implements Action {
-    static readonly KIND = 'updateDepthMapModel';
-    readonly kind = UpdateDepthMapModelAction.KIND;
+export interface UpdateDepthMapModelAction extends Action {
+    kind: typeof UpdateDepthMapModelAction.KIND
+}
+
+export namespace UpdateDepthMapModelAction {
+    export const KIND = 'updateDepthMapModel'
+
+    export function create(): UpdateDepthMapModelAction {
+        return {
+            kind: KIND,
+        }
+    }
 }
 
 /**

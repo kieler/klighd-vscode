@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from 'snabbdom/vnode';
+import { VNode } from 'snabbdom';
+import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Direction } from './constraint-classes';
 import { lockPath, arrowVertical, arrowHorizontal } from './svg-path';
 
@@ -64,7 +64,7 @@ export function createVerticalLine(mid: number, top: number, bot: number, direct
                     y2={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? bot : mid}
                     fill='none'
                     stroke='grey'
-                    style={{ 'stroke-dasharray': 4 }}
+                    style={{ 'stroke-dasharray': '4' }}
                 />
             </g>
 }
@@ -86,7 +86,7 @@ export function renderCircle(fill: boolean, x: number, y: number, forbidden: boo
                     r="2"
                     stroke={color}
                     fill={fill ? color : "none"}
-                    style={{ 'stroke-width': 0.5 }}
+                    style={{ 'stroke-width': '0.5' }}
                 />
             </g>
 }

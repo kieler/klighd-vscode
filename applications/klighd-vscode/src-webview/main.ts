@@ -31,7 +31,8 @@ import {
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
 import { createKlighdDiagramContainer, bindServices } from "@kieler/klighd-core";
 import { MessageConnection } from "./message-connection";
-import { ActionMessage, isActionMessage, KeyTool } from "sprotty";
+import { KeyTool } from "sprotty";
+import { ActionMessage, isActionMessage } from "sprotty-protocol";
 import { KlighdDiagramWidget } from "./klighd-widget";
 import { MessagePersistenceStorage } from "./persistence-storage";
 

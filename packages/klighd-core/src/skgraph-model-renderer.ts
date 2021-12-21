@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020 by
+ * Copyright 2020-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,8 +15,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { VNode } from 'snabbdom/vnode';
-import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, Viewport, ViewRegistry } from 'sprotty/lib';
+import { VNode } from 'snabbdom';
+import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, ViewRegistry } from 'sprotty';
+import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
@@ -45,14 +46,14 @@ export class SKGraphModelRenderer extends ModelRenderer {
      *
      * @param element The element to render the children from.
      */
-    renderChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement, args?: Record<string, unknown>): VNode[] {
+    renderChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement): VNode[] {
         element.areChildAreaChildrenRendered = true
         return element.children
             .filter(child =>
                 child.type === NODE_TYPE ||
                 child.type === EDGE_TYPE)
             .map((child): VNode | undefined => {
-                return this.renderElement(child, args)
+                return this.renderElement(child)
             })
             .filter(vnode => vnode !== undefined) as VNode[]
     }
@@ -62,14 +63,14 @@ export class SKGraphModelRenderer extends ModelRenderer {
      *
      * @param element The element to render the children from.
      */
-    renderNonChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement, args?: Record<string, unknown>): VNode[] {
+    renderNonChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement): VNode[] {
         element.areNonChildAreaChildrenRendered = true
         return element.children
             .filter(child =>
                 child.type === PORT_TYPE ||
                 child.type === LABEL_TYPE)
             .map((child): VNode | undefined => {
-                return this.renderElement(child, args)
+                return this.renderElement(child)
             })
             .filter(vnode => vnode !== undefined) as VNode[]
     }

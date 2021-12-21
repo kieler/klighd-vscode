@@ -16,7 +16,8 @@
  */
 
 import { inject, injectable, postConstruct } from "inversify";
-import { Action, IActionDispatcher, ICommand, TYPES } from "sprotty";
+import { IActionDispatcher, ICommand, TYPES } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { Registry } from "./base/registry";
 import { ResetPreferencesAction, SetPreferencesAction } from "./options/actions";
 import { Preference, TransformationOptionType } from "./options/option-models";
@@ -167,6 +168,6 @@ export class PreferencesRegistry extends Registry {
 
     /** Reset all stored options when the storage gets cleared from outside. */
     private handleClear() {
-        this.dispatcher.dispatch(new ResetPreferencesAction());
+        this.dispatcher.dispatch(ResetPreferencesAction.create());
     }
 }

@@ -17,13 +17,13 @@
 import "reflect-metadata";
 import { nanoid } from "nanoid/non-secure";
 import * as vscode from "vscode";
-import { LanguageClient } from "vscode-languageclient";
+import { CommonLanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
 import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { LspHandler } from "./lsp-handler";
 import { StorageService } from "./storage/storage-service";
 import { ReportChangeMessage } from "./storage/messages";
-import { Action, isAction } from "sprotty-vscode-protocol";
+import { Action, isAction } from "sprotty-protocol";
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
@@ -139,7 +139,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 }
 
-function isLanguageClient(client: unknown): client is LanguageClient {
+function isLanguageClient(client: unknown): client is CommonLanguageClient {
     // Instanceof checks do not work, since the LanguageClient class from the
     // host extension is not the same as this LanguageClient class.
     // Both classes are part of different bundles and thus module system.

@@ -31,28 +31,30 @@ import {
 } from "@kieler/klighd-interactive/lib/rect-packing/actions";
 import { inject, injectable } from "inversify";
 import {
-    Action,
     ActionHandlerRegistry,
-    ActionMessage,
     BringToFrontAction,
-    DiagramServer,
-    findElement,
-    generateRequestId,
+    DiagramServerProxy,
     GetViewportAction,
     ICommand,
-    RequestPopupModelAction,
-    SelectAction,
     SetModelCommand,
-    SetPopupModelAction,
     SwitchEditModeAction,
     TYPES,
     ViewportResult,
 } from "sprotty";
 import {
+    Action,
+    ActionMessage,
+    findElement,
+    generateRequestId,
+    RequestPopupModelAction,
+    SelectAction,
+    SetPopupModelAction,
+    UpdateModelAction,
+} from "sprotty-protocol";
+import {
     CheckedImagesAction,
     CheckImagesAction,
     KlighdFitToScreenAction,
-    KlighdUpdateModelAction,
     Pair,
     PerformActionAction,
     RefreshLayoutAction,
@@ -77,7 +79,7 @@ import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
  * actions and forward them to the server is required.
  */
 @injectable()
-export class KlighdDiagramServer extends DiagramServer {
+export class KlighdDiagramServer extends DiagramServerProxy {
     /** Generic connection to the server used to send and receive actions. */
     private _connection: Connection;
 
@@ -106,9 +108,9 @@ export class KlighdDiagramServer extends DiagramServer {
 
         const wasDiagramModelUpdated =
             message.action.kind === SetModelCommand.KIND ||
-            message.action.kind === KlighdUpdateModelAction.KIND;
+            message.action.kind === UpdateModelAction.KIND;
         if (wasDiagramModelUpdated) {
-            this.actionDispatcher.dispatch(new UpdateDepthMapModelAction());
+            this.actionDispatcher.dispatch(UpdateDepthMapModelAction.create());
 
             if (this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)) {
                 // After model is received request first piece.
@@ -118,12 +120,12 @@ export class KlighdDiagramServer extends DiagramServer {
                 //       with commands
                 // get root diagram piece
                 this.childrenToRequestQueue.reset()
-                this.actionDispatcher.dispatch(new RequestDiagramPieceAction(generateRequestId(), '$root'))
+                this.actionDispatcher.dispatch(RequestDiagramPieceAction.create(generateRequestId(), '$root'))
             }
             if (this.bookmarkRegistry.initialBookmark) {
-                this.actionDispatcher.dispatch(new GoToBookmarkAction(this.bookmarkRegistry.initialBookmark))
+                this.actionDispatcher.dispatch(GoToBookmarkAction.create(this.bookmarkRegistry.initialBookmark))
             } else if (this.renderOptionsRegistry.getValue(ResizeToFit)) {
-                this.actionDispatcher.dispatch(new KlighdFitToScreenAction(true));
+                this.actionDispatcher.dispatch(KlighdFitToScreenAction.create(true));
             }
         } else if (message.action.kind === SetDiagramPieceAction.KIND) {
             // add any children of the requested piece as stubs into queue
@@ -176,7 +178,7 @@ export class KlighdDiagramServer extends DiagramServer {
         registry.register(RectPackDeletePositionConstraintAction.KIND, this);
         registry.register(RefreshDiagramAction.KIND, this);
         registry.register(RefreshLayoutAction.KIND, this);
-        registry.register(RequestKlighdPopupModelAction.KIND, this);
+        registry.register(RequestPopupModelAction.KIND, this);
         registry.register(RequestDiagramPieceAction.KIND, this);
         registry.register(SetAspectRatioAction.KIND, this);
         registry.register(SetLayerConstraintAction.KIND, this);
@@ -204,7 +206,7 @@ export class KlighdDiagramServer extends DiagramServer {
         } else if (action.kind === RequestPopupModelAction.KIND) {
             // Handle RequestPopupModelAction if they are modified RequestKlighdPopupModelAction.
             // Other PopupModel requests are simply ignored.
-            if (action instanceof RequestKlighdPopupModelAction)
+            if (RequestKlighdPopupModelAction.isThisAction(action))
                 this.handleRequestKlighdPopupModel(action as RequestKlighdPopupModelAction);
         } else if (action.kind === RequestDiagramPieceAction.KIND) {
             this.handleRequestDiagramPiece(action as RequestDiagramPieceAction)
@@ -227,7 +229,7 @@ export class KlighdDiagramServer extends DiagramServer {
                 notCached.push({ k: image.bundleName, v: image.imagePath });
             }
         }
-        this.actionDispatcher.dispatch(new CheckedImagesAction(notCached));
+        this.actionDispatcher.dispatch(CheckedImagesAction.create(notCached));
     }
 
     handleStoreImages(action: StoreImagesAction): void {
@@ -263,7 +265,7 @@ export class KlighdDiagramServer extends DiagramServer {
             const model = this.popupModelProvider.getPopupModel(action, element);
 
             if (model) {
-                this.actionDispatcher.dispatch(new SetPopupModelAction(model));
+                this.actionDispatcher.dispatch(SetPopupModelAction.create(model));
             }
         }
         return false;
@@ -276,6 +278,6 @@ export class KlighdDiagramServer extends DiagramServer {
     handleViewportResult(action: ViewportResult): void {
         this.childrenToRequestQueue.setViewport(action)
         const child = this.childrenToRequestQueue.dequeue()!
-        this.actionDispatcher.dispatch(new RequestDiagramPieceAction(generateRequestId(), child.id))
+        this.actionDispatcher.dispatch(RequestDiagramPieceAction.create(generateRequestId(), child.id))
     }
 }

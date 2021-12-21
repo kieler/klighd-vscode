@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { svg } from 'snabbdom-jsx'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from "snabbdom/vnode";
+import { VNode } from "snabbdom";
+import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { KNode } from '../constraint-classes';
 import { renderLock } from '../interactive-view-objects';
 
@@ -58,7 +58,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
         stroke={color}
         fill= 'rgba(0,0,0,0)'
         strokeWidth={2 * boundingBoxMargin}
-        style={{ 'stroke-dasharray': 4 }}>
+        style={{ 'stroke-dasharray': '4' }}>
     </rect></g>
 }
 

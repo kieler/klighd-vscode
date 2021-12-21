@@ -16,7 +16,8 @@
  */
 
 import { injectable } from "inversify";
-import { Action, IActionHandler, ICommand } from "sprotty";
+import { IActionHandler, ICommand } from "sprotty";
+import { Action } from "sprotty-protocol";
 
 type Handler = () => void;
 

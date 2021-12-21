@@ -15,7 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import { injectable } from "inversify";
-import { Action, ICommand } from "sprotty";
+import { ICommand } from "sprotty";
+import { Action } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "./actions";
 

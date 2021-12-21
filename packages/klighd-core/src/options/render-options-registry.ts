@@ -16,7 +16,8 @@
  */
 
 import { inject, injectable, postConstruct } from "inversify";
-import { Action, ICommand, UpdateModelAction } from "sprotty";
+import { ICommand } from "sprotty";
+import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
@@ -337,7 +338,7 @@ export class RenderOptionsRegistry extends Registry {
             this.notifyListeners();
 
         }
-        return new UpdateModelAction([], false, action)
+        return UpdateModelAction.create([], { animate: false, cause: action })
     }
 
     get allRenderOptions(): RenderOption[] {

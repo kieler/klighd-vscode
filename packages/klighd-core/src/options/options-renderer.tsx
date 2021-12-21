@@ -16,19 +16,9 @@
  */
 
 /** @jsx html */
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { VNode } from "snabbdom/vnode";
 import { inject, injectable } from "inversify";
-import {
-    DisplayedActionData,
-    LayoutOptionUIData,
-    SynthesisOption,
-    RangeOption as RangeOptionData,
-    Type,
-    RenderOption,
-    TransformationOptionType
-} from "./option-models";
-import { IActionDispatcher, TYPES } from "sprotty";
+import { VNode } from "snabbdom";
+import { html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import {
     PerformOptionsActionAction,
     SetLayoutOptionsAction,
@@ -43,6 +33,15 @@ import {
     SeparatorOption,
     CategoryOption,
 } from "./components/option-inputs";
+import {
+    DisplayedActionData,
+    LayoutOptionUIData,
+    SynthesisOption,
+    RangeOption as RangeOptionData,
+    Type,
+    RenderOption,
+    TransformationOptionType
+} from "./option-models";
 
 // Note: Skipping a JSX children by rendering null or undefined for that child does not work the same way
 // as it works in React. It will render the literals as words. To skip a child return an empty string "".
@@ -65,13 +64,13 @@ export class OptionsRenderer {
      */
     renderServerOptions(options: AllOptions): VNode {
         return (
-            <div classNames="options">
+            <div class-options="true">
                 {options.actions.length === 0 ? (
                     ""
                 ) : (
-                    <div classNames="options__section">
-                        <h5 classNames="options__heading">Actions</h5>
-                        <div classNames="options__button-group">
+                    <div class-options__section="true">
+                        <h5 class-options__heading="true">Actions</h5>
+                        <div class-options__button-group="true">
                             {this.renderActions(options.actions)}
                         </div>
                     </div>
@@ -79,16 +78,16 @@ export class OptionsRenderer {
                 {options.synthesisOptions.length === 0 ? (
                     ""
                 ) : (
-                    <div classNames="options__section">
-                        <h5 classNames="options__heading">Synthesis Options</h5>
+                    <div class-options__section="true">
+                        <h5 class-options__heading="true">Synthesis Options</h5>
                         {this.renderSynthesisOptions(options.synthesisOptions, null)}
                     </div>
                 )}
                 {options.layoutOptions.length === 0 ? (
                     ""
                 ) : (
-                    <div classNames="options__section">
-                        <h5 classNames="options__heading">Layout Options</h5>
+                    <div class-options__section="true">
+                        <h5 class-options__heading="true">Layout Options</h5>
                         {this.renderLayoutOptions(options.layoutOptions)}
                     </div>
                 )}
@@ -99,7 +98,7 @@ export class OptionsRenderer {
     private renderActions(actions: DisplayedActionData[]): (VNode | "")[] | "" {
         return actions.map((action) => (
             <button
-                classNames="options__button"
+                class-options__button="true"
                 key={action.actionId}
                 title={action.tooltipText}
                 on-click={this.handleActionClick.bind(this, action.actionId)}
@@ -110,7 +109,7 @@ export class OptionsRenderer {
     }
 
     private handleActionClick(actionId: string) {
-        this.actionDispatcher.dispatch(new PerformOptionsActionAction(actionId));
+        this.actionDispatcher.dispatch(PerformOptionsActionAction.create(actionId));
     }
 
     /**
@@ -195,7 +194,7 @@ export class OptionsRenderer {
 
     private handleSynthesisOptionChange(option: SynthesisOption, newValue: any) {
         this.actionDispatcher.dispatch(
-            new SetSynthesisOptionsAction([{ ...option, currentValue: newValue }])
+            SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }])
         );
     }
 
@@ -247,7 +246,7 @@ export class OptionsRenderer {
 
     private handleLayoutOptionChange(option: LayoutOptionUIData, newValue: any) {
         this.actionDispatcher.dispatch(
-            new SetLayoutOptionsAction([{ optionId: option.optionId, value: newValue }])
+            SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }])
         );
     }
 
@@ -288,6 +287,6 @@ export class OptionsRenderer {
     }
 
     private handleRenderOptionChange(option: RenderOption, newValue: any) {
-        this.actionDispatcher.dispatch(new SetRenderOptionAction(option.id, newValue));
+        this.actionDispatcher.dispatch(SetRenderOptionAction.create(option.id, newValue));
     }
 }

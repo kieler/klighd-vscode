@@ -16,7 +16,8 @@
  */
 
 import { KGraphElement, KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
-import { Point, SChildElement, SModelRoot, Viewport } from "sprotty";
+import { SChildElement, SModelRoot } from "sprotty";
+import { Point, Viewport } from "sprotty-protocol";
 import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
 import { isContainerRendering, isRendering, KRendering } from "./skgraph-models";
 

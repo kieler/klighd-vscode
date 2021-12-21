@@ -26,7 +26,7 @@
 // https://gitter.im/inversify/InversifyJS?at=5e4ed3645fd3f22ede92d911
 
 import { Container } from "inversify";
-import { ActionMessage } from "sprotty";
+import { ActionMessage } from "sprotty-protocol";
 
 /** All services that are required by the `klighd-core` package and have to be provided externally. */
 interface Services {

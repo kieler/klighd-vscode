@@ -16,10 +16,13 @@
  */
 import { inject, injectable } from 'inversify';
 import {
-    Action, CommandExecutionContext, CommandResult, FitToScreenAction, Match, RequestAction,
-    ResetCommand, ResponseAction, SModelElementSchema, SModelRoot, SModelRootSchema, TYPES,
-    UpdateModelAction,
+     CommandExecutionContext, CommandResult,
+    ResetCommand, SModelRoot, TYPES,
 } from 'sprotty';
+import {
+    Action, FitToScreenAction, RequestAction, ResponseAction,
+    SModelElement
+} from "sprotty-protocol";
 import { insertSModelElementIntoModel } from '../diagram-pieces/smodel-util';
 import { KImage } from '../skgraph-models';
 
@@ -28,11 +31,19 @@ import { KImage } from '../skgraph-models';
  *
  * @author nre
  */
-export class StoreImagesAction implements Action {
-    static readonly KIND: string = 'storeImages'
-    readonly kind = StoreImagesAction.KIND
+export interface StoreImagesAction extends Action {
+    kind: typeof StoreImagesAction.KIND
+    images: Pair<Pair<string, string>, string>[]
+}
 
-    constructor(public readonly images: Pair<Pair<string, string>, string>[]) {
+export namespace StoreImagesAction {
+    export const KIND = 'storeImages'
+
+    export function create(images: Pair<Pair<string, string>, string>[]): StoreImagesAction {
+        return {
+            kind: KIND,
+            images,
+        }
     }
 }
 
@@ -48,24 +59,40 @@ export interface Pair<K, V> {
  * Sent from the server to the client to check if the {@link KImage}s provided in the message are cached or if they need
  * to be sent to the client again.
  */
-export class CheckImagesAction implements RequestAction<CheckedImagesAction> {
-    static readonly KIND: string = 'checkImages'
-    readonly kind = CheckImagesAction.KIND
+export interface CheckImagesAction extends RequestAction<CheckedImagesAction> {
+    kind: typeof CheckImagesAction.KIND
+    images: KImage[]
+}
 
-    constructor(public readonly images: KImage[],
-        public readonly requestId: string = '') {
+export namespace CheckImagesAction {
+    export const KIND = 'checkImages'
+
+    export function create(images: KImage[], requestId = ''): CheckImagesAction {
+        return {
+            kind: KIND,
+            images,
+            requestId,
+        }
     }
 }
 
 /**
  * Sent from the client to the server to inform it whether images need to be sent to the client before accepting the next diagram.
  */
-export class CheckedImagesAction implements ResponseAction {
-    static readonly KIND: string = 'checkedImages'
-    readonly kind = CheckedImagesAction.KIND
+export interface CheckedImagesAction extends ResponseAction {
+    kind: typeof CheckedImagesAction.KIND
+    notCached: Pair<string, string>[]
+}
 
-    constructor(public readonly notCached: Pair<string, string>[],
-        public readonly responseId = '') {
+export namespace CheckedImagesAction {
+    export const KIND = 'checkedImages'
+
+    export function create(notCached: Pair<string, string>[], responseId = ''): CheckedImagesAction {
+        return {
+            kind: KIND,
+            notCached,
+            responseId,
+        }
     }
 }
 
@@ -73,38 +100,42 @@ export class CheckedImagesAction implements ResponseAction {
  * Sent from the client to the diagram server to perform a klighd action on the model.
  * Causes the server to update the diagram accordingly to the action.
  */
-export class PerformActionAction implements Action {
-    static readonly KIND = 'performAction'
-    kind = PerformActionAction.KIND
+export interface PerformActionAction extends Action {
+    kind: typeof PerformActionAction.KIND
+    actionId: string
+    kGraphElementId: string
+    kRenderingId: string
+    revision?: number
+}
 
-    constructor(public readonly actionId: string, public kGraphElementId: string, protected kRenderingId: string, protected revision?: number) {
-    }
+export namespace PerformActionAction {
+    export const KIND = 'performAction'
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is PerformActionAction {
-        return action.kind === PerformActionAction.KIND;
+    export function create(actionId: string, kGraphElementId: string, kRenderingId: string, revision?: number): PerformActionAction {
+        return {
+            kind: KIND,
+            actionId,
+            kGraphElementId,
+            kRenderingId,
+            revision,
+        }
     }
 }
 
 /**
  * A sprotty action to refresh the layout. Send from client to server.
  */
-export class RefreshLayoutAction implements Action {
-    static readonly KIND: string = 'refreshLayout'
-    readonly kind = RefreshLayoutAction.KIND
+export interface RefreshLayoutAction extends Action {
+    kind: typeof RefreshLayoutAction.KIND
 }
 
-export class KlighdUpdateModelAction extends UpdateModelAction {
-    static readonly KIND = 'updateModel';
+export namespace RefreshLayoutAction {
+    export const KIND = 'refreshLayout'
 
-    public readonly newRoot?: SModelRootSchema;
-    public readonly matches?: Match[];
-    public cause: Action;
-
-    constructor(input: SModelRootSchema | Match[], cause: Action,
-                public readonly animate: boolean = true) {
-        super(input, animate)
-        this.cause = cause
+    export function create(): RefreshLayoutAction {
+        return {
+            kind: KIND,
+        }
     }
 }
 
@@ -112,32 +143,57 @@ export class KlighdUpdateModelAction extends UpdateModelAction {
  * Extended {@link FitToScreenAction} that always fits the root element with a padding
  * of 10px. Most of the time this is the wanted behavior in the `klighd-core`.
  */
-export class KlighdFitToScreenAction extends FitToScreenAction {
-    constructor(animate?: boolean) {
-        super(["$root"], 10, undefined, animate)
+export type KlighdFitToScreenAction = FitToScreenAction
+
+export namespace KlighdFitToScreenAction {
+    export function create( animate?: boolean): FitToScreenAction {
+        return {
+            kind: FitToScreenAction.KIND,
+            elementIds: ["$root"],
+            padding: 10,
+            animate: animate ?? true
+        }
     }
 }
 
 /**
  * Sent from client to request a certain piece of the diagram.
  */
-export class RequestDiagramPieceAction implements RequestAction<SetDiagramPieceAction> {
-    static readonly KIND: string = 'requestDiagramPiece'
-    readonly kind = RequestDiagramPieceAction.KIND
+export interface RequestDiagramPieceAction extends RequestAction<SetDiagramPieceAction> {
+    kind: typeof RequestDiagramPieceAction.KIND
+    modelElementId: string
+}
 
-    constructor(public readonly requestId: string = '',
-                public readonly modelElementId: string) {}
+export namespace RequestDiagramPieceAction {
+    export const KIND = 'requestDiagramPiece'
+
+    export function create(requestId = '', modelElementId: string): RequestDiagramPieceAction {
+        return {
+            kind: KIND,
+            requestId,
+            modelElementId,
+        }
+    }
 }
 
 /**
  * Response to {@link RequestDiagramPieceAction}. Contains the requested SModelElement.
  */
-export class SetDiagramPieceAction implements ResponseAction {
-    static readonly KIND: string = 'setDiagramPiece'
-    readonly kind = SetDiagramPieceAction.KIND
+export interface SetDiagramPieceAction extends ResponseAction {
+    kind: typeof SetDiagramPieceAction.KIND
+    diagramPiece: SModelElement
+}
 
-    constructor(public readonly responseId: string = '',
-                public readonly diagramPiece: SModelElementSchema) {}
+export namespace SetDiagramPieceAction {
+    export const KIND = 'setDiagramPiece'
+
+    export function create(responseId = "", diagramPiece: SModelElement): SetDiagramPieceAction {
+        return {
+            kind: KIND,
+            responseId,
+            diagramPiece,
+        }
+    }
 }
 
 /**

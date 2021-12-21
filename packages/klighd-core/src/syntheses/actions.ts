@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Action } from "sprotty";
+import { Action } from "sprotty-protocol";
 
 /** Data sent to the client for setting the available syntheses. */
 export interface SetSynthesesActionData {
@@ -26,27 +26,43 @@ export interface SetSynthesesActionData {
 }
 
 /** Sent from the server to the client to send a list of all available syntheses for the current model. */
-export class SetSynthesesAction implements Action {
-    static readonly KIND: string = "setSyntheses";
-    readonly kind = SetSynthesesAction.KIND;
+export interface SetSynthesesAction extends Action {
+    kind: typeof SetSynthesesAction.KIND
+    syntheses: SetSynthesesActionData[]
+}
 
-    constructor(public readonly syntheses: SetSynthesesActionData[]) {}
+export namespace SetSynthesesAction {
+    export const KIND = "setSyntheses"
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is SetSynthesesAction {
+    export function create(syntheses: SetSynthesesActionData[]): SetSynthesesAction {
+        return {
+            kind: KIND,
+            syntheses,
+        }
+    }
+
+    export function isThisAction(action: Action): action is SetSynthesesAction {
         return action.kind === SetSynthesesAction.KIND;
     }
 }
 
 /** Sent from the client to the server to request a new diagram with the given synthesis. */
-export class SetSynthesisAction implements Action {
-    static readonly KIND: string = "setSynthesis";
-    readonly kind = SetSynthesisAction.KIND;
+export interface SetSynthesisAction extends Action {
+    kind: typeof SetSynthesisAction.KIND
+    id: string
+}
 
-    constructor(public readonly id: string) {}
+export namespace SetSynthesisAction {
+    export const KIND = "setSynthesis"
 
-    /** Type predicate to narrow an action to this action. */
-    static isThisAction(action: Action): action is SetSynthesisAction {
+    export function create(id: string): SetSynthesisAction {
+        return {
+            kind: KIND,
+            id,
+        }
+    }
+
+    export function isThisAction(action: Action): action is SetSynthesisAction {
         return action.kind === SetSynthesisAction.KIND;
     }
 }

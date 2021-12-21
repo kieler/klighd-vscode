@@ -17,10 +17,10 @@
  */
 
 import { inject, injectable, postConstruct } from "inversify";
-import { VNode } from "snabbdom/vnode";
-import { html } from "snabbdom-jsx"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { IActionDispatcher, TYPES } from "sprotty";
+import { VNode } from "snabbdom";
+import { html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DISymbol } from "../di.symbols";
+import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SidebarPanel } from "../sidebar";
 import { BookmarkRegistry } from "./bookmark-registry";
 import { Bookmark, GoToBookmarkAction, CreateBookmarkAction, DeleteBookmarkAction, AddBookmarkAction, RenameBookmarkAction } from "./bookmark";
@@ -47,24 +47,24 @@ export class BookmarkPanel extends SidebarPanel {
         return "Bookmarks"
     }
     get icon(): VNode {
-        return <i attrs={{ "data-feather": "bookmark" }}></i>
+        return <FeatherIcon iconId={"bookmark"}/>
     }
     render(): VNode {
         return <div>
             <div>
                 <button
                     title="Create new Bookmark"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.newBookmark()}
                 >
-                    <i attrs={{ "data-feather": "bookmark" }} />
+                    <FeatherIcon iconId={"bookmark"}/>
                 </button>
                 <button
                     title="Load from Clipboard"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.handleBookmarkPast()}
                 >
-                    <i attrs={{ "data-feather": "upload" }} />
+                    <FeatherIcon iconId={"upload"}/>
                 </button>
             </div>
             {this.renderBookmarkList()}
@@ -87,40 +87,40 @@ export class BookmarkPanel extends SidebarPanel {
                 <legend>{bookmark.name ?? ("Bookmark " + bookmark.bookmarkIndex)}</legend>
                 <button
                     title="Goto"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.handleBookmarkGoto(bookmark)}
                 >
-                    <i attrs={{ "data-feather": "map-pin" }} />
+                    <FeatherIcon iconId={"map-pin"}/>
                 </button>
                 <button
                     title="Save to Clipboard"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.handleBookmarkCopy(bookmark)}
                 >
-                    <i attrs={{ "data-feather": "download" }} />
+                    <FeatherIcon iconId={"download"}/>
                 </button>
                 <button
                     title="Delete Bookmark"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.deleteBookmark(bookmark)}
                 >
-                    <i attrs={{ "data-feather": "trash-2" }} />
+                    <FeatherIcon iconId={"trash-2"}/>
                 </button>
                 <button
                     id={bookmark.editId}
                     title="Edit Bookmark Name"
-                    classNames="options__icon-button"
+                    class-options__icon-button="true"
                     on-click={() => this.startBookmarkNameEdit(bookmark)}
                 >
-                    <i attrs={{ "data-feather": "edit-3" }} />
+                    <FeatherIcon iconId={"edit-3"}/>
                 </button>
-                <span id={bookmark.saveId} classNames="options__hidden">
+                <span id={bookmark.saveId} class-options__hidden="true">
                     <button
                         title="Save Bookmark Name"
-                        classNames="options__icon-button"
+                        class-options__icon-button="true"
                         on-click={() => this.saveBookmarkName(bookmark)}
                     >
-                        <i attrs={{ "data-feather": "check" }} />
+                        <FeatherIcon iconId={"check"}/>
                     </button>
                     <input type="text" value={bookmark.name ?? ""} placeholder="Enter Bookmark Name" on-keypress={(event: KeyboardEvent) => this.inputSaveBookmarkName(bookmark, event)} />
                 </span>
@@ -129,16 +129,16 @@ export class BookmarkPanel extends SidebarPanel {
     }
 
     protected handleBookmarkGoto(bookmark: Bookmark): void {
-        this.actionDispatcher.dispatch(new GoToBookmarkAction(bookmark));
+        this.actionDispatcher.dispatch(GoToBookmarkAction.create(bookmark));
     }
 
     protected newBookmark(): void {
-        this.actionDispatcher.dispatch(new CreateBookmarkAction());
+        this.actionDispatcher.dispatch(CreateBookmarkAction.create());
     }
 
     protected deleteBookmark(bookmark: Bookmark): void {
         if (bookmark.bookmarkIndex !== undefined) {
-            this.actionDispatcher.dispatch(new DeleteBookmarkAction(bookmark.bookmarkIndex))
+            this.actionDispatcher.dispatch(DeleteBookmarkAction.create(bookmark.bookmarkIndex))
         }
     }
 
@@ -147,7 +147,7 @@ export class BookmarkPanel extends SidebarPanel {
 
         if (Bookmark.isBookmark(bookmark)) {
             bookmark.clone = Bookmark.prototype.clone
-            this.actionDispatcher.dispatch(new AddBookmarkAction(bookmark.clone()))
+            this.actionDispatcher.dispatch(AddBookmarkAction.create(bookmark.clone()))
         } else {
             console.log("Clipboard does not contain a valid Bookmark")
         }
@@ -173,7 +173,7 @@ export class BookmarkPanel extends SidebarPanel {
         if (save && bookmark.bookmarkIndex !== undefined) {
             save.classList.toggle("options__hidden", true)
             const new_name = save.getElementsByTagName("input")[0].value ?? undefined;
-            this.actionDispatcher.dispatch(new RenameBookmarkAction(bookmark.bookmarkIndex, new_name));
+            this.actionDispatcher.dispatch(RenameBookmarkAction.create(bookmark.bookmarkIndex, new_name));
         }
     }
 

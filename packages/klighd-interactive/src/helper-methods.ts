@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SNode } from "sprotty/lib/graph/sgraph"
+import { SNode } from "sprotty"
 import { KNode } from "./constraint-classes"
 
 /**

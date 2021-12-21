@@ -16,7 +16,7 @@
  */
 
 import { Memento } from "vscode";
-import { LanguageClient } from "vscode-languageclient";
+import { CommonLanguageClient } from "vscode-languageclient";
 import { KLighDWebview } from "../klighd-webview";
 import { PersistenceMessage } from "./messages";
 
@@ -31,7 +31,7 @@ export class StorageService {
     private static readonly key = "klighdPersistence";
     private memento: Memento;
 
-    constructor(memento: Memento, client: LanguageClient) {
+    constructor(memento: Memento, client: CommonLanguageClient) {
         this.memento = memento;
 
         const data = this.getData();

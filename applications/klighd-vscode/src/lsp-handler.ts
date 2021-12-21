@@ -15,13 +15,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import { window, TextEdit, workspace, Uri, WorkspaceEdit } from "vscode";
-import { LanguageClient, Range as LspRange } from "vscode-languageclient";
+import { CommonLanguageClient, Range as LspRange } from "vscode-languageclient";
 
 /** Handles KLighD specific LSP extensions. */
 export class LspHandler {
     private lastEditSuccessful: boolean;
 
-    constructor(private lsClient: LanguageClient) {
+    constructor(private lsClient: CommonLanguageClient) {
         lsClient.onReady().then(() => {
             lsClient.onNotification("general/sendMessage", this.handleGeneralMessage.bind(this));
             lsClient.onNotification(

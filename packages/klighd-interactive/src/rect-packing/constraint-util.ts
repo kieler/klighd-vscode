@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020 by
+ * Copyright 2020-2021 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { getAbsoluteBounds, translate } from 'sprotty';
+import { getAbsoluteBounds } from 'sprotty';
+import { Action, Bounds } from 'sprotty-protocol';
 import { RectPackSetPositionConstraintAction, SetAspectRatioAction } from './actions';
 import { RefreshDiagramAction } from '../actions';
 import { KNode } from '../constraint-classes';
@@ -27,15 +28,15 @@ import { KNode } from '../constraint-classes';
  * @param parent The parent node.
  * @param event The mouse released event.
  */
-export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent: KNode | undefined, event: MouseEvent): SetAspectRatioAction | RefreshDiagramAction {
+export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent: KNode | undefined, event: MouseEvent): Action {
     // If node is not put to a valid position the diagram will be refreshed.
-    let result = new RefreshDiagramAction()
+    let result: Action = RefreshDiagramAction.create()
     // If the node is moved on top of another node it takes its place.
     nodes.forEach(node => {
         if (node.id !== target.id) {
             const targetBounds = getAbsoluteBounds(node)
             const canvasBounds = target.root.canvasBounds;
-            const boundsInWindow = translate(targetBounds, canvasBounds);
+            const boundsInWindow = Bounds.translate(targetBounds, canvasBounds);
             const lowX = boundsInWindow.x
             const lowY = boundsInWindow.y
             const highX = boundsInWindow.x + boundsInWindow.width
@@ -51,14 +52,14 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
                         actualTargetPosition = target.properties.desiredPosition
                     }
                     if (actualPosition !== actualTargetPosition && actualPosition !== -1) {
-                        result = new RectPackSetPositionConstraintAction(
-                            {id: target.id, order: actualPosition}
-                        )
+                        result = RectPackSetPositionConstraintAction.create({
+                            id: target.id, order: actualPosition
+                        })
                     }
                 }
         }
     });
-    if (result instanceof RefreshDiagramAction) {
+    if (result.kind ===  RefreshDiagramAction.KIND) {
         // Case node should not be swapped.
 
         // Calculate aspect ratio.
@@ -84,7 +85,7 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
 
         // If changed update aspect ratio.
         if (parent && parent.properties.aspectRatio !== aspectRatio) {
-            return new SetAspectRatioAction({
+            return SetAspectRatioAction.create({
                 id: parent.id,
                 aspectRatio: aspectRatio
             })

@@ -60,11 +60,11 @@ export class KlighdModelViewer extends ModelViewer {
         const baseDiv = document.getElementById(this.options.baseDiv);
         if (baseDiv !== null) {
             const newBounds = this.getBoundsInPage(baseDiv as Element);
-            this.actiondispatcher.dispatch(new InitializeCanvasBoundsAction(newBounds));
+            this.actiondispatcher.dispatch(InitializeCanvasBoundsAction.create(newBounds));
 
             // Fit the diagram to the new window size, if the user enabled this behavior
             if (this.renderOptionsRegistry.getValue(ResizeToFit))
-                this.actiondispatcher.dispatch(new KlighdFitToScreenAction(false));
+                this.actiondispatcher.dispatch(KlighdFitToScreenAction.create(false));
         }
     };
 }
