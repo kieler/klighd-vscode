@@ -65,6 +65,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderRectangularShape(
     rendering: KContainerRendering,
@@ -73,7 +74,8 @@ export function renderRectangularShape(
     styles: KStyles,
     stylesToPropagate: KStyles,
     context: SKGraphModelRenderer,
-    mListener: KlighdInteractiveMouseListener): VNode {
+    mListener: KlighdInteractiveMouseListener,
+    childOfNodeTitle?: boolean): VNode {
 
     const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
@@ -83,7 +85,7 @@ export function renderRectangularShape(
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener, childOfNodeTitle)}
         </g>
     }
 
@@ -155,7 +157,7 @@ export function renderRectangularShape(
 
                 element = <g id={rendering.renderingId} {...gAttrs}>
                     {...renderSVGArc(lineStyles, colorStyles, shadowStyles, d, styles.kShadow)}
-                    {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+                    {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener, childOfNodeTitle)}
                 </g>
                 break
             } else {
@@ -166,7 +168,7 @@ export function renderRectangularShape(
         case K_ELLIPSE: {
             element = <g id={rendering.renderingId} {...gAttrs}>
                 {...renderSVGEllipse(boundsAndTransformation.bounds, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener, childOfNodeTitle)}
             </g>
             break
         }
@@ -181,7 +183,7 @@ export function renderRectangularShape(
 
             element = <g id={rendering.renderingId} {...gAttrs}>
                 {...renderSVGRect(boundsAndTransformation.bounds, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener, childOfNodeTitle)}
             </g>
             break
         }
@@ -237,6 +239,7 @@ export function renderRectangularShape(
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderLine(rendering: KPolyline,
     parent: SKGraphElement | SKEdge,
@@ -244,7 +247,8 @@ export function renderLine(rendering: KPolyline,
     styles: KStyles,
     stylesToPropagate: KStyles,
     context: SKGraphModelRenderer,
-    mListener: KlighdInteractiveMouseListener): VNode {
+    mListener: KlighdInteractiveMouseListener,
+    childOfNodeTitle?: boolean): VNode {
 
     const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
@@ -254,7 +258,7 @@ export function renderLine(rendering: KPolyline,
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener, childOfNodeTitle)}
         </g>
     }
 
@@ -268,7 +272,7 @@ export function renderLine(rendering: KPolyline,
     const points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
         return <g>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener, childOfNodeTitle)}
         </g>
     }
 
@@ -360,7 +364,7 @@ export function renderLine(rendering: KPolyline,
     // Only apply the fast shadow to KPolygons, other shadows are not allowed there.
     const element = <g id={rendering.renderingId} {...gAttrs}>
         {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
-        {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+        {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener, childOfNodeTitle)}
     </g>
     return element
 }
@@ -372,13 +376,15 @@ export function renderLine(rendering: KPolyline,
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  * @param mListener The mouse listener.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderKText(rendering: KText,
     parent: SKGraphElement | SKLabel,
     boundsAndTransformation: BoundsAndTransformation,
     styles: KStyles,
     context: SKGraphModelRenderer,
-    mListener: KlighdInteractiveMouseListener): VNode {
+    mListener: KlighdInteractiveMouseListener,
+    childOfNodeTitle?: boolean): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -408,11 +414,9 @@ export function renderKText(rendering: KText,
     const textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
-    const region = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
-
     const simplifySmallTextOption = context.renderingOptions.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails) && !rendering.isNodeTitle) {
+    if (simplifySmallText && !rendering.isNodeTitle && !childOfNodeTitle) {
         const simplificationThreshold = context.renderingOptions.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
@@ -515,14 +519,15 @@ export function renderKText(rendering: KText,
  * @param parent The parent element containing this rendering.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
-    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): (VNode | undefined)[] {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener, childOfNodeTitle?: boolean): (VNode | undefined)[] {
     // children only should be rendered if the parentElement is not a shadow
     if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
         const renderings: (VNode | undefined)[] = []
         for (const childRendering of parentRendering.children) {
-            const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, mListener)
+            const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, mListener, childOfNodeTitle)
             renderings.push(rendering)
         }
         return renderings
@@ -836,9 +841,10 @@ export function renderSingleSVGLine(x: number | undefined, y: number | undefined
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this rendering.
  * @param mListener The mouse listener.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function getRendering(datas: KGraphData[], parent: SKGraphElement, propagatedStyles: KStyles,
-    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined {
+    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener, childOfNodeTitle?: boolean): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -852,7 +858,7 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
         return undefined
     }
 
-    return renderKRendering(kRendering, parent, propagatedStyles, context, mListener)
+    return renderKRendering(kRendering, parent, propagatedStyles, context, mListener, childOfNodeTitle)
 }
 
 /**
@@ -862,9 +868,14 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  * @param mListener The mouse listener.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
-export function renderKRendering(kRendering: KRendering, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles,
-    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
+export function renderKRendering(kRendering: KRendering,
+    parent: SKGraphElement | SKLabel,
+    propagatedStyles: KStyles,
+    context: SKGraphModelRenderer,
+    mListener: KlighdInteractiveMouseListener,
+    childOfNodeTitle?: boolean): VNode | undefined { // TODO: not all of these are implemented yet
 
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
@@ -1017,18 +1028,18 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement 
         case K_IMAGE:
         case K_RECTANGLE:
         case K_ROUNDED_RECTANGLE: {
-            svgRendering = renderRectangularShape(kRendering as KContainerRendering, parent, boundsAndTransformation, styles, stylesToPropagate, context, mListener)
+            svgRendering = renderRectangularShape(kRendering as KContainerRendering, parent, boundsAndTransformation, styles, stylesToPropagate, context, mListener, childOfNodeTitle || isOverlay)
             break
         }
         case K_POLYLINE:
         case K_POLYGON:
         case K_ROUNDED_BENDS_POLYLINE:
         case K_SPLINE: {
-            svgRendering = renderLine(kRendering as KPolyline, parent, boundsAndTransformation, styles, stylesToPropagate, context, mListener)
+            svgRendering = renderLine(kRendering as KPolyline, parent, boundsAndTransformation, styles, stylesToPropagate, context, mListener, childOfNodeTitle || isOverlay)
             break
         }
         case K_TEXT: {
-            svgRendering = renderKText(kRendering as KText, parent, boundsAndTransformation, styles, context, mListener)
+            svgRendering = renderKText(kRendering as KText, parent, boundsAndTransformation, styles, context, mListener, childOfNodeTitle || isOverlay)
             break
         }
         default: {
