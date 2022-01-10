@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -37,13 +37,15 @@ import { KStyles } from './views-styles';
 @injectable()
 export class SKGraphView implements IView {
 
-    @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
+    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
+    @inject(DISymbol.RenderOptionsRegistry) renderOptionsRegistry: RenderOptionsRegistry
 
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
         ctx.renderingDefs = new Map
         ctx.renderingDefs.set("font", fontDefinition())
-        ctx.renderingOptions = this.renderOptionsRegistry;
+        ctx.mListener = this.mListener
+        ctx.renderOptionsRegistry = this.renderOptionsRegistry
 
         const viewport = findParentByFeature(model, isViewport)
         if (viewport) {
@@ -55,7 +57,7 @@ export class SKGraphView implements IView {
 
 
         // Add depthMap to context for rendering, when required.
-        const smartZoomOption = this.renderOptionsRegistry.getValue(UseSmartZoom)
+        const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
 
         // Only enable, if option is found.
         const useSmartZoom = smartZoomOption ?? false
@@ -63,7 +65,7 @@ export class SKGraphView implements IView {
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
             ctx.depthMap = DepthMap.getDM()
             if (ctx.viewport && ctx.depthMap) {
-                ctx.depthMap.updateDetailLevels(ctx.viewport, this.renderOptionsRegistry)
+                ctx.depthMap.updateDetailLevels(ctx.viewport, ctx.renderOptionsRegistry)
             }
         } else {
             ctx.depthMap = undefined
@@ -84,15 +86,12 @@ export class SKGraphView implements IView {
 @injectable()
 export class KNodeView implements IView {
 
-    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
-    @inject(DISymbol.RenderOptionsRegistry) protected renderOptionsRegistry: RenderOptionsRegistry
-
     render(node: SKNode, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderingOptions)
+            const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 // Make sure this node and its children are not drawn as long as it is not on full details.
                 node.areChildAreaChildrenRendered = true
@@ -116,10 +115,10 @@ export class KNodeView implements IView {
 
         if (isShadow) {
             // Render shadow of the node
-            shadow = getRendering(node.data, node, new KStyles, ctx, this.mListener)
+            shadow = getRendering(node.data, node, new KStyles, ctx)
         }
         if (isChildSelected(node as SKNode)) {
-            if (((node as SKNode).properties.interactiveLayout) && this.mListener.hasDragged) {
+            if (((node as SKNode).properties.interactiveLayout) && ctx.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
                 interactiveNodes = renderInteractiveLayout(node as SKNode)
             }
@@ -128,11 +127,11 @@ export class KNodeView implements IView {
         // Render nodes and constraint icon. All nodes that are not moved do not have a shadow and have their opacity set to 0.1.
         node.shadow = false
         let rendering = undefined
-        if (!this.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
+        if (!ctx.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
-            rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
+            rendering = getRendering(node.data, node, new KStyles, ctx)
 
-            if (this.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
+            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }
@@ -157,7 +156,7 @@ export class KNodeView implements IView {
             // }
         } else {
             node.opacity = 0.1
-            rendering = getRendering(node.data, node, new KStyles, ctx, this.mListener)
+            rendering = getRendering(node.data, node, new KStyles, ctx)
         }
         node.shadow = isShadow
 
@@ -218,13 +217,12 @@ export class KNodeView implements IView {
 @injectable()
 export class KPortView implements IView {
 
-    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     render(port: SKPort, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderingOptions)
+            const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 port.areChildAreaChildrenRendered = true
                 port.areNonChildAreaChildrenRendered = true
@@ -236,7 +234,7 @@ export class KPortView implements IView {
         ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
-        const rendering = getRendering(port.data, port, new KStyles, ctx, this.mListener)
+        const rendering = getRendering(port.data, port, new KStyles, ctx)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             const element =  <g>
@@ -278,14 +276,13 @@ export class KPortView implements IView {
  */
 @injectable()
 export class KLabelView implements IView {
-    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
     render(label: SKLabel, context: RenderingContext): VNode | undefined{
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderingOptions)
+            const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 label.areChildAreaChildrenRendered = true
                 label.areNonChildAreaChildrenRendered = true
@@ -298,11 +295,11 @@ export class KLabelView implements IView {
         label.areNonChildAreaChildrenRendered = false
 
         // let parent = label.parent
-        if (this.mListener.hasDragged) {
+        if (ctx.mListener.hasDragged) {
             // Nodes that are not on the same hierarchy are less visible.
             label.opacity = 0.1
         }
-        const rendering = getRendering(label.data, label, new KStyles, ctx, this.mListener)
+        const rendering = getRendering(label.data, label, new KStyles, ctx)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
@@ -345,13 +342,11 @@ export class KLabelView implements IView {
 @injectable()
 export class KEdgeView implements IView {
 
-    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
-
     render(edge: SKEdge, context: RenderingContext): VNode | undefined {
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderingOptions)
+            const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 edge.areChildAreaChildrenRendered = true
                 edge.areNonChildAreaChildrenRendered = true
@@ -371,19 +366,19 @@ export class KEdgeView implements IView {
         }
         // edge should be greyed out if the source or target is moved
         if (s !== undefined && t !== undefined && s instanceof SKNode && t instanceof SKNode) {
-            edge.moved = (s.selected || t.selected) && this.mListener.hasDragged
+            edge.moved = (s.selected || t.selected) && ctx.mListener.hasDragged
         }
 
         let rendering = undefined
-        if (!this.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {
+        if (!ctx.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {
             // edge should only be visible if it is in the same hierarchical level as
             // the moved node or no node is moved at all
-            rendering = getRendering(edge.data, edge, new KStyles, ctx, this.mListener)
+            rendering = getRendering(edge.data, edge, new KStyles, ctx)
         }
         edge.moved = false
 
         // Also get the renderings for all junction points
-        const junctionPointRenderings = getJunctionPointRenderings(edge, ctx, this.mListener)
+        const junctionPointRenderings = getJunctionPointRenderings(edge, ctx)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
