@@ -203,7 +203,7 @@ export function renderRectangularShape(
 
     if (element && context.depthMap) {
         const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
-        if (region && region.detail !== DetailLevel.FullDetails && parent.children.length > 1) {
+        if (region && region.detail !== DetailLevel.FullDetails && parent.children.length >= 1) {
             const offsetY = region.regionTitleHeight ?? 0
             const offsetX = region.regionTitleIndentation ?? 0
             const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
