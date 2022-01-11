@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -633,12 +633,12 @@ export function isInvisible(styles: KStyles): boolean {
 export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, context: SKGraphModelRenderer): LineStyles {
     // The line width as requested by the element
     let lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const useLineWidthOption = context.renderingOptions.getValue(UseMinimumLineWidth)
+    const useLineWidthOption = context.renderOptionsRegistry.getValue(UseMinimumLineWidth)
     // Only enable, if option is found.
     const useMinimumLineWidth = useLineWidthOption ?? false
     if (useMinimumLineWidth) {
         // The line witdh in px that the drawn line should not be less than.
-        const minimumLineWidth = context.renderingOptions.getValueOrDefault(MinimumLineWidth)
+        const minimumLineWidth = context.renderOptionsRegistry.getValueOrDefault(MinimumLineWidth)
         // The line width the requested one would have when rendered in the current zoom level.
         const realLineWidth = lineWidth * getZoom(target)
         if (styles.kLineWidth.lineWidth == 0) {

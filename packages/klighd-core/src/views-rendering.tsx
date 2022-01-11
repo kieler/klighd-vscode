@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -19,9 +19,8 @@ import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, TitleOverlayThreshold } from './options/render-options-registry';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -65,6 +64,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderRectangularShape(
     rendering: KContainerRendering,
@@ -73,7 +73,7 @@ export function renderRectangularShape(
     styles: KStyles,
     stylesToPropagate: KStyles,
     context: SKGraphModelRenderer,
-    mListener: KlighdInteractiveMouseListener): VNode {
+    childOfNodeTitle?: boolean): VNode {
 
     const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
@@ -83,7 +83,7 @@ export function renderRectangularShape(
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
         </g>
     }
 
@@ -93,7 +93,7 @@ export function renderRectangularShape(
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
-    const paperShadows: boolean = context.renderingOptions.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
 
     const lineStyles = getSvgLineStyles(styles, parent, context)
@@ -155,7 +155,7 @@ export function renderRectangularShape(
 
                 element = <g id={rendering.renderingId} {...gAttrs}>
                     {...renderSVGArc(lineStyles, colorStyles, shadowStyles, d, styles.kShadow)}
-                    {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+                    {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
                 </g>
                 break
             } else {
@@ -166,7 +166,7 @@ export function renderRectangularShape(
         case K_ELLIPSE: {
             element = <g id={rendering.renderingId} {...gAttrs}>
                 {...renderSVGEllipse(boundsAndTransformation.bounds, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
         }
@@ -181,7 +181,7 @@ export function renderRectangularShape(
 
             element = <g id={rendering.renderingId} {...gAttrs}>
                 {...renderSVGRect(boundsAndTransformation.bounds, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+                {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
         }
@@ -202,8 +202,8 @@ export function renderRectangularShape(
     }
 
     if (element && context.depthMap) {
-        const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
-        if (region && region.detail !== DetailLevel.FullDetails && parent.children.length > 1) {
+        const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
+        if (region && region.detail !== DetailLevel.FullDetails && parent.children.length >= 1) {
             const offsetY = region.regionTitleHeight ?? 0
             const offsetX = region.regionTitleIndentation ?? 0
             const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
@@ -237,6 +237,7 @@ export function renderRectangularShape(
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderLine(rendering: KPolyline,
     parent: SKGraphElement | SKEdge,
@@ -244,7 +245,7 @@ export function renderLine(rendering: KPolyline,
     styles: KStyles,
     stylesToPropagate: KStyles,
     context: SKGraphModelRenderer,
-    mListener: KlighdInteractiveMouseListener): VNode {
+    childOfNodeTitle?: boolean): VNode {
 
     const gAttrs = {
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
@@ -254,21 +255,21 @@ export function renderLine(rendering: KPolyline,
     // only render its children transformed by the transformation already calculated.
     if (isInvisible(styles)) {
         return <g {...gAttrs}>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
         </g>
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent)
 
-    const paperShadows: boolean = context.renderingOptions.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
     const points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
         return <g>
-            {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+            {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
         </g>
     }
 
@@ -360,7 +361,7 @@ export function renderLine(rendering: KPolyline,
     // Only apply the fast shadow to KPolygons, other shadows are not allowed there.
     const element = <g id={rendering.renderingId} {...gAttrs}>
         {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
-        {renderChildRenderings(rendering, parent, stylesToPropagate, context, mListener)}
+        {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
     </g>
     return element
 }
@@ -371,14 +372,14 @@ export function renderLine(rendering: KPolyline,
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
- * @param mListener The mouse listener.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderKText(rendering: KText,
     parent: SKGraphElement | SKLabel,
     boundsAndTransformation: BoundsAndTransformation,
     styles: KStyles,
     context: SKGraphModelRenderer,
-    mListener: KlighdInteractiveMouseListener): VNode {
+    childOfNodeTitle?: boolean): VNode {
     // Find the text to write first.
     let text = undefined
     // KText elements as renderings of labels have their text in the KLabel, not the KText
@@ -403,17 +404,15 @@ export function renderKText(rendering: KText,
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
 
-    const paperShadows: boolean = context.renderingOptions.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const textStyles = getSvgTextStyles(styles)
 
     // Replace text with rectangle, if the text is too small.
-    const region = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
-
-    const simplifySmallTextOption = context.renderingOptions.getValue(SimplifySmallText)
+    const simplifySmallTextOption = context.renderOptionsRegistry.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && (!region || region.detail === DetailLevel.FullDetails) && !rendering.isNodeTitle) {
-        const simplificationThreshold = context.renderingOptions.getValueOrDefault(TextSimplificationThreshold)
+    if (simplifySmallText && !rendering.isNodeTitle && !childOfNodeTitle) {
+        const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.calculatedTextBounds
@@ -438,7 +437,7 @@ export function renderKText(rendering: KText,
     }
 
     // The svg style of the resulting text element.
-    const opacity = mListener.hasDragged ? 0.1 : parent.opacity
+    const opacity = context.mListener.hasDragged ? 0.1 : parent.opacity
     const style = {
         ...{ 'dominant-baseline': textStyles.dominantBaseline },
         ...{ 'font-family': textStyles.fontFamily },
@@ -515,14 +514,15 @@ export function renderKText(rendering: KText,
  * @param parent The parent element containing this rendering.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
-    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): (VNode | undefined)[] {
+    context: SKGraphModelRenderer, childOfNodeTitle?: boolean): (VNode | undefined)[] {
     // children only should be rendered if the parentElement is not a shadow
     if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
         const renderings: (VNode | undefined)[] = []
         for (const childRendering of parentRendering.children) {
-            const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, mListener)
+            const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, childOfNodeTitle)
             renderings.push(rendering)
         }
         return renderings
@@ -835,10 +835,10 @@ export function renderSingleSVGLine(x: number | undefined, y: number | undefined
  * @param parent The parent element containing this rendering.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this rendering.
- * @param mListener The mouse listener.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
 export function getRendering(datas: KGraphData[], parent: SKGraphElement, propagatedStyles: KStyles,
-    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined {
+    context: SKGraphModelRenderer, childOfNodeTitle?: boolean): VNode | undefined {
     const kRenderingLibrary = datas.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -852,7 +852,7 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
         return undefined
     }
 
-    return renderKRendering(kRendering, parent, propagatedStyles, context, mListener)
+    return renderKRendering(kRendering, parent, propagatedStyles, context, childOfNodeTitle)
 }
 
 /**
@@ -861,10 +861,13 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
  * @param parent The parent element.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
- * @param mListener The mouse listener.
+ * @param childOfNodeTitle If this rendering is a child of a node title. May override special renderings
  */
-export function renderKRendering(kRendering: KRendering, parent: SKGraphElement | SKLabel, propagatedStyles: KStyles,
-    context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode | undefined { // TODO: not all of these are implemented yet
+export function renderKRendering(kRendering: KRendering,
+    parent: SKGraphElement | SKLabel,
+    propagatedStyles: KStyles,
+    context: SKGraphModelRenderer,
+    childOfNodeTitle?: boolean): VNode | undefined { // TODO: not all of these are implemented yet
 
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
@@ -879,7 +882,7 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement 
         return renderError(kRendering)
     }
 
-    const providingRegion = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderingOptions)
+    const providingRegion = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
 
     // Check if this is a title rendering. If we have a title, create that rendering, remember where it should be and how much space it has.
     // If we are zoomed in far enough, return that rendering, otherwise put it into the list to be rendered on top by the element rendering.
@@ -892,9 +895,14 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement 
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
     if (context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
-        const overlayThreshold = context.renderingOptions.getValueOrDefault(TitleOverlayThreshold)
+        // Scale to limit of bounding box or max size.
+        const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
+        let maxScale = titleScalingFactorOption
+        if (context.viewport) {
+            maxScale = maxScale / context.viewport.zoom
+        }
         if (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
-            || kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= overlayThreshold) {
+            || kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height) {
             isOverlay = true
 
             let boundingBox = boundsAndTransformation.bounds
@@ -903,12 +911,7 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement 
                 boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
             }
             
-            // Scale to limit of bounding box or max size.
-            const titleScalingFactorOption = context.renderingOptions.getValueOrDefault(TitleScalingFactor) as number
-            let maxScale = titleScalingFactorOption
-            if (context.viewport) {
-                maxScale = maxScale / context.viewport.zoom
-            }
+            
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalWidth = boundingBox.width
             const originalHeight = boundingBox.height
@@ -922,11 +925,6 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement 
             // Make sure we never scale down.
             scalingFactor = Math.max(scalingFactor,  1)
 
-            // Smooth transition between overlay title and normal title.
-            const t = Math.max((overlayThreshold - boundingBox.height * context.viewport.zoom), 0) / 3
-            if (t <= 1) {
-                scalingFactor = 1 + t * scalingFactor - t
-            }
             // Calculate the new x and y indentation:
             // width required of scaled rendering
             const newWidth = originalWidth * scalingFactor
@@ -987,7 +985,7 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement 
             }
             // Draw white background for overlaying titles
             if (context.depthMap && kRendering.isNodeTitle && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
-                && kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= overlayThreshold
+                && kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
                 overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black"/>
@@ -1017,18 +1015,18 @@ export function renderKRendering(kRendering: KRendering, parent: SKGraphElement 
         case K_IMAGE:
         case K_RECTANGLE:
         case K_ROUNDED_RECTANGLE: {
-            svgRendering = renderRectangularShape(kRendering as KContainerRendering, parent, boundsAndTransformation, styles, stylesToPropagate, context, mListener)
+            svgRendering = renderRectangularShape(kRendering as KContainerRendering, parent, boundsAndTransformation, styles, stylesToPropagate, context, childOfNodeTitle || isOverlay)
             break
         }
         case K_POLYLINE:
         case K_POLYGON:
         case K_ROUNDED_BENDS_POLYLINE:
         case K_SPLINE: {
-            svgRendering = renderLine(kRendering as KPolyline, parent, boundsAndTransformation, styles, stylesToPropagate, context, mListener)
+            svgRendering = renderLine(kRendering as KPolyline, parent, boundsAndTransformation, styles, stylesToPropagate, context, childOfNodeTitle || isOverlay)
             break
         }
         case K_TEXT: {
-            svgRendering = renderKText(kRendering as KText, parent, boundsAndTransformation, styles, context, mListener)
+            svgRendering = renderKText(kRendering as KText, parent, boundsAndTransformation, styles, context, childOfNodeTitle || isOverlay)
             break
         }
         default: {
@@ -1083,9 +1081,8 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
  * Renders all junction points of the given edge.
  * @param edge The edge the junction points should be rendered for.
  * @param context The rendering context for this rendering.
- * @param mListener The mouse listener
  */
-export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRenderer, mListener: KlighdInteractiveMouseListener): VNode[] {
+export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRenderer): VNode[] {
     const kRenderingLibrary = edge.data.find(data => data !== null && data.type === K_RENDERING_LIBRARY)
 
     if (kRenderingLibrary !== undefined) {
@@ -1125,7 +1122,7 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
         return []
     }
     // Render each junction point.
-    const vNode = renderKRendering(junctionPointRendering, edge, new KStyles, context, mListener)
+    const vNode = renderKRendering(junctionPointRendering, edge, new KStyles, context)
     if (vNode === undefined) {
         return []
     }

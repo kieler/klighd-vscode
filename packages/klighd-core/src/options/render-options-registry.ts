@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -174,25 +174,7 @@ export class TitleScalingFactor implements RangeOption {
     readonly initialValue: number = TitleScalingFactor.DEFAULT
     currentValue = 1
 }
-/**
- * The threshold at which the title will no longer overlay  
- */
-export class TitleOverlayThreshold implements RangeOption {
-    static readonly ID: string = 'title-overlay-threshold'
-    static readonly NAME: string = 'Title Overlay Threshold'
-    static readonly DEFAULT: number = 4
-    readonly id: string = TitleOverlayThreshold.ID
-    readonly name: string = TitleOverlayThreshold.NAME
-    readonly type: TransformationOptionType = TransformationOptionType.RANGE
-    readonly values: any[] = []
-    readonly range = {
-        first: 1,
-        second: 7
-    }
-    readonly stepSize = 0.01
-    readonly initialValue: number = TitleOverlayThreshold.DEFAULT
-    currentValue = 4
-}
+
 /**
  * Boolean option to toggle the scaling of lines based on zoom level.
  */
@@ -288,7 +270,6 @@ export class RenderOptionsRegistry extends Registry {
         this.register(TextSimplificationThreshold);
 
         this.register(TitleScalingFactor);
-        this.register(TitleOverlayThreshold);
 
         this.register(UseMinimumLineWidth);
         this.register(MinimumLineWidth);

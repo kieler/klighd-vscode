@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020-2021 by
+ * Copyright 2020-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { VNode } from 'snabbdom';
 import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, ViewRegistry } from 'sprotty';
 import { Viewport } from 'sprotty-protocol';
@@ -34,12 +35,14 @@ export class SKGraphModelRenderer extends ModelRenderer {
     boundsMap: any
     decorationMap: any
     depthMap?: DepthMap
-    renderingOptions: RenderOptionsRegistry
     kRenderingLibrary?: KRenderingLibrary
-    renderingDefs: Map<string, VNode>
-    viewport: Viewport
-    titles: VNode[][]
+    mListener: KlighdInteractiveMouseListener
     positions: string[]
+    renderingDefs: Map<string, VNode>
+    renderOptionsRegistry: RenderOptionsRegistry
+    titles: VNode[][]
+    viewport: Viewport
+    
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.
