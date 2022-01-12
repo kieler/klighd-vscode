@@ -519,7 +519,8 @@ export function renderKText(rendering: KText,
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, childOfNodeTitle?: boolean): (VNode | undefined)[] {
     // children only should be rendered if the parentElement is not a shadow
-    if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
+    const isShadow = (parentElement instanceof SKNode) && parentElement.shadow
+    if (!isShadow && parentRendering.children) {
         const renderings: (VNode | undefined)[] = []
         for (const childRendering of parentRendering.children) {
             const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, childOfNodeTitle)
