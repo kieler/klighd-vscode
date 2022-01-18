@@ -23,5 +23,8 @@
   },
   "include": [
     "src"
-  ]
+  ],
+  "paths": {
+    "@kieler/klighd-interactive/lib/*": ["../klighd-interactive/src/*"]
+  }
 }
