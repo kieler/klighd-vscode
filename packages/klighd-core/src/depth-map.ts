@@ -368,18 +368,6 @@ export class DepthMap {
 
     }
 
-    /**
-     * Compares the size of a node to the viewport and returns the smallest fraction of either height or width.
-     *
-     * @param node The KNode in question
-     * @param viewport The current viewport
-     * @returns the relative size of the KNodes shortest dimension
-     */
-    static sizeInViewport(node: SShapeElement, viewport: Viewport): number {
-        const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
-        const vertical = node.bounds.height / (node.root.canvasBounds.height / viewport.zoom)
-        return horizontal < vertical ? horizontal : vertical
-    }
 }
 
 
@@ -431,6 +419,18 @@ export class Region {
         }
     }
 
+    /**
+     * Compares the size of a node to the viewport and returns the smallest fraction of either height or width.
+     *
+     * @param node The KNode in question
+     * @param viewport The current viewport
+     * @returns the relative size of the KNodes shortest dimension
+     */
+     sizeInViewport(viewport: Viewport): number {
+        const horizontal = this.boundingRectangle.bounds.width  / (this.boundingRectangle.root.canvasBounds.width  / viewport.zoom)
+        const vertical   = this.boundingRectangle.bounds.height / (this.boundingRectangle.root.canvasBounds.height / viewport.zoom)
+        return horizontal < vertical ? horizontal : vertical
+    }
 
     /**
      * Decides the appropriate detail level for a region
@@ -448,7 +448,7 @@ export class Region {
             // Regions without parents should always be full detail if they are visible
             return DetailLevel.FullDetails
         } else {
-            const viewportSize = DepthMap.sizeInViewport(this.boundingRectangle, viewport)
+            const viewportSize = this.sizeInViewport(viewport)
             const scale = viewport.zoom
             // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
             if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
