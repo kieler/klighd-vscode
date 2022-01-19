@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KGraphElement, KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
-import { SChildElement, SModelRoot } from "sprotty";
+import { KGraphElement } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { SChildElement, SModelRoot, SShapeElement } from "sprotty";
 import { Point, Viewport } from "sprotty-protocol";
 import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
 import { isContainerRendering, isRendering, KRendering } from "./skgraph-models";
@@ -34,6 +34,9 @@ export enum DetailLevel {
  * All DetailLevel where the children are visible
  */
 type DetailWithChildren = DetailLevel.FullDetails
+
+type KChildElement = SChildElement & KGraphElement;
+type KShapeElement = SShapeElement & KGraphElement;
 
 /**
  * Type predicate to determine whether a DetailLevel is a DetailWithChildren level
@@ -62,35 +65,35 @@ export class DepthMap {
      * The region for immediate children of the SModelRoot,
      * aka. the root regions
      */
-    rootRegions: Region[];
+    private rootRegions: Region[];
 
     /**
      * The model for which the DepthMap is generated
      */
-    rootElement: SModelRoot;
+    private rootElement: SModelRoot;
 
     /**
      * Maps a given node id to the containing/providing Region
      * Root Child Nodes will have a providing region and no containing Region, while all
      * other nodes will have at least a containing region
      */
-    protected regionIndexMap: Map<string, RegionIndexEntry>;
+    private regionIndexMap: Map<string, RegionIndexEntry>;
 
     /**
      * The last viewport for which we updated the state of KNodes
      */
-    viewport?: Viewport;
+    private viewport?: Viewport;
 
     /**
      * The threshold for which we updated the state of KNodes
      */
-    lastThreshold?: number;
+    private lastThreshold?: number;
 
     /**
      * Set for handling regions, that need to be checked for detail level changes.
      * Consists of the region that contain at least one child with a lower detail level.
      */
-    criticalRegions: Set<Region>;
+    private criticalRegions: Set<Region>;
 
     /** Singleton pattern */
     private static instance?: DepthMap;
@@ -158,7 +161,7 @@ export class DepthMap {
      *
      * @param element The KGraphElement to initialize for DepthMap usage
      */
-    public initKGraphElement(element: SChildElement & KGraphElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
+    public initKGraphElement(element: KChildElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
 
         let entry = this.regionIndexMap.get(element.id)
         if (entry) {
@@ -170,33 +173,33 @@ export class DepthMap {
 
         const scaleThreshold = renderingOptions.getValueOrDefault(FullDetailScaleThreshold)
 
-        if (element.parent === element.root && element instanceof KNode) {
+        if (element.parent === element.root && element instanceof SShapeElement) {
             const providedRegion = new Region(element)
             providedRegion.absolutePosition = element.bounds
 
             entry = { providingRegion: providedRegion, containingRegion: undefined }
 
-            providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, relativeThreshold, scaleThreshold)
+            providedRegion.detail = providedRegion.computeDetailLevel(viewport, relativeThreshold, scaleThreshold)
 
             this.rootRegions.push(providedRegion)
 
         } else {
 
-            const parentEntry = this.initKGraphElement(element.parent as KNode, viewport, renderingOptions);
+            const parentEntry = this.initKGraphElement(element.parent as KChildElement, viewport, renderingOptions);
 
             entry = { containingRegion: parentEntry.providingRegion ?? parentEntry.containingRegion, providingRegion: undefined }
 
             const kRendering = this.findRendering(element)
-            if (element instanceof KNode && kRendering && isContainerRendering(kRendering) && kRendering.children.length !== 0) {
+            if (element instanceof SShapeElement && kRendering && isContainerRendering(kRendering) && kRendering.children.length !== 0) {
 
                 entry = { containingRegion: entry.containingRegion, providingRegion: new Region(element) }
 
-                entry.providingRegion.detail = this.computeDetailLevel(entry.providingRegion, viewport, relativeThreshold, scaleThreshold)
+                entry.providingRegion.detail = entry.providingRegion.computeDetailLevel(viewport, relativeThreshold, scaleThreshold)
 
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion);
 
-                let current = element.parent as KNode;
+                let current = element.parent as SShapeElement;
                 let offsetX = 0;
                 let offsetY = 0;
 
@@ -205,7 +208,7 @@ export class DepthMap {
                 while (current && currentEntry && !currentEntry.providingRegion) {
                     offsetX += current.bounds.x
                     offsetY += current.bounds.y
-                    current = current.parent as KNode
+                    current = current.parent as SShapeElement
                     currentEntry = this.regionIndexMap.get(current.id)
                 }
 
@@ -240,12 +243,12 @@ export class DepthMap {
         return undefined
     }
 
-    public getContainingRegion(element: SChildElement & KGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+    public getContainingRegion(element: KChildElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
         // initKGraphELement already checks if it is already initialized and if it is returns the existing value
         return this.initKGraphElement(element, viewport, renderOptions).containingRegion
     }
 
-    public getProvidingRegion(node: SChildElement & KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+    public getProvidingRegion(node: KShapeElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
         // initKGraphElement already checks if it is already initialized and if it is returns the existing value
         return this.initKGraphElement(node, viewport, renderOptions).providingRegion
     }
@@ -274,7 +277,7 @@ export class DepthMap {
         // Initialize detail level on first run.
         if (this.criticalRegions.size == 0) {
             for (const region of this.rootRegions) {
-                const vis = this.computeDetailLevel(region, viewport, relativeThreshold, scaleThreshold)
+                const vis = region.computeDetailLevel(viewport, relativeThreshold, scaleThreshold)
                 if (vis === DetailLevel.FullDetails) {
                     this.updateRegionDetailLevel(region, vis, viewport, relativeThreshold, scaleThreshold)
                 }
@@ -296,7 +299,7 @@ export class DepthMap {
         let isCritical = false;
 
         region.children.forEach(childRegion => {
-            const childVis = this.computeDetailLevel(childRegion, viewport, relativeThreshold, scaleThreshold);
+            const childVis = childRegion.computeDetailLevel(viewport, relativeThreshold, scaleThreshold);
             if (childVis < vis) {
                 isCritical = true
             }
@@ -341,7 +344,7 @@ export class DepthMap {
 
         while (toBeProcessed.size !== 0) {
             toBeProcessed.forEach(region => {
-                const vis = this.computeDetailLevel(region, viewport, relativeThreshold, scaleThreshold);
+                const vis = region.computeDetailLevel(viewport, relativeThreshold, scaleThreshold);
                 region.setDetailLevel(vis)
 
                 if (region.parent && vis !== region.parent.detail) {
@@ -366,61 +369,13 @@ export class DepthMap {
     }
 
     /**
-     * Decides the appropriate detail level for a region
-     * based on their size in the viewport and visibility
-     *
-     * @param region The region in question
-     * @param viewport The current viewport
-     * @param relativeThreshold The full detail threshold
-     * @returns The appropriate detail level
-     */
-    computeDetailLevel(region: Region, viewport: Viewport, relativeThreshold: number, scaleThreshold: number): DetailLevel {
-        if (!this.isInBounds(region, viewport)) {
-            return DetailLevel.OutOfBounds
-        } else if (!region.parent) {
-            // Regions without parents should always be full detail if they are visible
-            return DetailLevel.FullDetails
-        } else {
-            const viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
-            const scale = viewport.zoom
-            // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
-            if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
-                return DetailLevel.FullDetails
-            } else {
-                return DetailLevel.MinimalDetails
-            }
-        }
-    }
-
-    /**
-     * Checks visibility of a region with position from browser coordinates in current viewport.
-     *
-     * @param region The region in question for visibility.
-     * @param viewport The current viewport.
-     * @returns Boolean value indicating the visibility of the region in the current viewport.
-     */
-    isInBounds(region: Region, viewport: Viewport): boolean {
-        if (region.absolutePosition) {
-            const canvasBounds = this.rootElement.canvasBounds
-
-            return region.absolutePosition.x + region.boundingRectangle.bounds.width - viewport.scroll.x >= 0
-                && region.absolutePosition.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom)
-                && region.absolutePosition.y + region.boundingRectangle.bounds.height - viewport.scroll.y >= 0
-                && region.absolutePosition.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom)
-        } else {
-            // Better to assume it is visible, if information are not sufficient
-            return true
-        }
-    }
-
-    /**
      * Compares the size of a node to the viewport and returns the smallest fraction of either height or width.
      *
      * @param node The KNode in question
      * @param viewport The current viewport
      * @returns the relative size of the KNodes shortest dimension
      */
-    sizeInViewport(node: KNode, viewport: Viewport): number {
+    static sizeInViewport(node: SShapeElement, viewport: Viewport): number {
         const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
         const vertical = node.bounds.height / (node.root.canvasBounds.height / viewport.zoom)
         return horizontal < vertical ? horizontal : vertical
@@ -435,7 +390,7 @@ export class DepthMap {
  */
 export class Region {
     /** The rectangle of the child area in which the region lies. */
-    boundingRectangle: KNode
+    boundingRectangle: SShapeElement
     /** The absolute position of the boundingRectangle based on the layout information of the SModel. */
     absolutePosition: Point
     /** the regions current detail level that is used by all children */
@@ -449,10 +404,59 @@ export class Region {
     /** Indentation of region title. */
     regionTitleIndentation?: number
     /** Constructor initializes element array for region. */
-    constructor(boundingRectangle: KNode) {
+    constructor(boundingRectangle: SShapeElement) {
         this.boundingRectangle = boundingRectangle
         this.children = []
         this.detail = DetailLevel.FullDetails
+    }
+
+    /**
+     * Checks visibility of a region with position from browser coordinates in current viewport.
+     *
+     * @param region The region in question for visibility.
+     * @param viewport The current viewport.
+     * @returns Boolean value indicating the visibility of the region in the current viewport.
+     */
+     isInBounds(viewport: Viewport): boolean {
+        if (this.absolutePosition) {
+            const canvasBounds = this.boundingRectangle.root.canvasBounds
+
+            return this.absolutePosition.x + this.boundingRectangle.bounds.width - viewport.scroll.x >= 0
+                && this.absolutePosition.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom)
+                && this.absolutePosition.y + this.boundingRectangle.bounds.height - viewport.scroll.y >= 0
+                && this.absolutePosition.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom)
+        } else {
+            // Better to assume it is visible, if information are not sufficient
+            return true
+        }
+    }
+
+
+    /**
+     * Decides the appropriate detail level for a region
+     * based on their size in the viewport and visibility
+     *
+     * @param region The region in question
+     * @param viewport The current viewport
+     * @param relativeThreshold The full detail threshold
+     * @returns The appropriate detail level
+     */
+     computeDetailLevel(viewport: Viewport, relativeThreshold: number, scaleThreshold: number): DetailLevel {
+        if (!this.isInBounds(viewport)) {
+            return DetailLevel.OutOfBounds
+        } else if (!this.parent) {
+            // Regions without parents should always be full detail if they are visible
+            return DetailLevel.FullDetails
+        } else {
+            const viewportSize = DepthMap.sizeInViewport(this.boundingRectangle, viewport)
+            const scale = viewport.zoom
+            // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
+            if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
+                return DetailLevel.FullDetails
+            } else {
+                return DetailLevel.MinimalDetails
+            }
+        }
     }
 
     /**
