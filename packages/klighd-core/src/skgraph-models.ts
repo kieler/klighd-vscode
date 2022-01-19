@@ -37,7 +37,7 @@ export const LABEL_TYPE = 'label'
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKNode extends KNode {
+export class SKNode extends KNode implements SKGraphElement {
     tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
@@ -79,7 +79,7 @@ export class SKLabel extends SLabel implements SKGraphElement {
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKEdge extends KEdge {
+export class SKEdge extends KEdge implements SKGraphElement {
     tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
