@@ -6,7 +6,7 @@ export function maxParentScale(node: Bounds, parent: Bounds): number {
     // the maximum scale that keeps the node in bounds width wise
     const maxWidthScale = parent.width / node.width
 
-    return Math.max(maxHeightScale, maxWidthScale)
+    return Math.min(maxHeightScale, maxWidthScale)
 }
 
 
