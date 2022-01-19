@@ -194,8 +194,6 @@ export class DepthMap {
 
                 entry = { containingRegion: entry.containingRegion, providingRegion: new Region(element) }
 
-                entry.providingRegion.detail = entry.providingRegion.computeDetailLevel(viewport, relativeThreshold, scaleThreshold)
-
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion);
 
@@ -219,6 +217,8 @@ export class DepthMap {
                     x: offsetX + element.bounds.x,
                     y: offsetY + element.bounds.y
                 }
+
+                entry.providingRegion.detail = entry.providingRegion.computeDetailLevel(viewport, relativeThreshold, scaleThreshold)
             }
 
         }
