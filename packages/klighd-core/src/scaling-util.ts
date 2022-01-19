@@ -22,8 +22,8 @@ function inverseScaleDimension(offset_a: number, length_a: number, offset_b: num
 
     const numerator = offset_a + fa - offset_b - fb
 
-    const result_1 =  numerator / (fa - fb + length_a)
-    const result_2 = -numerator / (fb - fa + length_b)
+    const result_1 =  numerator / (fa - fb + length_b)
+    const result_2 = -numerator / (fb - fa + length_a)
 
     // the scale should be at least one and at most one of the results should be positive
     return Math.max(result_1, result_2, 1)
