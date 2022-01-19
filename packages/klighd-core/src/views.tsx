@@ -21,13 +21,14 @@ import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/k
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SShapeElement, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Bounds } from 'sprotty-protocol'
 import { DepthMap, DetailLevel, isDetailWithChildren } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom,MinimumTitleHeight, PerformNodeScaling } from './options/render-options-registry';
 import { upscaleBounds } from './scaling-util';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
-import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
+import {  NODE_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 
@@ -168,7 +169,9 @@ export class KNodeView implements IView {
             && providingRegion.regionTitleHeight * ctx.viewport.zoom < minHeight
             && ctx.renderOptionsRegistry.getValueOrDefault(PerformNodeScaling)) {
 
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(providingRegion.regionTitleHeight, minHeight, node.bounds, (node.parent as SShapeElement).bounds, ctx.viewport);
+            const siblings: Bounds[] = node.parent.children.filter((sibling) => sibling != node && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
+
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(providingRegion.regionTitleHeight, minHeight, node.bounds, (node.parent as SShapeElement).bounds, ctx.viewport, siblings);
 
             if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
                 // On initial load node.parent.bounds has all fields as 0 causing a division by 0
