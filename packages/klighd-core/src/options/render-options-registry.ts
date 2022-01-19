@@ -156,6 +156,20 @@ export class TextSimplificationThreshold implements RangeOption {
 }
 
 /**
+ * Boolean option to enable and disable the scaling of titles
+ */
+export class ScaleTitles implements RenderOption {
+    static readonly ID: string = 'use-title-scaling'
+    static readonly NAME: string = 'Scale Titles'
+    static readonly DEFAULT: boolean = false
+    readonly id: string = ScaleTitles.ID
+    readonly name: string = ScaleTitles.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = true
+    currentValue = true
+}
+
+/**
  * The minimum size a title should attempt to scale up to
  */
 export class MinimumTitleHeight implements RangeOption {
@@ -282,6 +296,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(SimplifySmallText);
         this.register(TextSimplificationThreshold);
 
+        this.register(ScaleTitles);
         this.register(MinimumTitleHeight);
 
         this.register(UseMinimumLineWidth);

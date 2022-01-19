@@ -20,7 +20,7 @@ import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unu
 import { Bounds } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, MinimumTitleHeight, UseSmartZoom } from './options/render-options-registry';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, MinimumTitleHeight, UseSmartZoom, ScaleTitles } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -894,11 +894,11 @@ export function renderKRendering(kRendering: KRendering,
     // remembers if this rendering is a title rendering and should therefore be rendered overlaying the other renderings.
     let isOverlay = false
 
-    const applyTitleScaling = context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom)
+    const applyTitleScaling = context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.renderOptionsRegistry.getValueOrDefault(ScaleTitles)
 
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
-    if (applyTitleScaling && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
+    if ( boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
 
         const overlayThreshold = context.renderOptionsRegistry.getValueOrDefault(MinimumTitleHeight) as number
 
@@ -908,15 +908,19 @@ export function renderKRendering(kRendering: KRendering,
         const notFullDetail = providingRegion && providingRegion.detail !== DetailLevel.FullDetails
         const multipleChildren = parent.children.length > 1
 
-        if ( (notFullDetail && multipleChildren) || tooSmall ) {
+        let boundingBox = boundsAndTransformation.bounds
+        // For KTexts the x and y coordinates define the origin of the baseline, not the bounding box.
+        if (kRendering.type === K_TEXT) {
+            boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
+        }
+
+        if (providingRegion) {
+            providingRegion.regionTitleHeight = boundingBox.height
+        }
+
+        if ( applyTitleScaling && ((notFullDetail && multipleChildren) || tooSmall) ) {
 
             isOverlay = true
-
-            let boundingBox = boundsAndTransformation.bounds
-            // For KTexts the x and y coordinates define the origin of the baseline, not the bounding box.
-            if (kRendering.type === K_TEXT) {
-                boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
-            }
 
 
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
