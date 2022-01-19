@@ -16,7 +16,8 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
+import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
+import { Point, Bounds } from 'sprotty-protocol'
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -116,7 +117,7 @@ export interface KRendering extends KGraphData, KStyleHolder {
     tooltip?: string
 
     /**
-     * Whether the server pre-determined this KRendering to be the title of a node or not. 
+     * Whether the server pre-determined this KRendering to be the title of a node or not.
      */
     isNodeTitle?: boolean
     /**
