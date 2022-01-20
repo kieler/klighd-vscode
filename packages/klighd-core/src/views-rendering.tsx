@@ -20,7 +20,7 @@ import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unus
 import { Bounds } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -891,18 +891,27 @@ export function renderKRendering(kRendering: KRendering,
     let overlayRectangle: VNode | undefined = undefined
     // remembers if this rendering is a title rendering and should therefore be rendered overlaying the other renderings.
     let isOverlay = false
-    
+
+    const applyTitleScaling = context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom)
+
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
-    if (context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
-        // Scale to limit of bounding box or max size.
+    if (applyTitleScaling && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
+
+		// Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
         let maxScale = titleScalingFactorOption
         if (context.viewport) {
             maxScale = maxScale / context.viewport.zoom
         }
-        if (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
-            || kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height) {
+
+        // is the rendering at the current zoom level smaller in height than our set threshold (apparently the threshold is minimum height?)
+        const tooSmall = kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
+        const notFullDetail = providingRegion && providingRegion.detail !== DetailLevel.FullDetails
+        const multipleChildren = parent.children.length > 1
+
+        if ( (notFullDetail && multipleChildren) || tooSmall ) {
+
             isOverlay = true
 
             let boundingBox = boundsAndTransformation.bounds
@@ -983,11 +992,12 @@ export function renderKRendering(kRendering: KRendering,
                 providingRegion.regionTitleHeight = newHeight
                 providingRegion.regionTitleIndentation = newX
             }
+
+            // Don't draw if the rendering is an empty KText
+            const isEmptyText = kRendering.type === K_TEXT && (kRendering as KText).text === ""
+
             // Draw white background for overlaying titles
-            if (context.depthMap && kRendering.isNodeTitle && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
-                && kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
-                // Don't draw if the rendering is an empty KText
-                && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
+            if ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && tooSmall && !isEmptyText) {
                 overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black"/>
             }
         }
