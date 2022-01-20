@@ -20,7 +20,7 @@ import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unu
 import { Bounds } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, MinimumTitleHeight, UseSmartZoom, ScaleTitles } from './options/render-options-registry';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -900,11 +900,12 @@ export function renderKRendering(kRendering: KRendering,
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
     if ( boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
 
-        const overlayThreshold = context.renderOptionsRegistry.getValueOrDefault(MinimumTitleHeight) as number
-
+		// Scale to limit of bounding box or max size.
+        const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
+        const maxScale = titleScalingFactorOption / context.viewport.zoom
 
         // is the rendering at the current zoom level smaller in height than our set threshold (apparently the threshold is minimum height?)
-        const tooSmall = kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= overlayThreshold
+        const tooSmall = kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
         const notFullDetail = providingRegion && providingRegion.detail !== DetailLevel.FullDetails
         const multipleChildren = parent.children.length > 1
 
@@ -915,6 +916,7 @@ export function renderKRendering(kRendering: KRendering,
         }
 
         if (providingRegion) {
+            providingRegion.originalTitleHeight = boundingBox.height
             providingRegion.regionTitleHeight = boundingBox.height
         }
 
@@ -926,7 +928,7 @@ export function renderKRendering(kRendering: KRendering,
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalBounds = boundingBox
 
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(originalBounds.height,overlayThreshold, originalBounds, parentBounds, context.viewport );
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(originalBounds.height, maxScale, originalBounds, parentBounds, context.viewport );
 
             // Apply the new bounds and scaling as the element's transformation.
             const translateAndScale = `translate(${newBounds.x},${newBounds.y})scale(${scalingFactor})`

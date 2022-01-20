@@ -170,23 +170,24 @@ export class ScaleTitles implements RenderOption {
 }
 
 /**
- * The minimum size a title should attempt to scale up to
+ * The factor by which titles of collapsed regions get scaled by
+ * in relation to their size at native resolution.
  */
-export class MinimumTitleHeight implements RangeOption {
-    static readonly ID: string = 'min-title-height'
-    static readonly NAME: string = 'Minimum Title Height'
-    static readonly DEFAULT: number = 10
-    readonly id: string = MinimumTitleHeight.ID
-    readonly name: string = MinimumTitleHeight.NAME
+export class TitleScalingFactor implements RangeOption {
+    static readonly ID: string = 'title-scaling-factor'
+    static readonly NAME: string = 'Title Scaling Factor'
+    static readonly DEFAULT: number = 1
+    readonly id: string = TitleScalingFactor.ID
+    readonly name: string = TitleScalingFactor.NAME
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
     readonly values: any[] = []
     readonly range = {
-        first: 0,
-        second: 40
+        first: 0.5,
+        second: 3
     }
-    readonly stepSize = 1
-    readonly initialValue: number = MinimumTitleHeight.DEFAULT
-    currentValue = MinimumTitleHeight.DEFAULT
+    readonly stepSize = 0.01
+    readonly initialValue: number = TitleScalingFactor.DEFAULT
+    currentValue = 1
 }
 
 /**
@@ -297,7 +298,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(TextSimplificationThreshold);
 
         this.register(ScaleTitles);
-        this.register(MinimumTitleHeight);
+        this.register(TitleScalingFactor);
 
         this.register(UseMinimumLineWidth);
         this.register(MinimumLineWidth);

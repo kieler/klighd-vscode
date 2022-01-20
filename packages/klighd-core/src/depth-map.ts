@@ -387,6 +387,8 @@ export class Region {
     parent?: Region
     /** All immediate child regions of this region */
     children: Region[]
+    /** The title height as defined in the model */
+    originalTitleHeight?: number
     /** Contains the height of the title of the region, if there is one. */
     regionTitleHeight?: number
     /** Indentation of region title. */

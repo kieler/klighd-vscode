@@ -39,13 +39,6 @@ export function maxSiblingScale(node: Bounds, parent:Bounds, sibling: Bounds) : 
     return Math.max(result_1, result_2, 1)
 }
 
-/*
-* Calculates at what scale we reach the desired screen size based on our model size and the viewport
-*/
-export function desiredScale(desiredSize: number, originalSize: number, viewport: Viewport) : number{
-    return desiredSize / (originalSize * viewport.zoom)
-}
-
 export function calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
     const originalWidth = originalBounds.width
     const originalHeight = originalBounds.height
@@ -69,14 +62,13 @@ export function scaleDimension(offset: number, length: number, available: number
     return {offset: newOffset, length: newLength}
 }
 
-export function upscaleBounds(currentSize: number, desiredSize: number, childBounds: Bounds, parentBounds: Bounds, viewport: Viewport, siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
+export function upscaleBounds(currentSize: number, maxScale: number, childBounds: Bounds, parentBounds: Bounds, viewport: Viewport, siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
 
-  const desiredHightScale = desiredScale(desiredSize, currentSize, viewport);
   const parentScaling = maxParentScale(childBounds, parentBounds)
 
   const siblingScaling = siblings.map((siblingBounds) => maxSiblingScale(childBounds, parentBounds, siblingBounds))
 
-  const preferredScale = Math.min(desiredHightScale, parentScaling, ...siblingScaling)
+  const preferredScale = Math.min(maxScale, parentScaling, ...siblingScaling)
 
   const scalingFactor = Math.max(1, preferredScale)
 
