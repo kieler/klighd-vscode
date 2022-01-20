@@ -900,10 +900,7 @@ export function renderKRendering(kRendering: KRendering,
 
 		// Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
-        let maxScale = titleScalingFactorOption
-        if (context.viewport) {
-            maxScale = maxScale / context.viewport.zoom
-        }
+        const maxScale = titleScalingFactorOption / context.viewport.zoom
 
         // is the rendering at the current zoom level smaller in height than our set threshold (apparently the threshold is minimum height?)
         const tooSmall = kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
@@ -929,7 +926,8 @@ export function renderKRendering(kRendering: KRendering,
 
             const maxScaleX = parentBounds.width / originalWidth
             const maxScaleY = parentBounds.height / originalHeight
-            // Don't let scalingfactor get too big.
+
+            // limit the scaling so that it does not exceed the parents size
             let scalingFactor = Math.min(maxScaleX, maxScaleY, maxScale)
             // Make sure we never scale down.
             scalingFactor = Math.max(scalingFactor,  1)
