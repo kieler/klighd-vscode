@@ -470,7 +470,7 @@ export function renderKText(rendering: KText,
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
-        
+
         elements = [
             <text {...attrs}>
                 {...lines}
@@ -542,7 +542,7 @@ export function renderError(rendering: KRendering): VNode {
  * Renders some SVG shape, possibly with an added shadow, as given by the svgFunction. If a simple shadow
  * should be added, it is added as four copies of the SVG shape with rgba(0,0,0,0.1) and the
  * offsets defined by the kShadow, if a nice shadow should be added, it is added via SVG filter.
- * 
+ *
  * @param kShadow The shadow definition for the rendering, or undefined if no shadow should be added
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
  * @param svgFunction The callback function rendering the wanted SVG shape. x and y are the offsets
@@ -582,7 +582,7 @@ export function renderWithShadow<T extends any[]>(
 
 /**
  * Renders a rectangle with all given information.
- * 
+ *
  * @param bounds bounds data calculated for this rectangle.
  * @param rx rx parameter of SVG rect
  * @param ry ry parameter of SVG rect
@@ -600,7 +600,7 @@ export function renderSVGRect(bounds: Bounds, rx: number, ry: number, lineStyles
  * Renders a rectangle with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the rectangle, to be used for shadows only.
  * @param y y offset of the rectangle, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -638,7 +638,7 @@ export function renderSingleSVGRect(x: number | undefined, y: number | undefined
 
 /**
  * Renders an image with all given information.
- * 
+ *
  * @param bounds bounds data calculated for this image.
  * @param image The image href string
  * @param kShadow shadow information.
@@ -651,7 +651,7 @@ export function renderSVGImage(bounds: Bounds, shadowStyles: string | undefined,
 /**
  * Renders an image with all given information.
  * If the rendering is a shadow, a shadow rect is drawn instead.
- * 
+ *
  * @param x x offset of the image, to be used for shadows only.
  * @param y y offset of the image, to be used for shadows only.
  * @param kShadow shadow information. Controls what this method does.
@@ -684,7 +684,7 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
 
 /**
  * Renders an arc with all given information.
- * 
+ *
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -694,13 +694,13 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
  */
 export function renderSVGArc(lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, path: string, kShadow: KShadow | undefined): VNode[] {
     return renderWithShadow(kShadow, shadowStyles, renderSingleSVGArc, lineStyles, colorStyles, path)
-} 
+}
 
 /**
  * Renders an arc with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the arc, to be used for shadows only.
  * @param y y offset of the arc, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -732,7 +732,7 @@ export function renderSingleSVGArc(x: number | undefined, y: number | undefined,
 
 /**
  * Renders an ellipse with all given information.
- * 
+ *
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -747,7 +747,7 @@ export function renderSVGEllipse(bounds: Bounds, lineStyles: LineStyles, colorSt
  * Renders an ellipse with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the ellipse, to be used for shadows only.
  * @param y y offset of the ellipse, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -782,7 +782,7 @@ export function renderSingleSVGEllipse(x: number | undefined, y: number | undefi
 
 /**
  * Renders a rendering with a specific path (polyline, polygon, etc.) with all given information.
- * 
+ *
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -798,7 +798,7 @@ export function renderSVGLine(lineStyles: LineStyles, colorStyles: ColorStyles, 
  * Renders a rendering with a specific path (polyline, polygon, etc.) with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the line, to be used for shadows only.
  * @param y y offset of the line, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -910,8 +910,8 @@ export function renderKRendering(kRendering: KRendering,
             if (kRendering.type === K_TEXT) {
                 boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
             }
-            
-            
+
+
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalWidth = boundingBox.width
             const originalHeight = boundingBox.height
