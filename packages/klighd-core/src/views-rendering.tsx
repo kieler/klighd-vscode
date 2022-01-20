@@ -17,7 +17,7 @@
 /** @jsx svg */
 import { VNode } from 'snabbdom';
 import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Bounds ,Dimension} from 'sprotty-protocol';
+import { Bounds } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
 import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, MinimumTitleHeight, UseSmartZoom } from './options/render-options-registry';
@@ -32,6 +32,7 @@ import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
+import { upscaleBounds } from './scaling-util';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -856,30 +857,6 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
     return renderKRendering(kRendering, parent, propagatedStyles, context, childOfNodeTitle)
 }
 
-export function calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
-    const originalWidth = originalBounds.width
-    const originalHeight = originalBounds.height
-    const originalX = originalBounds.x
-    const originalY = originalBounds.y
-
-    // Calculate the new x and y indentation:
-    // width required of scaled rendering
-    const newWidth = originalWidth * scale
-    // space to the left of the rendering without scaling...
-    const spaceL = originalX
-    // ...and to its right
-    const spaceR = availableSpace.width - originalX - originalWidth
-    // New x value after taking space off both sides at an equal ratio
-    const newX = originalX - spaceL * (newWidth - originalWidth) / (spaceL + spaceR)
-
-    // Same for y axis, just with switched dimensional variables.
-    const newHeight = originalHeight * scale
-    const spaceT = originalY
-    const spaceB = availableSpace.height - originalY - originalHeight
-    const newY = originalY - spaceT * (newHeight - originalHeight) / (spaceT + spaceB)
-    return {x: newX, y : newY, width: newWidth, height: newHeight}
-}
-
 /**
  * Translates any KRendering into an SVG rendering.
  * @param kRendering The rendering.
@@ -945,17 +922,7 @@ export function renderKRendering(kRendering: KRendering,
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalBounds = boundingBox
 
-            const maxScaleX = parentBounds.width / originalBounds.width
-            const maxScaleY = parentBounds.height / originalBounds.height
-
-            let maxScale = overlayThreshold / (boundingBox.height * context.viewport.zoom);
-
-            // limit the scaling so that it does not exceed the parents size
-            let scalingFactor = Math.min(maxScaleX, maxScaleY, maxScale)
-            // Make sure we never scale down.
-            scalingFactor = Math.max(scalingFactor,  1)
-
-            const newBounds = calculateScaledBounds(boundingBox, parentBounds, scalingFactor)
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(originalBounds.height,overlayThreshold, originalBounds, parentBounds, context.viewport );
 
             // Apply the new bounds and scaling as the element's transformation.
             const translateAndScale = `translate(${newBounds.x},${newBounds.y})scale(${scalingFactor})`

@@ -20,14 +20,15 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SShapeElement, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DepthMap, DetailLevel, isDetailWithChildren } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom,MinimumTitleHeight, PerformNodeScaling } from './options/render-options-registry';
+import { upscaleBounds } from './scaling-util';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
-import { getJunctionPointRenderings, getRendering,calculateScaledBounds } from './views-rendering';
+import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 
 /**
@@ -167,19 +168,8 @@ export class KNodeView implements IView {
             && providingRegion.regionTitleHeight * ctx.viewport.zoom < minHeight
             && ctx.renderOptionsRegistry.getValueOrDefault(PerformNodeScaling)) {
 
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(providingRegion.regionTitleHeight, minHeight, node.bounds, (node.parent as SShapeElement).bounds, ctx.viewport);
 
-            // the scale required to scale the title to the minHeight
-            const desiredHightScale = minHeight /  (providingRegion.regionTitleHeight * ctx.viewport.zoom);
-            // the maximum scale that keeps the node in bounds height wise
-            const maxHeightScale = (node.parent as SKNode).bounds.height / node.bounds.height
-            // the maximum scale that keeps the node in bounds width wise
-            const maxWidthScale = (node.parent as SKNode).bounds.width / node.bounds.width
-
-            // the most restrictive scaling of the three above
-            const preferredScale = Math.min(desiredHightScale, maxHeightScale,maxWidthScale)
-
-            const scalingFactor = Math.max(1, preferredScale)
-            const newBounds = calculateScaledBounds(node.bounds, (node.parent as SKNode).bounds, scalingFactor)
             if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
                 // On initial load node.parent.bounds has all fields as 0 causing a division by 0
                 return ""
