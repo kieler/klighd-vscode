@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -59,13 +59,13 @@ type RegionIndexEntry = { containingRegion: Region, providingRegion: undefined }
 export class DepthMap {
 
     /**
-     * The region for immediate children of the SModelRoot, 
+     * The region for immediate children of the SModelRoot,
      * aka. the root regions
      */
     rootRegions: Region[];
 
-    /** 
-     * The model for which the DepthMap is generated 
+    /**
+     * The model for which the DepthMap is generated
      */
     rootElement: SModelRoot;
 
@@ -86,7 +86,7 @@ export class DepthMap {
      */
     lastThreshold?: number;
 
-    /** 
+    /**
      * Set for handling regions, that need to be checked for detail level changes.
      * Consists of the region that contain at least one child with a lower detail level.
      */
@@ -95,8 +95,8 @@ export class DepthMap {
     /** Singleton pattern */
     private static instance?: DepthMap;
 
-    /** 
-     * @param rootElement The root element of the model. 
+    /**
+     * @param rootElement The root element of the model.
      */
     private constructor(rootElement: SModelRoot) {
         this.rootElement = rootElement
@@ -133,13 +133,13 @@ export class DepthMap {
 
     /**
      * Returns the current DepthMap instance or undefined if its not initialized
-     * @returns DepthMap | undefined 
+     * @returns DepthMap | undefined
      */
     public static getDM(): DepthMap | undefined {
         return DepthMap.instance
     }
 
-    /** 
+    /**
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
@@ -155,7 +155,7 @@ export class DepthMap {
 
     /**
      * It is generally advised to initialize the elements from root to leaf
-     * 
+     *
      * @param element The KGraphElement to initialize for DepthMap usage
      */
     public initKGraphElement(element: SChildElement & KGraphElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
@@ -223,7 +223,7 @@ export class DepthMap {
         this.regionIndexMap.set(element.id, entry)
         return entry
     }
-    
+
     /**
      * Finds the KRendering in the given graph element.
      * @param element The graph element to look up the rendering for.
@@ -250,10 +250,10 @@ export class DepthMap {
         return this.initKGraphElement(node, viewport, renderOptions).providingRegion
     }
 
-    /** 
+    /**
      * Decides the appropriate detail level for regions based on their size in the viewport and applies that state.
-     * 
-     * @param viewport The current viewport. 
+     *
+     * @param viewport The current viewport.
      */
     updateDetailLevels(viewport: Viewport, renderingOptions: RenderOptionsRegistry): void {
 
@@ -286,7 +286,7 @@ export class DepthMap {
 
     /**
      * Set detail level for the given region and recursively determine and update the children's detail level
-     * 
+     *
      * @param region The root region
      * @param viewport The current viewport
      * @param relativeThreshold The detail level threshold
@@ -327,7 +327,7 @@ export class DepthMap {
     /**
      * Looks for a change in detail level for all critical regions.
      * Applies the level change and manages the critical regions.
-     * 
+     *
      * @param viewport The current viewport
      * @param relativeThreshold The full detail threshold
      */
@@ -368,7 +368,7 @@ export class DepthMap {
     /**
      * Decides the appropriate detail level for a region
      * based on their size in the viewport and visibility
-     * 
+     *
      * @param region The region in question
      * @param viewport The current viewport
      * @param relativeThreshold The full detail threshold
@@ -392,12 +392,12 @@ export class DepthMap {
         }
     }
 
-    /** 
+    /**
      * Checks visibility of a region with position from browser coordinates in current viewport.
-     * 
+     *
      * @param region The region in question for visibility.
      * @param viewport The current viewport.
-     * @returns Boolean value indicating the visibility of the region in the current viewport. 
+     * @returns Boolean value indicating the visibility of the region in the current viewport.
      */
     isInBounds(region: Region, viewport: Viewport): boolean {
         if (region.absolutePosition) {
@@ -413,9 +413,9 @@ export class DepthMap {
         }
     }
 
-    /** 
+    /**
      * Compares the size of a node to the viewport and returns the smallest fraction of either height or width.
-     * 
+     *
      * @param node The KNode in question
      * @param viewport The current viewport
      * @returns the relative size of the KNodes shortest dimension
@@ -429,8 +429,8 @@ export class DepthMap {
 
 
 /**
- * Combines KNodes into regions. These correspond to child areas. A region can correspond to 
- * a region or a super state in the model. Also manages the boundaries, title candidates, 
+ * Combines KNodes into regions. These correspond to child areas. A region can correspond to
+ * a region or a super state in the model. Also manages the boundaries, title candidates,
  * tree structure of the model and application of detail level of its KNodes.
  */
 export class Region {
@@ -455,7 +455,7 @@ export class Region {
         this.detail = DetailLevel.FullDetails
     }
 
-    /** 
+    /**
      * Applies the detail level to all elements of a region.
      * @param level the detail level to apply
      */
