@@ -71,6 +71,7 @@ export class ShowConstraintOption implements RenderOption {
 export class UseSmartZoom implements RenderOption {
     static readonly ID: string = 'use-smart-zoom'
     static readonly NAME: string = 'Smart Zoom'
+    static readonly DEFAULT: boolean = false
     readonly id: string = UseSmartZoom.ID
     readonly name: string = UseSmartZoom.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK

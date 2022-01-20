@@ -57,10 +57,7 @@ export class SKGraphView implements IView {
 
 
         // Add depthMap to context for rendering, when required.
-        const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
-
-        // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ?? false
+        const useSmartZoom = this.renderOptionsRegistry.getValueOrDefault(UseSmartZoom)
 
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
             ctx.depthMap = DepthMap.getDM()
