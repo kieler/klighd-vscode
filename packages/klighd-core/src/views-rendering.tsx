@@ -16,8 +16,8 @@
  */
 /** @jsx svg */
 import { VNode } from 'snabbdom';
-import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Bounds } from 'sprotty-protocol';
+import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Bounds ,Dimension} from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
 import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, MinimumTitleHeight, UseSmartZoom } from './options/render-options-registry';
@@ -856,6 +856,30 @@ export function getRendering(datas: KGraphData[], parent: SKGraphElement, propag
     return renderKRendering(kRendering, parent, propagatedStyles, context, childOfNodeTitle)
 }
 
+export function calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
+    const originalWidth = originalBounds.width
+    const originalHeight = originalBounds.height
+    const originalX = originalBounds.x
+    const originalY = originalBounds.y
+
+    // Calculate the new x and y indentation:
+    // width required of scaled rendering
+    const newWidth = originalWidth * scale
+    // space to the left of the rendering without scaling...
+    const spaceL = originalX
+    // ...and to its right
+    const spaceR = availableSpace.width - originalX - originalWidth
+    // New x value after taking space off both sides at an equal ratio
+    const newX = originalX - spaceL * (newWidth - originalWidth) / (spaceL + spaceR)
+
+    // Same for y axis, just with switched dimensional variables.
+    const newHeight = originalHeight * scale
+    const spaceT = originalY
+    const spaceB = availableSpace.height - originalY - originalHeight
+    const newY = originalY - spaceT * (newHeight - originalHeight) / (spaceT + spaceB)
+    return {x: newX, y : newY, width: newWidth, height: newHeight}
+}
+
 /**
  * Translates any KRendering into an SVG rendering.
  * @param kRendering The rendering.
@@ -919,13 +943,10 @@ export function renderKRendering(kRendering: KRendering,
 
 
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
-            const originalWidth = boundingBox.width
-            const originalHeight = boundingBox.height
-            const originalX = boundingBox.x
-            const originalY = boundingBox.y
+            const originalBounds = boundingBox
 
-            const maxScaleX = parentBounds.width / originalWidth
-            const maxScaleY = parentBounds.height / originalHeight
+            const maxScaleX = parentBounds.width / originalBounds.width
+            const maxScaleY = parentBounds.height / originalBounds.height
 
             let maxScale = overlayThreshold / (boundingBox.height * context.viewport.zoom);
 
@@ -934,30 +955,20 @@ export function renderKRendering(kRendering: KRendering,
             // Make sure we never scale down.
             scalingFactor = Math.max(scalingFactor,  1)
 
-            // Calculate the new x and y indentation:
-            // width required of scaled rendering
-            const newWidth = originalWidth * scalingFactor
-            // space to the left of the rendering without scaling...
-            const spaceL = originalX
-            // ...and to its right
-            const spaceR = parentBounds.width - originalX - originalWidth
-            // New x value after taking space off both sides at an equal ratio
-            const newX = originalX - spaceL * (newWidth - originalWidth) / (spaceL + spaceR)
-
-            // Same for y axis, just with switched dimensional variables.
-            const newHeight = originalHeight * scalingFactor
-            const spaceT = originalY
-            const spaceB = parentBounds.height - originalY - originalHeight
-            const newY = originalY - spaceT * (newHeight - originalHeight) / (spaceT + spaceB)
+            const newBounds = calculateScaledBounds(boundingBox, parentBounds, scalingFactor)
 
             // Apply the new bounds and scaling as the element's transformation.
-            const translateAndScale = `translate(${newX},${newY})scale(${scalingFactor})`
+            const translateAndScale = `translate(${newBounds.x},${newBounds.y})scale(${scalingFactor})`
             if (!providingRegion) {
                 // Add the transformations necessary for correct placement
                 const positionOffset = context.positions[context.positions.length - 1]
                 boundsAndTransformation.transformation = positionOffset + translateAndScale
             } else {
                 boundsAndTransformation.transformation = translateAndScale
+
+                // Store exact height of title text
+                providingRegion.regionTitleHeight = newBounds.height
+                providingRegion.regionTitleIndentation = newBounds.x
             }
             // For text renderings, recalculate the required bounds the text needs with the updated data.
             if (kRendering.type === K_TEXT && (kRendering as KText).calculatedTextBounds) {
@@ -973,24 +984,19 @@ export function renderKRendering(kRendering: KRendering,
                     verticalAlignment: VerticalAlignment.CENTER
                 } as KVerticalAlignment
                 boundsAndTransformation.bounds = {
-                    x: calculateX(0, originalWidth, styles.kHorizontalAlignment, textWidth),
-                    y: originalHeight * 0.5,
-                    width: originalWidth,
-                    height: originalHeight
+                    x: calculateX(0, originalBounds.width, styles.kHorizontalAlignment, textWidth),
+                    y: originalBounds.height * 0.5,
+                    width: originalBounds.width,
+                    height: originalBounds.height
                 }
             } else {
                 // Offsets are already applied in the transformation, so set them to 0 here.
                 boundsAndTransformation.bounds = {
                     x: 0,
                     y: 0,
-                    width: originalWidth,
-                    height: originalHeight
+                    width: originalBounds.width,
+                    height: originalBounds.height
                 }
-            }
-            if (providingRegion) {
-                // Store exact height of title text
-                providingRegion.regionTitleHeight = newHeight
-                providingRegion.regionTitleIndentation = newX
             }
 
             // Don't draw if the rendering is an empty KText
@@ -998,7 +1004,7 @@ export function renderKRendering(kRendering: KRendering,
 
             // Draw white background for overlaying titles
             if ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && tooSmall && !isEmptyText) {
-                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black"/>
+                overlayRectangle = <rect x={0} y={0} width={originalBounds.width} height={originalBounds.height} fill="white" opacity="0.8" stroke="black"/>
             }
         }
     }

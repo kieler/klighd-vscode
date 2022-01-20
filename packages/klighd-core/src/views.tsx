@@ -21,13 +21,13 @@ import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/k
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { DepthMap, DetailLevel } from './depth-map';
+import { DepthMap, DetailLevel, isDetailWithChildren } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
-import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom,MinimumTitleHeight, PerformNodeScaling } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
-import { getJunctionPointRenderings, getRendering } from './views-rendering';
+import { getJunctionPointRenderings, getRendering,calculateScaledBounds } from './views-rendering';
 import { KStyles } from './views-styles';
 
 /**
@@ -89,7 +89,7 @@ export class KNodeView implements IView {
 
         if (ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
-            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
+            if (ctx.depthMap && containingRegion && !isDetailWithChildren(containingRegion.detail)) {
                 // Make sure this node and its children are not drawn as long as it is not on full details.
                 node.areChildAreaChildrenRendered = true
                 node.areNonChildAreaChildrenRendered = true
@@ -157,6 +157,38 @@ export class KNodeView implements IView {
         }
         node.shadow = isShadow
 
+
+        const providingRegion = ctx.depthMap?.getProvidingRegion(node , ctx.viewport, ctx.renderOptionsRegistry);
+        const minHeight = ctx.renderOptionsRegistry.getValueOrDefault(MinimumTitleHeight);
+
+        const calcScale = function() {if (node.parent
+            && providingRegion
+            && providingRegion.regionTitleHeight
+            && providingRegion.regionTitleHeight * ctx.viewport.zoom < minHeight
+            && ctx.renderOptionsRegistry.getValueOrDefault(PerformNodeScaling)) {
+
+
+            // the scale required to scale the title to the minHeight
+            const desiredHightScale = minHeight /  (providingRegion.regionTitleHeight * ctx.viewport.zoom);
+            // the maximum scale that keeps the node in bounds height wise
+            const maxHeightScale = (node.parent as SKNode).bounds.height / node.bounds.height
+            // the maximum scale that keeps the node in bounds width wise
+            const maxWidthScale = (node.parent as SKNode).bounds.width / node.bounds.width
+
+            // the most restrictive scaling of the three above
+            const preferredScale = Math.min(desiredHightScale, maxHeightScale,maxWidthScale)
+
+            const scalingFactor = Math.max(1, preferredScale)
+            const newBounds = calculateScaledBounds(node.bounds, (node.parent as SKNode).bounds, scalingFactor)
+            if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
+                // On initial load node.parent.bounds has all fields as 0 causing a division by 0
+                return ""
+            } else {
+                // Apply the new bounds and scaling as the element's transformation.
+                return `translate(${newBounds.x - node.bounds.x },${newBounds.y - node.bounds.y})scale(${scalingFactor})`
+            }
+        }}
+
         if (node.id === '$root') {
             // The root node should not be rendered, only its children should.
             const children = ctx.renderChildren(node)
@@ -184,10 +216,14 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             ctx.positions.pop()
-            return <g>
-                {ctx.titles.pop() ?? []}
-                {ctx.renderChildren(node)}
+            const titles = ctx.titles.pop() ?? []
+            const childRenderings = ctx.renderChildren(node)
+            const translateAndScale = calcScale()
+            const ret =  <g><g class={{"node-scale":true}} transform={translateAndScale}></g>
+                {titles}
+                {childRenderings}
             </g>
+            return ret
         }
         if (interactiveNodes) {
             result.push(interactiveNodes)
@@ -203,7 +239,9 @@ export class KNodeView implements IView {
         }
         result.push(...(ctx.titles.pop() ?? []))
         ctx.positions.pop()
-        return <g>{...result}</g>
+        const translateAndScale = calcScale()
+        const ret =<g> <g class={{"node-scale":true}} transform={translateAndScale}>{...result}</g></g>
+        return ret
     }
 }
 

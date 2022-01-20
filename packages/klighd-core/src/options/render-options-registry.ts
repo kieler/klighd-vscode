@@ -168,7 +168,7 @@ export class MinimumTitleHeight implements RangeOption {
     readonly values: any[] = []
     readonly range = {
         first: 0,
-        second: 80
+        second: 40
     }
     readonly stepSize = 1
     readonly initialValue: number = MinimumTitleHeight.DEFAULT
@@ -206,6 +206,19 @@ export class MinimumLineWidth implements RangeOption {
     readonly stepSize = 0.01
     readonly initialValue: number = 0.5
     currentValue = 0.5
+}
+/**
+ * Boolean option to toggle the scaling of lines based on zoom level.
+ */
+export class PerformNodeScaling implements RenderOption {
+    static readonly ID: string = 'perform-node-scaling'
+    static readonly NAME: string = 'Perform Node Scaling'
+    static readonly DEFAULT: boolean = false
+    readonly id: string = PerformNodeScaling.ID
+    readonly name: string = PerformNodeScaling.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = true
+    currentValue = true
 }
 
 /**
@@ -273,6 +286,7 @@ export class RenderOptionsRegistry extends Registry {
 
         this.register(UseMinimumLineWidth);
         this.register(MinimumLineWidth);
+        this.register(PerformNodeScaling);
 
         this.register(PaperShadows)
         this.register(AnimateGoToBookmark);
