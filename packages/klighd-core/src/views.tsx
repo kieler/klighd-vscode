@@ -214,10 +214,10 @@ export class KNodeView implements IView {
             const titles = ctx.titles.pop() ?? []
             const childRenderings = ctx.renderChildren(node)
             const translateAndScale = calcScale()
-            const ret =  <g><g class={{"node-scale":true}} transform={translateAndScale}></g>
+            const ret =  <g><g class={{"node-scale":true}} transform={translateAndScale}>
                 {titles}
                 {childRenderings}
-            </g>
+            </g></g>
             return ret
         }
         if (interactiveNodes) {
