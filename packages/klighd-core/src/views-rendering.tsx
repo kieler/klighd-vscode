@@ -903,7 +903,7 @@ export function renderKRendering(kRendering: KRendering,
         const maxScale = titleScalingFactorOption
 
         // is the rendering at the current zoom level smaller in height than our set threshold (apparently the threshold is minimum height?)
-        const tooSmall = kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.effectiveZoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
+        const tooSmall = context.effectiveZoom <= titleScalingFactorOption
         const notFullDetail = providingRegion && providingRegion.detail !== DetailLevel.FullDetails
         const multipleChildren = parent.children.length > 1
 
