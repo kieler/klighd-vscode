@@ -1036,7 +1036,7 @@ export function renderKRendering(kRendering: KRendering,
     context.popEffectiveZoom()
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
-        context.titles[context.titles.length - 1].push(svgRendering)
+        context.pushTitle(svgRendering)
         return <g></g>
     } else {
         return svgRendering

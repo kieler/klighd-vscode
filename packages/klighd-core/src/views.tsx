@@ -56,7 +56,6 @@ export class SKGraphView implements IView {
         } else {
             ctx.pushEffectiveZoom(ctx.effectiveZoom)
         }
-        ctx.titles = []
         ctx.positions = []
 
 
@@ -105,7 +104,7 @@ export class KNodeView implements IView {
             }
         }
 
-        ctx.titles.push([])
+        ctx.enterTitleScope()
         ctx.positions.push("")
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
@@ -207,7 +206,7 @@ export class KNodeView implements IView {
                 result.push(interactiveNodes)
             }
             result.push(...children)
-            result.push(...(ctx.titles.pop() ?? []))
+            result.push(...ctx.exitTitleScope())
             ctx.positions.pop()
             ctx.popEffectiveZoom()
             return <g>{...result}</g>
@@ -221,7 +220,7 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             ctx.positions.pop()
-            const titles = ctx.titles.pop() ?? []
+            const titles = ctx.exitTitleScope()
             const childRenderings = ctx.renderChildren(node)
             ctx.popEffectiveZoom()
             const ret =  <g><g class={{"node-scale":true}} transform={transformation}>
@@ -242,7 +241,7 @@ export class KNodeView implements IView {
         } else if (!node.areNonChildAreaChildrenRendered) {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
-        result.push(...(ctx.titles.pop() ?? []))
+        result.push(...ctx.exitTitleScope())
         ctx.positions.pop()
         ctx.popEffectiveZoom()
         const ret =<g><g class={{"node-scale":true}} transform={transformation}>{...result}</g></g>
@@ -270,7 +269,7 @@ export class KPortView implements IView {
             }
         }
 
-        ctx.titles.push([])
+        ctx.enterTitleScope()
         ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
@@ -278,7 +277,7 @@ export class KPortView implements IView {
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             const element =  <g>
-                {ctx.titles.pop() ?? []}
+                {ctx.exitTitleScope()}
                 {ctx.renderChildren(port)}
             </g>
 
@@ -290,19 +289,19 @@ export class KPortView implements IView {
         if (!port.areChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.exitTitleScope()}
                 {ctx.renderChildren(port)}
             </g>
         } else if (!port.areNonChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.exitTitleScope()}
                 {ctx.renderNonChildAreaChildren(port)}
             </g>
         } else {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.exitTitleScope()}
             </g>
         }
 
@@ -329,7 +328,7 @@ export class KLabelView implements IView {
                 return undefined
             }
         }
-        ctx.titles.push([])
+        ctx.enterTitleScope()
         ctx.positions.push("")
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
@@ -344,7 +343,7 @@ export class KLabelView implements IView {
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             const element = <g>
-                {ctx.renderChildren(label).push(...ctx.titles.pop() ?? [])}
+                {ctx.renderChildren(label).push(...ctx.exitTitleScope())}
             </g>
 
             ctx.positions.pop()
@@ -355,19 +354,19 @@ export class KLabelView implements IView {
         if (!label.areChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.exitTitleScope()}
                 {ctx.renderChildren(label)}
             </g>
         } else if (!label.areNonChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.exitTitleScope()}
                 {ctx.renderNonChildAreaChildren(label)}
             </g>
         } else {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.exitTitleScope()}
             </g>
         }
 

@@ -40,12 +40,25 @@ export class SKGraphModelRenderer extends ModelRenderer {
     positions: string[]
     renderingDefs: Map<string, VNode>
     renderOptionsRegistry: RenderOptionsRegistry
-    titles: VNode[][]
+    private titles: VNode[][] = []
     viewport: Viewport
     private _effectiveZoom: number[] = [1]
 
     get effectiveZoom(): number {
         return this._effectiveZoom[this._effectiveZoom.length - 1]
+    }
+
+    enterTitleScope() : void {
+        this.titles.push([])
+    }
+
+    // leaves the current title scope and returns the titles collected in the left scope
+    exitTitleScope() : VNode[] {
+        return this.titles.pop() ?? []
+    }
+
+    pushTitle(title: VNode): void {
+        this.titles[this.titles.length - 1].push(title)
     }
 
     pushEffectiveZoom(zoom: number): void {
