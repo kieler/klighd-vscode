@@ -225,15 +225,36 @@ export class MinimumLineWidth implements RangeOption {
 /**
  * Boolean option to toggle the scaling of lines based on zoom level.
  */
-export class PerformNodeScaling implements RenderOption {
-    static readonly ID: string = 'perform-node-scaling'
-    static readonly NAME: string = 'Perform Node Scaling'
+export class ScaleNodes implements RenderOption {
+    static readonly ID: string = 'use-node-scaling'
+    static readonly NAME: string = 'Scale Nodes'
     static readonly DEFAULT: boolean = false
-    readonly id: string = PerformNodeScaling.ID
-    readonly name: string = PerformNodeScaling.NAME
+    readonly id: string = ScaleNodes.ID
+    readonly name: string = ScaleNodes.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
     currentValue = true
+}
+
+/**
+ * The factor by which titles of collapsed regions get scaled by
+ * in relation to their size at native resolution.
+ */
+export class NodeScalingFactor implements RangeOption {
+    static readonly ID: string = 'node-scaling-factor'
+    static readonly NAME: string = 'Node Scaling Factor'
+    static readonly DEFAULT: number = 1
+    readonly id: string = NodeScalingFactor.ID
+    readonly name: string = NodeScalingFactor.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range = {
+        first: 0.5,
+        second: 3
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = NodeScalingFactor.DEFAULT
+    currentValue = 1
 }
 
 /**
@@ -300,9 +321,12 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ScaleTitles);
         this.register(TitleScalingFactor);
 
+        this.register(ScaleNodes);
+        this.register(NodeScalingFactor);
+
+
         this.register(UseMinimumLineWidth);
         this.register(MinimumLineWidth);
-        this.register(PerformNodeScaling);
 
         this.register(PaperShadows)
         this.register(AnimateGoToBookmark);

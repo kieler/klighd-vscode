@@ -210,10 +210,9 @@ export function renderRectangularShape(
             const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
             const size = 50
             let scalingFactor = Math.max(bounds, 0) / size
+
             // Use zoom for constant size in viewport.
-            if (context.viewport) {
-                scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
-            }
+            scalingFactor = Math.min(1 / context.effectiveZoom, scalingFactor)
 
             const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
             const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
@@ -416,8 +415,7 @@ export function renderKText(rendering: KText,
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
-        if (context.viewport && rendering.calculatedTextBounds
-            && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {
+        if (rendering.calculatedTextBounds && rendering.calculatedTextBounds.height * context.effectiveZoom <= simplificationThreshold) {
             const replacements: VNode[] = []
             lines.forEach((line, index) => {
                 const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
@@ -902,7 +900,7 @@ export function renderKRendering(kRendering: KRendering,
 
 		// Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
-        const maxScale = titleScalingFactorOption / context.viewport.zoom
+        const maxScale = titleScalingFactorOption
 
         // is the rendering at the current zoom level smaller in height than our set threshold (apparently the threshold is minimum height?)
         const tooSmall = kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
@@ -928,7 +926,8 @@ export function renderKRendering(kRendering: KRendering,
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalBounds = boundingBox
 
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(originalBounds.height, maxScale, originalBounds, parentBounds, context.viewport );
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(context.effectiveZoom, maxScale, originalBounds, parentBounds);
+            context.pushEffectiveZoom(context.effectiveZoom * scalingFactor)
 
             // Apply the new bounds and scaling as the element's transformation.
             const translateAndScale = `translate(${newBounds.x},${newBounds.y})scale(${scalingFactor})`
@@ -979,7 +978,11 @@ export function renderKRendering(kRendering: KRendering,
             if ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && tooSmall && !isEmptyText) {
                 overlayRectangle = <rect x={0} y={0} width={originalBounds.width} height={originalBounds.height} fill="white" opacity="0.8" stroke="black"/>
             }
+        } else {
+            context.pushEffectiveZoom(context.effectiveZoom)
         }
+    } else {
+        context.pushEffectiveZoom(context.effectiveZoom)
     }
     // Add the transformations to be able to positon the title correctly and above other elements
     context.positions[context.positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
@@ -987,6 +990,7 @@ export function renderKRendering(kRendering: KRendering,
     let svgRendering: VNode
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
+            context.popEffectiveZoom()
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
             return undefined
         }
@@ -995,6 +999,7 @@ export function renderKRendering(kRendering: KRendering,
             break
         }
         case K_CUSTOM_RENDERING: {
+            context.popEffectiveZoom()
             console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
             // data as KCustomRendering
             return undefined
@@ -1019,6 +1024,7 @@ export function renderKRendering(kRendering: KRendering,
             break
         }
         default: {
+            context.popEffectiveZoom()
             console.error('The rendering is of an unknown type:' + kRendering.type)
             return undefined
         }
@@ -1027,6 +1033,7 @@ export function renderKRendering(kRendering: KRendering,
     if (overlayRectangle) {
         svgRendering.children?.unshift(overlayRectangle)
     }
+    context.popEffectiveZoom()
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
         context.titles[context.titles.length - 1].push(svgRendering)

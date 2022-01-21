@@ -25,7 +25,7 @@ import { Bounds } from 'sprotty-protocol'
 import { DepthMap, DetailLevel, isDetailWithChildren } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
-import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, PerformNodeScaling, TitleScalingFactor } from './options/render-options-registry';
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, ScaleNodes, NodeScalingFactor } from './options/render-options-registry';
 import { upscaleBounds } from './scaling-util';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {  NODE_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
@@ -52,6 +52,9 @@ export class SKGraphView implements IView {
         const viewport = findParentByFeature(model, isViewport)
         if (viewport) {
             ctx.viewport = viewport
+            ctx.pushEffectiveZoom(ctx.effectiveZoom * viewport.zoom)
+        } else {
+            ctx.pushEffectiveZoom(ctx.effectiveZoom)
         }
         ctx.titles = []
         ctx.positions = []
@@ -71,11 +74,14 @@ export class SKGraphView implements IView {
         }
 
         const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`;
-        return <svg class-sprotty-graph={true}>
+
+        const rendered = <svg class-sprotty-graph={true}>
             <g transform={transform}>
-                {context.renderChildren(model)}
-            </g>
-        </svg>;
+                    {context.renderChildren(model)}
+                </g>
+            </svg>;
+        ctx.popEffectiveZoom()
+        return rendered;
     }
 }
 
@@ -111,6 +117,34 @@ export class KNodeView implements IView {
         let shadow = undefined
         let interactiveNodes = undefined
         let interactiveConstraints = undefined
+
+
+
+        const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
+        const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
+
+        let transformation: string;
+
+        // we push a new effective zoom in all cases so we can pop later without checking whether we pushed
+        if (node.parent && performNodeScaling) {
+
+            const siblings: Bounds[] = node.parent.children.filter((sibling) => sibling != node && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
+
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(ctx.effectiveZoom, minNodeScale, node.bounds, (node.parent as SShapeElement).bounds, siblings);
+
+            if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
+                // On initial load node.parent.bounds has all fields as 0 causing a division by 0
+                transformation = ""
+                ctx.pushEffectiveZoom(ctx.effectiveZoom)
+            } else {
+                // Apply the new bounds and scaling as the element's transformation.
+                transformation = `translate(${newBounds.x - node.bounds.x },${newBounds.y - node.bounds.y})scale(${scalingFactor})`
+                ctx.pushEffectiveZoom(ctx.effectiveZoom * scalingFactor)
+            }
+        } else {
+            transformation = ""
+            ctx.pushEffectiveZoom(ctx.effectiveZoom)
+        }
 
         if (isShadow) {
             // Render shadow of the node
@@ -159,31 +193,6 @@ export class KNodeView implements IView {
         }
         node.shadow = isShadow
 
-
-        const providingRegion = ctx.depthMap?.getProvidingRegion(node , ctx.viewport, ctx.renderOptionsRegistry);
-        const minTitleScale = ctx.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor);
-
-        const calcScale = function() {if (node.parent
-            && providingRegion
-            && providingRegion.originalTitleHeight
-            && providingRegion.regionTitleHeight
-            && providingRegion.regionTitleHeight * ctx.viewport.zoom < providingRegion.originalTitleHeight * minTitleScale
-            && ctx.renderOptionsRegistry.getValueOrDefault(PerformNodeScaling)) {
-
-            const siblings: Bounds[] = node.parent.children.filter((sibling) => sibling != node && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
-
-            const maxScale = minTitleScale / ctx.viewport.zoom / (providingRegion.regionTitleHeight / providingRegion.originalTitleHeight)
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(providingRegion.regionTitleHeight, maxScale, node.bounds, (node.parent as SShapeElement).bounds, ctx.viewport, siblings);
-
-            if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
-                // On initial load node.parent.bounds has all fields as 0 causing a division by 0
-                return ""
-            } else {
-                // Apply the new bounds and scaling as the element's transformation.
-                return `translate(${newBounds.x - node.bounds.x },${newBounds.y - node.bounds.y})scale(${scalingFactor})`
-            }
-        }}
-
         if (node.id === '$root') {
             // The root node should not be rendered, only its children should.
             const children = ctx.renderChildren(node)
@@ -200,6 +209,7 @@ export class KNodeView implements IView {
             result.push(...children)
             result.push(...(ctx.titles.pop() ?? []))
             ctx.positions.pop()
+            ctx.popEffectiveZoom()
             return <g>{...result}</g>
         }
 
@@ -213,8 +223,8 @@ export class KNodeView implements IView {
             ctx.positions.pop()
             const titles = ctx.titles.pop() ?? []
             const childRenderings = ctx.renderChildren(node)
-            const translateAndScale = calcScale()
-            const ret =  <g><g class={{"node-scale":true}} transform={translateAndScale}>
+            ctx.popEffectiveZoom()
+            const ret =  <g><g class={{"node-scale":true}} transform={transformation}>
                 {titles}
                 {childRenderings}
             </g></g>
@@ -234,8 +244,8 @@ export class KNodeView implements IView {
         }
         result.push(...(ctx.titles.pop() ?? []))
         ctx.positions.pop()
-        const translateAndScale = calcScale()
-        const ret =<g> <g class={{"node-scale":true}} transform={translateAndScale}>{...result}</g></g>
+        ctx.popEffectiveZoom()
+        const ret =<g><g class={{"node-scale":true}} transform={transformation}>{...result}</g></g>
         return ret
     }
 }

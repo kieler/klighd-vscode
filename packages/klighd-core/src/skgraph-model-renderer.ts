@@ -42,7 +42,20 @@ export class SKGraphModelRenderer extends ModelRenderer {
     renderOptionsRegistry: RenderOptionsRegistry
     titles: VNode[][]
     viewport: Viewport
-    
+    private _effectiveZoom: number[] = [1]
+
+    get effectiveZoom(): number {
+        return this._effectiveZoom[this._effectiveZoom.length - 1]
+    }
+
+    pushEffectiveZoom(zoom: number): void {
+        this._effectiveZoom.push(zoom)
+    }
+
+    popEffectiveZoom(): number | undefined {
+        return this._effectiveZoom.pop()
+    }
+
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.

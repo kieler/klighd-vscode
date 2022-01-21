@@ -1,4 +1,4 @@
-import { Bounds, Dimension, Viewport } from 'sprotty-protocol'
+import { Bounds, Dimension } from 'sprotty-protocol'
 
 export function maxParentScale(node: Bounds, parent: Bounds): number {
     // the maximum scale that keeps the node in bounds height wise
@@ -62,14 +62,22 @@ export function scaleDimension(offset: number, length: number, available: number
     return {offset: newOffset, length: newLength}
 }
 
-export function upscaleBounds(currentSize: number, maxScale: number, childBounds: Bounds, parentBounds: Bounds, viewport: Viewport, siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
+export function upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Bounds, siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
 
+  // we want that the effectiveScale * desiredScale = maxScale
+  // so that the we effectively up scale to maxScale
+  const desiredScale = maxScale / effectiveScale;
+
+  // the maximum scale at which the child still fits into the parent
   const parentScaling = maxParentScale(childBounds, parentBounds)
 
+  // some maximum scale at which the child does not interfere with its siblings
   const siblingScaling = siblings.map((siblingBounds) => maxSiblingScale(childBounds, parentBounds, siblingBounds))
 
-  const preferredScale = Math.min(maxScale, parentScaling, ...siblingScaling)
+  // the most restrictive scale between our desired scale and the maximum imposed by the parent and siblings
+  const preferredScale = Math.min(desiredScale, parentScaling, ...siblingScaling)
 
+  // we never want to shrink, should only be relevant if our desired scale is less than 1
   const scalingFactor = Math.max(1, preferredScale)
 
   const newBounds = calculateScaledBounds(childBounds, parentBounds, scalingFactor)
