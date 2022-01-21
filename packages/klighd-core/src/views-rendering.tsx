@@ -976,7 +976,7 @@ export function renderKRendering(kRendering: KRendering,
 
             // Draw white background for overlaying titles
             if ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && tooSmall && !isEmptyText) {
-                overlayRectangle = <rect x={0} y={0} width={originalBounds.width} height={originalBounds.height} fill="white" opacity="0.8" stroke="black"/>
+                overlayRectangle = <rect x={0} y={0} width={originalBounds.width} height={originalBounds.height} fill="white" opacity="0.8" stroke="grey"/>
             }
         } else {
             context.pushEffectiveZoom(context.effectiveZoom)
