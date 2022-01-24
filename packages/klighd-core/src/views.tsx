@@ -125,12 +125,16 @@ export class KNodeView implements IView {
 
         let transformation: string;
 
+        node.node_scaled_bounds = node.bounds
+
         // we push a new effective zoom in all cases so we can pop later without checking whether we pushed
         if (node.parent && performNodeScaling) {
 
             const siblings: Bounds[] = node.parent.children.filter((sibling) => sibling != node && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
 
             const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(ctx.effectiveZoom, minNodeScale, node.bounds, (node.parent as SShapeElement).bounds, margin,  siblings);
+
+            node.node_scaled_bounds = newBounds;
 
             if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
                 // On initial load node.parent.bounds has all fields as 0 causing a division by 0
@@ -404,10 +408,15 @@ export class KEdgeView implements IView {
         if (s === undefined || t === undefined) {
             return <g />
         }
+
+
+
         // edge should be greyed out if the source or target is moved
         if (s !== undefined && t !== undefined && s instanceof SKNode && t instanceof SKNode) {
             edge.moved = (s.selected || t.selected) && ctx.mListener.hasDragged
+
         }
+
 
         let rendering = undefined
         if (!ctx.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {

@@ -1,4 +1,4 @@
-import { Bounds, Dimension } from 'sprotty-protocol'
+import { Bounds, Dimension, Point} from 'sprotty-protocol'
 
 
 /**
@@ -77,6 +77,28 @@ export function calculateScaledBounds(originalBounds: Bounds, availableSpace: Di
     return {x: newX, y : newY, width: newWidth, height: newHeight}
 }
 
+export function calculateScaledPoint(originalBounds: Bounds, newBounds: Bounds, originalPoint: Point) : Point {
+
+    let newX
+    let newY
+
+    if (originalBounds.width == 0 || newBounds.width == 0) {
+        newX = originalPoint.x - originalBounds.x + newBounds.x
+    } else {
+        const alongX =  originalBounds.width == 0 ? 0 : (originalPoint.x - originalBounds.x) / originalBounds.width
+        newX = newBounds.x + alongX * newBounds.width
+    }
+
+    if (originalBounds.height == 0 || newBounds.height == 0) {
+        newY = originalPoint.y - originalBounds.y + newBounds.y
+    }else {
+        const alongY =  originalBounds.height == 0 ? 0 : (originalPoint.y - originalBounds.y) / originalBounds.height
+        newY =  newBounds.y + alongY * newBounds.height
+    }
+
+    return {x: newX, y: newY}
+}
+
 export function scaleDimension(offset: number, length: number, available: number, scale: number) : {offset:number, length:number}{
     const newLength = length * scale;
     const prefix = offset
@@ -106,4 +128,9 @@ export function upscaleBounds(effectiveScale: number, maxScale: number, childBou
   const newBounds = calculateScaledBounds(childBounds, parentBounds, scalingFactor)
 
   return {bounds:newBounds, scale: scalingFactor}
+}
+
+
+export function equalBounds(a: Bounds, b: Bounds) : boolean {
+    return a.x == b.x && a.y == b.y && a.height == b.height && a.width == b.width
 }

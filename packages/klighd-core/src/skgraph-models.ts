@@ -39,6 +39,7 @@ export const LABEL_TYPE = 'label'
  */
 export class SKNode extends KNode implements SKGraphElement {
     tooltip?: string
+    node_scaled_bounds?: Bounds
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
             || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)

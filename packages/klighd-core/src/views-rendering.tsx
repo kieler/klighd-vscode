@@ -32,7 +32,7 @@ import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
-import { upscaleBounds } from './scaling-util';
+import { calculateScaledPoint, equalBounds, upscaleBounds } from './scaling-util';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -266,11 +266,39 @@ export function renderLine(rendering: KPolyline,
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
-    const points = getPoints(parent, rendering, boundsAndTransformation)
+    let points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
         return <g>
             {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
         </g>
+    }
+
+    let skip_children = false
+
+    if (rendering.type !== K_POLYGON && parent instanceof SKEdge) {
+
+        const s = parent.source
+        const t = parent.target
+
+        if (parent.routingPoints.length > 0
+            && s instanceof SKNode
+            && t instanceof SKNode
+            && s.node_scaled_bounds
+            && t.node_scaled_bounds
+            ) {
+
+            const start = points[0]
+            const end = points[points.length-1]
+
+            const scaled_start = calculateScaledPoint(s.bounds, s.node_scaled_bounds, start)
+            const scaled_end   = calculateScaledPoint(t.bounds, t.node_scaled_bounds, end)
+
+            const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
+            const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
+
+            points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point))
+            skip_children = !equalBounds(s.bounds, s.node_scaled_bounds) || !(t.bounds , t.node_scaled_bounds)
+        }
     }
 
     // now define the line's path.
@@ -359,10 +387,17 @@ export function renderLine(rendering: KPolyline,
 
     // Create the svg element for this rendering.
     // Only apply the fast shadow to KPolygons, other shadows are not allowed there.
-    const element = <g id={rendering.renderingId} {...gAttrs}>
+    let element
+    if (skip_children) {
+        element = <g id={rendering.renderingId} {...gAttrs}>
+        {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
+        </g>
+    } else {
+        element = <g id={rendering.renderingId} {...gAttrs}>
         {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
         {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
-    </g>
+        </g>
+    }
     return element
 }
 
