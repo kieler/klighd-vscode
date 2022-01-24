@@ -9,9 +9,9 @@ import { Bounds, Dimension } from 'sprotty-protocol'
  */
 export function maxParentScale(node: Bounds, parent: Dimension, margin: number): number {
     // the maximum scale that keeps the node in bounds height wise
-    const maxHeightScale = (parent.height + 2 * margin) / node.height
+    const maxHeightScale = (parent.height - 2 * margin) / node.height
     // the maximum scale that keeps the node in bounds width wise
-    const maxWidthScale  = (parent.width  + 2 * margin) / node.width
+    const maxWidthScale  = (parent.width  - 2 * margin) / node.width
 
     return Math.min(maxHeightScale, maxWidthScale)
 }
