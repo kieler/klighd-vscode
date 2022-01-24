@@ -1,6 +1,13 @@
 import { Bounds, Dimension } from 'sprotty-protocol'
 
-export function maxParentScale(node: Bounds, parent: Bounds, margin: number): number {
+
+/**
+ * @param node the bounds of the node to scale
+ * @param parent the dimensions of the parent of the node to scale
+ * @param margin the margin node shall retain to parent
+ * @returns the maximum scale at which node retains the margin to parent
+ */
+export function maxParentScale(node: Bounds, parent: Dimension, margin: number): number {
     // the maximum scale that keeps the node in bounds height wise
     const maxHeightScale = (parent.height + 2 * margin) / node.height
     // the maximum scale that keeps the node in bounds width wise
@@ -29,7 +36,15 @@ function inverseScaleDimension(offset_a: number, length_a: number, offset_b: num
     return Math.max(result_1, result_2, 1)
 }
 
-export function maxSiblingScale(node: Bounds, parent:Bounds, sibling: Bounds, margin: number) : number {
+/**
+ * Calculate the maximum scale at which node and sibling retain the given margin between them
+ * @param node the bounds of node to scale
+ * @param parent the dimensions of the parent of the node to scale
+ * @param sibling a sibling og the nod to scale
+ * @param margin the margin node and sibling shall retain when both scaled by the result
+ * @returns the maximum scale at which node and sibling retain margin between them
+ */
+export function maxSiblingScale(node: Bounds, parent:Dimension, sibling: Bounds, margin: number) : number {
 
     // calculate the scale for each dimension at which we reach our sibling
     const result_1 = inverseScaleDimension(node.x, node.width, sibling.x, sibling.width, parent.width, margin)
@@ -39,6 +54,14 @@ export function maxSiblingScale(node: Bounds, parent:Bounds, sibling: Bounds, ma
     return Math.max(result_1, result_2, 1)
 }
 
+
+/**
+ * Scale bounds in the specified dimensions by the specified scale
+ * @param originalBounds the bounds to scale
+ * @param availableSpace the space available to scale the bounds
+ * @param scale the scale by which to scale
+ * @returns the scaled bounds
+ */
 export function calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
     const originalWidth = originalBounds.width
     const originalHeight = originalBounds.height
@@ -62,7 +85,7 @@ export function scaleDimension(offset: number, length: number, available: number
     return {offset: newOffset, length: newLength}
 }
 
-export function upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Bounds, margin:number,  siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
+export function upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin:number,  siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
 
   // we want that the effectiveScale * desiredScale = maxScale
   // so that the we effectively up scale to maxScale
