@@ -20,7 +20,7 @@ import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unu
 import { Bounds } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles } from './options/render-options-registry';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -893,6 +893,7 @@ export function renderKRendering(kRendering: KRendering,
     let isOverlay = false
 
     const applyTitleScaling = context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.renderOptionsRegistry.getValueOrDefault(ScaleTitles)
+    const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
@@ -926,7 +927,7 @@ export function renderKRendering(kRendering: KRendering,
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalBounds = boundingBox
 
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(context.effectiveZoom, maxScale, originalBounds, parentBounds);
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(context.effectiveZoom, maxScale, originalBounds, parentBounds, margin);
             context.pushEffectiveZoom(context.effectiveZoom * scalingFactor)
 
             // Apply the new bounds and scaling as the element's transformation.

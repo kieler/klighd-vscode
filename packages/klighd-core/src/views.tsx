@@ -25,7 +25,7 @@ import { Bounds } from 'sprotty-protocol'
 import { DepthMap, DetailLevel, isDetailWithChildren } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
-import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, ScaleNodes, NodeScalingFactor } from './options/render-options-registry';
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, ScaleNodes, NodeScalingFactor, NodeMargin } from './options/render-options-registry';
 import { upscaleBounds } from './scaling-util';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {  NODE_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
@@ -121,6 +121,7 @@ export class KNodeView implements IView {
 
         const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
         const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
+        const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
         let transformation: string;
 
@@ -129,7 +130,7 @@ export class KNodeView implements IView {
 
             const siblings: Bounds[] = node.parent.children.filter((sibling) => sibling != node && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
 
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(ctx.effectiveZoom, minNodeScale, node.bounds, (node.parent as SShapeElement).bounds, siblings);
+            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(ctx.effectiveZoom, minNodeScale, node.bounds, (node.parent as SShapeElement).bounds, margin,  siblings);
 
             if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
                 // On initial load node.parent.bounds has all fields as 0 causing a division by 0
