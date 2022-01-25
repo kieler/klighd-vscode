@@ -17,10 +17,10 @@
 /** @jsx svg */
 import { VNode } from 'snabbdom';
 import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Bounds } from 'sprotty-protocol';
+import { Bounds, Point } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin } from './options/render-options-registry';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin, NodeScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -32,7 +32,7 @@ import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
-import { calculateScaledPoint, equalBounds, upscaleBounds } from './scaling-util';
+import { calculateScaledPoint, upscaleBounds } from './scaling-util';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -273,34 +273,55 @@ export function renderLine(rendering: KPolyline,
         </g>
     }
 
-    let skip_children = false
-
-    if (rendering.type !== K_POLYGON && parent instanceof SKEdge) {
-
+    if (parent instanceof SKEdge) {
         const s = parent.source
         const t = parent.target
 
-        if (parent.routingPoints.length > 0
-            && s instanceof SKNode
-            && t instanceof SKNode
-            ) {
-
+        if (s instanceof SKNode && t instanceof SKNode) {
             const s_scaled = s.forceNodeScaleBounds(context)
             const t_scaled = t.forceNodeScaleBounds(context)
 
-            const start = points[0]
-            const end = points[points.length-1]
+            if (rendering.type !== K_POLYGON) {
+                if (points.length > 0) {
 
-            const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
-            const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
 
-            const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
-            const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
+                    const start = points[0]
+                    const end = points[points.length-1]
 
-            points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point))
-            skip_children = !equalBounds(s.bounds, s_scaled.bounds) || !(t.bounds , t_scaled.bounds)
+                    const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
+                    const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
+
+                    const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
+                    const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
+
+                    points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point))
+                }
+            } else {
+                let newPoint = boundsAndTransformation.bounds as Point
+
+
+                if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[0])) {
+                    newPoint = calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
+                } else if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[parent.routingPoints.length -1])) {
+                    newPoint = calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
+                }
+
+                const offset = Point.subtract(newPoint, boundsAndTransformation.bounds)
+                const offset_str =  "translate("+offset.x+","+offset.y+")"
+
+                gAttrs.transform = offset_str + " " +(gAttrs.transform ?? "")
+
+                const p_scaled = (parent.parent as SKNode).forceNodeScaleBounds(context);
+
+                const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
+
+                const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
+
+                gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -newPoint.x + "," + -newPoint.y + ") " + gAttrs.transform
+            }
         }
     }
+
 
     // now define the line's path.
     let path = ''
@@ -388,17 +409,10 @@ export function renderLine(rendering: KPolyline,
 
     // Create the svg element for this rendering.
     // Only apply the fast shadow to KPolygons, other shadows are not allowed there.
-    let element
-    if (skip_children) {
-        element = <g id={rendering.renderingId} {...gAttrs}>
-        {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
-        </g>
-    } else {
-        element = <g id={rendering.renderingId} {...gAttrs}>
+    const element = <g id={rendering.renderingId} {...gAttrs}>
         {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
         {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
-        </g>
-    }
+    </g>
     return element
 }
 
