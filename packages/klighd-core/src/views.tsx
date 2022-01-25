@@ -20,15 +20,13 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, SShapeElement, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Bounds } from 'sprotty-protocol'
+import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DepthMap, DetailLevel, isDetailWithChildren } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
-import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, ScaleNodes, NodeScalingFactor, NodeMargin } from './options/render-options-registry';
-import { upscaleBounds } from './scaling-util';
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, ScaleNodes } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
-import {  NODE_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
+import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 
@@ -66,7 +64,7 @@ export class SKGraphView implements IView {
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
             ctx.depthMap = DepthMap.getDM()
             if (ctx.viewport && ctx.depthMap) {
-                ctx.depthMap.updateDetailLevels(ctx.viewport, ctx.renderOptionsRegistry)
+                ctx.depthMap.updateDetailLevels(ctx)
             }
         } else {
             ctx.depthMap = undefined
@@ -95,7 +93,7 @@ export class KNodeView implements IView {
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
+            const containingRegion = ctx.depthMap.getContainingRegion(node, ctx)
             if (ctx.depthMap && containingRegion && !isDetailWithChildren(containingRegion.detail)) {
                 // Make sure this node and its children are not drawn as long as it is not on full details.
                 node.areChildAreaChildrenRendered = true
@@ -119,22 +117,15 @@ export class KNodeView implements IView {
 
 
 
-        const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
         const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
-        const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
         let transformation: string;
 
-        node.node_scaled_bounds = node.bounds
 
         // we push a new effective zoom in all cases so we can pop later without checking whether we pushed
         if (node.parent && performNodeScaling) {
 
-            const siblings: Bounds[] = node.parent.children.filter((sibling) => sibling != node && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
-
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(ctx.effectiveZoom, minNodeScale, node.bounds, (node.parent as SShapeElement).bounds, margin,  siblings);
-
-            node.node_scaled_bounds = newBounds;
+            const {bounds: newBounds, scale: scalingFactor} = node.forceNodeScaleBounds(ctx)
 
             if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
                 // On initial load node.parent.bounds has all fields as 0 causing a division by 0
@@ -266,7 +257,7 @@ export class KPortView implements IView {
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderOptionsRegistry)
+            const containingRegion = ctx.depthMap.getContainingRegion(port, ctx)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 port.areChildAreaChildrenRendered = true
                 port.areNonChildAreaChildrenRendered = true
@@ -326,7 +317,7 @@ export class KLabelView implements IView {
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderOptionsRegistry)
+            const containingRegion = ctx.depthMap.getContainingRegion(label, ctx)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 label.areChildAreaChildrenRendered = true
                 label.areNonChildAreaChildrenRendered = true
@@ -390,7 +381,7 @@ export class KEdgeView implements IView {
         const ctx = context as SKGraphModelRenderer
 
         if (ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderOptionsRegistry)
+            const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 edge.areChildAreaChildrenRendered = true
                 edge.areNonChildAreaChildrenRendered = true

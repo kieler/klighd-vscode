@@ -203,7 +203,7 @@ export function renderRectangularShape(
     }
 
     if (element && context.depthMap) {
-        const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
+        const region = context.depthMap.getProvidingRegion(parent as SKNode, context)
         if (region && region.detail !== DetailLevel.FullDetails && parent.children.length >= 1) {
             const offsetY = region.regionTitleHeight ?? 0
             const offsetX = region.regionTitleIndentation ?? 0
@@ -283,21 +283,22 @@ export function renderLine(rendering: KPolyline,
         if (parent.routingPoints.length > 0
             && s instanceof SKNode
             && t instanceof SKNode
-            && s.node_scaled_bounds
-            && t.node_scaled_bounds
             ) {
+
+            const s_scaled = s.forceNodeScaleBounds(context)
+            const t_scaled = t.forceNodeScaleBounds(context)
 
             const start = points[0]
             const end = points[points.length-1]
 
-            const scaled_start = calculateScaledPoint(s.bounds, s.node_scaled_bounds, start)
-            const scaled_end   = calculateScaledPoint(t.bounds, t.node_scaled_bounds, end)
+            const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
+            const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
 
             const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
             const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
 
             points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point))
-            skip_children = !equalBounds(s.bounds, s.node_scaled_bounds) || !(t.bounds , t.node_scaled_bounds)
+            skip_children = !equalBounds(s.bounds, s_scaled.bounds) || !(t.bounds , t_scaled.bounds)
         }
     }
 
@@ -917,7 +918,7 @@ export function renderKRendering(kRendering: KRendering,
         return renderError(kRendering)
     }
 
-    const providingRegion = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
+    const providingRegion = context.depthMap?.getProvidingRegion(parent as SKNode, context)
 
     // Check if this is a title rendering. If we have a title, create that rendering, remember where it should be and how much space it has.
     // If we are zoomed in far enough, return that rendering, otherwise put it into the list to be rendered on top by the element rendering.

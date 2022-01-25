@@ -1,4 +1,6 @@
 import { Bounds, Dimension, Point} from 'sprotty-protocol'
+import { SKNode } from './skgraph-models'
+import { SKGraphModelRenderer } from './skgraph-model-renderer'
 
 
 /**
@@ -133,4 +135,17 @@ export function upscaleBounds(effectiveScale: number, maxScale: number, childBou
 
 export function equalBounds(a: Bounds, b: Bounds) : boolean {
     return a.x == b.x && a.y == b.y && a.height == b.height && a.width == b.width
+}
+
+export function getAbsoluteRenderedBounds(element: SKNode, ctx: SKGraphModelRenderer) : Bounds {
+    let current: SKNode = element;
+    let {bounds: bounds} =  element.forceNodeScaleBounds(ctx)
+
+    while (current.parent instanceof SKNode) {
+        const parent = current.parent;
+        bounds = parent.localToParentRendered(bounds, ctx);
+        current = parent;
+    }
+
+    return bounds;
 }

@@ -25,6 +25,6 @@
     "src"
   ],
   "paths": {
-    "@kieler/klighd-interactive/lib/*": ["../klighd-interactive/src/*"]
+    "@kieler/klighd-interactive/lib/*": ["../klighd-interactive/lib/*"]
   }
 }

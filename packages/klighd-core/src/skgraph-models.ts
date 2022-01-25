@@ -16,8 +16,11 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
-import { Point, Bounds } from 'sprotty-protocol'
+import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement, SShapeElement } from 'sprotty';
+import { Point, isBounds, Bounds } from 'sprotty-protocol'
+import { NodeMargin, NodeScalingFactor, ScaleNodes } from './options/render-options-registry';
+import {  upscaleBounds } from './scaling-util';
+import { SKGraphModelRenderer } from './skgraph-model-renderer';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -39,12 +42,52 @@ export const LABEL_TYPE = 'label'
  */
 export class SKNode extends KNode implements SKGraphElement {
     tooltip?: string
-    node_scaled_bounds?: Bounds
+
+    private _node_scaled_bounds?: {bounds: Bounds, scale: number, effective_child_zoom: number}
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
             || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
             || feature === popupFeature
     }
+
+    forceNodeScaleBounds(ctx: SKGraphModelRenderer): {bounds: Bounds, scale: number, effective_child_zoom: number}{
+        const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
+
+        if (this.parent && this.parent instanceof SKNode && performNodeScaling) {
+            const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
+            const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
+
+            const parent_scaled = this.parent.forceNodeScaleBounds(ctx)
+
+            const effective_zoom = parent_scaled.effective_child_zoom
+            const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
+
+            const upscale = upscaleBounds(ctx.effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin,  siblings);
+            this._node_scaled_bounds = {...upscale, effective_child_zoom: effective_zoom * upscale.scale}
+        } else {
+            this._node_scaled_bounds = {bounds : this.bounds, scale: 1, effective_child_zoom: ctx.viewport.zoom}
+        }
+
+        return this._node_scaled_bounds
+    }
+
+    localToParentRendered(point: Point | Bounds, ctx: SKGraphModelRenderer): Bounds {
+        const scaled_bounds = this.forceNodeScaleBounds(ctx)
+
+        const result = {x: point.x * scaled_bounds.scale, y: point.y * scaled_bounds.scale, width: -1, height:-1}
+
+        if (isBounds(point)) {
+            result.width = point.width * scaled_bounds.scale
+            result.height = point.height * scaled_bounds.scale
+        }
+
+        result.x += scaled_bounds.bounds.x
+        result.y += scaled_bounds.bounds.y
+
+        return result
+    }
+
 }
 
 /**
