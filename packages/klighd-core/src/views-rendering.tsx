@@ -274,14 +274,16 @@ export function renderLine(rendering: KPolyline,
     }
 
     const performScaling = context.renderOptionsRegistry.getValueOrDefault(ScaleNodes)
+    const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin)
 
     if (performScaling && parent instanceof SKEdge) {
         const s = parent.source
         const t = parent.target
 
-        if (s instanceof SKNode && t instanceof SKNode) {
+        if (s instanceof SKNode && t instanceof SKNode && parent.parent instanceof SKNode) {
             const s_scaled = s.forceNodeScaleBounds(context)
             const t_scaled = t.forceNodeScaleBounds(context)
+            const p_scaled = parent.parent.forceNodeScaleBounds(context);
 
             if (rendering.type !== K_POLYGON) {
                 if (points.length > 0) {
@@ -296,7 +298,22 @@ export function renderLine(rendering: KPolyline,
                     const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
                     const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
 
-                    points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point))
+
+                    points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point)).map(point => {
+                        if (Bounds.includes(p_scaled.bounds, point)) {
+                            return point
+                        } else {
+                            const clamp = function(min: number,max: number,val: number): number {
+                                return Math.min(max, Math.max(min, val))
+                            }
+                            const newX = clamp(margin, p_scaled.bounds.width - margin, point.x)
+                            const newY = clamp(margin, p_scaled.bounds.height - margin, point.y)
+
+                            return {x: newX, y: newY}
+                        }
+                    })
+                    // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
+                    // points[points.length - 1] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[points.length -1])
                 }
             } else {
                 let newPoint = boundsAndTransformation.bounds as Point
@@ -313,7 +330,6 @@ export function renderLine(rendering: KPolyline,
 
                 gAttrs.transform = offset_str + " " +(gAttrs.transform ?? "")
 
-                const p_scaled = (parent.parent as SKNode).forceNodeScaleBounds(context);
 
                 const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
 
