@@ -336,17 +336,11 @@ export function renderLine(rendering: KPolyline,
                     newPoint = calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
                 }
 
-                const offset = Point.subtract(newPoint, boundsAndTransformation.bounds)
-                const offset_str =  "translate("+offset.x+","+offset.y+")"
-
-                gAttrs.transform = offset_str + " " +(gAttrs.transform ?? "")
-
-
                 const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
 
                 const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
 
-                gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -newPoint.x + "," + -newPoint.y + ") " + gAttrs.transform
+                gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + gAttrs.transform
             }
         }
     }
