@@ -298,18 +298,29 @@ export function renderLine(rendering: KPolyline,
                     const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
                     const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
 
-
-                    points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point)).map(point => {
+                    // clamp all edge point to be inside our parent
+                    points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point)).map((point, idx) => {
                         if (Bounds.includes(p_scaled.bounds, point)) {
                             return point
                         } else {
                             const clamp = function(min: number,max: number,val: number): number {
                                 return Math.min(max, Math.max(min, val))
                             }
-                            const newX = clamp(margin, p_scaled.bounds.width - margin, point.x)
-                            const newY = clamp(margin, p_scaled.bounds.height - margin, point.y)
 
-                            return {x: newX, y: newY}
+                            if (idx == 0 || idx == points.length - 1) {
+                                // for the start and end point we cannot account for the margin
+                                const newX = clamp(0, p_scaled.bounds.width, point.x)
+                                const newY = clamp(0, p_scaled.bounds.height, point.y)
+
+                                return {x: newX, y: newY}
+                            } else{
+                                const newX = clamp(margin, p_scaled.bounds.width - margin, point.x)
+                                const newY = clamp(margin, p_scaled.bounds.height - margin, point.y)
+
+                                return {x: newX, y: newY}
+                            }
+
+
                         }
                     })
                     // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
