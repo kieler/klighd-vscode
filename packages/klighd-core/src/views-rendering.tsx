@@ -20,7 +20,7 @@ import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unu
 import { Bounds, Point } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin, NodeScalingFactor } from './options/render-options-registry';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin, NodeScalingFactor, ScaleNodes } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -273,7 +273,9 @@ export function renderLine(rendering: KPolyline,
         </g>
     }
 
-    if (parent instanceof SKEdge) {
+    const performScaling = context.renderOptionsRegistry.getValueOrDefault(ScaleNodes)
+
+    if (performScaling && parent instanceof SKEdge) {
         const s = parent.source
         const t = parent.target
 
