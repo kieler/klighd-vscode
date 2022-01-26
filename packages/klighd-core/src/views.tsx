@@ -56,8 +56,6 @@ export class SKGraphView implements IView {
         }
         ctx.positions = []
 
-
-
         // Add depthMap to context for rendering, when required.
         const useSmartZoom = this.renderOptionsRegistry.getValueOrDefault(UseSmartZoom)
 
@@ -125,7 +123,7 @@ export class KNodeView implements IView {
         // we push a new effective zoom in all cases so we can pop later without checking whether we pushed
         if (node.parent && performNodeScaling) {
 
-            const {bounds: newBounds, scale: scalingFactor} = node.forceNodeScaleBounds(ctx)
+            const {bounds: newBounds, scale: scalingFactor} = node.forceNodeScaleBounds(ctx, true)
 
             if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
                 // On initial load node.parent.bounds has all fields as 0 causing a division by 0

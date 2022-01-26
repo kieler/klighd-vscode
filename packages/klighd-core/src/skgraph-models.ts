@@ -51,22 +51,26 @@ export class SKNode extends KNode implements SKGraphElement {
             || feature === popupFeature
     }
 
-    forceNodeScaleBounds(ctx: SKGraphModelRenderer): {bounds: Bounds, scale: number, effective_child_zoom: number}{
-        const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
+    forceNodeScaleBounds(ctx: SKGraphModelRenderer, force = false): {bounds: Bounds, scale: number, effective_child_zoom: number}{
 
-        if (this.parent && this.parent instanceof SKNode && performNodeScaling) {
-            const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
-            const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
+        if (force || this._node_scaled_bounds === undefined) {
+            const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
 
-            const parent_scaled = this.parent.forceNodeScaleBounds(ctx)
+            if (this.parent && this.parent instanceof SKNode && performNodeScaling) {
+                const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
+                const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
-            const effective_zoom = parent_scaled.effective_child_zoom
-            const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
+                const parent_scaled = this.parent.forceNodeScaleBounds(ctx, force)
 
-            const upscale = upscaleBounds(ctx.effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin,  siblings);
-            this._node_scaled_bounds = {...upscale, effective_child_zoom: effective_zoom * upscale.scale}
-        } else {
-            this._node_scaled_bounds = {bounds : this.bounds, scale: 1, effective_child_zoom: ctx.viewport.zoom}
+                const effective_zoom = parent_scaled.effective_child_zoom
+                const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
+
+                const upscale = upscaleBounds(ctx.effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin,  siblings);
+                this._node_scaled_bounds = {...upscale, effective_child_zoom: effective_zoom * upscale.scale}
+            } else {
+                this._node_scaled_bounds = {bounds : this.bounds, scale: 1, effective_child_zoom: ctx.viewport.zoom}
+            }
+
         }
 
         return this._node_scaled_bounds

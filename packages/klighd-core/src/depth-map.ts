@@ -175,7 +175,7 @@ export class DepthMap {
 
             entry = { providingRegion: providedRegion, containingRegion: undefined }
 
-            element.forceNodeScaleBounds(ctx)
+            element.forceNodeScaleBounds(ctx, true)
             providedRegion.detail = providedRegion.computeDetailLevel(ctx)
 
             this.rootRegions.push(providedRegion)
@@ -195,7 +195,7 @@ export class DepthMap {
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion);
 
-                element.forceNodeScaleBounds(ctx)
+                element.forceNodeScaleBounds(ctx, true)
                 entry.providingRegion.detail = entry.providingRegion.computeDetailLevel(ctx)
             }
 
@@ -432,7 +432,7 @@ export class Region {
         } else {
             const viewportSize = this.sizeInViewport(ctx)
 
-            const scale = (this.boundingRectangle.parent as SKNode).forceNodeScaleBounds(ctx).effective_child_zoom
+            const scale = (this.boundingRectangle.parent as SKNode).forceNodeScaleBounds(ctx, true).effective_child_zoom
             // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
             if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
                 return DetailLevel.FullDetails
