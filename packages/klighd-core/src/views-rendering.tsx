@@ -326,7 +326,7 @@ export function renderLine(rendering: KPolyline,
                     // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
                     // points[points.length - 1] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[points.length -1])
                 }
-            } else {
+            } else if (parent.routingPoints.length > 0){
                 let newPoint = boundsAndTransformation.bounds as Point
 
 
