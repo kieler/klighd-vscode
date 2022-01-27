@@ -289,8 +289,6 @@ export function renderLine(rendering: KPolyline,
         const p_scaled = parent.parent.forceNodeScaleBounds(context);
 
         if (rendering.type !== K_POLYGON) {
-            if (points.length > 0) {
-
 
                 const start = points[0]
                 const end = points[points.length-1]
@@ -328,7 +326,7 @@ export function renderLine(rendering: KPolyline,
                 })
                 // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
                 // points[points.length - 1] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[points.length -1])
-            }
+
         } else if (parent.routingPoints.length > 0){
             let newPoint = boundsAndTransformation.bounds as Point
 
