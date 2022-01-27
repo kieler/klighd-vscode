@@ -276,72 +276,74 @@ export function renderLine(rendering: KPolyline,
     const performScaling = context.renderOptionsRegistry.getValueOrDefault(ScaleNodes)
     const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin)
 
-    if (performScaling && parent instanceof SKEdge) {
+    if (performScaling
+        && parent instanceof SKEdge
+        && parent.source instanceof SKNode
+        && parent.target instanceof SKNode
+        && parent.parent instanceof SKNode
+    ) {
         const s = parent.source
         const t = parent.target
+        const s_scaled = s.forceNodeScaleBounds(context)
+        const t_scaled = t.forceNodeScaleBounds(context)
+        const p_scaled = parent.parent.forceNodeScaleBounds(context);
 
-        if (s instanceof SKNode && t instanceof SKNode && parent.parent instanceof SKNode) {
-            const s_scaled = s.forceNodeScaleBounds(context)
-            const t_scaled = t.forceNodeScaleBounds(context)
-            const p_scaled = parent.parent.forceNodeScaleBounds(context);
-
-            if (rendering.type !== K_POLYGON) {
-                if (points.length > 0) {
+        if (rendering.type !== K_POLYGON) {
+            if (points.length > 0) {
 
 
-                    const start = points[0]
-                    const end = points[points.length-1]
+                const start = points[0]
+                const end = points[points.length-1]
 
-                    const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
-                    const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
+                const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
+                const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
 
-                    const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
-                    const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
+                const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
+                const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
 
-                    // clamp all edge point to be inside our parent
-                    points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point)).map((point, idx) => {
-                        if (Bounds.includes(p_scaled.bounds, point)) {
-                            return point
-                        } else {
-                            const clamp = function(min: number,max: number,val: number): number {
-                                return Math.min(max, Math.max(min, val))
-                            }
-
-                            if (idx == 0 || idx == points.length - 1) {
-                                // for the start and end point we cannot account for the margin
-                                const newX = clamp(0, p_scaled.bounds.width, point.x)
-                                const newY = clamp(0, p_scaled.bounds.height, point.y)
-
-                                return {x: newX, y: newY}
-                            } else{
-                                const newX = clamp(margin, p_scaled.bounds.width - margin, point.x)
-                                const newY = clamp(margin, p_scaled.bounds.height - margin, point.y)
-
-                                return {x: newX, y: newY}
-                            }
-
-
+                // clamp all edge point to be inside our parent
+                points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point)).map((point, idx) => {
+                    if (Bounds.includes(p_scaled.bounds, point)) {
+                        return point
+                    } else {
+                        const clamp = function(min: number,max: number,val: number): number {
+                            return Math.min(max, Math.max(min, val))
                         }
-                    })
-                    // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
-                    // points[points.length - 1] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[points.length -1])
-                }
-            } else if (parent.routingPoints.length > 0){
-                let newPoint = boundsAndTransformation.bounds as Point
+
+                        if (idx == 0 || idx == points.length - 1) {
+                            // for the start and end point we cannot account for the margin
+                            const newX = clamp(0, p_scaled.bounds.width, point.x)
+                            const newY = clamp(0, p_scaled.bounds.height, point.y)
+
+                            return {x: newX, y: newY}
+                        } else{
+                            const newX = clamp(margin, p_scaled.bounds.width - margin, point.x)
+                            const newY = clamp(margin, p_scaled.bounds.height - margin, point.y)
+
+                            return {x: newX, y: newY}
+                        }
 
 
-                if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[0])) {
-                    newPoint = calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
-                } else if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[parent.routingPoints.length -1])) {
-                    newPoint = calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
-                }
-
-                const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
-
-                const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
-
-                gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + gAttrs.transform
+                    }
+                })
+                // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
+                // points[points.length - 1] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[points.length -1])
             }
+        } else if (parent.routingPoints.length > 0){
+            let newPoint = boundsAndTransformation.bounds as Point
+
+
+            if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[0])) {
+                newPoint = calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
+            } else if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[parent.routingPoints.length -1])) {
+                newPoint = calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
+            }
+
+            const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
+
+            const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
+
+            gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + gAttrs.transform
         }
     }
 
