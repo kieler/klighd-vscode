@@ -129,6 +129,9 @@ export class SKLabel extends SLabel implements SKGraphElement {
  */
 export class SKEdge extends KEdge implements SKGraphElement {
     tooltip?: string
+
+    moved_ends_by?: {start: Point, end: Point}
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }

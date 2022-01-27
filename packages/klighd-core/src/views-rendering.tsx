@@ -16,7 +16,7 @@
  */
 /** @jsx svg */
 import { VNode } from 'snabbdom';
-import {  svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import {  PointToPointLine, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds, Point } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
@@ -293,54 +293,116 @@ export function renderLine(rendering: KPolyline,
         const scaled_start = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.bounds, start)
         const scaled_end   = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.bounds, end)
 
+        let max_coord_per_point = 1
         switch (rendering.type) {
-            case K_SPLINE: {
+            case K_SPLINE:
+                max_coord_per_point = 3
+                // fallthrough
+            case K_ROUNDED_BENDS_POLYLINE:
+            case K_POLYLINE: {
 
-                points = [...points]
+                const newPoints = []
 
-                points.pop()
+                let i = 1
 
-                for (let i = 0 ; i< points.length ;) {
+                // skip points in the start node
+                while (i < points.length) {
                     const remainingPoints = points.length - i
 
-                    const z = Math.min(3, remainingPoints)
+                    const z = Math.min(max_coord_per_point, remainingPoints)
 
                     const p = points[i + z - 1]
 
                     if (
                         Bounds.includes(s_scaled.bounds, p)
-                        || Bounds.includes(t_scaled.bounds, p)
                     ) {
-                        for (let j = 0 ;j < z; j++){
-                            points.pop()
-                        }
+                        i+=z
                     } else {
-                        i+=3
+                        break
                     }
                 }
 
-                points.unshift(scaled_start)
-                points.push(scaled_end)
+                // determine new start point
 
+                let start_choice = scaled_start
+                if (i < points.length) {
+
+                    const remainingPoints = points.length - i
+                    const z = Math.min(max_coord_per_point, remainingPoints)
+
+                    const prev = points[i-1]
+                    const next = points[i + z - 1]
+
+                    const edge = new PointToPointLine(prev, next)
+
+                    const intersections = ScalingUtil.intersections(s_scaled.bounds, edge)
+
+                    intersections.sort(ScalingUtil.sort_by_dist(next))
+
+                    if (intersections.length > 0){
+                        start_choice = intersections[0]
+                    }
+
+                }
+                newPoints.push(start_choice)
+
+
+                // keep points not in end node
+                while (i < points.length) {
+                    const remainingPoints = points.length - i
+
+                    const z = Math.min(max_coord_per_point, remainingPoints)
+
+                    const p = points[i + z - 1]
+
+                    if (
+                        !Bounds.includes(t_scaled.bounds, p)
+                    ) {
+                        for (let j = 0; j < z ; j++) {
+                            i++
+                            newPoints.push(points[i])
+                        }
+                    } else {
+                        break
+                    }
+                }
+
+                // determine new end point
+
+                let end_choice = scaled_end
+                if (i < points.length) {
+
+                    const remainingPoints = points.length - i
+                    const z = Math.min(max_coord_per_point, remainingPoints)
+
+                    const prev = points[i-1]
+                    const next = points[i + z - 1]
+
+                    const edge = new PointToPointLine(prev, next)
+
+                    const intersections = ScalingUtil.intersections(t_scaled.bounds, edge)
+
+                    intersections.sort(ScalingUtil.sort_by_dist(prev))
+
+                    if (intersections.length > 0){
+                        end_choice = intersections[0]
+                    }
+                }
+                newPoints.push(end_choice)
+
+
+                parent.moved_ends_by = {start: Point.subtract(points[0], start_choice), end: Point.subtract(points[points.length -1], end_choice)}
+                points = newPoints
                 break;
             }
-            case K_ROUNDED_BENDS_POLYLINE:
-            case K_POLYLINE: {
-                points = points.filter(p => !Bounds.includes(s_scaled.bounds, p) && !Bounds.includes(t_scaled.bounds,p))
-                points.unshift(scaled_start)
-                points.push(scaled_end)
-
-                break
-            }
             case K_POLYGON: {
-                if (parent.routingPoints.length > 0){
+                if (parent.moved_ends_by && parent.routingPoints.length > 0){
                     let newPoint = boundsAndTransformation.bounds as Point
 
-
                     if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[0])) {
-                        newPoint = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
+                        newPoint = Point.add(parent.moved_ends_by.start, boundsAndTransformation.bounds)
                     } else if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[parent.routingPoints.length -1])) {
-                        newPoint = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
+                        newPoint = Point.add(parent.moved_ends_by.end, boundsAndTransformation.bounds)
                     }
 
                     const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)

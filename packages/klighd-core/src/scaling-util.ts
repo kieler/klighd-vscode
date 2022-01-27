@@ -1,6 +1,7 @@
 import { Bounds, Dimension, Point} from 'sprotty-protocol'
 import { SKNode } from './skgraph-models'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
+import { PointToPointLine } from 'sprotty'
 
 export class ScalingUtil {
     private constructor(){
@@ -152,4 +153,32 @@ export class ScalingUtil {
         return bounds;
     }
 
+    public static intersections(bounds: Bounds, line: PointToPointLine ) : Point[] {
+
+        const  tl = bounds as Point
+        const  tr = Point.add(bounds, {x: 0           , y: bounds.height})
+        const  bl = Point.add(bounds, {x: bounds.width, y: 0            })
+        const  br = Point.add(bounds, {x: bounds.width, y: bounds.height})
+
+        const top    = new PointToPointLine(tl, tr)
+        const bottom = new PointToPointLine(bl, br)
+        const left   = new PointToPointLine(tl, bl)
+        const right  = new PointToPointLine(tr, br)
+
+        return [line.intersection(top), line.intersection(bottom), line.intersection(left), line.intersection(right)].filter(p => p !== undefined).map(p => p as Point)
+    }
+
+    public static sort_by_dist(point: Point) : (a:Point, b:Point)=>number {
+        return (a: Point,b: Point) => {
+            const a_dist = Point.euclideanDistance(a, point)
+            const b_dist = Point.euclideanDistance(b, point)
+            if (a_dist > b_dist) {
+                return 1
+            } else if (b_dist > a_dist) {
+                return -1
+            } else {
+                return 0
+            }
+        }
+    }
 }
