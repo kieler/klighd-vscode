@@ -288,8 +288,10 @@ export function renderLine(rendering: KPolyline,
         const t_scaled = t.forceNodeScaleBounds(context)
         const p_scaled = parent.parent.forceNodeScaleBounds(context);
 
-        if (rendering.type !== K_POLYGON) {
-
+        switch (rendering.type) {
+            case K_SPLINE:
+            case K_ROUNDED_BENDS_POLYLINE:
+            case K_POLYLINE: {
                 const start = points[0]
                 const end = points[points.length-1]
 
@@ -326,25 +328,31 @@ export function renderLine(rendering: KPolyline,
                 })
                 // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
                 // points[points.length - 1] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[points.length -1])
-
-        } else if (parent.routingPoints.length > 0){
-            let newPoint = boundsAndTransformation.bounds as Point
-
-
-            if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[0])) {
-                newPoint = calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
-            } else if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[parent.routingPoints.length -1])) {
-                newPoint = calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
+                break
             }
+            case K_POLYGON: {
+                if (parent.routingPoints.length > 0){
+                    let newPoint = boundsAndTransformation.bounds as Point
 
-            const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
 
-            const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
+                    if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[0])) {
+                        newPoint = calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
+                    } else if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[parent.routingPoints.length -1])) {
+                        newPoint = calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
+                    }
 
-            gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + gAttrs.transform
+                    const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
+
+                    const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
+
+                    gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + gAttrs.transform
+                }
+                break
+            }
+            default:
+                console.error("Unexpected Line Type: ", rendering.type)
         }
     }
-
 
     // now define the line's path.
     let path = ''
