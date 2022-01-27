@@ -274,7 +274,6 @@ export function renderLine(rendering: KPolyline,
     }
 
     const performScaling = context.renderOptionsRegistry.getValueOrDefault(ScaleNodes)
-    const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin)
 
     if (performScaling
         && parent instanceof SKEdge
@@ -288,46 +287,49 @@ export function renderLine(rendering: KPolyline,
         const t_scaled = t.forceNodeScaleBounds(context)
         const p_scaled = parent.parent.forceNodeScaleBounds(context);
 
+        const start = points[0]
+        const end = points[points.length-1]
+
+        const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
+        const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
+
         switch (rendering.type) {
-            case K_SPLINE:
+            case K_SPLINE: {
+
+                points = [...points]
+
+                points.pop()
+
+                for (let i = 0 ; i< points.length ;) {
+                    const remainingPoints = points.length - i
+
+                    const z = Math.min(3, remainingPoints)
+
+                    const p = points[i + z - 1]
+
+                    if (
+                        Bounds.includes(s_scaled.bounds, p)
+                        || Bounds.includes(t_scaled.bounds, p)
+                    ) {
+                        for (let j = 0 ;j < z; j++){
+                            points.pop()
+                        }
+                    } else {
+                        i+=3
+                    }
+                }
+
+                points.unshift(scaled_start)
+                points.push(scaled_end)
+
+                break;
+            }
             case K_ROUNDED_BENDS_POLYLINE:
             case K_POLYLINE: {
-                const start = points[0]
-                const end = points[points.length-1]
+                points = points.filter(p => !Bounds.includes(s_scaled.bounds, p) && !Bounds.includes(t_scaled.bounds,p))
+                points.unshift(scaled_start)
+                points.push(scaled_end)
 
-                const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
-                const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
-
-                const curve_bounds = {x: start.x, y: start.y, width : end.x - start.x, height: end.y - start.y}
-                const scaled_curve_bounds = {x: scaled_start.x, y: scaled_start.y, width : scaled_end.x - scaled_start.x, height: scaled_end.y - scaled_start.y}
-
-                // clamp all edge point to be inside our parent
-                points = points.map(point => calculateScaledPoint(curve_bounds, scaled_curve_bounds, point)).map((point, idx) => {
-                    if (Bounds.includes(p_scaled.bounds, point)) {
-                        return point
-                    } else {
-                        const clamp = function(min: number,max: number,val: number): number {
-                            return Math.min(max, Math.max(min, val))
-                        }
-
-                        if (idx == 0 || idx == points.length - 1) {
-                            // for the start and end point we cannot account for the margin
-                            const newX = clamp(0, p_scaled.bounds.width, point.x)
-                            const newY = clamp(0, p_scaled.bounds.height, point.y)
-
-                            return {x: newX, y: newY}
-                        } else{
-                            const newX = clamp(margin, p_scaled.bounds.width - margin, point.x)
-                            const newY = clamp(margin, p_scaled.bounds.height - margin, point.y)
-
-                            return {x: newX, y: newY}
-                        }
-
-
-                    }
-                })
-                // points[0] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[0])
-                // points[points.length - 1] = calculateScaledPoint(curve_bounds, scaled_curve_bounds, points[points.length -1])
                 break
             }
             case K_POLYGON: {
