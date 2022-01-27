@@ -19,7 +19,7 @@ import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interact
 import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement, SShapeElement } from 'sprotty';
 import { Point, isBounds, Bounds } from 'sprotty-protocol'
 import { NodeMargin, NodeScalingFactor, ScaleNodes } from './options/render-options-registry';
-import {  upscaleBounds } from './scaling-util';
+import {  ScalingUtil } from './scaling-util';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 
 /**
@@ -65,7 +65,7 @@ export class SKNode extends KNode implements SKGraphElement {
                 const effective_zoom = parent_scaled.effective_child_zoom
                 const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
 
-                const upscale = upscaleBounds(ctx.effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin,  siblings);
+                const upscale = ScalingUtil.upscaleBounds(ctx.effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin,  siblings);
                 this._node_scaled_bounds = {...upscale, effective_child_zoom: effective_zoom * upscale.scale}
             } else {
                 this._node_scaled_bounds = {bounds : this.bounds, scale: 1, effective_child_zoom: ctx.viewport.zoom}

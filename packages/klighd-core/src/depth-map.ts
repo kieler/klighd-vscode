@@ -19,7 +19,7 @@ import { KGraphElement } from "@kieler/klighd-interactive/lib/constraint-classes
 import { SChildElement, SModelRoot } from "sprotty";
 import { Viewport } from "sprotty-protocol";
 import { FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
-import { getAbsoluteRenderedBounds } from "./scaling-util";
+import { ScalingUtil } from "./scaling-util";
 import { SKGraphModelRenderer } from "./skgraph-model-renderer";
 import { isContainerRendering, isRendering, KRendering, SKNode } from "./skgraph-models";
 
@@ -382,7 +382,7 @@ export class Region {
      * @returns Boolean value indicating the visibility of the region in the current viewport.
      */
      isInBounds(ctx: SKGraphModelRenderer): boolean {
-        const bounds = getAbsoluteRenderedBounds(this.boundingRectangle, ctx)
+        const bounds = ScalingUtil.getAbsoluteRenderedBounds(this.boundingRectangle, ctx)
 
         const canvasBounds = this.boundingRectangle.root.canvasBounds
 
@@ -401,7 +401,7 @@ export class Region {
      * @returns the relative size of the KNodes shortest dimension
      */
      sizeInViewport(ctx: SKGraphModelRenderer,): number {
-        const bounds = getAbsoluteRenderedBounds(this.boundingRectangle, ctx)
+        const bounds = ScalingUtil.getAbsoluteRenderedBounds(this.boundingRectangle, ctx)
 
         const canvasBounds = this.boundingRectangle.root.canvasBounds
 

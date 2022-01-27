@@ -32,7 +32,7 @@ import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
-import { calculateScaledPoint, upscaleBounds } from './scaling-util';
+import { ScalingUtil } from './scaling-util';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -290,8 +290,8 @@ export function renderLine(rendering: KPolyline,
         const start = points[0]
         const end = points[points.length-1]
 
-        const scaled_start = calculateScaledPoint(s.bounds, s_scaled.bounds, start)
-        const scaled_end   = calculateScaledPoint(t.bounds, t_scaled.bounds, end)
+        const scaled_start = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.bounds, start)
+        const scaled_end   = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.bounds, end)
 
         switch (rendering.type) {
             case K_SPLINE: {
@@ -338,9 +338,9 @@ export function renderLine(rendering: KPolyline,
 
 
                     if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[0])) {
-                        newPoint = calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
+                        newPoint = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.bounds, boundsAndTransformation.bounds)
                     } else if (Bounds.includes(boundsAndTransformation.bounds, parent.routingPoints[parent.routingPoints.length -1])) {
-                        newPoint = calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
+                        newPoint = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.bounds, boundsAndTransformation.bounds)
                     }
 
                     const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
@@ -1010,7 +1010,7 @@ export function renderKRendering(kRendering: KRendering,
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalBounds = boundingBox
 
-            const {bounds: newBounds, scale: scalingFactor} = upscaleBounds(context.effectiveZoom, maxScale, originalBounds, parentBounds, margin);
+            const {bounds: newBounds, scale: scalingFactor} = ScalingUtil.upscaleBounds(context.effectiveZoom, maxScale, originalBounds, parentBounds, margin);
             context.pushEffectiveZoom(context.effectiveZoom * scalingFactor)
 
             // Apply the new bounds and scaling as the element's transformation.
