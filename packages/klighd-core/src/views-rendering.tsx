@@ -352,29 +352,29 @@ export function renderLine(rendering: KPolyline,
     let path = ''
     switch (rendering.type) {
         case K_SPLINE: {
-            path += `M${points[0].x},${points[0].y}`
+            path += `M ${points[0].x},${points[0].y} `
             for (let i = 1; i < points.length; i = i + 3) {
                 const remainingPoints = points.length - i
                 if (remainingPoints === 1) {
                     // if one routing point is left, draw a straight line to there.
-                    path += `L${points[i].x},${points[i].y}`
+                    path += `L ${points[i].x},${points[i].y} `
                 } else if (remainingPoints === 2) {
                     // if two routing points are left, draw a quadratic bezier curve with those two points.
-                    path += `Q${points[i].x},${points[i].y} ${points[i + 1].x},${points[i + 1].y}`
+                    path += `Q ${points[i].x},${points[i].y} ${points[i + 1].x},${points[i + 1].y} `
                 } else {
                     // if three or more routing points are left, draw a cubic bezier curve with those points.
-                    path += `C${points[i].x},${points[i].y} `
+                    path += `C ${points[i].x},${points[i].y} `
                         + `${points[i + 1].x},${points[i + 1].y} `
-                        + `${points[i + 2].x},${points[i + 2].y}`
+                        + `${points[i + 2].x},${points[i + 2].y} `
                 }
             }
             break
         }
         case K_POLYLINE: // Fall through to next case. KPolylines are just KPolygons without the closing end.
         case K_POLYGON: {
-            path += `M${points[0].x},${points[0].y}`
+            path += `M ${points[0].x},${points[0].y} `
             for (let i = 1; i < points.length; i++) {
-                path += `L${points[i].x},${points[i].y}`
+                path += `L ${points[i].x},${points[i].y} `
             }
             if (rendering.type === K_POLYGON) {
                 path += 'Z'
@@ -386,7 +386,7 @@ export function renderLine(rendering: KPolyline,
             const bendRadius = (rendering as KRoundedBendsPolyline).bendRadius
 
             // now define the rounded polyline's path.
-            path += `M${points[0].x},${points[0].y}`
+            path += `M ${points[0].x},${points[0].y} `
             for (let i = 1; i < points.length - 1; i++) {
                 const p0 = points[i - 1]
                 const p = points[i]
@@ -422,11 +422,11 @@ export function renderLine(rendering: KPolyline,
                 }
                 // draw a line to the start of the bend point (from the last end of its bend)
                 // and then draw the bend with the control points of the point itself and the bend end point.
-                path += `L${xs},${ys}Q${xp},${yp} ${xe},${ye}`
+                path += `L ${xs},${ys} Q ${xp},${yp} ${xe},${ye} `
             }
             if (points.length > 1) {
                 const lastPoint = points[points.length - 1]
-                path += `L${lastPoint.x},${lastPoint.y}`
+                path += `L ${lastPoint.x},${lastPoint.y}`
             }
             break
         }
