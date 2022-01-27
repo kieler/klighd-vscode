@@ -345,7 +345,7 @@ export function renderLine(rendering: KPolyline,
 
                     const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
 
-                    gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + gAttrs.transform
+                    gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + (gAttrs.transform ?? "")
                 }
                 break
             }
