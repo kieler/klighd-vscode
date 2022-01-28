@@ -1069,7 +1069,6 @@ export function renderKRendering(kRendering: KRendering,
         }
 
         if (providingRegion) {
-            providingRegion.originalTitleHeight = boundingBox.height
             providingRegion.regionTitleHeight = boundingBox.height
         }
 
