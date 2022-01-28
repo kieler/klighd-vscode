@@ -27,8 +27,8 @@ export class ScalingUtil {
         // we want to find positive scale so that
         // result_a = scaleDimension(offset_a, length_a, available, scale)
         // result_b = scaleDimension(offset_b, length_b, available, scale)
-        // result_a.offset = result_b.offset + result_b.length
-        // || result_b.offset = result_a.offset + result_a.length
+        // result_a.offset = result_b.offset + result_b.length + margin
+        // || result_b.offset = result_a.offset + result_a.length + margin
 
         const fa = (offset_a * length_a) / (available - length_a)
         const fb = (offset_b * length_b) / (available - length_b)
@@ -51,7 +51,7 @@ export class ScalingUtil {
      * @param margin the margin node and sibling shall retain when both scaled by the result
      * @returns the maximum scale at which node and sibling retain margin between them
      */
-    public static maxSiblingScale(node: Bounds, parent:Dimension, sibling: Bounds, margin: number) : number {
+    public static maxSiblingScale(node: Bounds, parent: Dimension, sibling: Bounds, margin: number) : number {
 
         // calculate the scale for each dimension at which we reach our sibling
         const result_1 = ScalingUtil.inverseScaleDimension(node.x, node.width, sibling.x, sibling.width, parent.width, margin)
@@ -67,21 +67,36 @@ export class ScalingUtil {
      * @param scale the scale by which to scale
      * @returns the scaled bounds
      */
-    public static calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
+    private static calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
         const originalWidth = originalBounds.width
         const originalHeight = originalBounds.height
         const originalX = originalBounds.x
         const originalY = originalBounds.y
 
-        // Calculate the new x and y indentation:
-        // width required of scaled rendering
+        // Calculate the new x offset and width:
         const {length: newWidth, offset: newX} = ScalingUtil.scaleDimension(originalX, originalWidth, availableSpace.width, scale)
 
-        // Same for y axis, just with switched dimensional variables.
+        // Same for y offset and height
         const {length: newHeight, offset: newY} = ScalingUtil.scaleDimension(originalY, originalHeight, availableSpace.height, scale)
+
         return {x: newX, y : newY, width: newWidth, height: newHeight}
     }
 
+    private static scaleDimension(offset: number, length: number, available: number, scale: number) : {offset:number, length:number}{
+        const newLength = length * scale;
+        const prefix = offset
+        const postfix = available - offset - length
+        const newOffset = offset - prefix * (newLength - length) / (prefix + postfix)
+        return {offset: newOffset, length: newLength}
+    }
+
+    /**
+     * Calculate where a point ends up after scaling some bound
+     * @param originalBounds The original bounds before scaling
+     * @param newBounds The bounds after scaling
+     * @param originalPoint The point before scaling
+     * @returns The point after scaling
+     */
     public static calculateScaledPoint(originalBounds: Bounds, newBounds: Bounds, originalPoint: Point) : Point {
 
         let newX
@@ -102,14 +117,6 @@ export class ScalingUtil {
         }
 
         return {x: newX, y: newY}
-    }
-
-    public static scaleDimension(offset: number, length: number, available: number, scale: number) : {offset:number, length:number}{
-        const newLength = length * scale;
-        const prefix = offset
-        const postfix = available - offset - length
-        const newOffset = offset - prefix * (newLength - length) / (prefix + postfix)
-        return {offset: newOffset, length: newLength}
     }
 
     public static upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin:number,  siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
@@ -135,11 +142,12 @@ export class ScalingUtil {
       return {bounds:newBounds, scale: scalingFactor}
     }
 
-
-    public static equalBounds(a: Bounds, b: Bounds) : boolean {
-        return a.x == b.x && a.y == b.y && a.height == b.height && a.width == b.width
-    }
-
+    /**
+     * Get the absolute bounds of a node as rendered, might differ from the model bounds due to node scaling
+     * @param element the node to determine the absolute bounds for
+     * @param ctx the rendering context
+     * @returns the absolute bounds of teh node
+     */
     public static getAbsoluteRenderedBounds(element: SKNode, ctx: SKGraphModelRenderer) : Bounds {
         let current: SKNode = element;
         let {bounds: bounds} =  element.forceNodeScaleBounds(ctx)
@@ -153,6 +161,12 @@ export class ScalingUtil {
         return bounds;
     }
 
+    /**
+     * Determine the intersections between the bounding box of bounds and the line
+     * @param bounds the bounding box to intersect
+     * @param line the line to intersect
+     * @returns the intersection points (0 - 4), might contain duplicates when going thru a corner
+     */
     public static intersections(bounds: Bounds, line: PointToPointLine ) : Point[] {
 
         const  tl = bounds as Point
@@ -168,6 +182,11 @@ export class ScalingUtil {
         return [line.intersection(top), line.intersection(bottom), line.intersection(left), line.intersection(right)].filter(p => p !== undefined).map(p => p as Point)
     }
 
+    /**
+     *
+     * @param point the point to calculate the distance to
+     * @returns Function that can be used to sort by distance to point
+     */
     public static sort_by_dist(point: Point) : (a:Point, b:Point)=>number {
         return (a: Point,b: Point) => {
             const a_dist = Point.euclideanDistance(a, point)
