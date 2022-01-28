@@ -389,6 +389,7 @@ export function renderLine(rendering: KPolyline,
                         end_choice = intersections[0]
                     }
 
+                    // keep the control points of the current point
                     if (z >= 2) {
                         newPoints.push(points[i])
                         if (z == 3) {
