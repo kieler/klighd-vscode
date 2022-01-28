@@ -323,8 +323,8 @@ export function renderLine(rendering: KPolyline,
                 }
 
                 // determine new start point
-
                 let start_choice = scaled_start
+
                 if (i < points.length) {
 
                     const remainingPoints = points.length - i
@@ -344,6 +344,7 @@ export function renderLine(rendering: KPolyline,
                     }
 
                 }
+
                 newPoints.push(start_choice)
 
 
@@ -391,7 +392,7 @@ export function renderLine(rendering: KPolyline,
                 newPoints.push(end_choice)
 
 
-                parent.moved_ends_by = {start: Point.subtract(points[0], start_choice), end: Point.subtract(points[points.length -1], end_choice)}
+                parent.moved_ends_by = {start: Point.subtract(start_choice, points[0]), end: Point.subtract(end_choice, points[points.length -1])}
                 points = newPoints
                 break;
             }
