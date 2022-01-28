@@ -360,8 +360,8 @@ export function renderLine(rendering: KPolyline,
                         !Bounds.includes(t_scaled.bounds, p)
                     ) {
                         for (let j = 0; j < z ; j++) {
-                            i++
                             newPoints.push(points[i])
+                            i++
                         }
                     } else {
                         break
