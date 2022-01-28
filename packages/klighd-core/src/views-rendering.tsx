@@ -388,9 +388,17 @@ export function renderLine(rendering: KPolyline,
                     if (intersections.length > 0){
                         end_choice = intersections[0]
                     }
-                }
-                newPoints.push(end_choice)
 
+                    if (z >= 2) {
+                        newPoints.push(points[i])
+                        if (z == 3) {
+                            newPoints.push(points[i + 1])
+                        }
+                    }
+
+                }
+
+                newPoints.push(end_choice)
 
                 parent.moved_ends_by = {start: Point.subtract(start_choice, points[0]), end: Point.subtract(end_choice, points[points.length -1])}
                 points = newPoints
