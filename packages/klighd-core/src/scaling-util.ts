@@ -28,8 +28,20 @@ export class ScalingUtil {
         return Math.min(maxHeightScale, maxWidthScale)
     }
 
+    /** For some elements a and b determine the maximum scale to which they can be scaled without violating the margin in one dimension
+     *  this is used by maxSiblingScaling to determine the max scale for width and height separately
+     *
+     * @param offset_a the offset of a
+     * @param length_a the length of a
+     * @param offset_b the offset of b
+     * @param length_b the length of b
+     * @param available the available space for both a and b
+     * @param margin the margin to preserve between a and b
+     * @returns the calculated maximum scale
+     */
     private static inverseScaleDimension(offset_a: number, length_a: number, offset_b: number, length_b: number, available: number, margin: number): number {
-        // we want to find positive scale so that
+
+        // we want to find positive scale so that the following equations hold
         // result_a = scaleDimension(offset_a, length_a, available, scale)
         // result_b = scaleDimension(offset_b, length_b, available, scale)
         // result_a.offset = result_b.offset + result_b.length + margin
@@ -43,7 +55,6 @@ export class ScalingUtil {
         const result_1 = ( numerator - margin) / (fa - fb + length_b)
         const result_2 = (-numerator - margin) / (fb - fa + length_a)
 
-        // the scale should be at least one and at most one of the results should be positive
         return Math.max(result_1, result_2, 1)
     }
 
