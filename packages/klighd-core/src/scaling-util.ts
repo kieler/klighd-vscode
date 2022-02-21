@@ -157,10 +157,10 @@ export class ScalingUtil {
       const parentScaling = ScalingUtil.maxParentScale(childBounds, parentBounds, margin)
 
       // some maximum scale at which the child does not interfere with its siblings
-      const siblingScaling = siblings.map((siblingBounds) => ScalingUtil.maxSiblingScale(childBounds, parentBounds, siblingBounds, margin))
+      const siblingScalings = siblings.map((siblingBounds) => ScalingUtil.maxSiblingScale(childBounds, parentBounds, siblingBounds, margin))
 
       // the most restrictive scale between our desired scale and the maximum imposed by the parent and siblings
-      const preferredScale = Math.min(desiredScale, parentScaling, ...siblingScaling)
+      const preferredScale = Math.min(desiredScale, parentScaling, ...siblingScalings)
 
       // we never want to shrink, should only be relevant if our desired scale is less than 1
       const scalingFactor = Math.max(1, preferredScale)
