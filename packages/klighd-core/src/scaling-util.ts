@@ -80,7 +80,7 @@ export class ScalingUtil {
      * Scale bounds in the specified dimensions by the specified scale
      * @param originalBounds the bounds to scale
      * @param availableSpace the space available to scale the bounds
-     * @param scale the scale by which to scale
+     * @param scale the scale factor by which to scale
      * @returns the scaled bounds
      */
     private static calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
