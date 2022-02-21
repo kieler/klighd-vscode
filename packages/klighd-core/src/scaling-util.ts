@@ -176,7 +176,7 @@ export class ScalingUtil {
      * Determine the intersections between the bounding box of bounds and the line
      * @param bounds the bounding box to intersect
      * @param line the line to intersect
-     * @returns the intersection points (0 - 4), might contain duplicates when going thru a corner
+     * @returns the intersection points (0 - 4), might contain duplicates when going through a corner
      */
     public static intersections(bounds: Bounds, line: PointToPointLine ) : Point[] {
 
