@@ -160,7 +160,8 @@ export class DepthMap {
     /**
      * It is generally advised to initialize the elements from root to leaf
      *
-     * @param element The KGraphElement to initialize for DepthMap usage
+     * @param element The KChildElement to initialize for DepthMap usage
+     * @param ctx The rendering context
      */
     public initKGraphElement(element: KChildElement, ctx: SKGraphModelRenderer): RegionIndexEntry {
 
@@ -234,7 +235,7 @@ export class DepthMap {
     /**
      * Decides the appropriate detail level for regions based on their size in the viewport and applies that state.
      *
-     * @param viewport The current viewport.
+     * @param ctx The current rendering context
      */
     updateDetailLevels(ctx: SKGraphModelRenderer): void {
 
@@ -267,8 +268,8 @@ export class DepthMap {
      * Set detail level for the given region and recursively determine and update the children's detail level
      *
      * @param region The root region
-     * @param viewport The current viewport
-     * @param relativeThreshold The detail level threshold
+     * @param vis the detail level to apply
+     * @param ctx The current rendering context
      */
     updateRegionDetailLevel(region: Region, vis: DetailWithChildren, ctx: SKGraphModelRenderer): void {
         region.setDetailLevel(vis)
@@ -307,8 +308,7 @@ export class DepthMap {
      * Looks for a change in detail level for all critical regions.
      * Applies the level change and manages the critical regions.
      *
-     * @param viewport The current viewport
-     * @param relativeThreshold The full detail threshold
+     * @param ctx The current rendering context
      */
     checkCriticalRegions(ctx: SKGraphModelRenderer): void {
 
