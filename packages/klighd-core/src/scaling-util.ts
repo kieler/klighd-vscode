@@ -149,18 +149,22 @@ export class ScalingUtil {
      */
     public static upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin:number,  siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
 
-      // we want that the effectiveScale * desiredScale = maxScale
-      // so that the we effectively up scale to maxScale
-      const desiredScale = maxScale / effectiveScale;
+        // we want that the effectiveScale * desiredScale = maxScale
+        // so that the we effectively up scale to maxScale
+        const desiredScale = maxScale / effectiveScale;
 
-      // the maximum scale at which the child still fits into the parent
-      const parentScaling = ScalingUtil.maxParentScale(childBounds, parentBounds, margin)
+        // the maximum scale at which the child still fits into the parent
+        const parentScaling = ScalingUtil.maxParentScale(childBounds, parentBounds, margin)
 
-      // some maximum scale at which the child does not interfere with its siblings
-      const siblingScalings = siblings.map((siblingBounds) => ScalingUtil.maxSiblingScale(childBounds, parentBounds, siblingBounds, margin))
+        let preferredScale = Math.min(desiredScale, parentScaling)
 
-      // the most restrictive scale between our desired scale and the maximum imposed by the parent and siblings
-      const preferredScale = Math.min(desiredScale, parentScaling, ...siblingScalings)
+        for (const sibling of siblings) {
+            if (preferredScale <= 1) {
+                break
+            }
+            const siblingScaling = ScalingUtil.maxSiblingScale(childBounds, parentBounds, sibling, margin)
+            preferredScale = Math.min(preferredScale, siblingScaling)
+        }
 
       // we never want to shrink, should only be relevant if our desired scale is less than 1
       const scalingFactor = Math.max(1, preferredScale)
