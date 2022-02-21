@@ -1,6 +1,4 @@
 import { Bounds, Dimension, Point} from 'sprotty-protocol'
-import { SKNode } from './skgraph-models'
-import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { PointToPointLine } from 'sprotty'
 
 /**
@@ -172,25 +170,6 @@ export class ScalingUtil {
       const newBounds = ScalingUtil.calculateScaledBounds(childBounds, parentBounds, scalingFactor)
 
       return {bounds:newBounds, scale: scalingFactor}
-    }
-
-    /**
-     * Get the absolute bounds of a node as rendered, might differ from the model bounds due to node scaling
-     * @param element the node to determine the absolute bounds for
-     * @param ctx the rendering context
-     * @returns the absolute bounds of teh node
-     */
-    public static getAbsoluteRenderedBounds(element: SKNode, ctx: SKGraphModelRenderer) : Bounds {
-        let current: SKNode = element;
-        let {bounds: bounds} =  element.forceNodeScaleBounds(ctx)
-
-        while (current.parent instanceof SKNode) {
-            const parent = current.parent;
-            bounds = parent.localToParentRendered(bounds, ctx);
-            current = parent;
-        }
-
-        return bounds;
     }
 
     /**

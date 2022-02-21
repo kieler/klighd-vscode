@@ -37,13 +37,32 @@ export const EDGE_TYPE = 'edge'
 export const PORT_TYPE = 'port'
 export const LABEL_TYPE = 'label'
 
+type NodeScaleBoundsResult = {
+    /**
+     * The nodes scaled bounds relative to it's parent
+     */
+    relative_bounds: Bounds,
+    /**
+     * the nodes scale relative to its parent and its original size
+     */
+    relative_scale: number,
+    /**
+     * the nodes absolute scaled bounds
+     */
+    absolute_bounds: Bounds,
+    /**
+     * the scale children inherit form this node and its ancestors, not including the viewport zoom
+     */
+    effective_child_scale: number
+}
+
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
 export class SKNode extends KNode implements SKGraphElement {
     tooltip?: string
 
-    private _node_scaled_bounds?: {bounds: Bounds, scale: number, effective_child_zoom: number}
+    private _node_scaled_bounds?: NodeScaleBoundsResult
 
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
@@ -51,7 +70,7 @@ export class SKNode extends KNode implements SKGraphElement {
             || feature === popupFeature
     }
 
-    forceNodeScaleBounds(ctx: SKGraphModelRenderer, force = false): {bounds: Bounds, scale: number, effective_child_zoom: number}{
+    forceNodeScaleBounds(ctx: SKGraphModelRenderer, force = false): NodeScaleBoundsResult{
 
         if (force || this._node_scaled_bounds === undefined) {
             const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
@@ -62,13 +81,31 @@ export class SKNode extends KNode implements SKGraphElement {
 
                 const parent_scaled = this.parent.forceNodeScaleBounds(ctx, force)
 
-                const effective_zoom = parent_scaled.effective_child_zoom
+                const effective_zoom = parent_scaled.effective_child_scale * ctx.viewport.zoom
                 const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
 
-                const upscale = ScalingUtil.upscaleBounds(ctx.effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin,  siblings);
-                this._node_scaled_bounds = {...upscale, effective_child_zoom: effective_zoom * upscale.scale}
+                const upscale = ScalingUtil.upscaleBounds(effective_zoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
+
+                const abs_bounds = {
+                    x: parent_scaled.absolute_bounds.x + upscale.bounds.x * parent_scaled.effective_child_scale,
+                    y: parent_scaled.absolute_bounds.y + upscale.bounds.y * parent_scaled.effective_child_scale,
+                    width: upscale.bounds.width * parent_scaled.effective_child_scale,
+                    height: upscale.bounds.height * parent_scaled.effective_child_scale
+                }
+
+                this._node_scaled_bounds = {
+                    relative_bounds: upscale.bounds,
+                    relative_scale: upscale.scale,
+                    absolute_bounds: abs_bounds,
+                    effective_child_scale: parent_scaled.effective_child_scale * upscale.scale
+                }
             } else {
-                this._node_scaled_bounds = {bounds : this.bounds, scale: 1, effective_child_zoom: ctx.viewport.zoom}
+                this._node_scaled_bounds = {
+                    relative_bounds: this.bounds,
+                    relative_scale: 1,
+                    absolute_bounds: this.bounds,
+                    effective_child_scale: 1
+                }
             }
 
         }
@@ -79,15 +116,15 @@ export class SKNode extends KNode implements SKGraphElement {
     localToParentRendered(point: Point | Bounds, ctx: SKGraphModelRenderer): Bounds {
         const scaled_bounds = this.forceNodeScaleBounds(ctx)
 
-        const result = {x: point.x * scaled_bounds.scale, y: point.y * scaled_bounds.scale, width: -1, height:-1}
+        const result = {x: point.x * scaled_bounds.relative_scale, y: point.y * scaled_bounds.relative_scale, width: -1, height:-1}
 
         if (isBounds(point)) {
-            result.width = point.width * scaled_bounds.scale
-            result.height = point.height * scaled_bounds.scale
+            result.width = point.width * scaled_bounds.relative_scale
+            result.height = point.height * scaled_bounds.relative_scale
         }
 
-        result.x += scaled_bounds.bounds.x
-        result.y += scaled_bounds.bounds.y
+        result.x += scaled_bounds.relative_bounds.x
+        result.y += scaled_bounds.relative_bounds.y
 
         return result
     }

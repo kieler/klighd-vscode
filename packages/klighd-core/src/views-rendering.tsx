@@ -290,8 +290,8 @@ export function renderLine(rendering: KPolyline,
         const start = points[0]
         const end = points[points.length-1]
 
-        const scaled_start = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.bounds, start)
-        const scaled_end   = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.bounds, end)
+        const scaled_start = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.relative_bounds, start)
+        const scaled_end   = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.relative_bounds, end)
 
         let max_coord_per_point = 1
         switch (rendering.type) {
@@ -314,7 +314,7 @@ export function renderLine(rendering: KPolyline,
                     const p = points[i + z - 1]
 
                     if (
-                        Bounds.includes(s_scaled.bounds, p)
+                        Bounds.includes(s_scaled.relative_bounds, p)
                     ) {
                         i+=z
                     } else {
@@ -335,7 +335,7 @@ export function renderLine(rendering: KPolyline,
 
                     const edge = new PointToPointLine(prev, next)
 
-                    const intersections = ScalingUtil.intersections(s_scaled.bounds, edge)
+                    const intersections = ScalingUtil.intersections(s_scaled.relative_bounds, edge)
 
                     intersections.sort(ScalingUtil.sort_by_dist(next))
 
@@ -357,7 +357,7 @@ export function renderLine(rendering: KPolyline,
                     const p = points[i + z - 1]
 
                     if (
-                        !Bounds.includes(t_scaled.bounds, p)
+                        !Bounds.includes(t_scaled.relative_bounds, p)
                     ) {
                         for (let j = 0; j < z ; j++) {
                             newPoints.push(points[i])
@@ -381,7 +381,7 @@ export function renderLine(rendering: KPolyline,
 
                     const edge = new PointToPointLine(prev, next)
 
-                    const intersections = ScalingUtil.intersections(t_scaled.bounds, edge)
+                    const intersections = ScalingUtil.intersections(t_scaled.relative_bounds, edge)
 
                     intersections.sort(ScalingUtil.sort_by_dist(prev))
 
@@ -416,8 +416,15 @@ export function renderLine(rendering: KPolyline,
                     }
 
                     const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
+                    const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin)
 
-                    const scale = Math.max(target_scale / p_scaled.effective_child_zoom, 1)
+                    const parent_scale = ScalingUtil.maxParentScale(boundsAndTransformation.bounds, parent.parent.bounds, margin)
+
+                    const desired_scale = target_scale / (p_scaled.effective_child_scale * context.viewport.zoom)
+                    const preferred_scale = Math.min(desired_scale, parent_scale)
+
+                    const scale = Math.max(preferred_scale, 1)
+
 
                     gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale("+scale+") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + (gAttrs.transform ?? "")
                 }
