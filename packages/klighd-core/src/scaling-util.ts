@@ -61,9 +61,9 @@ export class ScalingUtil {
 
     /**
      * Calculate the maximum scale at which node and sibling retain the given margin between them
-     * @param node the bounds of node to scale
+     * @param node the bounds of the node to scale
      * @param parent the dimensions of the parent of the node to scale
-     * @param sibling a sibling og the nod to scale
+     * @param sibling a sibling of the node to scale
      * @param margin the margin node and sibling shall retain when both scaled by the result
      * @returns the maximum scale at which node and sibling retain margin between them
      */
