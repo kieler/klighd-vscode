@@ -96,10 +96,22 @@ export class ScalingUtil {
         return {x: newX, y : newY, width: newWidth, height: newHeight}
     }
 
-    private static scaleDimension(offset: number, length: number, available: number, scale: number) : {offset:number, length:number}{
+    /** Scale along one axis taking up space before and after the element at an equal ratio
+     *
+     * @param offset the start of the element in the scaled dimension
+     * @param length the length of the element in the scaled dimension
+     * @param available the space available in the scaled dimension
+     * @param scale the factor by which to scale the element
+     * @returns the scaled length and adjusted offset
+     */
+    private static scaleDimension(offset: number, length: number, available: number, scale: number): { offset: number, length: number }{
+        // calculate the scaled length
         const newLength = length * scale;
+        // space before the element to be scaped
         const prefix = offset
+        // space after the element to be scaled
         const postfix = available - offset - length
+        // new offset after taking space from before and after the scaled element at an equal ratio
         const newOffset = offset - prefix * (newLength - length) / (prefix + postfix)
         return {offset: newOffset, length: newLength}
     }
@@ -164,7 +176,7 @@ export class ScalingUtil {
             preferredScale = Math.min(preferredScale, siblingScaling)
         }
 
-      // we never want to shrink, should only be relevant if our desired scale is less than 1
+      // we never want to scale down
       const scalingFactor = Math.max(1, preferredScale)
 
       const newBounds = ScalingUtil.calculateScaledBounds(childBounds, parentBounds, scalingFactor)
