@@ -17,7 +17,7 @@
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement, SShapeElement } from 'sprotty';
-import { Point, isBounds, Bounds } from 'sprotty-protocol'
+import { Point, Bounds } from 'sprotty-protocol'
 import { NodeMargin, NodeScalingFactor, ScaleNodes } from './options/render-options-registry';
 import {  ScalingUtil } from './scaling-util';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
@@ -111,22 +111,6 @@ export class SKNode extends KNode implements SKGraphElement {
         }
 
         return this._node_scaled_bounds
-    }
-
-    localToParentRendered(point: Point | Bounds, ctx: SKGraphModelRenderer): Bounds {
-        const scaled_bounds = this.forceNodeScaleBounds(ctx)
-
-        const result = {x: point.x * scaled_bounds.relative_scale, y: point.y * scaled_bounds.relative_scale, width: -1, height:-1}
-
-        if (isBounds(point)) {
-            result.width = point.width * scaled_bounds.relative_scale
-            result.height = point.height * scaled_bounds.relative_scale
-        }
-
-        result.x += scaled_bounds.relative_bounds.x
-        result.y += scaled_bounds.relative_bounds.y
-
-        return result
     }
 
 }
