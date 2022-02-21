@@ -121,15 +121,15 @@ export class ScalingUtil {
         if (originalBounds.width == 0 || newBounds.width == 0) {
             newX = originalPoint.x - originalBounds.x + newBounds.x
         } else {
-            const alongX =  originalBounds.width == 0 ? 0 : (originalPoint.x - originalBounds.x) / originalBounds.width
-            newX = newBounds.x + alongX * newBounds.width
+            const relativeX =  originalBounds.width == 0 ? 0 : (originalPoint.x - originalBounds.x) / originalBounds.width
+            newX = newBounds.x + relativeX * newBounds.width
         }
 
         if (originalBounds.height == 0 || newBounds.height == 0) {
             newY = originalPoint.y - originalBounds.y + newBounds.y
-        }else {
-            const alongY =  originalBounds.height == 0 ? 0 : (originalPoint.y - originalBounds.y) / originalBounds.height
-            newY =  newBounds.y + alongY * newBounds.height
+        } else {
+            const relativeY =  originalBounds.height == 0 ? 0 : (originalPoint.y - originalBounds.y) / originalBounds.height
+            newY =  newBounds.y + relativeY * newBounds.height
         }
 
         return {x: newX, y: newY}
