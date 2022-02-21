@@ -9,8 +9,6 @@ import { DetailLevel } from "./depth-map";
  * a region or a super state in the model. Also manages the boundaries, title candidates,
  * tree structure of the model and application of detail level of its KNodes.
  */
-
-
 export class Region {
     /** The rectangle of the child area in which the region lies. */
     boundingRectangle: SKNode;
@@ -34,8 +32,7 @@ export class Region {
     /**
      * Checks visibility of a region with position from browser coordinates in current viewport.
      *
-     * @param region The region in question for visibility.
-     * @param viewport The current viewport.
+     * @param ctx The current rendering context
      * @returns Boolean value indicating the visibility of the region in the current viewport.
      */
     isInBounds(ctx: SKGraphModelRenderer): boolean {
@@ -51,11 +48,10 @@ export class Region {
     }
 
     /**
-     * Compares the size of a node to the viewport and returns the smallest fraction of either height or width.
+     * Compares the size of a region to the viewport and returns the smallest fraction of either height or width.
      *
-     * @param node The KNode in question
-     * @param viewport The current viewport
-     * @returns the relative size of the KNodes shortest dimension
+     * @param ctx The current rendering context
+     * @returns the relative size of the region's shortest dimension
      */
     sizeInViewport(ctx: SKGraphModelRenderer): number {
         const bounds = ScalingUtil.getAbsoluteRenderedBounds(this.boundingRectangle, ctx);
@@ -71,9 +67,7 @@ export class Region {
      * Decides the appropriate detail level for a region
      * based on their size in the viewport and visibility
      *
-     * @param region The region in question
-     * @param viewport The current viewport
-     * @param relativeThreshold The full detail threshold
+     * @param ctx The current rendering context
      * @returns The appropriate detail level
      */
     computeDetailLevel(ctx: SKGraphModelRenderer): DetailLevel {
