@@ -3,7 +3,12 @@ import { SKNode } from './skgraph-models'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { PointToPointLine } from 'sprotty'
 
+/**
+ * A class for some helper methods used calculate the scale to be used for graphs elements and
+ * for actually scaling them.
+ */
 export class ScalingUtil {
+
     private constructor(){
         // private constructor as this class should not be instantiated
     }
@@ -119,6 +124,18 @@ export class ScalingUtil {
         return {x: newX, y: newY}
     }
 
+    /**
+     * Calculate upscaled bounds for a graph element
+     *
+     * @param effectiveScale the effective scale at the position the element will be rendered
+     * @param maxScale the maximum factor to upscale the element by
+     * @param childBounds the bounds of the element to scale
+     * @param parentBounds the bounds of the parent of the element to scale
+     * @param margin the margin to keep between the element and its parent as well as it and its siblings,
+     *   it is assumed that the element does not violate this margin at normal scale (1)
+     * @param siblings the bounds of the elements siblings that should be taken into account while scaling
+     * @returns the upscaled local bounds and local scale
+     */
     public static upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin:number,  siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
 
       // we want that the effectiveScale * desiredScale = maxScale
