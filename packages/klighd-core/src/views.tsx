@@ -21,7 +21,7 @@ import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/k
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { DepthMap, DetailLevel, isDetailWithChildren } from './depth-map';
+import { DepthMap, DetailLevel, isDetailWithChildren } from './hierarchy/depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, ScaleNodes } from './options/render-options-registry';

@@ -19,7 +19,7 @@ import { VNode } from 'snabbdom';
 import {  PointToPointLine, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds, Point } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { DetailLevel } from './depth-map';
+import { DetailLevel } from './hierarchy/depth-map';
 import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin, NodeScalingFactor, ScaleNodes } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {

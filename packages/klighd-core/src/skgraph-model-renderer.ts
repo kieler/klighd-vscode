@@ -19,7 +19,7 @@ import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/k
 import { VNode } from 'snabbdom';
 import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, ViewRegistry } from 'sprotty';
 import { Viewport } from 'sprotty-protocol';
-import { DepthMap } from './depth-map';
+import { DepthMap } from './hierarchy/depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
 
