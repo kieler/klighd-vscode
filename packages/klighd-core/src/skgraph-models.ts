@@ -75,29 +75,44 @@ export class SKNode extends KNode implements SKGraphElement {
         if (force || this._node_scaled_bounds === undefined) {
             const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
 
-            if (this.parent && this.parent instanceof SKNode && performNodeScaling) {
-                const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
-                const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
-
+            if (this.parent && this.parent instanceof SKNode) {
                 const parent_scaled = this.parent.forceNodeScaleBounds(ctx, force)
 
-                const effective_zoom = parent_scaled.effective_child_scale * ctx.viewport.zoom
-                const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
+                if (performNodeScaling) {
+                    const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
+                    const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
-                const upscale = ScalingUtil.upscaleBounds(effective_zoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
 
-                const abs_bounds = {
-                    x: parent_scaled.absolute_bounds.x + upscale.bounds.x * parent_scaled.effective_child_scale,
-                    y: parent_scaled.absolute_bounds.y + upscale.bounds.y * parent_scaled.effective_child_scale,
-                    width: upscale.bounds.width * parent_scaled.effective_child_scale,
-                    height: upscale.bounds.height * parent_scaled.effective_child_scale
-                }
+                    const effective_zoom = parent_scaled.effective_child_scale * ctx.viewport.zoom
+                    const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
 
-                this._node_scaled_bounds = {
-                    relative_bounds: upscale.bounds,
-                    relative_scale: upscale.scale,
-                    absolute_bounds: abs_bounds,
-                    effective_child_scale: parent_scaled.effective_child_scale * upscale.scale
+                    const upscale = ScalingUtil.upscaleBounds(effective_zoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
+
+                    let abs_bounds = {
+                        x:      upscale.bounds.x      * parent_scaled.effective_child_scale,
+                        y:      upscale.bounds.y      * parent_scaled.effective_child_scale,
+                        width:  upscale.bounds.width  * parent_scaled.effective_child_scale,
+                        height: upscale.bounds.height * parent_scaled.effective_child_scale
+                    }
+
+                    abs_bounds = Bounds.translate(abs_bounds, parent_scaled.absolute_bounds)
+
+                    this._node_scaled_bounds = {
+                        relative_bounds: upscale.bounds,
+                        relative_scale: upscale.scale,
+                        absolute_bounds: abs_bounds,
+                        effective_child_scale: parent_scaled.effective_child_scale * upscale.scale
+                    }
+
+                } else {
+                    const abs_bounds = Bounds.translate(this.bounds, parent_scaled.absolute_bounds)
+
+                    this._node_scaled_bounds = {
+                        relative_bounds: this.bounds,
+                        relative_scale: 1,
+                        absolute_bounds: abs_bounds,
+                        effective_child_scale: 1
+                    }
                 }
             } else {
                 this._node_scaled_bounds = {
@@ -107,9 +122,7 @@ export class SKNode extends KNode implements SKGraphElement {
                     effective_child_scale: 1
                 }
             }
-
         }
-
         return this._node_scaled_bounds
     }
 
