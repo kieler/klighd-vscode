@@ -176,7 +176,7 @@ export class DepthMap {
 
             entry = { providingRegion: providedRegion, containingRegion: undefined }
 
-            element.forceNodeScaleBounds(ctx, true)
+            element.forceNodeScaleBounds(ctx)
             providedRegion.detail = providedRegion.computeDetailLevel(ctx)
 
             this.rootRegions.push(providedRegion)
@@ -196,7 +196,7 @@ export class DepthMap {
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion);
 
-                element.forceNodeScaleBounds(ctx, true)
+                element.forceNodeScaleBounds(ctx)
                 entry.providingRegion.detail = entry.providingRegion.computeDetailLevel(ctx)
             }
 

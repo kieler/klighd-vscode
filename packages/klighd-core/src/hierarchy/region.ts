@@ -35,7 +35,7 @@ export class Region {
      * @returns Boolean value indicating the visibility of the region in the current viewport.
      */
     isInBounds(ctx: SKGraphModelRenderer): boolean {
-        const {absolute_bounds: bounds } = this.boundingRectangle.forceNodeScaleBounds(ctx)
+        const { absolute_bounds: bounds } = this.boundingRectangle.forceNodeScaleBounds(ctx)
         const canvasBounds = this.boundingRectangle.root.canvasBounds;
 
         return bounds.x + bounds.width - ctx.viewport.scroll.x >= 0
@@ -52,7 +52,7 @@ export class Region {
      * @returns the relative size of the region's shortest dimension
      */
     sizeInViewport(ctx: SKGraphModelRenderer): number {
-        const {absolute_bounds: bounds } = this.boundingRectangle.forceNodeScaleBounds(ctx)
+        const { absolute_bounds: bounds } = this.boundingRectangle.forceNodeScaleBounds(ctx)
 
         const canvasBounds = this.boundingRectangle.root.canvasBounds;
 
@@ -81,7 +81,7 @@ export class Region {
         } else {
             const viewportSize = this.sizeInViewport(ctx);
 
-            const scale = (this.boundingRectangle.parent as SKNode).forceNodeScaleBounds(ctx, true).effective_child_scale * ctx.viewport.zoom;
+            const scale = (this.boundingRectangle.parent as SKNode).forceNodeScaleBounds(ctx).effective_child_scale * ctx.viewport.zoom;
             // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
             if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
                 return DetailLevel.FullDetails;

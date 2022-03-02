@@ -19,7 +19,7 @@ import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interact
 import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement, SShapeElement } from 'sprotty';
 import { Point, Bounds } from 'sprotty-protocol'
 import { NodeMargin, NodeScalingFactor, ScaleNodes } from './options/render-options-registry';
-import {  ScalingUtil } from './scaling-util';
+import { ScalingUtil } from './scaling-util';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 
 /**
@@ -62,6 +62,10 @@ type NodeScaleBoundsResult = {
 export class SKNode extends KNode implements SKGraphElement {
     tooltip?: string
 
+    private _scale_nodes_cache_key?: boolean
+    private _min_scale_cache_key?: number
+    private _zoom_cache_key?: number
+    private _margin_key?: boolean
     private _node_scaled_bounds?: NodeScaleBoundsResult
 
     hasFeature(feature: symbol): boolean {
@@ -70,17 +74,21 @@ export class SKNode extends KNode implements SKGraphElement {
             || feature === popupFeature
     }
 
-    forceNodeScaleBounds(ctx: SKGraphModelRenderer, force = false): NodeScaleBoundsResult{
+    forceNodeScaleBounds(ctx: SKGraphModelRenderer): NodeScaleBoundsResult {
+        const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
+        const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
+        const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
-        if (force || this._node_scaled_bounds === undefined) {
-            const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
+        const needsUpdate = this._scale_nodes_cache_key !== performNodeScaling
+            || this._margin_key !== margin
+            || this._min_scale_cache_key !== minNodeScale
+            || this._zoom_cache_key !== ctx.viewport.zoom
 
+        if (this._node_scaled_bounds === undefined || needsUpdate) {
             if (this.parent && this.parent instanceof SKNode) {
-                const parent_scaled = this.parent.forceNodeScaleBounds(ctx, force)
+                const parent_scaled = this.parent.forceNodeScaleBounds(ctx)
 
                 if (performNodeScaling) {
-                    const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
-                    const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
 
                     const effective_zoom = parent_scaled.effective_child_scale * ctx.viewport.zoom
@@ -89,9 +97,9 @@ export class SKNode extends KNode implements SKGraphElement {
                     const upscale = ScalingUtil.upscaleBounds(effective_zoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
 
                     let abs_bounds = {
-                        x:      upscale.bounds.x      * parent_scaled.effective_child_scale,
-                        y:      upscale.bounds.y      * parent_scaled.effective_child_scale,
-                        width:  upscale.bounds.width  * parent_scaled.effective_child_scale,
+                        x: upscale.bounds.x * parent_scaled.effective_child_scale,
+                        y: upscale.bounds.y * parent_scaled.effective_child_scale,
+                        width: upscale.bounds.width * parent_scaled.effective_child_scale,
                         height: upscale.bounds.height * parent_scaled.effective_child_scale
                     }
 
@@ -123,6 +131,12 @@ export class SKNode extends KNode implements SKGraphElement {
                 }
             }
         }
+
+        this._scale_nodes_cache_key = performNodeScaling
+        this._margin_key = margin
+        this._zoom_cache_key = ctx.viewport.zoom
+        this._min_scale_cache_key = minNodeScale
+
         return this._node_scaled_bounds
     }
 
@@ -164,7 +178,7 @@ export class SKLabel extends SLabel implements SKGraphElement {
 export class SKEdge extends KEdge implements SKGraphElement {
     tooltip?: string
 
-    moved_ends_by?: {start: Point, end: Point}
+    moved_ends_by?: { start: Point, end: Point }
 
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
