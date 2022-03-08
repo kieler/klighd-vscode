@@ -176,7 +176,8 @@ export class KNodeView implements IView {
             result.push(...children)
             result.push(...(ctx.titles.pop() ?? []))
             ctx.positions.pop()
-            return <g>{...result}</g>
+            //return <g>{...result}</g>
+            return scaleRendering(<g>{...result}</g>, node)
         }
 
         // Add renderings that are not undefined
@@ -187,6 +188,10 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             ctx.positions.pop()
+            //return scaleRendering(<g>
+            //    {ctx.titles.pop() ?? []}
+            //    {ctx.renderChildren(node)}
+            //</g>, node)
             return <g>
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(node)}
@@ -206,7 +211,10 @@ export class KNodeView implements IView {
         }
         result.push(...(ctx.titles.pop() ?? []))
         ctx.positions.pop()
-        return <g>{...result}</g>
+        let scaledResult = result.map(rendering => scaleRendering(rendering, node))
+        scaledResult;
+        return <g>{...scaledResult}</g>
+        //return <g>{...result}</g>
     }
 }
 
@@ -237,7 +245,7 @@ export class KPortView implements IView {
         const rendering = getRendering(port.data, port, new KStyles, ctx)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            const element =  <g>
+            const element = <g>
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
@@ -277,7 +285,7 @@ export class KPortView implements IView {
 @injectable()
 export class KLabelView implements IView {
 
-    render(label: SKLabel, context: RenderingContext): VNode | undefined{
+    render(label: SKLabel, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
@@ -415,4 +423,29 @@ function fontDefinition(): VNode {
         {overpass_regular_style}
         {overpass_mono_regular_style}
     </style>
+}
+
+function scaleRendering(rendering: VNode, parent: SKNode) {
+    // TODO: determine the desired semantics of the scaling and which property should control it 
+    if ((parent as any).properties == undefined || (parent as any).properties.topdownScaleFactor == undefined) {
+        return rendering
+    }
+    // TODO: idea, go into rendering vnode here and apply scalefactor internally
+    // for regions the graph children seem to always be attached as the second child in the rendering,
+    // so wrap a scale <g> tag around the second child with the scale property of the parent, what could go wrong
+    // big question remains, how to handle this for general non sccharts cases?
+
+    // THIS NOW SEEMS TO BE DOING WHAT I WANT,
+    // now just need to make sure the right scale factors are computed and assigned during layout
+
+    const topdownScaleFactor = (parent as any).properties.topdownScaleFactor
+
+    if (rendering.children != undefined) {
+        if (rendering.children.length >= 2) {
+            rendering.children[1] = <g transform={`scale (${topdownScaleFactor})`}>${rendering.children[1]}</g>
+            console.log("Scale (" + parent.id + "): " + topdownScaleFactor)
+        }
+    }
+    return rendering
+    //return <g transform={`scale (${topdownScaleFactor})`}>{rendering}</g>
 }
