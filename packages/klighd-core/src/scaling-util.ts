@@ -1,4 +1,4 @@
-import { Bounds, Dimension, Point} from 'sprotty-protocol'
+import { Bounds, Dimension, Point } from 'sprotty-protocol'
 import { PointToPointLine } from 'sprotty'
 
 /**
@@ -7,7 +7,7 @@ import { PointToPointLine } from 'sprotty'
  */
 export class ScalingUtil {
 
-    private constructor(){
+    private constructor() {
         // private constructor as this class should not be instantiated
     }
 
@@ -21,7 +21,7 @@ export class ScalingUtil {
         // the maximum scale that keeps the node in bounds height wise
         const maxHeightScale = (parent.height - 2 * margin) / node.height
         // the maximum scale that keeps the node in bounds width wise
-        const maxWidthScale  = (parent.width  - 2 * margin) / node.width
+        const maxWidthScale = (parent.width - 2 * margin) / node.width
 
         return Math.min(maxHeightScale, maxWidthScale)
     }
@@ -37,20 +37,30 @@ export class ScalingUtil {
      * @param margin the margin to preserve between a and b
      * @returns the calculated maximum scale
      */
-    private static inverseScaleDimension(offset_a: number, length_a: number, offset_b: number, length_b: number, available: number, margin: number): number {
+    private static maxSiblingScaleDimension(offset_a: number, length_a: number, offset_b: number, length_b: number, available: number, margin: number): number {
 
-        // we want to find positive scale so that the following equations hold
+        // There are three scenarios that can happen
+        // either a is before b,
+        // b is before a,
+        // or a and b overlap
+        //
+        // In the last case we can just use one as we never want a scale below one and we take the maximum of both dimensions outside this function
+        // In the other two cases we need to solve one of the following two equations for scale
+        // result_a.offset = result_b.offset + result_b.length + margin
+        // result_b.offset = result_a.offset + result_a.length + margin
+        // both with
         // result_a = scaleDimension(offset_a, length_a, available, scale)
         // result_b = scaleDimension(offset_b, length_b, available, scale)
-        // result_a.offset = result_b.offset + result_b.length + margin
-        // || result_b.offset = result_a.offset + result_a.length + margin
+        //
+        // result_a and result_b should only be positive and larger than one if that is the case present
+        // below we have solve both equations and take the maximum of the solution to all three cases as the result.
 
         const fa = (offset_a * length_a) / (available - length_a)
         const fb = (offset_b * length_b) / (available - length_b)
 
         const numerator = offset_a + fa - offset_b - fb
 
-        const result_1 = ( numerator - margin) / (fa - fb + length_b)
+        const result_1 = (numerator - margin) / (fa - fb + length_b)
         const result_2 = (-numerator - margin) / (fb - fa + length_a)
 
         return Math.max(result_1, result_2, 1)
@@ -65,11 +75,11 @@ export class ScalingUtil {
      * @param margin the margin node and sibling shall retain when both scaled by the result
      * @returns the maximum scale at which node and sibling retain margin between them
      */
-    public static maxSiblingScale(node: Bounds, parent: Dimension, sibling: Bounds, margin: number) : number {
+    public static maxSiblingScale(node: Bounds, parent: Dimension, sibling: Bounds, margin: number): number {
 
         // calculate the scale for each dimension at which we reach our sibling
-        const result_1 = ScalingUtil.inverseScaleDimension(node.x, node.width, sibling.x, sibling.width, parent.width, margin)
-        const result_2 = ScalingUtil.inverseScaleDimension(node.y, node.height, sibling.y, sibling.height, parent.height, margin)
+        const result_1 = ScalingUtil.maxSiblingScaleDimension(node.x, node.width, sibling.x, sibling.width, parent.width, margin)
+        const result_2 = ScalingUtil.maxSiblingScaleDimension(node.y, node.height, sibling.y, sibling.height, parent.height, margin)
 
         // take the max as that which ever is further is relevant for bounding us, but should be at least 1
         return Math.max(result_1, result_2, 1)
@@ -81,19 +91,19 @@ export class ScalingUtil {
      * @param scale the scale factor by which to scale
      * @returns the scaled bounds
      */
-    private static calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number) : Bounds {
+    private static calculateScaledBounds(originalBounds: Bounds, availableSpace: Dimension, scale: number): Bounds {
         const originalWidth = originalBounds.width
         const originalHeight = originalBounds.height
         const originalX = originalBounds.x
         const originalY = originalBounds.y
 
         // Calculate the new x offset and width:
-        const {length: newWidth, offset: newX} = ScalingUtil.scaleDimension(originalX, originalWidth, availableSpace.width, scale)
+        const { length: newWidth, offset: newX } = ScalingUtil.scaleDimension(originalX, originalWidth, availableSpace.width, scale)
 
         // Same for y offset and height
-        const {length: newHeight, offset: newY} = ScalingUtil.scaleDimension(originalY, originalHeight, availableSpace.height, scale)
+        const { length: newHeight, offset: newY } = ScalingUtil.scaleDimension(originalY, originalHeight, availableSpace.height, scale)
 
-        return {x: newX, y : newY, width: newWidth, height: newHeight}
+        return { x: newX, y: newY, width: newWidth, height: newHeight }
     }
 
     /** Scale along one axis taking up space before and after the element at an equal ratio
@@ -104,7 +114,7 @@ export class ScalingUtil {
      * @param scale the factor by which to scale the element
      * @returns the scaled length and adjusted offset
      */
-    private static scaleDimension(offset: number, length: number, available: number, scale: number): { offset: number, length: number }{
+    private static scaleDimension(offset: number, length: number, available: number, scale: number): { offset: number, length: number } {
         // calculate the scaled length
         const newLength = length * scale;
         // space before the element to be scaped
@@ -113,7 +123,7 @@ export class ScalingUtil {
         const postfix = available - offset - length
         // new offset after taking space from before and after the scaled element at an equal ratio
         const newOffset = offset - prefix * (newLength - length) / (prefix + postfix)
-        return {offset: newOffset, length: newLength}
+        return { offset: newOffset, length: newLength }
     }
 
     /**
@@ -123,7 +133,7 @@ export class ScalingUtil {
      * @param originalPoint The point before scaling
      * @returns The point after scaling
      */
-    public static calculateScaledPoint(originalBounds: Bounds, newBounds: Bounds, originalPoint: Point) : Point {
+    public static calculateScaledPoint(originalBounds: Bounds, newBounds: Bounds, originalPoint: Point): Point {
 
         let newX
         let newY
@@ -131,18 +141,18 @@ export class ScalingUtil {
         if (originalBounds.width == 0 || newBounds.width == 0) {
             newX = originalPoint.x - originalBounds.x + newBounds.x
         } else {
-            const relativeX =  originalBounds.width == 0 ? 0 : (originalPoint.x - originalBounds.x) / originalBounds.width
+            const relativeX = originalBounds.width == 0 ? 0 : (originalPoint.x - originalBounds.x) / originalBounds.width
             newX = newBounds.x + relativeX * newBounds.width
         }
 
         if (originalBounds.height == 0 || newBounds.height == 0) {
             newY = originalPoint.y - originalBounds.y + newBounds.y
         } else {
-            const relativeY =  originalBounds.height == 0 ? 0 : (originalPoint.y - originalBounds.y) / originalBounds.height
-            newY =  newBounds.y + relativeY * newBounds.height
+            const relativeY = originalBounds.height == 0 ? 0 : (originalPoint.y - originalBounds.y) / originalBounds.height
+            newY = newBounds.y + relativeY * newBounds.height
         }
 
-        return {x: newX, y: newY}
+        return { x: newX, y: newY }
     }
 
     /**
@@ -157,7 +167,7 @@ export class ScalingUtil {
      * @param siblings the bounds of the elements siblings that should be taken into account while scaling
      * @returns the upscaled local bounds and local scale
      */
-    public static upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin:number,  siblings: Bounds[] = []) : {bounds: Bounds, scale: number} {
+    public static upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin: number, siblings: Bounds[] = []): { bounds: Bounds, scale: number } {
 
         // we want that the effectiveScale * desiredScale = maxScale
         // so that the we effectively up scale to maxScale
@@ -176,12 +186,12 @@ export class ScalingUtil {
             preferredScale = Math.min(preferredScale, siblingScaling)
         }
 
-      // we never want to scale down
-      const scalingFactor = Math.max(1, preferredScale)
+        // we never want to scale down
+        const scalingFactor = Math.max(1, preferredScale)
 
-      const newBounds = ScalingUtil.calculateScaledBounds(childBounds, parentBounds, scalingFactor)
+        const newBounds = ScalingUtil.calculateScaledBounds(childBounds, parentBounds, scalingFactor)
 
-      return {bounds:newBounds, scale: scalingFactor}
+        return { bounds: newBounds, scale: scalingFactor }
     }
 
     /**
@@ -190,17 +200,17 @@ export class ScalingUtil {
      * @param line the line to intersect
      * @returns the intersection points (0 - 4), might contain duplicates when going through a corner
      */
-    public static intersections(bounds: Bounds, line: PointToPointLine ) : Point[] {
+    public static intersections(bounds: Bounds, line: PointToPointLine): Point[] {
 
-        const  tl = bounds as Point
-        const  tr = Point.add(bounds, {x: 0           , y: bounds.height})
-        const  bl = Point.add(bounds, {x: bounds.width, y: 0            })
-        const  br = Point.add(bounds, {x: bounds.width, y: bounds.height})
+        const tl = bounds as Point
+        const tr = Point.add(bounds, { x: 0, y: bounds.height })
+        const bl = Point.add(bounds, { x: bounds.width, y: 0 })
+        const br = Point.add(bounds, { x: bounds.width, y: bounds.height })
 
-        const top    = new PointToPointLine(tl, tr)
+        const top = new PointToPointLine(tl, tr)
         const bottom = new PointToPointLine(bl, br)
-        const left   = new PointToPointLine(tl, bl)
-        const right  = new PointToPointLine(tr, br)
+        const left = new PointToPointLine(tl, bl)
+        const right = new PointToPointLine(tr, br)
 
         return [line.intersection(top), line.intersection(bottom), line.intersection(left), line.intersection(right)].filter(p => p !== undefined).map(p => p as Point)
     }
@@ -210,8 +220,8 @@ export class ScalingUtil {
      * @param point the point to calculate the distance to
      * @returns Function that can be used to sort by distance to point
      */
-    public static sort_by_dist(point: Point) : (a:Point, b:Point)=>number {
-        return (a: Point,b: Point) => {
+    public static sort_by_dist(point: Point): (a: Point, b: Point) => number {
+        return (a: Point, b: Point) => {
             const a_dist = Point.euclideanDistance(a, point)
             const b_dist = Point.euclideanDistance(b, point)
             if (a_dist > b_dist) {
