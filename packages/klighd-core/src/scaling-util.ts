@@ -155,6 +155,32 @@ export class ScalingUtil {
         return { x: newX, y: newY }
     }
 
+    static calculateUpscale(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin: number, siblings: Bounds[] = []): number {
+        // we want that the effectiveScale * desiredScale = maxScale
+        // so that the we effectively up scale to maxScale
+        const desiredScale = maxScale / effectiveScale;
+
+        if (desiredScale < 1) {
+            return 1;
+        }
+
+        // the maximum scale at which the child still fits into the parent
+        const parentScaling = ScalingUtil.maxParentScale(childBounds, parentBounds, margin)
+
+        let preferredScale = Math.min(desiredScale, parentScaling)
+
+        for (const sibling of siblings) {
+            if (preferredScale <= 1) {
+                return 1
+            }
+            const siblingScaling = ScalingUtil.maxSiblingScale(childBounds, parentBounds, sibling, margin)
+            preferredScale = Math.min(preferredScale, siblingScaling)
+        }
+
+        // we never want to scale down
+        return Math.max(1, preferredScale)
+    }
+
     /**
      * Calculate upscaled bounds for a graph element
      *
@@ -169,26 +195,7 @@ export class ScalingUtil {
      */
     public static upscaleBounds(effectiveScale: number, maxScale: number, childBounds: Bounds, parentBounds: Dimension, margin: number, siblings: Bounds[] = []): { bounds: Bounds, scale: number } {
 
-        // we want that the effectiveScale * desiredScale = maxScale
-        // so that the we effectively up scale to maxScale
-        const desiredScale = maxScale / effectiveScale;
-
-        // the maximum scale at which the child still fits into the parent
-        const parentScaling = ScalingUtil.maxParentScale(childBounds, parentBounds, margin)
-
-        let preferredScale = Math.min(desiredScale, parentScaling)
-
-        for (const sibling of siblings) {
-            if (preferredScale <= 1) {
-                break
-            }
-            const siblingScaling = ScalingUtil.maxSiblingScale(childBounds, parentBounds, sibling, margin)
-            preferredScale = Math.min(preferredScale, siblingScaling)
-        }
-
-        // we never want to scale down
-        const scalingFactor = Math.max(1, preferredScale)
-
+        const scalingFactor = ScalingUtil.calculateUpscale(effectiveScale, maxScale, childBounds, parentBounds, margin, siblings)
         const newBounds = ScalingUtil.calculateScaledBounds(childBounds, parentBounds, scalingFactor)
 
         return { bounds: newBounds, scale: scalingFactor }
