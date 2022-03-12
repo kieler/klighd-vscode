@@ -117,20 +117,20 @@ export class DepthMap {
         this.lastThreshold = undefined
         this.regionIndexMap.clear()
 
-        let current_regions = this.rootRegions
+        let currentRegions = this.rootRegions
         this.rootRegions = []
 
-        let remaining_regions: Region[] = []
+        let remainingRegions: Region[] = []
 
         // Go through all regions and clear the references to other Regions and KNodes
-        while (current_regions.length !== 0) {
-            for (const region of current_regions) {
-                remaining_regions.concat(region.children)
+        while (currentRegions.length !== 0) {
+            for (const region of currentRegions) {
+                remainingRegions.concat(region.children)
                 region.children = []
                 region.parent = undefined
             }
-            current_regions = remaining_regions
-            remaining_regions = []
+            currentRegions = remainingRegions
+            remainingRegions = []
         }
 
     }

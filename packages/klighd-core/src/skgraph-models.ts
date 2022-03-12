@@ -86,34 +86,34 @@ export class SKNode extends KNode implements SKGraphElement {
 
         if (this._nodeScaledBounds === undefined || needsUpdate) {
             if (this.parent && this.parent instanceof SKNode) {
-                const parent_scaled = this.parent.forceNodeScaleBounds(ctx)
+                const parentScaled = this.parent.forceNodeScaleBounds(ctx)
 
                 if (performNodeScaling) {
 
 
-                    const effective_zoom = parent_scaled.effectiveChildScale * ctx.viewport.zoom
+                    const effectiveZoom = parentScaled.effectiveChildScale * ctx.viewport.zoom
                     const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
 
-                    const upscale = ScalingUtil.upscaleBounds(effective_zoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
+                    const upscale = ScalingUtil.upscaleBounds(effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
 
                     let abs_bounds = {
-                        x: upscale.bounds.x * parent_scaled.effectiveChildScale,
-                        y: upscale.bounds.y * parent_scaled.effectiveChildScale,
-                        width: upscale.bounds.width * parent_scaled.effectiveChildScale,
-                        height: upscale.bounds.height * parent_scaled.effectiveChildScale
+                        x: upscale.bounds.x * parentScaled.effectiveChildScale,
+                        y: upscale.bounds.y * parentScaled.effectiveChildScale,
+                        width: upscale.bounds.width * parentScaled.effectiveChildScale,
+                        height: upscale.bounds.height * parentScaled.effectiveChildScale
                     }
 
-                    abs_bounds = Bounds.translate(abs_bounds, parent_scaled.absoluteBounds)
+                    abs_bounds = Bounds.translate(abs_bounds, parentScaled.absoluteBounds)
 
                     this._nodeScaledBounds = {
                         relativeBounds: upscale.bounds,
                         relativeScale: upscale.scale,
                         absoluteBounds: abs_bounds,
-                        effectiveChildScale: parent_scaled.effectiveChildScale * upscale.scale
+                        effectiveChildScale: parentScaled.effectiveChildScale * upscale.scale
                     }
 
                 } else {
-                    const abs_bounds = Bounds.translate(this.bounds, parent_scaled.absoluteBounds)
+                    const abs_bounds = Bounds.translate(this.bounds, parentScaled.absoluteBounds)
 
                     this._nodeScaledBounds = {
                         relativeBounds: this.bounds,
@@ -178,7 +178,7 @@ export class SKLabel extends SLabel implements SKGraphElement {
 export class SKEdge extends KEdge implements SKGraphElement {
     tooltip?: string
 
-    moved_ends_by?: { start: Point, end: Point }
+    movedEndsBy?: { start: Point, end: Point }
 
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature

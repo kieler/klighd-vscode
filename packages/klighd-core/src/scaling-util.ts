@@ -333,17 +333,17 @@ export class ScalingUtil {
 
                 newPoints.push(end_choice)
 
-                edge.moved_ends_by = { start: Point.subtract(start_choice, points[0]), end: Point.subtract(end_choice, points[points.length - 1]) }
+                edge.movedEndsBy = { start: Point.subtract(start_choice, points[0]), end: Point.subtract(end_choice, points[points.length - 1]) }
                 return newPoints;
             }
             case K_POLYGON: {
-                if (edge.moved_ends_by && edge.routingPoints.length > 0) {
+                if (edge.movedEndsBy && edge.routingPoints.length > 0) {
                     let newPoint = boundsAndTransformation.bounds as Point
 
                     if (Bounds.includes(boundsAndTransformation.bounds, edge.routingPoints[0])) {
-                        newPoint = Point.add(edge.moved_ends_by.start, boundsAndTransformation.bounds)
+                        newPoint = Point.add(edge.movedEndsBy.start, boundsAndTransformation.bounds)
                     } else if (Bounds.includes(boundsAndTransformation.bounds, edge.routingPoints[edge.routingPoints.length - 1])) {
-                        newPoint = Point.add(edge.moved_ends_by.end, boundsAndTransformation.bounds)
+                        newPoint = Point.add(edge.movedEndsBy.end, boundsAndTransformation.bounds)
                     }
 
                     const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
