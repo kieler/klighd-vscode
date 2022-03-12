@@ -41,19 +41,19 @@ type NodeScaleBoundsResult = {
     /**
      * The nodes scaled bounds relative to it's parent
      */
-    relative_bounds: Bounds,
+    relativeBounds: Bounds,
     /**
      * the nodes scale relative to its parent and its original size
      */
-    relative_scale: number,
+    relativeScale: number,
     /**
      * the nodes absolute scaled bounds
      */
-    absolute_bounds: Bounds,
+    absoluteBounds: Bounds,
     /**
      * the scale children inherit form this node and its ancestors, not including the viewport zoom
      */
-    effective_child_scale: number
+    effectiveChildScale: number
 }
 
 /**
@@ -62,11 +62,11 @@ type NodeScaleBoundsResult = {
 export class SKNode extends KNode implements SKGraphElement {
     tooltip?: string
 
-    private _scale_nodes_cache_key?: boolean
-    private _min_scale_cache_key?: number
-    private _zoom_cache_key?: number
-    private _margin_key?: boolean
-    private _node_scaled_bounds?: NodeScaleBoundsResult
+    private _scaleNodesCacheKey?: boolean
+    private _minScaleCacheKey?: number
+    private _zoomCacheKey?: number
+    private _marginKey?: boolean
+    private _nodeScaledBounds?: NodeScaleBoundsResult
 
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
@@ -79,65 +79,65 @@ export class SKNode extends KNode implements SKGraphElement {
         const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
         const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
-        const needsUpdate = this._scale_nodes_cache_key !== performNodeScaling
-            || this._margin_key !== margin
-            || this._min_scale_cache_key !== minNodeScale
-            || this._zoom_cache_key !== ctx.viewport.zoom
+        const needsUpdate = this._scaleNodesCacheKey !== performNodeScaling
+            || this._marginKey !== margin
+            || this._minScaleCacheKey !== minNodeScale
+            || this._zoomCacheKey !== ctx.viewport.zoom
 
-        if (this._node_scaled_bounds === undefined || needsUpdate) {
+        if (this._nodeScaledBounds === undefined || needsUpdate) {
             if (this.parent && this.parent instanceof SKNode) {
                 const parent_scaled = this.parent.forceNodeScaleBounds(ctx)
 
                 if (performNodeScaling) {
 
 
-                    const effective_zoom = parent_scaled.effective_child_scale * ctx.viewport.zoom
+                    const effective_zoom = parent_scaled.effectiveChildScale * ctx.viewport.zoom
                     const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
 
                     const upscale = ScalingUtil.upscaleBounds(effective_zoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
 
                     let abs_bounds = {
-                        x: upscale.bounds.x * parent_scaled.effective_child_scale,
-                        y: upscale.bounds.y * parent_scaled.effective_child_scale,
-                        width: upscale.bounds.width * parent_scaled.effective_child_scale,
-                        height: upscale.bounds.height * parent_scaled.effective_child_scale
+                        x: upscale.bounds.x * parent_scaled.effectiveChildScale,
+                        y: upscale.bounds.y * parent_scaled.effectiveChildScale,
+                        width: upscale.bounds.width * parent_scaled.effectiveChildScale,
+                        height: upscale.bounds.height * parent_scaled.effectiveChildScale
                     }
 
-                    abs_bounds = Bounds.translate(abs_bounds, parent_scaled.absolute_bounds)
+                    abs_bounds = Bounds.translate(abs_bounds, parent_scaled.absoluteBounds)
 
-                    this._node_scaled_bounds = {
-                        relative_bounds: upscale.bounds,
-                        relative_scale: upscale.scale,
-                        absolute_bounds: abs_bounds,
-                        effective_child_scale: parent_scaled.effective_child_scale * upscale.scale
+                    this._nodeScaledBounds = {
+                        relativeBounds: upscale.bounds,
+                        relativeScale: upscale.scale,
+                        absoluteBounds: abs_bounds,
+                        effectiveChildScale: parent_scaled.effectiveChildScale * upscale.scale
                     }
 
                 } else {
-                    const abs_bounds = Bounds.translate(this.bounds, parent_scaled.absolute_bounds)
+                    const abs_bounds = Bounds.translate(this.bounds, parent_scaled.absoluteBounds)
 
-                    this._node_scaled_bounds = {
-                        relative_bounds: this.bounds,
-                        relative_scale: 1,
-                        absolute_bounds: abs_bounds,
-                        effective_child_scale: 1
+                    this._nodeScaledBounds = {
+                        relativeBounds: this.bounds,
+                        relativeScale: 1,
+                        absoluteBounds: abs_bounds,
+                        effectiveChildScale: 1
                     }
                 }
             } else {
-                this._node_scaled_bounds = {
-                    relative_bounds: this.bounds,
-                    relative_scale: 1,
-                    absolute_bounds: this.bounds,
-                    effective_child_scale: 1
+                this._nodeScaledBounds = {
+                    relativeBounds: this.bounds,
+                    relativeScale: 1,
+                    absoluteBounds: this.bounds,
+                    effectiveChildScale: 1
                 }
             }
         }
 
-        this._scale_nodes_cache_key = performNodeScaling
-        this._margin_key = margin
-        this._zoom_cache_key = ctx.viewport.zoom
-        this._min_scale_cache_key = minNodeScale
+        this._scaleNodesCacheKey = performNodeScaling
+        this._marginKey = margin
+        this._zoomCacheKey = ctx.viewport.zoom
+        this._minScaleCacheKey = minNodeScale
 
-        return this._node_scaled_bounds
+        return this._nodeScaledBounds
     }
 
 }
