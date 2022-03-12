@@ -1,5 +1,10 @@
-import { Bounds, Dimension, Point } from 'sprotty-protocol'
+
+import { NodeMargin, NodeScalingFactor } from './options/render-options-registry';
+import { KPolyline, K_POLYGON, K_POLYLINE, K_ROUNDED_BENDS_POLYLINE, K_SPLINE, SKEdge, SKNode } from './skgraph-models';
+import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { PointToPointLine } from 'sprotty'
+import { Bounds, Dimension, Point } from 'sprotty-protocol'
+import { BoundsAndTransformation } from './views-common';
 
 /**
  * A class for some helper methods used calculate the scale to be used for graphs elements and
@@ -239,5 +244,173 @@ export class ScalingUtil {
                 return 0
             }
         }
+    }
+
+    /**
+     * For lines calculate new line points to account for node scaling
+     * For polygons (arrow head) adjusts position to new line end point and perform scaling
+     */
+    public static performLineScaling(rendering: KPolyline,
+        edge: SKEdge,
+        parent: SKNode,
+        source: SKNode,
+        target: SKNode,
+        boundsAndTransformation: BoundsAndTransformation,
+        context: SKGraphModelRenderer,
+        gAttrs: { transform?: string | undefined },
+        points: Point[]
+    ): Point[] {
+        const s = source
+        const t = target
+        const s_scaled = s.forceNodeScaleBounds(context)
+        const t_scaled = t.forceNodeScaleBounds(context)
+        const p_scaled = parent.forceNodeScaleBounds(context);
+
+        const start = points[0]
+        const end = points[points.length - 1]
+
+        const scaled_start = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.relativeBounds, start)
+        const scaled_end = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.relativeBounds, end)
+
+        let max_coord_per_point = 1
+        switch (rendering.type) {
+            case K_SPLINE:
+                max_coord_per_point = 3
+            // fallthrough
+            case K_ROUNDED_BENDS_POLYLINE:
+            case K_POLYLINE: {
+
+                const newPoints = []
+
+                let i = 1
+
+                // skip points in the start node
+                while (i < points.length) {
+                    const remainingPoints = points.length - i
+
+                    const z = Math.min(max_coord_per_point, remainingPoints)
+
+                    const p = points[i + z - 1]
+
+                    if (
+                        Bounds.includes(s_scaled.relativeBounds, p)
+                    ) {
+                        i += z
+                    } else {
+                        break
+                    }
+                }
+
+                // determine new start point
+                let start_choice = scaled_start
+
+                if (i < points.length) {
+                    const remainingPoints = points.length - i
+
+                    const z = Math.min(max_coord_per_point, remainingPoints)
+
+                    const prev = points[i - 1]
+                    const next = points[i + z - 1]
+
+                    const edge = new PointToPointLine(prev, next)
+
+                    const intersections = ScalingUtil.intersections(s_scaled.relativeBounds, edge)
+
+                    intersections.sort(ScalingUtil.sort_by_dist(next))
+
+                    if (intersections.length > 0) {
+                        start_choice = intersections[0]
+                    }
+
+                }
+
+                newPoints.push(start_choice)
+
+
+                // keep points not in end node
+                while (i < points.length) {
+                    const remainingPoints = points.length - i
+
+                    const z = Math.min(max_coord_per_point, remainingPoints)
+
+                    const p = points[i + z - 1]
+
+                    if (
+                        !Bounds.includes(t_scaled.relativeBounds, p)
+                    ) {
+                        for (let j = 0; j < z; j++) {
+                            newPoints.push(points[i])
+                            i++
+                        }
+                    } else {
+                        break
+                    }
+                }
+
+                // determine new end point
+
+                let end_choice = scaled_end
+                if (i < points.length) {
+
+                    const remainingPoints = points.length - i
+                    const z = Math.min(max_coord_per_point, remainingPoints)
+
+                    const prev = points[i - 1]
+                    const next = points[i + z - 1]
+
+                    const edge = new PointToPointLine(prev, next)
+
+                    const intersections = ScalingUtil.intersections(t_scaled.relativeBounds, edge)
+
+                    intersections.sort(ScalingUtil.sort_by_dist(prev))
+
+                    if (intersections.length > 0) {
+                        end_choice = intersections[0]
+                    }
+
+                    // keep the control points of the current point
+                    if (z >= 2) {
+                        newPoints.push(points[i])
+                        if (z == 3) {
+                            newPoints.push(points[i + 1])
+                        }
+                    }
+
+                }
+
+                newPoints.push(end_choice)
+
+                edge.moved_ends_by = { start: Point.subtract(start_choice, points[0]), end: Point.subtract(end_choice, points[points.length - 1]) }
+                return newPoints;
+            }
+            case K_POLYGON: {
+                if (edge.moved_ends_by && edge.routingPoints.length > 0) {
+                    let newPoint = boundsAndTransformation.bounds as Point
+
+                    if (Bounds.includes(boundsAndTransformation.bounds, edge.routingPoints[0])) {
+                        newPoint = Point.add(edge.moved_ends_by.start, boundsAndTransformation.bounds)
+                    } else if (Bounds.includes(boundsAndTransformation.bounds, edge.routingPoints[edge.routingPoints.length - 1])) {
+                        newPoint = Point.add(edge.moved_ends_by.end, boundsAndTransformation.bounds)
+                    }
+
+                    const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
+                    const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin)
+
+                    const parent_scale = ScalingUtil.maxParentScale(boundsAndTransformation.bounds, parent.bounds, margin)
+
+                    const desired_scale = target_scale / (p_scaled.effectiveChildScale * context.viewport.zoom)
+                    const preferred_scale = Math.min(desired_scale, parent_scale)
+
+                    const scale = Math.max(preferred_scale, 1)
+
+
+                    gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale(" + scale + ") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + (gAttrs.transform ?? "")
+                }
+                break
+            }
+            default:
+                console.error("Unexpected Line Type: ", rendering.type)
+        }
+        return points
     }
 }
