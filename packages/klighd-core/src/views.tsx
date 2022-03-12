@@ -217,11 +217,10 @@ export class KNodeView implements IView {
             const titles = ctx.exitTitleScope()
             const childRenderings = ctx.renderChildren(node)
             ctx.popEffectiveZoom()
-            const ret =  <g><g transform={transformation}>
+            return <g><g transform={transformation}>
                 {titles}
                 {childRenderings}
             </g></g>
-            return ret
         }
         if (interactiveNodes) {
             result.push(interactiveNodes)
@@ -238,8 +237,7 @@ export class KNodeView implements IView {
         result.push(...ctx.exitTitleScope())
         ctx.positions.pop()
         ctx.popEffectiveZoom()
-        const ret =<g><g transform={transformation}>{...result}</g></g>
-        return ret
+        return <g><g transform={transformation}>{...result}</g></g>
     }
 }
 
