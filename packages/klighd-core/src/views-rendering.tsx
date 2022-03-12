@@ -997,22 +997,20 @@ export function renderKRendering(kRendering: KRendering,
     // Add the transformations to be able to positon the title correctly and above other elements
     context.positions[context.positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
 
-    let svgRendering: VNode
+    let svgRendering: VNode | undefined
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
-            context.popEffectiveZoom()
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
-            return undefined
+            break
         }
         case K_CHILD_AREA: {
             svgRendering = renderChildArea(kRendering as KChildArea, parent, propagatedStyles, context)
             break
         }
         case K_CUSTOM_RENDERING: {
-            context.popEffectiveZoom()
             console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
             // data as KCustomRendering
-            return undefined
+            break
         }
         case K_ARC:
         case K_ELLIPSE:
@@ -1034,16 +1032,19 @@ export function renderKRendering(kRendering: KRendering,
             break
         }
         default: {
-            context.popEffectiveZoom()
             console.error('The rendering is of an unknown type:' + kRendering.type)
-            return undefined
+            break
         }
     }
     // Put the rectangle for the overlay behind the rendering itself.
-    if (overlayRectangle) {
+    if (overlayRectangle && svgRendering) {
         svgRendering.children?.unshift(overlayRectangle)
     }
     context.popEffectiveZoom()
+    if (!svgRendering) {
+        return undefined
+    }
+
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
         context.pushTitle(svgRendering)
