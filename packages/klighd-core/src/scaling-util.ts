@@ -280,7 +280,7 @@ export class ScalingUtil {
             case K_ROUNDED_BENDS_POLYLINE:
             case K_POLYLINE: {
 
-                const newPoints = []
+                const newPoints: Point[] = []
 
                 let i = 1
 
@@ -302,27 +302,7 @@ export class ScalingUtil {
                 }
 
                 // determine new start point
-                let start_choice = scaled_start
-
-                if (i < points.length) {
-                    const remainingPoints = points.length - i
-
-                    const z = Math.min(max_coord_per_point, remainingPoints)
-
-                    const prev = points[i - 1]
-                    const next = points[i + z - 1]
-
-                    const edge = new PointToPointLine(prev, next)
-
-                    const intersections = ScalingUtil.intersections(s_scaled.relativeBounds, edge)
-
-                    intersections.sort(ScalingUtil.sort_by_dist(next))
-
-                    if (intersections.length > 0) {
-                        start_choice = intersections[0]
-                    }
-
-                }
+                const start_choice = calculateEndPoint(i, newPoints, true) ?? scaled_start;
 
                 newPoints.push(start_choice)
 
@@ -349,34 +329,7 @@ export class ScalingUtil {
 
                 // determine new end point
 
-                let end_choice = scaled_end
-                if (i < points.length) {
-
-                    const remainingPoints = points.length - i
-                    const z = Math.min(max_coord_per_point, remainingPoints)
-
-                    const prev = points[i - 1]
-                    const next = points[i + z - 1]
-
-                    const edge = new PointToPointLine(prev, next)
-
-                    const intersections = ScalingUtil.intersections(t_scaled.relativeBounds, edge)
-
-                    intersections.sort(ScalingUtil.sort_by_dist(prev))
-
-                    if (intersections.length > 0) {
-                        end_choice = intersections[0]
-                    }
-
-                    // keep the control points of the current point
-                    if (z >= 2) {
-                        newPoints.push(points[i])
-                        if (z == 3) {
-                            newPoints.push(points[i + 1])
-                        }
-                    }
-
-                }
+                const end_choice = calculateEndPoint(i, newPoints, false) ?? scaled_end;
 
                 newPoints.push(end_choice)
 
@@ -412,5 +365,39 @@ export class ScalingUtil {
                 console.error("Unexpected Line Type: ", rendering.type)
         }
         return points
+
+        function calculateEndPoint(i: number, newPoints: any[], start: boolean): Point | void {
+            if (i < points.length) {
+
+                let choice;
+
+                const remainingPoints = points.length - i;
+                const z = Math.min(max_coord_per_point, remainingPoints);
+
+                const prev = points[i - 1];
+                const next = points[i + z - 1];
+
+                const edge = new PointToPointLine(prev, next);
+
+                const intersections = ScalingUtil.intersections((start ? s_scaled : t_scaled).relativeBounds, edge);
+
+                intersections.sort(ScalingUtil.sort_by_dist(start ? next : prev));
+
+                if (intersections.length > 0) {
+                    choice = intersections[0];
+                }
+
+                // keep the control points of the current point
+                if (!start && z >= 2) {
+                    newPoints.push(points[i]);
+                    if (z == 3) {
+                        newPoints.push(points[i + 1]);
+                    }
+                }
+
+                return choice;
+            }
+        }
+
     }
 }
