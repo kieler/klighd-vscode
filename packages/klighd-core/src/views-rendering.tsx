@@ -370,11 +370,10 @@ export function renderLine(rendering: KPolyline,
 
     // Create the svg element for this rendering.
     // Only apply the fast shadow to KPolygons, other shadows are not allowed there.
-    const element = <g id={rendering.renderingId} {...gAttrs}>
+    return <g id={rendering.renderingId} {...gAttrs}>
         {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
         {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
-    </g>
-    return element
+    </g >;
 }
 
 /**
