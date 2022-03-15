@@ -285,20 +285,18 @@ export class ScalingUtil {
                 let i = 1
 
                 // skip points in the start node
-                while (i < points.length) {
+                out: while (i < points.length) {
                     const remainingPoints = points.length - i
 
                     const z = Math.min(max_coord_per_point, remainingPoints)
 
-                    const p = points[i + z - 1]
-
-                    if (
-                        Bounds.includes(s_scaled.relativeBounds, p)
-                    ) {
-                        i += z
-                    } else {
-                        break
+                    for (let j = i; j < i + z; j++) {
+                        if (Bounds.includes(s_scaled.relativeBounds, points[j])) {
+                            i += z
+                            continue out;
+                        }
                     }
+                    break;
                 }
 
                 // determine new start point
@@ -379,7 +377,9 @@ export class ScalingUtil {
 
                 const edge = new PointToPointLine(prev, next);
 
-                const intersections = ScalingUtil.intersections((start ? s_scaled : t_scaled).relativeBounds, edge);
+                const target = (start ? s_scaled : t_scaled).relativeBounds
+
+                const intersections = ScalingUtil.intersections(target, edge);
 
                 intersections.sort(ScalingUtil.sort_by_dist(start ? next : prev));
 
@@ -387,13 +387,14 @@ export class ScalingUtil {
                     choice = intersections[0];
                 }
 
-                // keep the control points of the current point
-                if (!start && z >= 2) {
-                    newPoints.push(points[i]);
-                    if (z == 3) {
-                        newPoints.push(points[i + 1]);
+                // keep the control points of the current point if they are not in the target
+                if (!start)
+                    if (z >= 2 && !Bounds.includes(target, points[i])) {
+                        newPoints.push(points[i]);
+                        if (z == 3 && !Bounds.includes(target, points[i + 1])) {
+                            newPoints.push(points[i + 1]);
+                        }
                     }
-                }
 
                 return choice;
             }
