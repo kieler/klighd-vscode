@@ -20,13 +20,14 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { findParentByFeature, isViewport, IView, RenderingContext, SChildElement, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Bounds } from 'sprotty-protocol'
 import { DepthMap, DetailLevel, isDetailWithChildren } from './hierarchy/depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom, ScaleNodes } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
-import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
+import { SKEdge, SKLabel, SKNode, SKPort, LABEL_TYPE, NODE_TYPE } from './skgraph-models';
 import { getJunctionPointRenderings, getRendering } from './views-rendering';
 import { KStyles } from './views-styles';
 
@@ -425,9 +426,45 @@ export class KEdgeView implements IView {
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!edge.areChildAreaChildrenRendered) {
+
+            let children: readonly SChildElement[];
+
+            if (ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes)) {
+
+                const intersects = function (a: Bounds, b: Bounds): boolean {
+                    return (a.x < b.x + b.width
+                        && a.y < b.y + b.height
+                        && b.x < a.x + a.width
+                        && b.y < a.y + a.height)
+                }
+
+                const label_bounds = edge.children.filter(elem => elem.type === LABEL_TYPE)
+                    .map(elem => (elem as SKEdge).bounds).reduce(Bounds.combine, Bounds.EMPTY);
+
+                const siblings = edge.parent.children.filter(elem => elem.type === NODE_TYPE).map(elem => elem as SKNode);
+
+                let keep_labels = true;
+
+                for (const sibling of siblings) {
+                    const sib = sibling.forceNodeScaleBounds(ctx).relativeBounds
+
+                    if (intersects(sib, label_bounds)) {
+                        keep_labels = false;
+                        break
+                    }
+                }
+
+                children = edge.children.filter(elem => (elem.type !== LABEL_TYPE) || keep_labels)
+            } else {
+                children = edge.children
+            }
+
+            const children_rendered = children.map(elem => ctx.renderElement(elem))
+                .filter(elem => elem !== undefined);
+
             return <g>
                 {rendering}
-                {ctx.renderChildren(edge)}
+                {children_rendered}
                 {...junctionPointRenderings}
             </g>
         } else if (!edge.areNonChildAreaChildrenRendered) {
