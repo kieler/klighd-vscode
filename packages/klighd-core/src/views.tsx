@@ -419,47 +419,17 @@ export class KEdgeView implements IView {
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
+            const children_rendered = filterEdgeChildren(edge, ctx).map(elem => ctx.renderElement(elem))
+                .filter(elem => elem !== undefined);
             return <g>
-                {ctx.renderChildren(edge)}
+                {children_rendered}
                 {...junctionPointRenderings}
             </g>
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!edge.areChildAreaChildrenRendered) {
 
-            let children: readonly SChildElement[];
-
-            if (ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes)) {
-
-                const intersects = function (a: Bounds, b: Bounds): boolean {
-                    return (a.x < b.x + b.width
-                        && a.y < b.y + b.height
-                        && b.x < a.x + a.width
-                        && b.y < a.y + a.height)
-                }
-
-                const label_bounds = edge.children.filter(elem => elem.type === LABEL_TYPE)
-                    .map(elem => (elem as SKEdge).bounds).reduce(Bounds.combine, Bounds.EMPTY);
-
-                const siblings = edge.parent.children.filter(elem => elem.type === NODE_TYPE).map(elem => elem as SKNode);
-
-                let keep_labels = true;
-
-                for (const sibling of siblings) {
-                    const sib = sibling.forceNodeScaleBounds(ctx).relativeBounds
-
-                    if (intersects(sib, label_bounds)) {
-                        keep_labels = false;
-                        break
-                    }
-                }
-
-                children = edge.children.filter(elem => (elem.type !== LABEL_TYPE) || keep_labels)
-            } else {
-                children = edge.children
-            }
-
-            const children_rendered = children.map(elem => ctx.renderElement(elem))
+            const children_rendered = filterEdgeChildren(edge, ctx).map(elem => ctx.renderElement(elem))
                 .filter(elem => elem !== undefined);
 
             return <g>
@@ -479,6 +449,37 @@ export class KEdgeView implements IView {
                 {...junctionPointRenderings}
             </g>
         }
+    }
+}
+
+function filterEdgeChildren(edge: Readonly<SKEdge>, ctx: SKGraphModelRenderer): readonly SChildElement[] {
+    if (ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes)) {
+        const intersects = function (a: Bounds, b: Bounds): boolean {
+            return (a.x < b.x + b.width
+                && a.y < b.y + b.height
+                && b.x < a.x + a.width
+                && b.y < a.y + a.height)
+        }
+
+        const label_bounds = edge.children.filter(elem => elem.type === LABEL_TYPE)
+            .map(elem => (elem as SKEdge).bounds).reduce(Bounds.combine, Bounds.EMPTY);
+
+        const siblings = edge.parent.children.filter(elem => elem.type === NODE_TYPE).map(elem => elem as SKNode);
+
+        let keep_labels = true;
+
+        for (const sibling of siblings) {
+            const sib = sibling.forceNodeScaleBounds(ctx).relativeBounds
+
+            if (intersects(sib, label_bounds)) {
+                keep_labels = false;
+                break
+            }
+        }
+
+        return edge.children.filter(elem => (elem.type !== LABEL_TYPE) || keep_labels)
+    } else {
+        return edge.children
     }
 }
 
