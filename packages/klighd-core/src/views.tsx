@@ -430,15 +430,11 @@ function scaleRendering(rendering: VNode, parent: SKNode) {
     if ((parent as any).properties == undefined || (parent as any).properties.topdownScaleFactor == undefined) {
         return rendering
     }
-    // TODO: idea, go into rendering vnode here and apply scalefactor internally
-    // for regions the graph children seem to always be attached as the second child in the rendering,
-    // so wrap a scale <g> tag around the second child with the scale property of the parent, what could go wrong
-    // big question remains, how to handle this for general non sccharts cases?
 
-    // THIS NOW SEEMS TO BE DOING WHAT I WANT,
-    // now just need to make sure the right scale factors are computed and assigned during layout
-
-    const topdownScaleFactor = (parent as any).properties.topdownScaleFactor
+    // The property scaleFactor here refers to the scaleFactor of the topdown group, the group prefix
+    // gets lost somewhere during the transfer to klighd-vscode, because there is another scaleFactor
+    // defined in CoreOptions, this could potentially be a problem in the future
+    const topdownScaleFactor = (parent as any).properties.scaleFactor
 
     if (rendering.children != undefined) {
         if (rendering.children.length >= 2) {
@@ -447,5 +443,4 @@ function scaleRendering(rendering: VNode, parent: SKNode) {
         }
     }
     return rendering
-    //return <g transform={`scale (${topdownScaleFactor})`}>{rendering}</g>
 }
