@@ -426,8 +426,7 @@ function fontDefinition(): VNode {
 }
 
 function scaleRendering(rendering: VNode, parent: SKNode) {
-    // TODO: determine the desired semantics of the scaling and which property should control it 
-    if ((parent as any).properties == undefined || (parent as any).properties.topdownScaleFactor == undefined) {
+    if ((parent as any).properties == undefined || (parent as any).properties.scaleFactor == undefined) {
         return rendering
     }
 
