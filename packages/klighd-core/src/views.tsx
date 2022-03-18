@@ -435,14 +435,12 @@ function scaleRendering(rendering: VNode, parent: SKNode) {
     // defined in CoreOptions, this could potentially be a problem in the future
     const topdownScaleFactor = (parent as any).properties.scaleFactor
 
-    // TODO: the scaling here is currently still applied too high in the svg hierarchy, because the positioning
-    //       transform of the child layout comes deeper and is currently scaled although it shouldn't be
-    //       the other problem here is that svg structures of other graph types seem to be different which 
-    //       means that this isn't a general solution which is bad 
     if (rendering.children != undefined) {
         if (rendering.children.length >= 2) {
+
             rendering.children[1] = <g transform={`scale (${topdownScaleFactor})`}>${rendering.children[1]}</g>
             console.log("Scale (" + parent.id + "): " + topdownScaleFactor)
+
         }
     }
     return rendering
