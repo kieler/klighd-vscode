@@ -333,6 +333,8 @@ export class ScalingUtil {
                 return newPoints;
             }
             case K_POLYGON: {
+                // this is reached for the arrow heads of edges
+                // it adjusts the arrow head to match the changed edge position and also scales the arrow head similar to how nodes are scaled
                 if (edge.movedEndsBy && edge.routingPoints.length > 0) {
                     let newPoint = boundsAndTransformation.bounds as Point
 
@@ -352,7 +354,7 @@ export class ScalingUtil {
 
                     const scale = Math.max(preferredScale, 1)
 
-
+                    // translate arrow head to origin, then scale, then translate to new position
                     gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale(" + scale + ") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + (gAttrs.transform ?? "")
                 }
                 break
