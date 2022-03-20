@@ -124,7 +124,7 @@ export class KNodeView implements IView {
         // we push a new effective zoom in all cases so we can pop later without checking whether we pushed
         if (node.parent && performNodeScaling) {
 
-            const {relativeBounds: newBounds, relativeScale: scalingFactor} = node.forceNodeScaleBounds(ctx)
+            const {relativeBounds: newBounds, relativeScale: scalingFactor} = node.calculateScaledBounds(ctx)
 
             if(Number.isNaN(newBounds.x) || Number.isNaN(newBounds.y) || Number.isNaN(scalingFactor)){
                 // On initial load node.parent.bounds has all fields as 0 causing a division by 0
@@ -469,7 +469,7 @@ function filterEdgeChildren(edge: Readonly<SKEdge>, ctx: SKGraphModelRenderer): 
         let keepLabels = true;
 
         for (const sibling of siblings) {
-            const sib = sibling.forceNodeScaleBounds(ctx).relativeBounds
+            const sib = sibling.calculateScaledBounds(ctx).relativeBounds
 
             if (intersects(sib, labelBounds)) {
                 keepLabels = false;

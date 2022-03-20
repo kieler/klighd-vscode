@@ -260,9 +260,9 @@ export class ScalingUtil {
         gAttrs: { transform?: string | undefined },
         points: Point[]
     ): Point[] {
-        const sourceScaled = source.forceNodeScaleBounds(context);
-        const targetScaled = target.forceNodeScaleBounds(context);
-        const parentScaled = parent.forceNodeScaleBounds(context);
+        const sourceScaled = source.calculateScaledBounds(context);
+        const targetScaled = target.calculateScaledBounds(context);
+        const parentScaled = parent.calculateScaledBounds(context);
 
         const start = points[0]
         const end = points[points.length - 1]

@@ -645,7 +645,7 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         let effectiveZoom = getZoom(target);
 
         if(target instanceof SChildElement && target.parent instanceof SKNode) {
-            effectiveZoom *= target.parent.forceNodeScaleBounds(context).effectiveChildScale
+            effectiveZoom *= target.parent.calculateScaledBounds(context).effectiveChildScale
         }
 
         const realLineWidth = lineWidth * effectiveZoom

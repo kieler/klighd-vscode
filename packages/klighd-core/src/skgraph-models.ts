@@ -74,22 +74,28 @@ export class SKNode extends KNode implements SKGraphElement {
             || feature === popupFeature
     }
 
-    forceNodeScaleBounds(ctx: SKGraphModelRenderer): NodeScaleBoundsResult {
+    /**
+     * calculate the rendered bounds of the node
+     */
+    calculateScaledBounds(ctx: SKGraphModelRenderer): NodeScaleBoundsResult {
         const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
         const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
         const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
 
+        // has the cached result been invalidated
         const needsUpdate = this._scaleNodesCacheKey !== performNodeScaling
             || this._marginKey !== margin
             || this._minScaleCacheKey !== minNodeScale
             || this._zoomCacheKey !== ctx.viewport.zoom
 
         if (this._nodeScaledBounds === undefined || needsUpdate) {
+            // no valid cached result available
+
             if (this.parent && this.parent instanceof SKNode) {
-                const parentScaled = this.parent.forceNodeScaleBounds(ctx)
+                const parentScaled = this.parent.calculateScaledBounds(ctx)
 
                 if (performNodeScaling) {
-
+                    // not the root node and node scaling enabled
 
                     const effectiveZoom = parentScaled.effectiveChildScale * ctx.viewport.zoom
                     const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
@@ -111,8 +117,9 @@ export class SKNode extends KNode implements SKGraphElement {
                         absoluteBounds: absoluteBounds,
                         effectiveChildScale: parentScaled.effectiveChildScale * upscale.scale
                     }
-
                 } else {
+                    // node scaling is not enabled
+
                     const absoluteBounds = Bounds.translate(this.bounds, parentScaled.absoluteBounds)
 
                     this._nodeScaledBounds = {
@@ -123,6 +130,9 @@ export class SKNode extends KNode implements SKGraphElement {
                     }
                 }
             } else {
+                // this is the root node, therefore node scaling should never be applied
+                // or we break zooming out
+
                 this._nodeScaledBounds = {
                     relativeBounds: this.bounds,
                     relativeScale: 1,
