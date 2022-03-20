@@ -96,29 +96,29 @@ export class SKNode extends KNode implements SKGraphElement {
 
                     const upscale = ScalingUtil.upscaleBounds(effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
 
-                    let abs_bounds = {
+                    let absoluteBounds = {
                         x: upscale.bounds.x * parentScaled.effectiveChildScale,
                         y: upscale.bounds.y * parentScaled.effectiveChildScale,
                         width: upscale.bounds.width * parentScaled.effectiveChildScale,
                         height: upscale.bounds.height * parentScaled.effectiveChildScale
                     }
 
-                    abs_bounds = Bounds.translate(abs_bounds, parentScaled.absoluteBounds)
+                    absoluteBounds = Bounds.translate(absoluteBounds, parentScaled.absoluteBounds)
 
                     this._nodeScaledBounds = {
                         relativeBounds: upscale.bounds,
                         relativeScale: upscale.scale,
-                        absoluteBounds: abs_bounds,
+                        absoluteBounds: absoluteBounds,
                         effectiveChildScale: parentScaled.effectiveChildScale * upscale.scale
                     }
 
                 } else {
-                    const abs_bounds = Bounds.translate(this.bounds, parentScaled.absoluteBounds)
+                    const absoluteBounds = Bounds.translate(this.bounds, parentScaled.absoluteBounds)
 
                     this._nodeScaledBounds = {
                         relativeBounds: this.bounds,
                         relativeScale: 1,
-                        absoluteBounds: abs_bounds,
+                        absoluteBounds: absoluteBounds,
                         effectiveChildScale: 1
                     }
                 }

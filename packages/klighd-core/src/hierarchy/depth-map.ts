@@ -109,8 +109,8 @@ export class DepthMap {
         this.regionIndexMap = new Map()
     }
 
-    protected reset(model_root: SModelRoot): void {
-        this.rootElement = model_root
+    protected reset(modelRoot: SModelRoot): void {
+        this.rootElement = modelRoot
         // rootRegions are reset below as we also want to remove the edges from the graph spanned by the regions
         this.criticalRegions.clear()
         this.viewport = undefined

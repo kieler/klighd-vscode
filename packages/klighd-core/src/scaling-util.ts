@@ -232,7 +232,7 @@ export class ScalingUtil {
      * @param point the point to calculate the distance to
      * @returns Function that can be used to sort by distance to point
      */
-    public static sort_by_dist(point: Point): (a: Point, b: Point) => number {
+    public static sortByDist(point: Point): (a: Point, b: Point) => number {
         return (a: Point, b: Point) => {
             const a_dist = Point.euclideanDistance(a, point)
             const b_dist = Point.euclideanDistance(b, point)
@@ -260,22 +260,20 @@ export class ScalingUtil {
         gAttrs: { transform?: string | undefined },
         points: Point[]
     ): Point[] {
-        const s = source
-        const t = target
-        const s_scaled = s.forceNodeScaleBounds(context)
-        const t_scaled = t.forceNodeScaleBounds(context)
-        const p_scaled = parent.forceNodeScaleBounds(context);
+        const sourceScaled = source.forceNodeScaleBounds(context);
+        const targetScaled = target.forceNodeScaleBounds(context);
+        const parentScaled = parent.forceNodeScaleBounds(context);
 
         const start = points[0]
         const end = points[points.length - 1]
 
-        const scaled_start = ScalingUtil.calculateScaledPoint(s.bounds, s_scaled.relativeBounds, start)
-        const scaled_end = ScalingUtil.calculateScaledPoint(t.bounds, t_scaled.relativeBounds, end)
+        const scaledStart = ScalingUtil.calculateScaledPoint(source.bounds, sourceScaled.relativeBounds, start)
+        const scaledEnd = ScalingUtil.calculateScaledPoint(target.bounds, targetScaled.relativeBounds, end)
 
-        let max_coord_per_point = 1
+        let maxCoordPerPoint = 1
         switch (rendering.type) {
             case K_SPLINE:
-                max_coord_per_point = 3
+                maxCoordPerPoint = 3
             // fallthrough
             case K_ROUNDED_BENDS_POLYLINE:
             case K_POLYLINE: {
@@ -288,10 +286,10 @@ export class ScalingUtil {
                 out: while (i < points.length) {
                     const remainingPoints = points.length - i
 
-                    const z = Math.min(max_coord_per_point, remainingPoints)
+                    const z = Math.min(maxCoordPerPoint, remainingPoints)
 
                     for (let j = i; j < i + z; j++) {
-                        if (Bounds.includes(s_scaled.relativeBounds, points[j])) {
+                        if (Bounds.includes(sourceScaled.relativeBounds, points[j])) {
                             i += z
                             continue out;
                         }
@@ -300,21 +298,21 @@ export class ScalingUtil {
                 }
 
                 // determine new start point
-                const start_choice = calculateEndPoint(i, newPoints, true) ?? scaled_start;
+                const startChoice = calculateEndPoint(i, newPoints, true) ?? scaledStart;
 
-                newPoints.push(start_choice)
+                newPoints.push(startChoice)
 
 
                 // keep points not in end node
                 while (i < points.length) {
                     const remainingPoints = points.length - i
 
-                    const z = Math.min(max_coord_per_point, remainingPoints)
+                    const z = Math.min(maxCoordPerPoint, remainingPoints)
 
                     const p = points[i + z - 1]
 
                     if (
-                        !Bounds.includes(t_scaled.relativeBounds, p)
+                        !Bounds.includes(targetScaled.relativeBounds, p)
                     ) {
                         for (let j = 0; j < z; j++) {
                             newPoints.push(points[i])
@@ -327,11 +325,11 @@ export class ScalingUtil {
 
                 // determine new end point
 
-                const end_choice = calculateEndPoint(i, newPoints, false) ?? scaled_end;
+                const endChoice = calculateEndPoint(i, newPoints, false) ?? scaledEnd;
 
-                newPoints.push(end_choice)
+                newPoints.push(endChoice)
 
-                edge.movedEndsBy = { start: Point.subtract(start_choice, points[0]), end: Point.subtract(end_choice, points[points.length - 1]) }
+                edge.movedEndsBy = { start: Point.subtract(startChoice, points[0]), end: Point.subtract(endChoice, points[points.length - 1]) }
                 return newPoints;
             }
             case K_POLYGON: {
@@ -344,15 +342,15 @@ export class ScalingUtil {
                         newPoint = Point.add(edge.movedEndsBy.end, boundsAndTransformation.bounds)
                     }
 
-                    const target_scale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
+                    const targetScale = context.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor)
                     const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin)
 
-                    const parent_scale = ScalingUtil.maxParentScale(boundsAndTransformation.bounds, parent.bounds, margin)
+                    const parentScale = ScalingUtil.maxParentScale(boundsAndTransformation.bounds, parent.bounds, margin)
 
-                    const desired_scale = target_scale / (p_scaled.effectiveChildScale * context.viewport.zoom)
-                    const preferred_scale = Math.min(desired_scale, parent_scale)
+                    const desiredScale = targetScale / (parentScaled.effectiveChildScale * context.viewport.zoom)
+                    const preferredScale = Math.min(desiredScale, parentScale)
 
-                    const scale = Math.max(preferred_scale, 1)
+                    const scale = Math.max(preferredScale, 1)
 
 
                     gAttrs.transform = "translate(" + newPoint.x + "," + newPoint.y + ") scale(" + scale + ") translate(" + -boundsAndTransformation.bounds.x + "," + -boundsAndTransformation.bounds.y + ") " + (gAttrs.transform ?? "")
@@ -370,18 +368,18 @@ export class ScalingUtil {
                 let choice;
 
                 const remainingPoints = points.length - i;
-                const z = Math.min(max_coord_per_point, remainingPoints);
+                const z = Math.min(maxCoordPerPoint, remainingPoints);
 
                 const prev = points[i - 1];
                 const next = points[i + z - 1];
 
                 const edge = new PointToPointLine(prev, next);
 
-                const target = (start ? s_scaled : t_scaled).relativeBounds
+                const target = (start ? sourceScaled : targetScaled).relativeBounds
 
                 const intersections = ScalingUtil.intersections(target, edge);
 
-                intersections.sort(ScalingUtil.sort_by_dist(start ? next : prev));
+                intersections.sort(ScalingUtil.sortByDist(start ? next : prev));
 
                 if (intersections.length > 0) {
                     choice = intersections[0];

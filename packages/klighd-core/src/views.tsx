@@ -419,22 +419,22 @@ export class KEdgeView implements IView {
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            const children_rendered = filterEdgeChildren(edge, ctx).map(elem => ctx.renderElement(elem))
+            const childrenRendered = filterEdgeChildren(edge, ctx).map(elem => ctx.renderElement(elem))
                 .filter(elem => elem !== undefined);
             return <g>
-                {children_rendered}
+                {childrenRendered}
                 {...junctionPointRenderings}
             </g>
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!edge.areChildAreaChildrenRendered) {
 
-            const children_rendered = filterEdgeChildren(edge, ctx).map(elem => ctx.renderElement(elem))
+            const childrenRendered = filterEdgeChildren(edge, ctx).map(elem => ctx.renderElement(elem))
                 .filter(elem => elem !== undefined);
 
             return <g>
                 {rendering}
-                {children_rendered}
+                {childrenRendered}
                 {...junctionPointRenderings}
             </g>
         } else if (!edge.areNonChildAreaChildrenRendered) {
@@ -461,23 +461,23 @@ function filterEdgeChildren(edge: Readonly<SKEdge>, ctx: SKGraphModelRenderer): 
                 && b.y < a.y + a.height)
         }
 
-        const label_bounds = edge.children.filter(elem => elem.type === LABEL_TYPE)
+        const labelBounds = edge.children.filter(elem => elem.type === LABEL_TYPE)
             .map(elem => (elem as SKEdge).bounds).reduce(Bounds.combine, Bounds.EMPTY);
 
         const siblings = edge.parent.children.filter(elem => elem.type === NODE_TYPE).map(elem => elem as SKNode);
 
-        let keep_labels = true;
+        let keepLabels = true;
 
         for (const sibling of siblings) {
             const sib = sibling.forceNodeScaleBounds(ctx).relativeBounds
 
-            if (intersects(sib, label_bounds)) {
-                keep_labels = false;
+            if (intersects(sib, labelBounds)) {
+                keepLabels = false;
                 break
             }
         }
 
-        return edge.children.filter(elem => (elem.type !== LABEL_TYPE) || keep_labels)
+        return edge.children.filter(elem => (elem.type !== LABEL_TYPE) || keepLabels)
     } else {
         return edge.children
     }
