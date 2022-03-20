@@ -3,7 +3,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -172,8 +172,8 @@ export class BookmarkPanel extends SidebarPanel {
         const save = document.getElementById(bookmark.saveId);
         if (save && bookmark.bookmarkIndex !== undefined) {
             save.classList.toggle("options__hidden", true)
-            const new_name = save.getElementsByTagName("input")[0].value ?? undefined;
-            this.actionDispatcher.dispatch(RenameBookmarkAction.create(bookmark.bookmarkIndex, new_name));
+            const newName = save.getElementsByTagName("input")[0].value ?? undefined;
+            this.actionDispatcher.dispatch(RenameBookmarkAction.create(bookmark.bookmarkIndex, newName));
         }
     }
 
