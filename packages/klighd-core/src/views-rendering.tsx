@@ -993,7 +993,7 @@ export function renderKRendering(kRendering: KRendering,
     } else {
         context.pushEffectiveZoom(context.effectiveZoom)
     }
-    // Add the transformations to be able to positon the title correctly and above other elements
+    // Add the transformations to be able to position the title correctly and above other elements
     context.positions[context.positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
 
     let svgRendering: VNode | undefined
