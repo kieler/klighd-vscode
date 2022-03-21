@@ -236,13 +236,7 @@ export class ScalingUtil {
         return (a: Point, b: Point) => {
             const a_dist = Point.euclideanDistance(a, point)
             const b_dist = Point.euclideanDistance(b, point)
-            if (a_dist > b_dist) {
-                return 1
-            } else if (b_dist > a_dist) {
-                return -1
-            } else {
-                return 0
-            }
+            return a_dist - b_dist
         }
     }
 
