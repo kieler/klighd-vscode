@@ -40,7 +40,7 @@ export class SKNode extends KNode {
     tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
-            || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
+            || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.get("org.eclipse.elk.interactiveLayout") as boolean)
             || feature === popupFeature
     }
 }

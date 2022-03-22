@@ -46,7 +46,7 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
         const layer = layers[i]
         if (coordinateInLayoutDirection < layer.end &&
             (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ||
-        coordinateInLayoutDirection > layer.end && (direction === Direction.LEFT || direction === Direction.UP)) {
+            coordinateInLayoutDirection > layer.end && (direction === Direction.LEFT || direction === Direction.UP)) {
             return i
         }
     }
@@ -71,7 +71,7 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
 export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number): number {
 
     // Examine all nodes that have a layer Id left or equal to the layerCandidate and that have a layerCons > their layerId
-    const layerConstraintLeftOfCandidate = nodes.filter(n => n.properties.layerId <= layerCandidate && n.properties.layerConstraint > n.properties.layerId)
+    const layerConstraintLeftOfCandidate = nodes.filter(n => n.properties.get("org.eclipse.elk.layered.layering.layerId") as number <= layerCandidate && (n.properties.get("org.eclipse.elk.layered.layering.layerChoiceConstraint") as number) > (n.properties.get("org.eclipse.elk.layered.layering.layerId") as number))
 
     // In case that there are no such nodes return the layerCandidate
     if (layerConstraintLeftOfCandidate.length === 0) {
@@ -84,7 +84,7 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
     let nodeWithMaxCons = null
     let maxCons = -1
     for (const n of layerConstraintLeftOfCandidate) {
-        const layerConstraint = n.properties.layerConstraint
+        const layerConstraint = n.properties.get("org.eclipse.elk.layered.layering.layerChoiceConstraint") as number
         if (layerConstraint > maxCons) {
             nodeWithMaxCons = n
             maxCons = layerConstraint
@@ -92,7 +92,7 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
     }
 
     if (nodeWithMaxCons !== null) {
-        const idDiff = layerCandidate - nodeWithMaxCons.properties.layerId
+        const idDiff = layerCandidate - (nodeWithMaxCons.properties.get("org.eclipse.elk.layered.layering.layerId") as number)
         return maxCons + idDiff
     }
 
@@ -112,9 +112,9 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
         // than its position ID
         const upperIndex = localTargetIndex - 1
         const upperNeighbor = layerNodes[upperIndex]
-        const posConsOfUpper = upperNeighbor.properties.positionConstraint
+        const posConsOfUpper = upperNeighbor.properties.get("org.eclipse.elk.layered.crossingMinimization.positionChoiceConstraint") as number
         if (posConsOfUpper > upperIndex) {
-            if (alreadyInLayer && upperNeighbor.properties.positionId === localTargetIndex) {
+            if (alreadyInLayer && upperNeighbor.properties.get("org.eclipse.elk.layered.crossingMinimization.positionId") === localTargetIndex) {
                 localTargetIndex = posConsOfUpper
             } else {
                 localTargetIndex = posConsOfUpper + 1
@@ -130,7 +130,7 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
  */
 export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
     // All nodes within one hierarchy level have the same direction
-    nodes.sort((a, b) => a.properties.layerId - b.properties.layerId)
+    nodes.sort((a, b) => (a.properties.get("org.eclipse.elk.layered.layering.layerId") as number) - (b.properties.get("org.eclipse.elk.layered.layering.layerId") as number))
     const layers = []
     let layer = 0
     // Begin coordinate of layer, depending of on the layout direction this might be a x or y coordinate
@@ -142,7 +142,7 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
     // calculate bounds of the layers
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        if (node.properties.layerId !== layer) {
+        if (node.properties.get("org.eclipse.elk.layered.layering.layerId") !== layer) {
             // node is in the next layer
             layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
             beginCoordinate = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ? Number.MAX_VALUE : Number.MIN_VALUE
@@ -275,7 +275,7 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
 export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
     const nodesOfLayer: KNode[] = []
     for (const node of nodes) {
-        if (node.properties.layerId === layer) {
+        if (node.properties.get("org.eclipse.elk.layered.layering.layerId") === layer) {
             nodesOfLayer[nodesOfLayer.length] = node
         }
     }
@@ -325,7 +325,7 @@ export function isLayerForbidden(node: KNode, layer: number): boolean {
 
     // check the connected nodes for layer constraints
     for (const node of connectedNodes) {
-        if (node.properties.layerId === layer && node.properties.layerConstraint !== -1) {
+        if (node.properties.get("org.eclipse.elk.layered.layering.layerId") === layer && node.properties.get("org.eclipse.elk.layered.layering.layerChoiceConstraint") !== -1) {
             // layer is forbidden for the given node
             return true
         }
@@ -369,7 +369,7 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
     if (forbidden) {
         // If layer is forbidden just refresh
         return RefreshDiagramAction.create()
-    } else if (targetNode.properties.layerId !== layerOfTarget) {
+    } else if (targetNode.properties.get("org.eclipse.elk.layered.layering.layerId") !== layerOfTarget) {
         // layer constraint should only be set if the layer index changed
         if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
             // only the layer constraint should be set
@@ -391,7 +391,7 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
     } else {
 
         // position constraint should only be set if the position of the node changed
-        if (targetNode.properties.positionId !== positionOfTarget) {
+        if (targetNode.properties.get("org.eclipse.elk.layered.crossingMinimization.positionId") !== positionOfTarget) {
             // set the position Constraint
             return SetPositionConstraintAction.create({
                 id: targetNode.id,

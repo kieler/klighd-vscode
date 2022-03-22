@@ -52,10 +52,11 @@ export class KNode extends RectangularNode implements KGraphElement {
     areChildAreaChildrenRendered = false
     areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).properties.interactiveLayout)
+        return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).properties.get("org.eclipse.elk.interactiveLayout") as boolean)
     }
 
-    properties: NodeProperties
+    //properties: NodeProperties
+    properties: Map<string, unknown>
 
     direction: Direction
 
