@@ -188,14 +188,14 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             ctx.positions.pop()
-            //return scaleRendering(<g>
-            //    {ctx.titles.pop() ?? []}
-            //    {ctx.renderChildren(node)}
-            //</g>, node)
-            return <g>
+            return scaleRendering(<g>
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(node)}
-            </g>
+            </g>, node)
+            //return <g>
+            //    {ctx.titles.pop() ?? []}
+            //    {ctx.renderChildren(node)}
+            //</g>
         }
         if (interactiveNodes) {
             result.push(interactiveNodes)
@@ -213,8 +213,8 @@ export class KNodeView implements IView {
         ctx.positions.pop()
         let scaledResult = result.map(rendering => scaleRendering(rendering, node))
         scaledResult;
-        return <g>{...scaledResult}</g>
-        //return <g>{...result}</g>
+        //return <g>{...scaledResult}</g>
+        return <g>{...result}</g>
     }
 }
 
