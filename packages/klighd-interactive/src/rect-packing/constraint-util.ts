@@ -43,13 +43,13 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
             const highY = boundsInWindow.y + boundsInWindow.height
             if (event.pageX > lowX && event.pageX < highX
                 && event.pageY > lowY && event.pageY < highY) {
-                let actualPosition = node.properties.get("org.eclipse.elk.rectPacking.currentPosition") as number
-                if (node.properties.get("org.eclipse.elk.alg.rectpacking.desiredPosition") !== -1) {
-                    actualPosition = node.properties.get("org.eclipse.elk.alg.rectpacking.desiredPosition") as number
+                let actualPosition = node.properties.get('org.eclipse.elk.rectPacking.currentPosition') as number
+                if (node.properties.get('org.eclipse.elk.alg.rectpacking.desiredPosition') !== -1) {
+                    actualPosition = node.properties.get('org.eclipse.elk.alg.rectpacking.desiredPosition') as number
                 }
-                let actualTargetPosition = target.properties.get("org.eclipse.elk.rectPacking.currentPosition") as number
-                if (node.properties.get("org.eclipse.elk.alg.rectpacking.desiredPosition") !== -1) {
-                    actualTargetPosition = target.properties.get("org.eclipse.elk.alg.rectpacking.desiredPosition") as number
+                let actualTargetPosition = target.properties.get('org.eclipse.elk.rectPacking.currentPosition') as number
+                if (node.properties.get('org.eclipse.elk.alg.rectpacking.desiredPosition') !== -1) {
+                    actualTargetPosition = target.properties.get('org.eclipse.elk.alg.rectpacking.desiredPosition') as number
                 }
                 if (actualPosition !== actualTargetPosition && actualPosition !== -1) {
                     result = RectPackSetPositionConstraintAction.create({
@@ -84,7 +84,7 @@ export function setGenerateRectPackAction(nodes: KNode[], target: KNode, parent:
         const aspectRatio = (maxX - x) / (maxY - y)
 
         // If changed update aspect ratio.
-        if (parent && parent.properties.get("org.eclipse.elk.rectPacking.aspectRatio") !== aspectRatio) {
+        if (parent && parent.properties.get('org.eclipse.elk.rectPacking.aspectRatio') !== aspectRatio) {
             return SetAspectRatioAction.create({
                 id: parent.id,
                 aspectRatio: aspectRatio
