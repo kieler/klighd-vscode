@@ -17,7 +17,7 @@
 /** @jsx svg */
 import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Bounds } from 'sprotty-protocol';
+import { Bounds, almostEquals } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './hierarchy/depth-map';
 import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin, ScaleNodes } from './options/render-options-registry';
@@ -982,9 +982,9 @@ export function renderKRendering(kRendering: KRendering,
 
             // Don't draw if the rendering is an empty KText
             const isEmptyText = kRendering.type === K_TEXT && (kRendering as KText).text === ""
-
+            const almostEqual = almostEquals(originalBounds.width, newBounds.width) && almostEquals(originalBounds.height, newBounds.height)
             // Draw white background for overlaying titles
-            if ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && tooSmall && !isEmptyText) {
+            if ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && (tooSmall && !almostEqual) && !isEmptyText) {
                 overlayRectangle = <rect x={0} y={0} width={originalBounds.width} height={originalBounds.height} fill="white" opacity="0.8" stroke="grey"/>
             }
         } else {
