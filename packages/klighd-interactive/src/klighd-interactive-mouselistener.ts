@@ -81,12 +81,12 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             targetNode = target.parent
         }
         if (targetNode && targetNode instanceof SNode) {
-            if (((targetNode as KNode).parent as KNode).properties.get('org.eclipse.elk.interactiveLayout')) {
+            if (((targetNode as KNode).parent as KNode).properties['org.eclipse.elk.interactiveLayout']) {
                 this.target = targetNode as KNode
                 // Set layer bounds
                 this.nodes = filterKNodes(this.target.parent.children)
 
-                const algorithm = ((targetNode as KNode).parent as KNode).properties.get('org.eclipse.elk.algorithm') as string
+                const algorithm = ((targetNode as KNode).parent as KNode).properties['org.eclipse.elk.algorithm'] as string
                 // Set algorithm specific data
                 if (algorithm === undefined || algorithm.endsWith('layered')) {
                     this.data.set('layered', getLayers(this.nodes, this.target.direction))
@@ -130,7 +130,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             // if a node is moved set properties
             this.target.shadow = false
             let result = super.mouseUp(this.target, event)
-            const algorithm = (this.target.parent as KNode).properties.get('org.eclipse.elk.algorithm') as string
+            const algorithm = (this.target.parent as KNode).properties['org.eclipse.elk.algorithm'] as string
             if (algorithm === undefined || algorithm.endsWith('layered')) {
                 result = [setProperty(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
             } else if (algorithm.endsWith('rectpacking')) {

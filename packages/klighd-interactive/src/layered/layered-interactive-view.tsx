@@ -45,7 +45,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
         // let globalEndCoordinate = layers[layers.length - 1].end
 
         // determines whether only the layer constraint will be set when the node is released
-        const onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.properties.get('org.eclipse.elk.layered.layering.layerId') !== currentLayer
+        const onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.properties['org.eclipse.elk.layered.layering.layerId'] !== currentLayer
 
         // create layers
         let result = <g></g>
@@ -108,7 +108,7 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
     // position of selected node
     const curPos = getPositionInLayer(layerNodes, target)
 
-    layerNodes.sort((a, b) => (a.properties.get('org.eclipse.elk.layered.crossingMinimization.positionId') as number) - (b.properties.get('org.eclipse.elk.layered.crossingMinimization.positionId') as number))
+    layerNodes.sort((a, b) => (a.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] as number) - (b.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] as number))
     if (layerNodes.length > 0) {
         let result = <g></g>
         // mid of the current layer
@@ -258,8 +258,8 @@ export function renderLayeredConstraint(node: KNode): VNode {
     const x = node.size.width
     const y = 0
     const constraintOffset = 2
-    const positionConstraint = node.properties.get('org.eclipse.elk.layered.crossingMinimization.positionChoiceConstraint') as number
-    const layerConstraint = node.properties.get('org.eclipse.elk.layered.layering.layerChoiceConstraint')
+    const positionConstraint = node.properties['org.eclipse.elk.layered.crossingMinimization.positionChoiceConstraint'] as number
+    const layerConstraint = node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint']
     if (layerConstraint !== -1 && positionConstraint !== -1) {
         // layer and position Constraint are set
         result = <g>{renderLock(x, y)}</g>

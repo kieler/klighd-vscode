@@ -30,9 +30,9 @@ export function renderInteractiveLayout(root: KNode): VNode {
     // Filter KNodes
     const nodes = filterKNodes(root.children)
     let result = undefined
-    if (root.properties.get('org.eclipse.elk.algorithm') === undefined || (root.properties.get('org.eclipse.elk.algorithm') as string).endsWith('layered')) {
+    if (root.properties['org.eclipse.elk.algorithm'] === undefined || (root.properties['org.eclipse.elk.algorithm'] as string).endsWith('layered')) {
         result = renderHierarchyLevelLayered(nodes)
-    } else if ((root.properties.get('org.eclipse.elk.algorithm') as string).endsWith('rectpacking')) {
+    } else if ((root.properties['org.eclipse.elk.algorithm'] as string).endsWith('rectpacking')) {
         result = renderHierarchyLevelRectPacking(nodes)
     } else {
         // Not supported
@@ -49,11 +49,11 @@ export function renderInteractiveLayout(root: KNode): VNode {
  */
 export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
-    const algorithm = (node.parent as KNode).properties.get('org.eclipse.elk.algorithm') as string
+    const algorithm = (node.parent as KNode).properties['org.eclipse.elk.algorithm'] as string
     if (algorithm === undefined || algorithm.endsWith('layered')) {
         result = renderLayeredConstraint(node)
     } else if (algorithm.endsWith('rectpacking')) {
-        if (node.properties.get('org.eclipse.elk.alg.rectpacking.desiredPosition') !== -1) {
+        if (node.properties['org.eclipse.elk.alg.rectpacking.desiredPosition'] !== -1) {
             result = renderRectPackConstraint(node)
         }
     } else {
