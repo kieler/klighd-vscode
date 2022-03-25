@@ -1065,8 +1065,8 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
                 const id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
                 for (const rendering of context.kRenderingLibrary.renderings) {
                     if ((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string === id) {
-                        context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
-                        context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
+                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map']
+                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map']
                         return rendering as KRendering
                     }
                 }
