@@ -484,7 +484,18 @@ export function renderKText(rendering: KText,
         const calculatedTextLineWidths = rendering.properties['klighd.calculated.text.line.widths'] as number[]
         const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
         let currentY = boundsAndTransformation.bounds.y ? boundsAndTransformation.bounds.y : 0
-        if (rendering.properties['klighd.calculated.text.line.widths'] as number[]) {
+
+        // Since the text is centered the start position has to be calculated based on the existing line heights.
+        if (calculatedTextLineHeights) {
+            for (let i = 0; i < lines.length / 2.0 - 1; i++) {
+                currentY -= calculatedTextLineHeights[i]
+            }
+            if (!(lines.length % 2)) {
+                currentY -= calculatedTextLineHeights[lines.length / 2] / 2
+            }
+        }
+
+        if (rendering.calculatedTextLineWidths) {
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
