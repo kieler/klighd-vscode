@@ -413,6 +413,9 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
     } else {
         text = rendering.text
     }
+    if (parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] !== undefined) {
+        text = parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] as string
+    }
 
     // The text split into an array for each individual line
     const lines = text?.split('\n')?.length ?? 1
