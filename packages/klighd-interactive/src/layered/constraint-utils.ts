@@ -71,7 +71,8 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
 export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: number): number {
 
     // Examine all nodes that have a layer Id left or equal to the layerCandidate and that have a layerCons > their layerId
-    const layerConstraintLeftOfCandidate = nodes.filter(n => n.properties['org.eclipse.elk.layered.layering.layerId'] as number <= layerCandidate && (n.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] as number) > (n.properties['org.eclipse.elk.layered.layering.layerId'] as number))
+    const layerConstraintLeftOfCandidate = nodes.filter(n => n.properties['org.eclipse.elk.layered.layering.layerId'] as number <= layerCandidate
+        && (n.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] as number) > (n.properties['org.eclipse.elk.layered.layering.layerId'] as number))
 
     // In case that there are no such nodes return the layerCandidate
     if (layerConstraintLeftOfCandidate.length === 0) {

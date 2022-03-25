@@ -55,7 +55,6 @@ export class KNode extends RectangularNode implements KGraphElement {
         return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
     }
 
-    //properties: NodeProperties
     properties: Record<string, unknown>
 
     direction: Direction
@@ -71,23 +70,6 @@ export enum Direction {
     LEFT,
     DOWN,
     UP
-}
-
-/**
- * Properties needed for client side layout or visualization.
- * Send together with the nodes from server to client.
- * They correspond to properties on the server.
- */
-export class NodeProperties {
-    algorithm: string
-    aspectRatio: number
-    currentPosition: number
-    desiredPosition: number
-    interactiveLayout: boolean
-    layerConstraint: number
-    layerId: number
-    positionConstraint: number
-    positionId: number
 }
 
 /**
