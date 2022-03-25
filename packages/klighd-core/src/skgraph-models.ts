@@ -26,6 +26,7 @@ import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPor
  */
 export interface SKGraphElement extends KGraphElement {
     tooltip?: string
+    properties: Record<string, unknown>
 }
 
 export const NODE_TYPE = 'node'
@@ -57,6 +58,7 @@ export class SKPort extends RectangularPort implements SKGraphElement {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+    properties: Record<string, unknown>
 }
 
 /**
@@ -73,6 +75,7 @@ export class SKLabel extends SLabel implements SKGraphElement {
         // estimated during the estimateTextBounds action.
         return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
+    properties: Record<string, unknown>
 }
 
 /**
@@ -83,6 +86,7 @@ export class SKEdge extends KEdge {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+    properties: Record<string, unknown>
 }
 
 /**
@@ -102,6 +106,9 @@ export interface KRendering extends KGraphData, KStyleHolder {
     actions: KAction[]
     // not in the original java model, but is included in messages to remove the need to call '[Grid]?PlacementUtil.evaluate[Grid|Area|Point]Placement'
     // and similar methods on client side for every rendering
+
+    properties: Record<string, unknown>
+    // TODO: remove below fields
     /**
      * The server pre-calculated bounds for this rendering.
      */

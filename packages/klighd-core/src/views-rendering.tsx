@@ -219,7 +219,7 @@ export function renderRectangularShape(
             const placeholder = <g
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
                 <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
-                <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{'stroke-linecap': 'round', 'stroke-width': '2'}}/>
+                <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{ 'stroke-linecap': 'round', 'stroke-width': '2' }} />
                 <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
                 <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
             </g>
@@ -388,6 +388,9 @@ export function renderKText(rendering: KText,
     } else {
         text = rendering.text
     }
+    if (parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] !== undefined) {
+        text = parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] as string
+    }
     // If no text can be found, return here.
     if (text === undefined) return <g />
 
@@ -455,7 +458,7 @@ export function renderKText(rendering: KText,
         x: boundsAndTransformation.bounds.x,
         style: style,
         ...(colorStyle ? { fill: colorStyle.color } : {}),
-        ...(shadowStyles ? {filter: shadowStyles} : {}),
+        ...(shadowStyles ? { filter: shadowStyles } : {}),
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size adjustment include any trailing white spaces.
     } as any
 
@@ -470,7 +473,7 @@ export function renderKText(rendering: KText,
             attrs.textLength = rendering.calculatedTextLineWidths[0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
-        
+
         elements = [
             <text {...attrs}>
                 {...lines}
@@ -621,18 +624,18 @@ export function renderSingleSVGRect(x: number | undefined, y: number | undefined
         {...(rx ? { rx: rx } : {})}
         {...(ry ? { ry: ry } : {})}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -677,7 +680,7 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
             width={bounds.width}
             height={bounds.height}
             href={image}
-            {...(shadowStyles ? {filter: shadowStyles} : {})}
+            {...(shadowStyles ? { filter: shadowStyles } : {})}
         />
     }
 }
@@ -694,7 +697,7 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
  */
 export function renderSVGArc(lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, path: string, kShadow: KShadow | undefined): VNode[] {
     return renderWithShadow(kShadow, shadowStyles, renderSingleSVGArc, lineStyles, colorStyles, path)
-} 
+}
 
 /**
  * Renders an arc with all given information.
@@ -715,18 +718,18 @@ export function renderSingleSVGArc(x: number | undefined, y: number | undefined,
         {...(x && y ? { transform: `translate(${x},${y})` } : {})}
         d={path}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -765,18 +768,18 @@ export function renderSingleSVGEllipse(x: number | undefined, y: number | undefi
         rx={bounds.width / 2}
         ry={bounds.height / 2}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -813,18 +816,18 @@ export function renderSingleSVGLine(x: number | undefined, y: number | undefined
         {...(x && y ? { transform: `translate(${x},${y})` } : {})}
         d={path}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -875,7 +878,7 @@ export function renderKRendering(kRendering: KRendering,
     const styles = getKStyles(parent, kRendering.styles, propagatedStyles, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
-    const isEdge = [K_POLYLINE,  K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_SPLINE].includes(kRendering.type)
+    const isEdge = [K_POLYLINE, K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_SPLINE].includes(kRendering.type)
     const boundsAndTransformation = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
@@ -891,7 +894,7 @@ export function renderKRendering(kRendering: KRendering,
     let overlayRectangle: VNode | undefined = undefined
     // remembers if this rendering is a title rendering and should therefore be rendered overlaying the other renderings.
     let isOverlay = false
-    
+
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
     if (context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
@@ -910,8 +913,8 @@ export function renderKRendering(kRendering: KRendering,
             if (kRendering.type === K_TEXT) {
                 boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
             }
-            
-            
+
+
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalWidth = boundingBox.width
             const originalHeight = boundingBox.height
@@ -923,7 +926,7 @@ export function renderKRendering(kRendering: KRendering,
             // Don't let scalingfactor get too big.
             let scalingFactor = Math.min(maxScaleX, maxScaleY, maxScale)
             // Make sure we never scale down.
-            scalingFactor = Math.max(scalingFactor,  1)
+            scalingFactor = Math.max(scalingFactor, 1)
 
             // Calculate the new x and y indentation:
             // width required of scaled rendering
@@ -988,7 +991,7 @@ export function renderKRendering(kRendering: KRendering,
                 && kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
-                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black"/>
+                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />
             }
         }
     }

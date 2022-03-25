@@ -50,8 +50,6 @@ export const optionsBlacklist = [
   'de.cau.cs.kieler.sccharts.ui.synthesis.hooks.ExpandCollapseHook.CHECK-1902441701',
   'de.cau.cs.kieler.sccharts.ui.synthesis.AdaptiveZoom.CHECK-1237943491',
   'de.cau.cs.kieler.sccharts.ui.synthesis.GeneralSynthesisOptions.CHECK-857562601',
-  'de.cau.cs.kieler.sccharts.ui.synthesis.hooks.LabelShorteningHook.CHOICE2065322287',
-  'de.cau.cs.kieler.sccharts.ui.synthesis.hooks.LabelShorteningHook.RANGE-230395005',
   'de.cau.cs.kieler.graphs.klighd.syntheses.KGraphDiagramSynthesis.CHECK-1675366116',
   'de.cau.cs.kieler.graphs.klighd.syntheses.AbstractStyledDiagramSynthesis.CHOICE577556810',
   'de.cau.cs.kieler.scg.klighd.SCGraphSynthesisOptions.CHECK-496527882',
