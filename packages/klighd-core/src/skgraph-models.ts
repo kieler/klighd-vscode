@@ -108,28 +108,6 @@ export interface KRendering extends KGraphData, KStyleHolder {
     // and similar methods on client side for every rendering
 
     properties: Record<string, unknown>
-    // TODO: remove below fields
-    /**
-     * The server pre-calculated bounds for this rendering.
-     */
-    calculatedBounds?: Bounds
-    /**
-     * The server pre-calculated decoration for this rendering.
-     */
-    calculatedDecoration?: Decoration
-    /**
-     * A possible tooltip that can be shown for this rendering.
-     */
-    tooltip?: string
-
-    /**
-     * Whether the server pre-determined this KRendering to be the title of a node or not. 
-     */
-    isNodeTitle?: boolean
-    /**
-     * The unique identifier of this rendering.
-     */
-    renderingId: string
 }
 
 /**
