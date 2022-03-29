@@ -260,13 +260,13 @@ export function renderLayeredConstraint(node: KNode): VNode {
     const constraintOffset = 2
     const positionConstraint = node.properties['org.eclipse.elk.layered.crossingMinimization.positionChoiceConstraint'] as number
     const layerConstraint = node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint']
-    if (layerConstraint !== -1 && positionConstraint !== -1) {
+    if (layerConstraint !== -1 && positionConstraint !== -1 && layerConstraint !== undefined && positionConstraint !== undefined) {
         // layer and position Constraint are set
         result = <g>{renderLock(x, y)}</g>
-    } else if (layerConstraint !== -1) {
+    } else if (layerConstraint !== -1 && layerConstraint !== undefined) {
         // only layer Constraint is set
         result = <g>{renderLayerConstraint(x + constraintOffset, y - constraintOffset, node.direction)}</g>
-    } else if (positionConstraint !== -1) {
+    } else if (positionConstraint !== -1 && positionConstraint !== undefined) {
         // only position Constraint is set
         result = <g>{renderPositionConstraint(x + constraintOffset, y - constraintOffset, node.direction)}</g>
     }

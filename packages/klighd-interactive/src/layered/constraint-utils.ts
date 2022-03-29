@@ -326,7 +326,7 @@ export function isLayerForbidden(node: KNode, layer: number): boolean {
 
     // check the connected nodes for layer constraints
     for (const node of connectedNodes) {
-        if (node.properties['org.eclipse.elk.layered.layering.layerId'] === layer && node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] !== -1) {
+        if (node.properties['org.eclipse.elk.layered.layering.layerId'] === layer && node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] !== -1 && node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] !== undefined) {
             // layer is forbidden for the given node
             return true
         }
