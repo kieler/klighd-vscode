@@ -433,6 +433,7 @@ function scaleRendering(rendering: VNode, parent: SKNode) {
     // The property scaleFactor here refers to the scaleFactor of the topdown group, the group prefix
     // gets lost somewhere during the transfer to klighd-vscode, because there is another scaleFactor
     // defined in CoreOptions, this could potentially be a problem in the future
+    // TODO: this is fixed by https://github.com/kieler/KLighD/pull/110, need to change code here to fit
     // FIXME: this only works correctly for SCCharts
     const topdownScaleFactor = (parent as any).properties.scaleFactor
 
