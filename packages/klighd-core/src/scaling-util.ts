@@ -258,11 +258,13 @@ export class ScalingUtil {
         const targetScaled = target.calculateScaledBounds(context);
         const parentScaled = parent.calculateScaledBounds(context);
 
-        const start = points[0]
-        const end = points[points.length - 1]
 
-        const scaledStart = ScalingUtil.calculateScaledPoint(source.bounds, sourceScaled.relativeBounds, start)
-        const scaledEnd = ScalingUtil.calculateScaledPoint(target.bounds, targetScaled.relativeBounds, end)
+        // the last previous point that is not a bend point, but an actual coordinate point
+        let lastPointInSource = points[0];
+        let lastPointOutTarget = points[0];
+
+        const scaledStart = ScalingUtil.calculateScaledPoint(source.bounds, sourceScaled.relativeBounds, points[0])
+        const scaledEnd = ScalingUtil.calculateScaledPoint(target.bounds, targetScaled.relativeBounds, points[points.length - 1])
 
         let maxCoordPerPoint = 1
         switch (rendering.type) {
@@ -277,49 +279,82 @@ export class ScalingUtil {
                 let i = 1
 
                 // skip points in the start node
-                out: while (i < points.length) {
+                out1: while (i < points.length) {
                     const remainingPoints = points.length - i
-
                     const z = Math.min(maxCoordPerPoint, remainingPoints)
+                    const p = points[i + z - 1]
 
-                    for (let j = i; j < i + z; j++) {
-                        if (Bounds.includes(sourceScaled.relativeBounds, points[j])) {
-                            i += z
-                            continue out;
+                    if (Bounds.includes(sourceScaled.relativeBounds, p)) {
+                        // the coordinate is inbounds of the source so skip this set of points
+                        lastPointInSource = p
+                        i += z;
+                        continue;
+                    }
+
+                    for (let j = 1; j < z; j++) {
+                        if (Bounds.includes(sourceScaled.relativeBounds, points[i + j])) {
+                            // one of the bendpoints of this coordinate is in bounds of source so we skip this set of points
+                            i += z;
+                            continue out1;
                         }
                     }
+
+                    // neither the coordinate nor its bendpoints are in bounds for source so we can keep it for now
+
                     break;
                 }
 
+                lastPointOutTarget = lastPointInSource
+
+                const remainingPoints = points.length - i
+                const z = Math.min(maxCoordPerPoint, remainingPoints)
+                const p = points[i + z - 1]
+
                 // determine new start point
-                const startChoice = calculateEndPoint(i, newPoints, true) ?? scaledStart;
+                const startChoice = calculateEndPoint(lastPointInSource, p, i, newPoints, true) ?? scaledStart;
 
                 newPoints.push(startChoice)
 
-
                 // keep points not in end node
-                while (i < points.length) {
+                out2: while (i < points.length) {
                     const remainingPoints = points.length - i
-
                     const z = Math.min(maxCoordPerPoint, remainingPoints)
-
                     const p = points[i + z - 1]
 
-                    if (
-                        !Bounds.includes(targetScaled.relativeBounds, p)
-                    ) {
-                        for (let j = 0; j < z; j++) {
-                            newPoints.push(points[i])
-                            i++
-                        }
-                    } else {
-                        break
+                    if (Bounds.includes(targetScaled.relativeBounds, p)) {
+                        // the coordinate is inbounds of the target so we stop including points
+                        break;
                     }
+
+
+                    lastPointOutTarget = p;
+
+                    const tmp = []
+
+                    for (let j = 1; j < z; j++) {
+                        if (Bounds.includes(targetScaled.relativeBounds, points[i + j])) {
+                            // one of the bendpoints of this coordinate is in bounds of target so we skip this set of points
+                            i += z;
+                            continue out2;
+                        }
+                        tmp.push(points[i + j])
+                    }
+
+                    // the point and all its bendpoints are not in bound for target
+                    for (const b of tmp) {
+                        newPoints.push(b)
+                    }
+                    newPoints.push(p)
+                    i += z;
+
                 }
 
                 // determine new end point
+                const remainingPoints2 = points.length - i
+                const z2 = Math.min(maxCoordPerPoint, remainingPoints2)
+                const p2 = points[i + z2 - 1]
 
-                const endChoice = calculateEndPoint(i, newPoints, false) ?? scaledEnd;
+                const endChoice = calculateEndPoint(lastPointOutTarget, p2, i, newPoints, false) ?? scaledEnd;
 
                 newPoints.push(endChoice)
 
@@ -358,40 +393,36 @@ export class ScalingUtil {
         }
         return points
 
-        function calculateEndPoint(i: number, newPoints: any[], start: boolean): Point | void {
-            if (i < points.length) {
+        function calculateEndPoint(prev: Point, next: Point, i: number, newPoints: any[], start: boolean): Point | void {
 
-                let choice;
+            let choice;
 
-                const remainingPoints = points.length - i;
-                const z = Math.min(maxCoordPerPoint, remainingPoints);
+            const edge = new PointToPointLine(prev, next);
 
-                const prev = points[i - 1];
-                const next = points[i + z - 1];
+            const target = (start ? sourceScaled : targetScaled).relativeBounds
 
-                const edge = new PointToPointLine(prev, next);
+            const intersections = ScalingUtil.intersections(target, edge);
 
-                const target = (start ? sourceScaled : targetScaled).relativeBounds
+            intersections.sort(ScalingUtil.sortByDist(start ? next : prev));
 
-                const intersections = ScalingUtil.intersections(target, edge);
-
-                intersections.sort(ScalingUtil.sortByDist(start ? next : prev));
-
-                if (intersections.length > 0) {
-                    choice = intersections[0];
-                }
-
-                // keep the control points of the current point if they are not in the target
-                if (!start)
-                    if (z >= 2 && !Bounds.includes(target, points[i])) {
-                        newPoints.push(points[i]);
-                        if (z == 3 && !Bounds.includes(target, points[i + 1])) {
-                            newPoints.push(points[i + 1]);
-                        }
-                    }
-
-                return choice;
+            if (intersections.length > 0) {
+                choice = intersections[0];
             }
+
+            // keep the control points of the current point if they are not in the target
+            if (!start) {
+                const remainingPoints = points.length - i
+                const z = Math.min(maxCoordPerPoint, remainingPoints)
+
+                if (z >= 2 && !Bounds.includes(target, points[i])) {
+                    newPoints.push(points[i]);
+                    if (z == 3 && !Bounds.includes(target, points[i + 1])) {
+                        newPoints.push(points[i + 1]);
+                    }
+                }
+            }
+
+            return choice;
         }
 
     }
