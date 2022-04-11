@@ -46,11 +46,20 @@ export class ProxyView extends AbstractUIExtension {
     update(model: SGraph, context: RenderingContext): void {
         // TODO creates all visible proxies
         console.log(model.root);
+
+        /* Notes:
+        - iterate through nodes starting by outer layer for efficiency
+        */
         return;
     }
 
     createSingleProxy(): void {
         // TODO creates a single proxy
+
+        /* Notes:
+        - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
+        - 
+        */
         return;
     }
 
