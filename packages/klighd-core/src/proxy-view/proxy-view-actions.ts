@@ -22,7 +22,7 @@ import { DISymbol } from "../di.symbols";
 import { ProxyView } from "./proxy-view";
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
-  * Otherwise the proxy would be invisible. */
+  * Otherwise the proxy-view would be invisible. */
 export type ShowProxyViewAction = SetUIExtensionVisibilityAction
 
 export namespace ShowProxyViewAction {
@@ -34,6 +34,9 @@ export namespace ShowProxyViewAction {
     }
 }
 
+/**
+ * Handles {@link SendModelContextAction}s to redirect the content to the {@link ProxyView}.
+ */
 @injectable()
 export class ProxyViewActionHandler implements IActionHandler, IActionHandlerInitializer {
     @inject(DISymbol.ProxyViewUI) private proxyView: ProxyView;
@@ -46,6 +49,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
     }
 
     initialize(registry: ActionHandlerRegistry): void {
+        // Register as a handler to receive the action
         registry.register(SendModelContextAction.KIND, this);
     }
 }
