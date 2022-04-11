@@ -16,8 +16,8 @@
  */
 import { inject, injectable } from 'inversify';
 import {
-     CommandExecutionContext, CommandResult,
-    ResetCommand, SModelRoot, TYPES,
+     CommandExecutionContext, CommandResult, RenderingContext,
+    ResetCommand, SGraph, SModelRoot, TYPES,
 } from 'sprotty';
 import {
     Action, FitToScreenAction, RequestAction, ResponseAction,
@@ -227,5 +227,24 @@ export class SetDiagramPieceCommand extends ResetCommand {
 
     redo(_context: CommandExecutionContext): SModelRoot {
         return this.root
+    }
+}
+
+/** Sent from the view to the diagram server to further send the data to whoever needs it. */
+export interface SendModelContextAction extends Action {
+    kind: typeof SendModelContextAction.KIND
+    model: SGraph
+    context: RenderingContext
+}
+
+export namespace SendModelContextAction {
+    export const KIND = 'sendModelContextAction'
+
+    export function create(model: SGraph, context: RenderingContext): SendModelContextAction {
+        return {
+            kind: KIND,
+            model,
+            context
+        }
     }
 }

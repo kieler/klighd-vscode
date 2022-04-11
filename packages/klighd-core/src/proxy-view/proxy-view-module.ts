@@ -17,12 +17,17 @@
 
 import { ContainerModule } from "inversify";
 import { TYPES } from "sprotty";
-import { Proxy } from "./proxy";
+import { DISymbol } from "../di.symbols";
+import { ProxyView } from "./proxy-view";
+import { ProxyViewActionHandler } from "./proxy-view-actions";
 
-export const proxyModule = new ContainerModule((bind) => {
+export const proxyViewModule = new ContainerModule((bind) => {
     // The class needs to be bound to itself and
     // we have to let sprotty know our service is an UIExtension
-    bind(Proxy).toSelf().inSingletonScope();
-    bind(TYPES.IUIExtension).toService(Proxy);
+    bind(DISymbol.ProxyViewUI).to(ProxyView).inSingletonScope();
+    bind(TYPES.IUIExtension).toService(DISymbol.ProxyViewUI);
+    
+    bind(ProxyViewActionHandler).toSelf().inSingletonScope();
+    bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler);
 });
 

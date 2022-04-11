@@ -20,7 +20,8 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { findParentByFeature, IActionDispatcher, isViewport, IView, RenderingContext, SGraph, svg, TYPES } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { SendModelContextAction } from './actions/actions';
 import { DepthMap, DetailLevel } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
@@ -39,8 +40,11 @@ export class SKGraphView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     @inject(DISymbol.RenderOptionsRegistry) renderOptionsRegistry: RenderOptionsRegistry
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
 
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
+        this.actionDispatcher.dispatch(SendModelContextAction.create(model, context))
+
         const ctx = context as SKGraphModelRenderer
         ctx.renderingDefs = new Map
         ctx.renderingDefs.set("font", fontDefinition())
@@ -53,8 +57,6 @@ export class SKGraphView implements IView {
         }
         ctx.titles = []
         ctx.positions = []
-
-
 
         // Add depthMap to context for rendering, when required.
         const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)

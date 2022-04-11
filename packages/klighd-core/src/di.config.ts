@@ -33,7 +33,7 @@ import { KlighdModelViewer } from './model-viewer';
 import { ResetPreferencesAction, SetPreferencesAction } from './options/actions';
 import { optionsModule } from './options/options-module';
 import { PreferencesRegistry } from './preferences-registry';
-import { proxyModule } from './proxy-view/proxy-module';
+import { proxyViewModule } from './proxy-view/proxy-view-module';
 import { sidebarModule } from './sidebar';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
@@ -98,7 +98,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
-        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule, proxyModule)
+        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule, proxyViewModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,

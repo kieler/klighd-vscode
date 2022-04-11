@@ -17,26 +17,41 @@
 
 /** @jsx html */
 import { inject, injectable, postConstruct } from "inversify";
-import { AbstractUIExtension, html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { ShowProxyAction } from "./proxy-actions";
+import { AbstractUIExtension, html, IActionDispatcher, RenderingContext, SGraph, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+// import { SKGraphView } from "../views";
+import { ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
-export class Proxy extends AbstractUIExtension {
-    static readonly ID = "ProxyUI";
+export class ProxyView extends AbstractUIExtension {
+    static readonly ID = "ProxyViewUI";
     /** This actionDispatcher is needed for init(), so the class may be rendered as visible. */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
+    // Use for rendering
+    // @inject(SKGraphView) private view: SKGraphView;
 
     id(): string {
-        return Proxy.ID;
+        return ProxyView.ID;
     }
 
     containerClass(): string {
-        return Proxy.ID;
+        return ProxyView.ID;
     }
 
     @postConstruct()
     init(): void {
-        this.actionDispatcher.dispatch(ShowProxyAction.create());
+        // Show the proxy-view
+        this.actionDispatcher.dispatch(ShowProxyViewAction.create());
+    }
+
+    update(model: SGraph, context: RenderingContext): void {
+        // TODO creates all visible proxies
+        console.log(model.root);
+        return;
+    }
+
+    createSingleProxy(): void {
+        // TODO creates a single proxy
+        return;
     }
 
     protected initializeContents(containerElement: HTMLElement): void {

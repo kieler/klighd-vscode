@@ -28,4 +28,6 @@ export const DISymbol = {
     RenderOptionsRegistry: Symbol("RenderOptionsRegistry"),
     SynthesesRegistry: Symbol("SynthesesRegistry"),
     BookmarkRegistry: Symbol("BookmarkRegistry"),
+
+    ProxyViewUI: Symbol("ProxyViewUI")
 };
