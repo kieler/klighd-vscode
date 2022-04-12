@@ -17,8 +17,10 @@
 
 /** @jsx html */
 import { inject, injectable, postConstruct } from "inversify";
-import { AbstractUIExtension, html, IActionDispatcher, RenderingContext, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { SKGraphView } from "../views";
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, RenderingContext, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { SKGraphModelRenderer } from "../skgraph-model-renderer";
+import { SKNode } from "../skgraph-models";
+import { KNodeView, SKGraphView } from "../views";
 import { ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
@@ -26,8 +28,12 @@ export class ProxyView extends AbstractUIExtension {
     static readonly ID = "ProxyView";
     /** This actionDispatcher is needed for init(), so the class may be rendered as visible. */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
+    /** Use for replacing the HTML containerElement with a VNode. */
+    @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
+    private patcher: Patcher;
     // Use for rendering
-    @inject(SKGraphView) private view: SKGraphView;
+    @inject(SKGraphView) private graphView: SKGraphView;
+    @inject(KNodeView) private nodeView: KNodeView;
 
     id(): string {
         return ProxyView.ID;
@@ -41,6 +47,7 @@ export class ProxyView extends AbstractUIExtension {
     init(): void {
         // Show the proxy-view
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
+        this.patcher = this.patcherProvider.patcher;
     }
 
     update(model: SGraph, context: RenderingContext): void {
@@ -54,13 +61,28 @@ export class ProxyView extends AbstractUIExtension {
             <div id="keith-diagram_sprotty_ProxyView" class="ProxyView" style="visibility: visible; opacity: 1;">
                 <h1 style="color: red;">Hello, world!</h1>
             </div>
+        - this.activeElement -> not sure yet
+        - (context as SKGraphModelRenderer).depthMap -> depthmap, check if region is in bounds
+            const depthMap = (context as SKGraphModelRenderer).depthMap;
+            if (depthMap?.viewport !== undefined) {
+                console.log(depthMap?.isInBounds(depthMap.rootRegions[0], depthMap.viewport));
+            }
+        - this.patcher() -> replaces oldRoot with newRoot
         */
-        // const root = model.root;
-        // console.log("Model:");
-        // console.log(model);
-        // console.log("Context:");
-        // console.log(context);
-        this.view;
+
+        const root = model.root;
+        // context.renderElement(root);
+        // this.graphView.render(model, context);
+        const node = Object.assign({}, root.children[0] as SKNode); // This effectively clones the node
+        node.children = [node.children[0]];
+        console.log("Node:");
+        console.log(node);
+        // TODO this puts an svg besides the view. The view needs to be inside the svg or both inside another svg, then this works
+
+        const vnode = this.nodeView.render(node, context);
+        if (vnode !== undefined) {
+            this.patcher(this.containerElement, <svg>{vnode}</svg>); // This replaces the containerElement
+        }
 
         return;
     }
@@ -77,14 +99,19 @@ export class ProxyView extends AbstractUIExtension {
 
     protected onBeforeShow(containerElement: HTMLElement, root: Readonly<SModelRoot>, ...contextElementIds: string[]): void {
         // TODO could be useful?
+        // TODO remove later on, used to ignore unused warnings:
+        this.graphView;
+        this.nodeView;
+        this.patcher;
+        SKGraphModelRenderer;
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
         // containerElement is the canvas to add the html via appendChild() to
-        const content = document.createElement("h1");
-        content.style.color = "red";
-        content.innerText = "Hello, world!";
-        containerElement.appendChild(content);
+        // const content = document.createElement("test");
+        // content.style.color = "red";
+        // content.innerText = "H!";
+        // containerElement.appendChild(content);
         // The same html using JSX/TSX:
         <h1 style={{color: "red"}}>Hello, world!</h1>;
     }
