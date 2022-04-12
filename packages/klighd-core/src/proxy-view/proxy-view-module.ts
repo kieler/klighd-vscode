@@ -25,8 +25,8 @@ export const proxyViewModule = new ContainerModule((bind) => {
     // The class needs to be bound to itself and
     // we have to let sprotty know our service is an UIExtension
     // Using a symbol for binding helps mitigate other problems
-    bind(DISymbol.ProxyViewUI).to(ProxyView).inSingletonScope();
-    bind(TYPES.IUIExtension).toService(DISymbol.ProxyViewUI);
+    bind(DISymbol.ProxyView).to(ProxyView).inSingletonScope();
+    bind(TYPES.IUIExtension).toService(DISymbol.ProxyView);
     
     bind(ProxyViewActionHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler);
