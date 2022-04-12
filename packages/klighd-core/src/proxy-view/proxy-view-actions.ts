@@ -39,7 +39,7 @@ export namespace ShowProxyViewAction {
  */
 @injectable()
 export class ProxyViewActionHandler implements IActionHandler, IActionHandlerInitializer {
-    @inject(DISymbol.ProxyViewUI) private proxyView: ProxyView;
+    @inject(DISymbol.ProxyView) private proxyView: ProxyView;
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SendModelContextAction.KIND) {

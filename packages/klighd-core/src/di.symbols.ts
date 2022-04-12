@@ -29,5 +29,5 @@ export const DISymbol = {
     SynthesesRegistry: Symbol("SynthesesRegistry"),
     BookmarkRegistry: Symbol("BookmarkRegistry"),
 
-    ProxyViewUI: Symbol("ProxyViewUI")
+    ProxyView: Symbol("ProxyView")
 };

@@ -23,7 +23,7 @@ import { ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
 export class ProxyView extends AbstractUIExtension {
-    static readonly ID = "ProxyViewUI";
+    static readonly ID = "ProxyView";
     /** This actionDispatcher is needed for init(), so the class may be rendered as visible. */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     // Use for rendering
