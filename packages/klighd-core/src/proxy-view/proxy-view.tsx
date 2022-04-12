@@ -17,8 +17,8 @@
 
 /** @jsx html */
 import { inject, injectable, postConstruct } from "inversify";
-import { AbstractUIExtension, html, IActionDispatcher, RenderingContext, SGraph, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-// import { SKGraphView } from "../views";
+import { AbstractUIExtension, html, IActionDispatcher, RenderingContext, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { SKGraphView } from "../views";
 import { ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
@@ -27,7 +27,7 @@ export class ProxyView extends AbstractUIExtension {
     /** This actionDispatcher is needed for init(), so the class may be rendered as visible. */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     // Use for rendering
-    // @inject(SKGraphView) private view: SKGraphView;
+    @inject(SKGraphView) private view: SKGraphView;
 
     id(): string {
         return ProxyView.ID;
@@ -45,11 +45,23 @@ export class ProxyView extends AbstractUIExtension {
 
     update(model: SGraph, context: RenderingContext): void {
         // TODO creates all visible proxies
-        console.log(model.root);
-
         /* Notes:
         - iterate through nodes starting by outer layer for efficiency
+        - root.canvasBounds -> get bounds for border region
+        - root.id -> get file name (use for adding modules per diagram type)
+        - root.children == model.children
+        - this.containerElement -> remember this already exists, example:
+            <div id="keith-diagram_sprotty_ProxyView" class="ProxyView" style="visibility: visible; opacity: 1;">
+                <h1 style="color: red;">Hello, world!</h1>
+            </div>
         */
+        // const root = model.root;
+        // console.log("Model:");
+        // console.log(model);
+        // console.log("Context:");
+        // console.log(context);
+        this.view;
+
         return;
     }
 
@@ -61,6 +73,10 @@ export class ProxyView extends AbstractUIExtension {
         - 
         */
         return;
+    }
+
+    protected onBeforeShow(containerElement: HTMLElement, root: Readonly<SModelRoot>, ...contextElementIds: string[]): void {
+        // TODO could be useful?
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
