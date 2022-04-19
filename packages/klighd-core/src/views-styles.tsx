@@ -16,7 +16,7 @@
  */
 /** @jsx svg */
 import { VNode } from 'snabbdom';
-import { getZoom, isSelectable, SChildElement, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { isSelectable, SChildElement, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
@@ -642,7 +642,7 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         // The line width the requested one would have when rendered in the current zoom level.
 
 
-        let effectiveZoom = getZoom(target);
+        let effectiveZoom = context.effectiveZoom;
 
         if(target instanceof SChildElement && target.parent instanceof SKNode) {
             effectiveZoom *= target.parent.calculateScaledBounds(context).effectiveChildScale
