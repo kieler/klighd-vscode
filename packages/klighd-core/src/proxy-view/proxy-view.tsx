@@ -52,11 +52,27 @@ export class ProxyView extends AbstractUIExtension {
         this.patcher = this.patcherProvider.patcher;
     }
 
+    protected initializeContents(containerElement: HTMLElement): void {
+        // Use temp for initializing oldContentRoot
+        const temp = document.createElement("div");
+        this.oldContentRoot = this.patcher(temp, <div />);
+        containerElement.appendChild(temp);
+    }
+
+    protected onBeforeShow(containerElement: HTMLElement, root: Readonly<SModelRoot>, ...contextElementIds: string[]): void {
+        // TODO could be useful?
+        // TODO remove later on, used to ignore unused warnings:
+        this.graphView;
+        this.nodeView;
+        this.patcher;
+        SKGraphModelRenderer;
+    }
+
     update(model: SGraph, context: RenderingContext): void {
         // TODO creates all visible proxies
         /* Notes:
         - iterate through nodes starting by outer layer for efficiency
-        - root.canvasBounds -> get bounds for border region
+        - root.canvasBounds / model.canvasBounds -> get bounds for border region
         - root.id -> get file name (use for adding modules per diagram type)
         - root.children == model.children
         - this.containerElement -> remember this already exists, example:
@@ -70,56 +86,39 @@ export class ProxyView extends AbstractUIExtension {
                 console.log(depthMap?.isInBounds(depthMap.rootRegions[0], depthMap.viewport));
             }
         - this.patcher() -> replaces oldRoot with newRoot
-        - model.canvasBounds -> canvas bounds (e.g. size for svg tag)
+        - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
         */
 
+        // const ctx = context as SKGraphModelRenderer;
         const root = model.root;
-        // context.renderElement(root);
-        // this.graphView.render(model, context);
         const node = Object.assign({}, root.children[0] as SKNode); // This effectively clones the node
-        // console.log("Node:");
-        // console.log(node);
-        // node.children = [node.children[0]];
-        // TODO this puts an svg besides the view. The view needs to be inside the svg or both inside another svg, then this works
-        // TODO define CSS style to remove the border, click-through for svg (not gs)
-
+        // node.size = {width: 100, height: 100};
+        console.log(node);
         const vnode = this.nodeView.render(node, context);
-
         const vnodes = [vnode];
+
+        // Iterate through nodes starting by root
+        // check if node is: 
+        // (partially) in bounds -> no proxy, check children
+        // out of bounds         -> proxy
 
         const width = model.canvasBounds.width;
         const height = model.canvasBounds.height;
         this.oldContentRoot = this.patcher(this.oldContentRoot,
             <svg style={
                     {width: width.toString(), height: height.toString(), // Set size to whole canvas
-                    pointerEvents: "none"} // Make click-through, TODO: make vnode pointer-events auto?
+                    pointerEvents: "none"} // Make click-through
                     }>
                 {...vnodes}
             </svg>);
     }
 
-    createSingleProxy(): void {
-        // TODO creates a single proxy
+    createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer): VNode | undefined {
+        // TODO creates a single proxy, make vnode pointer-events auto (aka not-click-through)?
 
         /* Notes:
         - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
         */
-        return;
-    }
-
-    protected onBeforeShow(containerElement: HTMLElement, root: Readonly<SModelRoot>, ...contextElementIds: string[]): void {
-        // TODO could be useful?
-        // TODO remove later on, used to ignore unused warnings:
-        this.graphView;
-        this.nodeView;
-        this.patcher;
-        SKGraphModelRenderer;
-    }
-
-    protected initializeContents(containerElement: HTMLElement): void {
-        // Use temp as a placeholder for oldContentRoot
-        const temp = document.createElement("div");
-        this.oldContentRoot = this.patcher(temp, <div />);
-        containerElement.appendChild(temp);
+        return ctx.renderProxy(node);
     }
 }

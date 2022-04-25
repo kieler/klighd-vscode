@@ -21,7 +21,7 @@ import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement
 import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
-import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
+import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement, SKNode } from './skgraph-models';
 
 /**
  * Contains additional data and functionality needed for the rendering of SKGraphs.
@@ -76,5 +76,14 @@ export class SKGraphModelRenderer extends ModelRenderer {
                 return this.renderElement(child)
             })
             .filter(vnode => vnode !== undefined) as VNode[]
+    }
+
+    /**
+     * Renders a node as a proxy, e.g. reduced to the proxy's necessities.
+     * 
+     * @param node The node to render as a proxy.
+     */
+    renderProxy(node: SKNode): VNode | undefined {
+        return undefined;
     }
 }
