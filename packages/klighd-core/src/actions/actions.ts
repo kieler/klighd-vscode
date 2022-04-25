@@ -230,7 +230,7 @@ export class SetDiagramPieceCommand extends ResetCommand {
     }
 }
 
-/** Sent from the view to the diagram server to further send the data to whoever needs it. */
+/** Sent from the view. */
 export interface SendModelContextAction extends Action {
     kind: typeof SendModelContextAction.KIND
     model: SGraph

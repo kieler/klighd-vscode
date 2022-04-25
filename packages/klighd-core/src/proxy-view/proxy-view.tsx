@@ -22,7 +22,7 @@ import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider,
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKNode } from "../skgraph-models";
 import { KNodeView, SKGraphView } from "../views";
-import { ShowProxyViewAction } from "./proxy-view-actions";
+import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
 export class ProxyView extends AbstractUIExtension {
@@ -47,7 +47,8 @@ export class ProxyView extends AbstractUIExtension {
 
     @postConstruct()
     init(): void {
-        // Show the proxy-view
+        // Send and show to proxy view
+        this.actionDispatcher.dispatch(SendProxyViewAction.create(this));
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
         this.patcher = this.patcherProvider.patcher;
     }
@@ -96,6 +97,7 @@ export class ProxyView extends AbstractUIExtension {
         console.log(node);
         const vnode = this.nodeView.render(node, context);
         const vnodes = [vnode];
+        vnodes
 
         // Iterate through nodes starting by root
         // check if node is: 
@@ -109,7 +111,7 @@ export class ProxyView extends AbstractUIExtension {
                     {width: width.toString(), height: height.toString(), // Set size to whole canvas
                     pointerEvents: "none"} // Make click-through
                     }>
-                {...vnodes}
+                {/* {...vnodes} */}
             </svg>);
     }
 

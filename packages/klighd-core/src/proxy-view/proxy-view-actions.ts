@@ -15,11 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable } from "inversify";
+import { injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
-import { DISymbol } from "../di.symbols";
 import { ProxyView } from "./proxy-view";
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
@@ -35,22 +34,44 @@ export namespace ShowProxyViewAction {
     }
 }
 
+/** Sent from the {@link ProxyView} to the action handler to avoid Stackoverflows. */
+export interface SendProxyViewAction extends Action {
+    kind: typeof SendProxyViewAction.KIND
+    proxyView: ProxyView
+}
+
+export namespace SendProxyViewAction {
+    export const KIND = 'sendProxyViewAction'
+
+    export function create(proxyView: ProxyView): SendProxyViewAction {
+        return {
+            kind: KIND,
+            proxyView
+        }
+    }
+}
+
 /**
- * Handles {@link SendModelContextAction}s to redirect the content to the {@link ProxyView}.
+ * Handles {@link SendProxyViewAction}s to get the {@link ProxyView} instance
+ * aswell as {@link SendModelContextAction}s to redirect the content to the {@link ProxyView}.
  */
 @injectable()
 export class ProxyViewActionHandler implements IActionHandler, IActionHandlerInitializer {
-    @inject(DISymbol.ProxyView) private proxyView: ProxyView;
+    private proxyView: ProxyView;
 
     handle(action: Action): void | Action | ICommand {
-        if (action.kind === SendModelContextAction.KIND) {
+        if (action.kind === SendProxyViewAction.KIND) {
+            const sPVAction = action as SendProxyViewAction;
+            this.proxyView = sPVAction.proxyView;
+        } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {
             const sMCAction = action as SendModelContextAction;
             this.proxyView.update(sMCAction.model, sMCAction.context);
         }
     }
 
     initialize(registry: ActionHandlerRegistry): void {
-        // Register as a handler to receive the action
+        // Register as a handler to receive the actions
         registry.register(SendModelContextAction.KIND, this);
+        registry.register(SendProxyViewAction.KIND, this);
     }
 }
