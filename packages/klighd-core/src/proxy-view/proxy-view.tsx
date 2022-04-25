@@ -17,6 +17,7 @@
 
 /** @jsx html */
 import { inject, injectable, postConstruct } from "inversify";
+import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, RenderingContext, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKNode } from "../skgraph-models";
@@ -25,12 +26,13 @@ import { ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
 export class ProxyView extends AbstractUIExtension {
-    static readonly ID = "ProxyView";
+    static readonly ID = "proxy-view";
     /** This actionDispatcher is needed for init(), so the class may be rendered as visible. */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
-    /** Use for replacing the HTML containerElement with a VNode. */
+    /** Use for replacing the HTML elements. */
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
     private patcher: Patcher;
+    private oldContentRoot: VNode;
     // Use for rendering
     @inject(SKGraphView) private graphView: SKGraphView;
     @inject(KNodeView) private nodeView: KNodeView;
@@ -68,23 +70,32 @@ export class ProxyView extends AbstractUIExtension {
                 console.log(depthMap?.isInBounds(depthMap.rootRegions[0], depthMap.viewport));
             }
         - this.patcher() -> replaces oldRoot with newRoot
+        - model.canvasBounds -> canvas bounds (e.g. size for svg tag)
         */
 
         const root = model.root;
         // context.renderElement(root);
         // this.graphView.render(model, context);
         const node = Object.assign({}, root.children[0] as SKNode); // This effectively clones the node
-        node.children = [node.children[0]];
-        console.log("Node:");
-        console.log(node);
+        // console.log("Node:");
+        // console.log(node);
+        // node.children = [node.children[0]];
         // TODO this puts an svg besides the view. The view needs to be inside the svg or both inside another svg, then this works
+        // TODO define CSS style to remove the border, click-through for svg (not gs)
 
         const vnode = this.nodeView.render(node, context);
-        if (vnode !== undefined) {
-            this.patcher(this.containerElement, <svg>{vnode}</svg>); // This replaces the containerElement
-        }
 
-        return;
+        const vnodes = [vnode];
+
+        const width = model.canvasBounds.width;
+        const height = model.canvasBounds.height;
+        this.oldContentRoot = this.patcher(this.oldContentRoot,
+            <svg style={
+                    {width: width.toString(), height: height.toString(), // Set size to whole canvas
+                    pointerEvents: "none"} // Make click-through, TODO: make vnode pointer-events auto?
+                    }>
+                {...vnodes}
+            </svg>);
     }
 
     createSingleProxy(): void {
@@ -92,7 +103,6 @@ export class ProxyView extends AbstractUIExtension {
 
         /* Notes:
         - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
-        - 
         */
         return;
     }
@@ -107,12 +117,9 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
-        // containerElement is the canvas to add the html via appendChild() to
-        // const content = document.createElement("test");
-        // content.style.color = "red";
-        // content.innerText = "H!";
-        // containerElement.appendChild(content);
-        // The same html using JSX/TSX:
-        <h1 style={{color: "red"}}>Hello, world!</h1>;
+        // Use temp as a placeholder for oldContentRoot
+        const temp = document.createElement("div");
+        this.oldContentRoot = this.patcher(temp, <div />);
+        containerElement.appendChild(temp);
     }
 }
