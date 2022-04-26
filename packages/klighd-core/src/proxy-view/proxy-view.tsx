@@ -89,21 +89,7 @@ export class ProxyView extends AbstractUIExtension {
         - this.patcher() -> replaces oldRoot with newRoot
         - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
         */
-
-        // const ctx = context as SKGraphModelRenderer;
-        const root = model.root;
-        const node = Object.assign({}, root.children[0] as SKNode); // This effectively clones the node
-        // node.size = {width: 100, height: 100};
-        console.log(node);
-        const vnode = this.nodeView.render(node, context);
-        const vnodes = [vnode];
-        vnodes
-
-        // Iterate through nodes starting by root
-        // check if node is: 
-        // (partially) in bounds -> no proxy, check children
-        // out of bounds         -> proxy
-
+       
         const width = model.canvasBounds.width;
         const height = model.canvasBounds.height;
         this.oldContentRoot = this.patcher(this.oldContentRoot,
@@ -111,16 +97,71 @@ export class ProxyView extends AbstractUIExtension {
                     {width: width.toString(), height: height.toString(), // Set size to whole canvas
                     pointerEvents: "none"} // Make click-through
                     }>
-                {/* {...vnodes} */}
+                {...this.createAllProxies(model.children[0] as SKNode, context as SKGraphModelRenderer, Math.min(width, height))}
             </svg>);
     }
 
+    /**
+     * Returns the proxy rendering for all off-screen nodes in root and applies logic e.g. clustering.
+     */
+    createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, size: number): (VNode | undefined)[] {
+        // Iterate through nodes starting by root
+        // check if node is: 
+        // (partially) in bounds -> no proxy, check children
+        // out of bounds         -> proxy
+
+        const depthMap = ctx.depthMap;
+        const viewport = ctx.viewport;
+        if (!depthMap) {
+            console.error("Couldn't create proxies, depthmap is not defined!");
+            return [];
+        } else if (!viewport) {
+            console.error("Couldn't create proxies, viewport is not defined!");
+            return [];
+        }
+
+        const res: (VNode | undefined)[] = [];
+        for (const temp of root.children) {
+            const node = temp as SKNode;
+            // TODO as of right now the clone is still affected by the depthmap
+            // const region = depthMap.getContainingRegion(node, viewport, ctx.renderOptionsRegistry);
+            // if (region && !depthMap.isInBounds(region, viewport)) {
+                // Node out of bounds
+                // This effectively clones the node
+                const clone: SKNode = Object.create(node);
+                clone.id += "-proxy"; // TODO remove
+                // console.log("node");
+                // console.log(node);
+                // console.log("clone");
+                // console.log(clone);
+                const vnode = this.createSingleProxy(clone, ctx);
+                if (vnode) {
+                    res.push(vnode);
+                }
+            // } else
+            if (node.children.length > 0) {
+                // Node in bounds, check children
+                res.push(...this.createAllProxies(node, ctx, size));
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Returns the proxy rendering for a single off-screen node and applies logic e.g. where to place it.
+     */
     createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer): VNode | undefined {
         // TODO creates a single proxy, make vnode pointer-events auto (aka not-click-through)?
+        // TODO width, height, x, y of canvas?
 
         /* Notes:
         - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
         */
-        return ctx.renderProxy(node);
+
+       if (!node.id.includes("$$") && node instanceof SKNode) {
+            // Not a comment, not an edge
+            return ctx.renderProxy(node);
+        }
+        return undefined;
     }
 }

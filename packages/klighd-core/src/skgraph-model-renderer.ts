@@ -84,6 +84,14 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * @param node The node to render as a proxy.
      */
     renderProxy(node: SKNode): VNode | undefined {
-        return undefined;
+        const vnode = super.renderElement(node);
+        if (vnode) {
+            vnode.key = "proxy"; // TODO remove
+        }
+        // console.log("node");
+        // console.log(node);
+        // console.log("vnode");
+        // console.log(vnode);
+        return vnode;
     }
 }
