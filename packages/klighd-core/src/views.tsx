@@ -66,7 +66,7 @@ export class SKGraphView implements IView {
 
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
             ctx.depthMap = DepthMap.getDM()
-            if (ctx.viewport && ctx.depthMap) {
+            if (!ctx.forceRendering && ctx.viewport && ctx.depthMap) {
                 ctx.depthMap.updateDetailLevels(ctx.viewport, ctx.renderOptionsRegistry)
             }
         } else {
@@ -92,7 +92,7 @@ export class KNodeView implements IView {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 // Make sure this node and its children are not drawn as long as it is not on full details.
@@ -223,7 +223,7 @@ export class KPortView implements IView {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 port.areChildAreaChildrenRendered = true
@@ -283,7 +283,7 @@ export class KLabelView implements IView {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 label.areChildAreaChildrenRendered = true
@@ -347,7 +347,7 @@ export class KEdgeView implements IView {
     render(edge: SKEdge, context: RenderingContext): VNode | undefined {
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 edge.areChildAreaChildrenRendered = true

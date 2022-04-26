@@ -42,6 +42,8 @@ export class SKGraphModelRenderer extends ModelRenderer {
     renderOptionsRegistry: RenderOptionsRegistry
     titles: VNode[][]
     viewport: Viewport
+    /** Used to force rendering independant of the depthMap. Used by the {@link ProxyView} for now. */
+    forceRendering = false;
     
 
     /**
@@ -84,10 +86,12 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * @param node The node to render as a proxy.
      */
     renderProxy(node: SKNode): VNode | undefined {
+        this.forceRendering = true;
         const vnode = super.renderElement(node);
-        if (vnode) {
-            vnode.key = "proxy"; // TODO remove
-        }
+        this.forceRendering = false;
+        // if (vnode) {
+        //     vnode.key = "proxy3"; // TODO: so far this doesn't help at all
+        // }
         // console.log("node");
         // console.log(node);
         // console.log("vnode");

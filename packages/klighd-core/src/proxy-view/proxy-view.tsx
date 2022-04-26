@@ -61,8 +61,8 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     protected onBeforeShow(containerElement: HTMLElement, root: Readonly<SModelRoot>, ...contextElementIds: string[]): void {
-        // TODO could be useful?
-        // TODO remove later on, used to ignore unused warnings:
+        // TODO: could be useful?
+        // TODO: remove later on, used to ignore unused warnings:
         this.graphView;
         this.nodeView;
         this.patcher;
@@ -70,7 +70,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     update(model: SGraph, context: RenderingContext): void {
-        // TODO creates all visible proxies
+        // TODO: creates all visible proxies
         /* Notes:
         - iterate through nodes starting by outer layer for efficiency
         - root.canvasBounds / model.canvasBounds -> get bounds for border region
@@ -92,12 +92,15 @@ export class ProxyView extends AbstractUIExtension {
        
         const width = model.canvasBounds.width;
         const height = model.canvasBounds.height;
+        const root = model.children[0] as SKNode;
+        const rootClone: SKNode = Object.create(root);
+        rootClone.id = "proxy";
         this.oldContentRoot = this.patcher(this.oldContentRoot,
             <svg style={
                     {width: width.toString(), height: height.toString(), // Set size to whole canvas
                     pointerEvents: "none"} // Make click-through
                     }>
-                {...this.createAllProxies(model.children[0] as SKNode, context as SKGraphModelRenderer, Math.min(width, height))}
+                {...this.createAllProxies(rootClone, context as SKGraphModelRenderer, Math.min(width, height))}
             </svg>);
     }
 
@@ -109,6 +112,7 @@ export class ProxyView extends AbstractUIExtension {
         // check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
+        // TODO: save nodes for efficiency (no need for rerendering)
 
         const depthMap = ctx.depthMap;
         const viewport = ctx.viewport;
@@ -123,13 +127,13 @@ export class ProxyView extends AbstractUIExtension {
         const res: (VNode | undefined)[] = [];
         for (const temp of root.children) {
             const node = temp as SKNode;
-            // TODO as of right now the clone is still affected by the depthmap
-            // const region = depthMap.getContainingRegion(node, viewport, ctx.renderOptionsRegistry);
-            // if (region && !depthMap.isInBounds(region, viewport)) {
+            // TODO: as of right now the clone is still affected by the depthmap
+            const region = depthMap.getContainingRegion(node, viewport, ctx.renderOptionsRegistry);
+            if (region && !depthMap.isInBounds(region, viewport)) {
                 // Node out of bounds
                 // This effectively clones the node
                 const clone: SKNode = Object.create(node);
-                clone.id += "-proxy"; // TODO remove
+                clone.id = "proxy2"; // TODO: this helps in keeping the proxies on screen until the root is out of bound, make this more elegant later on
                 // console.log("node");
                 // console.log(node);
                 // console.log("clone");
@@ -138,7 +142,7 @@ export class ProxyView extends AbstractUIExtension {
                 if (vnode) {
                     res.push(vnode);
                 }
-            // } else
+            } else
             if (node.children.length > 0) {
                 // Node in bounds, check children
                 res.push(...this.createAllProxies(node, ctx, size));
@@ -151,8 +155,8 @@ export class ProxyView extends AbstractUIExtension {
      * Returns the proxy rendering for a single off-screen node and applies logic e.g. where to place it.
      */
     createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer): VNode | undefined {
-        // TODO creates a single proxy, make vnode pointer-events auto (aka not-click-through)?
-        // TODO width, height, x, y of canvas?
+        // TODO: creates a single proxy, make vnode pointer-events auto (aka not-click-through)?
+        // TODO: width, height, x, y of canvas?
 
         /* Notes:
         - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
