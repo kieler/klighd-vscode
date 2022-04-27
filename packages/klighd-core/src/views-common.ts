@@ -314,7 +314,7 @@ export function camelToKebab(string: string): string {
  */
 export function findBoundsAndTransformationData(rendering: KRendering, styles: KStyles, parent: SKGraphElement,
     context: SKGraphModelRenderer, isEdge?: boolean, boundingBox?: boolean): BoundsAndTransformation | undefined {
-    
+
     if (rendering.type === K_TEXT && !boundingBox) {
         return findTextBoundsAndTransformationData(rendering as KText, styles, parent, context)
     }
@@ -322,17 +322,17 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
     let bounds
     let decoration
 
-    if (rendering.calculatedBounds !== undefined) {
+    if (rendering.properties['klighd.lsp.calculated.bounds'] as Bounds !== undefined) {
         // Bounds are in the calculatedBounds of the rendering.
-        bounds = rendering.calculatedBounds
+        bounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
     }
     // If no bounds have been found yet, they should be in the boundsMap.
     if (bounds === undefined && context.boundsMap !== undefined) {
-        bounds = findById(context.boundsMap, rendering.renderingId)
+        bounds = findById(context.boundsMap, rendering.properties['klighd.lsp.rendering.id'] as string)
     }
     // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
-    if (rendering.calculatedDecoration !== undefined) {
-        decoration = rendering.calculatedDecoration
+    if (rendering.properties['klighd.lsp.calculated.decoration'] as Decoration !== undefined) {
+        decoration = rendering.properties['klighd.lsp.calculated.decoration'] as Decoration
         bounds = {
             x: decoration.bounds.x + decoration.origin.x,
             y: decoration.bounds.y + decoration.origin.y,
@@ -342,7 +342,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
     }
     // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
     if (decoration === undefined && context.decorationMap !== undefined) {
-        decoration = findById(context.decorationMap, rendering.renderingId)
+        decoration = findById(context.decorationMap, rendering.properties['klighd.lsp.rendering.id'] as string)
         if (decoration !== undefined) {
             bounds = {
                 x: decoration.bounds.x + decoration.origin.x,
@@ -413,16 +413,19 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
     } else {
         text = rendering.text
     }
+    if (parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] !== undefined) {
+        text = parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] as string
+    }
 
     // The text split into an array for each individual line
     const lines = text?.split('\n')?.length ?? 1
 
-    if (rendering.calculatedTextBounds !== undefined) {
-        const textWidth = rendering.calculatedTextBounds.width
-        const textHeight = rendering.calculatedTextBounds.height
+    if (rendering.properties['klighd.calculated.text.bounds'] as Bounds !== undefined) {
+        const textWidth = (rendering.properties['klighd.calculated.text.bounds'] as Bounds).width
+        const textHeight = (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height
 
-        if (rendering.calculatedBounds !== undefined) {
-            const foundBounds = rendering.calculatedBounds
+        if (rendering.properties['klighd.lsp.calculated.bounds'] as Bounds !== undefined) {
+            const foundBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
             bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
             bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
             bounds.width = textWidth
@@ -430,7 +433,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         }
         // if no bounds have been found yet, they should be in the boundsMap
         if (bounds.x === undefined && context.boundsMap !== undefined) {
-            const foundBounds = findById(context.boundsMap, rendering.renderingId)
+            const foundBounds = findById(context.boundsMap, rendering.properties['klighd.lsp.rendering.id'] as string)
             if (bounds !== undefined) {
                 bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
                 bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
@@ -439,8 +442,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             }
         }
         // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
-        if (rendering.calculatedDecoration !== undefined) {
-            decoration = rendering.calculatedDecoration
+        if (rendering.properties['klighd.lsp.calculated.decoration'] as Decoration !== undefined) {
+            decoration = rendering.properties['klighd.lsp.calculated.decoration'] as Decoration
             bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment, textWidth)
             bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment, lines)
             bounds.width = decoration.bounds.width
@@ -448,7 +451,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         }
         // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
         if (decoration === undefined && context.decorationMap !== undefined) {
-            decoration = findById(context.decorationMap, rendering.renderingId)
+            decoration = findById(context.decorationMap, rendering.properties['klighd.lsp.rendering.id'] as string)
             if (decoration !== undefined) {
                 bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment, textWidth)
                 bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment, lines)
