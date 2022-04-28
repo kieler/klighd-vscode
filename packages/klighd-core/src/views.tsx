@@ -118,7 +118,7 @@ export class KNodeView implements IView {
             shadow = getRendering(node.data, node, new KStyles, ctx)
         }
         if (isChildSelected(node as SKNode)) {
-            if (((node as SKNode).properties['org.eclipse.elk.interactiveLayout']) && ctx.mListener.hasDragged) {
+            if (((node as SKNode).properties.interactiveLayout) && ctx.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
                 interactiveNodes = renderInteractiveLayout(node as SKNode)
             }
@@ -131,7 +131,7 @@ export class KNodeView implements IView {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx)
 
-            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties['org.eclipse.elk.interactiveLayout']) {
+            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }
@@ -426,16 +426,11 @@ function fontDefinition(): VNode {
 }
 
 function scaleRendering(rendering: VNode, parent: SKNode) {
-    if ((parent as any).properties == undefined || (parent as any).properties.scaleFactor == undefined) {
+    if ((parent as any).properties == undefined || (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
         return rendering
     }
-
-    // The property scaleFactor here refers to the scaleFactor of the topdown group, the group prefix
-    // gets lost somewhere during the transfer to klighd-vscode, because there is another scaleFactor
-    // defined in CoreOptions, this could potentially be a problem in the future
-    // TODO: this is fixed by https://github.com/kieler/KLighD/pull/110, need to change code here to fit
     // FIXME: this only works correctly for SCCharts
-    const topdownScaleFactor = (parent as any).properties.scaleFactor
+    const topdownScaleFactor = (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
 
     if (rendering.children != undefined) {
         if (rendering.children.length >= 2) {
