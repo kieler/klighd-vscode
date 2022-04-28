@@ -261,6 +261,10 @@ export function renderLine(rendering: KPolyline,
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent)
+    // Any non-closed line segment cannot be filled with any color.
+    if (rendering.type !== K_POLYGON) {
+        colorStyles.background = DEFAULT_FILL
+    }
 
     const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
