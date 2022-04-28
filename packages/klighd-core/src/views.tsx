@@ -176,8 +176,8 @@ export class KNodeView implements IView {
             result.push(...children)
             result.push(...(ctx.titles.pop() ?? []))
             ctx.positions.pop()
-            //return <g>{...result}</g>
-            return scaleRendering(<g>{...result}</g>, node)
+            return <g>{...result}</g>
+            // return scaleRendering(<g>{...result}</g>, node)
         }
 
         // Add renderings that are not undefined
@@ -188,14 +188,14 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             ctx.positions.pop()
-            return scaleRendering(<g>
-                {ctx.titles.pop() ?? []}
-                {ctx.renderChildren(node)}
-            </g>, node)
-            //return <g>
-            //    {ctx.titles.pop() ?? []}
-            //    {ctx.renderChildren(node)}
-            //</g>
+            // return scaleRendering(<g>
+            //     {ctx.titles.pop() ?? []}
+            //     {ctx.renderChildren(node)}
+            // </g>, node)
+            return <g>
+               {ctx.titles.pop() ?? []}
+               {ctx.renderChildren(node)}
+            </g>
         }
         if (interactiveNodes) {
             result.push(interactiveNodes)
@@ -206,14 +206,17 @@ export class KNodeView implements IView {
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!node.areChildAreaChildrenRendered) {
             result.push(...ctx.renderChildren(node))
+            console.log("child area children are not rendered: " + node.id) // elkgraphs completely land here
         } else if (!node.areNonChildAreaChildrenRendered) {
+            console.log("non-child area children are not rendered: " + node.id) // nodes with children in sccharts land here
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
         result.push(...(ctx.titles.pop() ?? []))
         ctx.positions.pop()
-        let scaledResult = result.map(rendering => scaleRendering(rendering, node))
-        scaledResult;
-        //return <g>{...scaledResult}</g>
+
+        result.map(rendering => scaleRendering(rendering, node))
+        // scalerendering has SIDE EFFECTS, not so nice when combining it with the functional map
+        // TODO: here instead of scaling the result we need either scale exactly the child area or if there is no child area, all child nodes wrapped in one <g>
         return <g>{...result}</g>
     }
 }
@@ -436,8 +439,6 @@ function scaleRendering(rendering: VNode, parent: SKNode) {
         if (rendering.children.length >= 2) {
 
             rendering.children[1] = <g transform={`scale (${topdownScaleFactor})`}>${rendering.children[1]}</g>
-            console.log("Scale (" + parent.id + "): " + topdownScaleFactor)
-
         }
     }
     return rendering
