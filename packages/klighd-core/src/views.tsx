@@ -429,6 +429,11 @@ function fontDefinition(): VNode {
 }
 
 function scaleRendering(rendering: VNode, parent: SKNode) {
+
+    // This code would need to be called one parent higher so that we always have access to all the children correctly
+    // The problem still remains though how to manipulate the svg in the right places
+    // A better solution handles this more abstractly somewhere else, but I'm not sure where
+
     if ((parent as any).properties == undefined || (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
         return rendering
     }
