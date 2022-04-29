@@ -217,7 +217,9 @@ export class KNodeView implements IView {
         result.map(rendering => scaleRendering(rendering, node))
         // scalerendering has SIDE EFFECTS, not so nice when combining it with the functional map
         // TODO: here instead of scaling the result we need either scale exactly the child area or if there is no child area, all child nodes wrapped in one <g>
-        return <g>{...result}</g>
+        return <g>{...result}</g> // <-- this for stuff with child areas (sccharts), there is an extra element in between children and parent
+        // return scaleRendering(<g>{...result}</g>, node) <-- this for stuff without child areas + different internals of scaleRendering necessary, because 
+        //                                                     children are siblings of other renderings that belong to the parent such as the parents rectangle
     }
 }
 
