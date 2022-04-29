@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -13,7 +13,7 @@
 
 import { ContainerModule } from "inversify";
 import { configureCommand } from "sprotty";
-import { SetDiagramPieceCommand } from "../actions/actions";
+import { SetDiagramPieceCommand } from './actions';
 
 /**
  * Dependency injection module that adds functionality to insert diagram pieces
