@@ -44,7 +44,6 @@ export class SKGraphModelRenderer extends ModelRenderer {
     viewport: Viewport
     /** Used to force rendering independant of the depthMap. Used by the {@link ProxyView} for now. */
     forceRendering = false;
-    
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.
@@ -84,18 +83,22 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * Renders a node as a proxy, e.g. reduced to the proxy's necessities.
      * 
      * @param node The node to render as a proxy.
+     * @param size The proxy's size.
      */
-    renderProxy(node: SKNode): VNode | undefined {
+    renderProxy(node: SKNode, size: number): VNode | undefined {
         this.forceRendering = true;
         const vnode = super.renderElement(node);
         this.forceRendering = false;
-        // if (vnode) {
-        //     vnode.key = "proxy3"; // TODO: so far this doesn't help at all
-        // }
         // console.log("node");
         // console.log(node);
         // console.log("vnode");
         // console.log(vnode);
+        if (vnode && vnode.data && vnode.data.attrs) {
+            // Remove translation to apply logic later on and make proxies non-click-through
+            delete vnode.data.attrs["transform"];
+            // TODO: non-click-through or click-through? Mouseevents should work either way
+            // vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
+        }
         return vnode;
     }
 }

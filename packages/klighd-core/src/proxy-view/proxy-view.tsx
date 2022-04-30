@@ -93,8 +93,8 @@ export class ProxyView extends AbstractUIExtension {
         const width = model.canvasBounds.width;
         const height = model.canvasBounds.height;
         const root = model.children[0] as SKNode;
-        const rootClone: SKNode = Object.create(root);
-        rootClone.id = "proxy";
+        const rootClone: SKNode = Object.create(root); // TODO: check if this can be removed later on
+        rootClone.id += "-proxy";
         this.oldContentRoot = this.patcher(this.oldContentRoot,
             <svg style={
                     {width: width.toString(), height: height.toString(), // Set size to whole canvas
@@ -105,9 +105,9 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /**
-     * Returns the proxy rendering for all off-screen nodes in root and applies logic e.g. clustering.
+     * Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering.
      */
-    createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, size: number): (VNode | undefined)[] {
+    createAllProxies(currRoot: SKNode, ctx: SKGraphModelRenderer, size: number): VNode[] {
         // Iterate through nodes starting by root
         // check if node is: 
         // (partially) in bounds -> no proxy, check children
@@ -116,34 +116,27 @@ export class ProxyView extends AbstractUIExtension {
 
         const depthMap = ctx.depthMap;
         const viewport = ctx.viewport;
-        if (!depthMap) {
-            console.error("Couldn't create proxies, depthmap is not defined!");
-            return [];
-        } else if (!viewport) {
-            console.error("Couldn't create proxies, viewport is not defined!");
+        if (!depthMap || !viewport) {
+            // Not yet initialized
             return [];
         }
 
-        const res: (VNode | undefined)[] = [];
-        for (const temp of root.children) {
+        const res: VNode[] = [];
+        for (const temp of currRoot.children) {
             const node = temp as SKNode;
-            // TODO: as of right now the clone is still affected by the depthmap
-            const region = depthMap.getContainingRegion(node, viewport, ctx.renderOptionsRegistry);
+            // TODO: as of right now the root is still affected by the depthmap
+            const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
             if (region && !depthMap.isInBounds(region, viewport)) {
-                // Node out of bounds
-                // This effectively clones the node
+                // Node out of bounds, create a proxy
+                // This effectively clones the node, also change its id for good measure
                 const clone: SKNode = Object.create(node);
-                clone.id = "proxy2"; // TODO: this helps in keeping the proxies on screen until the root is out of bound, make this more elegant later on
-                // console.log("node");
-                // console.log(node);
-                // console.log("clone");
-                // console.log(clone);
-                const vnode = this.createSingleProxy(clone, ctx);
+                clone.id += "-proxy";
+
+                const vnode = this.createSingleProxy(clone, ctx, size);
                 if (vnode) {
                     res.push(vnode);
                 }
-            } else
-            if (node.children.length > 0) {
+            } else if (node.children.length > 0) {
                 // Node in bounds, check children
                 res.push(...this.createAllProxies(node, ctx, size));
             }
@@ -152,10 +145,9 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /**
-     * Returns the proxy rendering for a single off-screen node and applies logic e.g. where to place it.
+     * Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place.
      */
-    createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer): VNode | undefined {
-        // TODO: creates a single proxy, make vnode pointer-events auto (aka not-click-through)?
+    createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, size: number): VNode | undefined {
         // TODO: width, height, x, y of canvas?
 
         /* Notes:
@@ -164,7 +156,7 @@ export class ProxyView extends AbstractUIExtension {
 
        if (!node.id.includes("$$") && node instanceof SKNode) {
             // Not a comment, not an edge
-            return ctx.renderProxy(node);
+            return ctx.renderProxy(node, size);
         }
         return undefined;
     }
