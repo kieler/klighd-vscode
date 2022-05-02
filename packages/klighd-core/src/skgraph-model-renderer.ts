@@ -22,8 +22,6 @@ import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement, SKNode } from './skgraph-models';
-import { getRendering } from './views-rendering';
-import { KStyles } from './views-styles';
 
 /**
  * Contains additional data and functionality needed for the rendering of SKGraphs.
@@ -92,7 +90,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
         const vnode = super.renderElement(node);
         // const temp = node.data[0] as KRectangle;
         // const data : KRectangle = {actions: [], calculatedBounds: {x:0,y:0,width:size,height:size}, children: temp.children, renderingId: temp.renderingId, styles: temp.styles, type: temp.type, id: temp.id};
-        const vnode2 = getRendering(node.data, node, new KStyles, this); vnode2;
+        // const vnode2 = getRendering(node.data, node, new KStyles, this); vnode2;
         this.forceRendering = false;
         // console.log("node");
         // console.log(node);

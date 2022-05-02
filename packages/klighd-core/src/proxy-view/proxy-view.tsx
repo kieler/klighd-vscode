@@ -18,11 +18,10 @@
 /** @jsx html */
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
-import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, RenderingContext, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKNode } from "../skgraph-models";
-import { KNodeView, SKGraphView } from "../views";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
@@ -34,9 +33,6 @@ export class ProxyView extends AbstractUIExtension {
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
     private patcher: Patcher;
     private oldContentRoot: VNode;
-    // Use for rendering
-    @inject(SKGraphView) private graphView: SKGraphView;
-    @inject(KNodeView) private nodeView: KNodeView;
 
     id(): string {
         return ProxyView.ID;
@@ -63,15 +59,9 @@ export class ProxyView extends AbstractUIExtension {
 
     protected onBeforeShow(containerElement: HTMLElement, root: Readonly<SModelRoot>, ...contextElementIds: string[]): void {
         // TODO: could be useful?
-        // TODO: remove later on, used to ignore unused warnings:
-        this.graphView;
-        this.nodeView;
-        this.patcher;
-        SKGraphModelRenderer;
     }
 
-    update(model: SGraph, context: RenderingContext): void {
-        // TODO: creates all visible proxies
+    update(model: SGraph, ctx: SKGraphModelRenderer): void {
         /* Notes:
         - iterate through nodes starting by outer layer for efficiency
         - root.canvasBounds / model.canvasBounds -> get bounds for border region
@@ -79,25 +69,29 @@ export class ProxyView extends AbstractUIExtension {
         - root.children == model.children
         - this.containerElement -> remember this already exists, example:
             <div id="keith-diagram_sprotty_ProxyView" class="ProxyView" style="visibility: visible; opacity: 1;">
-                <h1 style="color: red;">Hello, world!</h1>
+            <h1 style="color: red;">Hello, world!</h1>
             </div>
-        - this.activeElement -> not sure yet
+            - this.activeElement -> not sure yet
         - (context as SKGraphModelRenderer).depthMap -> depthmap, check if region is in bounds
             const depthMap = (context as SKGraphModelRenderer).depthMap;
             if (depthMap?.viewport !== undefined) {
                 console.log(depthMap?.isInBounds(depthMap.rootRegions[0], depthMap.viewport));
             }
-        - this.patcher() -> replaces oldRoot with newRoot
-        - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
-        */
+            - this.patcher() -> replaces oldRoot with newRoot
+            - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
+            */
+        if (!this.oldContentRoot) {
+            return;
+        }
+        console.log(model);
 
         const width = model.canvasBounds.width;
         const height = model.canvasBounds.height;
         const scroll = model.scroll;
         const zoom = model.zoom;
         const root = model.children[0] as SKNode;
-        const rootClone: SKNode = Object.create(root); // TODO: check if this can be removed later on
-        rootClone.id += "-proxy";
+        // const rootClone: SKNode = Object.create(root);
+        // rootClone.id += "-proxy";
         this.oldContentRoot = this.patcher(this.oldContentRoot,
             <svg style={
                 {
@@ -105,7 +99,7 @@ export class ProxyView extends AbstractUIExtension {
                     pointerEvents: "none" // Make click-through
                 }
             }>
-                {...this.createAllProxies(rootClone, context as SKGraphModelRenderer, width, height, scroll, zoom)}
+                {...this.createAllProxies(root, ctx, width, height, scroll, zoom)}
             </svg>);
     }
 
@@ -167,6 +161,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // Get absolute coordinates, could be more efficient
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
+        // Also TODO: take sidebar bounds/coords into consideration
         const bounds = node.bounds;
         let newX = bounds.x - scroll.x;
         let newY = bounds.y - scroll.y;
@@ -186,8 +181,10 @@ export class ProxyView extends AbstractUIExtension {
         const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
 
         let vnode = undefined;
-        if (!node.id.includes("$$") && node instanceof SKNode) {
-            // Not a comment, not an edge
+        // if (node instanceof SKNode && !node.id.includes("$$")) {
+        if (node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$") {
+            // Not an edge, not a comment/non-explicitly specified region
+            // Don't use !node.id.includes("$$") since non-explicitly specified regions may contain nodes
             vnode = ctx.renderProxy(node, size, newX, newY);
         }
         return vnode;
