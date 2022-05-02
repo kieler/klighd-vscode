@@ -83,7 +83,6 @@ export class ProxyView extends AbstractUIExtension {
         if (!this.oldContentRoot) {
             return;
         }
-        console.log(model);
 
         const width = model.canvasBounds.width;
         const height = model.canvasBounds.height;
@@ -120,13 +119,9 @@ export class ProxyView extends AbstractUIExtension {
             return [];
         }
 
-        // Add all defs to prevent the root proxy from becoming transparent
-        const defs = <defs></defs>
-        ctx.renderingDefs.forEach((value: VNode) => {
-            (defs.children as (string | VNode)[]).push(value)
-        })
+        // console.log(currRoot);
 
-        const res: VNode[] = [defs];
+        const res: VNode[] = [];
         for (const node of currRoot.children as SKNode[]) {
             const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
             if (region && !depthMap.isInBounds(region, viewport)) {
@@ -162,6 +157,7 @@ export class ProxyView extends AbstractUIExtension {
         // Get absolute coordinates, could be more efficient
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
         // Also TODO: take sidebar bounds/coords into consideration
+        // Even more TODO: currently using bounds of SKNode, change to size later on?
         const bounds = node.bounds;
         let newX = bounds.x - scroll.x;
         let newY = bounds.y - scroll.y;
@@ -184,7 +180,7 @@ export class ProxyView extends AbstractUIExtension {
         // if (node instanceof SKNode && !node.id.includes("$$")) {
         if (node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$") {
             // Not an edge, not a comment/non-explicitly specified region
-            // Don't use !node.id.includes("$$") since non-explicitly specified regions may contain nodes
+            // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
             vnode = ctx.renderProxy(node, size, newX, newY);
         }
         return vnode;

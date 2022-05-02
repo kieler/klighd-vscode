@@ -46,7 +46,10 @@ export class SKGraphView implements IView {
         this.actionDispatcher.dispatch(SendModelContextAction.create(model, context))
 
         const ctx = context as SKGraphModelRenderer
-        ctx.renderingDefs = new Map
+        if (!ctx.renderingDefs) {
+            // Make sure not to create a new map all the time
+            ctx.renderingDefs = new Map
+        }
         ctx.renderingDefs.set("font", fontDefinition())
         ctx.mListener = this.mListener
         ctx.renderOptionsRegistry = this.renderOptionsRegistry

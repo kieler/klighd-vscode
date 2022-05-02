@@ -27,7 +27,7 @@ export const proxyViewModule = new ContainerModule((bind) => {
     // Using a symbol for binding helps mitigate other problems
     bind(DISymbol.ProxyView).to(ProxyView).inSingletonScope();
     bind(TYPES.IUIExtension).toService(DISymbol.ProxyView);
-    
+
     bind(ProxyViewActionHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler);
 });
