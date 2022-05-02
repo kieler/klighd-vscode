@@ -26,13 +26,19 @@ import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
 export class ProxyView extends AbstractUIExtension {
+    /** ID. */
     static readonly ID = "proxy-view";
-    /** This actionDispatcher is needed for init(), so the class may be rendered as visible. */
+    /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
-    /** Use for replacing the HTML elements. */
+    /** Used to replace HTML elements. */
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
     private patcher: Patcher;
-    private oldContentRoot: VNode;
+    /** VNode of the current HTML root element. Used by the {@link patcher}. */
+    private currHTMLRoot: VNode;
+    /** Stores the proxy renderings of already rendered nodes. */
+    private renderings: Map<string, VNode>;
+    /** Stores the relative coordinates (without scroll) of already rendered nodes. */
+    private coordinates: Map<string, Point>;
 
     id(): string {
         return ProxyView.ID;
@@ -48,12 +54,15 @@ export class ProxyView extends AbstractUIExtension {
         this.actionDispatcher.dispatch(SendProxyViewAction.create(this));
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
         this.patcher = this.patcherProvider.patcher;
+        this.renderings = new Map;
+        this.coordinates = new Map;
+        this.coordinates // TODO: cache coordinates
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
         // Use temp for initializing oldContentRoot
         const temp = document.createElement("div");
-        this.oldContentRoot = this.patcher(temp, <div />);
+        this.currHTMLRoot = this.patcher(temp, <div />);
         containerElement.appendChild(temp);
     }
 
@@ -80,7 +89,7 @@ export class ProxyView extends AbstractUIExtension {
             - this.patcher() -> replaces oldRoot with newRoot
             - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
             */
-        if (!this.oldContentRoot) {
+        if (!this.currHTMLRoot) {
             return;
         }
 
@@ -91,7 +100,7 @@ export class ProxyView extends AbstractUIExtension {
         const root = model.children[0] as SKNode;
         // const rootClone: SKNode = Object.create(root);
         // rootClone.id += "-proxy";
-        this.oldContentRoot = this.patcher(this.oldContentRoot,
+        this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
                 {
                     width: width.toString(), height: height.toString(), // Set size to whole canvas
@@ -105,7 +114,7 @@ export class ProxyView extends AbstractUIExtension {
     /**
      * Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering.
      */
-    createAllProxies(currRoot: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode[] {
+    private createAllProxies(currRoot: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode[] {
         // Iterate through nodes starting by root
         // check if node is: 
         // (partially) in bounds -> no proxy, check children
@@ -146,14 +155,51 @@ export class ProxyView extends AbstractUIExtension {
     /**
      * Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place.
      */
-    createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
-        // TODO: width, height, x, y of canvas?
-
+    private createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
         /* Notes:
         - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
         - node bounds.x/y -> vnode transform: translate(x,y)
         */
 
+        let vnode = this.renderings.get(node.id);
+        if (vnode) {
+            // Node has already been rendered, update position and return
+            const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
+            if (vnode && vnode.data && vnode.data.attrs) {
+                vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
+            }
+            return vnode;
+        }
+
+        if (node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$") {
+            // Not an edge, not a comment/non-explicitly specified region
+            // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
+
+            const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
+
+            // Calculate size
+            const sizePercentage = 0.1; // TODO: could be configured in options
+            const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
+
+            vnode = ctx.renderProxy(node, size);
+            if (vnode && vnode.data && vnode.data.attrs) {
+                // Place proxy at the calculated position
+                vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
+                // TODO: non-click-through or click-through? Mouseevents should work either way
+                // vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
+            }
+        }
+
+        if (vnode) {
+            // Store this node
+            this.renderings.set(node.id, vnode);
+        }
+
+        return vnode;
+    }
+
+    /** Calculates the position to place this node's proxy at. */
+    private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): Point {
         // Get absolute coordinates, could be more efficient
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
         // Also TODO: take sidebar bounds/coords into consideration
@@ -172,17 +218,6 @@ export class ProxyView extends AbstractUIExtension {
         newX = Math.max(0, Math.min(canvasWidth - bounds.width, newX * zoom));
         newY = Math.max(0, Math.min(canvasHeight - bounds.height, newY * zoom));
 
-        // Calculate size
-        const sizePercentage = 0.1; // TODO: could be configured in options
-        const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
-
-        let vnode = undefined;
-        // if (node instanceof SKNode && !node.id.includes("$$")) {
-        if (node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$") {
-            // Not an edge, not a comment/non-explicitly specified region
-            // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
-            vnode = ctx.renderProxy(node, size, newX, newY);
-        }
-        return vnode;
+        return { x: newX, y: newY };
     }
 }

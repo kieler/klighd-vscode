@@ -85,7 +85,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * @param node The node to render as a proxy.
      * @param size The proxy's size.
      */
-    renderProxy(node: SKNode, size: number, newX: number, newY: number): VNode | undefined {
+    renderProxy(node: SKNode, size: number): VNode | undefined {
         this.forceRendering = true;
         const vnode = super.renderElement(node);
         // const temp = node.data[0] as KRectangle;
@@ -96,13 +96,6 @@ export class SKGraphModelRenderer extends ModelRenderer {
         // console.log(node);
         // console.log("vnode");
         // console.log(vnode);
-        if (vnode && vnode.data && vnode.data.attrs) {
-            // Remove translation to apply logic later on and make proxies non-click-through
-            vnode.data.attrs["transform"] = `translate(${newX}, ${newY})`;
-            // delete vnode.data.attrs["transform"];
-            // TODO: non-click-through or click-through? Mouseevents should work either way
-            // vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
-        }
         return vnode;
     }
 }
