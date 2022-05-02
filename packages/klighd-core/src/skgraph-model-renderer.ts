@@ -22,6 +22,8 @@ import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement, SKNode } from './skgraph-models';
+import { getRendering } from './views-rendering';
+import { KStyles } from './views-styles';
 
 /**
  * Contains additional data and functionality needed for the rendering of SKGraphs.
@@ -85,9 +87,12 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * @param node The node to render as a proxy.
      * @param size The proxy's size.
      */
-    renderProxy(node: SKNode, size: number): VNode | undefined {
+    renderProxy(node: SKNode, size: number, newX: number, newY: number): VNode | undefined {
         this.forceRendering = true;
         const vnode = super.renderElement(node);
+        // const temp = node.data[0] as KRectangle;
+        // const data : KRectangle = {actions: [], calculatedBounds: {x:0,y:0,width:size,height:size}, children: temp.children, renderingId: temp.renderingId, styles: temp.styles, type: temp.type, id: temp.id};
+        const vnode2 = getRendering(node.data, node, new KStyles, this); vnode2;
         this.forceRendering = false;
         // console.log("node");
         // console.log(node);
@@ -95,7 +100,8 @@ export class SKGraphModelRenderer extends ModelRenderer {
         // console.log(vnode);
         if (vnode && vnode.data && vnode.data.attrs) {
             // Remove translation to apply logic later on and make proxies non-click-through
-            delete vnode.data.attrs["transform"];
+            vnode.data.attrs["transform"] = `translate(${newX}, ${newY})`;
+            // delete vnode.data.attrs["transform"];
             // TODO: non-click-through or click-through? Mouseevents should work either way
             // vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
         }

@@ -19,6 +19,7 @@
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, RenderingContext, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Point } from "sprotty-protocol";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKNode } from "../skgraph-models";
 import { KNodeView, SKGraphView } from "../views";
@@ -89,25 +90,29 @@ export class ProxyView extends AbstractUIExtension {
         - this.patcher() -> replaces oldRoot with newRoot
         - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
         */
-       
+
         const width = model.canvasBounds.width;
         const height = model.canvasBounds.height;
+        const scroll = model.scroll;
+        const zoom = model.zoom;
         const root = model.children[0] as SKNode;
         const rootClone: SKNode = Object.create(root); // TODO: check if this can be removed later on
         rootClone.id += "-proxy";
         this.oldContentRoot = this.patcher(this.oldContentRoot,
             <svg style={
-                    {width: width.toString(), height: height.toString(), // Set size to whole canvas
-                    pointerEvents: "none"} // Make click-through
-                    }>
-                {...this.createAllProxies(rootClone, context as SKGraphModelRenderer, Math.min(width, height))}
+                {
+                    width: width.toString(), height: height.toString(), // Set size to whole canvas
+                    pointerEvents: "none" // Make click-through
+                }
+            }>
+                {...this.createAllProxies(rootClone, context as SKGraphModelRenderer, width, height, scroll, zoom)}
             </svg>);
     }
 
     /**
      * Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering.
      */
-    createAllProxies(currRoot: SKNode, ctx: SKGraphModelRenderer, size: number): VNode[] {
+    createAllProxies(currRoot: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode[] {
         // Iterate through nodes starting by root
         // check if node is: 
         // (partially) in bounds -> no proxy, check children
@@ -121,10 +126,14 @@ export class ProxyView extends AbstractUIExtension {
             return [];
         }
 
-        const res: VNode[] = [];
-        for (const temp of currRoot.children) {
-            const node = temp as SKNode;
-            // TODO: as of right now the root is still affected by the depthmap
+        // Add all defs to prevent the root proxy from becoming transparent
+        const defs = <defs></defs>
+        ctx.renderingDefs.forEach((value: VNode) => {
+            (defs.children as (string | VNode)[]).push(value)
+        })
+
+        const res: VNode[] = [defs];
+        for (const node of currRoot.children as SKNode[]) {
             const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
             if (region && !depthMap.isInBounds(region, viewport)) {
                 // Node out of bounds, create a proxy
@@ -132,32 +141,55 @@ export class ProxyView extends AbstractUIExtension {
                 const clone: SKNode = Object.create(node);
                 clone.id += "-proxy";
 
-                const vnode = this.createSingleProxy(clone, ctx, size);
+                const vnode = this.createSingleProxy(clone, ctx, canvasWidth, canvasHeight, scroll, zoom);
                 if (vnode) {
                     res.push(vnode);
                 }
             } else if (node.children.length > 0) {
                 // Node in bounds, check children
-                res.push(...this.createAllProxies(node, ctx, size));
+                res.push(...this.createAllProxies(node, ctx, canvasWidth, canvasHeight, scroll, zoom));
             }
         }
+        // TODO: clustering
         return res;
     }
 
     /**
      * Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place.
      */
-    createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, size: number): VNode | undefined {
+    createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
         // TODO: width, height, x, y of canvas?
 
         /* Notes:
         - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
+        - node bounds.x/y -> vnode transform: translate(x,y)
         */
 
-       if (!node.id.includes("$$") && node instanceof SKNode) {
-            // Not a comment, not an edge
-            return ctx.renderProxy(node, size);
+        // Get absolute coordinates, could be more efficient
+        // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
+        const bounds = node.bounds;
+        let newX = bounds.x - scroll.x;
+        let newY = bounds.y - scroll.y;
+        let next = node.parent as SKNode;
+        while (next) {
+            newX += next.bounds.x;
+            newY += next.bounds.y;
+            next = next.parent as SKNode;
         }
-        return undefined;
+
+        // Calculate position to put the proxy at
+        newX = Math.max(0, Math.min(canvasWidth - bounds.width, newX * zoom));
+        newY = Math.max(0, Math.min(canvasHeight - bounds.height, newY * zoom));
+
+        // Calculate size
+        const sizePercentage = 0.1; // TODO: could be configured in options
+        const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
+
+        let vnode = undefined;
+        if (!node.id.includes("$$") && node instanceof SKNode) {
+            // Not a comment, not an edge
+            vnode = ctx.renderProxy(node, size, newX, newY);
+        }
+        return vnode;
     }
 }
