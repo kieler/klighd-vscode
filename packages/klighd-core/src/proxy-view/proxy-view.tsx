@@ -20,6 +20,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
+import { DepthMap } from "../depth-map";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
@@ -35,10 +36,17 @@ export class ProxyView extends AbstractUIExtension {
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
-    /** Stores the proxy renderings of already rendered nodes. */
+    // TODO: when the diagram is changed these maps should be reloaded
+    /**
+     * Stores the proxy renderings of already rendered nodes.
+     * Always make sure the ids ending with "-proxy" are used.
+     */
     private renderings: Map<string, VNode>;
-    /** Stores the relative coordinates (without scroll) of already rendered nodes. */
-    private coordinates: Map<string, Point>;
+    /**
+     * Stores the relative coordinates (without scroll) of already rendered nodes.
+     * Always make sure the ids ending with "-proxy" are used.
+     */
+    private positions: Map<string, Point>;
 
     id(): string {
         return ProxyView.ID;
@@ -50,13 +58,12 @@ export class ProxyView extends AbstractUIExtension {
 
     @postConstruct()
     init(): void {
-        // Send and show to proxy view
+        // Send and show proxy view
         this.actionDispatcher.dispatch(SendProxyViewAction.create(this));
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
         this.patcher = this.patcherProvider.patcher;
         this.renderings = new Map;
-        this.coordinates = new Map;
-        this.coordinates // TODO: cache coordinates
+        this.positions = new Map;
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
@@ -91,6 +98,9 @@ export class ProxyView extends AbstractUIExtension {
             */
         if (!this.currHTMLRoot) {
             return;
+        } else if (!ctx.depthMap) {
+            // Create a new depthmap if otherwise unused
+            ctx.depthMap = DepthMap.init(model);
         }
 
         const width = model.canvasBounds.width;
@@ -128,8 +138,6 @@ export class ProxyView extends AbstractUIExtension {
             return [];
         }
 
-        // console.log(currRoot);
-
         const res: VNode[] = [];
         for (const node of currRoot.children as SKNode[]) {
             const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
@@ -161,17 +169,20 @@ export class ProxyView extends AbstractUIExtension {
         - node bounds.x/y -> vnode transform: translate(x,y)
         */
 
-        let vnode = this.renderings.get(node.id);
-        if (vnode) {
+        const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
+        let vnode = this.renderings.get(id);
+        if (vnode && vnode.data && vnode.data.attrs) {
             // Node has already been rendered, update position and return
+            // TODO: dynamic position update only partially working, transform updates only once the <g> is removed from html, ask Max about this
             const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
-            if (vnode && vnode.data && vnode.data.attrs) {
-                vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
-            }
+            vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
+            document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", `translate(${pos.x}, ${pos.y})`);
+            // console.log(document.getElementById(`keith-diagram_sprotty_${node.id}`));
+            // console.log(vnode);
             return vnode;
         }
 
-        if (node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$") {
+        if (node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$") {
             // Not an edge, not a comment/non-explicitly specified region
             // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
 
@@ -192,7 +203,7 @@ export class ProxyView extends AbstractUIExtension {
 
         if (vnode) {
             // Store this node
-            this.renderings.set(node.id, vnode);
+            this.renderings.set(id, vnode);
         }
 
         return vnode;
@@ -200,24 +211,44 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Calculates the position to place this node's proxy at. */
     private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): Point {
-        // Get absolute coordinates, could be more efficient
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
         // Also TODO: take sidebar bounds/coords into consideration
-        // Even more TODO: currently using bounds of SKNode, change to size later on?
-        const bounds = node.bounds;
-        let newX = bounds.x - scroll.x;
-        let newY = bounds.y - scroll.y;
-        let next = node.parent as SKNode;
-        while (next) {
-            newX += next.bounds.x;
-            newY += next.bounds.y;
-            next = next.parent as SKNode;
-        }
+        const point = this.getPositionRec(node);
+        let x = (point.x - scroll.x) * zoom;
+        let y = (point.y - scroll.y) * zoom;
 
         // Calculate position to put the proxy at
-        newX = Math.max(0, Math.min(canvasWidth - bounds.width, newX * zoom));
-        newY = Math.max(0, Math.min(canvasHeight - bounds.height, newY * zoom));
+        x = Math.max(0, Math.min(canvasWidth - node.bounds.width, x));
+        y = Math.max(0, Math.min(canvasHeight - node.bounds.height, y));
 
-        return { x: newX, y: newY };
+
+
+        return { x: x, y: y };
+    }
+
+    /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
+    private getPositionRec(node: SKNode): Point {
+        if (!node) {
+            return { x: 0, y: 0 };
+        }
+
+        const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
+        let point = this.positions.get(id);
+        if (point) {
+            // Point already stored
+            return point;
+        } else {
+            console.log("Recalc: " + id);
+            // Point hasn't been stored yet, check parent
+            point = this.getPositionRec(node.parent as SKNode);
+            // TODO: currently using bounds of SKNode, change to size later on?
+            const x = point.x + node.bounds.x;
+            const y = point.y + node.bounds.y;
+            point = { x: x, y: y };
+
+            // Also store this point
+            this.positions.set(id, point);
+            return point;
+        }
     }
 }
