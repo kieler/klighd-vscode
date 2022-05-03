@@ -175,8 +175,8 @@ export class ProxyView extends AbstractUIExtension {
             // Node has already been rendered, update position and return
             // TODO: dynamic position update only partially working, transform updates only once the <g> is removed from html, ask Max about this
             const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
-            vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
-            document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", `translate(${pos.x}, ${pos.y})`);
+            // vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`; // Update position once non-rendered
+            // document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", `translate(${pos.x}, ${pos.y})`); // Update position while rendered
             // console.log(document.getElementById(`keith-diagram_sprotty_${node.id}`));
             // console.log(vnode);
             return vnode;
@@ -216,12 +216,21 @@ export class ProxyView extends AbstractUIExtension {
         const point = this.getPositionRec(node);
         let x = (point.x - scroll.x) * zoom;
         let y = (point.y - scroll.y) * zoom;
+        // TODO: currently using bounds width/height of SKNode, change to size later on?
+        const nodeWidth = node.bounds.width;
+        const nodeHeight = node.bounds.height;
 
         // Calculate position to put the proxy at
-        x = Math.max(0, Math.min(canvasWidth - node.bounds.width, x));
-        y = Math.max(0, Math.min(canvasHeight - node.bounds.height, y));
+        x = Math.max(0, Math.min(canvasWidth - nodeWidth, x));
+        y = Math.max(0, Math.min(canvasHeight - nodeHeight, y));
 
-
+        // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
+        /* Don't need to check for the opened sidebar since it closes as soon as the diagram is moved
+          (onMouseDown), e.g. don't reposition proxies accordingly */
+        const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
+        if (rect && y < rect.bottom && x > rect.left - nodeWidth) {
+            x = rect.left - nodeWidth;
+        }
 
         return { x: x, y: y };
     }
@@ -241,7 +250,6 @@ export class ProxyView extends AbstractUIExtension {
             console.log("Recalc: " + id);
             // Point hasn't been stored yet, check parent
             point = this.getPositionRec(node.parent as SKNode);
-            // TODO: currently using bounds of SKNode, change to size later on?
             const x = point.x + node.bounds.x;
             const y = point.y + node.bounds.y;
             point = { x: x, y: y };
