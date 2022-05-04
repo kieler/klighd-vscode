@@ -129,7 +129,6 @@ export class ProxyView extends AbstractUIExtension {
         // check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
-        // TODO: save nodes for efficiency (no need for rerendering)
 
         const depthMap = ctx.depthMap;
         const viewport = ctx.viewport;
@@ -170,33 +169,31 @@ export class ProxyView extends AbstractUIExtension {
         */
 
         const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
+        
+        // Get position and calculate size
+        const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
+        const sizePercentage = 0.1; // TODO: could be configured in options
+        const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
+
         let vnode = this.renderings.get(id);
         if (vnode && vnode.data && vnode.data.attrs) {
             // Node has already been rendered, update position and return
-            // TODO: dynamic position update only partially working, transform updates only once the <g> is removed from html, ask Max about this
-            const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
-            // vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`; // Update position once non-rendered
-            // document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", `translate(${pos.x}, ${pos.y})`); // Update position while rendered
-            // console.log(document.getElementById(`keith-diagram_sprotty_${node.id}`));
-            // console.log(vnode);
-            return vnode;
-        }
+            // TODO: if size has changed, clear map
 
-        if (node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$") {
+            // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
+            // Update position once the canvas is left
+            vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
+            // Update position while on the canvas
+            document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", `translate(${pos.x}, ${pos.y})`);
+        } else if (node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$") {
             // Not an edge, not a comment/non-explicitly specified region
             // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
-
-            const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
-
-            // Calculate size
-            const sizePercentage = 0.1; // TODO: could be configured in options
-            const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
 
             vnode = ctx.renderProxy(node, size);
             if (vnode && vnode.data && vnode.data.attrs) {
                 // Place proxy at the calculated position
                 vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
-                // TODO: non-click-through or click-through? Mouseevents should work either way
+                // Code to make proxies non-click-through:
                 // vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
             }
         }
@@ -212,7 +209,6 @@ export class ProxyView extends AbstractUIExtension {
     /** Calculates the position to place this node's proxy at. */
     private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): Point {
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
-        // Also TODO: take sidebar bounds/coords into consideration
         const point = this.getPositionRec(node);
         let x = (point.x - scroll.x) * zoom;
         let y = (point.y - scroll.y) * zoom;
@@ -247,7 +243,6 @@ export class ProxyView extends AbstractUIExtension {
             // Point already stored
             return point;
         } else {
-            console.log("Recalc: " + id);
             // Point hasn't been stored yet, check parent
             point = this.getPositionRec(node.parent as SKNode);
             const x = point.x + node.bounds.x;
