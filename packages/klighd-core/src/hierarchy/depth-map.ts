@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,8 +17,6 @@
 
 import { KGraphElement } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { SChildElement, SModelRoot } from "sprotty";
-import { Viewport } from "sprotty-protocol";
-import { FullDetailRelativeThreshold } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { isContainerRendering, isRendering, KRendering, SKNode } from "../skgraph-models";
 import { Region } from "./region";
@@ -81,16 +79,6 @@ export class DepthMap {
     private regionIndexMap: Map<string, RegionIndexEntry>;
 
     /**
-     * The last viewport for which we updated the state of KNodes
-     */
-    private viewport?: Viewport;
-
-    /**
-     * The threshold for which we updated the state of KNodes
-     */
-    private lastThreshold?: number;
-
-    /**
      * Set for handling regions, that need to be checked for detail level changes.
      * Consists of the region that contain at least one child with a lower detail level.
      */
@@ -113,8 +101,6 @@ export class DepthMap {
         this.rootElement = modelRoot
         // rootRegions are reset below as we also want to remove the edges from the graph spanned by the regions
         this.criticalRegions.clear()
-        this.viewport = undefined
-        this.lastThreshold = undefined
         this.regionIndexMap.clear()
 
         let currentRegions = this.rootRegions
@@ -238,18 +224,6 @@ export class DepthMap {
      * @param ctx The current rendering context
      */
     updateDetailLevels(ctx: SKGraphModelRenderer): void {
-
-        const relativeThreshold = ctx.renderOptionsRegistry.getValueOrDefault(FullDetailRelativeThreshold)
-
-        if (this.viewport?.scroll === ctx.viewport.scroll
-            && this.viewport?.zoom === ctx.viewport.zoom
-            && this.lastThreshold === relativeThreshold) {
-            // the viewport did not change, no need to update
-            return
-        }
-
-        this.viewport = { zoom: ctx.viewport.zoom, scroll: ctx.viewport.scroll }
-        this.lastThreshold = relativeThreshold;
 
         // Initialize detail level on first run.
         if (this.criticalRegions.size == 0) {

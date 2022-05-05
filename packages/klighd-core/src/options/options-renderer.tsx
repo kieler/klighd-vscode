@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -131,6 +131,7 @@ export class OptionsRenderer {
                                 id={option.id}
                                 name={option.name}
                                 value={option.currentValue}
+                                description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             />
                         );
@@ -142,6 +143,7 @@ export class OptionsRenderer {
                                 name={option.name}
                                 value={option.currentValue}
                                 availableValues={option.values}
+                                description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             />
                         );
@@ -155,6 +157,7 @@ export class OptionsRenderer {
                                 minValue={(option as RangeOptionData).range.first}
                                 maxValue={(option as RangeOptionData).range.second}
                                 stepSize={(option as RangeOptionData).stepSize}
+                                description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             />
                         );
@@ -165,6 +168,7 @@ export class OptionsRenderer {
                                 id={option.id}
                                 name={option.name}
                                 value={option.currentValue}
+                                description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             />
                         );
@@ -177,6 +181,7 @@ export class OptionsRenderer {
                                 id={option.id}
                                 name={option.name}
                                 value={option.currentValue}
+                                description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             >
                                 {/* Skip rendering the children if the category is closed */}
@@ -212,6 +217,7 @@ export class OptionsRenderer {
                             minValue={option.minValue}
                             maxValue={option.maxValue}
                             stepSize={option.type === Type.INT ? 1 : 0.01}
+                            description={option.description}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
                         />
                     );
@@ -222,6 +228,7 @@ export class OptionsRenderer {
                             id={option.optionId}
                             name={option.name}
                             value={option.currentValue}
+                            description={option.description}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
                         />
                     );
@@ -234,6 +241,7 @@ export class OptionsRenderer {
                             value={option.currentValue}
                             availableValues={option.availableValues.k}
                             availableValuesLabels={option.availableValues.v}
+                            description={option.description}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
                         />
                     );
@@ -263,6 +271,7 @@ export class OptionsRenderer {
                             id={option.id}
                             name={option.name}
                             value={option.currentValue}
+                            description={option.description}
                             onChange={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );
@@ -276,6 +285,7 @@ export class OptionsRenderer {
                             minValue={(option as RangeOptionData).range.first}
                             maxValue={(option as RangeOptionData).range.second}
                             stepSize={(option as RangeOptionData).stepSize}
+                            description={option.description}
                             onChange={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );

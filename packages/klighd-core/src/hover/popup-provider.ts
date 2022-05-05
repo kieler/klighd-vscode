@@ -67,12 +67,12 @@ export class PopupModelProvider implements IPopupModelProvider {
      * @param id The ID of the KRendering within that SKGraphElement.
      */
     protected findTooltip(element: SKGraphElement, id: string): string | undefined {
-        if (element.tooltip) {
-            return element.tooltip;
+        if (element.properties['klighd.tooltip'] as string) {
+            return element.properties['klighd.tooltip'] as string;
         }
         const rendering = findRendering(element, id);
         if (rendering) {
-            return rendering.tooltip;
+            return rendering.properties['klighd.tooltip'] as string;
         }
     }
 }
