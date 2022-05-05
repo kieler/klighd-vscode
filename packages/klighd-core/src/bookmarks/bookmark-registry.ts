@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -27,7 +27,7 @@ import { AddBookmarkAction, Bookmark, DeleteBookmarkAction, GoToBookmarkAction, 
  * A simple {@link Registry} that holds a list of all added Bookmarks
  *
  * Handles CreateBookmark and GoToBookmark actions
- * 
+ *
  */
 @injectable()
 export class BookmarkRegistry extends Registry {
@@ -50,11 +50,11 @@ export class BookmarkRegistry extends Registry {
 
         } else if (DeleteBookmarkAction.isThisAction(action)) {
 
-            this.deleteBookmark(action.bookmark_index)
+            this.deleteBookmark(action.bookmarkIndex)
 
         } else if (RenameBookmarkAction.isThisAction(action)) {
 
-            this.updateBookmarkName(action.bookmark_index, action.new_name)
+            this.updateBookmarkName(action.bookmarkIndex, action.newName)
 
         } else if (AddBookmarkAction.isThisAction(action)) {
 
@@ -69,19 +69,19 @@ export class BookmarkRegistry extends Registry {
         this.notifyListeners();
     }
 
-    protected deleteBookmark(bookmark_index: number): void {
-        const index = this._bookmarks.findIndex((value) => value.bookmarkIndex === bookmark_index);
+    protected deleteBookmark(bookmarkIndex: number): void {
+        const index = this._bookmarks.findIndex((value) => value.bookmarkIndex === bookmarkIndex);
         this._bookmarks.splice(index, 1)
         this.notifyListeners();
     }
 
-    protected updateBookmarkName(bookmark_index: number, new_name: string): void {
-        const bm = this._bookmarks.find((bm) => bm.bookmarkIndex === bookmark_index)
+    protected updateBookmarkName(bookmarkIndex: number, newName: string): void {
+        const bm = this._bookmarks.find((bm) => bm.bookmarkIndex === bookmarkIndex)
         if (bm) {
-            if (new_name === "") {
+            if (newName === "") {
                 bm.name = undefined
             } else {
-                bm.name = new_name
+                bm.name = newName
             }
             this.notifyListeners();
         }

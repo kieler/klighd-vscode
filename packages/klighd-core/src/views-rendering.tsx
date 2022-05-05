@@ -17,10 +17,10 @@
 /** @jsx svg */
 import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Bounds } from 'sprotty-protocol';
+import { Bounds, almostEquals } from 'sprotty-protocol';
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
+import { DetailLevel } from './hierarchy/depth-map';
+import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor, UseSmartZoom, ScaleTitles, NodeMargin, ScaleNodes } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
@@ -32,6 +32,7 @@ import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
+import { ScalingUtil } from './scaling-util';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -202,17 +203,16 @@ export function renderRectangularShape(
     }
 
     if (element && context.depthMap) {
-        const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
+        const region = context.depthMap.getProvidingRegion(parent as SKNode, context)
         if (region && region.detail !== DetailLevel.FullDetails && parent.children.length >= 1) {
             const offsetY = region.regionTitleHeight ?? 0
             const offsetX = region.regionTitleIndentation ?? 0
             const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
             const size = 50
             let scalingFactor = Math.max(bounds, 0) / size
+
             // Use zoom for constant size in viewport.
-            if (context.viewport) {
-                scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
-            }
+            scalingFactor = Math.min(1 / context.effectiveZoom, scalingFactor)
 
             const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
             const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
@@ -270,11 +270,22 @@ export function renderLine(rendering: KPolyline,
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
-    const points = getPoints(parent, rendering, boundsAndTransformation)
+    let points = getPoints(parent, rendering, boundsAndTransformation)
     if (points.length === 0) {
         return <g>
             {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
         </g>
+    }
+
+    const performScaling = context.renderOptionsRegistry.getValueOrDefault(ScaleNodes)
+
+    if (performScaling
+        && parent instanceof SKEdge
+        && parent.source instanceof SKNode
+        && parent.target instanceof SKNode
+        && parent.parent instanceof SKNode
+    ) {
+        points = ScalingUtil.performLineScaling(rendering, parent, parent.parent, parent.source, parent.target, boundsAndTransformation, context, gAttrs, points)
     }
 
     // now define the line's path.
@@ -422,8 +433,7 @@ export function renderKText(rendering: KText,
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
-        if (context.viewport && rendering.properties['klighd.calculated.text.bounds'] as Bounds
-            && (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height * context.viewport.zoom <= simplificationThreshold) {
+        if (rendering.properties['klighd.calculated.text.bounds'] as Bounds && (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height * context.effectiveZoom <= simplificationThreshold) {
             const replacements: VNode[] = []
             lines.forEach((line, index) => {
                 const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
@@ -527,7 +537,8 @@ export function renderKText(rendering: KText,
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, childOfNodeTitle?: boolean): (VNode | undefined)[] {
     // children only should be rendered if the parentElement is not a shadow
-    if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
+    const isShadow = (parentElement instanceof SKNode) && parentElement.shadow
+    if (!isShadow && parentRendering.children) {
         const renderings: (VNode | undefined)[] = []
         for (const childRendering of parentRendering.children) {
             const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, childOfNodeTitle)
@@ -550,7 +561,7 @@ export function renderError(rendering: KRendering): VNode {
  * Renders some SVG shape, possibly with an added shadow, as given by the svgFunction. If a simple shadow
  * should be added, it is added as four copies of the SVG shape with rgba(0,0,0,0.1) and the
  * offsets defined by the kShadow, if a nice shadow should be added, it is added via SVG filter.
- * 
+ *
  * @param kShadow The shadow definition for the rendering, or undefined if no shadow should be added
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
  * @param svgFunction The callback function rendering the wanted SVG shape. x and y are the offsets
@@ -590,7 +601,7 @@ export function renderWithShadow<T extends any[]>(
 
 /**
  * Renders a rectangle with all given information.
- * 
+ *
  * @param bounds bounds data calculated for this rectangle.
  * @param rx rx parameter of SVG rect
  * @param ry ry parameter of SVG rect
@@ -608,7 +619,7 @@ export function renderSVGRect(bounds: Bounds, rx: number, ry: number, lineStyles
  * Renders a rectangle with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the rectangle, to be used for shadows only.
  * @param y y offset of the rectangle, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -646,7 +657,7 @@ export function renderSingleSVGRect(x: number | undefined, y: number | undefined
 
 /**
  * Renders an image with all given information.
- * 
+ *
  * @param bounds bounds data calculated for this image.
  * @param image The image href string
  * @param kShadow shadow information.
@@ -659,7 +670,7 @@ export function renderSVGImage(bounds: Bounds, shadowStyles: string | undefined,
 /**
  * Renders an image with all given information.
  * If the rendering is a shadow, a shadow rect is drawn instead.
- * 
+ *
  * @param x x offset of the image, to be used for shadows only.
  * @param y y offset of the image, to be used for shadows only.
  * @param kShadow shadow information. Controls what this method does.
@@ -692,7 +703,7 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
 
 /**
  * Renders an arc with all given information.
- * 
+ *
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -708,7 +719,7 @@ export function renderSVGArc(lineStyles: LineStyles, colorStyles: ColorStyles, s
  * Renders an arc with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the arc, to be used for shadows only.
  * @param y y offset of the arc, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -740,7 +751,7 @@ export function renderSingleSVGArc(x: number | undefined, y: number | undefined,
 
 /**
  * Renders an ellipse with all given information.
- * 
+ *
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -755,7 +766,7 @@ export function renderSVGEllipse(bounds: Bounds, lineStyles: LineStyles, colorSt
  * Renders an ellipse with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the ellipse, to be used for shadows only.
  * @param y y offset of the ellipse, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -790,7 +801,7 @@ export function renderSingleSVGEllipse(x: number | undefined, y: number | undefi
 
 /**
  * Renders a rendering with a specific path (polyline, polygon, etc.) with all given information.
- * 
+ *
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -806,7 +817,7 @@ export function renderSVGLine(lineStyles: LineStyles, colorStyles: ColorStyles, 
  * Renders a rendering with a specific path (polyline, polygon, etc.) with all given information.
  * If the rendering is a shadow (has a kShadow parameter), all stroke attributes are ignored (no stroke on the shadow) and a
  * black fill with 0.1 alpha is returned.
- * 
+ *
  * @param x x offset of the line, to be used for shadows only.
  * @param y y offset of the line, to be used for shadows only.
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
@@ -890,7 +901,7 @@ export function renderKRendering(kRendering: KRendering,
         return renderError(kRendering)
     }
 
-    const providingRegion = context.depthMap?.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
+    const providingRegion = context.depthMap?.getProvidingRegion(parent as SKNode, context)
 
     // Check if this is a title rendering. If we have a title, create that rendering, remember where it should be and how much space it has.
     // If we are zoomed in far enough, return that rendering, otherwise put it into the list to be rendered on top by the element rendering.
@@ -900,63 +911,51 @@ export function renderKRendering(kRendering: KRendering,
     // remembers if this rendering is a title rendering and should therefore be rendered overlaying the other renderings.
     let isOverlay = false
 
+    const applyTitleScaling = context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.renderOptionsRegistry.getValueOrDefault(ScaleTitles)
+    const margin = context.renderOptionsRegistry.getValueOrDefault(NodeMargin);
+
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
-    if (context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.properties['klighd.isNodeTitle'] as boolean) {
+    if ( boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.properties['klighd.isNodeTitle'] as boolean) {
+
         // Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
-        let maxScale = titleScalingFactorOption
-        if (context.viewport) {
-            maxScale = maxScale / context.viewport.zoom
+        const maxScale = titleScalingFactorOption
+
+        const tooSmall = context.effectiveZoom <= titleScalingFactorOption
+        const notFullDetail = providingRegion && providingRegion.detail !== DetailLevel.FullDetails
+        const multipleChildren = parent.children.length > 1
+
+        let boundingBox = boundsAndTransformation.bounds
+        // For KTexts the x and y coordinates define the origin of the baseline, not the bounding box.
+        if (kRendering.type === K_TEXT) {
+            boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
         }
-        if (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
-            || kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height) {
+        if (providingRegion) {
+            providingRegion.regionTitleHeight = boundingBox.height
+        }
+
+        if ( applyTitleScaling && ((notFullDetail && multipleChildren) || tooSmall) ) {
             isOverlay = true
 
-            let boundingBox = boundsAndTransformation.bounds
-            // For KTexts the x and y coordinates define the origin of the baseline, not the bounding box.
-            if (kRendering.type === K_TEXT) {
-                boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
-            }
-
-
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
-            const originalWidth = boundingBox.width
-            const originalHeight = boundingBox.height
-            const originalX = boundingBox.x
-            const originalY = boundingBox.y
+            const originalBounds = boundingBox
 
-            const maxScaleX = parentBounds.width / originalWidth
-            const maxScaleY = parentBounds.height / originalHeight
-            // Don't let scalingfactor get too big.
-            let scalingFactor = Math.min(maxScaleX, maxScaleY, maxScale)
-            // Make sure we never scale down.
-            scalingFactor = Math.max(scalingFactor, 1)
-
-            // Calculate the new x and y indentation:
-            // width required of scaled rendering
-            const newWidth = originalWidth * scalingFactor
-            // space to the left of the rendering without scaling...
-            const spaceL = originalX
-            // ...and to its right
-            const spaceR = parentBounds.width - originalX - originalWidth
-            // New x value after taking space off both sides at an equal ratio
-            const newX = originalX - spaceL * (newWidth - originalWidth) / (spaceL + spaceR)
-
-            // Same for y axis, just with switched dimensional variables.
-            const newHeight = originalHeight * scalingFactor
-            const spaceT = originalY
-            const spaceB = parentBounds.height - originalY - originalHeight
-            const newY = originalY - spaceT * (newHeight - originalHeight) / (spaceT + spaceB)
+            const {bounds: newBounds, scale: scalingFactor} = ScalingUtil.upscaleBounds(context.effectiveZoom, maxScale, originalBounds, parentBounds, margin);
+            context.pushEffectiveZoom(context.effectiveZoom * scalingFactor)
 
             // Apply the new bounds and scaling as the element's transformation.
-            const translateAndScale = `translate(${newX},${newY})scale(${scalingFactor})`
+            const translateAndScale = `translate(${newBounds.x},${newBounds.y})scale(${scalingFactor})`
             if (!providingRegion) {
                 // Add the transformations necessary for correct placement
                 const positionOffset = context.positions[context.positions.length - 1]
                 boundsAndTransformation.transformation = positionOffset + translateAndScale
             } else {
                 boundsAndTransformation.transformation = translateAndScale
+
+                // Store exact height of title text
+                providingRegion.regionTitleHeight = newBounds.height
+                providingRegion.regionTitleIndentation = newBounds.x
             }
             // For text renderings, recalculate the required bounds the text needs with the updated data.
             if (kRendering.type === K_TEXT && (kRendering as KText).properties['klighd.calculated.text.bounds'] as Bounds) {
@@ -972,42 +971,42 @@ export function renderKRendering(kRendering: KRendering,
                     verticalAlignment: VerticalAlignment.CENTER
                 } as KVerticalAlignment
                 boundsAndTransformation.bounds = {
-                    x: calculateX(0, originalWidth, styles.kHorizontalAlignment, textWidth),
-                    y: originalHeight * 0.5,
-                    width: originalWidth,
-                    height: originalHeight
+                    x: calculateX(0, originalBounds.width, styles.kHorizontalAlignment, textWidth),
+                    y: originalBounds.height * 0.5,
+                    width: originalBounds.width,
+                    height: originalBounds.height
                 }
             } else {
                 // Offsets are already applied in the transformation, so set them to 0 here.
                 boundsAndTransformation.bounds = {
                     x: 0,
                     y: 0,
-                    width: originalWidth,
-                    height: originalHeight
+                    width: originalBounds.width,
+                    height: originalBounds.height
                 }
             }
-            if (providingRegion) {
-                // Store exact height of title text
-                providingRegion.regionTitleHeight = newHeight
-                providingRegion.regionTitleIndentation = newX
-            }
+
+            // Don't draw if the rendering is an empty KText
+            const isEmptyText = kRendering.type === K_TEXT && (kRendering as KText).text === ""
+            const almostEqual = almostEquals(originalBounds.width, newBounds.width) && almostEquals(originalBounds.height, newBounds.height)
             // Draw white background for overlaying titles
-            if (context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
-                && kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height
-                // Don't draw if the rendering is an empty KText
-                && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
-                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />
+            if ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && (tooSmall && !almostEqual) && !isEmptyText) {
+                overlayRectangle = <rect x={0} y={0} width={originalBounds.width} height={originalBounds.height} fill="white" opacity="0.8" stroke="grey"/>
             }
+        } else {
+            context.pushEffectiveZoom(context.effectiveZoom)
         }
+    } else {
+        context.pushEffectiveZoom(context.effectiveZoom)
     }
-    // Add the transformations to be able to positon the title correctly and above other elements
+    // Add the transformations to be able to position the title correctly and above other elements
     context.positions[context.positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
 
-    let svgRendering: VNode
+    let svgRendering: VNode | undefined
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
-            return undefined
+            break
         }
         case K_CHILD_AREA: {
             svgRendering = renderChildArea(kRendering as KChildArea, parent, propagatedStyles, context)
@@ -1016,7 +1015,7 @@ export function renderKRendering(kRendering: KRendering,
         case K_CUSTOM_RENDERING: {
             console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
             // data as KCustomRendering
-            return undefined
+            break
         }
         case K_ARC:
         case K_ELLIPSE:
@@ -1039,16 +1038,21 @@ export function renderKRendering(kRendering: KRendering,
         }
         default: {
             console.error('The rendering is of an unknown type:' + kRendering.type)
-            return undefined
+            break
         }
     }
     // Put the rectangle for the overlay behind the rendering itself.
-    if (overlayRectangle) {
+    if (overlayRectangle && svgRendering) {
         svgRendering.children?.unshift(overlayRectangle)
     }
+    context.popEffectiveZoom()
+    if (!svgRendering) {
+        return undefined
+    }
+
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
-        context.titles[context.titles.length - 1].push(svgRendering)
+        context.pushTitle(svgRendering)
         return <g></g>
     } else {
         return svgRendering

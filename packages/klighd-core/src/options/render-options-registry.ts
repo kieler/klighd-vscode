@@ -71,6 +71,7 @@ export class ShowConstraintOption implements RenderOption {
 export class UseSmartZoom implements RenderOption {
     static readonly ID: string = 'use-smart-zoom'
     static readonly NAME: string = 'Smart Zoom'
+    static readonly DEFAULT: boolean = false
     readonly id: string = UseSmartZoom.ID
     readonly name: string = UseSmartZoom.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
@@ -155,6 +156,20 @@ export class TextSimplificationThreshold implements RangeOption {
 }
 
 /**
+ * Boolean option to enable and disable the scaling of titles
+ */
+export class ScaleTitles implements RenderOption {
+    static readonly ID: string = 'use-title-scaling'
+    static readonly NAME: string = 'Scale Titles'
+    static readonly DEFAULT: boolean = false
+    readonly id: string = ScaleTitles.ID
+    readonly name: string = ScaleTitles.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = true
+    currentValue = true
+}
+
+/**
  * The factor by which titles of collapsed regions get scaled by
  * in relation to their size at native resolution.
  */
@@ -206,6 +221,61 @@ export class MinimumLineWidth implements RangeOption {
     readonly stepSize = 0.01
     readonly initialValue: number = 0.5
     currentValue = 0.5
+}
+/**
+ * Boolean option to toggle the scaling of lines based on zoom level.
+ */
+export class ScaleNodes implements RenderOption {
+    static readonly ID: string = 'use-node-scaling'
+    static readonly NAME: string = 'Scale Nodes'
+    static readonly DEFAULT: boolean = false
+    readonly id: string = ScaleNodes.ID
+    readonly name: string = ScaleNodes.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = true
+    currentValue = true
+}
+
+/**
+ * The factor by which titles of collapsed regions get scaled by
+ * in relation to their size at native resolution.
+ */
+export class NodeScalingFactor implements RangeOption {
+    static readonly ID: string = 'node-scaling-factor'
+    static readonly NAME: string = 'Node Scaling Factor'
+    static readonly DEFAULT: number = 1
+    readonly id: string = NodeScalingFactor.ID
+    readonly name: string = NodeScalingFactor.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range = {
+        first: 0.5,
+        second: 3
+    }
+    readonly stepSize = 0.01
+    readonly initialValue: number = NodeScalingFactor.DEFAULT
+    currentValue = 1
+}
+
+/**
+ * The factor by which titles of collapsed regions get scaled by
+ * in relation to their size at native resolution.
+ */
+export class NodeMargin implements RangeOption {
+    static readonly ID: string = 'node-margin'
+    static readonly NAME: string = 'Node Margin'
+    static readonly DEFAULT: number = 1
+    readonly id: string = NodeMargin.ID
+    readonly name: string = NodeMargin.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE
+    readonly values: any[] = []
+    readonly range = {
+        first: 0,
+        second: 20
+    }
+    readonly stepSize = 0.5
+    readonly initialValue: number = NodeMargin.DEFAULT
+    currentValue = 10
 }
 
 /**
@@ -269,7 +339,13 @@ export class RenderOptionsRegistry extends Registry {
         this.register(SimplifySmallText);
         this.register(TextSimplificationThreshold);
 
+        this.register(ScaleTitles);
         this.register(TitleScalingFactor);
+
+        this.register(ScaleNodes);
+        this.register(NodeScalingFactor);
+        this.register(NodeMargin);
+
 
         this.register(UseMinimumLineWidth);
         this.register(MinimumLineWidth);

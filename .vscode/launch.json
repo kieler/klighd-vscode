@@ -15,6 +15,19 @@
             "preLaunchTask": "${defaultBuildTask}"
         },
         {
+            "name": "Launch VS Code Extension (socket)",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}/applications/klighd-vscode"],
+            "env": {
+                "KEITH_LS_PORT": "5007"
+            },
+            "sourceMaps": true,
+            "smartStep": true,
+            "outFiles": ["${workspaceFolder}/applications/klighd-vscode/dist/**/*.js"],
+            "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
             "name": "Start CLI Webserver",
             "type": "node",
             "request": "launch",

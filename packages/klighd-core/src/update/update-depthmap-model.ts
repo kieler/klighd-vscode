@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -19,7 +19,7 @@ import { inject, injectable } from 'inversify';
 import { Command, TYPES } from 'sprotty'
 import { CommandExecutionContext, CommandReturn } from 'sprotty';
 import { Action } from 'sprotty-protocol';
-import { DepthMap } from '../depth-map';
+import { DepthMap } from '../hierarchy/depth-map';
 
 /**
  * Simple UpdateDepthMapAction fires the UpdateDepthMapModelCommand

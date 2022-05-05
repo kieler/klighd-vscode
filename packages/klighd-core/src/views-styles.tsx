@@ -16,7 +16,7 @@
  */
 /** @jsx svg */
 import { VNode } from 'snabbdom';
-import { getZoom, isSelectable, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { isSelectable, SChildElement, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
@@ -677,7 +677,7 @@ export function isInvisible(styles: KStyles): boolean {
  * 'stroke-miterlimit' has to be set to the miterLimit style. (This is not a string, but a number.)
  * @param styles The KStyles of the rendering.
  * @param target The target of the line
- * @param context The current rendering context 
+ * @param context The current rendering context
  */
 export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, context: SKGraphModelRenderer): LineStyles {
     // The line width as requested by the element
@@ -689,7 +689,15 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         // The line witdh in px that the drawn line should not be less than.
         const minimumLineWidth = context.renderOptionsRegistry.getValueOrDefault(MinimumLineWidth)
         // The line width the requested one would have when rendered in the current zoom level.
-        const realLineWidth = lineWidth * getZoom(target)
+
+
+        let effectiveZoom = context.effectiveZoom;
+
+        if(target instanceof SChildElement && target.parent instanceof SKNode) {
+            effectiveZoom *= target.parent.calculateScaledBounds(context).effectiveChildScale
+        }
+
+        const realLineWidth = lineWidth * effectiveZoom
         if (styles.kLineWidth.lineWidth == 0) {
             lineWidth = 0
         } else if (realLineWidth < minimumLineWidth) {

@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -168,16 +168,16 @@ export namespace AddBookmarkAction {
  */
 export interface DeleteBookmarkAction extends Action {
     kind: typeof DeleteBookmarkAction.KIND
-    bookmark_index: number
+    bookmarkIndex: number
 }
 
 export namespace DeleteBookmarkAction {
     export const KIND = 'delete-bookmark'
 
-    export function create(bookmark_index: number): DeleteBookmarkAction {
+    export function create(bookmarkIndex: number): DeleteBookmarkAction {
         return {
             kind: KIND,
-            bookmark_index,
+            bookmarkIndex,
         }
     }
 
@@ -189,18 +189,18 @@ export namespace DeleteBookmarkAction {
 
 export interface RenameBookmarkAction extends Action {
     kind: typeof RenameBookmarkAction.KIND
-    bookmark_index: number
-    new_name: string
+    bookmarkIndex: number
+    newName: string
 }
 
 export namespace RenameBookmarkAction {
     export const KIND = 'rename-bookmark'
 
-    export function create(bookmark_index: number, new_name: string): RenameBookmarkAction {
+    export function create(bookmarkIndex: number, newName: string): RenameBookmarkAction {
         return {
             kind: KIND,
-            bookmark_index,
-            new_name,
+            bookmarkIndex,
+            newName,
         }
     }
 

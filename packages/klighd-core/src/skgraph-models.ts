@@ -16,7 +16,11 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
+import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement, SShapeElement } from 'sprotty';
+import { Point, Bounds } from 'sprotty-protocol'
+import { NodeMargin, NodeScalingFactor, ScaleNodes } from './options/render-options-registry';
+import { ScalingUtil } from './scaling-util';
+import { SKGraphModelRenderer } from './skgraph-model-renderer';
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -34,16 +38,120 @@ export const EDGE_TYPE = 'edge'
 export const PORT_TYPE = 'port'
 export const LABEL_TYPE = 'label'
 
+type NodeScaleBoundsResult = {
+    /**
+     * The nodes scaled bounds relative to it's parent
+     */
+    relativeBounds: Bounds,
+    /**
+     * the nodes scale relative to its parent and its original size
+     */
+    relativeScale: number,
+    /**
+     * the nodes absolute scaled bounds
+     */
+    absoluteBounds: Bounds,
+    /**
+     * the scale children inherit form this node and its ancestors, not including the viewport zoom
+     */
+    effectiveChildScale: number
+}
+
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKNode extends KNode {
+export class SKNode extends KNode implements SKGraphElement {
     tooltip?: string
+
+    private _scaleNodesCacheKey?: boolean
+    private _minScaleCacheKey?: number
+    private _zoomCacheKey?: number
+    private _marginKey?: boolean
+    private _nodeScaledBounds?: NodeScaleBoundsResult
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
             || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
             || feature === popupFeature
     }
+    properties: Record<string, unknown>
+
+    /**
+     * calculate the rendered bounds of the node
+     */
+    calculateScaledBounds(ctx: SKGraphModelRenderer): NodeScaleBoundsResult {
+        const performNodeScaling = ctx.renderOptionsRegistry.getValueOrDefault(ScaleNodes);
+        const minNodeScale = ctx.renderOptionsRegistry.getValueOrDefault(NodeScalingFactor);
+        const margin = ctx.renderOptionsRegistry.getValueOrDefault(NodeMargin);
+
+        // has the cached result been invalidated
+        const needsUpdate = this._scaleNodesCacheKey !== performNodeScaling
+            || this._marginKey !== margin
+            || this._minScaleCacheKey !== minNodeScale
+            || this._zoomCacheKey !== ctx.viewport.zoom
+
+        if (this._nodeScaledBounds === undefined || needsUpdate) {
+            // no valid cached result available
+
+            if (this.parent && this.parent instanceof SKNode) {
+                const parentScaled = this.parent.calculateScaledBounds(ctx)
+
+                if (performNodeScaling) {
+                    // not the root node and node scaling enabled
+
+                    const effectiveZoom = parentScaled.effectiveChildScale * ctx.viewport.zoom
+                    const siblings: Bounds[] = this.parent.children.filter((sibling) => sibling != this && sibling.type == NODE_TYPE).map((sibling) => (sibling as SShapeElement).bounds)
+
+                    const upscale = ScalingUtil.upscaleBounds(effectiveZoom, minNodeScale, this.bounds, this.parent.bounds, margin, siblings);
+
+                    let absoluteBounds = {
+                        x: upscale.bounds.x * parentScaled.effectiveChildScale,
+                        y: upscale.bounds.y * parentScaled.effectiveChildScale,
+                        width: upscale.bounds.width * parentScaled.effectiveChildScale,
+                        height: upscale.bounds.height * parentScaled.effectiveChildScale
+                    }
+
+                    absoluteBounds = Bounds.translate(absoluteBounds, parentScaled.absoluteBounds)
+
+                    this._nodeScaledBounds = {
+                        relativeBounds: upscale.bounds,
+                        relativeScale: upscale.scale,
+                        absoluteBounds: absoluteBounds,
+                        effectiveChildScale: parentScaled.effectiveChildScale * upscale.scale
+                    }
+                } else {
+                    // node scaling is not enabled
+
+                    const absoluteBounds = Bounds.translate(this.bounds, parentScaled.absoluteBounds)
+
+                    this._nodeScaledBounds = {
+                        relativeBounds: this.bounds,
+                        relativeScale: 1,
+                        absoluteBounds: absoluteBounds,
+                        effectiveChildScale: 1
+                    }
+                }
+            } else {
+                // this is the root node, therefore node scaling should never be applied
+                // or we break zooming out
+
+                this._nodeScaledBounds = {
+                    relativeBounds: this.bounds,
+                    relativeScale: 1,
+                    absoluteBounds: this.bounds,
+                    effectiveChildScale: 1
+                }
+            }
+        }
+
+        this._scaleNodesCacheKey = performNodeScaling
+        this._marginKey = margin
+        this._zoomCacheKey = ctx.viewport.zoom
+        this._minScaleCacheKey = minNodeScale
+
+        return this._nodeScaledBounds
+    }
+
 }
 
 /**
@@ -81,8 +189,11 @@ export class SKLabel extends SLabel implements SKGraphElement {
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKEdge extends KEdge {
+export class SKEdge extends KEdge implements SKGraphElement {
     tooltip?: string
+
+    movedEndsBy?: { start: Point, end: Point }
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }

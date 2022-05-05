@@ -19,7 +19,7 @@ import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/k
 import { VNode } from 'snabbdom';
 import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, ViewRegistry } from 'sprotty';
 import { Viewport } from 'sprotty-protocol';
-import { DepthMap } from './depth-map';
+import { DepthMap } from './hierarchy/depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
 
@@ -40,9 +40,35 @@ export class SKGraphModelRenderer extends ModelRenderer {
     positions: string[]
     renderingDefs: Map<string, VNode>
     renderOptionsRegistry: RenderOptionsRegistry
-    titles: VNode[][]
+    private titles: VNode[][] = []
     viewport: Viewport
-    
+    private _effectiveZoom: number[] = [1]
+
+    get effectiveZoom(): number {
+        return this._effectiveZoom[this._effectiveZoom.length - 1]
+    }
+
+    enterTitleScope() : void {
+        this.titles.push([])
+    }
+
+    // leaves the current title scope and returns the titles collected in the left scope
+    exitTitleScope() : VNode[] {
+        return this.titles.pop() ?? []
+    }
+
+    pushTitle(title: VNode): void {
+        this.titles[this.titles.length - 1].push(title)
+    }
+
+    pushEffectiveZoom(zoom: number): void {
+        this._effectiveZoom.push(zoom)
+    }
+
+    popEffectiveZoom(): number | undefined {
+        return this._effectiveZoom.pop()
+    }
+
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.
