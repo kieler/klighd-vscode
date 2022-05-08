@@ -83,9 +83,8 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * Renders a node as a proxy, e.g. reduced to the proxy's necessities.
      * 
      * @param node The node to render as a proxy.
-     * @param size The proxy's size.
      */
-    renderProxy(node: SKNode, size: number): VNode | undefined {
+    renderProxy(node: SKNode): VNode | undefined {
         this.forceRendering = true;
         const vnode = super.renderElement(node);
         // const temp = node.data[0] as KRectangle;

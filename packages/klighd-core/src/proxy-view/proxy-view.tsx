@@ -16,6 +16,7 @@
  */
 
 /** @jsx html */
+import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -42,6 +43,8 @@ export class ProxyView extends AbstractUIExtension {
      * Always make sure the ids ending with "-proxy" are used.
      */
     private renderings: Map<string, VNode>;
+    /** Stores the proxy's current size. Used for clearing {@link renderings} if the size has changed. */
+    private currSize: number;
     /**
      * Stores the relative coordinates (without scroll) of already rendered nodes.
      * Always make sure the ids ending with "-proxy" are used.
@@ -93,9 +96,12 @@ export class ProxyView extends AbstractUIExtension {
             if (depthMap?.viewport !== undefined) {
                 console.log(depthMap?.isInBounds(depthMap.rootRegions[0], depthMap.viewport));
             }
-            - this.patcher() -> replaces oldRoot with newRoot
-            - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
-            */
+        - this.patcher() -> replaces oldRoot with newRoot
+        - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
+        */
+        /* TODO: for evaluation/future work:
+        define proxy rendering in synthesis as attribute of KNode -> when writing a new synthesis
+        no client-side changes need to be made (diagram specifics are server-side only) */
         if (!this.currHTMLRoot) {
             return;
         } else if (!ctx.depthMap) {
@@ -141,12 +147,9 @@ export class ProxyView extends AbstractUIExtension {
         for (const node of currRoot.children as SKNode[]) {
             const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
             if (region && !depthMap.isInBounds(region, viewport)) {
+                // TODO: isConnected() default filter from sidebar
                 // Node out of bounds, create a proxy
-                // This effectively clones the node, also change its id for good measure
-                const clone: SKNode = Object.create(node);
-                clone.id += "-proxy";
-
-                const vnode = this.createSingleProxy(clone, ctx, canvasWidth, canvasHeight, scroll, zoom);
+                const vnode = this.createSingleProxy(node, ctx, canvasWidth, canvasHeight, scroll, zoom);
                 if (vnode) {
                     res.push(vnode);
                 }
@@ -168,17 +171,21 @@ export class ProxyView extends AbstractUIExtension {
         - node bounds.x/y -> vnode transform: translate(x,y)
         */
 
-        const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
-        
         // Get position and calculate size
-        const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
-        const sizePercentage = 0.1; // TODO: could be configured in options
+        const sizePercentage = 0.08; // TODO: could be configured in options
         const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
+        const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom, size);
 
+        if (size !== this.currSize) {
+            // Size of proxies has changed, cannot reuse previous renderings
+            this.renderings.clear();
+        }
+        this.currSize = size;
+
+        const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
         let vnode = this.renderings.get(id);
         if (vnode && vnode.data && vnode.data.attrs) {
             // Node has already been rendered, update position and return
-            // TODO: if size has changed, clear map
 
             // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
             // Update position once the canvas is left
@@ -189,7 +196,27 @@ export class ProxyView extends AbstractUIExtension {
             // Not an edge, not a comment/non-explicitly specified region
             // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
 
-            vnode = ctx.renderProxy(node, size);
+            // This effectively clones the node
+            const clone: SKNode = Object.create(node);
+            // Change its id for good measure
+            clone.id = id;
+            // Clear children, proxies don't show nested nodes
+            clone.children = [];
+            // Change size FIXME:
+            clone.data = this.fitToSize(clone.data, size);
+
+            // const temp = Object.create(clone.data[0]); // KRectangle/KRoundedRectangle of whole Node
+            // temp.calculatedBounds = { x: 0, y: 0, width: size, height: size };
+            // temp.renderingId += "-proxy";
+            // temp.children = [temp.children[0]]
+            // clone.data = [temp];
+            // clone.bounds = {x:clone.bounds.x,y:clone.bounds.y,width:size,height:size};
+
+            console.log(node);
+            // Synthesis specific options TODO:
+
+
+            vnode = ctx.renderProxy(clone);
             if (vnode && vnode.data && vnode.data.attrs) {
                 // Place proxy at the calculated position
                 vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
@@ -207,25 +234,26 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Calculates the position to place this node's proxy at. */
-    private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): Point {
+    private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number, size: number): Point {
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
         const point = this.getPositionRec(node);
-        let x = (point.x - scroll.x) * zoom;
-        let y = (point.y - scroll.y) * zoom;
-        // TODO: currently using bounds width/height of SKNode, change to size later on?
-        const nodeWidth = node.bounds.width;
-        const nodeHeight = node.bounds.height;
+        const offsetX = 0.5 * (node.bounds.width * zoom - size);
+        const offsetY = 0.5 * (node.bounds.height * zoom - size);
+        let x = (point.x - scroll.x) * zoom + offsetX;
+        let y = (point.y - scroll.y) * zoom + offsetY;
+
+        // TODO: shift position to middle of node (dependant of size)
 
         // Calculate position to put the proxy at
-        x = Math.max(0, Math.min(canvasWidth - nodeWidth, x));
-        y = Math.max(0, Math.min(canvasHeight - nodeHeight, y));
+        x = Math.max(0, Math.min(canvasWidth - size, x));
+        y = Math.max(0, Math.min(canvasHeight - size, y));
 
         // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
         /* Don't need to check for the opened sidebar since it closes as soon as the diagram is moved
           (onMouseDown), e.g. don't reposition proxies accordingly */
         const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
-        if (rect && y < rect.bottom && x > rect.left - nodeWidth) {
-            x = rect.left - nodeWidth;
+        if (rect && y < rect.bottom && x > rect.left - size) {
+            x = rect.left - size;
         }
 
         return { x: x, y: y };
@@ -237,6 +265,7 @@ export class ProxyView extends AbstractUIExtension {
             return { x: 0, y: 0 };
         }
 
+        // This node might not be a proxy, make sure to store the right id
         const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
         let point = this.positions.get(id);
         if (point) {
@@ -253,5 +282,23 @@ export class ProxyView extends AbstractUIExtension {
             this.positions.set(id, point);
             return point;
         }
+    }
+
+    /** Returns a copy of the data fit to the given size. */
+    private fitToSize(data: KGraphData[], size: number): KGraphData[] {
+        if (!data) {
+            return [];
+        }
+        
+        const res = [];
+        for (let i = 0; i < data.length; i++) {
+            const clone = Object.create(data[i]);
+            clone.calculatedBounds = { x: clone.calculatedBounds.x, y: clone.calculatedBounds.y, width: size, height: size };
+            clone.renderingId += "-proxy";
+            clone.children = this.fitToSize(clone.children, size);
+
+            res.push(clone);
+        }
+        return res;
     }
 }
