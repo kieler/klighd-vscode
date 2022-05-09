@@ -43,9 +43,9 @@ export class SKGraphView implements IView {
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
 
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
-        this.actionDispatcher.dispatch(SendModelContextAction.create(model, context))
-
         const ctx = context as SKGraphModelRenderer
+        this.actionDispatcher.dispatch(SendModelContextAction.create(model, ctx))
+
         if (!ctx.renderingDefs) {
             // Make sure not to create a new map all the time
             ctx.renderingDefs = new Map

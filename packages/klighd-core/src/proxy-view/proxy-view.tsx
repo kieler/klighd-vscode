@@ -143,6 +143,7 @@ export class ProxyView extends AbstractUIExtension {
             return [];
         }
 
+        // Get proxy renderings
         const res: VNode[] = [];
         for (const node of currRoot.children as SKNode[]) {
             const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
@@ -151,6 +152,7 @@ export class ProxyView extends AbstractUIExtension {
                 // Node out of bounds, create a proxy
                 const vnode = this.createSingleProxy(node, ctx, canvasWidth, canvasHeight, scroll, zoom);
                 if (vnode) {
+                    // TODO: check for overlap here?
                     res.push(vnode);
                 }
             } else if (node.children.length > 0) {
@@ -158,9 +160,18 @@ export class ProxyView extends AbstractUIExtension {
                 res.push(...this.createAllProxies(node, ctx, canvasWidth, canvasHeight, scroll, zoom));
             }
         }
+        
+        console.log(res);
+
         // TODO: clustering
-
-
+        // for (let i = 0; i < res.length; i++) {
+        //     // Check if the current node overlaps with any of the following
+        //     const node1 = res[i];
+        //     for (let j = i + 1; j < res.length; j++) {
+        //         const node2 = res[j];
+        //         const verticalOverlap = node1.
+        //     }
+        // }
 
         return res;
     }

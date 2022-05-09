@@ -18,6 +18,7 @@ import { SGraph } from "sprotty";
 import {
     Action, FitToScreenAction, RequestAction, ResponseAction
 } from "sprotty-protocol";
+import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { KImage } from '../skgraph-models';
 
 /**
@@ -154,13 +155,13 @@ export namespace KlighdFitToScreenAction {
 export interface SendModelContextAction extends Action {
     kind: typeof SendModelContextAction.KIND
     model: SGraph
-    context: RenderingContext
+    context: SKGraphModelRenderer
 }
 
 export namespace SendModelContextAction {
     export const KIND = 'sendModelContextAction'
 
-    export function create(model: SGraph, context: RenderingContext): SendModelContextAction {
+    export function create(model: SGraph, context: SKGraphModelRenderer): SendModelContextAction {
         return {
             kind: KIND,
             model,

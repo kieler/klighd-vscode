@@ -19,7 +19,6 @@ import { injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
-import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { ProxyView } from "./proxy-view";
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
@@ -66,7 +65,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
             this.proxyView = sPVAction.proxyView;
         } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {
             const sMCAction = action as SendModelContextAction;
-            this.proxyView.update(sMCAction.model, sMCAction.context as SKGraphModelRenderer);
+            this.proxyView.update(sMCAction.model, sMCAction.context);
         }
     }
 
