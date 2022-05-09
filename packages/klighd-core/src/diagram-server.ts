@@ -58,14 +58,13 @@ import {
     Pair,
     PerformActionAction,
     RefreshLayoutAction,
-    RequestDiagramPieceAction,
-    SetDiagramPieceAction,
     StoreImagesAction,
 } from "./actions/actions";
 import { GoToBookmarkAction } from "./bookmarks/bookmark";
 import { BookmarkRegistry } from "./bookmarks/bookmark-registry";
 import { DISymbol } from "./di.symbols";
-import { GridDiagramPieceRequestManager, IDiagramPieceRequestManager } from './diagram-piece-request-manager';
+import { RequestDiagramPieceAction, SetDiagramPieceAction } from './diagram-pieces/actions';
+import { GridDiagramPieceRequestManager, IDiagramPieceRequestManager } from './diagram-pieces/diagram-piece-request-manager';
 import { RequestKlighdPopupModelAction } from "./hover/hover";
 import { PopupModelProvider } from "./hover/popup-provider";
 import { RenderOptionsRegistry, ResizeToFit } from "./options/render-options-registry";

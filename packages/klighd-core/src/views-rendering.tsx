@@ -50,7 +50,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
     // remember, that this parent's children are now already rendered
     parent.areChildAreaChildrenRendered = true
 
-    const element = <g id={rendering.renderingId}>
+    const element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string}>
         {context.renderChildAreaChildren(parent)}
     </g>
 
@@ -153,7 +153,7 @@ export function renderRectangularShape(
                     }
                 }
 
-                element = <g id={rendering.renderingId} {...gAttrs}>
+                element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
                     {...renderSVGArc(lineStyles, colorStyles, shadowStyles, d, styles.kShadow)}
                     {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
                 </g>
@@ -164,7 +164,7 @@ export function renderRectangularShape(
         }
         // eslint-disable-next-line
         case K_ELLIPSE: {
-            element = <g id={rendering.renderingId} {...gAttrs}>
+            element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
                 {...renderSVGEllipse(boundsAndTransformation.bounds, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
@@ -179,7 +179,7 @@ export function renderRectangularShape(
             const rx = (rendering as KRoundedRectangle).cornerWidth
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
-            element = <g id={rendering.renderingId} {...gAttrs}>
+            element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
                 {...renderSVGRect(boundsAndTransformation.bounds, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
@@ -190,7 +190,7 @@ export function renderRectangularShape(
             const id = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
             const extension = id.slice(id.lastIndexOf('.') + 1)
             const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(id)
-            element = <g id={rendering.renderingId} {...gAttrs}>
+            element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
                 {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
             </g>
             break
@@ -219,7 +219,7 @@ export function renderRectangularShape(
             const placeholder = <g
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
                 <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
-                <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{'stroke-linecap': 'round', 'stroke-width': '2'}}/>
+                <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{ 'stroke-linecap': 'round', 'stroke-width': '2' }} />
                 <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
                 <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
             </g>
@@ -261,6 +261,10 @@ export function renderLine(rendering: KPolyline,
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent)
+    // Any non-closed line segment cannot be filled with any color.
+    if (rendering.type !== K_POLYGON) {
+        colorStyles.background = DEFAULT_FILL
+    }
 
     const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
@@ -359,7 +363,7 @@ export function renderLine(rendering: KPolyline,
 
     // Create the svg element for this rendering.
     // Only apply the fast shadow to KPolygons, other shadows are not allowed there.
-    const element = <g id={rendering.renderingId} {...gAttrs}>
+    const element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
         {...renderSVGLine(lineStyles, colorStyles, shadowStyles, path, rendering.type == K_POLYGON ? styles.kShadow : undefined)}
         {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
     </g>
@@ -388,6 +392,9 @@ export function renderKText(rendering: KText,
     } else {
         text = rendering.text
     }
+    if (parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] !== undefined) {
+        text = parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] as string
+    }
     // If no text can be found, return here.
     if (text === undefined) return <g />
 
@@ -411,25 +418,25 @@ export function renderKText(rendering: KText,
     // Replace text with rectangle, if the text is too small.
     const simplifySmallTextOption = context.renderOptionsRegistry.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && !rendering.isNodeTitle && !childOfNodeTitle) {
+    if (simplifySmallText && !rendering.properties['klighd.isNodeTitle'] as boolean && !childOfNodeTitle) {
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
-        if (context.viewport && rendering.calculatedTextBounds
-            && rendering.calculatedTextBounds.height * context.viewport.zoom <= simplificationThreshold) {
+        if (context.viewport && rendering.properties['klighd.calculated.text.bounds'] as Bounds
+            && (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height * context.viewport.zoom <= simplificationThreshold) {
             const replacements: VNode[] = []
             lines.forEach((line, index) => {
                 const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
-                const yPos = boundsAndTransformation && boundsAndTransformation.bounds.y && rendering.calculatedTextLineHeights && boundsAndTransformation.bounds.height ?
-                    boundsAndTransformation.bounds.y - boundsAndTransformation.bounds.height / 2 + rendering.calculatedTextLineHeights[index] / 2 * proportionalHeight : 0
-                const width = rendering.calculatedTextLineWidths ? rendering.calculatedTextLineWidths[index] : 0
-                const height = rendering.calculatedTextLineHeights ? rendering.calculatedTextLineHeights[index] * proportionalHeight : 0
+                const yPos = boundsAndTransformation && boundsAndTransformation.bounds.y && rendering.properties['klighd.calculated.text.line.heights'] as number[] && boundsAndTransformation.bounds.height ?
+                    boundsAndTransformation.bounds.y - boundsAndTransformation.bounds.height / 2 + (rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] / 2 * proportionalHeight : 0
+                const width = rendering.properties['klighd.calculated.text.line.widths'] as number[] ? (rendering.properties['klighd.calculated.text.line.widths'] as number[])[index] : 0
+                const height = rendering.properties['klighd.calculated.text.line.heights'] as number[] ? (rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] * proportionalHeight : 0
                 // Generate rectangle for each line with color style.
                 const curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
                     : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
                 replacements.push(curLine)
             });
-            return <g id={rendering.renderingId} {...{}}>
+            return <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...{}}>
                 {...replacements}
             </g>
         }
@@ -455,7 +462,7 @@ export function renderKText(rendering: KText,
         x: boundsAndTransformation.bounds.x,
         style: style,
         ...(colorStyle ? { fill: colorStyle.color } : {}),
-        ...(shadowStyles ? {filter: shadowStyles} : {}),
+        ...(shadowStyles ? { filter: shadowStyles } : {}),
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size adjustment include any trailing white spaces.
     } as any
 
@@ -466,11 +473,11 @@ export function renderKText(rendering: KText,
         // Force any SVG renderer rendering this text to use the exact width calculated for it.
         // This avoids overlapping texts or too big gaps at the cost of slightly bigger/tighter glyph spacings
         // when viewed in a different SVG viewer after exporting.
-        if (rendering.calculatedTextLineWidths) {
-            attrs.textLength = rendering.calculatedTextLineWidths[0]
+        if (rendering.properties['klighd.calculated.text.line.widths'] as number[]) {
+            attrs.textLength = rendering.properties['klighd.calculated.text.line.widths'] as number[][0]
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
-        
+
         elements = [
             <text {...attrs}>
                 {...lines}
@@ -478,9 +485,10 @@ export function renderKText(rendering: KText,
         ]
     } else {
         // Otherwise, put each line of text in a separate <text> element.
-        const calculatedTextLineWidths = rendering.calculatedTextLineWidths
-        const calculatedTextLineHeights = rendering.calculatedTextLineHeights
+        const calculatedTextLineWidths = rendering.properties['klighd.calculated.text.line.widths'] as number[]
+        const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
         let currentY = boundsAndTransformation.bounds.y ? boundsAndTransformation.bounds.y : 0
+
         if (rendering.calculatedTextLineWidths) {
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
@@ -503,7 +511,7 @@ export function renderKText(rendering: KText,
         ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
     }
     // build the element from the above defined attributes and children
-    return <g id={rendering.renderingId} {...gAttrs}>
+    return <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
         {...elements}
     </g>
 }
@@ -534,7 +542,7 @@ export function renderError(rendering: KRendering): VNode {
     return <text>
         {'Rendering cannot be drawn!\n' +
             'Type: ' + rendering.type + '\n' +
-            'ID: ' + rendering.renderingId}
+            'ID: ' + rendering.properties['klighd.lsp.rendering.id'] as string}
     </text>
 }
 
@@ -621,18 +629,18 @@ export function renderSingleSVGRect(x: number | undefined, y: number | undefined
         {...(rx ? { rx: rx } : {})}
         {...(ry ? { ry: ry } : {})}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -677,7 +685,7 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
             width={bounds.width}
             height={bounds.height}
             href={image}
-            {...(shadowStyles ? {filter: shadowStyles} : {})}
+            {...(shadowStyles ? { filter: shadowStyles } : {})}
         />
     }
 }
@@ -694,7 +702,7 @@ export function renderSingleSVGImage(x: number | undefined, y: number | undefine
  */
 export function renderSVGArc(lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, path: string, kShadow: KShadow | undefined): VNode[] {
     return renderWithShadow(kShadow, shadowStyles, renderSingleSVGArc, lineStyles, colorStyles, path)
-} 
+}
 
 /**
  * Renders an arc with all given information.
@@ -715,18 +723,18 @@ export function renderSingleSVGArc(x: number | undefined, y: number | undefined,
         {...(x && y ? { transform: `translate(${x},${y})` } : {})}
         d={path}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -765,18 +773,18 @@ export function renderSingleSVGEllipse(x: number | undefined, y: number | undefi
         rx={bounds.width / 2}
         ry={bounds.height / 2}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -813,18 +821,18 @@ export function renderSingleSVGLine(x: number | undefined, y: number | undefined
         {...(x && y ? { transform: `translate(${x},${y})` } : {})}
         d={path}
         style={{
-            ...(kShadow ? {} : {'stroke-linecap': lineStyles.lineCap}),
-            ...(kShadow ? {} : {'stroke-linejoin': lineStyles.lineJoin}),
-            ...(kShadow ? {} : {'stroke-width': lineStyles.lineWidth}),
-            ...(kShadow ? {} : {'stroke-dasharray': lineStyles.dashArray}),
-            ...(kShadow ? {} : {'stroke-miterlimit': lineStyles.miterLimit}),
+            ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
+            ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
+            ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
+            ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+            ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
             'opacity': kShadow ? colorStyles.opacity ? String(Number(colorStyles.opacity) * 0.1) : '0.1' : colorStyles.opacity,
-            ...(kShadow ? {} : {'stroke-opacity': colorStyles.foreground.opacity}),
-            ...(kShadow || colorStyles.background.opacity ? {'fill-opacity': kShadow ? '1' : colorStyles.background.opacity} : {})
+            ...(kShadow ? {} : { 'stroke-opacity': colorStyles.foreground.opacity }),
+            ...(kShadow || colorStyles.background.opacity ? { 'fill-opacity': kShadow ? '1' : colorStyles.background.opacity } : {})
         }}
-        {...(kShadow ? {} : {stroke: colorStyles.foreground.color})}
-        {...(kShadow ? {fill:'rgb(0,0,0)'} : {fill: colorStyles.background.color})}
-        {...(shadowStyles ? {filter: shadowStyles} : {})}
+        {...(kShadow ? {} : { stroke: colorStyles.foreground.color })}
+        {...(kShadow ? { fill: 'rgb(0,0,0)' } : { fill: colorStyles.background.color })}
+        {...(shadowStyles ? { filter: shadowStyles } : {})}
     />
 }
 
@@ -875,7 +883,7 @@ export function renderKRendering(kRendering: KRendering,
     const styles = getKStyles(parent, kRendering.styles, propagatedStyles, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
-    const isEdge = [K_POLYLINE,  K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_SPLINE].includes(kRendering.type)
+    const isEdge = [K_POLYLINE, K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_SPLINE].includes(kRendering.type)
     const boundsAndTransformation = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge)
     if (boundsAndTransformation === undefined) {
         // If no bounds are found, the rendering can not be drawn.
@@ -891,10 +899,10 @@ export function renderKRendering(kRendering: KRendering,
     let overlayRectangle: VNode | undefined = undefined
     // remembers if this rendering is a title rendering and should therefore be rendered overlaying the other renderings.
     let isOverlay = false
-    
+
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
-    if (!context.forceRendering && context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.isNodeTitle) {
+    if (!context.forceRendering && context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.properties['klighd.isNodeTitle'] as boolean) {
         // Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
         let maxScale = titleScalingFactorOption
@@ -902,7 +910,7 @@ export function renderKRendering(kRendering: KRendering,
             maxScale = maxScale / context.viewport.zoom
         }
         if (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
-            || kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height) {
+            || kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height) {
             isOverlay = true
 
             let boundingBox = boundsAndTransformation.bounds
@@ -910,8 +918,8 @@ export function renderKRendering(kRendering: KRendering,
             if (kRendering.type === K_TEXT) {
                 boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
             }
-            
-            
+
+
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
             const originalWidth = boundingBox.width
             const originalHeight = boundingBox.height
@@ -923,7 +931,7 @@ export function renderKRendering(kRendering: KRendering,
             // Don't let scalingfactor get too big.
             let scalingFactor = Math.min(maxScaleX, maxScaleY, maxScale)
             // Make sure we never scale down.
-            scalingFactor = Math.max(scalingFactor,  1)
+            scalingFactor = Math.max(scalingFactor, 1)
 
             // Calculate the new x and y indentation:
             // width required of scaled rendering
@@ -951,10 +959,10 @@ export function renderKRendering(kRendering: KRendering,
                 boundsAndTransformation.transformation = translateAndScale
             }
             // For text renderings, recalculate the required bounds the text needs with the updated data.
-            if (kRendering.type === K_TEXT && (kRendering as KText).calculatedTextBounds) {
+            if (kRendering.type === K_TEXT && (kRendering as KText).properties['klighd.calculated.text.bounds'] as Bounds) {
                 const rendering = kRendering as KText
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const textWidth = rendering.calculatedTextBounds!.width
+                const textWidth = (rendering.properties['klighd.calculated.text.bounds'] as Bounds)!.width
 
                 // text centered in its new bounding box around local 0,0 coordinates
                 styles.kHorizontalAlignment = {
@@ -984,11 +992,11 @@ export function renderKRendering(kRendering: KRendering,
                 providingRegion.regionTitleIndentation = newX
             }
             // Draw white background for overlaying titles
-            if (!context.forceRendering && context.depthMap && kRendering.isNodeTitle && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
-                && kRendering.calculatedBounds && kRendering.calculatedBounds.height * context.viewport.zoom <= titleScalingFactorOption * kRendering.calculatedBounds.height
+            if (!context.forceRendering && context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
+                && kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
-                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black"/>
+                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />
             }
         }
     }
@@ -1058,11 +1066,11 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
             continue
         if (data.type === K_RENDERING_REF) {
             if (context.kRenderingLibrary) {
-                const id = (data as KRenderingRef).renderingId
+                const id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
                 for (const rendering of context.kRenderingLibrary.renderings) {
-                    if ((rendering as KRendering).renderingId === id) {
-                        context.boundsMap = (data as KRenderingRef).calculatedBoundsMap
-                        context.decorationMap = (data as KRenderingRef).calculatedDecorationMap
+                    if ((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string === id) {
+                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map']
+                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map']
                         return rendering as KRendering
                     }
                 }

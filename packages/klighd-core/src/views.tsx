@@ -123,7 +123,7 @@ export class KNodeView implements IView {
             shadow = getRendering(node.data, node, new KStyles, ctx)
         }
         if (isChildSelected(node as SKNode)) {
-            if (((node as SKNode).properties.interactiveLayout) && ctx.mListener.hasDragged) {
+            if (((node as SKNode).properties['org.eclipse.elk.interactiveLayout']) && ctx.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
                 interactiveNodes = renderInteractiveLayout(node as SKNode)
             }
@@ -136,7 +136,7 @@ export class KNodeView implements IView {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx)
 
-            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
+            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties['org.eclipse.elk.interactiveLayout']) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }
@@ -242,7 +242,7 @@ export class KPortView implements IView {
         const rendering = getRendering(port.data, port, new KStyles, ctx)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            const element =  <g>
+            const element = <g>
                 {ctx.titles.pop() ?? []}
                 {ctx.renderChildren(port)}
             </g>
@@ -282,7 +282,7 @@ export class KPortView implements IView {
 @injectable()
 export class KLabelView implements IView {
 
-    render(label: SKLabel, context: RenderingContext): VNode | undefined{
+    render(label: SKLabel, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 

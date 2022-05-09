@@ -18,6 +18,16 @@ related, web-based packages. The packages are seperated in two types:
 | [@kieler/klighd-cli](./applications/klighd-cli)             | application | CLI and web-server to visualize diagrams in the browser using klighd-core`.                                                                                              |
 | [klighd-vscode](./applications/klighd-vscode)               | application | Visual Studio Code extension that uses `klighd-core` to add diagram support to VS Code. Should be used by other extensions to visualize their KLighD generated diagrams. |
 
+## KlighD Release Mapping
+
+| klighd-vscode | KlighD |
+| ------------- | ------ |
+| 0.1.0         | 2.1.0  |
+| 0.2.0         | 2.1.0  |
+| 0.2.1         | 2.1.0  |
+
+Moreover, the default branches of both repositories should be compatible but might experience regression.
+
 ## Contributing
 
 ### Requirements

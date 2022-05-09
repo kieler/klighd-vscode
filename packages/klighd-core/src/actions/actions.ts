@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,16 +14,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { inject, injectable } from 'inversify';
+import { SGraph } from "sprotty";
 import {
-     CommandExecutionContext, CommandResult, RenderingContext,
-    ResetCommand, SGraph, SModelRoot, TYPES,
-} from 'sprotty';
-import {
-    Action, FitToScreenAction, RequestAction, ResponseAction,
-    SModelElement
+    Action, FitToScreenAction, RequestAction, ResponseAction
 } from "sprotty-protocol";
-import { insertSModelElementIntoModel } from '../diagram-pieces/smodel-util';
 import { KImage } from '../skgraph-models';
 
 /**
@@ -153,80 +147,6 @@ export namespace KlighdFitToScreenAction {
             padding: 10,
             animate: animate ?? true
         }
-    }
-}
-
-/**
- * Sent from client to request a certain piece of the diagram.
- */
-export interface RequestDiagramPieceAction extends RequestAction<SetDiagramPieceAction> {
-    kind: typeof RequestDiagramPieceAction.KIND
-    modelElementId: string
-}
-
-export namespace RequestDiagramPieceAction {
-    export const KIND = 'requestDiagramPiece'
-
-    export function create(requestId = '', modelElementId: string): RequestDiagramPieceAction {
-        return {
-            kind: KIND,
-            requestId,
-            modelElementId,
-        }
-    }
-}
-
-/**
- * Response to {@link RequestDiagramPieceAction}. Contains the requested SModelElement.
- */
-export interface SetDiagramPieceAction extends ResponseAction {
-    kind: typeof SetDiagramPieceAction.KIND
-    diagramPiece: SModelElement
-}
-
-export namespace SetDiagramPieceAction {
-    export const KIND = 'setDiagramPiece'
-
-    export function create(responseId = "", diagramPiece: SModelElement): SetDiagramPieceAction {
-        return {
-            kind: KIND,
-            responseId,
-            diagramPiece,
-        }
-    }
-}
-
-/**
- * Command to trigger re-rendering of diagram when new pieces arrive.
- */
-@injectable()
-export class SetDiagramPieceCommand extends ResetCommand {
-    static readonly KIND: string = 'setDiagramPiece'
-
-    root: SModelRoot
-
-    constructor(@inject(TYPES.Action) protected action: SetDiagramPieceAction) {
-        super()
-    }
-
-    execute(context: CommandExecutionContext): CommandResult {
-        this.root = context.modelFactory.createRoot(context.root)
-        insertSModelElementIntoModel(
-            this.root, 
-            context.modelFactory.createElement(this.action.diagramPiece))
-        return {
-            model: this.root,
-            modelChanged: true,
-            cause: this.action
-        }
-    }
-
-    undo(_context: CommandExecutionContext): SModelRoot {
-        return this.root
-    }
-
-    redo(_context: CommandExecutionContext): SModelRoot {
-        return this.root
     }
 }
 

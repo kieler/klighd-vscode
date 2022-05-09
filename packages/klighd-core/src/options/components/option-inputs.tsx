@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -26,6 +26,7 @@ interface BaseProps<T> {
     id: string;
     name: string;
     value: T;
+    description?: string;
     onChange: OptionChangeHandler<T>;
 }
 
@@ -36,10 +37,11 @@ export function CheckOption(props: CheckOptionProps): VNode {
     // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
     props = (props as any as {props: CheckOptionProps}).props
     return (
-        <label htmlFor={props.id}>
+        <label htmlFor={props.id} title={props.description ?? props.name}>
             <input
                 class-options__input="true"
                 type="checkbox"
+                title={props.description ?? props.name}
                 id={props.id}
                 checked={props.value}
                 on-change={() => props.onChange(!props.value)}
@@ -62,10 +64,11 @@ export function ChoiceOption(props: ChoiceOptionProps): VNode {
         <div class-options__input-container="true">
             <legend>{props.name}</legend>
             {props.availableValues.map((value, i) => (
-                <label key={value} htmlFor={props.availableValuesLabels?.[i] ?? value}>
+                <label key={value} htmlFor={props.availableValuesLabels?.[i] ?? value} title={props.description ?? props.name}>
                     <input
                         class-options__input="true"
                         type="radio"
+                        title={props.description ?? props.name}
                         id={props.availableValuesLabels?.[i] ?? value}
                         checked={props.value === value}
                         on-change={() => props.onChange(value)}
@@ -89,12 +92,13 @@ export function RangeOption(props: RangeOptionProps): VNode {
     props = (props as any as {props: RangeOptionProps}).props
     return (
         <div class-options__column="true">
-            <label htmlFor={props.id}>
+            <label htmlFor={props.id} title={props.description ?? props.name}>
                 {props.name}: {props.value}
             </label>
             <input
                 class-options__input="true"
                 type="range"
+                title={props.description ?? props.name}
                 id={props.id}
                 min={props.minValue}
                 max={props.maxValue}
@@ -114,10 +118,11 @@ export function TextOption(props: TextOptionProps): VNode {
     props = (props as any as {props: TextOptionProps}).props
     return (
         <div class-options__column="true">
-            <label htmlFor={props.id}>{props.name}</label>
+            <label htmlFor={props.id} title={props.description ?? props.name}>{props.name}</label>
             <input
                 class-options__input options__text-field="true"
                 type="text"
+                title={props.description ?? props.name}
                 id={props.id}
                 value={props.value}
                 on-change={(e: any) => props.onChange(e.target.value)}
@@ -150,7 +155,9 @@ export function CategoryOption(props: CategoryOptionProps, children: VNode[]): V
 
     return (
         <details open={props.value} class-options__category="true" on-toggle={handleToggle}>
-            <summary>{props.name}</summary>
+            <summary title={props.description ?? props.name}>
+                {props.name}
+            </summary>
             {children}
         </details>
     );

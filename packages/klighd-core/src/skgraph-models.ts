@@ -26,6 +26,7 @@ import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPor
  */
 export interface SKGraphElement extends KGraphElement {
     tooltip?: string
+    properties: Record<string, unknown>
 }
 
 export const NODE_TYPE = 'node'
@@ -40,7 +41,7 @@ export class SKNode extends KNode {
     tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
-            || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties.interactiveLayout)
+            || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
             || feature === popupFeature
     }
 }
@@ -57,6 +58,7 @@ export class SKPort extends RectangularPort implements SKGraphElement {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+    properties: Record<string, unknown>
 }
 
 /**
@@ -73,6 +75,7 @@ export class SKLabel extends SLabel implements SKGraphElement {
         // estimated during the estimateTextBounds action.
         return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
+    properties: Record<string, unknown>
 }
 
 /**
@@ -83,6 +86,7 @@ export class SKEdge extends KEdge {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+    properties: Record<string, unknown>
 }
 
 /**
@@ -102,27 +106,8 @@ export interface KRendering extends KGraphData, KStyleHolder {
     actions: KAction[]
     // not in the original java model, but is included in messages to remove the need to call '[Grid]?PlacementUtil.evaluate[Grid|Area|Point]Placement'
     // and similar methods on client side for every rendering
-    /**
-     * The server pre-calculated bounds for this rendering.
-     */
-    calculatedBounds?: Bounds
-    /**
-     * The server pre-calculated decoration for this rendering.
-     */
-    calculatedDecoration?: Decoration
-    /**
-     * A possible tooltip that can be shown for this rendering.
-     */
-    tooltip?: string
 
-    /**
-     * Whether the server pre-determined this KRendering to be the title of a node or not. 
-     */
-    isNodeTitle?: boolean
-    /**
-     * The unique identifier of this rendering.
-     */
-    renderingId: string
+    properties: Record<string, unknown>
 }
 
 /**
