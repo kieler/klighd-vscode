@@ -109,8 +109,8 @@ export class ProxyView extends AbstractUIExtension {
             ctx.depthMap = DepthMap.init(model);
         }
 
-        const width = model.canvasBounds.width;
-        const height = model.canvasBounds.height;
+        const canvasWidth = model.canvasBounds.width;
+        const canvasHeight = model.canvasBounds.height;
         const scroll = model.scroll;
         const zoom = model.zoom;
         const root = model.children[0] as SKNode;
@@ -119,11 +119,11 @@ export class ProxyView extends AbstractUIExtension {
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
                 {
-                    width: width.toString(), height: height.toString(), // Set size to whole canvas
+                    width: canvasWidth.toString(), height: canvasHeight.toString(), // Set size to whole canvas
                     pointerEvents: "none" // Make click-through
                 }
             }>
-                {...this.createAllProxies(root, ctx, width, height, scroll, zoom)}
+                {...this.createAllProxies(root, ctx, canvasWidth, canvasHeight, scroll, zoom)}
             </svg>);
     }
 
@@ -159,6 +159,9 @@ export class ProxyView extends AbstractUIExtension {
             }
         }
         // TODO: clustering
+
+
+
         return res;
     }
 
@@ -182,9 +185,9 @@ export class ProxyView extends AbstractUIExtension {
         }
         this.currSize = size;
 
-        const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
+        const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
-        if (vnode && vnode.data && vnode.data.attrs) {
+        if (vnode && vnode.data && vnode.data.attrs) { // TODO: also when rerendered via paper-mode
             // Node has already been rendered, update position and return
 
             // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
@@ -204,13 +207,13 @@ export class ProxyView extends AbstractUIExtension {
             clone.children = [];
             // Change size FIXME:
             clone.data = this.fitToSize(clone.data, size);
+            clone.bounds = { x: clone.bounds.x, y: clone.bounds.y, width: size, height: size };
 
             // const temp = Object.create(clone.data[0]); // KRectangle/KRoundedRectangle of whole Node
             // temp.calculatedBounds = { x: 0, y: 0, width: size, height: size };
             // temp.renderingId += "-proxy";
             // temp.children = [temp.children[0]]
             // clone.data = [temp];
-            // clone.bounds = {x:clone.bounds.x,y:clone.bounds.y,width:size,height:size};
 
             console.log(node);
             // Synthesis specific options TODO:
@@ -231,6 +234,11 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         return vnode;
+    }
+
+    /** Appends "-proxy" to the given id if the given id isn't already a proxy's id. */
+    private getProxyId(id: string): string {
+        return id.endsWith("-proxy") ? id : id + "-proxy";
     }
 
     /** Calculates the position to place this node's proxy at. */
@@ -266,7 +274,7 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // This node might not be a proxy, make sure to store the right id
-        const id = node.id.endsWith("-proxy") ? node.id : node.id + "-proxy";
+        const id = this.getProxyId(node.id);
         let point = this.positions.get(id);
         if (point) {
             // Point already stored
@@ -289,12 +297,13 @@ export class ProxyView extends AbstractUIExtension {
         if (!data) {
             return [];
         }
-        
+
         const res = [];
-        for (let i = 0; i < data.length; i++) {
-            const clone = Object.create(data[i]);
+        for (const temp of data) {
+            // TODO: check type and act accordingly
+            const clone = Object.create(temp);
             clone.calculatedBounds = { x: clone.calculatedBounds.x, y: clone.calculatedBounds.y, width: size, height: size };
-            clone.renderingId += "-proxy";
+            clone.renderingId = this.getProxyId(clone.renderingId);
             clone.children = this.fitToSize(clone.children, size);
 
             res.push(clone);
