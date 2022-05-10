@@ -241,6 +241,7 @@ export class AnimateGoToBookmark implements RenderOption {
 export class ProxyViewCategory implements RenderOption {
     static readonly ID: string = 'proxy-view-category';
     static readonly NAME: string = 'Proxy View Options';
+    static readonly INSTANCE: ProxyViewCategory = new ProxyViewCategory;
     readonly id: string = ProxyViewCategory.ID;
     readonly name: string = ProxyViewCategory.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CATEGORY;
@@ -259,7 +260,7 @@ export class ProxyViewFilterUnconnected implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ProxyViewFilterUnconnected.DEFAULT;
     readonly description?: string | undefined = ProxyViewFilterUnconnected.DESCRIPTION;
-    readonly category?: RenderOption | undefined = new ProxyViewCategory;
+    readonly category?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
     currentValue = ProxyViewFilterUnconnected.DEFAULT;
 }
 
