@@ -66,7 +66,7 @@ export class ProxyView extends AbstractUIExtension {
 
     @postConstruct()
     init(): void {
-        // Send and show proxy view
+        // Send and show proxy-view
         this.actionDispatcher.dispatch(SendProxyViewAction.create(this));
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
         this.patcher = this.patcherProvider.patcher;

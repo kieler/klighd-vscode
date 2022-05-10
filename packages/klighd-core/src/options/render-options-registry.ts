@@ -237,6 +237,7 @@ export class AnimateGoToBookmark implements RenderOption {
     currentValue = true;
 }
 
+/** The category containing proxy-view options. */
 export class ProxyViewCategory implements RenderOption {
     static readonly ID: string = 'proxy-view-category';
     static readonly NAME: string = 'Proxy View Options';
