@@ -259,10 +259,12 @@ export class OptionsRenderer {
     }
 
     /** Renders render options that are stored in the client. An example would be "show constraints" */
-    renderRenderOptions(renderOptions: RenderOption[]): (VNode | "")[] | "" {
+    renderRenderOptions(renderOptions: RenderOption[], category: RenderOption | null): (VNode | "")[] | "" {
         if (renderOptions.length === 0) return "";
 
-        return renderOptions.map((option) => {
+        return renderOptions
+            .filter((option) => option.category?.id === category?.id)
+            .map((option) => {
             switch (option.type) {
                 case TransformationOptionType.CHECK:
                     return (
@@ -288,6 +290,22 @@ export class OptionsRenderer {
                             description={option.description}
                             onChange={this.handleRenderOptionChange.bind(this, option)}
                         />
+                    );
+                case TransformationOptionType.CATEGORY:
+                    return (
+                        <CategoryOption
+                            key={option.id}
+                            id={option.id}
+                            name={option.name}
+                            value={option.currentValue}
+                            description={option.description}
+                            onChange={this.handleRenderOptionChange.bind(this, option)}
+                        >
+                            {/* Skip rendering the children if the category is closed */}
+                            {!option.currentValue
+                                ? ""
+                                : this.renderRenderOptions(renderOptions, option)}
+                        </CategoryOption>
                     );
                 default:
                     console.error("Unsupported option type for option:", option.name);

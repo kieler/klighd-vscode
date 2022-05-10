@@ -23,6 +23,7 @@ export interface RenderOption {
     initialValue: any;
     currentValue: any;
     description?: string;
+    category?: RenderOption
 }
 
 export interface Preference extends RenderOption {

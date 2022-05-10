@@ -139,7 +139,8 @@ export class GeneralPanel extends SidebarPanel {
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Render Options</h5>
                     {this.optionsRenderer.renderRenderOptions(
-                        this.renderOptionsRegistry.allRenderOptions
+                        this.renderOptionsRegistry.allRenderOptions,
+                        null
                     )}
                 </div>
                 <div class-options__section="true">

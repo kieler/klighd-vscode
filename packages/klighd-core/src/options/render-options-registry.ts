@@ -237,6 +237,30 @@ export class AnimateGoToBookmark implements RenderOption {
     currentValue = true;
 }
 
+export class ProxyViewCategory implements RenderOption {
+    static readonly ID: string = 'proxy-view-category';
+    static readonly NAME: string = 'Proxy View Options';
+    readonly id: string = ProxyViewCategory.ID;
+    readonly name: string = ProxyViewCategory.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CATEGORY;
+    readonly initialValue: any;
+    currentValue: any;
+}
+
+/** Whether proxies should be filtered by removing unconnected nodes. */
+export class ProxyViewFilterUnconnected implements RenderOption {
+    static readonly ID: string = 'proxy-view-filter-unconnected';
+    static readonly NAME: string = 'Filter Unconnected Nodes';
+    static readonly DEFAULT: boolean = true;
+    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes.";
+    readonly id: string = ProxyViewFilterUnconnected.ID;
+    readonly name: string = ProxyViewFilterUnconnected.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewFilterUnconnected.DEFAULT;
+    readonly description?: string | undefined = ProxyViewFilterUnconnected.DESCRIPTION;
+    readonly category?: RenderOption | undefined = new ProxyViewCategory;
+    currentValue = ProxyViewFilterUnconnected.DEFAULT;
+}
 
 export interface RenderOptionType {
     readonly ID: string,
@@ -276,6 +300,9 @@ export class RenderOptionsRegistry extends Registry {
 
         this.register(PaperShadows)
         this.register(AnimateGoToBookmark);
+
+        this.register(ProxyViewCategory);
+        this.register(ProxyViewFilterUnconnected);
     }
 
     @postConstruct()

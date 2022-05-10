@@ -22,6 +22,7 @@ import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
+import { ProxyViewFilterUnconnected, RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
@@ -52,6 +53,8 @@ export class ProxyView extends AbstractUIExtension {
      * Always make sure the ids ending with "-proxy" are used.
      */
     private positions: Map<string, Point>;
+    /** Whether proxies should be filtered by removing unconnected nodes. */
+    private filterUnconnected: boolean;
 
     id(): string {
         return ProxyView.ID;
@@ -98,6 +101,7 @@ export class ProxyView extends AbstractUIExtension {
             // Create a new depthmap if otherwise unused
             ctx.depthMap = DepthMap.init(model);
         }
+        console.log("Update");
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
@@ -137,9 +141,8 @@ export class ProxyView extends AbstractUIExtension {
         // const filteredOffScreenNodes = offScreenNodes.filter(node => filterList.every(filter => filter(node)));
 
         const res = [];
-        const filterUnconnected = true; // TODO: could be configured in options
         for (const node of offScreenNodes) {
-            if (!filterUnconnected || this.isConnected(node, onScreenNodes)) {
+            if (!this.filterUnconnected || this.isConnected(node, onScreenNodes)) {
                 // Create a proxy
                 const vnode = this.createSingleProxy(node, ctx, canvasWidth, canvasHeight, scroll, zoom);
                 if (vnode) {
@@ -267,6 +270,11 @@ export class ProxyView extends AbstractUIExtension {
         return vnode;
     }
 
+    /** Updates the options specified in the {@link RenderOptionsRegistry}. */
+    updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
+        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
+    }
+
     //////// General helper methods ////////
 
     /** Appends "-proxy" to the given id if the given id isn't already a proxy's id. */
@@ -276,6 +284,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Clears the {@link renderings} map. */
     clearRenderings(): void {
+        console.log("Cleared");
         this.renderings.clear();
     }
 
