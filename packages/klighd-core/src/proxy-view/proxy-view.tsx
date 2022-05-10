@@ -23,13 +23,15 @@ import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider,
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { SKNode } from "../skgraph-models";
+import { SKEdge, SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 
 @injectable()
 export class ProxyView extends AbstractUIExtension {
     /** ID. */
     static readonly ID = "proxy-view";
+    /** ID used for proxy rendering property of SKNodes. */
+    static readonly proxyRenderingId = "de.cau.cs.kieler.klighd.proxyRendering";
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     /** Used to replace HTML elements. */
@@ -80,28 +82,16 @@ export class ProxyView extends AbstractUIExtension {
         // TODO: could be useful?
     }
 
+    //////// Main methods ////////
+
+    /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
         /* Notes:
-        - iterate through nodes starting by outer layer for efficiency
-        - root.canvasBounds / model.canvasBounds -> get bounds for border region
-        - root.id -> get file name (use for adding modules per diagram type)
-        - root.children == model.children
-        - this.containerElement -> remember this already exists, example:
-            <div id="keith-diagram_sprotty_ProxyView" class="ProxyView" style="visibility: visible; opacity: 1;">
-            <h1 style="color: red;">Hello, world!</h1>
-            </div>
-            - this.activeElement -> not sure yet
-        - (context as SKGraphModelRenderer).depthMap -> depthmap, check if region is in bounds
-            const depthMap = (context as SKGraphModelRenderer).depthMap;
-            if (depthMap?.viewport !== undefined) {
-                console.log(depthMap?.isInBounds(depthMap.rootRegions[0], depthMap.viewport));
-            }
-        - this.patcher() -> replaces oldRoot with newRoot
         - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
         */
-        /* TODO: for evaluation/future work:
-        define proxy rendering in synthesis as attribute of KNode -> when writing a new synthesis
+        /* TODO: define proxy rendering in synthesis as attribute of KNode -> when writing a new synthesis
         no client-side changes need to be made (diagram specifics are server-side only) */
+
         if (!this.currHTMLRoot) {
             return;
         } else if (!ctx.depthMap) {
@@ -114,8 +104,6 @@ export class ProxyView extends AbstractUIExtension {
         const scroll = model.scroll;
         const zoom = model.zoom;
         const root = model.children[0] as SKNode;
-        // const rootClone: SKNode = Object.create(root);
-        // rootClone.id += "-proxy";
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
                 {
@@ -127,10 +115,8 @@ export class ProxyView extends AbstractUIExtension {
             </svg>);
     }
 
-    /**
-     * Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering.
-     */
-    private createAllProxies(currRoot: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode[] {
+    /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
+    private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode[] {
         // Iterate through nodes starting by root
         // check if node is: 
         // (partially) in bounds -> no proxy, check children
@@ -143,25 +129,27 @@ export class ProxyView extends AbstractUIExtension {
             return [];
         }
 
-        // Get proxy renderings
-        const res: VNode[] = [];
-        for (const node of currRoot.children as SKNode[]) {
-            const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
-            if (region && !depthMap.isInBounds(region, viewport)) {
-                // TODO: isConnected() default filter from sidebar
-                // Node out of bounds, create a proxy
+        // Used for filters
+        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, ctx);
+
+        // OLD: filter list?
+        // const filterList = [(node: SKNode) => !filterUnconnected || this.isConnected(node, onScreenNodes)];
+        // const filteredOffScreenNodes = offScreenNodes.filter(node => filterList.every(filter => filter(node)));
+
+        const res = [];
+        const filterUnconnected = true; // TODO: could be configured in options
+        for (const node of offScreenNodes) {
+            if (!filterUnconnected || this.isConnected(node, onScreenNodes)) {
+                // Create a proxy
                 const vnode = this.createSingleProxy(node, ctx, canvasWidth, canvasHeight, scroll, zoom);
                 if (vnode) {
-                    // TODO: check for overlap here?
+                    // TODO: check for overlap here? For clustering
                     res.push(vnode);
                 }
-            } else if (node.children.length > 0) {
-                // Node in bounds, check children
-                res.push(...this.createAllProxies(node, ctx, canvasWidth, canvasHeight, scroll, zoom));
             }
         }
-        
-        console.log(res);
+
+        // ctx.renderOptionsRegistry.
 
         // TODO: clustering
         // for (let i = 0; i < res.length; i++) {
@@ -176,29 +164,57 @@ export class ProxyView extends AbstractUIExtension {
         return res;
     }
 
-    /**
-     * Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place.
-     */
-    private createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
-        /* Notes:
-        - use a min-max-norm of sorts to render the proxy at the border (min/max the coords)
-        - node bounds.x/y -> vnode transform: translate(x,y)
-        */
+    /** Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
+     * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned. */
+    private getOffAndOnScreenNodes(currRoot: SKNode, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
+        const depthMap = ctx.depthMap;
+        const viewport = ctx.viewport;
+        if (!depthMap || !viewport) {
+            // Not yet initialized
+            return { offScreenNodes: [], onScreenNodes: [] };
+        }
 
+        // For each node check if it's off-screen
+        const offScreenNodes = [];
+        const onScreenNodes = [];
+        for (const node of currRoot.children as SKNode[]) {
+            const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
+            if (region && !depthMap.isInBounds(region, viewport)) {
+                // Node out of bounds
+                offScreenNodes.push(node);
+            } else {
+                // Node in bounds
+                onScreenNodes.push(node);
+
+                if (node.children.length > 0) {
+                    // Has children, recursively check them
+                    const offAndOnScreenNodes = this.getOffAndOnScreenNodes(node, ctx);
+                    offScreenNodes.push(...offAndOnScreenNodes.offScreenNodes);
+                    onScreenNodes.push(...offAndOnScreenNodes.onScreenNodes);
+                }
+            }
+        }
+
+        return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes };
+    }
+
+    /** Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place. */
+    private createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
         // Get position and calculate size
         const sizePercentage = 0.08; // TODO: could be configured in options
         const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
-        const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom, size);
+        const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
 
-        if (size !== this.currSize) {
+        ctx.renderOptionsRegistry.onChange
+        if (size !== this.currSize) { // TODO: also when rerendered (e.g. via paper-mode)
             // Size of proxies has changed, cannot reuse previous renderings
-            this.renderings.clear();
+            this.clearRenderings();
         }
         this.currSize = size;
 
         const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
-        if (vnode && vnode.data && vnode.data.attrs) { // TODO: also when rerendered via paper-mode
+        if (vnode && vnode.data && vnode.data.attrs) {
             // Node has already been rendered, update position and return
 
             // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
@@ -216,26 +232,30 @@ export class ProxyView extends AbstractUIExtension {
             clone.id = id;
             // Clear children, proxies don't show nested nodes
             clone.children = [];
-            // Change size FIXME:
-            clone.data = this.fitToSize(clone.data, size);
-            clone.bounds = { x: clone.bounds.x, y: clone.bounds.y, width: size, height: size };
 
-            // const temp = Object.create(clone.data[0]); // KRectangle/KRoundedRectangle of whole Node
-            // temp.calculatedBounds = { x: 0, y: 0, width: size, height: size };
-            // temp.renderingId += "-proxy";
-            // temp.children = [temp.children[0]]
-            // clone.data = [temp];
-
-            console.log(node);
-            // Synthesis specific options TODO:
-
+            // console.log("node");
+            // console.log(node);
+            // console.log("clone");
+            // console.log(clone);
+            // Specification of rendering data depends on if the synthesis has specified it
+            if (node.properties && node.properties[ProxyView.proxyRenderingId]) {
+                // Proxy rendering available
+                clone.data = node.properties[ProxyView.proxyRenderingId] as KGraphData[];
+            } else {
+                // Fallback, use mock
+                // TODO: further specify what to change for the mock?
+            }
 
             vnode = ctx.renderProxy(clone);
             if (vnode && vnode.data && vnode.data.attrs) {
                 // Place proxy at the calculated position
                 vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
-                // Code to make proxies non-click-through:
-                // vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
+
+                const clickThrough = true; // TODO: could be configured in options
+                if (!clickThrough) {
+                    // Make proxies non-click-through
+                    vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
+                }
             }
         }
 
@@ -247,32 +267,43 @@ export class ProxyView extends AbstractUIExtension {
         return vnode;
     }
 
+    //////// General helper methods ////////
+
     /** Appends "-proxy" to the given id if the given id isn't already a proxy's id. */
     private getProxyId(id: string): string {
         return id.endsWith("-proxy") ? id : id + "-proxy";
     }
 
+    /** Clears the {@link renderings} map. */
+    clearRenderings(): void {
+        this.renderings.clear();
+    }
+
     /** Calculates the position to place this node's proxy at. */
-    private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number, size: number): Point {
+    private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): Point {
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
+
+        // OLD: if the proxy should be resized, replace bounds.width/height with size
+        // const offsetX = 0.5 * (node.bounds.width * zoom - size);
+        // const offsetY = 0.5 * (node.bounds.height * zoom - size);
+
         const point = this.getPositionRec(node);
-        const offsetX = 0.5 * (node.bounds.width * zoom - size);
-        const offsetY = 0.5 * (node.bounds.height * zoom - size);
+        const bounds = node.bounds;
+        const offsetX = 0.5 * bounds.width * (zoom - 1);
+        const offsetY = 0.5 * bounds.height * (zoom - 1);
         let x = (point.x - scroll.x) * zoom + offsetX;
         let y = (point.y - scroll.y) * zoom + offsetY;
 
-        // TODO: shift position to middle of node (dependant of size)
-
         // Calculate position to put the proxy at
-        x = Math.max(0, Math.min(canvasWidth - size, x));
-        y = Math.max(0, Math.min(canvasHeight - size, y));
+        x = Math.max(0, Math.min(canvasWidth - bounds.width, x));
+        y = Math.max(0, Math.min(canvasHeight - bounds.height, y));
 
         // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
         /* Don't need to check for the opened sidebar since it closes as soon as the diagram is moved
           (onMouseDown), e.g. don't reposition proxies accordingly */
         const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
-        if (rect && y < rect.bottom && x > rect.left - size) {
-            x = rect.left - size;
+        if (rect && y < rect.bottom && x > rect.left - bounds.width) {
+            x = rect.left - bounds.width;
         }
 
         return { x: x, y: y };
@@ -303,7 +334,49 @@ export class ProxyView extends AbstractUIExtension {
         }
     }
 
+    //////// Filter methods ////////
+
+    /** Checks if `currNode` is connected to at least one of the other given `nodes`. */
+    private isConnected(currNode: SKNode, nodes: SKNode[]): boolean {
+        return (
+            (currNode.outgoingEdges as SKEdge[])
+                .map(edge => edge.target as SKNode)
+                .some(target => nodes.includes(target))
+            ||
+            (currNode.incomingEdges as SKEdge[])
+                .map(edge => edge.source as SKNode)
+                .some(source => nodes.includes(source))
+        );
+    }
+
+    /* OLD: previously used by createAllProxies() for rendering proxies
+    // Get proxy renderings
+    const res: VNode[] = [];
+    for (const node of currRoot.children as SKNode[]) {
+        const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
+        if (region && !depthMap.isInBounds(region, viewport)) {
+            // Node out of bounds
+            offScreenNodes.push(node);
+
+            // Create a proxy
+            const vnode = this.createSingleProxy(node, ctx, canvasWidth, canvasHeight, scroll, zoom);
+            if (vnode) {
+                res.push(vnode);
+            }
+        } else {
+            // Node in bounds
+            onScreenNodes.push(node);
+
+            if (node.children.length > 0) {
+                // Has children, recursively check them
+                res.push(...this.createAllProxies(node, ctx, canvasWidth, canvasHeight, scroll, zoom));
+            }
+        }
+    }
+    */
+
     /** Returns a copy of the data fit to the given size. */
+    /* OLD: previously used for resizing proxies
     private fitToSize(data: KGraphData[], size: number): KGraphData[] {
         if (!data) {
             return [];
@@ -311,14 +384,22 @@ export class ProxyView extends AbstractUIExtension {
 
         const res = [];
         for (const temp of data) {
-            // TODO: check type and act accordingly
+            // TODO check type and act accordingly
             const clone = Object.create(temp);
-            clone.calculatedBounds = { x: clone.calculatedBounds.x, y: clone.calculatedBounds.y, width: size, height: size };
-            clone.renderingId = this.getProxyId(clone.renderingId);
-            clone.children = this.fitToSize(clone.children, size);
+            const prop = Object.create(clone.properties);
+            if (prop) {
+                const calcBounds = prop["klighd.lsp.calculated.bounds"];
+                const renderingId = prop["klighd.lsp.rendering.id"];
+                if (calcBounds && renderingId) {
+                    prop["klighd.lsp.calculated.bounds"] = { x: calcBounds.x, y: calcBounds.y, width: size, height: size };
+                    prop["klighd.lsp.rendering.id"] = this.getProxyId(renderingId);
+                    clone.children = this.fitToSize(clone.children, size);
 
-            res.push(clone);
+                    res.push(clone);
+                }
+            }
         }
         return res;
     }
+    */
 }

@@ -15,10 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
 import { Action } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
+import { DISymbol } from "../di.symbols";
+import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { ProxyView } from "./proxy-view";
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
@@ -58,11 +60,20 @@ export namespace SendProxyViewAction {
 @injectable()
 export class ProxyViewActionHandler implements IActionHandler, IActionHandlerInitializer {
     private proxyView: ProxyView;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+    private onChangeRegistered: boolean;
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SendProxyViewAction.KIND) {
             const sPVAction = action as SendProxyViewAction;
             this.proxyView = sPVAction.proxyView;
+
+            // Make sure the rendering cache is cleared when the registry is updated
+            // TODO: server registry updates (check what happens when layout button is pressed)
+            if (!this.onChangeRegistered) {
+                this.renderOptionsRegistry.onChange(() => this.proxyView.clearRenderings());
+                this.onChangeRegistered = true;
+            }
         } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {
             const sMCAction = action as SendModelContextAction;
             this.proxyView.update(sMCAction.model, sMCAction.context);

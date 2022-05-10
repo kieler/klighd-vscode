@@ -87,6 +87,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
     renderProxy(node: SKNode): VNode | undefined {
         this.forceRendering = true;
         const vnode = super.renderElement(node);
+        // OLD:
         // const temp = node.data[0] as KRectangle;
         // const data : KRectangle = {actions: [], calculatedBounds: {x:0,y:0,width:size,height:size}, children: temp.children, renderingId: temp.renderingId, styles: temp.styles, type: temp.type, id: temp.id};
         // const vnode2 = getRendering(node.data, node, new KStyles, this); vnode2;
