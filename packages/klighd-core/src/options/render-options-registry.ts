@@ -21,7 +21,7 @@ import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
-import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
+import { Range, RangeOption, RenderOption, TransformationOptionType } from "./option-models";
 
 
 /**
@@ -240,7 +240,7 @@ export class AnimateGoToBookmark implements RenderOption {
 /** The category containing proxy-view options. */
 export class ProxyViewCategory implements RenderOption {
     static readonly ID: string = 'proxy-view-category';
-    static readonly NAME: string = 'Proxy View Options';
+    static readonly NAME: string = 'Proxy-View Options';
     static readonly INSTANCE: ProxyViewCategory = new ProxyViewCategory;
     readonly id: string = ProxyViewCategory.ID;
     readonly name: string = ProxyViewCategory.NAME;
@@ -249,18 +249,53 @@ export class ProxyViewCategory implements RenderOption {
     currentValue: any;
 }
 
+/** Whether the Proxy-View is enabled. */
+export class ProxyViewEnabled implements RenderOption {
+    static readonly ID: string = 'proxy-view-enabled';
+    static readonly NAME: string = 'Enable Proxy-View';
+    static readonly DESCRIPTION: string = "Whether the Proxy-View is enabled.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewEnabled.ID;
+    readonly name: string = ProxyViewEnabled.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewEnabled.DEFAULT;
+    readonly description?: string | undefined = ProxyViewEnabled.DESCRIPTION;
+    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewEnabled.DEFAULT;
+}
+
+/** Part of calculating the proxies' size. */
+export class ProxyViewSize implements RangeOption {
+    static readonly ID: string = 'proxy-view-size';
+    static readonly NAME: string = 'Size of Proxies';
+    static readonly DESCRIPTION: string = "Part of calculating the proxies' size.";
+    static readonly DEFAULT: number = 0.08;
+    static readonly RANGE: Range = { first: 0.01, second: 1 };
+    static readonly STEPSIZE: number = 0.01;
+    readonly id: string = ProxyViewSize.ID;
+    readonly name: string = ProxyViewSize.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE;
+    readonly initialValue: number = ProxyViewSize.DEFAULT;
+    readonly description?: string | undefined = ProxyViewSize.DESCRIPTION;
+    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    readonly range: Range = ProxyViewSize.RANGE;
+    readonly stepSize: number = ProxyViewSize.STEPSIZE;
+    readonly values: any[] = [];
+    currentValue = ProxyViewSize.DEFAULT;
+}
+
 /** Whether proxies should be filtered by removing unconnected nodes. */
 export class ProxyViewFilterUnconnected implements RenderOption {
     static readonly ID: string = 'proxy-view-filter-unconnected';
     static readonly NAME: string = 'Filter Unconnected Nodes';
-    static readonly DEFAULT: boolean = true;
     static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes.";
+    static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewFilterUnconnected.ID;
     readonly name: string = ProxyViewFilterUnconnected.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ProxyViewFilterUnconnected.DEFAULT;
     readonly description?: string | undefined = ProxyViewFilterUnconnected.DESCRIPTION;
-    readonly category?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
     currentValue = ProxyViewFilterUnconnected.DEFAULT;
 }
 
@@ -304,6 +339,8 @@ export class RenderOptionsRegistry extends Registry {
         this.register(AnimateGoToBookmark);
 
         this.register(ProxyViewCategory);
+        this.register(ProxyViewEnabled);
+        this.register(ProxyViewSize);
         this.register(ProxyViewFilterUnconnected);
     }
 

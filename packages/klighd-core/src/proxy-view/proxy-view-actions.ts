@@ -22,8 +22,6 @@ import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
-import { PreferencesRegistry } from "../preferences-registry";
-import { SidebarPanelRegistry } from "../sidebar/sidebar-panel-registry";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { ProxyView } from "./proxy-view";
 
@@ -64,10 +62,8 @@ export namespace SendProxyViewAction {
 @injectable()
 export class ProxyViewActionHandler implements IActionHandler, IActionHandlerInitializer {
     private proxyView: ProxyView;
-    @inject(DISymbol.SidebarPanelRegistry) private sidebarPanelRegistry: SidebarPanelRegistry;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
-    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
     private onChangeRegistered: boolean;
 
@@ -76,14 +72,13 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
             const sPVAction = action as SendProxyViewAction;
             this.proxyView = sPVAction.proxyView;
 
-            // Make sure the rendering cache is cleared when the renderings change
-            // TODO: when does the rendering actually change? Syntheses + options?
+            // Register to receive updates on registry changes
             if (!this.onChangeRegistered) {
-                this.sidebarPanelRegistry//.onChange(() => this.proxyView.clearRenderings());
+                // Make sure the rendering cache is cleared when the renderings change
                 this.synthesesRegistry.onChange(() => this.proxyView.clearRenderings());
-                this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry));
-                this.preferencesRegistry//.onChange(() => this.proxyView.clearRenderings());
                 this.optionsRegistry.onChange(() => this.proxyView.clearRenderings());
+                // Make sure to be notified when rendering options are changed
+                this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry));
                 this.onChangeRegistered = true;
             }
         } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {

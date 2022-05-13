@@ -22,7 +22,7 @@ import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
-import { ProxyViewFilterUnconnected, RenderOptionsRegistry } from "../options/render-options-registry";
+import { ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
@@ -40,7 +40,6 @@ export class ProxyView extends AbstractUIExtension {
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
-    // TODO: when the diagram is changed these maps should be reloaded
     /**
      * Stores the proxy renderings of already rendered nodes.
      * Always make sure the ids ending with "-proxy" are used.
@@ -53,6 +52,10 @@ export class ProxyView extends AbstractUIExtension {
      * Always make sure the ids ending with "-proxy" are used.
      */
     private positions: Map<string, Point>;
+    /** Whether the Proxy-View is enabled. */
+    private proxyViewEnabled: boolean;
+    /** Part of calculating the proxies' size. */
+    private sizePercentage: number;
     /** Whether proxies should be filtered by removing unconnected nodes. */
     private filterUnconnected: boolean;
 
@@ -95,13 +98,15 @@ export class ProxyView extends AbstractUIExtension {
         /* TODO: define proxy rendering in synthesis as attribute of KNode -> when writing a new synthesis
         no client-side changes need to be made (diagram specifics are server-side only) */
 
-        if (!this.currHTMLRoot) {
+        if (!this.proxyViewEnabled) {
+            this.currHTMLRoot = this.patcher(this.currHTMLRoot, <div />);
+            return;
+        } else if (!this.currHTMLRoot) {
             return;
         } else if (!ctx.depthMap) {
             // Create a new depthmap if otherwise unused
             ctx.depthMap = DepthMap.init(model);
         }
-        console.log("Update");
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
@@ -135,10 +140,6 @@ export class ProxyView extends AbstractUIExtension {
 
         // Used for filters
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, ctx);
-
-        // OLD: filter list?
-        // const filterList = [(node: SKNode) => !filterUnconnected || this.isConnected(node, onScreenNodes)];
-        // const filteredOffScreenNodes = offScreenNodes.filter(node => filterList.every(filter => filter(node)));
 
         const res = [];
         for (const node of offScreenNodes) {
@@ -204,17 +205,22 @@ export class ProxyView extends AbstractUIExtension {
     /** Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place. */
     private createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
         // Get position and calculate size
-        const sizePercentage = 0.08; // TODO: could be configured in options
-        const size = Math.min(canvasWidth, canvasHeight) * sizePercentage;
+        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage;
+        const proxyHeight = size / node.bounds.width * 0.08 // TODO:
+        const proxyWidth = size / node.bounds.width * 0.08; // All have same width (capped)
+        // const proxyWidth = size * 0.001; // Size dependant on node's bounds
+        const proxySize = Math.min(proxyHeight, proxyWidth);
+        console.log(proxySize);
+
         const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
 
-        ctx.renderOptionsRegistry.onChange
-        if (size !== this.currSize) { // TODO: also when rerendered (e.g. via paper-mode)
+        if (size !== this.currSize) {
             // Size of proxies has changed, cannot reuse previous renderings
             this.clearRenderings();
         }
         this.currSize = size;
 
+        const transformString = `scale(${proxySize}) translate(${pos.x}, ${pos.y})`;
         const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
         if (vnode && vnode.data && vnode.data.attrs) {
@@ -222,9 +228,9 @@ export class ProxyView extends AbstractUIExtension {
 
             // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
             // Update position once the canvas is left
-            vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
+            vnode.data.attrs["transform"] = transformString;
             // Update position while on the canvas
-            document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", `translate(${pos.x}, ${pos.y})`);
+            document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", transformString);
         } else if (node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$") {
             // Not an edge, not a comment/non-explicitly specified region
             // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
@@ -252,7 +258,7 @@ export class ProxyView extends AbstractUIExtension {
             vnode = ctx.renderProxy(clone);
             if (vnode && vnode.data && vnode.data.attrs) {
                 // Place proxy at the calculated position
-                vnode.data.attrs["transform"] = `translate(${pos.x}, ${pos.y})`;
+                vnode.data.attrs["transform"] = transformString;
 
                 const clickThrough = true; // TODO: could be configured in options
                 if (!clickThrough) {
@@ -272,6 +278,8 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Updates the options specified in the {@link RenderOptionsRegistry}. */
     updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
+        this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
+        this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
     }
 
@@ -284,7 +292,6 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Clears the {@link renderings} map. */
     clearRenderings(): void {
-        console.log("Cleared");
         this.renderings.clear();
     }
 
