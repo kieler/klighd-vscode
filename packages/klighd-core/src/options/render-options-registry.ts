@@ -269,9 +269,9 @@ export class ProxyViewSize implements RangeOption {
     static readonly ID: string = 'proxy-view-size';
     static readonly NAME: string = 'Size of Proxies';
     static readonly DESCRIPTION: string = "Part of calculating the proxies' size.";
-    static readonly DEFAULT: number = 0.08;
-    static readonly RANGE: Range = { first: 0.01, second: 1 };
-    static readonly STEPSIZE: number = 0.01;
+    static readonly DEFAULT: number = 1;
+    static readonly RANGE: Range = { first: 0.1, second: 2 };
+    static readonly STEPSIZE: number = 0.1;
     readonly id: string = ProxyViewSize.ID;
     readonly name: string = ProxyViewSize.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.RANGE;

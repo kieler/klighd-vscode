@@ -17,13 +17,15 @@
 
 import { inject, injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
-import { Action } from "sprotty-protocol";
+import { Action, Point } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { ProxyView } from "./proxy-view";
+
+//////// Actions ////////
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
   * Otherwise the proxy-view would be invisible. */
@@ -75,7 +77,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
             // Register to receive updates on registry changes
             if (!this.onChangeRegistered) {
                 // Make sure the rendering cache is cleared when the renderings change
-                this.synthesesRegistry.onChange(() => this.proxyView.clearRenderings());
+                this.synthesesRegistry.onChange(() => { this.proxyView.clearRenderings(); this.proxyView.clearPositions() });
                 this.optionsRegistry.onChange(() => this.proxyView.clearRenderings());
                 // Make sure to be notified when rendering options are changed
                 this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry));
@@ -92,4 +94,16 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
         registry.register(SendModelContextAction.KIND, this);
         registry.register(SendProxyViewAction.KIND, this);
     }
+}
+
+//////// Other helpers ////////
+
+/** Contains all attributes used in defining a VNode's transform attribute. */
+export interface TransformAttributes extends Point {
+    // Inherited by Point
+    readonly x: number;
+    readonly y: number;
+    // Self-defined
+    readonly scale?: number;
+    readonly rotation?: number;
 }

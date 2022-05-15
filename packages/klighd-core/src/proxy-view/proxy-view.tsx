@@ -25,14 +25,14 @@ import { DepthMap } from "../depth-map";
 import { ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
-import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
+import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 
 @injectable()
 export class ProxyView extends AbstractUIExtension {
     /** ID. */
     static readonly ID = "proxy-view";
     /** ID used for proxy rendering property of SKNodes. */
-    static readonly proxyRenderingId = "de.cau.cs.kieler.klighd.proxyRendering";
+    static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxyRendering";
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     /** Used to replace HTML elements. */
@@ -45,13 +45,13 @@ export class ProxyView extends AbstractUIExtension {
      * Always make sure the ids ending with "-proxy" are used.
      */
     private renderings: Map<string, VNode>;
-    /** Stores the proxy's current size. Used for clearing {@link renderings} if the size has changed. */
-    private currSize: number;
     /**
-     * Stores the relative coordinates (without scroll) of already rendered nodes.
+     * Stores the absolute coordinates (without scroll) of already rendered nodes.
      * Always make sure the ids ending with "-proxy" are used.
      */
     private positions: Map<string, Point>;
+    /** Stores the proxy's current size. Used for clearing {@link renderings} if the size has changed. */
+    private currSize: number;
     /** Whether the Proxy-View is enabled. */
     private proxyViewEnabled: boolean;
     /** Part of calculating the proxies' size. */
@@ -204,23 +204,22 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place. */
     private createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
-        // Get position and calculate size
-        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage;
-        const proxyHeight = size / node.bounds.width * 0.08 // TODO:
-        const proxyWidth = size / node.bounds.width * 0.08; // All have same width (capped)
-        // const proxyWidth = size * 0.001; // Size dependant on node's bounds
-        const proxySize = Math.min(proxyHeight, proxyWidth);
-        console.log(proxySize);
-
-        const pos = this.getPosition(node, canvasWidth, canvasHeight, scroll, zoom);
-
+        // Calculate size
+        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage * 0.1;
         if (size !== this.currSize) {
             // Size of proxies has changed, cannot reuse previous renderings
             this.clearRenderings();
         }
         this.currSize = size;
 
-        const transformString = `scale(${proxySize}) translate(${pos.x}, ${pos.y})`;
+        // Get transform attributes
+        const transform = this.getTransform(node, size, canvasWidth, canvasHeight, scroll, zoom);
+        let transformString = `translate(${transform.x}, ${transform.y})`;
+        if (transform.scale) {
+            transformString += ` scale(${transform.scale})`;
+        }
+
+        // Get VNode
         const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
         if (vnode && vnode.data && vnode.data.attrs) {
@@ -247,9 +246,10 @@ export class ProxyView extends AbstractUIExtension {
             // console.log("clone");
             // console.log(clone);
             // Specification of rendering data depends on if the synthesis has specified it
-            if (node.properties && node.properties[ProxyView.proxyRenderingId]) {
+            if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
                 // Proxy rendering available
-                clone.data = node.properties[ProxyView.proxyRenderingId] as KGraphData[];
+                console.log("Rendering available"); // TODO:
+                clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
                 // Fallback, use mock
                 // TODO: further specify what to change for the mock?
@@ -276,7 +276,7 @@ export class ProxyView extends AbstractUIExtension {
         return vnode;
     }
 
-    /** Updates the options specified in the {@link RenderOptionsRegistry}. */
+    /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
     updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
         this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
@@ -295,34 +295,61 @@ export class ProxyView extends AbstractUIExtension {
         this.renderings.clear();
     }
 
-    /** Calculates the position to place this node's proxy at. */
-    private getPosition(node: SKNode, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): Point {
+    /** Clears the {@link positions} map. */
+    clearPositions(): void {
+        this.positions.clear();
+    }
+
+    /**
+     * Calculates the TransformAttributes for this node's proxy, e.g. the position to place the proxy at aswell as its scale.
+     * Note that the position is pre-scaling.
+     */
+    private getTransform(node: SKNode, desiredSize: number, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): TransformAttributes {
         // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
 
-        // OLD: if the proxy should be resized, replace bounds.width/height with size
-        // const offsetX = 0.5 * (node.bounds.width * zoom - size);
-        // const offsetY = 0.5 * (node.bounds.height * zoom - size);
+        // OLD: without resizing the proxy
+        // const offsetX = 0.5 * bounds.width * (zoom - 1);
+        // const offsetY = 0.5 * bounds.height * (zoom - 1);
+
+        // OLD: size dependant on node's bounds
+        // const proxyWidth = size * 0.001;
+        // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
+        // console.log(proxySizeScale);
 
         const point = this.getPositionRec(node);
         const bounds = node.bounds;
-        const offsetX = 0.5 * bounds.width * (zoom - 1);
-        const offsetY = 0.5 * bounds.height * (zoom - 1);
+
+        // Calculate the scale and the resulting proxy dimensions
+        // The scale is calculated such that width & height are capped to a max value
+        const proxyWidthScale = desiredSize / bounds.width;
+        const proxyHeightScale = desiredSize / bounds.height;
+        const scale = Math.min(proxyWidthScale, proxyHeightScale);
+        const proxyWidth = bounds.width * scale;
+        const proxyHeight = bounds.height * scale;
+
+        // Center at middle of node
+        const offsetX = 0.5 * (node.bounds.width * zoom - proxyWidth);
+        const offsetY = 0.5 * (node.bounds.height * zoom - proxyHeight);
         let x = (point.x - scroll.x) * zoom + offsetX;
         let y = (point.y - scroll.y) * zoom + offsetY;
 
-        // Calculate position to put the proxy at
-        x = Math.max(0, Math.min(canvasWidth - bounds.width, x));
-        y = Math.max(0, Math.min(canvasHeight - bounds.height, y));
+        // Cap proxy at canvas border
+        x = Math.max(0, Math.min(canvasWidth - proxyWidth, x));
+        y = Math.max(0, Math.min(canvasHeight - proxyHeight, y));
 
         // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
         /* Don't need to check for the opened sidebar since it closes as soon as the diagram is moved
           (onMouseDown), e.g. don't reposition proxies accordingly */
         const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
-        if (rect && y < rect.bottom && x > rect.left - bounds.width) {
-            x = rect.left - bounds.width;
+        if (rect && y < rect.bottom && x > rect.left - proxyWidth) {
+            x = rect.left - proxyWidth;
         }
 
-        return { x: x, y: y };
+        // OLD: scale the coordinates
+        // x /= scale;
+        // y /= scale;
+
+        return { x: x, y: y, scale: scale };
     }
 
     /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
