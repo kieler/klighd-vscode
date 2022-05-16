@@ -22,7 +22,7 @@ import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
-import { ProxyViewClusteringEnabled, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
+import { ProxyViewCapProxyToParent, ProxyViewClusteringEnabled, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
@@ -52,13 +52,15 @@ export class ProxyView extends AbstractUIExtension {
     private positions: Map<string, Point>;
     /** Stores the proxy's current size. Used for clearing {@link renderings} if the size has changed. */
     private currSize: number;
-    /** Whether the proxy-view is enabled. */
+    /** @see {@link ProxyViewEnabled} */
     private proxyViewEnabled: boolean;
-    /** Part of calculating the proxies' size. */
+    /** @see {@link ProxyViewSize} */
     private sizePercentage: number;
-    /** Whether clustering is enabled. */
+    /** @see {@link ProxyViewClusteringEnabled} */
     private clusteringEnabled: boolean;
-    /** Whether proxies should be filtered by removing unconnected nodes. */
+    /** @see {@link ProxyViewCapProxyToParent} */
+    private capProxyToParent: boolean;
+    /** @see {@link ProxyViewFilterUnconnected} */
     private filterUnconnected: boolean;
 
     id(): string {
@@ -228,47 +230,45 @@ export class ProxyView extends AbstractUIExtension {
             return offScreenNodes;
         }
 
-        // Set containing groups of indices of overlapping proxies
-        const overlapIndexGroups = new Set<Set<number>>();
+        // List containing groups of indices of overlapping proxies
+        // Could use a set of sets here, not needed since the same group cannot appear twice
+        const overlapIndexGroups: number[][] = [];
         for (let i = 0; i < offScreenNodes.length; i++) {
-            // New set for current overlap group
-            const currOverlapIndexGroup = new Set<number>();
+            if (overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
+                // i already in an overlapIndexGroup, prevent cascading clustering
+                continue;
+            }
+
+            // New list for current overlap group
+            const currOverlapIndexGroup = [];
             let overlap = false;
 
-            // TODO: skip if i already in overlapIndexGroups
-            
             // Check next proxies for overlap
             for (let j = i + 1; j < offScreenNodes.length; j++) {
                 if (this.checkOverlap(offScreenNodes[i].transform, offScreenNodes[j].transform)) {
                     // Proxies at i and j overlap
                     overlap = true;
-                    currOverlapIndexGroup.add(j);
+                    currOverlapIndexGroup.push(j);
 
                 }
             }
 
             if (overlap) {
                 // This proxy overlaps
-                currOverlapIndexGroup.add(i);
-                overlapIndexGroups.add(currOverlapIndexGroup);
+                currOverlapIndexGroup.push(i);
+                overlapIndexGroups.push(currOverlapIndexGroup);
             }
         }
 
-        const overlapIndices: number[] = [];
-        const clusterProxies = [];
-        for (const group of Array.from(overlapIndexGroups)) {
+        // Filter all overlapping nodes
+        const res = offScreenNodes.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
+        
+        // Add cluster proxies
+        for (const _ of overlapIndexGroups) {
             // Add a cluster for each group
             // TODO: push a cluster rendering (VNode)
-            clusterProxies.push(offScreenNodes[0]);
-            // Also push this group's indices
-            overlapIndices.push(...Array.from(group));
+            // res.push(offScreenNodes[0]);
         }
-
-        // Filter all overlapping nodes
-        const res = offScreenNodes.filter((_, index) => !overlapIndices.includes(index));
-
-        // Add the cluster proxies
-        // res.push(...clusterProxies);
 
         return res;
     }
@@ -281,6 +281,7 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         if (!(node instanceof SKNode)) {
+            // TODO: does this work?
             // VNode, this is a predefined rendering
             if (node.data && node.data.attrs) {
                 // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
@@ -312,11 +313,12 @@ export class ProxyView extends AbstractUIExtension {
             clone.children = [];
             // Update bounds
             clone.bounds = transform;
+            // Enable smart zoom FIXME:
+            console.log(node);
 
             // Check if synthesis has specified a proxy rendering
             if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
                 // Proxy rendering available
-                console.log("Rendering available"); // FIXME:
                 clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
                 // Fallback, use mock
@@ -367,6 +369,7 @@ export class ProxyView extends AbstractUIExtension {
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
+        this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
     }
 
     /** Clears the {@link renderings} map. */
@@ -422,6 +425,14 @@ export class ProxyView extends AbstractUIExtension {
         const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
         if (rect && y < rect.bottom && x > rect.left - proxyWidth) {
             x = rect.left - proxyWidth;
+        }
+
+        if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
+            const parent = node.parent as SKNode;
+            const parentBounds = parent.bounds;
+            const parentPos = this.getPosition(parent);
+            x = Math.max((parentPos.x - scroll.x) * zoom, Math.min((parentPos.x + parentBounds.width - scroll.x) * zoom - proxyWidth, x));
+            y = Math.max((parentPos.y - scroll.y) * zoom, Math.min((parentPos.y + parentBounds.height - scroll.y) * zoom - proxyHeight, y));
         }
 
         // OLD: Scale the coordinates (to get position post-scaling)

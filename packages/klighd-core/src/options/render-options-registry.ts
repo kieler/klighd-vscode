@@ -259,8 +259,8 @@ export class ProxyViewEnabled implements RenderOption {
     readonly name: string = ProxyViewEnabled.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ProxyViewEnabled.DEFAULT;
-    readonly description?: string | undefined = ProxyViewEnabled.DESCRIPTION;
-    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    readonly description?: string = ProxyViewEnabled.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
     currentValue = ProxyViewEnabled.DEFAULT;
 }
 
@@ -276,8 +276,8 @@ export class ProxyViewSize implements RangeOption {
     readonly name: string = ProxyViewSize.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.RANGE;
     readonly initialValue: number = ProxyViewSize.DEFAULT;
-    readonly description?: string | undefined = ProxyViewSize.DESCRIPTION;
-    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    readonly description?: string = ProxyViewSize.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
     readonly range: Range = ProxyViewSize.RANGE;
     readonly stepSize: number = ProxyViewSize.STEPSIZE;
     readonly values: any[] = [];
@@ -294,9 +294,24 @@ export class ProxyViewClusteringEnabled implements RenderOption {
     readonly name: string = ProxyViewClusteringEnabled.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ProxyViewClusteringEnabled.DEFAULT;
-    readonly description?: string | undefined = ProxyViewClusteringEnabled.DESCRIPTION;
-    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    readonly description?: string = ProxyViewClusteringEnabled.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
     currentValue = ProxyViewClusteringEnabled.DEFAULT;
+}
+
+/** Whether to cap proxies in their parent node. */
+export class ProxyViewCapProxyToParent implements RenderOption {
+    static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
+    static readonly NAME: string = 'Cap Proxy to Parent';
+    static readonly DESCRIPTION: string = "Whether proxies should be capped inside their parent node.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewCapProxyToParent.ID;
+    readonly name: string = ProxyViewCapProxyToParent.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewCapProxyToParent.DEFAULT;
+    readonly description?: string = ProxyViewCapProxyToParent.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewCapProxyToParent.DEFAULT;
 }
 
 /** Whether proxies should be filtered by removing unconnected nodes. */
@@ -309,8 +324,8 @@ export class ProxyViewFilterUnconnected implements RenderOption {
     readonly name: string = ProxyViewFilterUnconnected.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ProxyViewFilterUnconnected.DEFAULT;
-    readonly description?: string | undefined = ProxyViewFilterUnconnected.DESCRIPTION;
-    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    readonly description?: string = ProxyViewFilterUnconnected.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
     currentValue = ProxyViewFilterUnconnected.DEFAULT;
 }
 
@@ -357,6 +372,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewEnabled);
         this.register(ProxyViewSize);
         this.register(ProxyViewClusteringEnabled);
+        this.register(ProxyViewCapProxyToParent);
         this.register(ProxyViewFilterUnconnected);
     }
 
