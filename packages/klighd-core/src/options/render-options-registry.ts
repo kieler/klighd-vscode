@@ -249,7 +249,7 @@ export class ProxyViewCategory implements RenderOption {
     currentValue: any;
 }
 
-/** Whether the Proxy-View is enabled. */
+/** Whether the proxy-view is enabled. */
 export class ProxyViewEnabled implements RenderOption {
     static readonly ID: string = 'proxy-view-enabled';
     static readonly NAME: string = 'Enable Proxy-View';
@@ -282,6 +282,21 @@ export class ProxyViewSize implements RangeOption {
     readonly stepSize: number = ProxyViewSize.STEPSIZE;
     readonly values: any[] = [];
     currentValue = ProxyViewSize.DEFAULT;
+}
+
+/** Whether clustering is enabled. */
+export class ProxyViewClusteringEnabled implements RenderOption {
+    static readonly ID: string = 'proxy-view-clustering-enabled';
+    static readonly NAME: string = 'Enable Clustering';
+    static readonly DESCRIPTION: string = "Whether overlapping proxies should be clustered.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewClusteringEnabled.ID;
+    readonly name: string = ProxyViewClusteringEnabled.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewClusteringEnabled.DEFAULT;
+    readonly description?: string | undefined = ProxyViewClusteringEnabled.DESCRIPTION;
+    readonly renderCategory?: RenderOption | undefined = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewClusteringEnabled.DEFAULT;
 }
 
 /** Whether proxies should be filtered by removing unconnected nodes. */
@@ -341,6 +356,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewCategory);
         this.register(ProxyViewEnabled);
         this.register(ProxyViewSize);
+        this.register(ProxyViewClusteringEnabled);
         this.register(ProxyViewFilterUnconnected);
     }
 

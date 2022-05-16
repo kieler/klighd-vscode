@@ -17,7 +17,7 @@
 
 import { inject, injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
-import { Action, Point } from "sprotty-protocol";
+import { Action, Bounds } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
@@ -99,10 +99,12 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
 //////// Other helpers ////////
 
 /** Contains all attributes used in defining a VNode's transform attribute. */
-export interface TransformAttributes extends Point {
-    // Inherited by Point
+export interface TransformAttributes extends Bounds {
+    // Inherited by Bounds
     readonly x: number;
     readonly y: number;
+    readonly width: number;
+    readonly height: number;
     // Self-defined
     readonly scale?: number;
     readonly rotation?: number;

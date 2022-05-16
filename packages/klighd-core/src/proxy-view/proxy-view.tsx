@@ -22,7 +22,7 @@ import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
-import { ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
+import { ProxyViewClusteringEnabled, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
@@ -52,10 +52,12 @@ export class ProxyView extends AbstractUIExtension {
     private positions: Map<string, Point>;
     /** Stores the proxy's current size. Used for clearing {@link renderings} if the size has changed. */
     private currSize: number;
-    /** Whether the Proxy-View is enabled. */
+    /** Whether the proxy-view is enabled. */
     private proxyViewEnabled: boolean;
     /** Part of calculating the proxies' size. */
     private sizePercentage: number;
+    /** Whether clustering is enabled. */
+    private clusteringEnabled: boolean;
     /** Whether proxies should be filtered by removing unconnected nodes. */
     private filterUnconnected: boolean;
 
@@ -89,6 +91,8 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     //////// Main methods ////////
+
+    // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
 
     /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
@@ -138,18 +142,76 @@ export class ProxyView extends AbstractUIExtension {
             return [];
         }
 
-        // Used for filters
+        //// Initial nodes ////
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, ctx);
 
-        const res = [];
-        for (const node of offScreenNodes) {
-            if (!this.filterUnconnected || this.isConnected(node, onScreenNodes)) {
-                // Create a proxy
-                const vnode = this.createSingleProxy(node, ctx, canvasWidth, canvasHeight, scroll, zoom);
-                if (vnode) {
-                    // TODO: check for overlap here? For clustering
-                    res.push(vnode);
+        //// Apply filters ////
+        const filteredOffScreenNodes = offScreenNodes.filter(node =>
+            this.canRenderNode(node) &&
+            (!this.filterUnconnected || this.isConnected(node, onScreenNodes)));
+
+        // Calculate size
+        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage * 0.08;
+        if (size !== this.currSize) {
+            // Size of proxies has changed, cannot reuse previous renderings
+            this.clearRenderings();
+        }
+        this.currSize = size;
+
+        //// Calculate transformations ////
+        const transformedOffScreenNodes = filteredOffScreenNodes.map(node => ({
+            node: node,
+            transform: this.getTransform(node, size, canvasWidth, canvasHeight, scroll, zoom)
+        }));
+
+        //// Apply clustering ////
+        const clusteredNodes = [...transformedOffScreenNodes];
+        if (this.clusteringEnabled) {
+            const overlappedIndices: number[] = [];
+
+            for (let i = 0; i < offScreenNodes.length; i++) {
+                let overlap = false;
+                for (let j = i + 1; j < offScreenNodes.length; j++) {
+                    const iBounds = transformedOffScreenNodes[i].transform;
+                    const iLeft = iBounds.x;
+                    const iRight = iLeft + iBounds.width;
+                    const iTop = iBounds.y;
+                    const iBottom = iTop + iBounds.height;
+                    const jBounds = transformedOffScreenNodes[j].transform;
+                    const jLeft = jBounds.x;
+                    const jRight = jLeft + jBounds.width;
+                    const jTop = jBounds.y;
+                    const jBottom = jTop + jBounds.height;
+
+                    const horizontalOverlap = iLeft >= jLeft && iLeft <= jRight || iRight >= jLeft && iRight <= jRight;
+                    const verticalOverlap = iBottom >= jTop && iBottom <= jBottom || iTop >= jTop && iTop <= jBottom;
+                    overlap = horizontalOverlap && verticalOverlap;
+                    console.log(horizontalOverlap + ", " + verticalOverlap);
+                    console.log("Bottom: " + iBottom + ", " + jBottom);
+                    console.log("Top: " + iTop + ", " + jTop);
+
+                    if (overlap) {
+                        // Proxies at i and j overlap
+                        console.log("Ha!");
+                        overlappedIndices.push(j);
+                    }
                 }
+                if (overlap) {
+                    // This node has overlap
+                    overlappedIndices.push(i);
+                }
+            }
+
+            clusteredNodes.filter((_, index) => !overlappedIndices.includes(index));
+        }
+
+        const res = [];
+        for (const { node, transform } of clusteredNodes) {
+            // Create a proxy
+            const vnode = this.createSingleProxy(node, transform, ctx);
+            if (vnode) {
+                // TODO: check for overlap here? For clustering
+                res.push(vnode);
             }
         }
 
@@ -202,25 +264,15 @@ export class ProxyView extends AbstractUIExtension {
         return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes };
     }
 
-    /** Returns the proxy rendering for a single off-screen node and applies logic, e.g. where the proxy is placed place. */
-    private createSingleProxy(node: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode | undefined {
-        // Calculate size
-        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage * 0.1;
-        if (size !== this.currSize) {
-            // Size of proxies has changed, cannot reuse previous renderings
-            this.clearRenderings();
-        }
-        this.currSize = size;
-
-        // Get transform attributes
-        const transform = this.getTransform(node, size, canvasWidth, canvasHeight, scroll, zoom);
+    /** Returns the proxy rendering for a single off-screen node and applies logic, e.g. the proxy's position. */
+    private createSingleProxy(node: SKNode, transform: TransformAttributes, ctx: SKGraphModelRenderer): VNode | undefined {// Get transform attributes
+        const id = this.getProxyId(node.id);
         let transformString = `translate(${transform.x}, ${transform.y})`;
         if (transform.scale) {
-            transformString += ` scale(${transform.scale})`;
+            transformString = `scale(${transform.scale}) ` + transformString;
         }
 
         // Get VNode
-        const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
         if (vnode && vnode.data && vnode.data.attrs) {
             // Node has already been rendered, update position and return
@@ -230,7 +282,7 @@ export class ProxyView extends AbstractUIExtension {
             vnode.data.attrs["transform"] = transformString;
             // Update position while on the canvas
             document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", transformString);
-        } else if (node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$") {
+        } else if (this.canRenderNode(node, id)) {
             // Not an edge, not a comment/non-explicitly specified region
             // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
 
@@ -240,12 +292,10 @@ export class ProxyView extends AbstractUIExtension {
             clone.id = id;
             // Clear children, proxies don't show nested nodes
             clone.children = [];
+            // Update bounds
+            clone.bounds = transform;
 
-            // console.log("node");
-            // console.log(node);
-            // console.log("clone");
-            // console.log(clone);
-            // Specification of rendering data depends on if the synthesis has specified it
+            // Check if synthesis has specified a proxy rendering
             if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
                 // Proxy rendering available
                 console.log("Rendering available"); // TODO:
@@ -260,9 +310,9 @@ export class ProxyView extends AbstractUIExtension {
                 // Place proxy at the calculated position
                 vnode.data.attrs["transform"] = transformString;
 
-                const clickThrough = true; // TODO: could be configured in options
+                // OLD: code to make a proxy non-click-through
+                const clickThrough = true;
                 if (!clickThrough) {
-                    // Make proxies non-click-through
                     vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
                 }
             }
@@ -276,10 +326,19 @@ export class ProxyView extends AbstractUIExtension {
         return vnode;
     }
 
+    /** Returns whether the given `node` is valid for rendering. */
+    private canRenderNode(node: SKNode, id?: string): boolean {
+        if (!id) {
+            id = this.getProxyId(node.id);
+        }
+        return node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$";
+    }
+
     /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
     updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
         this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
+        this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
     }
 
@@ -301,12 +360,10 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /**
-     * Calculates the TransformAttributes for this node's proxy, e.g. the position to place the proxy at aswell as its scale.
-     * Note that the position is pre-scaling.
+     * Calculates the TransformAttributes for this node's proxy, e.g. the position to place the proxy at aswell as its scale and bounds.
+     * Note that the position is post-scaling.
      */
     private getTransform(node: SKNode, desiredSize: number, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): TransformAttributes {
-        // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
-
         // OLD: without resizing the proxy
         // const offsetX = 0.5 * bounds.width * (zoom - 1);
         // const offsetY = 0.5 * bounds.height * (zoom - 1);
@@ -316,7 +373,9 @@ export class ProxyView extends AbstractUIExtension {
         // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
         // console.log(proxySizeScale);
 
-        const point = this.getPositionRec(node);
+        // TODO: cap node to parent bounds
+
+        const pos = this.getPosition(node);
         const bounds = node.bounds;
 
         // Calculate the scale and the resulting proxy dimensions
@@ -330,8 +389,8 @@ export class ProxyView extends AbstractUIExtension {
         // Center at middle of node
         const offsetX = 0.5 * (node.bounds.width * zoom - proxyWidth);
         const offsetY = 0.5 * (node.bounds.height * zoom - proxyHeight);
-        let x = (point.x - scroll.x) * zoom + offsetX;
-        let y = (point.y - scroll.y) * zoom + offsetY;
+        let x = (pos.x - scroll.x) * zoom + offsetX;
+        let y = (pos.y - scroll.y) * zoom + offsetY;
 
         // Cap proxy at canvas border
         x = Math.max(0, Math.min(canvasWidth - proxyWidth, x));
@@ -345,15 +404,16 @@ export class ProxyView extends AbstractUIExtension {
             x = rect.left - proxyWidth;
         }
 
-        // OLD: scale the coordinates
-        // x /= scale;
-        // y /= scale;
+        // Scale the coordinates
+        x /= scale;
+        y /= scale;
+        console.log("Bottom of node: " + (y + proxyHeight));
 
-        return { x: x, y: y, scale: scale };
+        return { x: x, y: y, scale: scale, width: proxyWidth, height: proxyHeight };
     }
 
     /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
-    private getPositionRec(node: SKNode): Point {
+    private getPosition(node: SKNode): Point {
         if (!node) {
             return { x: 0, y: 0 };
         }
@@ -366,7 +426,7 @@ export class ProxyView extends AbstractUIExtension {
             return point;
         } else {
             // Point hasn't been stored yet, check parent
-            point = this.getPositionRec(node.parent as SKNode);
+            point = this.getPosition(node.parent as SKNode);
             const x = point.x + node.bounds.x;
             const y = point.y + node.bounds.y;
             point = { x: x, y: y };

@@ -42,7 +42,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
     renderOptionsRegistry: RenderOptionsRegistry
     titles: VNode[][]
     viewport: Viewport
-    /** Used to force rendering independant of the depthMap. Used by the {@link ProxyView} for now. */
+    /** Used to force rendering independant of the depthMap. Needed by the proxy-view. */
     forceRendering = false;
 
     /**
@@ -79,23 +79,11 @@ export class SKGraphModelRenderer extends ModelRenderer {
             .filter(vnode => vnode !== undefined) as VNode[]
     }
 
-    /**
-     * Renders a node as a proxy, e.g. reduced to the proxy's necessities.
-     * 
-     * @param node The node to render as a proxy.
-     */
+    /** Renders a node as a proxy. */
     renderProxy(node: SKNode): VNode | undefined {
         this.forceRendering = true;
         const vnode = super.renderElement(node);
-        // OLD:
-        // const temp = node.data[0] as KRectangle;
-        // const data : KRectangle = {actions: [], calculatedBounds: {x:0,y:0,width:size,height:size}, children: temp.children, renderingId: temp.renderingId, styles: temp.styles, type: temp.type, id: temp.id};
-        // const vnode2 = getRendering(node.data, node, new KStyles, this); vnode2;
         this.forceRendering = false;
-        // console.log("node");
-        // console.log(node);
-        // console.log("vnode");
-        // console.log(vnode);
         return vnode;
     }
 }
