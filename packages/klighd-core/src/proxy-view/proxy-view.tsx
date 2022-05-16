@@ -228,41 +228,47 @@ export class ProxyView extends AbstractUIExtension {
             return offScreenNodes;
         }
 
-        // Set containing indices of all overlapping proxies
-        const overlappedIndices = new Set<number>();
-        const clusterProxies = [];
-
+        // Set containing groups of indices of overlapping proxies
+        const overlapIndexGroups = new Set<Set<number>>();
         for (let i = 0; i < offScreenNodes.length; i++) {
-            let iOverlap = false;
-            for (let j = 0; j < offScreenNodes.length; j++) {
-                if (i == j) {
-                    // Each proxy overlaps with itself
-                    continue;
-                }
+            // New set for current overlap group
+            const currOverlapIndexGroup = new Set<number>();
+            let overlap = false;
 
-                const jOverlap = this.checkOverlap(offScreenNodes[i].transform, offScreenNodes[j].transform);
-                iOverlap ||= jOverlap;
-
-                if (jOverlap) {
+            // TODO: skip if i already in overlapIndexGroups
+            
+            // Check next proxies for overlap
+            for (let j = i + 1; j < offScreenNodes.length; j++) {
+                if (this.checkOverlap(offScreenNodes[i].transform, offScreenNodes[j].transform)) {
                     // Proxies at i and j overlap
-                    overlappedIndices.add(j);
+                    overlap = true;
+                    currOverlapIndexGroup.add(j);
+
                 }
             }
-            if (iOverlap) {
-                // This proxy has overlap
-                overlappedIndices.add(i);
-                // TODO: now add a node representing a cluster to clusterProxies
-                // TODO: use smarter data structure for grouping proxies and creating one cluster per group
-                // TODO: push a cluster rendering (VNode)
-                clusterProxies.push(offScreenNodes[i]);
+
+            if (overlap) {
+                // This proxy overlaps
+                currOverlapIndexGroup.add(i);
+                overlapIndexGroups.add(currOverlapIndexGroup);
             }
         }
 
+        const overlapIndices: number[] = [];
+        const clusterProxies = [];
+        for (const group of Array.from(overlapIndexGroups)) {
+            // Add a cluster for each group
+            // TODO: push a cluster rendering (VNode)
+            clusterProxies.push(offScreenNodes[0]);
+            // Also push this group's indices
+            overlapIndices.push(...Array.from(group));
+        }
+
         // Filter all overlapping nodes
-        const res = offScreenNodes.filter((_, index) => !overlappedIndices.has(index));
+        const res = offScreenNodes.filter((_, index) => !overlapIndices.includes(index));
 
         // Add the cluster proxies
-        res.push(...clusterProxies);
+        // res.push(...clusterProxies);
 
         return res;
     }
@@ -466,9 +472,14 @@ export class ProxyView extends AbstractUIExtension {
         const top2 = bounds2.y;
         const bottom2 = top2 + bounds2.height;
 
-        const horizontalOverlap = left1 >= left2 && left1 <= right2 || right1 >= left2 && right1 <= right2;
-        const verticalOverlap = bottom1 >= top2 && bottom1 <= bottom2 || top1 >= top2 && top1 <= bottom2;
-        return horizontalOverlap && verticalOverlap;
+        // 1 in 2
+        const horizontalOverlap1 = left1 >= left2 && left1 <= right2 || right1 >= left2 && right1 <= right2;
+        const verticalOverlap1 = bottom1 >= top2 && bottom1 <= bottom2 || top1 >= top2 && top1 <= bottom2;
+        // 2 in 1
+        const horizontalOverlap2 = left2 >= left1 && left2 <= right1 || right2 >= left1 && right2 <= right1;
+        const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;
+
+        return horizontalOverlap1 && verticalOverlap1 || horizontalOverlap2 && verticalOverlap2;
     }
 
     //////// Filter methods ////////
