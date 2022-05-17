@@ -910,7 +910,7 @@ export function renderKRendering(kRendering: KRendering,
             maxScale = maxScale / context.viewport.zoom
         }
         if (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
-            || kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height) {
+            || context.viewport.zoom <= titleScalingFactorOption) {
             isOverlay = true
 
             let boundingBox = boundsAndTransformation.bounds
