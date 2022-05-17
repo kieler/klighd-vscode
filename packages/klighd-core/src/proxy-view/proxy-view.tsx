@@ -22,7 +22,7 @@ import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
-import { ProxyViewCapProxyToParent, ProxyViewClusteringEnabled, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
+import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
@@ -58,6 +58,7 @@ export class ProxyView extends AbstractUIExtension {
     private sizePercentage: number;
     /** @see {@link ProxyViewClusteringEnabled} */
     private clusteringEnabled: boolean;
+    private clusteringCascading: boolean; // FIXME:
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
     /** @see {@link ProxyViewFilterUnconnected} */
@@ -165,7 +166,7 @@ export class ProxyView extends AbstractUIExtension {
         }));
 
         //// Apply clustering ////
-        const clusteredNodes = this.applyClustering(transformedOffScreenNodes);
+        const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasWidth, canvasHeight);
 
         // Render the proxies
         const res = [];
@@ -225,35 +226,32 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Applies clustering to all `offScreenNodes`. TODO: */
-    private applyClustering(offScreenNodes: { node: SKNode, transform: TransformAttributes }[]): { node: SKNode, transform: TransformAttributes }[] {
+    private applyClustering(offScreenNodes: { node: SKNode, transform: TransformAttributes }[], size: number, canvasWidth: number, canvasHeight: number): { node: SKNode | VNode, transform: TransformAttributes }[] {
         if (!this.clusteringEnabled) {
             return offScreenNodes;
         }
 
         // List containing groups of indices of overlapping proxies
         // Could use a set of sets here, not needed since the same group cannot appear twice
-        const overlapIndexGroups: number[][] = [];
+        let overlapIndexGroups: number[][] = [];
         for (let i = 0; i < offScreenNodes.length; i++) {
-            if (overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
+            if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
                 // i already in an overlapIndexGroup, prevent cascading clustering
                 continue;
             }
 
             // New list for current overlap group
             const currOverlapIndexGroup = [];
-            let overlap = false;
 
             // Check next proxies for overlap
             for (let j = i + 1; j < offScreenNodes.length; j++) {
                 if (this.checkOverlap(offScreenNodes[i].transform, offScreenNodes[j].transform)) {
                     // Proxies at i and j overlap
-                    overlap = true;
                     currOverlapIndexGroup.push(j);
-
                 }
             }
 
-            if (overlap) {
+            if (currOverlapIndexGroup.length > 0) {
                 // This proxy overlaps
                 currOverlapIndexGroup.push(i);
                 overlapIndexGroups.push(currOverlapIndexGroup);
@@ -261,13 +259,65 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // Filter all overlapping nodes
-        const res = offScreenNodes.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
+        const res: {node: SKNode | VNode, transform: TransformAttributes}[] = offScreenNodes.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
         
+        if (this.clusteringCascading) {
+            // Join groups containing at least 1 same index
+            console.log("Before merging groups");
+            overlapIndexGroups.forEach(group => console.log(group));
+
+            const out = [];
+            while (overlapIndexGroups.length > 0) {
+                let first = Array.from(new Set(overlapIndexGroups.shift()));
+                let rest = [...overlapIndexGroups];
+
+                let lf = -1;
+                while (first.length > lf) {
+                    lf = first.length;
+                    const rest2 = [];
+                    for (const r of rest) {
+                        if (new Set([...first].filter(x => r.includes(x))).size > 0) {
+                            first = Array.from(new Set(first.concat(r)));
+                        } else {
+                            rest2.push(r);
+                        }
+                    }
+                    rest = rest2;
+                }
+
+                out.push(Array.from(new Set(first)));
+                overlapIndexGroups = rest;
+            }
+
+            console.log("After merging groups");
+            overlapIndexGroups = out;
+            overlapIndexGroups.forEach(group => console.log(group));
+        }
+
         // Add cluster proxies
-        for (const _ of overlapIndexGroups) {
+        for (let i = 0; i < overlapIndexGroups.length; i++) {
+            const group = overlapIndexGroups[i];
             // Add a cluster for each group
             // TODO: push a cluster rendering (VNode)
-            // res.push(offScreenNodes[0]);
+            const currGroupNodes = offScreenNodes.filter((_, index) => group.includes(index));
+
+            // Calculate position to put cluster proxy at, e.g. average of this group's positions
+            let x = currGroupNodes.reduce((acc, {node, transform}) => acc + transform.x, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
+            let y = currGroupNodes.reduce((acc, {node, transform}) => acc + transform.y, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
+            // Make sure the calculated positions don't leave the canvas bounds
+            x = Math.max(0, Math.min(canvasWidth - size, x));
+            y = Math.max(0, Math.min(canvasHeight - size, y));
+            // Also make sure the calculated positions are still capped to the border (no floating proxies)
+            if (y > 0 && y < canvasHeight - size && (x < canvasWidth - size || x > 0)) {
+                x = x > (canvasWidth - size) / 2 ? canvasWidth - size : 0;
+            }
+            if (x > 0 && x < canvasWidth - size && (y < canvasHeight - size || y > 0)) {
+                y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
+            }
+            
+            // TODO: also allow cluster to cap to parent
+            const test: VNode = JSON.parse('{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"keith-diagram_sprotty_$root$N-cluster-' + i + '-proxy","transform":"translate(' + x + ', ' + y + ')"},"class":{"selected":false}},"children":[{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"R1519736165"}},"children":[{"sel":"rect","data":{"ns":"http://www.w3.org/2000/svg","style":{"opacity":"1"},"attrs":{"width":' + size + ',"height":' + size + ',"stroke":"black","fill":"rgb(220,220,220)"}},"children":[]},{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"R1519736165$R331418503"}},"children":[]}]}],"key":"$root$N-cluster-' + i + '-proxy"}');
+            res.push({node: test, transform: {x: x, y: y, scale: 1, width: size, height: size}});
         }
 
         return res;
@@ -310,11 +360,9 @@ export class ProxyView extends AbstractUIExtension {
             // Change its id for good measure
             clone.id = id;
             // Clear children, proxies don't show nested nodes
-            clone.children = [];
+            clone.children = clone.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge));
             // Update bounds
             clone.bounds = transform;
-            // Enable smart zoom FIXME:
-            console.log(node);
 
             // Check if synthesis has specified a proxy rendering
             if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
@@ -358,6 +406,7 @@ export class ProxyView extends AbstractUIExtension {
         if (!id) {
             id = this.getProxyId(node.id);
         }
+        // TODO: don't check using $$, use a property instead
         // Not an edge, not a comment/non-explicitly specified region
         // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
         return node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$";
@@ -368,6 +417,7 @@ export class ProxyView extends AbstractUIExtension {
         this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
+        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading); // FIXME: 
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
     }
@@ -379,6 +429,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Clears the {@link positions} map. */
     clearPositions(): void {
+        // TODO: also clear when the text is edited
         this.positions.clear();
     }
 

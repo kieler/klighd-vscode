@@ -299,6 +299,21 @@ export class ProxyViewClusteringEnabled implements RenderOption {
     currentValue = ProxyViewClusteringEnabled.DEFAULT;
 }
 
+// FIXME:
+export class ProxyViewClusteringCascading implements RenderOption {
+    static readonly ID: string = 'proxy-view-clustering-cascading';
+    static readonly NAME: string = 'Cascading Clustering';
+    static readonly DESCRIPTION: string = "Whether clustering should be cascading.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewClusteringCascading.ID;
+    readonly name: string = ProxyViewClusteringCascading.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewClusteringCascading.DEFAULT;
+    readonly description?: string = ProxyViewClusteringCascading.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewClusteringCascading.DEFAULT;
+}
+
 /** Whether to cap proxies in their parent node. */
 export class ProxyViewCapProxyToParent implements RenderOption {
     static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
@@ -372,6 +387,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewEnabled);
         this.register(ProxyViewSize);
         this.register(ProxyViewClusteringEnabled);
+        this.register(ProxyViewClusteringCascading); // FIXME:
         this.register(ProxyViewCapProxyToParent);
         this.register(ProxyViewFilterUnconnected);
     }

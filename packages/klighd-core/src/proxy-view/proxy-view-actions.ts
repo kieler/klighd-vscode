@@ -17,7 +17,7 @@
 
 import { inject, injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
-import { Action, Bounds } from "sprotty-protocol";
+import { Action, Bounds, SetModelAction, UpdateModelAction } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
@@ -86,6 +86,9 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
         } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {
             const sMCAction = action as SendModelContextAction;
             this.proxyView.update(sMCAction.model, sMCAction.context);
+        } else if (this.proxyView !== undefined && (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND)) {
+            this.proxyView.clearRenderings();
+            this.proxyView.clearPositions();
         }
     }
 
@@ -93,6 +96,9 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
         // Register as a handler to receive the actions
         registry.register(SendModelContextAction.KIND, this);
         registry.register(SendProxyViewAction.KIND, this);
+        // Layout changes
+        registry.register(SetModelAction.KIND, this);
+        registry.register(UpdateModelAction.KIND, this);
     }
 }
 
