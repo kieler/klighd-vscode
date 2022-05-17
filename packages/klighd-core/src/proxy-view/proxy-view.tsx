@@ -259,8 +259,8 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // Filter all overlapping nodes
-        const res: {node: SKNode | VNode, transform: TransformAttributes}[] = offScreenNodes.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
-        
+        const res: { node: SKNode | VNode, transform: TransformAttributes }[] = offScreenNodes.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
+
         if (this.clusteringCascading) {
             // Join groups containing at least 1 same index
             console.log("Before merging groups");
@@ -302,8 +302,8 @@ export class ProxyView extends AbstractUIExtension {
             const currGroupNodes = offScreenNodes.filter((_, index) => group.includes(index));
 
             // Calculate position to put cluster proxy at, e.g. average of this group's positions
-            let x = currGroupNodes.reduce((acc, {node, transform}) => acc + transform.x, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
-            let y = currGroupNodes.reduce((acc, {node, transform}) => acc + transform.y, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
+            let x = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.x, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
+            let y = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.y, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
             // Make sure the calculated positions don't leave the canvas bounds
             x = Math.max(0, Math.min(canvasWidth - size, x));
             y = Math.max(0, Math.min(canvasHeight - size, y));
@@ -314,10 +314,9 @@ export class ProxyView extends AbstractUIExtension {
             if (x > 0 && x < canvasWidth - size && (y < canvasHeight - size || y > 0)) {
                 y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
             }
-            
-            // TODO: also allow cluster to cap to parent
-            const test: VNode = JSON.parse('{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"keith-diagram_sprotty_$root$N-cluster-' + i + '-proxy","transform":"translate(' + x + ', ' + y + ')"},"class":{"selected":false}},"children":[{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"R1519736165"}},"children":[{"sel":"rect","data":{"ns":"http://www.w3.org/2000/svg","style":{"opacity":"1"},"attrs":{"width":' + size + ',"height":' + size + ',"stroke":"black","fill":"rgb(220,220,220)"}},"children":[]},{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"R1519736165$R331418503"}},"children":[]}]}],"key":"$root$N-cluster-' + i + '-proxy"}');
-            res.push({node: test, transform: {x: x, y: y, scale: 1, width: size, height: size}});
+
+            const test: VNode = this.getClusterRendering(`-cluster-${i}-proxy`, size, size, x, y);
+            res.push({ node: test, transform: { x: x, y: y, scale: 1, width: size, height: size } });
         }
 
         return res;
@@ -542,6 +541,11 @@ export class ProxyView extends AbstractUIExtension {
         const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;
 
         return horizontalOverlap1 && verticalOverlap1 || horizontalOverlap2 && verticalOverlap2;
+    }
+
+    /** Returns the rendering of clusters. */
+    private getClusterRendering(id: string, width: number, height: number, x: number, y: number): VNode {
+        return JSON.parse(`{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"keith-diagram_sprotty_$root$N${id}","transform":"translate(${x}, ${y})"},"class":{"selected":false}},"children":[{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"${id}"}},"children":[{"sel":"rect","data":{"ns":"http://www.w3.org/2000/svg","style":{"opacity":"1"},"attrs":{"width":${width},"height":${height},"stroke":"black","fill":"rgb(220,220,220)"}},"children":[]},{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"${id}$${id}"}},"children":[]}]}],"key":"$root$N${id}"}`);
     }
 
     //////// Filter methods ////////
