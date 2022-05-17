@@ -24,6 +24,7 @@ import { LspHandler } from "./lsp-handler";
 import { StorageService } from "./storage/storage-service";
 import { ReportChangeMessage } from "./storage/messages";
 import { Action, isAction } from "sprotty-protocol";
+import { PropertiesTreeDataProvider } from "./properties-tree-data-provider";
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
@@ -137,6 +138,14 @@ export function activate(context: vscode.ExtensionContext): void {
             extension.webviews.forEach((webview) => webview.dispatch(action));
         })
     );
+
+    const propertiesDataProvider = new PropertiesTreeDataProvider();
+
+    // Register and start properties view
+    vscode.window.registerTreeDataProvider('properties-tree', propertiesDataProvider)
+    vscode.window.createTreeView('properties-tree', {
+        treeDataProvider: propertiesDataProvider,
+    })
 }
 
 function isLanguageClient(client: unknown): client is CommonLanguageClient {

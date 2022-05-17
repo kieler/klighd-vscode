@@ -28,6 +28,25 @@
     ],
     "main": "./dist/extension.js",
     "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "diagram-info",
+                    "title": "Diagram Info",
+                    "icon": "./icon.png_TODO: actually have an icon" 
+                }
+            ]
+          },
+          "views": {
+              "diagram-info": [
+                {
+                    "type": "tree",
+                    "id": "properties-tree",
+                    "name": "Properties"
+                }
+            ]
+                
+        },
         "commands": [
             {
                 "command": "klighd-vscode.data.clear",
