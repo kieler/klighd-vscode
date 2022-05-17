@@ -3,7 +3,7 @@
 *
 * http://rtsys.informatik.uni-kiel.de/kieler
 *
-* Copyright 2019 by
+* Copyright 2019-2022 by
 * + Kiel University
 *   + Department of Computer Science
 *     + Real-Time and Embedded Systems Group
@@ -18,16 +18,29 @@ import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K
 
 /**
  * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
+ * If the element should be selected but is not selectable, the next selectable element in the hierarchy will be chosen.
+ * @param target The graph element the event is triggered on.
  * @param element The topmost SVG element clicked.
+ * @param select Optional parameter to search for selectable renderings only. Defaults to false.
  */
-export function getSemanticElement(element: EventTarget | null): SVGElement | undefined {
+export function getSemanticElement(target: SKGraphElement, element: EventTarget | null, select = false): SVGElement | undefined {
     if (!(element instanceof SVGElement)) {
         return undefined
     }
     let currentElement: Element | null = element
     let semanticElement = undefined
     while (semanticElement === undefined && currentElement instanceof SVGElement) {
-        if (currentElement.id !== '') {
+        // If the rendering is configured to be not selectable, do not select it.
+        let renderingSelectable = true
+        if (currentElement.id !== '' && select) {
+            const rendering = findRendering(target, currentElement.id)
+            if (rendering?.properties['de.cau.cs.kieler.klighd.suppressSelectability'] === true) {
+                renderingSelectable = false
+            }
+        }
+        // Choose this element if it is a defined element with an ID.
+        // Also only use this if selection implies it is selectable (select => renderingSelectable)
+        if (currentElement.id !== '' && (!select || renderingSelectable)) {
             semanticElement = currentElement
         } else {
             currentElement = currentElement.parentElement

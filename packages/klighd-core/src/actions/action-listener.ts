@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2021 by
+ * Copyright 2018-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -61,7 +61,7 @@ export class ActionListener extends MouseListener {
     protected actions(target: SKGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
         const actions: Action[] = []
         // Look up the ID of the semantic element that was clicked.
-        const semanticElement = getSemanticElement(event.target)
+        const semanticElement = getSemanticElement(target, event.target, true)
         if (semanticElement === undefined) {
             return actions
         }
