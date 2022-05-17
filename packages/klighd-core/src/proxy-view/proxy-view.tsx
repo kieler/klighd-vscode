@@ -22,7 +22,10 @@ import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
-import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry } from "../options/render-options-registry";
+import {
+    ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewEnabled,
+    ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry
+} from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
@@ -226,97 +229,108 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Applies clustering to all `offScreenNodes`. TODO: */
-    private applyClustering(offScreenNodes: { node: SKNode, transform: TransformAttributes }[], size: number, canvasWidth: number, canvasHeight: number): { node: SKNode | VNode, transform: TransformAttributes }[] {
+    private applyClustering(offScreenNodes: { node: SKNode, transform: TransformAttributes }[],
+        size: number, canvasWidth: number, canvasHeight: number): { node: SKNode | VNode, transform: TransformAttributes }[] {
         if (!this.clusteringEnabled) {
             return offScreenNodes;
         }
 
         // List containing groups of indices of overlapping proxies
         // Could use a set of sets here, not needed since the same group cannot appear twice
-        let overlapIndexGroups: number[][] = [];
-        for (let i = 0; i < offScreenNodes.length; i++) {
-            if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
-                // i already in an overlapIndexGroup, prevent cascading clustering
-                continue;
-            }
+        let overlapIndexGroups: number[][] = [[]];
+        let res: { node: SKNode | VNode, transform: TransformAttributes }[] = offScreenNodes;
 
-            // New list for current overlap group
-            const currOverlapIndexGroup = [];
-
-            // Check next proxies for overlap
-            for (let j = i + 1; j < offScreenNodes.length; j++) {
-                if (this.checkOverlap(offScreenNodes[i].transform, offScreenNodes[j].transform)) {
-                    // Proxies at i and j overlap
-                    currOverlapIndexGroup.push(j);
+        while (overlapIndexGroups.length > 0) {
+            overlapIndexGroups = [];
+            for (let i = 0; i < res.length; i++) {
+                if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
+                    // i already in an overlapIndexGroup, prevent cascading clustering
+                    continue;
                 }
-            }
 
-            if (currOverlapIndexGroup.length > 0) {
-                // This proxy overlaps
-                currOverlapIndexGroup.push(i);
-                overlapIndexGroups.push(currOverlapIndexGroup);
-            }
-        }
+                // New list for current overlap group
+                const currOverlapIndexGroup = [];
 
-        // Filter all overlapping nodes
-        const res: { node: SKNode | VNode, transform: TransformAttributes }[] = offScreenNodes.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
-
-        if (this.clusteringCascading) {
-            // Join groups containing at least 1 same index
-            console.log("Before merging groups");
-            overlapIndexGroups.forEach(group => console.log(group));
-
-            const out = [];
-            while (overlapIndexGroups.length > 0) {
-                let first = Array.from(new Set(overlapIndexGroups.shift()));
-                let rest = [...overlapIndexGroups];
-
-                let lf = -1;
-                while (first.length > lf) {
-                    lf = first.length;
-                    const rest2 = [];
-                    for (const r of rest) {
-                        if (new Set([...first].filter(x => r.includes(x))).size > 0) {
-                            first = Array.from(new Set(first.concat(r)));
-                        } else {
-                            rest2.push(r);
-                        }
+                // Check next proxies for overlap
+                for (let j = i + 1; j < res.length; j++) {
+                    if (this.checkOverlap(res[i].transform, res[j].transform)) {
+                        // Proxies at i and j overlap
+                        currOverlapIndexGroup.push(j);
                     }
-                    rest = rest2;
                 }
 
-                out.push(Array.from(new Set(first)));
-                overlapIndexGroups = rest;
+                if (currOverlapIndexGroup.length > 0) {
+                    // This proxy overlaps
+                    currOverlapIndexGroup.push(i);
+                    overlapIndexGroups.push(currOverlapIndexGroup);
+                }
             }
 
-            console.log("After merging groups");
-            overlapIndexGroups = out;
-            overlapIndexGroups.forEach(group => console.log(group));
-        }
-
-        // Add cluster proxies
-        for (let i = 0; i < overlapIndexGroups.length; i++) {
-            const group = overlapIndexGroups[i];
-            // Add a cluster for each group
-            // TODO: push a cluster rendering (VNode)
-            const currGroupNodes = offScreenNodes.filter((_, index) => group.includes(index));
-
-            // Calculate position to put cluster proxy at, e.g. average of this group's positions
-            let x = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.x, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
-            let y = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.y, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
-            // Make sure the calculated positions don't leave the canvas bounds
-            x = Math.max(0, Math.min(canvasWidth - size, x));
-            y = Math.max(0, Math.min(canvasHeight - size, y));
-            // Also make sure the calculated positions are still capped to the border (no floating proxies)
-            if (y > 0 && y < canvasHeight - size && (x < canvasWidth - size || x > 0)) {
-                x = x > (canvasWidth - size) / 2 ? canvasWidth - size : 0;
-            }
-            if (x > 0 && x < canvasWidth - size && (y < canvasHeight - size || y > 0)) {
-                y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
+            if (overlapIndexGroups.length <= 0) {
+                // No more overlap
+                break;
             }
 
-            const test: VNode = this.getClusterRendering(`-cluster-${i}-proxy`, size, size, x, y);
-            res.push({ node: test, transform: { x: x, y: y, scale: 1, width: size, height: size } });
+            // Filter all overlapping nodes
+            res = res.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
+
+            if (this.clusteringCascading) {
+                // Join groups containing at least 1 same index
+                console.log("Before merging groups");
+                overlapIndexGroups.forEach(group => console.log(group));
+
+                const out = [];
+                while (overlapIndexGroups.length > 0) {
+                    let first = Array.from(new Set(overlapIndexGroups.shift()));
+                    let rest = [...overlapIndexGroups];
+
+                    let prevLength = -1; // FIXME: =0?
+                    while (first.length > prevLength) {
+                        prevLength = first.length;
+                        const rest2 = [];
+                        for (const r of rest) {
+                            if (new Set([...first].filter(x => r.includes(x))).size > 0) {
+                                first = Array.from(new Set(first.concat(r)));
+                            } else {
+                                rest2.push(r);
+                            }
+                        }
+                        rest = rest2;
+                    }
+
+                    out.push(Array.from(new Set(first)));
+                    overlapIndexGroups = rest;
+                }
+
+                console.log("After merging groups");
+                overlapIndexGroups = out;
+                overlapIndexGroups.forEach(group => console.log(group));
+            }
+
+            // Add cluster proxies
+            for (let i = 0; i < overlapIndexGroups.length; i++) {
+                // Add a cluster for each group
+                const group = overlapIndexGroups[i];
+                // Get all nodes of the current group
+                const currGroupNodes = res.filter((_, index) => group.includes(index));
+
+                // Calculate position to put cluster proxy at, e.g. average of this group's positions
+                let x = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.x, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
+                let y = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.y, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
+                // Make sure the calculated positions don't leave the canvas bounds
+                x = Math.max(0, Math.min(canvasWidth - size, x));
+                y = Math.max(0, Math.min(canvasHeight - size, y));
+                // Also make sure the calculated positions are still capped to the border (no floating proxies)
+                if (y > 0 && y < canvasHeight - size && (x < canvasWidth - size || x > 0)) {
+                    x = x > (canvasWidth - size) / 2 ? canvasWidth - size : 0;
+                }
+                if (x > 0 && x < canvasWidth - size && (y < canvasHeight - size || y > 0)) {
+                    y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
+                }
+
+                const clusterNode: VNode = this.getClusterRendering(`-cluster-${i}-proxy`, size, size, x, y);
+                res.push({ node: clusterNode, transform: { x: x, y: y, scale: 1, width: size, height: size } });
+            }
         }
 
         return res;
@@ -364,7 +378,7 @@ export class ProxyView extends AbstractUIExtension {
             clone.bounds = transform;
 
             // Check if synthesis has specified a proxy rendering
-            if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
+            if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) { // FIXME: add an option to use fallback
                 // Proxy rendering available
                 clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
@@ -455,7 +469,7 @@ export class ProxyView extends AbstractUIExtension {
         // The scale is calculated such that width & height are capped to a max value
         const proxyWidthScale = desiredSize / bounds.width;
         const proxyHeightScale = desiredSize / bounds.height;
-        const scale = Math.min(proxyWidthScale, proxyHeightScale);
+        const scale = Math.min(proxyWidthScale, proxyHeightScale); // TODO: max 1?
         const proxyWidth = bounds.width * scale;
         const proxyHeight = bounds.height * scale;
 
@@ -545,7 +559,57 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns the rendering of clusters. */
     private getClusterRendering(id: string, width: number, height: number, x: number, y: number): VNode {
-        return JSON.parse(`{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"keith-diagram_sprotty_$root$N${id}","transform":"translate(${x}, ${y})"},"class":{"selected":false}},"children":[{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"${id}"}},"children":[{"sel":"rect","data":{"ns":"http://www.w3.org/2000/svg","style":{"opacity":"1"},"attrs":{"width":${width},"height":${height},"stroke":"black","fill":"rgb(220,220,220)"}},"children":[]},{"sel":"g","data":{"ns":"http://www.w3.org/2000/svg","attrs":{"id":"${id}$${id}"}},"children":[]}]}],"key":"$root$N${id}"}`);
+        return JSON.parse( // FIXME: change ids? Also layer second grey node
+            `{
+                "sel":"g",
+                "data":
+                    {
+                        "ns":"http://www.w3.org/2000/svg",
+                        "attrs":{"id":"keith-diagram_sprotty_$root$N${id}",
+                        "transform":"translate(${x}, ${y})"},
+                        "class":{"selected":false}
+                    },
+                "children":
+                    [
+                        {
+                            "sel":"g",
+                            "data":
+                                {
+                                    "ns":"http://www.w3.org/2000/svg",
+                                    "attrs":{"id":"${id}"}
+                                },
+                                "children":
+                                    [
+                                        {
+                                            "sel":"rect",
+                                            "data":
+                                                {
+                                                    "ns":"http://www.w3.org/2000/svg",
+                                                    "style":{"opacity":"1"},
+                                                    "attrs":
+                                                        {
+                                                            "width":${width},
+                                                            "height":${height},
+                                                            "stroke":"black",
+                                                            "fill":"rgb(220,220,220)"
+                                                        }
+                                                },
+                                            "children":[]
+                                        },
+                                        {
+                                            "sel":"g",
+                                            "data":
+                                                {
+                                                    "ns":"http://www.w3.org/2000/svg",
+                                                    "attrs":{"id":"${id}$${id}"}
+                                                },
+                                            "children":[]
+                                        }
+                                    ]
+                        }
+                    ],
+                "key":"$root$N${id}"
+            }`);
     }
 
     //////// Filter methods ////////
