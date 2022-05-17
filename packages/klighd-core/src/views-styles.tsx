@@ -23,7 +23,7 @@ import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
     KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
     KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge,
-    SKGraphElement, SKNode, VerticalAlignment
+    SKGraphElement, SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
 import {
     camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText,
@@ -733,7 +733,7 @@ export function getSvgTextStyles(styles: KStyles): TextStyles {
         fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size * 96 / 72 + 'px',
         fontStyle: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
         fontWeight: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
-        textDecorationLine: styles.kTextUnderline === undefined ? undefined : 'underline',
+        textDecorationLine: styles.kTextUnderline === undefined || styles.kTextUnderline.underline === Underline.NONE ? undefined : 'underline',
         textDecorationStyle: styles.kTextUnderline === undefined ? undefined : textDecorationStyleText(styles.kTextUnderline as KTextUnderline)
         // textDecorationColor: styles.kTextUnderline === undefined ? undefined : textDecorationColor(styles.kTextUnderline as KTextUnderline),
         // TODO: textDecorationColorDefinition:
