@@ -264,6 +264,21 @@ export class ProxyViewEnabled implements RenderOption {
     currentValue = ProxyViewEnabled.DEFAULT;
 }
 
+/** Whether to use the synthesis specified proxy-rendering. */
+export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
+    static readonly ID: string = 'proxy-view-use-synthesis-proxy-rendering';
+    static readonly NAME: string = 'Use Synthesis Proxy-Rendering';
+    static readonly DESCRIPTION: string = "Whether proxies should be rendered as specified by the synthesis (if specified).";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewUseSynthesisProxyRendering.ID;
+    readonly name: string = ProxyViewUseSynthesisProxyRendering.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewUseSynthesisProxyRendering.DEFAULT;
+    readonly description?: string = ProxyViewUseSynthesisProxyRendering.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
+}
+
 /** Part of calculating the proxies' size. */
 export class ProxyViewSize implements RangeOption {
     static readonly ID: string = 'proxy-view-size';
@@ -385,6 +400,7 @@ export class RenderOptionsRegistry extends Registry {
 
         this.register(ProxyViewCategory);
         this.register(ProxyViewEnabled);
+        this.register(ProxyViewUseSynthesisProxyRendering);
         this.register(ProxyViewSize);
         this.register(ProxyViewClusteringEnabled);
         this.register(ProxyViewClusteringCascading); // FIXME:

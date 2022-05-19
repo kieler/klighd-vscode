@@ -24,7 +24,7 @@ import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
 import {
     ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewEnabled,
-    ProxyViewFilterUnconnected, ProxyViewSize, RenderOptionsRegistry
+    ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering, RenderOptionsRegistry
 } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode } from "../skgraph-models";
@@ -64,6 +64,8 @@ export class ProxyView extends AbstractUIExtension {
     private clusteringCascading: boolean; // FIXME:
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
+    /** @see {@link ProxyViewUseSynthesisProxyRendering} */
+    private useSynthesisProxyRendering: boolean;
     /** @see {@link ProxyViewFilterUnconnected} */
     private filterUnconnected: boolean;
 
@@ -181,16 +183,6 @@ export class ProxyView extends AbstractUIExtension {
             }
         }
 
-        // OLD: clustering
-        // for (let i = 0; i < res.length; i++) {
-        //     // Check if the current node overlaps with any of the following
-        //     const node1 = res[i];
-        //     for (let j = i + 1; j < res.length; j++) {
-        //         const node2 = res[j];
-        //         const verticalOverlap = node1.
-        //     }
-        // }
-
         return res;
     }
 
@@ -271,20 +263,14 @@ export class ProxyView extends AbstractUIExtension {
                 break;
             }
 
-            // Filter all overlapping nodes
-            res = res.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
-
             if (this.clusteringCascading) {
                 // Join groups containing at least 1 same index
-                console.log("Before merging groups");
-                overlapIndexGroups.forEach(group => console.log(group));
-
                 const out = [];
                 while (overlapIndexGroups.length > 0) {
                     let first = Array.from(new Set(overlapIndexGroups.shift()));
                     let rest = [...overlapIndexGroups];
 
-                    let prevLength = -1; // FIXME: =0?
+                    let prevLength = 0;
                     while (first.length > prevLength) {
                         prevLength = first.length;
                         const rest2 = [];
@@ -301,10 +287,6 @@ export class ProxyView extends AbstractUIExtension {
                     out.push(Array.from(new Set(first)));
                     overlapIndexGroups = rest;
                 }
-
-                console.log("After merging groups");
-                overlapIndexGroups = out;
-                overlapIndexGroups.forEach(group => console.log(group));
             }
 
             // Add cluster proxies
@@ -328,9 +310,12 @@ export class ProxyView extends AbstractUIExtension {
                     y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
                 }
 
-                const clusterNode: VNode = this.getClusterRendering(`-cluster-${i}-proxy`, size, size, x, y);
+                const clusterNode = this.getClusterRendering(`-cluster-${i}-proxy`, size, size, x, y);
                 res.push({ node: clusterNode, transform: { x: x, y: y, scale: 1, width: size, height: size } });
             }
+
+            // Filter all overlapping nodes
+            res = res.filter((_, index) => !overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(index));
         }
 
         return res;
@@ -344,41 +329,29 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         if (!(node instanceof SKNode)) {
-            // TODO: does this work?
-            // VNode, this is a predefined rendering
-            if (node.data && node.data.attrs) {
-                // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
-                // Update position once the canvas is left
-                node.data.attrs["transform"] = transformString;
-                // Update position while on the canvas
-                document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`)?.setAttribute("transform", transformString);
-            }
+            // VNode, this is a predefined rendering (e.g. cluster)
+            this.updateTransform(node, transformString);
             return node;
         }
 
         // Get VNode
         const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
-        if (vnode && vnode.data && vnode.data.attrs) {
+        if (vnode) {
             // Node has already been rendered, update position and return
-
-            // Just changing the vnode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
-            // Update position once the canvas is left
-            vnode.data.attrs["transform"] = transformString;
-            // Update position while on the canvas
-            document.getElementById(`keith-diagram_sprotty_${id}`)?.setAttribute("transform", transformString);
+            this.updateTransform(vnode, transformString);
         } else {
             // This effectively clones the node
             const clone: SKNode = Object.create(node);
             // Change its id for good measure
             clone.id = id;
-            // Clear children, proxies don't show nested nodes
+            // Clear children, proxies don't show nested nodes (but keep Labels)
             clone.children = clone.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge));
             // Update bounds
             clone.bounds = transform;
 
             // Check if synthesis has specified a proxy rendering
-            if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) { // FIXME: add an option to use fallback
+            if (this.useSynthesisProxyRendering && node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
                 // Proxy rendering available
                 clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
@@ -431,8 +404,9 @@ export class ProxyView extends AbstractUIExtension {
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading); // FIXME: 
-        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+        this.useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
+        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
     }
 
     /** Clears the {@link renderings} map. */
@@ -487,7 +461,8 @@ export class ProxyView extends AbstractUIExtension {
         /* Don't need to check for the opened sidebar since it closes as soon as the diagram is moved
           (onMouseDown), e.g. don't reposition proxies accordingly */
         const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
-        if (rect && y < rect.bottom && x > rect.left - proxyWidth) {
+        const isSidebarOpen = document.querySelector('.sidebar--open');
+        if (!isSidebarOpen && rect && y < rect.bottom && x > rect.left - proxyWidth) {
             x = rect.left - proxyWidth;
         }
 
@@ -528,6 +503,17 @@ export class ProxyView extends AbstractUIExtension {
             // Also store this point
             this.positions.set(id, point);
             return point;
+        }
+    }
+
+    /** Updates a VNode's transform attribute. */
+    private updateTransform(node: VNode, transformString: string): void {
+        if (node && node.data && node.data.attrs) {
+            // Just changing the VNode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
+            // Update transform while off the canvas
+            node.data.attrs["transform"] = transformString;
+            // Update transform while on the canvas
+            document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`)?.setAttribute("transform", transformString);
         }
     }
 
@@ -576,7 +562,7 @@ export class ProxyView extends AbstractUIExtension {
                             "data":
                                 {
                                     "ns":"http://www.w3.org/2000/svg",
-                                    "attrs":{"id":"${id}"}
+                                    "attrs":{"id":"${id}1"}
                                 },
                                 "children":
                                     [
@@ -601,7 +587,7 @@ export class ProxyView extends AbstractUIExtension {
                                             "data":
                                                 {
                                                     "ns":"http://www.w3.org/2000/svg",
-                                                    "attrs":{"id":"${id}$${id}"}
+                                                    "attrs":{"id":"${id}2"}
                                                 },
                                             "children":[]
                                         }
