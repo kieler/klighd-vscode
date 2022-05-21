@@ -265,28 +265,7 @@ export class ProxyView extends AbstractUIExtension {
 
             if (this.clusteringCascading) {
                 // Join groups containing at least 1 same index
-                const out = [];
-                while (overlapIndexGroups.length > 0) {
-                    let first = Array.from(new Set(overlapIndexGroups.shift()));
-                    let rest = [...overlapIndexGroups];
-
-                    let prevLength = 0;
-                    while (first.length > prevLength) {
-                        prevLength = first.length;
-                        const rest2 = [];
-                        for (const r of rest) {
-                            if (new Set([...first].filter(x => r.includes(x))).size > 0) {
-                                first = Array.from(new Set(first.concat(r)));
-                            } else {
-                                rest2.push(r);
-                            }
-                        }
-                        rest = rest2;
-                    }
-
-                    out.push(Array.from(new Set(first)));
-                    overlapIndexGroups = rest;
-                }
+                overlapIndexGroups = this.joinTransitiveGroups(overlapIndexGroups);
             }
 
             // Add cluster proxies
@@ -297,8 +276,20 @@ export class ProxyView extends AbstractUIExtension {
                 const currGroupNodes = res.filter((_, index) => group.includes(index));
 
                 // Calculate position to put cluster proxy at, e.g. average of this group's positions
-                let x = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.x, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
-                let y = currGroupNodes.reduce((acc, { node, transform }) => acc + transform.y, 0) / currGroupNodes.length; // eslint-disable-line @typescript-eslint/no-unused-vars
+                let numProxiesInCluster = 0;
+                let x = 0;
+                let y = 0;
+                for (const { transform } of currGroupNodes) {
+                    // Weigh coordinates by the number of proxies in the current proxy (which might be a cluster)
+                    const numProxiesInCurr = (transform as any).numProxies ?? 1;
+
+                    numProxiesInCluster += numProxiesInCurr;
+                    x += transform.x * numProxiesInCurr;
+                    y += transform.y * numProxiesInCurr;
+                }
+                x /= numProxiesInCluster;
+                y /= numProxiesInCluster;
+
                 // Make sure the calculated positions don't leave the canvas bounds
                 x = Math.max(0, Math.min(canvasWidth - size, x));
                 y = Math.max(0, Math.min(canvasHeight - size, y));
@@ -311,7 +302,13 @@ export class ProxyView extends AbstractUIExtension {
                 }
 
                 const clusterNode = this.getClusterRendering(`-cluster-${i}-proxy`, size, size, x, y);
-                res.push({ node: clusterNode, transform: { x: x, y: y, scale: 1, width: size, height: size } });
+                res.push({
+                    node: clusterNode,
+                    transform: {
+                        x: x, y: y, scale: 1, width: size, height: size,
+                        numProxies: numProxiesInCluster // Store the number of proxies in this cluster in case the cluster is clustered later on
+                    } as any as TransformAttributes
+                });
             }
 
             // Filter all overlapping nodes
@@ -541,6 +538,41 @@ export class ProxyView extends AbstractUIExtension {
         const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;
 
         return horizontalOverlap1 && verticalOverlap1 || horizontalOverlap2 && verticalOverlap2;
+    }
+
+    /**
+     * Join groups containing at least 1 same element. Transitive joining applies:
+     * @example joinTransitiveGroups([[0, 1], [1, 2], [2, 3]]) == [[0, 1, 2, 3]]
+     */
+    private joinTransitiveGroups<T>(groups: T[][]): T[][] {
+        const res = [];
+        while (groups.length > 0) {
+            // Use a set for removing duplicates
+            let firstGroup = Array.from(new Set(groups.shift()));
+            let remainingGroups = [...groups];
+
+            let prevLength = -1;
+            while (firstGroup.length > prevLength) {
+                // Iterate until no group can be joined with firstGroup anymore
+                prevLength = firstGroup.length;
+                const nextRemainingGroups = [];
+                for (const group of remainingGroups) {
+                    if (new Set([...firstGroup].filter(x => group.includes(x))).size > 0) {
+                        // Intersection of firstGroup and group is not empty, join both groups
+                        firstGroup = Array.from(new Set(firstGroup.concat(group)));
+                    } else {
+                        // firstGroup and group share no element
+                        nextRemainingGroups.push(group);
+                    }
+                }
+                remainingGroups = nextRemainingGroups;
+            }
+
+            // firstGroup has been fully joined, add to res and continue with remainingGroups
+            res.push(Array.from(new Set(firstGroup)));
+            groups = remainingGroups;
+        }
+        return res;
     }
 
     /** Returns the rendering of clusters. */
