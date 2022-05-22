@@ -36,6 +36,8 @@ export class ProxyView extends AbstractUIExtension {
     static readonly ID = "proxy-view";
     /** ID used for proxy rendering property of SKNodes. */
     static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxyRendering";
+    /** ID used for proxy rendering property of SKNodes. */
+    static readonly RENDER_NODE_AS_PROXY_PROPERTY = "de.cau.cs.kieler.klighd.renderNodeAsProxy";
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     /** Used to replace HTML elements. */
@@ -301,7 +303,7 @@ export class ProxyView extends AbstractUIExtension {
                     y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
                 }
 
-                const clusterNode = this.getClusterRendering(`-cluster-${i}-proxy`, size, size, x, y);
+                const clusterNode = this.getClusterRendering(`cluster-${i}-proxy`, numProxiesInCluster, size, x, y);
                 res.push({
                     node: clusterNode,
                     transform: {
@@ -385,14 +387,14 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns whether the given `node` is valid for rendering. */
-    private canRenderNode(node: SKNode, id?: string): boolean {
-        if (!id) {
-            id = this.getProxyId(node.id);
+    private canRenderNode(node: SKNode): boolean {
+        if (this.useSynthesisProxyRendering) {
+            return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
+        } else {
+            // Not an edge, not a comment/non-explicitly specified region
+            // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
+            return node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$";
         }
-        // TODO: don't check using $$, use a property instead
-        // Not an edge, not a comment/non-explicitly specified region
-        // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
-        return node instanceof SKNode && id.charAt(id.lastIndexOf("$") - 1) !== "$";
     }
 
     /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
@@ -402,7 +404,12 @@ export class ProxyView extends AbstractUIExtension {
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading); // FIXME: 
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
-        this.useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
+        const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
+        if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
+            // Make sure not to use the wrong renderings if changed
+            this.clearRenderings();
+        }
+        this.useSynthesisProxyRendering = useSynthesisProxyRendering;
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
     }
 
@@ -413,7 +420,6 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Clears the {@link positions} map. */
     clearPositions(): void {
-        // TODO: also clear when the text is edited
         this.positions.clear();
     }
 
@@ -422,16 +428,10 @@ export class ProxyView extends AbstractUIExtension {
      * Note that the position is pre-scaling.
      */
     private getTransform(node: SKNode, desiredSize: number, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): TransformAttributes {
-        // OLD: without resizing the proxy
-        // const offsetX = 0.5 * bounds.width * (zoom - 1);
-        // const offsetY = 0.5 * bounds.height * (zoom - 1);
-
         // OLD: size dependant on node's bounds
         // const proxyWidth = size * 0.001;
         // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
         // console.log(proxySizeScale);
-
-        // TODO: cap node to parent bounds
 
         const pos = this.getPosition(node);
         const bounds = node.bounds;
@@ -440,7 +440,7 @@ export class ProxyView extends AbstractUIExtension {
         // The scale is calculated such that width & height are capped to a max value
         const proxyWidthScale = desiredSize / bounds.width;
         const proxyHeightScale = desiredSize / bounds.height;
-        const scale = Math.min(proxyWidthScale, proxyHeightScale); // TODO: max 1?
+        const scale = Math.min(1, proxyWidthScale, proxyHeightScale); // TODO: max 1? (include in min)
         const proxyWidth = bounds.width * scale;
         const proxyHeight = bounds.height * scale;
 
@@ -576,57 +576,145 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the rendering of clusters. */
-    private getClusterRendering(id: string, width: number, height: number, x: number, y: number): VNode {
-        return JSON.parse( // FIXME: change ids? Also layer second grey node
+    private getClusterRendering(id: string, numProxies: number, size: number, x: number, y: number): VNode {
+        return JSON.parse(
             `{
-                "sel":"g",
-                "data":
-                    {
-                        "ns":"http://www.w3.org/2000/svg",
-                        "attrs":{"id":"keith-diagram_sprotty_$root$N${id}",
-                        "transform":"translate(${x}, ${y})"},
-                        "class":{"selected":false}
+                "sel": "g",
+                "data": {
+                    "ns": "http://www.w3.org/2000/svg",
+                    "attrs": {
+                        "id": "keith-diagram_sprotty_$${id}",
+                        "transform": "translate(${x}, ${y})"
                     },
-                "children":
-                    [
-                        {
-                            "sel":"g",
-                            "data":
-                                {
-                                    "ns":"http://www.w3.org/2000/svg",
-                                    "attrs":{"id":"${id}1"}
+                    "class": {
+                        "selected": false
+                    }
+                },
+                "children": [
+                    {
+                        "sel": "g",
+                        "data": {
+                            "ns": "http://www.w3.org/2000/svg",
+                            "attrs": {
+                                "id": "${id}1"
+                            }
+                        },
+                        "children": [
+                            {
+                                "sel": "rect",
+                                "data": {
+                                    "ns": "http://www.w3.org/2000/svg",
+                                    "style": {
+                                        "opacity": "1"
+                                    },
+                                    "attrs": {
+                                        "width":${size * 0.9},
+                                        "height":${size * 0.9},
+                                        "x":${size * 0.1},
+                                        "y":${size * 0.1},
+                                        "stroke": "black",
+                                        "fill": "rgb(220,220,220)"
+                                    }
                                 },
-                                "children":
-                                    [
-                                        {
-                                            "sel":"rect",
-                                            "data":
-                                                {
-                                                    "ns":"http://www.w3.org/2000/svg",
-                                                    "style":{"opacity":"1"},
-                                                    "attrs":
-                                                        {
-                                                            "width":${width},
-                                                            "height":${height},
-                                                            "stroke":"black",
-                                                            "fill":"rgb(220,220,220)"
-                                                        }
-                                                },
-                                            "children":[]
+                                "children": []
+                            },
+                            {
+                                "sel": "g",
+                                "data": {
+                                    "ns": "http://www.w3.org/2000/svg",
+                                    "attrs": {
+                                        "id": "${id}2"
+                                    }
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "sel": "g",
+                        "data": {
+                            "ns": "http://www.w3.org/2000/svg",
+                            "attrs": {
+                                "id": "${id}3"
+                            }
+                        },
+                        "children": [
+                            {
+                                "sel": "rect",
+                                "data": {
+                                    "ns": "http://www.w3.org/2000/svg",
+                                    "style": {
+                                        "opacity": "1"
+                                    },
+                                    "attrs": {
+                                        "width":${size * 0.9},
+                                        "height":${size * 0.9},
+                                        "stroke": "black",
+                                        "fill": "rgb(220,220,220)"
+                                    }
+                                },
+                                "children": []
+                            },
+                            {
+                                "sel": "g",
+                                "data": {
+                                    "ns": "http://www.w3.org/2000/svg",
+                                    "attrs": {
+                                        "id": "${id}4"
+                                    }
+                                },
+                                "children": []
+                            }
+                        ]
+                    },
+                    {
+                        "sel": "g",
+                        "data": {
+                            "ns": "http://www.w3.org/2000/svg",
+                            "attrs": {
+                                "id": "keith-diagram_sprotty_$${id}2",
+                                "transform": "translate(${size * 0.25}, ${size * 0.5})"
+                            },
+                            "class": {
+                                "selected": false
+                            }
+                        },
+                        "children": [
+                            {
+                                "sel": "g",
+                                "data": {
+                                    "ns": "http://www.w3.org/2000/svg",
+                                    "attrs": {
+                                        "id": "${id}5"
+                                    }
+                                },
+                                "children": [
+                                    {
+                                        "sel": "text",
+                                        "data": {
+                                            "ns": "http://www.w3.org/2000/svg",
+                                            "style": {
+                                                "dominant-baseline": "middle",
+                                                "font-family": "overpass, sans-serif",
+                                                "font-size": "${size * 0.5}",
+                                                "opacity": 1
+                                            },
+                                            "attrs": {
+                                                "x": 0,
+                                                "xml:space": "preserve",
+                                                "y": 0,
+                                                "lengthAdjust": "spacingAndGlyphs"
+                                            }
                                         },
-                                        {
-                                            "sel":"g",
-                                            "data":
-                                                {
-                                                    "ns":"http://www.w3.org/2000/svg",
-                                                    "attrs":{"id":"${id}2"}
-                                                },
-                                            "children":[]
-                                        }
-                                    ]
-                        }
-                    ],
-                "key":"$root$N${id}"
+                                        "text": "${numProxies}"
+                                    }
+                                ]
+                            }
+                        ],
+                        "key": "$${id}2"
+                    }
+                ],
+                "key": "$${id}"
             }`);
     }
 
@@ -651,58 +739,4 @@ export class ProxyView extends AbstractUIExtension {
                 .some(source => nodes.includes(source))
         );
     }
-
-    /* OLD: previously used by createAllProxies() for rendering proxies
-    // Get proxy renderings
-    const res: VNode[] = [];
-    for (const node of currRoot.children as SKNode[]) {
-        const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
-        if (region && !depthMap.isInBounds(region, viewport)) {
-            // Node out of bounds
-            offScreenNodes.push(node);
-
-            // Create a proxy
-            const vnode = this.createSingleProxy(node, ctx, canvasWidth, canvasHeight, scroll, zoom);
-            if (vnode) {
-                res.push(vnode);
-            }
-        } else {
-            // Node in bounds
-            onScreenNodes.push(node);
-
-            if (node.children.length > 0) {
-                // Has children, recursively check them
-                res.push(...this.createAllProxies(node, ctx, canvasWidth, canvasHeight, scroll, zoom));
-            }
-        }
-    }
-    */
-
-    /** Returns a copy of the data fit to the given size. */
-    /* OLD: previously used for resizing proxies
-    private fitToSize(data: KGraphData[], size: number): KGraphData[] {
-        if (!data) {
-            return [];
-        }
-
-        const res = [];
-        for (const temp of data) {
-            // TODO check type and act accordingly
-            const clone = Object.create(temp);
-            const prop = Object.create(clone.properties);
-            if (prop) {
-                const calcBounds = prop["klighd.lsp.calculated.bounds"];
-                const renderingId = prop["klighd.lsp.rendering.id"];
-                if (calcBounds && renderingId) {
-                    prop["klighd.lsp.calculated.bounds"] = { x: calcBounds.x, y: calcBounds.y, width: size, height: size };
-                    prop["klighd.lsp.rendering.id"] = this.getProxyId(renderingId);
-                    clone.children = this.fitToSize(clone.children, size);
-
-                    res.push(clone);
-                }
-            }
-        }
-        return res;
-    }
-    */
 }
