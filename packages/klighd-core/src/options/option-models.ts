@@ -23,7 +23,8 @@ export interface RenderOption {
     initialValue: any;
     currentValue: any;
     description?: string;
-    renderCategory?: RenderOption
+    renderCategory?: RenderOption;
+    debug?: boolean;
 }
 
 export interface Preference extends RenderOption {

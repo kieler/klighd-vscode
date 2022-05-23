@@ -23,6 +23,19 @@ import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { Range, RangeOption, RenderOption, TransformationOptionType } from "./option-models";
 
+/** Whether debug mode should be enabled. */
+export class DebugEnabled implements RenderOption {
+    static readonly ID: string = 'debug-enabled';
+    static readonly NAME: string = 'Enable Debug Mode';
+    static readonly DESCRIPTION: string = 'Enables the Debug Mode';
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = DebugEnabled.ID;
+    readonly name: string = DebugEnabled.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: any = DebugEnabled.DEFAULT;
+    readonly description?: string = DebugEnabled.DESCRIPTION;
+    currentValue: any = DebugEnabled.DEFAULT;
+}
 
 /**
  * Resize the diagram to fit the viewport if it is redrawn after a model update
@@ -276,6 +289,7 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     readonly initialValue: boolean = ProxyViewUseSynthesisProxyRendering.DEFAULT;
     readonly description?: string = ProxyViewUseSynthesisProxyRendering.DESCRIPTION;
     readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
+    readonly debug?: boolean = true;
     currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
 }
 
@@ -314,7 +328,6 @@ export class ProxyViewClusteringEnabled implements RenderOption {
     currentValue = ProxyViewClusteringEnabled.DEFAULT;
 }
 
-// FIXME:
 export class ProxyViewClusteringCascading implements RenderOption {
     static readonly ID: string = 'proxy-view-clustering-cascading';
     static readonly NAME: string = 'Cascading Clustering';
@@ -326,6 +339,7 @@ export class ProxyViewClusteringCascading implements RenderOption {
     readonly initialValue: boolean = ProxyViewClusteringCascading.DEFAULT;
     readonly description?: string = ProxyViewClusteringCascading.DESCRIPTION;
     readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
+    readonly debug?: boolean = true;
     currentValue = ProxyViewClusteringCascading.DEFAULT;
 }
 
@@ -379,6 +393,8 @@ export class RenderOptionsRegistry extends Registry {
     constructor() {
         super();
         // Add available render options to this registry
+        this.register(DebugEnabled);
+
         this.register(ResizeToFit);
         this.register(ForceLightBackground);
         this.register(ShowConstraintOption);
@@ -403,7 +419,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewUseSynthesisProxyRendering);
         this.register(ProxyViewSize);
         this.register(ProxyViewClusteringEnabled);
-        this.register(ProxyViewClusteringCascading); // FIXME:
+        this.register(ProxyViewClusteringCascading);
         this.register(ProxyViewCapProxyToParent);
         this.register(ProxyViewFilterUnconnected);
     }

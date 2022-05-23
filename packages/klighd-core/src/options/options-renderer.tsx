@@ -19,6 +19,7 @@
 import { inject, injectable } from "inversify";
 import { VNode } from "snabbdom";
 import { html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { DISymbol } from "../di.symbols";
 import {
     PerformOptionsActionAction,
     SetLayoutOptionsAction,
@@ -42,6 +43,7 @@ import {
     RenderOption,
     TransformationOptionType
 } from "./option-models";
+import { DebugEnabled, RenderOptionsRegistry } from "./render-options-registry";
 
 // Note: Skipping a JSX children by rendering null or undefined for that child does not work the same way
 // as it works in React. It will render the literals as words. To skip a child return an empty string "".
@@ -57,6 +59,7 @@ interface AllOptions {
 @injectable()
 export class OptionsRenderer {
     @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher;
+    @inject(DISymbol.RenderOptionsRegistry) renderOptionsRegistry: RenderOptionsRegistry;
 
     /**
      * Renders all diagram options that are provided by the server. This includes
@@ -263,7 +266,7 @@ export class OptionsRenderer {
         if (renderOptions.length === 0) return "";
 
         return renderOptions
-            .filter((option) => option.renderCategory?.id === renderCategory?.id)
+            .filter((option) => (this.renderOptionsRegistry.getValue(DebugEnabled) || !option.debug) && option.renderCategory?.id === renderCategory?.id)
             .map((option) => {
             switch (option.type) {
                 case TransformationOptionType.CHECK:
