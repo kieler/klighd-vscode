@@ -63,7 +63,8 @@ export class ProxyView extends AbstractUIExtension {
     private sizePercentage: number;
     /** @see {@link ProxyViewClusteringEnabled} */
     private clusteringEnabled: boolean;
-    private clusteringCascading: boolean; // FIXME:
+    /** @see {@link ProxyViewClusteringCascading} */
+    private clusteringCascading: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
@@ -352,6 +353,10 @@ export class ProxyView extends AbstractUIExtension {
             // Check if synthesis has specified a proxy rendering
             if (this.useSynthesisProxyRendering && node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
                 // Proxy rendering available
+                console.log("node"); // FIXME:
+                console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY]); // FIXME:
+                console.log("proxyRendering"); // FIXME:
+                console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY + "2"]); // FIXME:
                 clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
                 // Fallback, use mock
@@ -402,8 +407,9 @@ export class ProxyView extends AbstractUIExtension {
         this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
-        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading); // FIXME: 
+        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+        // TODO: toggling while a proxy is on-screen doesn't get rid of the old proxy yet
         const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
         if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
             // Make sure not to use the wrong renderings if changed

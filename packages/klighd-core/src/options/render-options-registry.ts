@@ -328,6 +328,7 @@ export class ProxyViewClusteringEnabled implements RenderOption {
     currentValue = ProxyViewClusteringEnabled.DEFAULT;
 }
 
+/** Whether cascading clustering should be used, i.e. take transitive overlap into consideration. */
 export class ProxyViewClusteringCascading implements RenderOption {
     static readonly ID: string = 'proxy-view-clustering-cascading';
     static readonly NAME: string = 'Cascading Clustering';
