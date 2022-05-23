@@ -107,12 +107,6 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
-        /* Notes:
-        - edges are handled like this: children=[SKNode, SKNode, SKEdge] -> edge between the nodes
-        */
-        /* TODO: define proxy rendering in synthesis as attribute of KNode -> when writing a new synthesis
-        no client-side changes need to be made (diagram specifics are server-side only) */
-
         if (!this.proxyViewEnabled) {
             this.currHTMLRoot = this.patcher(this.currHTMLRoot, <div />);
             return;
@@ -141,8 +135,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
     private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode[] {
-        // Iterate through nodes starting by root
-        // check if node is: 
+        // Iterate through nodes starting by root, check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
@@ -223,7 +216,7 @@ export class ProxyView extends AbstractUIExtension {
         return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes };
     }
 
-    /** Applies clustering to all `offScreenNodes`. TODO: */
+    /** Applies clustering to all `offScreenNodes` until there's no more overlap. Cluster-proxies are returned as VNodes. */
     private applyClustering(offScreenNodes: { node: SKNode, transform: TransformAttributes }[],
         size: number, canvasWidth: number, canvasHeight: number): { node: SKNode | VNode, transform: TransformAttributes }[] {
         if (!this.clusteringEnabled) {
@@ -262,7 +255,7 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             if (overlapIndexGroups.length <= 0) {
-                // No more overlap
+                // No more overlap, clustering is done
                 break;
             }
 
@@ -337,11 +330,10 @@ export class ProxyView extends AbstractUIExtension {
         // Get VNode
         const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
-        if (vnode) {
-            // Node has already been rendered, update position and return
-            this.updateTransform(vnode, transformString);
-        } else {
-            // This effectively clones the node
+        if (!vnode) {
+            // Node hasn't been rendered yet (cache empty)
+
+            // Clone the node
             const clone: SKNode = Object.create(node);
             // Change its id for good measure
             clone.id = id;
@@ -364,11 +356,9 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             vnode = ctx.renderProxy(clone);
-            if (vnode && vnode.data && vnode.data.attrs) {
-                // Place proxy at the calculated position
-                vnode.data.attrs["transform"] = transformString;
 
-                // OLD: code to make a proxy non-click-through
+            // OLD: code to make a proxy non-click-through
+            if (vnode && vnode.data && vnode.data.attrs) {
                 const clickThrough = true;
                 if (!clickThrough) {
                     vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
@@ -377,6 +367,8 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         if (vnode) {
+            // Place proxy at the calculated position
+            this.updateTransform(vnode, transformString);
             // Store this node
             this.renderings.set(id, vnode);
         }
@@ -395,7 +387,9 @@ export class ProxyView extends AbstractUIExtension {
     private canRenderNode(node: SKNode): boolean {
         if (this.useSynthesisProxyRendering) {
             return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
-        } else {
+        }
+        // FIXME: remove this else once the synthesis proxy properties fully work
+        else {
             // Not an edge, not a comment/non-explicitly specified region
             // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
             return node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$";
@@ -409,7 +403,7 @@ export class ProxyView extends AbstractUIExtension {
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
-        // TODO: toggling while a proxy is on-screen doesn't get rid of the old proxy yet
+        // TODO: toggling useSynthesisProxyRendering while a proxy is on-screen doesn't get rid of the old proxy yet
         const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
         if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
             // Make sure not to use the wrong renderings if changed
@@ -446,7 +440,7 @@ export class ProxyView extends AbstractUIExtension {
         // The scale is calculated such that width & height are capped to a max value
         const proxyWidthScale = desiredSize / bounds.width;
         const proxyHeightScale = desiredSize / bounds.height;
-        const scale = Math.min(1, proxyWidthScale, proxyHeightScale); // TODO: max 1? (include in min)
+        const scale = Math.min(1, proxyWidthScale, proxyHeightScale);
         const proxyWidth = bounds.width * scale;
         const proxyHeight = bounds.height * scale;
 
@@ -511,8 +505,8 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Updates a VNode's transform attribute. */
     private updateTransform(node: VNode, transformString: string): void {
+        // Just changing the VNode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
         if (node && node.data && node.data.attrs) {
-            // Just changing the VNode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
             // Update transform while off the canvas
             node.data.attrs["transform"] = transformString;
             // Update transform while on the canvas
