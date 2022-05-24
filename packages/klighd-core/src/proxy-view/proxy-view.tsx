@@ -27,8 +27,9 @@ import {
     ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering, RenderOptionsRegistry
 } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { SKEdge, SKNode } from "../skgraph-models";
+import { SKEdge, SKNode, SKPort } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
+import { getClusterRendering } from "./proxy-view-cluster";
 
 @injectable()
 export class ProxyView extends AbstractUIExtension {
@@ -59,6 +60,8 @@ export class ProxyView extends AbstractUIExtension {
     private currSize: number;
     /** @see {@link ProxyViewEnabled} */
     private proxyViewEnabled: boolean;
+    /** Whether the proxy view was previously enabled. Used to avoid excessive patching. */
+    private prevProxyViewEnabled: boolean;
     /** @see {@link ProxyViewSize} */
     private sizePercentage: number;
     /** @see {@link ProxyViewClusteringEnabled} */
@@ -104,11 +107,16 @@ export class ProxyView extends AbstractUIExtension {
     //////// Main methods ////////
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
+    // TODO: performance in developer options for measuring performance
 
     /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
         if (!this.proxyViewEnabled) {
-            this.currHTMLRoot = this.patcher(this.currHTMLRoot, <div />);
+            if (this.prevProxyViewEnabled) {
+                // Prevent excessive patching, only patch if disabled just now
+                this.currHTMLRoot = this.patcher(this.currHTMLRoot, <div />);
+                this.prevProxyViewEnabled = this.proxyViewEnabled;
+            }
             return;
         } else if (!this.currHTMLRoot) {
             return;
@@ -150,10 +158,11 @@ export class ProxyView extends AbstractUIExtension {
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, ctx);
 
         //// Apply filters ////
+        // onScreenNodes is also given as an argument since some filters need it
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, onScreenNodes);
 
         // Calculate size
-        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage * 0.08;
+        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage;
         if (size !== this.currSize) {
             // Size of proxies has changed, cannot reuse previous renderings
             this.clearRenderings();
@@ -297,7 +306,7 @@ export class ProxyView extends AbstractUIExtension {
                     y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
                 }
 
-                const clusterNode = this.getClusterRendering(`cluster-${i}-proxy`, numProxiesInCluster, size, x, y);
+                const clusterNode = getClusterRendering(`cluster-${i}-proxy`, numProxiesInCluster, size, x, y);
                 res.push({
                     node: clusterNode,
                     transform: {
@@ -338,7 +347,7 @@ export class ProxyView extends AbstractUIExtension {
             // Change its id for good measure
             clone.id = id;
             // Clear children, proxies don't show nested nodes (but keep Labels)
-            clone.children = clone.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge));
+            clone.children = clone.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
             // Update bounds
             clone.bounds = transform;
 
@@ -351,7 +360,7 @@ export class ProxyView extends AbstractUIExtension {
                 console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY + "2"]); // FIXME:
                 clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
-                // Fallback, use mock
+                // Fallback, use universal proxy rendering
                 // TODO: further specify what to change for the mock?
             }
 
@@ -398,11 +407,17 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
     updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
+        this.prevProxyViewEnabled = this.proxyViewEnabled;
         this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
-        this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize);
+
+        const toPercent = 0.01;
+        this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * toPercent;
+
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
+
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+
         // TODO: toggling useSynthesisProxyRendering while a proxy is on-screen doesn't get rid of the old proxy yet
         const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
         if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
@@ -410,6 +425,7 @@ export class ProxyView extends AbstractUIExtension {
             this.clearRenderings();
         }
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
+
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
     }
 
@@ -575,152 +591,12 @@ export class ProxyView extends AbstractUIExtension {
         return res;
     }
 
-    /** Returns the rendering of clusters. */
-    private getClusterRendering(id: string, numProxies: number, size: number, x: number, y: number): VNode {
-        return JSON.parse(
-            `{
-                "sel": "g",
-                "data": {
-                    "ns": "http://www.w3.org/2000/svg",
-                    "attrs": {
-                        "id": "keith-diagram_sprotty_$${id}",
-                        "transform": "translate(${x}, ${y})"
-                    },
-                    "class": {
-                        "selected": false
-                    }
-                },
-                "children": [
-                    {
-                        "sel": "g",
-                        "data": {
-                            "ns": "http://www.w3.org/2000/svg",
-                            "attrs": {
-                                "id": "${id}1"
-                            }
-                        },
-                        "children": [
-                            {
-                                "sel": "rect",
-                                "data": {
-                                    "ns": "http://www.w3.org/2000/svg",
-                                    "style": {
-                                        "opacity": "1"
-                                    },
-                                    "attrs": {
-                                        "width":${size * 0.9},
-                                        "height":${size * 0.9},
-                                        "x":${size * 0.1},
-                                        "y":${size * 0.1},
-                                        "stroke": "black",
-                                        "fill": "rgb(220,220,220)"
-                                    }
-                                },
-                                "children": []
-                            },
-                            {
-                                "sel": "g",
-                                "data": {
-                                    "ns": "http://www.w3.org/2000/svg",
-                                    "attrs": {
-                                        "id": "${id}2"
-                                    }
-                                },
-                                "children": []
-                            }
-                        ]
-                    },
-                    {
-                        "sel": "g",
-                        "data": {
-                            "ns": "http://www.w3.org/2000/svg",
-                            "attrs": {
-                                "id": "${id}3"
-                            }
-                        },
-                        "children": [
-                            {
-                                "sel": "rect",
-                                "data": {
-                                    "ns": "http://www.w3.org/2000/svg",
-                                    "style": {
-                                        "opacity": "1"
-                                    },
-                                    "attrs": {
-                                        "width":${size * 0.9},
-                                        "height":${size * 0.9},
-                                        "stroke": "black",
-                                        "fill": "rgb(220,220,220)"
-                                    }
-                                },
-                                "children": []
-                            },
-                            {
-                                "sel": "g",
-                                "data": {
-                                    "ns": "http://www.w3.org/2000/svg",
-                                    "attrs": {
-                                        "id": "${id}4"
-                                    }
-                                },
-                                "children": []
-                            }
-                        ]
-                    },
-                    {
-                        "sel": "g",
-                        "data": {
-                            "ns": "http://www.w3.org/2000/svg",
-                            "attrs": {
-                                "id": "keith-diagram_sprotty_$${id}2",
-                                "transform": "translate(${size * 0.25}, ${size * 0.5})"
-                            },
-                            "class": {
-                                "selected": false
-                            }
-                        },
-                        "children": [
-                            {
-                                "sel": "g",
-                                "data": {
-                                    "ns": "http://www.w3.org/2000/svg",
-                                    "attrs": {
-                                        "id": "${id}5"
-                                    }
-                                },
-                                "children": [
-                                    {
-                                        "sel": "text",
-                                        "data": {
-                                            "ns": "http://www.w3.org/2000/svg",
-                                            "style": {
-                                                "dominant-baseline": "middle",
-                                                "font-family": "overpass, sans-serif",
-                                                "font-size": "${size * 0.5}",
-                                                "opacity": 1
-                                            },
-                                            "attrs": {
-                                                "x": 0,
-                                                "xml:space": "preserve",
-                                                "y": 0,
-                                                "lengthAdjust": "spacingAndGlyphs"
-                                            }
-                                        },
-                                        "text": "${numProxies}"
-                                    }
-                                ]
-                            }
-                        ],
-                        "key": "$${id}2"
-                    }
-                ],
-                "key": "$${id}"
-            }`);
-    }
-
     //////// Filter methods ////////
 
-    /** Returns all `offScreenNodes` matching the enabled filters. */
+    /**
+     * Returns all `offScreenNodes` matching the enabled filters.
+     * @param `onScreenNodes` is needed by since some filters.
+     */
     private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[]): SKNode[] {
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&

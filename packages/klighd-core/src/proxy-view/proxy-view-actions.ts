@@ -86,7 +86,8 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
         } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {
             const sMCAction = action as SendModelContextAction;
             this.proxyView.update(sMCAction.model, sMCAction.context);
-        } else if (this.proxyView !== undefined && (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND)) {
+        } else if ((action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) && this.proxyView !== undefined) {
+            // Layout has changed
             this.proxyView.clearRenderings();
             this.proxyView.clearPositions();
         }

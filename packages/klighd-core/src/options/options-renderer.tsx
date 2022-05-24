@@ -262,7 +262,7 @@ export class OptionsRenderer {
     }
 
     /** Renders render options that are stored in the client. An example would be "show constraints" */
-    renderRenderOptions(renderOptions: RenderOption[], renderCategory: RenderOption | null): (VNode | "")[] | "" {
+    renderRenderOptions(renderOptions: RenderOption[], renderCategory?: RenderOption): (VNode | "")[] | "" {
         if (renderOptions.length === 0) return "";
 
         return renderOptions

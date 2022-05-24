@@ -394,7 +394,6 @@ export class DepthMap {
      * @returns Boolean value indicating the visibility of the region in the current viewport. 
      */
     isInBounds(region: Region, viewport: Viewport): boolean {
-        // TODO: only partially working, e.g. region "too late" out of bounds, see motor-copy
         if (region.absolutePosition) {
             const canvasBounds = this.rootElement.canvasBounds
 

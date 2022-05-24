@@ -296,11 +296,11 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
 /** Part of calculating the proxies' size. */
 export class ProxyViewSize implements RangeOption {
     static readonly ID: string = 'proxy-view-size';
-    static readonly NAME: string = 'Size of Proxies';
-    static readonly DESCRIPTION: string = "Part of calculating the proxies' size.";
-    static readonly DEFAULT: number = 1;
-    static readonly RANGE: Range = { first: 0.1, second: 2 };
-    static readonly STEPSIZE: number = 0.1;
+    static readonly NAME: string = 'Size of Proxies in %';
+    static readonly DESCRIPTION: string = "Percentage by which the proxies are scaled regarding the minimum of the canvas' height and width.";
+    static readonly DEFAULT: number = 8;
+    static readonly RANGE: Range = { first: 1, second: 25 };
+    static readonly STEPSIZE: number = 1;
     readonly id: string = ProxyViewSize.ID;
     readonly name: string = ProxyViewSize.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.RANGE;
