@@ -23,7 +23,7 @@ import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider,
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
 import {
-    ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewEnabled,
+    ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled,
     ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering, RenderOptionsRegistry
 } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
@@ -68,6 +68,8 @@ export class ProxyView extends AbstractUIExtension {
     private clusteringEnabled: boolean;
     /** @see {@link ProxyViewClusteringCascading} */
     private clusteringCascading: boolean;
+    /** @see {@link ProxyViewClusteringSweepLine} */
+    private clusteringSweepLine: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
@@ -231,6 +233,7 @@ export class ProxyView extends AbstractUIExtension {
         if (!this.clusteringEnabled) {
             return offScreenNodes;
         }
+        // TODO: sweep
 
         // List containing groups of indices of overlapping proxies
         // Could use a set of sets here, not needed since the same group cannot appear twice
@@ -239,27 +242,56 @@ export class ProxyView extends AbstractUIExtension {
 
         while (overlapIndexGroups.length > 0) {
             overlapIndexGroups = [];
-            for (let i = 0; i < res.length; i++) {
-                if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
-                    // i already in an overlapIndexGroup, prevent cascading clustering
-                    continue;
-                }
+            
+            if (this.clusteringSweepLine) {
+                // TODO:
+                res = res.sort(({transform: transform1}, {transform: transform2}) => transform1.x - transform2.x);
+                for (let i = 0; i < res.length; i++) {
+                    // New list for current overlap group
+                    const currOverlapIndexGroup = [];
+                    
+                    const transform1 = res[i].transform;
+                    const right = transform1.x + transform1.width;
+                    for (let j = 0; j < res.length; j++) {
+                        const transform2 = res[j].transform;
+                        if (transform2.x > right) {
+                            break;
+                        } else if (this.checkOverlap(transform1, transform2)) {
+                            // Proxies at i and j overlap
+                            currOverlapIndexGroup.push(j);
+                        }
+                    }
 
-                // New list for current overlap group
-                const currOverlapIndexGroup = [];
-
-                // Check next proxies for overlap
-                for (let j = i + 1; j < res.length; j++) {
-                    if (this.checkOverlap(res[i].transform, res[j].transform)) {
-                        // Proxies at i and j overlap
-                        currOverlapIndexGroup.push(j);
+                    if (currOverlapIndexGroup.length > 0) {
+                        // This proxy overlaps
+                        currOverlapIndexGroup.push(i);
+                        overlapIndexGroups.push(currOverlapIndexGroup);
                     }
                 }
+                console.log(res);
+            } else {
+                for (let i = 0; i < res.length; i++) {
+                        if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
+                        // i already in an overlapIndexGroup, prevent cascading clustering
+                        continue;
+                    }
 
-                if (currOverlapIndexGroup.length > 0) {
-                    // This proxy overlaps
-                    currOverlapIndexGroup.push(i);
-                    overlapIndexGroups.push(currOverlapIndexGroup);
+                    // New list for current overlap group
+                    const currOverlapIndexGroup = [];
+
+                    // Check next proxies for overlap
+                    for (let j = i + 1; j < res.length; j++) {
+                        if (this.checkOverlap(res[i].transform, res[j].transform)) {
+                            // Proxies at i and j overlap
+                            currOverlapIndexGroup.push(j);
+                        }
+                    }
+
+                    if (currOverlapIndexGroup.length > 0) {
+                        // This proxy overlaps
+                        currOverlapIndexGroup.push(i);
+                        overlapIndexGroups.push(currOverlapIndexGroup);
+                    }
                 }
             }
 
@@ -354,10 +386,10 @@ export class ProxyView extends AbstractUIExtension {
             // Check if synthesis has specified a proxy rendering
             if (this.useSynthesisProxyRendering && node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
                 // Proxy rendering available
-                console.log("node"); // FIXME:
-                console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY]); // FIXME:
-                console.log("proxyRendering"); // FIXME:
-                console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY + "2"]); // FIXME:
+                // console.log("node"); // FIXME:
+                // console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY]); // FIXME:
+                // console.log("proxyRendering"); // FIXME:
+                // console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY + "2"]); // FIXME:
                 clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
                 // Fallback, use universal proxy rendering
@@ -397,7 +429,7 @@ export class ProxyView extends AbstractUIExtension {
         if (this.useSynthesisProxyRendering) {
             return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
         }
-        // FIXME: remove this else once the synthesis proxy properties fully work
+        // FIXME: remove if and else once the synthesis proxy properties fully work
         else {
             // Not an edge, not a comment/non-explicitly specified region
             // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
@@ -415,10 +447,10 @@ export class ProxyView extends AbstractUIExtension {
 
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
+        this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
 
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
 
-        // TODO: toggling useSynthesisProxyRendering while a proxy is on-screen doesn't get rid of the old proxy yet
         const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
         if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
             // Make sure not to use the wrong renderings if changed

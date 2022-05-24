@@ -344,6 +344,22 @@ export class ProxyViewClusteringCascading implements RenderOption {
     currentValue = ProxyViewClusteringCascading.DEFAULT;
 }
 
+/** Whether the sweep line algorithm should be used for clustering. */
+export class ProxyViewClusteringSweepLine implements RenderOption {
+    static readonly ID: string = 'proxy-view-clustering-sweep-line';
+    static readonly NAME: string = 'Sweep Line Clustering';
+    static readonly DESCRIPTION: string = "Whether clustering should be done via sweep line algorithm.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewClusteringSweepLine.ID;
+    readonly name: string = ProxyViewClusteringSweepLine.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewClusteringSweepLine.DEFAULT;
+    readonly description?: string = ProxyViewClusteringSweepLine.DESCRIPTION;
+    readonly renderCategory?: RenderOption = ProxyViewCategory.INSTANCE;
+    readonly debug?: boolean = true;
+    currentValue = ProxyViewClusteringSweepLine.DEFAULT;
+}
+
 /** Whether to cap proxies in their parent node. */
 export class ProxyViewCapProxyToParent implements RenderOption {
     static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
@@ -421,6 +437,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewSize);
         this.register(ProxyViewClusteringEnabled);
         this.register(ProxyViewClusteringCascading);
+        this.register(ProxyViewClusteringSweepLine);
         this.register(ProxyViewCapProxyToParent);
         this.register(ProxyViewFilterUnconnected);
     }

@@ -67,6 +67,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
+    /** Whether the proxy-view was registered in the registries' onchange() method. Prevents registering multiple times. */
     private onChangeRegistered: boolean;
 
     handle(action: Action): void | Action | ICommand {
