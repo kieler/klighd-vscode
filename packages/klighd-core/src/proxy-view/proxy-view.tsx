@@ -233,7 +233,6 @@ export class ProxyView extends AbstractUIExtension {
         if (!this.clusteringEnabled) {
             return offScreenNodes;
         }
-        // TODO: sweep
 
         // List containing groups of indices of overlapping proxies
         // Could use a set of sets here, not needed since the same group cannot appear twice
@@ -242,19 +241,45 @@ export class ProxyView extends AbstractUIExtension {
 
         while (overlapIndexGroups.length > 0) {
             overlapIndexGroups = [];
-            
+
             if (this.clusteringSweepLine) {
                 // TODO:
-                res = res.sort(({transform: transform1}, {transform: transform2}) => transform1.x - transform2.x);
+                // Sort res primarily by leftmost x value, secondarily by uppermost y value, i.e.
+                // res[0] has leftmost proxy (and of all leftmost proxies it's the uppermost one)
+                res = res.sort(
+                    ({ transform: transform1 }, { transform: transform2 }) => {
+                        let res = transform1.x - transform2.x;
+                        if (res == 0) {
+                            res = transform1.y - transform2.y;
+                        }
+                        return res;
+                    });
                 for (let i = 0; i < res.length; i++) {
+                    if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
+                        // i already in an overlapIndexGroup, prevent redundant clustering
+                        continue;
+                    }
+
                     // New list for current overlap group
                     const currOverlapIndexGroup = [];
-                    
+
+                    // Check proxies to the left of the current one's right border for overlap
                     const transform1 = res[i].transform;
                     const right = transform1.x + transform1.width;
+                    const bottom = transform1.y + transform1.height;
                     for (let j = 0; j < res.length; j++) {
+                        if (i == j || overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(j)) {
+                            // Every proxy overlaps with itself or
+                            // j already in an overlapIndexGroup, prevent redundant clustering
+                            continue;
+                        }
+
                         const transform2 = res[j].transform;
                         if (transform2.x > right) {
+                            // Too far right, no need to check
+                            break;
+                        } else if (transform2.x == right && transform2.y > bottom) {
+                            // Too far down, no need to check
                             break;
                         } else if (this.checkOverlap(transform1, transform2)) {
                             // Proxies at i and j overlap
@@ -268,11 +293,10 @@ export class ProxyView extends AbstractUIExtension {
                         overlapIndexGroups.push(currOverlapIndexGroup);
                     }
                 }
-                console.log(res);
             } else {
                 for (let i = 0; i < res.length; i++) {
-                        if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
-                        // i already in an overlapIndexGroup, prevent cascading clustering
+                    if (!this.clusteringCascading && overlapIndexGroups.reduce((acc, group) => acc.concat(group), []).includes(i)) {
+                        // i already in an overlapIndexGroup, prevent redundant clustering
                         continue;
                     }
 
@@ -581,11 +605,15 @@ export class ProxyView extends AbstractUIExtension {
         // 1 in 2
         const horizontalOverlap1 = left1 >= left2 && left1 <= right2 || right1 >= left2 && right1 <= right2;
         const verticalOverlap1 = bottom1 >= top2 && bottom1 <= bottom2 || top1 >= top2 && top1 <= bottom2;
+        if (horizontalOverlap1 && verticalOverlap1) {
+            return true;
+        }
+        
         // 2 in 1
         const horizontalOverlap2 = left2 >= left1 && left2 <= right1 || right2 >= left1 && right2 <= right1;
         const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;
 
-        return horizontalOverlap1 && verticalOverlap1 || horizontalOverlap2 && verticalOverlap2;
+        return horizontalOverlap2 && verticalOverlap2;
     }
 
     /**
