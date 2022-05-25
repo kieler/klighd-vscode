@@ -22,15 +22,14 @@ import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Point } from "sprotty-protocol";
 import { DepthMap } from "../depth-map";
-import {
-    ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled,
-    ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering, RenderOptionsRegistry
-} from "../options/render-options-registry";
+import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode, SKPort } from "../skgraph-models";
 import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
+import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
+/** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
 export class ProxyView extends AbstractUIExtension {
     /** ID. */
@@ -193,8 +192,10 @@ export class ProxyView extends AbstractUIExtension {
         return res;
     }
 
-    /** Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
-     * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned. */
+    /**
+     * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
+     * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
+     */
     private getOffAndOnScreenNodes(currRoot: SKNode, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
         const depthMap = ctx.depthMap;
         const viewport = ctx.viewport;
@@ -608,7 +609,7 @@ export class ProxyView extends AbstractUIExtension {
         if (horizontalOverlap1 && verticalOverlap1) {
             return true;
         }
-        
+
         // 2 in 1
         const horizontalOverlap2 = left2 >= left1 && left2 <= right1 || right2 >= left1 && right2 <= right1;
         const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;

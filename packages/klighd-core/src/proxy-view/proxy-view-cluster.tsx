@@ -1,3 +1,20 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2022 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 import { VNode } from "snabbdom";
 
 /** Returns the rendering of clusters. */
@@ -11,7 +28,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
             "data": {
                 "ns": "http://www.w3.org/2000/svg",
                 "attrs": {
-                    "id": "keith-diagram_sprotty_$${id}",
+                    "id": "keith-diagram_sprotty_$ProxyView$${id}",
                     "transform": "translate(${x}, ${y})"
                 },
                 "class": {
@@ -25,7 +42,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                     "data": {
                         "ns": "http://www.w3.org/2000/svg",
                         "attrs": {
-                            "id": "${id}1"
+                            "id": "$ProxyView${id}1"
                         }
                     },
                     "children": [
@@ -52,7 +69,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             "data": {
                                 "ns": "http://www.w3.org/2000/svg",
                                 "attrs": {
-                                    "id": "${id}2"
+                                    "id": "$ProxyView${id}2"
                                 }
                             },
                             "children": []
@@ -65,7 +82,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                     "data": {
                         "ns": "http://www.w3.org/2000/svg",
                         "attrs": {
-                            "id": "${id}3"
+                            "id": "$ProxyView${id}3"
                         }
                     },
                     "children": [
@@ -90,7 +107,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             "data": {
                                 "ns": "http://www.w3.org/2000/svg",
                                 "attrs": {
-                                    "id": "${id}4"
+                                    "id": "$ProxyView${id}4"
                                 }
                             },
                             "children": []
@@ -103,7 +120,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                     "data": {
                         "ns": "http://www.w3.org/2000/svg",
                         "attrs": {
-                            "id": "keith-diagram_sprotty_$${id}2",
+                            "id": "keith-diagram_sprotty_$ProxyView$${id}2",
                             "transform": "translate(${textSize * 0.5}, ${textSize})"
                         },
                         "class": {
@@ -116,7 +133,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             "data": {
                                 "ns": "http://www.w3.org/2000/svg",
                                 "attrs": {
-                                    "id": "${id}5"
+                                    "id": "$ProxyView${id}5"
                                 }
                             },
                             "children": [
@@ -129,12 +146,6 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                                             "font-family": "overpass, sans-serif",
                                             "font-size": "${textSize}",
                                             "opacity": 1
-                                        },
-                                        "attrs": {
-                                            "x": 0,
-                                            "xml:space": "preserve",
-                                            "y": 0,
-                                            "lengthAdjust": "spacingAndGlyphs"
                                         }
                                     },
                                     "text": "${numProxies}"
@@ -142,9 +153,9 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             ]
                         }
                     ],
-                    "key": "$${id}2"
+                    "key": "$ProxyView$${id}2"
                 }
             ],
-            "key": "$${id}"
+            "key": "$ProxyView$${id}"
         }`);
 }

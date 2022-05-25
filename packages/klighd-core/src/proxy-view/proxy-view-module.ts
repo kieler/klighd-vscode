@@ -23,7 +23,7 @@ import { ProxyViewActionHandler } from "./proxy-view-actions";
 
 export const proxyViewModule = new ContainerModule((bind) => {
     // The class needs to be bound to itself and
-    // we have to let sprotty know our service is an UIExtension
+    // we have to let Sprotty know our service is a UIExtension
     // Using a symbol for binding helps mitigate other problems
     bind(DISymbol.ProxyView).to(ProxyView).inSingletonScope();
     bind(TYPES.IUIExtension).toService(DISymbol.ProxyView);

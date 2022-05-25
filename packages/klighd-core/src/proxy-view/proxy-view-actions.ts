@@ -27,8 +27,10 @@ import { ProxyView } from "./proxy-view";
 
 //////// Actions ////////
 
-/** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
-  * Otherwise the proxy-view would be invisible. */
+/**
+ * Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
+ * Otherwise the proxy-view would be invisible.
+ */
 export type ShowProxyViewAction = SetUIExtensionVisibilityAction
 
 export namespace ShowProxyViewAction {
@@ -40,7 +42,8 @@ export namespace ShowProxyViewAction {
     }
 }
 
-/** Sent from the {@link ProxyView} to the action handler to avoid Stackoverflows. */
+/** An action containing the {@link ProxyView}. */
+// Sent from the proxy-view to the action handler to avoid stackoverflows
 export interface SendProxyViewAction extends Action {
     kind: typeof SendProxyViewAction.KIND
     proxyView: ProxyView
@@ -57,10 +60,7 @@ export namespace SendProxyViewAction {
     }
 }
 
-/**
- * Handles {@link SendProxyViewAction}s to get the {@link ProxyView} instance
- * aswell as {@link SendModelContextAction}s to redirect the content to the {@link ProxyView}.
- */
+/** Handles all actions regarding the {@link ProxyView}. */
 @injectable()
 export class ProxyViewActionHandler implements IActionHandler, IActionHandlerInitializer {
     private proxyView: ProxyView;
@@ -72,6 +72,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SendProxyViewAction.KIND) {
+            // Save the proxy-view instance
             const sPVAction = action as SendProxyViewAction;
             this.proxyView = sPVAction.proxyView;
 
@@ -85,6 +86,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
                 this.onChangeRegistered = true;
             }
         } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {
+            // Redirect the content to the proxy-view
             const sMCAction = action as SendModelContextAction;
             this.proxyView.update(sMCAction.model, sMCAction.context);
         } else if ((action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) && this.proxyView !== undefined) {

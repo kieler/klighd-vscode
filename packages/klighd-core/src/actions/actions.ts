@@ -151,7 +151,7 @@ export namespace KlighdFitToScreenAction {
     }
 }
 
-/** Sent from the view. */
+/** Contains the model and RenderingContext to be sent from the view to where it's needed. */
 export interface SendModelContextAction extends Action {
     kind: typeof SendModelContextAction.KIND
     model: SGraph
