@@ -15,20 +15,49 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+/** @jsx html */
 import { VNode } from "snabbdom";
+import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /** Returns the rendering of clusters. */
 export function getClusterRendering(id: string, numProxies: number, size: number, x: number, y: number): VNode {
     const squareSize = size * 0.9;
     const squareOffset = size * 0.1;
     const textSize = size * 0.5;
+    const color = "rgb(220,220,220)";
+    const innerID = `$ProxyView$${id}`;
+    const outerID = `keith-diagram_sprotty_${innerID}`;
+    <g id={`${outerID}1`} transform={`translate(${x}, ${y})`}>
+        {/* Bottom right square in background */}
+        <g id={`${innerID}1`}>
+            <rect width={`${squareSize}`} height={`${squareSize}`} x={`${squareOffset}`} y={`${squareOffset}`} stroke="black" fill={color} style={{ opacity: "1" }}>
+            </rect>
+            <g id={`${innerID}2`}>
+            </g>
+        </g>
+        {/* Top left square in foreground */}
+        <g id={`${innerID}3`}>
+            <rect width={`${squareSize}`} height={`${squareSize}`} stroke="black" fill={color} style={{ opacity: "1" }}>
+            </rect>
+            <g id={`${innerID}4`}>
+            </g>
+        </g>
+        {/* Text containining number of proxies in cluster */}
+        <g id={`${outerID}2`} transform={`translate(${textSize * 0.5}, ${textSize})`}>
+            <g id={`${innerID}5`}>
+                <text style={{ dominantBaseline: "middle", fontFamily: "overpass, sans-serif", fontSize: `${textSize}`, opacity: "1" }}>
+                    {numProxies}
+                </text>
+            </g>
+        </g>
+    </g>
     return JSON.parse(
         `{
             "sel": "g",
             "data": {
                 "ns": "http://www.w3.org/2000/svg",
                 "attrs": {
-                    "id": "keith-diagram_sprotty_$ProxyView$${id}",
+                    "id": "${outerID}1",
                     "transform": "translate(${x}, ${y})"
                 },
                 "class": {
@@ -42,7 +71,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                     "data": {
                         "ns": "http://www.w3.org/2000/svg",
                         "attrs": {
-                            "id": "$ProxyView${id}1"
+                            "id": "${innerID}1"
                         }
                     },
                     "children": [
@@ -59,7 +88,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                                     "x":${squareOffset},
                                     "y":${squareOffset},
                                     "stroke": "black",
-                                    "fill": "rgb(220,220,220)"
+                                    "fill": "${color}"
                                 }
                             },
                             "children": []
@@ -69,7 +98,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             "data": {
                                 "ns": "http://www.w3.org/2000/svg",
                                 "attrs": {
-                                    "id": "$ProxyView${id}2"
+                                    "id": "${innerID}2"
                                 }
                             },
                             "children": []
@@ -82,7 +111,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                     "data": {
                         "ns": "http://www.w3.org/2000/svg",
                         "attrs": {
-                            "id": "$ProxyView${id}3"
+                            "id": "${innerID}3"
                         }
                     },
                     "children": [
@@ -97,7 +126,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                                     "width":${squareSize},
                                     "height":${squareSize},
                                     "stroke": "black",
-                                    "fill": "rgb(220,220,220)"
+                                    "fill": "${color}"
                                 }
                             },
                             "children": []
@@ -107,7 +136,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             "data": {
                                 "ns": "http://www.w3.org/2000/svg",
                                 "attrs": {
-                                    "id": "$ProxyView${id}4"
+                                    "id": "${innerID}4"
                                 }
                             },
                             "children": []
@@ -120,7 +149,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                     "data": {
                         "ns": "http://www.w3.org/2000/svg",
                         "attrs": {
-                            "id": "keith-diagram_sprotty_$ProxyView$${id}2",
+                            "id": "${outerID}2",
                             "transform": "translate(${textSize * 0.5}, ${textSize})"
                         },
                         "class": {
@@ -133,7 +162,7 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             "data": {
                                 "ns": "http://www.w3.org/2000/svg",
                                 "attrs": {
-                                    "id": "$ProxyView${id}5"
+                                    "id": "${innerID}5"
                                 }
                             },
                             "children": [
@@ -153,9 +182,9 @@ export function getClusterRendering(id: string, numProxies: number, size: number
                             ]
                         }
                     ],
-                    "key": "$ProxyView$${id}2"
+                    "key": "${innerID}6"
                 }
             ],
-            "key": "$ProxyView$${id}"
+            "key": "${innerID}7"
         }`);
 }
