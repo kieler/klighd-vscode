@@ -25,9 +25,9 @@ import { DepthMap } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode, SKPort } from "../skgraph-models";
-import { SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
+import { CanvasAttributes, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -75,6 +75,8 @@ export class ProxyView extends AbstractUIExtension {
     private useSynthesisProxyRendering: boolean;
     /** @see {@link ProxyViewFilterUnconnected} */
     private filterUnconnected: boolean;
+    /** @see {@link ProxyViewFilterDistant} */
+    private filterDistant: boolean;
 
     id(): string {
         return ProxyView.ID;
@@ -128,8 +130,7 @@ export class ProxyView extends AbstractUIExtension {
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
-        const scroll = model.scroll;
-        const zoom = model.zoom;
+        const canvas = { ...model.canvasBounds, ...ctx.viewport };
         const root = model.children[0] as SKNode;
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
@@ -138,12 +139,12 @@ export class ProxyView extends AbstractUIExtension {
                     pointerEvents: "none" // Make click-through
                 }
             }>
-                {...this.createAllProxies(root, ctx, canvasWidth, canvasHeight, scroll, zoom)}
+                {...this.createAllProxies(root, ctx, canvas)}
             </svg>);
     }
 
     /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
-    private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): VNode[] {
+    private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvas: CanvasAttributes): VNode[] {
         // Iterate through nodes starting by root, check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
@@ -159,11 +160,11 @@ export class ProxyView extends AbstractUIExtension {
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, ctx);
 
         //// Apply filters ////
-        // onScreenNodes is also given as an argument since some filters need it
-        const filteredOffScreenNodes = this.applyFilters(offScreenNodes, onScreenNodes);
+        const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
+            onScreenNodes, canvas); // Additional arguments for filters
 
         // Calculate size
-        const size = Math.min(canvasWidth, canvasHeight) * this.sizePercentage;
+        const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
         if (size !== this.currSize) {
             // Size of proxies has changed, cannot reuse previous renderings
             this.clearRenderings();
@@ -173,11 +174,11 @@ export class ProxyView extends AbstractUIExtension {
         //// Calculate transformations ////
         const transformedOffScreenNodes = filteredOffScreenNodes.map(node => ({
             node: node,
-            transform: this.getTransform(node, size, canvasWidth, canvasHeight, scroll, zoom)
+            transform: this.getTransform(node, size, canvas)
         }));
 
         //// Apply clustering ////
-        const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasWidth, canvasHeight);
+        const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvas);
 
         // Render the proxies
         const res = [];
@@ -230,7 +231,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Applies clustering to all `offScreenNodes` until there's no more overlap. Cluster-proxies are returned as VNodes. */
     private applyClustering(offScreenNodes: { node: SKNode, transform: TransformAttributes }[],
-        size: number, canvasWidth: number, canvasHeight: number): { node: SKNode | VNode, transform: TransformAttributes }[] {
+        size: number, canvas: CanvasAttributes): { node: SKNode | VNode, transform: TransformAttributes }[] {
         if (!this.clusteringEnabled) {
             return offScreenNodes;
         }
@@ -355,14 +356,14 @@ export class ProxyView extends AbstractUIExtension {
                 y /= numProxiesInCluster;
 
                 // Make sure the calculated positions don't leave the canvas bounds
-                x = Math.max(0, Math.min(canvasWidth - size, x));
-                y = Math.max(0, Math.min(canvasHeight - size, y));
+                x = Math.max(0, Math.min(canvas.width - size, x));
+                y = Math.max(0, Math.min(canvas.height - size, y));
                 // Also make sure the calculated positions are still capped to the border (no floating proxies)
-                if (y > 0 && y < canvasHeight - size && (x < canvasWidth - size || x > 0)) {
-                    x = x > (canvasWidth - size) / 2 ? canvasWidth - size : 0;
+                if (y > 0 && y < canvas.height - size && (x < canvas.width - size || x > 0)) {
+                    x = x > (canvas.width - size) / 2 ? canvas.width - size : 0;
                 }
-                if (x > 0 && x < canvasWidth - size && (y < canvasHeight - size || y > 0)) {
-                    y = y > (canvasHeight - size) / 2 ? canvasHeight - size : 0;
+                if (x > 0 && x < canvas.width - size && (y < canvas.height - size || y > 0)) {
+                    y = y > (canvas.height - size) / 2 ? canvas.height - size : 0;
                 }
 
                 const clusterNode = getClusterRendering(`cluster-${clusterIDOffset + i}-proxy`, numProxiesInCluster, size, x, y);
@@ -487,6 +488,7 @@ export class ProxyView extends AbstractUIExtension {
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
+        this.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
     }
 
     /** Clears the {@link renderings} map. */
@@ -503,7 +505,7 @@ export class ProxyView extends AbstractUIExtension {
      * Calculates the TransformAttributes for this node's proxy, e.g. the position to place the proxy at aswell as its scale and bounds.
      * Note that the position is pre-scaling.
      */
-    private getTransform(node: SKNode, desiredSize: number, canvasWidth: number, canvasHeight: number, scroll: Point, zoom: number): TransformAttributes {
+    private getTransform(node: SKNode, desiredSize: number, canvas: CanvasAttributes): TransformAttributes {
         // OLD: size dependant on node's bounds
         // const proxyWidth = size * 0.001;
         // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
@@ -511,6 +513,8 @@ export class ProxyView extends AbstractUIExtension {
 
         const pos = this.getPosition(node);
         const bounds = node.bounds;
+        const zoom = canvas.zoom;
+        const scroll = canvas.scroll;
 
         // Calculate the scale and the resulting proxy dimensions
         // The scale is calculated such that width & height are capped to a max value
@@ -521,14 +525,14 @@ export class ProxyView extends AbstractUIExtension {
         const proxyHeight = bounds.height * scale;
 
         // Center at middle of node
-        const offsetX = 0.5 * (node.bounds.width * zoom - proxyWidth);
-        const offsetY = 0.5 * (node.bounds.height * zoom - proxyHeight);
+        const offsetX = 0.5 * (bounds.width * zoom - proxyWidth);
+        const offsetY = 0.5 * (bounds.height * zoom - proxyHeight);
         let x = (pos.x - scroll.x) * zoom + offsetX;
         let y = (pos.y - scroll.y) * zoom + offsetY;
 
         // Cap proxy at canvas border
-        x = Math.max(0, Math.min(canvasWidth - proxyWidth, x));
-        y = Math.max(0, Math.min(canvasHeight - proxyHeight, y));
+        x = Math.max(0, Math.min(canvas.width - proxyWidth, x));
+        y = Math.max(0, Math.min(canvas.height - proxyHeight, y));
 
         // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
         /* Don't need to check for the opened sidebar since it closes as soon as the diagram is moved
@@ -669,22 +673,63 @@ export class ProxyView extends AbstractUIExtension {
      * Returns all `offScreenNodes` matching the enabled filters.
      * @param `onScreenNodes` is needed by since some filters.
      */
-    private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[]): SKNode[] {
+    private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
-            (!this.filterUnconnected || this.isConnected(node, onScreenNodes)));
+            (!this.filterUnconnected || this.isConnected(node, onScreenNodes)) &&
+            (!this.filterDistant || this.isInRange(node, canvas, 700)));
     }
 
-    /** Checks if `currNode` is connected to at least one of the other given `nodes`. */
-    private isConnected(currNode: SKNode, nodes: SKNode[]): boolean {
+    /** Checks if `node` is connected to at least one of the other given `nodes`. */
+    private isConnected(node: SKNode, nodes: SKNode[]): boolean {
         return (
-            (currNode.outgoingEdges as SKEdge[])
+            (node.outgoingEdges as SKEdge[])
                 .map(edge => edge.target as SKNode)
                 .some(target => nodes.includes(target))
             ||
-            (currNode.incomingEdges as SKEdge[])
+            (node.incomingEdges as SKEdge[])
                 .map(edge => edge.source as SKNode)
                 .some(source => nodes.includes(source))
         );
+    }
+
+    /** Checks if the distance between `node` and the center of the canvas is in the given range. */
+    private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
+        const bounds = node.bounds;
+        let pos = this.getPosition(node);
+        pos = Point.subtract(pos, canvas.scroll);
+        pos = { x: pos.x + 0.5 * bounds.width, y: pos.y + 0.5 * bounds.height };
+        // pos = {x: pos.x * canvas.zoom, y: pos.y * canvas.zoom};
+        let dist = 0;
+        // const center = { x: canvas.width * 0.5, y: canvas.height * 0.5 };
+        const topLeft = { x: 0, y: 0 };
+        const topRight = { x: canvas.width, y: 0 };
+        const botLeft = { x: 0, y: canvas.height };
+        const botRight = { x: canvas.width, y: canvas.height };
+
+        if (pos.x < botRight.x && pos.y < botRight.y) {
+            if (pos.x < topLeft.x && pos.y < topLeft.y) {
+                dist = Point.euclideanDistance(pos, topLeft);
+            } else {
+                // TODO: don't use max
+                dist = Point.maxDistance(pos, topLeft);
+            }
+        } else if (pos.x > topLeft.x && pos.y > topLeft.y) {
+            if (pos.x > botRight.x && pos.y > botRight.y) {
+                dist = Point.euclideanDistance(pos, botRight);
+            } else {
+                dist = Point.maxDistance(pos, botRight);
+            }
+        } else {
+            if (pos.x < botLeft.x) {
+                dist = Point.euclideanDistance(pos, botLeft);
+            } else {
+                dist = Point.euclideanDistance(pos, topRight);
+            }
+        }
+
+        console.log(node.id + ": " + dist)
+
+        return dist <= range;
     }
 }

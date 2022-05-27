@@ -17,7 +17,7 @@
 
 import { inject, injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
-import { Action, Bounds, SetModelAction, UpdateModelAction } from "sprotty-protocol";
+import { Action, Bounds, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
@@ -108,14 +108,17 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
 
 //////// Other helpers ////////
 
-/** Contains all attributes used in defining a VNode's transform attribute. */
+/**
+ * Contains all attributes used in defining a VNode's transform attribute.
+ * @example (x, y, width, height, scale, rotation)
+ */
 export interface TransformAttributes extends Bounds {
-    // Inherited by Bounds
-    readonly x: number;
-    readonly y: number;
-    readonly width: number;
-    readonly height: number;
-    // Self-defined
     readonly scale?: number;
     readonly rotation?: number;
 }
+
+/** 
+ * Contains all canvas-related attributes - though `x` and `y` are unused.
+ * @example (x, y, width, height, scroll, zoom)
+ */
+export interface CanvasAttributes extends Viewport, Bounds { }

@@ -19,7 +19,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { ICommand } from "sprotty";
 import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
-import { ProxyViewCapProxyToParent, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "../proxy-view/proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "../proxy-view/proxy-view-options";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
@@ -299,6 +299,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewClusteringEnabled);
         this.register(ProxyViewCapProxyToParent);
         this.register(ProxyViewFilterUnconnected);
+        this.register(ProxyViewFilterDistant);
         
         // Proxy-view debug
         this.register(ProxyViewDebugCategory)

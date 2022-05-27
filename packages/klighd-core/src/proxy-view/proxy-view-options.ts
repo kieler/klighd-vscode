@@ -109,6 +109,21 @@ export class ProxyViewFilterUnconnected implements RenderOption {
     currentValue = ProxyViewFilterUnconnected.DEFAULT;
 }
 
+/** Whether proxies should be filtered by removing distant nodes. */
+export class ProxyViewFilterDistant implements RenderOption {
+    static readonly ID: string = 'proxy-view-filter-distant';
+    static readonly NAME: string = 'Filter Distant Nodes';
+    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing nodes that are far away from the center.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewFilterDistant.ID;
+    readonly name: string = ProxyViewFilterDistant.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewFilterDistant.DEFAULT;
+    readonly description: string = ProxyViewFilterDistant.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewFilterDistant.DEFAULT;
+}
+
 //////// DEBUG ////////
 
 /** The category containing debug proxy-view options. */
