@@ -19,7 +19,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { ICommand } from "sprotty";
 import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
-import { ProxyViewCapProxyToParent, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "../proxy-view/proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewEnabled, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "../proxy-view/proxy-view-options";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
@@ -292,15 +292,19 @@ export class RenderOptionsRegistry extends Registry {
         this.register(PaperShadows)
         this.register(AnimateGoToBookmark);
 
+        // Proxy-view
         this.register(ProxyViewCategory);
         this.register(ProxyViewEnabled);
-        this.register(ProxyViewUseSynthesisProxyRendering);
         this.register(ProxyViewSize);
         this.register(ProxyViewClusteringEnabled);
-        this.register(ProxyViewClusteringCascading);
-        this.register(ProxyViewClusteringSweepLine);
         this.register(ProxyViewCapProxyToParent);
         this.register(ProxyViewFilterUnconnected);
+        
+        // Proxy-view debug
+        this.register(ProxyViewDebugCategory)
+        this.register(ProxyViewUseSynthesisProxyRendering);
+        this.register(ProxyViewClusteringCascading);
+        this.register(ProxyViewClusteringSweepLine);
     }
 
     @postConstruct()

@@ -44,22 +44,6 @@ export class ProxyViewEnabled implements RenderOption {
     currentValue = ProxyViewEnabled.DEFAULT;
 }
 
-/** Whether to use the synthesis specified proxy-rendering. */
-export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
-    static readonly ID: string = 'proxy-view-use-synthesis-proxy-rendering';
-    static readonly NAME: string = 'Use Synthesis Proxy-Rendering';
-    static readonly DESCRIPTION: string = "Whether proxies should be rendered as specified by the synthesis (if specified).";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewUseSynthesisProxyRendering.ID;
-    readonly name: string = ProxyViewUseSynthesisProxyRendering.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewUseSynthesisProxyRendering.DEFAULT;
-    readonly description: string = ProxyViewUseSynthesisProxyRendering.DESCRIPTION;
-    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
-    readonly debug: boolean = true;
-    currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
-}
-
 /** Part of calculating the proxies' size. */
 export class ProxyViewSize implements RangeOption {
     static readonly ID: string = 'proxy-view-size';
@@ -95,38 +79,6 @@ export class ProxyViewClusteringEnabled implements RenderOption {
     currentValue = ProxyViewClusteringEnabled.DEFAULT;
 }
 
-/** Whether cascading clustering should be used, i.e. take transitive overlap into consideration. */
-export class ProxyViewClusteringCascading implements RenderOption {
-    static readonly ID: string = 'proxy-view-clustering-cascading';
-    static readonly NAME: string = 'Cascading Clustering';
-    static readonly DESCRIPTION: string = "Whether clustering should be cascading.";
-    static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewClusteringCascading.ID;
-    readonly name: string = ProxyViewClusteringCascading.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewClusteringCascading.DEFAULT;
-    readonly description: string = ProxyViewClusteringCascading.DESCRIPTION;
-    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
-    readonly debug: boolean = true;
-    currentValue = ProxyViewClusteringCascading.DEFAULT;
-}
-
-/** Whether the sweep line algorithm should be used for clustering. */
-export class ProxyViewClusteringSweepLine implements RenderOption {
-    static readonly ID: string = 'proxy-view-clustering-sweep-line';
-    static readonly NAME: string = 'Sweep Line Clustering';
-    static readonly DESCRIPTION: string = "Whether clustering should be done via sweep line algorithm.";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewClusteringSweepLine.ID;
-    readonly name: string = ProxyViewClusteringSweepLine.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewClusteringSweepLine.DEFAULT;
-    readonly description: string = ProxyViewClusteringSweepLine.DESCRIPTION;
-    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
-    readonly debug: boolean = true;
-    currentValue = ProxyViewClusteringSweepLine.DEFAULT;
-}
-
 /** Whether to cap proxies in their parent node. */
 export class ProxyViewCapProxyToParent implements RenderOption {
     static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
@@ -155,4 +107,67 @@ export class ProxyViewFilterUnconnected implements RenderOption {
     readonly description: string = ProxyViewFilterUnconnected.DESCRIPTION;
     readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
     currentValue = ProxyViewFilterUnconnected.DEFAULT;
+}
+
+//////// DEBUG ////////
+
+/** The category containing debug proxy-view options. */
+export class ProxyViewDebugCategory implements RenderOption {
+    static readonly ID: string = 'proxy-view-debug-category';
+    static readonly NAME: string = 'Proxy-View Debug Options';
+    static readonly INSTANCE: ProxyViewDebugCategory = new ProxyViewDebugCategory;
+    readonly id: string = ProxyViewDebugCategory.ID;
+    readonly name: string = ProxyViewDebugCategory.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CATEGORY;
+    readonly initialValue: any;
+    readonly debug: boolean = true;
+    currentValue: any;
+}
+
+/** Whether to use the synthesis specified proxy-rendering. */
+export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
+    static readonly ID: string = 'proxy-view-use-synthesis-proxy-rendering';
+    static readonly NAME: string = 'Use Synthesis Proxy-Rendering';
+    static readonly DESCRIPTION: string = "Whether proxies should be rendered as specified by the synthesis (if specified).";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewUseSynthesisProxyRendering.ID;
+    readonly name: string = ProxyViewUseSynthesisProxyRendering.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewUseSynthesisProxyRendering.DEFAULT;
+    readonly description: string = ProxyViewUseSynthesisProxyRendering.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
+}
+
+/** Whether cascading clustering should be used, i.e. take transitive overlap into consideration. */
+export class ProxyViewClusteringCascading implements RenderOption {
+    static readonly ID: string = 'proxy-view-clustering-cascading';
+    static readonly NAME: string = 'Cascading Clustering';
+    static readonly DESCRIPTION: string = "Whether clustering should be cascading.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewClusteringCascading.ID;
+    readonly name: string = ProxyViewClusteringCascading.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewClusteringCascading.DEFAULT;
+    readonly description: string = ProxyViewClusteringCascading.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewClusteringCascading.DEFAULT;
+}
+
+/** Whether the sweep line algorithm should be used for clustering. */
+export class ProxyViewClusteringSweepLine implements RenderOption {
+    static readonly ID: string = 'proxy-view-clustering-sweep-line';
+    static readonly NAME: string = 'Sweep Line Clustering';
+    static readonly DESCRIPTION: string = "Whether clustering should be done via sweep line algorithm.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewClusteringSweepLine.ID;
+    readonly name: string = ProxyViewClusteringSweepLine.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewClusteringSweepLine.DEFAULT;
+    readonly description: string = ProxyViewClusteringSweepLine.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewClusteringSweepLine.DEFAULT;
 }
