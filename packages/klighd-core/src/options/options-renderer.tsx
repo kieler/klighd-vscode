@@ -310,6 +310,23 @@ export class OptionsRenderer {
                                 : this.renderRenderOptions(renderOptions, option)}
                         </CategoryOption>
                     );
+                case TransformationOptionType.CHOICE:
+                    if (option.renderChoiceValues) {
+                        return (
+                            <ChoiceOption
+                                key={option.id}
+                                id={option.id}
+                                name={option.name}
+                                value={option.currentValue}
+                                availableValues={option.renderChoiceValues}
+                                description={option.description}
+                                onChange={this.handleRenderOptionChange.bind(this, option)}
+                            />
+                        );
+                    } else {
+                        console.error("No choice values for option:", option.name);
+                        return "";
+                    }
                 default:
                     console.error("Unsupported option type for option:", option.name);
                     return "";

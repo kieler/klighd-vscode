@@ -25,6 +25,8 @@ export interface RenderOption {
     description?: string;
     /** The category this RenderOption is part of. */
     renderCategory?: RenderOption;
+    /** The values this RenderOption has, if it's type is {@link TransformationOptionType.CHOICE}. */
+    renderChoiceValues?: any[];
     /** Whether this RenderOption is used for debugging purposes, e.g. only shown when debug mode is enabled. */
     debug?: boolean;
 }

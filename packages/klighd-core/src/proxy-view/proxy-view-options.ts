@@ -33,7 +33,7 @@ export class ProxyViewCategory implements RenderOption {
 export class ProxyViewEnabled implements RenderOption {
     static readonly ID: string = 'proxy-view-enabled';
     static readonly NAME: string = 'Enable Proxy-View';
-    static readonly DESCRIPTION: string = "Whether the Proxy-View is enabled.";
+    static readonly DESCRIPTION: string = 'Whether the Proxy-View is enabled.';
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewEnabled.ID;
     readonly name: string = ProxyViewEnabled.NAME;
@@ -68,7 +68,7 @@ export class ProxyViewSize implements RangeOption {
 export class ProxyViewClusteringEnabled implements RenderOption {
     static readonly ID: string = 'proxy-view-clustering-enabled';
     static readonly NAME: string = 'Enable Clustering';
-    static readonly DESCRIPTION: string = "Whether overlapping proxies should be clustered.";
+    static readonly DESCRIPTION: string = 'Whether overlapping proxies should be clustered.';
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewClusteringEnabled.ID;
     readonly name: string = ProxyViewClusteringEnabled.NAME;
@@ -83,7 +83,7 @@ export class ProxyViewClusteringEnabled implements RenderOption {
 export class ProxyViewCapProxyToParent implements RenderOption {
     static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
     static readonly NAME: string = 'Cap Proxy to Parent';
-    static readonly DESCRIPTION: string = "Whether proxies should be capped inside their parent node.";
+    static readonly DESCRIPTION: string = 'Whether proxies should be capped inside their parent node.';
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewCapProxyToParent.ID;
     readonly name: string = ProxyViewCapProxyToParent.NAME;
@@ -98,7 +98,7 @@ export class ProxyViewCapProxyToParent implements RenderOption {
 export class ProxyViewFilterUnconnected implements RenderOption {
     static readonly ID: string = 'proxy-view-filter-unconnected';
     static readonly NAME: string = 'Filter Unconnected Nodes';
-    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes.";
+    static readonly DESCRIPTION: string = 'Whether proxies should be filtered by removing unconnected nodes.';
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewFilterUnconnected.ID;
     readonly name: string = ProxyViewFilterUnconnected.NAME;
@@ -113,14 +113,19 @@ export class ProxyViewFilterUnconnected implements RenderOption {
 export class ProxyViewFilterDistant implements RenderOption {
     static readonly ID: string = 'proxy-view-filter-distant';
     static readonly NAME: string = 'Filter Distant Nodes';
-    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing nodes that are far away from the center.";
-    static readonly DEFAULT: boolean = false;
+    static readonly DESCRIPTION: string = 'Whether proxies should be filtered by removing nodes that are far away from the center.';
+    static readonly CHOICE_OFF: string = 'Off';
+    static readonly CHOICE_CLOSE: string = 'Close';
+    static readonly CHOICE_DISTANT: string = 'Distant';
+    static readonly DEFAULT: string = ProxyViewFilterDistant.CHOICE_OFF;
+    static readonly CHOICES: string[] = [ProxyViewFilterDistant.CHOICE_OFF, ProxyViewFilterDistant.CHOICE_CLOSE, ProxyViewFilterDistant.CHOICE_DISTANT];
     readonly id: string = ProxyViewFilterDistant.ID;
     readonly name: string = ProxyViewFilterDistant.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewFilterDistant.DEFAULT;
+    readonly type: TransformationOptionType = TransformationOptionType.CHOICE;
+    readonly initialValue: string = ProxyViewFilterDistant.DEFAULT;
     readonly description: string = ProxyViewFilterDistant.DESCRIPTION;
     readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    readonly renderChoiceValues: string[] = ProxyViewFilterDistant.CHOICES;
     currentValue = ProxyViewFilterDistant.DEFAULT;
 }
 
@@ -143,7 +148,7 @@ export class ProxyViewDebugCategory implements RenderOption {
 export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     static readonly ID: string = 'proxy-view-use-synthesis-proxy-rendering';
     static readonly NAME: string = 'Use Synthesis Proxy-Rendering';
-    static readonly DESCRIPTION: string = "Whether proxies should be rendered as specified by the synthesis (if specified).";
+    static readonly DESCRIPTION: string = 'Whether proxies should be rendered as specified by the synthesis (if specified).';
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewUseSynthesisProxyRendering.ID;
     readonly name: string = ProxyViewUseSynthesisProxyRendering.NAME;
@@ -159,7 +164,7 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
 export class ProxyViewClusteringCascading implements RenderOption {
     static readonly ID: string = 'proxy-view-clustering-cascading';
     static readonly NAME: string = 'Cascading Clustering';
-    static readonly DESCRIPTION: string = "Whether clustering should be cascading.";
+    static readonly DESCRIPTION: string = 'Whether clustering should be cascading.';
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewClusteringCascading.ID;
     readonly name: string = ProxyViewClusteringCascading.NAME;
@@ -175,7 +180,7 @@ export class ProxyViewClusteringCascading implements RenderOption {
 export class ProxyViewClusteringSweepLine implements RenderOption {
     static readonly ID: string = 'proxy-view-clustering-sweep-line';
     static readonly NAME: string = 'Sweep Line Clustering';
-    static readonly DESCRIPTION: string = "Whether clustering should be done via sweep line algorithm.";
+    static readonly DESCRIPTION: string = 'Whether clustering should be done via sweep line algorithm.';
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewClusteringSweepLine.ID;
     readonly name: string = ProxyViewClusteringSweepLine.NAME;

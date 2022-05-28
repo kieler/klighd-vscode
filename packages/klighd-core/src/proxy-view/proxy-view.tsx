@@ -76,7 +76,7 @@ export class ProxyView extends AbstractUIExtension {
     /** @see {@link ProxyViewFilterUnconnected} */
     private filterUnconnected: boolean;
     /** @see {@link ProxyViewFilterDistant} */
-    private filterDistant: boolean;
+    private filterDistant: string;
 
     id(): string {
         return ProxyView.ID;
@@ -674,12 +674,11 @@ export class ProxyView extends AbstractUIExtension {
      * @param `onScreenNodes` is needed by since some filters.
      */
     private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
-        // TODO: range off/close/distant choice?
-        const range = 500;
+        const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
             (!this.filterUnconnected || this.isConnected(node, onScreenNodes)) &&
-            (!this.filterDistant || this.isInRange(node, canvas, range)));
+            (range <= 0 || this.isInRange(node, canvas, range)));
     }
 
     /** Checks if `node` is connected to at least one of the other given `nodes`. */
@@ -695,13 +694,22 @@ export class ProxyView extends AbstractUIExtension {
         );
     }
 
+    /**
+     * Maps the filterDistant choice to a range.
+     * If the filter is turned off, returns `-1`.
+     */
+    private choiceToRange(choice: string): number {
+        switch (choice) {
+            case ProxyViewFilterDistant.CHOICE_CLOSE:
+                return 300;
+            case ProxyViewFilterDistant.CHOICE_DISTANT:
+                return 700;
+        }
+        return -1;
+    }
+
     /** Checks if the distance between `node` and the center of the canvas is in the given range. */
     private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
-        // pos = { x: pos.x + 0.5 * bounds.width, y: pos.y + 0.5 * bounds.height };
-        // const center = { x: canvas.width * 0.5, y: canvas.height * 0.5 };
-        // nodePos = Point.subtract(nodePos, canvas.scroll);
-        // nodePos = { x: nodePos.x * canvas.zoom, y: nodePos.y * canvas.zoom };
-
         const nodePos = this.getPosition(node);
         const nodeTop = (nodePos.y - canvas.scroll.y) * canvas.zoom;
         const nodeBottom = nodeTop + node.bounds.height * canvas.zoom;
