@@ -674,10 +674,12 @@ export class ProxyView extends AbstractUIExtension {
      * @param `onScreenNodes` is needed by since some filters.
      */
     private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        // TODO: range off/close/distant choice?
+        const range = 500;
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
             (!this.filterUnconnected || this.isConnected(node, onScreenNodes)) &&
-            (!this.filterDistant || this.isInRange(node, canvas, 700)));
+            (!this.filterDistant || this.isInRange(node, canvas, range)));
     }
 
     /** Checks if `node` is connected to at least one of the other given `nodes`. */
@@ -695,40 +697,71 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Checks if the distance between `node` and the center of the canvas is in the given range. */
     private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
-        const bounds = node.bounds;
-        let pos = this.getPosition(node);
-        pos = Point.subtract(pos, canvas.scroll);
-        pos = { x: pos.x + 0.5 * bounds.width, y: pos.y + 0.5 * bounds.height };
-        // pos = {x: pos.x * canvas.zoom, y: pos.y * canvas.zoom};
-        let dist = 0;
+        // pos = { x: pos.x + 0.5 * bounds.width, y: pos.y + 0.5 * bounds.height };
         // const center = { x: canvas.width * 0.5, y: canvas.height * 0.5 };
-        const topLeft = { x: 0, y: 0 };
-        const topRight = { x: canvas.width, y: 0 };
-        const botLeft = { x: 0, y: canvas.height };
-        const botRight = { x: canvas.width, y: canvas.height };
+        // nodePos = Point.subtract(nodePos, canvas.scroll);
+        // nodePos = { x: nodePos.x * canvas.zoom, y: nodePos.y * canvas.zoom };
 
-        if (pos.x < botRight.x && pos.y < botRight.y) {
-            if (pos.x < topLeft.x && pos.y < topLeft.y) {
-                dist = Point.euclideanDistance(pos, topLeft);
+        const nodePos = this.getPosition(node);
+        const nodeTop = (nodePos.y - canvas.scroll.y) * canvas.zoom;
+        const nodeBottom = nodeTop + node.bounds.height * canvas.zoom;
+        const nodeLeft = (nodePos.x - canvas.scroll.x) * canvas.zoom;
+        const nodeRight = nodeLeft + node.bounds.width * canvas.zoom;
+        const canvasTop = 0;
+        const canvasBottom = canvas.height;
+        const canvasLeft = 0;
+        const canvasRight = canvas.width;
+
+        /* Partition the screen plane into 9 segments (as in tic-tac-toe):
+         * 1 | 2 | 3
+         * --+---+--
+         * 4 | 5 | 6
+         * --+---+--
+         * 7 | 8 | 9
+         * Now 5 correlates to the canvas, e.g. the 'on-screen area'.
+         * Using the other segments we can figure out the distance to the canvas:
+         * 1,3,7,9: calculate euclidean distance to nearest corner of 5
+         * 2,8: only take y-coordinate into consideration for calculating the distance
+         * 4,6: only take x-coordinate into consideration for calculating the distance
+         */
+        let dist = 0;
+        if (nodeBottom < canvasTop) {
+            // Above canvas (1,2,3)
+            if (nodeRight < canvasLeft) {
+                // Top left (1)
+                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeRight }, { y: canvasTop, x: canvasLeft });
+            } else if (nodeLeft > canvasRight) {
+                // Top right (3)
+                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeLeft }, { y: canvasTop, x: canvasRight });
             } else {
-                // TODO: don't use max
-                dist = Point.maxDistance(pos, topLeft);
+                // Top middle (2)
+                dist = canvasTop - nodeBottom;
             }
-        } else if (pos.x > topLeft.x && pos.y > topLeft.y) {
-            if (pos.x > botRight.x && pos.y > botRight.y) {
-                dist = Point.euclideanDistance(pos, botRight);
+        } else if (nodeTop > canvasBottom) {
+            // Below canvas (7,8,9)
+            if (nodeRight < canvasLeft) {
+                // Bottom left (7)
+                dist = Point.euclideanDistance({ y: nodeTop, x: nodeRight }, { y: canvasBottom, x: canvasLeft });
+            } else if (nodeLeft > canvasRight) {
+                // Bottom right (9)
+                dist = Point.euclideanDistance({ y: nodeTop, x: nodeLeft }, { y: canvasBottom, x: canvasRight });
             } else {
-                dist = Point.maxDistance(pos, botRight);
+                // Bottom middle (8)
+                dist = nodeTop - canvasBottom;
             }
         } else {
-            if (pos.x < botLeft.x) {
-                dist = Point.euclideanDistance(pos, botLeft);
+            // Same height as canvas (4,5,6)
+            if (nodeRight < canvasLeft) {
+                // Left of canvas (4)
+                dist = canvasLeft - nodeRight;
+            } else if (nodeLeft > canvasRight) {
+                // Right of canvas (6)
+                dist = nodeLeft - canvasRight;
             } else {
-                dist = Point.euclideanDistance(pos, topRight);
+                // On the canvas (5)
+                // Should never be the case, would be on-screen
             }
         }
-
-        console.log(node.id + ": " + dist)
 
         return dist <= range;
     }
