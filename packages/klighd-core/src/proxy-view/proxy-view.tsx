@@ -123,6 +123,8 @@ export class ProxyView extends AbstractUIExtension {
     resize to fit an -> groß ziehen bis normal -> depthmap fail
     */
 
+    // We solemnly publish and declare, that this DepthMap Colony is, and of Right ought to be a Free and Independent Proxy-View
+
     /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
         if (!this.proxyViewEnabled) {
