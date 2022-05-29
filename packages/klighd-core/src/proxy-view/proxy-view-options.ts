@@ -144,6 +144,22 @@ export class ProxyViewDebugCategory implements RenderOption {
     currentValue: any;
 }
 
+/** Whether to highlight proxies that are connected to the selected node. */
+export class ProxyViewHighlightSelected implements RenderOption {
+    static readonly ID: string = 'proxy-view-highlight-selected';
+    static readonly NAME: string = 'Highlight Proxies by Selection';
+    static readonly DESCRIPTION: string = 'Whether proxies that are connected to the selected node should be highlighted.';
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewHighlightSelected.ID;
+    readonly name: string = ProxyViewHighlightSelected.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewHighlightSelected.DEFAULT;
+    readonly description: string = ProxyViewHighlightSelected.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewHighlightSelected.DEFAULT;
+}
+
 /** Whether to use the synthesis specified proxy-rendering. */
 export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     static readonly ID: string = 'proxy-view-use-synthesis-proxy-rendering';

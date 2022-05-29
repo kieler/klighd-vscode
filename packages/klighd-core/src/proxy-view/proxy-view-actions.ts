@@ -16,6 +16,7 @@
  */
 
 import { inject, injectable } from "inversify";
+import { VNode } from "snabbdom";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
 import { Action, Bounds, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
@@ -122,3 +123,8 @@ export interface TransformAttributes extends Bounds {
  * @example (x, y, width, height, scroll, zoom)
  */
 export interface CanvasAttributes extends Viewport, Bounds { }
+
+/** A VNode containing some additional information to be used only by the {@link ProxyView}. */
+export interface ProxyVNode extends VNode {
+    selected?: boolean;
+}

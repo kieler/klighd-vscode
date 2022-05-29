@@ -25,9 +25,9 @@ import { DepthMap } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode, SKPort } from "../skgraph-models";
-import { CanvasAttributes, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
+import { CanvasAttributes, ProxyVNode, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewHighlightSelected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -49,14 +49,14 @@ export class ProxyView extends AbstractUIExtension {
      * Stores the proxy renderings of already rendered nodes.
      * Always make sure the ids ending with "-proxy" are used.
      */
-    private renderings: Map<string, VNode>;
+    private renderings: Map<string, ProxyVNode>;
     /**
      * Stores the absolute coordinates (without scroll) of already rendered nodes.
      * Always make sure the ids ending with "-proxy" are used.
      */
     private positions: Map<string, Point>;
-    /** Stores the proxy's current size. Used for clearing {@link renderings} if the size has changed. */
-    private currSize: number;
+
+    //// Sidebar options ////
     /** @see {@link ProxyViewEnabled} */
     private proxyViewEnabled: boolean;
     /** Whether the proxy view was previously enabled. Used to avoid excessive patching. */
@@ -65,18 +65,25 @@ export class ProxyView extends AbstractUIExtension {
     private sizePercentage: number;
     /** @see {@link ProxyViewClusteringEnabled} */
     private clusteringEnabled: boolean;
-    /** @see {@link ProxyViewClusteringCascading} */
-    private clusteringCascading: boolean;
-    /** @see {@link ProxyViewClusteringSweepLine} */
-    private clusteringSweepLine: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
-    /** @see {@link ProxyViewUseSynthesisProxyRendering} */
-    private useSynthesisProxyRendering: boolean;
     /** @see {@link ProxyViewFilterUnconnected} */
     private filterUnconnected: boolean;
     /** @see {@link ProxyViewFilterDistant} */
     private filterDistant: string;
+
+    //// Sidebar debug options ////
+    /** 
+     * Note that clusters are never highlighted, as highlighting is synthesis-specific while cluster renderings are not.
+     * @see {@link ProxyViewHighlightSelected}
+     */
+    private highlightSelected: boolean;
+    /** @see {@link ProxyViewUseSynthesisProxyRendering} */
+    private useSynthesisProxyRendering: boolean;
+    /** @see {@link ProxyViewClusteringCascading} */
+    private clusteringCascading: boolean;
+    /** @see {@link ProxyViewClusteringSweepLine} */
+    private clusteringSweepLine: boolean;
 
     id(): string {
         return ProxyView.ID;
@@ -111,6 +118,10 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
+    /* FIXME: bug
+    resize to fit aus -> diagramm öffnen -> klein ziehen bis cap ->
+    resize to fit an -> groß ziehen bis normal -> depthmap fail
+    */
 
     /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
@@ -157,21 +168,14 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         //// Initial nodes ////
-        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, ctx);
+        const { offScreenNodes, onScreenNodes, selectedNode } = this.getOffAndOnScreenNodes(root, ctx);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
             onScreenNodes, canvas); // Additional arguments for filters
 
-        // Calculate size
-        const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
-        if (size !== this.currSize) {
-            // Size of proxies has changed, cannot reuse previous renderings
-            this.clearRenderings();
-        }
-        this.currSize = size;
-
         //// Calculate transformations ////
+        const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
         const transformedOffScreenNodes = filteredOffScreenNodes.map(node => ({
             node: node,
             transform: this.getTransform(node, size, canvas)
@@ -184,7 +188,7 @@ export class ProxyView extends AbstractUIExtension {
         const res = [];
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
-            const vnode = this.createSingleProxy(node, transform, ctx);
+            const vnode = this.createSingleProxy(node, transform, ctx, selectedNode);
             if (vnode) {
                 res.push(vnode);
             }
@@ -197,7 +201,7 @@ export class ProxyView extends AbstractUIExtension {
      * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
      * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
      */
-    private getOffAndOnScreenNodes(currRoot: SKNode, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
+    private getOffAndOnScreenNodes(currRoot: SKNode, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[], selectedNode?: SKNode } {
         const depthMap = ctx.depthMap;
         const viewport = ctx.viewport;
         if (!depthMap || !viewport) {
@@ -208,25 +212,36 @@ export class ProxyView extends AbstractUIExtension {
         // For each node check if it's off-screen
         const offScreenNodes = [];
         const onScreenNodes = [];
+        let selectedNode = undefined;
         for (const node of currRoot.children as SKNode[]) {
-            const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
-            if (region && !depthMap.isInBounds(region, viewport)) {
-                // Node out of bounds
-                offScreenNodes.push(node);
-            } else {
-                // Node in bounds
-                onScreenNodes.push(node);
+            if (node instanceof SKNode) {
+                const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
+                if (region && !depthMap.isInBounds(region, viewport)) {
+                    // Node out of bounds
+                    offScreenNodes.push(node);
+                } else {
+                    // Node in bounds
+                    onScreenNodes.push(node);
 
-                if (node.children.length > 0) {
-                    // Has children, recursively check them
-                    const offAndOnScreenNodes = this.getOffAndOnScreenNodes(node, ctx);
-                    offScreenNodes.push(...offAndOnScreenNodes.offScreenNodes);
-                    onScreenNodes.push(...offAndOnScreenNodes.onScreenNodes);
+                    if (node.children.length > 0) {
+                        // Has children, recursively check them
+                        const childRes = this.getOffAndOnScreenNodes(node, ctx);
+                        offScreenNodes.push(...childRes.offScreenNodes);
+                        onScreenNodes.push(...childRes.onScreenNodes);
+
+                        if (childRes.selectedNode) {
+                            selectedNode = childRes.selectedNode;
+                        }
+                    }
+
+                    if (node.selected) {
+                        selectedNode = node;
+                    }
                 }
             }
         }
 
-        return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes };
+        return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes, selectedNode: selectedNode };
     }
 
     /** Applies clustering to all `offScreenNodes` until there's no more overlap. Cluster-proxies are returned as VNodes. */
@@ -385,7 +400,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the proxy rendering for a single off-screen node and applies logic, e.g. the proxy's position. */
-    private createSingleProxy(node: SKNode | VNode, transform: TransformAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
+    private createSingleProxy(node: SKNode | VNode, transform: TransformAttributes, ctx: SKGraphModelRenderer, selectedNode?: SKNode): VNode | undefined {
         let transformString = `translate(${transform.x}, ${transform.y})`;
         if (transform.scale) {
             transformString += ` scale(${transform.scale})`;
@@ -397,20 +412,27 @@ export class ProxyView extends AbstractUIExtension {
             return node;
         }
 
+        // Check if this node's proxy should be highlighted
+        const highlight = this.highlightSelected && (selectedNode ? this.isConnectedToAny(node, [selectedNode]) : false);
+
         // Get VNode
         const id = this.getProxyId(node.id);
         let vnode = this.renderings.get(id);
-        if (!vnode) {
-            // Node hasn't been rendered yet (cache empty)
+        if (!vnode || vnode.selected !== highlight) {
+            // Node hasn't been rendered yet (cache empty for this node) or the attributes don't match
+            console.log("New!");
 
             // Clone the node
             const clone: SKNode = Object.create(node);
             // Change its id for good measure
             clone.id = id;
-            // Clear children, proxies don't show nested nodes (but keep Labels)
+            // Clear children, proxies don't show nested nodes (but keep labels)
             clone.children = clone.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
             // Update bounds
             clone.bounds = transform;
+            // Proxies should never appear to be selected (even if their on-screen counterpart is selected)
+            // unless highlighting is enabled
+            clone.selected = highlight;
 
             // Check if synthesis has specified a proxy rendering
             if (this.useSynthesisProxyRendering && node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
@@ -422,10 +444,14 @@ export class ProxyView extends AbstractUIExtension {
                 clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
             } else {
                 // Fallback, use universal proxy rendering
-                // TODO: further specify what to change for the mock?
+                // TODO: further specify what to change?
             }
 
             vnode = ctx.renderProxy(clone);
+            if (vnode) {
+                // New rendering, set ProxyVNode attributes
+                vnode.selected = highlight;
+            }
 
             // OLD: code to make a proxy non-click-through
             if (vnode && vnode.data && vnode.data.attrs) {
@@ -434,6 +460,8 @@ export class ProxyView extends AbstractUIExtension {
                     vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
                 }
             }
+        } else {
+            console.log("Cached!");
         }
 
         if (vnode) {
@@ -475,10 +503,14 @@ export class ProxyView extends AbstractUIExtension {
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * toPercent;
 
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
-        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
-        this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
 
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+
+        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
+        this.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
+
+        // Debug
+        this.highlightSelected = renderOptionsRegistry.getValue(ProxyViewHighlightSelected);
 
         const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
         if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
@@ -487,12 +519,13 @@ export class ProxyView extends AbstractUIExtension {
         }
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
-        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
-        this.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
+        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
+        this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
     }
 
     /** Clears the {@link renderings} map. */
     clearRenderings(): void {
+        console.log("Cleared")
         this.renderings.clear();
     }
 
@@ -674,15 +707,16 @@ export class ProxyView extends AbstractUIExtension {
      * @param `onScreenNodes` is needed by since some filters.
      */
     private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        // TODO: filters for node type?, node size?
         const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
-            (!this.filterUnconnected || this.isConnected(node, onScreenNodes)) &&
+            (!this.filterUnconnected || this.isConnectedToAny(node, onScreenNodes)) &&
             (range <= 0 || this.isInRange(node, canvas, range)));
     }
 
     /** Checks if `node` is connected to at least one of the other given `nodes`. */
-    private isConnected(node: SKNode, nodes: SKNode[]): boolean {
+    private isConnectedToAny(node: SKNode, nodes: SKNode[]): boolean {
         return (
             (node.outgoingEdges as SKEdge[])
                 .map(edge => edge.target as SKNode)
