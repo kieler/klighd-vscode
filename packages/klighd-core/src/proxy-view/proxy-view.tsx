@@ -20,8 +20,7 @@ import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Point } from "sprotty-protocol";
-import { DepthMap } from "../depth-map";
+import { Bounds, Point } from "sprotty-protocol";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode, SKPort } from "../skgraph-models";
@@ -124,6 +123,7 @@ export class ProxyView extends AbstractUIExtension {
     */
 
     // We solemnly publish and declare, that this DepthMap Colony is, and of Right ought to be a Free and Independent Proxy-View
+    // Signed: tik
 
     /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
@@ -136,14 +136,12 @@ export class ProxyView extends AbstractUIExtension {
             return;
         } else if (!this.currHTMLRoot) {
             return;
-        } else if (!ctx.depthMap) {
-            // Create a new depthmap if otherwise unused
-            ctx.depthMap = DepthMap.init(model);
         }
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
-        const canvas = { ...model.canvasBounds, ...ctx.viewport };
+        const viewport = ctx.viewport;
+        const canvas = { ...model.canvasBounds, scroll: viewport.scroll, zoom: viewport.zoom };
         const root = model.children[0] as SKNode;
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
@@ -162,15 +160,8 @@ export class ProxyView extends AbstractUIExtension {
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
-        const depthMap = ctx.depthMap;
-        const viewport = ctx.viewport;
-        if (!depthMap || !viewport) {
-            // Not yet initialized
-            return [];
-        }
-
         //// Initial nodes ////
-        const { offScreenNodes, onScreenNodes, selectedNode } = this.getOffAndOnScreenNodes(root, ctx);
+        const { offScreenNodes, onScreenNodes, selectedNode } = this.getOffAndOnScreenNodes(root, canvas);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
@@ -203,22 +194,18 @@ export class ProxyView extends AbstractUIExtension {
      * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
      * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
      */
-    private getOffAndOnScreenNodes(currRoot: SKNode, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[], selectedNode?: SKNode } {
-        const depthMap = ctx.depthMap;
-        const viewport = ctx.viewport;
-        if (!depthMap || !viewport) {
-            // Not yet initialized
-            return { offScreenNodes: [], onScreenNodes: [] };
-        }
-
+    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes): { offScreenNodes: SKNode[], onScreenNodes: SKNode[], selectedNode?: SKNode } {
         // For each node check if it's off-screen
         const offScreenNodes = [];
         const onScreenNodes = [];
         let selectedNode = undefined;
         for (const node of currRoot.children as SKNode[]) {
             if (node instanceof SKNode) {
-                const region = depthMap.getProvidingRegion(node, viewport, ctx.renderOptionsRegistry);
-                if (region && !depthMap.isInBounds(region, viewport)) {
+                let nodePos = Point.subtract(this.getPosition(node), canvas.scroll);
+                nodePos = { x: nodePos.x * canvas.zoom, y: nodePos.y * canvas.zoom };
+                const nodeBounds = { ...node.bounds, ...nodePos };
+
+                if (!this.isInBounds(nodeBounds, canvas)) {
                     // Node out of bounds
                     offScreenNodes.push(node);
                 } else {
@@ -227,7 +214,7 @@ export class ProxyView extends AbstractUIExtension {
 
                     if (node.children.length > 0) {
                         // Has children, recursively check them
-                        const childRes = this.getOffAndOnScreenNodes(node, ctx);
+                        const childRes = this.getOffAndOnScreenNodes(node, canvas);
                         offScreenNodes.push(...childRes.offScreenNodes);
                         onScreenNodes.push(...childRes.onScreenNodes);
 
@@ -478,6 +465,13 @@ export class ProxyView extends AbstractUIExtension {
 
     //////// General helper methods ////////
 
+    /** Checks if `b1` is (partially) in `b2`. */
+    private isInBounds(b1: Bounds, b2: Bounds) {
+        const horizontalOverlap = b1.x + b1.width >= b2.x && b1.x <= b2.x + b2.width;
+        const verticalOverlap = b1.y + b1.height >= b2.y && b1.y <= b2.y + b2.height
+        return horizontalOverlap && verticalOverlap;
+    }
+
     /** Appends "-proxy" to the given id if the given id isn't already a proxy's id. */
     private getProxyId(id: string): string {
         return id.endsWith("-proxy") ? id : id + "-proxy";
@@ -631,32 +625,32 @@ export class ProxyView extends AbstractUIExtension {
 
     /**
      * Checks if the given bounds overlap.
-     * 
      * @returns `true` if there is overlap.
      */
-    private checkOverlap(bounds1: TransformAttributes, bounds2: TransformAttributes): boolean {
-        // TODO: could add an overlap percentage?
-        const left1 = bounds1.x;
-        const right1 = left1 + bounds1.width;
-        const top1 = bounds1.y;
-        const bottom1 = top1 + bounds1.height;
-        const left2 = bounds2.x;
-        const right2 = left2 + bounds2.width;
-        const top2 = bounds2.y;
-        const bottom2 = top2 + bounds2.height;
+    private checkOverlap(b1: Bounds, b2: Bounds): boolean {
+        return this.isInBounds(b1, b2) || this.isInBounds(b2, b1);
+        // OLD:
+        // const left1 = b1.x;
+        // const right1 = left1 + b1.width;
+        // const top1 = b1.y;
+        // const bottom1 = top1 + b1.height;
+        // const left2 = b2.x;
+        // const right2 = left2 + b2.width;
+        // const top2 = b2.y;
+        // const bottom2 = top2 + b2.height;
 
-        // 1 in 2
-        const horizontalOverlap1 = left1 >= left2 && left1 <= right2 || right1 >= left2 && right1 <= right2;
-        const verticalOverlap1 = bottom1 >= top2 && bottom1 <= bottom2 || top1 >= top2 && top1 <= bottom2;
-        if (horizontalOverlap1 && verticalOverlap1) {
-            return true;
-        }
+        // // 1 in 2
+        // const horizontalOverlap1 = left1 >= left2 && left1 <= right2 || right1 >= left2 && right1 <= right2;
+        // const verticalOverlap1 = bottom1 >= top2 && bottom1 <= bottom2 || top1 >= top2 && top1 <= bottom2;
+        // if (horizontalOverlap1 && verticalOverlap1) {
+        //     return true;
+        // }
 
-        // 2 in 1
-        const horizontalOverlap2 = left2 >= left1 && left2 <= right1 || right2 >= left1 && right2 <= right1;
-        const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;
+        // // 2 in 1
+        // const horizontalOverlap2 = left2 >= left1 && left2 <= right1 || right2 >= left1 && right2 <= right1;
+        // const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;
 
-        return horizontalOverlap2 && verticalOverlap2;
+        // return horizontalOverlap2 && verticalOverlap2;
     }
 
     /**
