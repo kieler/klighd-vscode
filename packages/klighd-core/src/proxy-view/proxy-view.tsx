@@ -495,8 +495,8 @@ export class ProxyView extends AbstractUIExtension {
         this.prevProxyViewEnabled = this.proxyViewEnabled;
         this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
 
-        const toPercent = 0.01;
-        this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * toPercent;
+        const fromPercent = 0.01;
+        this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * fromPercent;
 
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
 
