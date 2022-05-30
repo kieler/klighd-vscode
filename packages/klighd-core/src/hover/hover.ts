@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,6 +17,7 @@
 import { injectable } from 'inversify';
 import { HoverMouseListener, SModelElement } from 'sprotty';
 import { Action, Bounds, generateRequestId, RequestPopupModelAction } from "sprotty-protocol";
+import { SKGraphElement } from '../skgraph-models';
 import { getSemanticElement } from '../skgraph-utils';
 
 /**
@@ -57,7 +58,7 @@ export class KlighdHoverMouseListener extends HoverMouseListener {
         return new Promise((resolve) => {
             this.state.mouseOverTimer = window.setTimeout(() => {
                 const popupBounds = this.computePopupBounds(target, {x: event.pageX, y: event.pageY})
-                const semanticElement = getSemanticElement(event.target)
+                const semanticElement = getSemanticElement(target as SKGraphElement, event.target)
 
                 if (semanticElement) {
                     resolve(RequestKlighdPopupModelAction.create(semanticElement, target, popupBounds))
