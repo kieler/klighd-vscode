@@ -50,7 +50,7 @@ export class ProxyView extends AbstractUIExtension {
      */
     private renderings: Map<string, ProxyVNode>;
     /**
-     * Stores the absolute coordinates (without scroll) of already rendered nodes.
+     * Stores the absolute coordinates (without scroll and zoom) of already rendered nodes.
      * Always make sure the ids ending with "-proxy" are used.
      */
     private positions: Map<string, Point>;
@@ -162,6 +162,7 @@ export class ProxyView extends AbstractUIExtension {
 
         //// Initial nodes ////
         const { offScreenNodes, onScreenNodes, selectedNode } = this.getOffAndOnScreenNodes(root, canvas);
+        console.log(canvas)
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
@@ -201,11 +202,9 @@ export class ProxyView extends AbstractUIExtension {
         let selectedNode = undefined;
         for (const node of currRoot.children as SKNode[]) {
             if (node instanceof SKNode) {
-                let nodePos = Point.subtract(this.getPosition(node), canvas.scroll);
-                nodePos = { x: nodePos.x * canvas.zoom, y: nodePos.y * canvas.zoom };
-                const nodeBounds = { ...node.bounds, ...nodePos };
+                const translated = this.getTranslatedBounds(node, canvas);
 
-                if (!this.isInBounds(nodeBounds, canvas)) {
+                if (!this.isInBounds(translated, canvas)) {
                     // Node out of bounds
                     offScreenNodes.push(node);
                 } else {
@@ -540,10 +539,8 @@ export class ProxyView extends AbstractUIExtension {
         // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
         // console.log(proxySizeScale);
 
-        const pos = this.getPosition(node);
         const bounds = node.bounds;
-        const zoom = canvas.zoom;
-        const scroll = canvas.scroll;
+        const translated = this.getTranslatedBounds(node, canvas);
 
         // Calculate the scale and the resulting proxy dimensions
         // The scale is calculated such that width & height are capped to a max value
@@ -554,18 +551,17 @@ export class ProxyView extends AbstractUIExtension {
         const proxyHeight = bounds.height * scale;
 
         // Center at middle of node
-        const offsetX = 0.5 * (bounds.width * zoom - proxyWidth);
-        const offsetY = 0.5 * (bounds.height * zoom - proxyHeight);
-        let x = (pos.x - scroll.x) * zoom + offsetX;
-        let y = (pos.y - scroll.y) * zoom + offsetY;
+        const offsetX = 0.5 * (translated.width - proxyWidth);
+        const offsetY = 0.5 * (translated.height - proxyHeight);
+        let x = translated.x + offsetX;
+        let y = translated.y + offsetY;
 
         // Cap proxy at canvas border
         x = Math.max(0, Math.min(canvas.width - proxyWidth, x));
         y = Math.max(0, Math.min(canvas.height - proxyHeight, y));
 
         // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
-        /* Don't need to check for the opened sidebar since it closes as soon as the diagram is moved
-          (onMouseDown), e.g. don't reposition proxies accordingly */
+        // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
         const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
         const isSidebarOpen = document.querySelector('.sidebar--open');
         if (!isSidebarOpen && rect && y < rect.bottom && x > rect.left - proxyWidth) {
@@ -573,11 +569,9 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
-            const parent = node.parent as SKNode;
-            const parentBounds = parent.bounds;
-            const parentPos = this.getPosition(parent);
-            x = Math.max((parentPos.x - scroll.x) * zoom, Math.min((parentPos.x + parentBounds.width - scroll.x) * zoom - proxyWidth, x));
-            y = Math.max((parentPos.y - scroll.y) * zoom, Math.min((parentPos.y + parentBounds.height - scroll.y) * zoom - proxyHeight, y));
+            const translatedParent = this.getTranslatedBounds(node.parent as SKNode, canvas);
+            x = Math.max(translatedParent.x, Math.min(translatedParent.x + translatedParent.width - proxyWidth, x));
+            y = Math.max(translatedParent.y, Math.min(translatedParent.y + translatedParent.height - proxyHeight, y));
         }
 
         // OLD: Scale the coordinates (to get position post-scaling)
@@ -585,6 +579,15 @@ export class ProxyView extends AbstractUIExtension {
         // y /= scale;
 
         return { x: x, y: y, scale: scale, width: proxyWidth, height: proxyHeight };
+    }
+
+    /** Returns the translated bounds for the given `node`, e.g. calculates its absolute position according to scroll and zoom. */
+    private getTranslatedBounds(node: SKNode, canvas: CanvasAttributes): Bounds {
+        const b = node.bounds;
+        const p = this.getPosition(node);
+        const s = canvas.scroll;
+        const z = canvas.zoom;
+        return { x: (p.x - s.x) * z, y: (p.y - s.y) * z, width: b.width * z, height: b.height * z };
     }
 
     /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
@@ -596,20 +599,15 @@ export class ProxyView extends AbstractUIExtension {
         // This node might not be a proxy, make sure to store the right id
         const id = this.getProxyId(node.id);
         let point = this.positions.get(id);
-        if (point) {
-            // Point already stored
-            return point;
-        } else {
+        if (!point) {
             // Point hasn't been stored yet, check parent
             point = this.getPosition(node.parent as SKNode);
-            const x = point.x + node.bounds.x;
-            const y = point.y + node.bounds.y;
-            point = { x: x, y: y };
+            point = Point.add(point, node.bounds);
 
             // Also store this point
             this.positions.set(id, point);
-            return point;
         }
+        return point;
     }
 
     /** Updates a VNode's transform attribute. */
@@ -740,15 +738,15 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Checks if the distance between `node` and the center of the canvas is in the given range. */
     private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
-        const nodePos = this.getPosition(node);
-        const nodeTop = (nodePos.y - canvas.scroll.y) * canvas.zoom;
-        const nodeBottom = nodeTop + node.bounds.height * canvas.zoom;
-        const nodeLeft = (nodePos.x - canvas.scroll.x) * canvas.zoom;
-        const nodeRight = nodeLeft + node.bounds.width * canvas.zoom;
-        const canvasTop = 0;
-        const canvasBottom = canvas.height;
+        const translated = this.getTranslatedBounds(node, canvas);
+        const nodeLeft = translated.x;
+        const nodeRight = nodeLeft + translated.width;
+        const nodeTop = translated.y;
+        const nodeBottom = nodeTop + translated.height;
         const canvasLeft = 0;
         const canvasRight = canvas.width;
+        const canvasTop = 0;
+        const canvasBottom = canvas.height;
 
         /* Partition the screen plane into 9 segments (as in tic-tac-toe):
          * 1 | 2 | 3
