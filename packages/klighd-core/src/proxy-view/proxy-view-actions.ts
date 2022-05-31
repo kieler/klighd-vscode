@@ -86,14 +86,16 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
                 this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry));
                 this.onChangeRegistered = true;
             }
-        } else if (action.kind === SendModelContextAction.KIND && this.proxyView !== undefined) {
-            // Redirect the content to the proxy-view
-            const sMCAction = action as SendModelContextAction;
-            this.proxyView.update(sMCAction.model, sMCAction.context);
-        } else if ((action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) && this.proxyView !== undefined) {
-            // Layout has changed
-            this.proxyView.clearRenderings();
-            this.proxyView.clearPositions();
+        } else if (this.proxyView !== undefined) {
+            if (action.kind === SendModelContextAction.KIND) {
+                // Redirect the content to the proxy-view
+                const sMCAction = action as SendModelContextAction;
+                this.proxyView.update(sMCAction.model, sMCAction.context);
+            } else if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
+                // Layout has changed, new model
+                this.proxyView.clearRenderings();
+                this.proxyView.clearPositions();
+            }
         }
     }
 

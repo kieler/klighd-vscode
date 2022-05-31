@@ -176,6 +176,38 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
 }
 
+/** Whether to cap scaling of proxies to 1. */
+export class ProxyViewCapScaleToOne implements RenderOption {
+    static readonly ID: string = 'proxy-view-cap-scale-to-one';
+    static readonly NAME: string = 'Cap Scaling to 1';
+    static readonly DESCRIPTION: string = 'Whether proxies should be upscaled more than their original size.';
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewCapScaleToOne.ID;
+    readonly name: string = ProxyViewCapScaleToOne.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewCapScaleToOne.DEFAULT;
+    readonly description: string = ProxyViewCapScaleToOne.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewCapScaleToOne.DEFAULT;
+}
+
+/** Whether to use the positions cache. */
+export class ProxyViewUsePositionsCache implements RenderOption {
+    static readonly ID: string = 'proxy-view-use-positions-cache';
+    static readonly NAME: string = 'Cache positions';
+    static readonly DESCRIPTION: string = 'Whether the absolute positions of nodes should be cached by the proxy-view.';
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewUsePositionsCache.ID;
+    readonly name: string = ProxyViewUsePositionsCache.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewUsePositionsCache.DEFAULT;
+    readonly description: string = ProxyViewUsePositionsCache.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewUsePositionsCache.DEFAULT;
+}
+
 /** Whether cascading clustering should be used, i.e. take transitive overlap into consideration. */
 export class ProxyViewClusteringCascading implements RenderOption {
     static readonly ID: string = 'proxy-view-clustering-cascading';

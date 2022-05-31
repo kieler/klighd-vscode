@@ -24,9 +24,10 @@ import { Bounds, Point } from "sprotty-protocol";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode, SKPort } from "../skgraph-models";
+import { getKRendering } from "../views-rendering";
 import { CanvasAttributes, ProxyVNode, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewHighlightSelected, ProxyViewSize, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewHighlightSelected, ProxyViewSize, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -40,7 +41,7 @@ export class ProxyView extends AbstractUIExtension {
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     /** Used to replace HTML elements. */
-    @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
+    @inject(TYPES.PatcherProvider) private patcherProvider: PatcherProvider;
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
@@ -79,6 +80,10 @@ export class ProxyView extends AbstractUIExtension {
     private highlightSelected: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
     private useSynthesisProxyRendering: boolean;
+    /** @see {@link ProxyViewCapScaleToOne} */
+    private capScaleToOne: boolean;
+    /** @see {@link ProxyViewUsePositionsCache} */
+    private usePositionsCache: boolean;
     /** @see {@link ProxyViewClusteringCascading} */
     private clusteringCascading: boolean;
     /** @see {@link ProxyViewClusteringSweepLine} */
@@ -117,10 +122,6 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    /* FIXME: bug
-    resize to fit aus -> diagramm öffnen -> klein ziehen bis cap ->
-    resize to fit an -> groß ziehen bis normal -> depthmap fail
-    */
 
     // We solemnly publish and declare, that this DepthMap Colony is, and of Right ought to be a Free and Independent Proxy-View
     // Signed: tik
@@ -143,6 +144,8 @@ export class ProxyView extends AbstractUIExtension {
         const viewport = ctx.viewport;
         const canvas = { ...model.canvasBounds, scroll: viewport.scroll, zoom: viewport.zoom };
         const root = model.children[0] as SKNode;
+
+        // Actually update the document
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
                 {
@@ -162,33 +165,38 @@ export class ProxyView extends AbstractUIExtension {
 
         //// Initial nodes ////
         const { offScreenNodes, onScreenNodes, selectedNode } = this.getOffAndOnScreenNodes(root, canvas);
-        console.log(canvas)
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
             onScreenNodes, canvas); // Additional arguments for filters
 
+        //// Use proxy-rendering as specified by synthesis ////
+        const synthesisRenderingOffScreenNodes = this.updateSynthesisProxyRendering(filteredOffScreenNodes, ctx);
+
         //// Calculate transformations ////
         const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
-        const transformedOffScreenNodes = filteredOffScreenNodes.map(node => ({
+        const transformedOffScreenNodes = synthesisRenderingOffScreenNodes.map(({ node, proxyBounds }) => ({
             node: node,
-            transform: this.getTransform(node, size, canvas)
+            transform: this.getTransform(node, size, proxyBounds, canvas)
         }));
 
         //// Apply clustering ////
         const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvas);
 
         // Render the proxies
-        const res = [];
+        const proxies = [];
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
-            const vnode = this.createSingleProxy(node, transform, ctx, selectedNode);
-            if (vnode) {
-                res.push(vnode);
+            const proxy = this.createSingleProxy(node, transform, ctx, selectedNode);
+            if (proxy) {
+                proxies.push(proxy);
             }
         }
 
-        return res;
+        // Clear positions for the next model
+        this.clearPositions();
+
+        return proxies;
     }
 
     /**
@@ -230,6 +238,34 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes, selectedNode: selectedNode };
+    }
+
+    /** Updates the node to use the rendering specified by the synthesis. */
+    private updateSynthesisProxyRendering(offScreenNodes: SKNode[], ctx: SKGraphModelRenderer): { node: SKNode, proxyBounds: Bounds }[] {
+        if (this.useSynthesisProxyRendering) {
+            const res = [];
+            for (const node of offScreenNodes) {
+                // Fallback, if property undefined use universal proxy rendering for this node
+                let proxyBounds = node.bounds;
+                let clone = node;
+
+                if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
+                    // Proxy rendering available, update data
+                    clone = Object.create(node);
+                    const data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
+                    clone.data = data;
+
+                    // Also update the bounds
+                    const kRendering = getKRendering(data, ctx);
+                    if (kRendering && kRendering.properties['klighd.lsp.calculated.bounds']) {
+                        proxyBounds = kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds;
+                    }
+                }
+                res.push({ node: clone, proxyBounds: proxyBounds });
+            }
+            return res;
+        }
+        return offScreenNodes.map(node => ({ node: node, proxyBounds: node.bounds }));
     }
 
     /** Applies clustering to all `offScreenNodes` until there's no more overlap. Cluster-proxies are returned as VNodes. */
@@ -408,7 +444,6 @@ export class ProxyView extends AbstractUIExtension {
         let vnode = this.renderings.get(id);
         if (!vnode || vnode.selected !== highlight) {
             // Node hasn't been rendered yet (cache empty for this node) or the attributes don't match
-            console.log("New!");
 
             // Clone the node
             const clone: SKNode = Object.create(node);
@@ -421,19 +456,7 @@ export class ProxyView extends AbstractUIExtension {
             // Proxies should never appear to be selected (even if their on-screen counterpart is selected)
             // unless highlighting is enabled
             clone.selected = highlight;
-
-            // Check if synthesis has specified a proxy rendering
-            if (this.useSynthesisProxyRendering && node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
-                // Proxy rendering available
-                console.log("proxyRendering"); // FIXME:
-                console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY]); // FIXME:
-                console.log("node"); // FIXME:
-                console.log(node.properties[ProxyView.PROXY_RENDERING_PROPERTY + "2"]); // FIXME:
-                clone.data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
-            } else {
-                // Fallback, use universal proxy rendering
-                // TODO: further specify what to change?
-            }
+            // TODO: further specify what to change?
 
             vnode = ctx.renderProxy(clone);
             if (vnode) {
@@ -448,8 +471,6 @@ export class ProxyView extends AbstractUIExtension {
                     vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
                 }
             }
-        } else {
-            console.log("Cached!");
         }
 
         if (vnode) {
@@ -514,13 +535,20 @@ export class ProxyView extends AbstractUIExtension {
         }
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
+        this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
+
+        this.usePositionsCache = renderOptionsRegistry.getValue(ProxyViewUsePositionsCache);
+        if (this.usePositionsCache) {
+            // Make sure to also clear previously cached positions
+            this.clearPositions();
+        }
+
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
         this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
     }
 
     /** Clears the {@link renderings} map. */
     clearRenderings(): void {
-        console.log("Cleared")
         this.renderings.clear();
     }
 
@@ -533,24 +561,22 @@ export class ProxyView extends AbstractUIExtension {
      * Calculates the TransformAttributes for this node's proxy, e.g. the position to place the proxy at aswell as its scale and bounds.
      * Note that the position is pre-scaling.
      */
-    private getTransform(node: SKNode, desiredSize: number, canvas: CanvasAttributes): TransformAttributes {
+    private getTransform(node: SKNode, desiredSize: number, proxyBounds: Bounds, canvas: CanvasAttributes): TransformAttributes {
         // OLD: size dependant on node's bounds
         // const proxyWidth = size * 0.001;
         // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
-        // console.log(proxySizeScale);
 
-        const bounds = node.bounds;
-        const translated = this.getTranslatedBounds(node, canvas);
 
         // Calculate the scale and the resulting proxy dimensions
         // The scale is calculated such that width & height are capped to a max value
-        const proxyWidthScale = desiredSize / bounds.width;
-        const proxyHeightScale = desiredSize / bounds.height;
-        const scale = Math.min(1, proxyWidthScale, proxyHeightScale);
-        const proxyWidth = bounds.width * scale;
-        const proxyHeight = bounds.height * scale;
+        const proxyWidthScale = desiredSize / proxyBounds.width;
+        const proxyHeightScale = desiredSize / proxyBounds.height;
+        const scale = Math.min(proxyWidthScale, proxyHeightScale, this.capScaleToOne ? 1 : proxyHeightScale);
+        const proxyWidth = proxyBounds.width * scale;
+        const proxyHeight = proxyBounds.height * scale;
 
         // Center at middle of node
+        const translated = this.getTranslatedBounds(node, canvas);
         const offsetX = 0.5 * (translated.width - proxyWidth);
         const offsetY = 0.5 * (translated.height - proxyHeight);
         let x = translated.x + offsetX;
@@ -605,7 +631,9 @@ export class ProxyView extends AbstractUIExtension {
             point = Point.add(point, node.bounds);
 
             // Also store this point
-            this.positions.set(id, point);
+            if (this.usePositionsCache) {
+                this.positions.set(id, point);
+            }
         }
         return point;
     }
