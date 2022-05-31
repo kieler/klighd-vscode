@@ -434,6 +434,7 @@ export class ProxyView extends AbstractUIExtension {
             return node;
         }
 
+        // TODO: instead of highlighting selected, make other proxies more transparent
         // Check if this node's proxy should be highlighted
         const highlight = this.highlightSelected && (selectedNode ? this.isConnectedToAny(node, [selectedNode]) : false);
 
@@ -726,7 +727,7 @@ export class ProxyView extends AbstractUIExtension {
      * @param `onScreenNodes` is needed by since some filters.
      */
     private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
-        // TODO: filters for node type?, node size?
+        // TODO: filters for node type?, node size?, only show connected to selected
         const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
@@ -763,6 +764,8 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Checks if the distance between `node` and the center of the canvas is in the given range. */
     private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
+        // TODO: transparency/size by distance
+        // TODO: stacking order (which proxy is on top) by distance + transparency?
         const translated = this.getTranslatedBounds(node, canvas);
         const nodeLeft = translated.x;
         const nodeRight = nodeLeft + translated.width;
