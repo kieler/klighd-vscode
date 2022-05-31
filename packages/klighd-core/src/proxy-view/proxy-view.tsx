@@ -171,7 +171,7 @@ export class ProxyView extends AbstractUIExtension {
             onScreenNodes, canvas); // Additional arguments for filters
 
         //// Use proxy-rendering as specified by synthesis ////
-        const synthesisRenderingOffScreenNodes = this.updateSynthesisProxyRendering(filteredOffScreenNodes, ctx);
+        const synthesisRenderingOffScreenNodes = this.getSynthesisProxyRendering(filteredOffScreenNodes, ctx);
 
         //// Calculate transformations ////
         const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
@@ -202,6 +202,7 @@ export class ProxyView extends AbstractUIExtension {
     /**
      * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
      * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
+     * Also returns the currently selected node, if any.
      */
     private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes): { offScreenNodes: SKNode[], onScreenNodes: SKNode[], selectedNode?: SKNode } {
         // For each node check if it's off-screen
@@ -240,32 +241,29 @@ export class ProxyView extends AbstractUIExtension {
         return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes, selectedNode: selectedNode };
     }
 
-    /** Updates the node to use the rendering specified by the synthesis. */
-    private updateSynthesisProxyRendering(offScreenNodes: SKNode[], ctx: SKGraphModelRenderer): { node: SKNode, proxyBounds: Bounds }[] {
-        if (this.useSynthesisProxyRendering) {
-            const res = [];
-            for (const node of offScreenNodes) {
-                // Fallback, if property undefined use universal proxy rendering for this node
-                let proxyBounds = node.bounds;
-                let clone = node;
+    /** Returns the nodes updated to use the rendering specified by the synthesis. */
+    private getSynthesisProxyRendering(offScreenNodes: SKNode[], ctx: SKGraphModelRenderer): { node: SKNode, proxyBounds: Bounds }[] {
+        const res = [];
+        for (const node of offScreenNodes) {
+            // Fallback, if property undefined use universal proxy rendering for this node
+            let proxyBounds = node.bounds;
+            let clone = node;
 
-                if (node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
+            if (this.useSynthesisProxyRendering && node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
+                const data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
+                const kRendering = getKRendering(data, ctx);
+
+                if (kRendering && kRendering.properties['klighd.lsp.calculated.bounds']) {
                     // Proxy rendering available, update data
                     clone = Object.create(node);
-                    const data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
                     clone.data = data;
-
                     // Also update the bounds
-                    const kRendering = getKRendering(data, ctx);
-                    if (kRendering && kRendering.properties['klighd.lsp.calculated.bounds']) {
-                        proxyBounds = kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds;
-                    }
+                    proxyBounds = kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds;
                 }
-                res.push({ node: clone, proxyBounds: proxyBounds });
             }
-            return res;
+            res.push({ node: clone, proxyBounds: proxyBounds });
         }
-        return offScreenNodes.map(node => ({ node: node, proxyBounds: node.bounds }));
+        return res;
     }
 
     /** Applies clustering to all `offScreenNodes` until there's no more overlap. Cluster-proxies are returned as VNodes. */
@@ -499,15 +497,15 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns whether the given `node` is valid for rendering. */
     private canRenderNode(node: SKNode): boolean {
-        if (this.useSynthesisProxyRendering) {
-            return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
-        }
+        return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
+        // if (this.useSynthesisProxyRendering) {
+        // }
         // FIXME: remove if and else once the synthesis proxy properties fully work
-        else {
-            // Not an edge, not a comment/non-explicitly specified region
-            // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
-            return node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$";
-        }
+        // else {
+        //     // Not an edge, not a comment/non-explicitly specified region
+        //     // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
+        //     return node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$";
+        // }
     }
 
     /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
@@ -565,7 +563,6 @@ export class ProxyView extends AbstractUIExtension {
         // OLD: size dependant on node's bounds
         // const proxyWidth = size * 0.001;
         // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
-
 
         // Calculate the scale and the resulting proxy dimensions
         // The scale is calculated such that width & height are capped to a max value
