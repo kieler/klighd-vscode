@@ -27,7 +27,7 @@ import { SKEdge, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
 import { CanvasAttributes, ProxyVNode, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewHighlightSelected, ProxyViewSize, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewSize, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -69,6 +69,8 @@ export class ProxyView extends AbstractUIExtension {
     private capProxyToParent: boolean;
     /** @see {@link ProxyViewFilterUnconnected} */
     private filterUnconnected: boolean;
+    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
+    private filterUnconnectedToSelected: boolean;
     /** @see {@link ProxyViewFilterDistant} */
     private filterDistant: string;
 
@@ -122,9 +124,7 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-
-    // We solemnly publish and declare, that this DepthMap Colony is, and of Right ought to be a Free and Independent Proxy-View
-    // Signed: tik
+    // TODO: add proxy actions
 
     /** Updates the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
@@ -168,7 +168,7 @@ export class ProxyView extends AbstractUIExtension {
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
-            onScreenNodes, canvas); // Additional arguments for filters
+            onScreenNodes, canvas, selectedNode); // Additional arguments for filters
 
         //// Use proxy-rendering as specified by synthesis ////
         const synthesisRenderingOffScreenNodes = this.getSynthesisProxyRendering(filteredOffScreenNodes, ctx);
@@ -436,7 +436,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // TODO: instead of highlighting selected, make other proxies more transparent
         // Check if this node's proxy should be highlighted
-        const highlight = this.highlightSelected && (selectedNode ? this.isConnectedToAny(node, [selectedNode]) : false);
+        const highlight = this.highlightSelected && this.isConnectedToSelected(node, selectedNode);
 
         // Get VNode
         const id = this.getProxyId(node.id);
@@ -522,6 +522,7 @@ export class ProxyView extends AbstractUIExtension {
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
 
         this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
+        this.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
         this.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
 
         // Debug
@@ -726,11 +727,14 @@ export class ProxyView extends AbstractUIExtension {
      * Returns all `offScreenNodes` matching the enabled filters.
      * @param `onScreenNodes` is needed by since some filters.
      */
-    private applyFilters(offScreenNodes: SKNode[], onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+    private applyFilters(offScreenNodes: SKNode[],
+        onScreenNodes: SKNode[], canvas: CanvasAttributes, selectedNode?: SKNode): SKNode[] {
         // TODO: filters for node type?, node size?, only show connected to selected
+        // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check TODO: or other way around?
         const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
+            (!this.filterUnconnectedToSelected || this.isConnectedToSelected(node, selectedNode)) &&
             (!this.filterUnconnected || this.isConnectedToAny(node, onScreenNodes)) &&
             (range <= 0 || this.isInRange(node, canvas, range)));
     }
@@ -746,6 +750,15 @@ export class ProxyView extends AbstractUIExtension {
                 .map(edge => edge.source as SKNode)
                 .some(source => nodes.includes(source))
         );
+    }
+
+    /** Checks if `node` is connected to `selectedNode`. */
+    private isConnectedToSelected(node: SKNode, selectedNode?: SKNode): boolean {
+        // FIXME: only works if selectedNode is on-screen
+        if (!selectedNode) {
+            return false;
+        }
+        return this.isConnectedToAny(node, [selectedNode]);
     }
 
     /**
