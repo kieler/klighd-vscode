@@ -14,7 +14,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
 */
-import { SModelRoot } from 'sprotty'
+import { SModelRoot } from 'sprotty-protocol'
 import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKGraphElement, SKNode } from './skgraph-models'
 
 /**

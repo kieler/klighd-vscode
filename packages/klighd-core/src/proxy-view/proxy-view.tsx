@@ -24,9 +24,8 @@ import { Bounds, Point } from "sprotty-protocol";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode, SKPort } from "../skgraph-models";
-import { getNodeByID } from "../skgraph-utils";
 import { getKRendering } from "../views-rendering";
-import { CanvasAttributes, ProxyVNode, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
+import { CanvasAttributes, ProxyVNode, SelectedElementsUtil, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewSize, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
@@ -37,7 +36,7 @@ export class ProxyView extends AbstractUIExtension {
     static readonly ID = "proxy-view";
     /** ID used for proxy rendering property of SKNodes. */
     static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxyRendering";
-    /** ID used for proxy rendering property of SKNodes. */
+    /** ID used to indicate whether an SKNode should be rendered as a proxy. */
     static readonly RENDER_NODE_AS_PROXY_PROPERTY = "de.cau.cs.kieler.klighd.renderNodeAsProxy";
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
@@ -46,10 +45,6 @@ export class ProxyView extends AbstractUIExtension {
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
-    /** The currently selected nodes IDs. */
-    private selectedNodesIDs?: string[];
-    /** The currently selected nodes. */
-    private selectedNodes: SKNode[];
 
     //// Caches ////
     /**
@@ -114,7 +109,6 @@ export class ProxyView extends AbstractUIExtension {
         this.patcher = this.patcherProvider.patcher;
         this.renderings = new Map;
         this.positions = new Map;
-        this.selectedNodes = [];
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
@@ -171,19 +165,12 @@ export class ProxyView extends AbstractUIExtension {
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
-        // console.log(this.selectedNodesIDs);
-        if (this.selectedNodesIDs) {
-            this.selectedNodes = this.selectedNodesIDs.map(id => getNodeByID(root as any, id)).filter((node): node is SKNode => !!node);
-            this.selectedNodesIDs = undefined;
-        }
-        console.log(this.selectedNodes);
-
         //// Initial nodes ////
-        const { offScreenNodes, onScreenNodes, selectedNode } = this.getOffAndOnScreenNodes(root, canvas);
+        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
-            onScreenNodes, canvas, selectedNode); // Additional arguments for filters
+            onScreenNodes, canvas); // Additional arguments for filters
 
         //// Use proxy-rendering as specified by synthesis ////
         const synthesisRenderingOffScreenNodes = this.getSynthesisProxyRendering(filteredOffScreenNodes, ctx);
@@ -202,7 +189,7 @@ export class ProxyView extends AbstractUIExtension {
         const proxies = [];
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
-            const proxy = this.createSingleProxy(node, transform, ctx, selectedNode);
+            const proxy = this.createSingleProxy(node, transform, ctx);
             if (proxy) {
                 proxies.push(proxy);
             }
@@ -217,13 +204,11 @@ export class ProxyView extends AbstractUIExtension {
     /**
      * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
      * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
-     * Also returns the currently selected node, if any.
      */
-    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes): { offScreenNodes: SKNode[], onScreenNodes: SKNode[], selectedNode?: SKNode } {
+    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
         // For each node check if it's off-screen
         const offScreenNodes = [];
         const onScreenNodes = [];
-        let selectedNode = undefined;
         for (const node of currRoot.children as SKNode[]) {
             if (node instanceof SKNode) {
                 const translated = this.getTranslatedBounds(node, canvas);
@@ -240,20 +225,12 @@ export class ProxyView extends AbstractUIExtension {
                         const childRes = this.getOffAndOnScreenNodes(node, canvas);
                         offScreenNodes.push(...childRes.offScreenNodes);
                         onScreenNodes.push(...childRes.onScreenNodes);
-
-                        if (childRes.selectedNode) {
-                            selectedNode = childRes.selectedNode;
-                        }
-                    }
-
-                    if (node.selected) {
-                        selectedNode = node;
                     }
                 }
             }
         }
 
-        return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes, selectedNode: selectedNode };
+        return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes };
     }
 
     /** Returns the nodes updated to use the rendering specified by the synthesis. */
@@ -437,7 +414,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the proxy rendering for a single off-screen node and applies logic, e.g. the proxy's position. */
-    private createSingleProxy(node: SKNode | VNode, transform: TransformAttributes, ctx: SKGraphModelRenderer, selectedNode?: SKNode): VNode | undefined {
+    private createSingleProxy(node: SKNode | VNode, transform: TransformAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
         let transformString = `translate(${transform.x}, ${transform.y})`;
         if (transform.scale) {
             transformString += ` scale(${transform.scale})`;
@@ -451,7 +428,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // TODO: instead of highlighting selected, make other proxies more transparent
         // Check if this node's proxy should be highlighted
-        const highlight = this.highlightSelected && this.isConnectedToSelected(node, selectedNode);
+        const highlight = node.selected || this.highlightSelected && this.isSelectedOrConnectedToSelected(node);
 
         // Get VNode
         const id = this.getProxyId(node.id);
@@ -688,37 +665,38 @@ export class ProxyView extends AbstractUIExtension {
      * @param `onScreenNodes` is needed by since some filters.
      */
     private applyFilters(offScreenNodes: SKNode[],
-        onScreenNodes: SKNode[], canvas: CanvasAttributes, selectedNode?: SKNode): SKNode[] {
-        // TODO: filters for node type?, node size?, only show connected to selected
+        onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        // TODO: filters for node type?, node size?
         // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check TODO: or other way around?
         const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
-            (!this.filterUnconnectedToSelected || this.isConnectedToSelected(node, selectedNode)) &&
+            (!this.filterUnconnectedToSelected || this.isSelectedOrConnectedToSelected(node)) &&
             (!this.filterUnconnected || this.isConnectedToAny(node, onScreenNodes)) &&
             (range <= 0 || this.isInRange(node, canvas, range)));
     }
 
     /** Checks if `node` is connected to at least one of the other given `nodes`. */
     private isConnectedToAny(node: SKNode, nodes: SKNode[]): boolean {
+        if (nodes.length <= 0) {
+            return false;
+        }
+        const ids = nodes.map(node => node.id);
         return (
             (node.outgoingEdges as SKEdge[])
                 .map(edge => edge.target as SKNode)
-                .some(target => nodes.includes(target))
+                .some(target => ids.includes(target.id))
             ||
             (node.incomingEdges as SKEdge[])
                 .map(edge => edge.source as SKNode)
-                .some(source => nodes.includes(source))
+                .some(source => ids.includes(source.id))
         );
     }
 
-    /** Checks if `node` is connected to `selectedNode`. */
-    private isConnectedToSelected(node: SKNode, selectedNode?: SKNode): boolean {
-        // FIXME: only works if selectedNode is on-screen
-        if (!selectedNode) {
-            return false;
-        }
-        return this.isConnectedToAny(node, [selectedNode]);
+    /** Checks if `node` is selected or connected to any selected element. */
+    private isSelectedOrConnectedToSelected(node: SKNode): boolean {
+        const selectedNodes = SelectedElementsUtil.getSelectedElements();
+        return node.selected || this.isConnectedToAny(node, selectedNodes);
     }
 
     /**
@@ -847,14 +825,7 @@ export class ProxyView extends AbstractUIExtension {
     reset(): void {
         this.clearPositions();
         this.clearRenderings();
-        this.selectedNodes = [];
-        this.selectedNodesIDs = undefined;
     }
-
-    setSelectedNodesIDs(selectedNodesIDs: string[]): void {
-        this.selectedNodesIDs = selectedNodesIDs;
-    }
-
     /** Clears the {@link renderings} map. */
     clearRenderings(): void {
         this.renderings.clear();

@@ -19,7 +19,7 @@ import { ContainerModule } from "inversify";
 import { TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import { ProxyView } from "./proxy-view";
-import { ProxyViewActionHandler } from "./proxy-view-actions";
+import { ProxyViewActionHandler, SelectedElementsUtilActionHandler } from "./proxy-view-actions";
 
 export const proxyViewModule = new ContainerModule((bind) => {
     // The class needs to be bound to itself and
@@ -30,5 +30,8 @@ export const proxyViewModule = new ContainerModule((bind) => {
 
     bind(ProxyViewActionHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler);
+
+    bind(SelectedElementsUtilActionHandler).toSelf().inSingletonScope();
+    bind(TYPES.IActionHandlerInitializer).toService(SelectedElementsUtilActionHandler);
 });
 
