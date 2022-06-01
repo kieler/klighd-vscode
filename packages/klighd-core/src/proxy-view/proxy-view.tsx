@@ -574,6 +574,72 @@ export class ProxyView extends AbstractUIExtension {
         return point;
     }
 
+    /** Returns the distance between the node and the canvas. */
+    private getDistanceToCanvas(node: SKNode, canvas: CanvasAttributes): number {
+        const translated = this.getTranslatedBounds(node, canvas);
+        const nodeLeft = translated.x;
+        const nodeRight = nodeLeft + translated.width;
+        const nodeTop = translated.y;
+        const nodeBottom = nodeTop + translated.height;
+        const canvasLeft = 0;
+        const canvasRight = canvas.width;
+        const canvasTop = 0;
+        const canvasBottom = canvas.height;
+
+        /* Partition the screen plane into 9 segments (as in tic-tac-toe):
+         * 1 | 2 | 3
+         * --+---+--
+         * 4 | 5 | 6
+         * --+---+--
+         * 7 | 8 | 9
+         * Now 5 correlates to the canvas, e.g. the 'on-screen area'.
+         * Using the other segments we can figure out the distance to the canvas:
+         * 1,3,7,9: calculate euclidean distance to nearest corner of 5
+         * 2,8: only take y-coordinate into consideration for calculating the distance
+         * 4,6: only take x-coordinate into consideration for calculating the distance
+         */
+        let dist = 0;
+        if (nodeBottom < canvasTop) {
+            // Above canvas (1,2,3)
+            if (nodeRight < canvasLeft) {
+                // Top left (1)
+                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeRight }, { y: canvasTop, x: canvasLeft });
+            } else if (nodeLeft > canvasRight) {
+                // Top right (3)
+                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeLeft }, { y: canvasTop, x: canvasRight });
+            } else {
+                // Top middle (2)
+                dist = canvasTop - nodeBottom;
+            }
+        } else if (nodeTop > canvasBottom) {
+            // Below canvas (7,8,9)
+            if (nodeRight < canvasLeft) {
+                // Bottom left (7)
+                dist = Point.euclideanDistance({ y: nodeTop, x: nodeRight }, { y: canvasBottom, x: canvasLeft });
+            } else if (nodeLeft > canvasRight) {
+                // Bottom right (9)
+                dist = Point.euclideanDistance({ y: nodeTop, x: nodeLeft }, { y: canvasBottom, x: canvasRight });
+            } else {
+                // Bottom middle (8)
+                dist = nodeTop - canvasBottom;
+            }
+        } else {
+            // Same height as canvas (4,5,6)
+            if (nodeRight < canvasLeft) {
+                // Left of canvas (4)
+                dist = canvasLeft - nodeRight;
+            } else if (nodeLeft > canvasRight) {
+                // Right of canvas (6)
+                dist = nodeLeft - canvasRight;
+            } else {
+                // On the canvas (5)
+                // Should never be the case, would be on-screen
+            }
+        }
+
+        return dist;
+    }
+
     /** Updates a VNode's transform attribute. */
     private updateTransform(node: VNode, transformString: string): void {
         // Just changing the VNode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
@@ -666,11 +732,12 @@ export class ProxyView extends AbstractUIExtension {
      */
     private applyFilters(offScreenNodes: SKNode[],
         onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
-        // TODO: filters for node type?, node size?
+        // TODO: filters for node type?, mega nodes (num children, size, ...?)
         // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check TODO: or other way around?
         const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
+            node.opacity > 0 &&
             (!this.filterUnconnectedToSelected || this.isSelectedOrConnectedToSelected(node)) &&
             (!this.filterUnconnected || this.isConnectedToAny(node, onScreenNodes)) &&
             (range <= 0 || this.isInRange(node, canvas, range)));
@@ -713,72 +780,11 @@ export class ProxyView extends AbstractUIExtension {
         return -1;
     }
 
-    /** Checks if the distance between `node` and the center of the canvas is in the given range. */
+    /** Checks if the distance between `node` and the canvas is in the given range. */
     private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
         // TODO: transparency/size by distance
         // TODO: stacking order (which proxy is on top) by distance + transparency?
-        const translated = this.getTranslatedBounds(node, canvas);
-        const nodeLeft = translated.x;
-        const nodeRight = nodeLeft + translated.width;
-        const nodeTop = translated.y;
-        const nodeBottom = nodeTop + translated.height;
-        const canvasLeft = 0;
-        const canvasRight = canvas.width;
-        const canvasTop = 0;
-        const canvasBottom = canvas.height;
-
-        /* Partition the screen plane into 9 segments (as in tic-tac-toe):
-         * 1 | 2 | 3
-         * --+---+--
-         * 4 | 5 | 6
-         * --+---+--
-         * 7 | 8 | 9
-         * Now 5 correlates to the canvas, e.g. the 'on-screen area'.
-         * Using the other segments we can figure out the distance to the canvas:
-         * 1,3,7,9: calculate euclidean distance to nearest corner of 5
-         * 2,8: only take y-coordinate into consideration for calculating the distance
-         * 4,6: only take x-coordinate into consideration for calculating the distance
-         */
-        let dist = 0;
-        if (nodeBottom < canvasTop) {
-            // Above canvas (1,2,3)
-            if (nodeRight < canvasLeft) {
-                // Top left (1)
-                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeRight }, { y: canvasTop, x: canvasLeft });
-            } else if (nodeLeft > canvasRight) {
-                // Top right (3)
-                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeLeft }, { y: canvasTop, x: canvasRight });
-            } else {
-                // Top middle (2)
-                dist = canvasTop - nodeBottom;
-            }
-        } else if (nodeTop > canvasBottom) {
-            // Below canvas (7,8,9)
-            if (nodeRight < canvasLeft) {
-                // Bottom left (7)
-                dist = Point.euclideanDistance({ y: nodeTop, x: nodeRight }, { y: canvasBottom, x: canvasLeft });
-            } else if (nodeLeft > canvasRight) {
-                // Bottom right (9)
-                dist = Point.euclideanDistance({ y: nodeTop, x: nodeLeft }, { y: canvasBottom, x: canvasRight });
-            } else {
-                // Bottom middle (8)
-                dist = nodeTop - canvasBottom;
-            }
-        } else {
-            // Same height as canvas (4,5,6)
-            if (nodeRight < canvasLeft) {
-                // Left of canvas (4)
-                dist = canvasLeft - nodeRight;
-            } else if (nodeLeft > canvasRight) {
-                // Right of canvas (6)
-                dist = nodeLeft - canvasRight;
-            } else {
-                // On the canvas (5)
-                // Should never be the case, would be on-screen
-            }
-        }
-
-        return dist <= range;
+        return this.getDistanceToCanvas(node, canvas) <= range;
     }
 
     //////// Misc public methods ////////
