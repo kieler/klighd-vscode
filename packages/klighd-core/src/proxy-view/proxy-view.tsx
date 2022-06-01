@@ -24,6 +24,7 @@ import { Bounds, Point } from "sprotty-protocol";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { SKEdge, SKNode, SKPort } from "../skgraph-models";
+import { getNodeByID } from "../skgraph-utils";
 import { getKRendering } from "../views-rendering";
 import { CanvasAttributes, ProxyVNode, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
@@ -45,6 +46,12 @@ export class ProxyView extends AbstractUIExtension {
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
+    /** The currently selected nodes IDs. */
+    private selectedNodesIDs?: string[];
+    /** The currently selected nodes. */
+    private selectedNodes: SKNode[];
+
+    //// Caches ////
     /**
      * Stores the proxy renderings of already rendered nodes.
      * Always make sure the ids ending with "-proxy" are used.
@@ -107,6 +114,7 @@ export class ProxyView extends AbstractUIExtension {
         this.patcher = this.patcherProvider.patcher;
         this.renderings = new Map;
         this.positions = new Map;
+        this.selectedNodes = [];
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
@@ -126,7 +134,7 @@ export class ProxyView extends AbstractUIExtension {
     // TODO: performance in developer options for measuring performance
     // TODO: add proxy actions
 
-    /** Updates the proxy-view. */
+    /** Update step of the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
         if (!this.proxyViewEnabled) {
             if (this.prevProxyViewEnabled) {
@@ -162,6 +170,13 @@ export class ProxyView extends AbstractUIExtension {
         // Iterate through nodes starting by root, check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
+
+        // console.log(this.selectedNodesIDs);
+        if (this.selectedNodesIDs) {
+            this.selectedNodes = this.selectedNodesIDs.map(id => getNodeByID(root as any, id)).filter((node): node is SKNode => !!node);
+            this.selectedNodesIDs = undefined;
+        }
+        console.log(this.selectedNodes);
 
         //// Initial nodes ////
         const { offScreenNodes, onScreenNodes, selectedNode } = this.getOffAndOnScreenNodes(root, canvas);
@@ -498,63 +513,8 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns whether the given `node` is valid for rendering. */
     private canRenderNode(node: SKNode): boolean {
+        // Specified by rendering, otherwise all nodes should be rendered
         return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
-        // if (this.useSynthesisProxyRendering) {
-        // }
-        // FIXME: remove if and else once the synthesis proxy properties fully work
-        // else {
-        //     // Not an edge, not a comment/non-explicitly specified region
-        //     // Don't just use includes("$$") since non-explicitly specified regions may contain nodes
-        //     return node instanceof SKNode && node.id.charAt(node.id.lastIndexOf("$") - 1) !== "$";
-        // }
-    }
-
-    /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
-    updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
-        this.prevProxyViewEnabled = this.proxyViewEnabled;
-        this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
-
-        const fromPercent = 0.01;
-        this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * fromPercent;
-
-        this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
-
-        this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
-
-        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
-        this.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
-        this.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
-
-        // Debug
-        this.highlightSelected = renderOptionsRegistry.getValue(ProxyViewHighlightSelected);
-
-        const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
-        if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
-            // Make sure not to use the wrong renderings if changed
-            this.clearRenderings();
-        }
-        this.useSynthesisProxyRendering = useSynthesisProxyRendering;
-
-        this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
-
-        this.usePositionsCache = renderOptionsRegistry.getValue(ProxyViewUsePositionsCache);
-        if (this.usePositionsCache) {
-            // Make sure to also clear previously cached positions
-            this.clearPositions();
-        }
-
-        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
-        this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
-    }
-
-    /** Clears the {@link renderings} map. */
-    clearRenderings(): void {
-        this.renderings.clear();
-    }
-
-    /** Clears the {@link positions} map. */
-    clearPositions(): void {
-        this.positions.clear();
     }
 
     /**
@@ -841,5 +801,67 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         return dist <= range;
+    }
+
+    //////// Misc public methods ////////
+
+    /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
+    updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
+        this.prevProxyViewEnabled = this.proxyViewEnabled;
+        this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
+
+        const fromPercent = 0.01;
+        this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * fromPercent;
+
+        this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
+
+        this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+
+        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
+        this.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
+        this.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
+
+        // Debug
+        this.highlightSelected = renderOptionsRegistry.getValue(ProxyViewHighlightSelected);
+
+        const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
+        if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {
+            // Make sure not to use the wrong renderings if changed
+            this.clearRenderings();
+        }
+        this.useSynthesisProxyRendering = useSynthesisProxyRendering;
+
+        this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
+
+        this.usePositionsCache = renderOptionsRegistry.getValue(ProxyViewUsePositionsCache);
+        if (this.usePositionsCache) {
+            // Make sure to also clear previously cached positions
+            this.clearPositions();
+        }
+
+        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
+        this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
+    }
+
+    /** Resets the proxy-view, i.e. when the model is updated. */
+    reset(): void {
+        this.clearPositions();
+        this.clearRenderings();
+        this.selectedNodes = [];
+        this.selectedNodesIDs = undefined;
+    }
+
+    setSelectedNodesIDs(selectedNodesIDs: string[]): void {
+        this.selectedNodesIDs = selectedNodesIDs;
+    }
+
+    /** Clears the {@link renderings} map. */
+    clearRenderings(): void {
+        this.renderings.clear();
+    }
+
+    /** Clears the {@link positions} map. */
+    clearPositions(): void {
+        this.positions.clear();
     }
 }

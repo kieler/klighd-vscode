@@ -14,7 +14,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
 */
-import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKGraphElement } from './skgraph-models'
+import { SModelRoot } from 'sprotty'
+import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKGraphElement, SKNode } from './skgraph-models'
 
 /**
  * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
@@ -97,4 +98,32 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         return
     }
     return currentElement
+}
+
+/**
+ * Finds the SKNode that matches the given ID.
+ * @param root The root.
+ * @param id The ID to search for.
+ * @returns The node matching the given id or `undefined` if there is none.
+ */
+ export function getNodeByID(root: SModelRoot, id: string): SKNode | undefined {
+    let curr = root as unknown as SKNode;
+    const idPath = id.split('$');
+    // The node id is build hierarchically and the root is already given, so start with i=1
+    for (let i = 1; i < idPath.length; i++) {
+        // Cannot check if next is undefined as a stopping criterion here
+        // since ids allow for $$ (e.g. comments in sccharts)
+        const next = curr.children.find(node => id.startsWith(node.id)) as SKNode;
+        curr = next ? next : curr;
+    }
+
+    // Now currNode should be the node searched for by the id
+    if (!curr) {
+        console.error('No node found matching the id:', id);
+        return undefined;
+    } else if (curr.id !== id) {
+        console.error('The found node does not match the searched id! id:', id, ', found node:', curr);
+        return undefined;
+    }
+    return curr;
 }

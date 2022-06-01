@@ -18,7 +18,7 @@
 import { inject, injectable } from "inversify";
 import { VNode } from "snabbdom";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
-import { Action, Bounds, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
+import { Action, Bounds, SelectAction, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
@@ -80,7 +80,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
             // Register to receive updates on registry changes
             if (!this.onChangeRegistered) {
                 // Make sure the rendering cache is cleared when the renderings change
-                this.synthesesRegistry.onChange(() => { this.proxyView.clearRenderings(); this.proxyView.clearPositions() });
+                this.synthesesRegistry.onChange(() => this.proxyView.reset());
                 this.optionsRegistry.onChange(() => this.proxyView.clearRenderings());
                 // Make sure to be notified when rendering options are changed
                 this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry));
@@ -91,10 +91,14 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
                 // Redirect the content to the proxy-view
                 const sMCAction = action as SendModelContextAction;
                 this.proxyView.update(sMCAction.model, sMCAction.context);
+            } else if (action.kind === SelectAction.KIND) {
+                // Set selected node
+                const sAction = action as SelectAction;
+                console.log(sAction); // FIXME: selected/deselect is additive to previous, not all
+                this.proxyView.setSelectedNodesIDs(sAction.selectedElementsIDs);
             } else if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
                 // Layout has changed, new model
-                this.proxyView.clearRenderings();
-                this.proxyView.clearPositions();
+                this.proxyView.reset();
             }
         }
     }
@@ -103,6 +107,7 @@ export class ProxyViewActionHandler implements IActionHandler, IActionHandlerIni
         // Register as a handler to receive the actions
         registry.register(SendModelContextAction.KIND, this);
         registry.register(SendProxyViewAction.KIND, this);
+        registry.register(SelectAction.KIND, this);
         // Layout changes
         registry.register(SetModelAction.KIND, this);
         registry.register(UpdateModelAction.KIND, this);
