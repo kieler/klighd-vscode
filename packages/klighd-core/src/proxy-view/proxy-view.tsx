@@ -27,7 +27,7 @@ import { SKEdge, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
 import { CanvasAttributes, ProxyVNode, SelectedElementsUtil, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -38,6 +38,10 @@ export class ProxyView extends AbstractUIExtension {
     static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxyRendering";
     /** ID used to indicate whether an SKNode should be rendered as a proxy. */
     static readonly RENDER_NODE_AS_PROXY_PROPERTY = "de.cau.cs.kieler.klighd.renderNodeAsProxy";
+    /** Number indicating at what distance a node is close. */
+    static readonly DISTANCE_CLOSE = 300;
+    /** Number indicating at what distance a node is distant. */
+    static readonly DISTANCE_DISTANT = 700;
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     /** Used to replace HTML elements. */
@@ -89,6 +93,8 @@ export class ProxyView extends AbstractUIExtension {
      * @see {@link ProxyViewHighlightSelected}
      */
     private highlightSelected: boolean;
+    /** @see {@link ProxyViewOpacityBySelected} */
+    private opacityBySelected: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
     private useSynthesisProxyRendering: boolean;
     /** @see {@link ProxyViewStackingOrderByDistance} */
@@ -151,6 +157,7 @@ export class ProxyView extends AbstractUIExtension {
         } else if (!this.currHTMLRoot) {
             return;
         }
+        console.log(SelectedElementsUtil.getSelectedElements());
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
@@ -189,8 +196,11 @@ export class ProxyView extends AbstractUIExtension {
         //// Stacking order ////
         const distanceOrderedOffScreenNodes = this.orderByDistance(clonedNodes, canvas);
 
+        //// Opacity ////
+        const opacityOffScreenNodes = this.calculateOpacity(distanceOrderedOffScreenNodes, canvas);
+
         //// Use proxy-rendering as specified by synthesis ////
-        const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(distanceOrderedOffScreenNodes, ctx);
+        const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(opacityOffScreenNodes, ctx);
 
         //// Calculate transformations ////
         const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
@@ -266,14 +276,27 @@ export class ProxyView extends AbstractUIExtension {
             // Makes no sense to order when clustering is enabled -> proxies cannot be stacked
             res.sort((n1, n2) => this.getDistanceToCanvas(n2, canvas) - this.getDistanceToCanvas(n1, canvas));
         }
+        return res;
+    }
+
+    /** Calculates the opacities of `offScreenNodes`. */
+    private calculateOpacity(offScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        const res = offScreenNodes;
         if (this.opacityByDistance) {
             for (const node of res) {
-                console.log(node.id)
-                console.log("Before");
-                console.log(node.opacity);
-                node.opacity = Math.max(0, 1 - this.getDistanceToCanvas(node, canvas) / 700);
-                console.log("After");
-                console.log(node.opacity);
+                node.opacity = Math.max(0, node.opacity - this.getDistanceToCanvas(node, canvas) / ProxyView.DISTANCE_DISTANT);
+            }
+        }
+        if (this.opacityBySelected && SelectedElementsUtil.areElementsSelected()) {
+            // Only change opacity if there are selected nodes
+            for (const node of res) {
+                if (this.isSelectedOrConnectedToSelected(node)) {
+                    // If selected itself or connected to a selected node, this node should be opaque
+                    node.opacity = 1;
+                } else {
+                    // Node not relevant to current selection context, decrease opacity
+                    node.opacity = Math.max(0, node.opacity - 0.5);
+                }
             }
         }
         return res;
@@ -476,6 +499,7 @@ export class ProxyView extends AbstractUIExtension {
         // TODO: instead of highlighting selected, make other proxies more transparent
         // Check if this node's proxy should be highlighted
         const highlight = node.selected || this.highlightSelected && this.isSelectedOrConnectedToSelected(node);
+        const opacity = node.opacity.toString();
 
         // Get VNode
         const id = this.getProxyId(node.id);
@@ -492,6 +516,8 @@ export class ProxyView extends AbstractUIExtension {
             // Proxies should never appear to be selected (even if their on-screen counterpart is selected)
             // unless highlighting is enabled
             node.selected = highlight;
+            // Render this node as opaque to change opacity later on
+            node.opacity = 1;
             // TODO: further specify what to change?
 
             vnode = ctx.renderProxy(node);
@@ -510,14 +536,12 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         if (vnode) {
-            // Place proxy at the calculated position
-            this.updateTransform(vnode, transformString);
-
-            console.log(vnode); // FIXME:
-            this.updateOpacity(vnode, node.opacity);
-            
             // Store this node
             this.renderings.set(id, vnode);
+            // Place proxy at the calculated position
+            this.updateTransform(vnode, transformString);
+            // Update its opacity
+            this.updateOpacity(vnode, opacity);
         }
 
         return vnode;
@@ -702,23 +726,33 @@ export class ProxyView extends AbstractUIExtension {
     /** Updates a VNode's transform attribute. */
     private updateTransform(node: VNode, transformString: string): void {
         // Just changing the VNode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
-        if (node && node.data && node.data.attrs) {
+        if (node.data) {
+            if (!node.data.attrs) {
+                node.data.attrs = {};
+            }
             // Update transform while off the canvas
             node.data.attrs["transform"] = transformString;
+
             // Update transform while on the canvas
             document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`)?.setAttribute("transform", transformString);
         }
     }
 
     /** Updates a VNode's opacity. */
-    private updateOpacity(node: VNode, opacity: number): void {
-        // TODO:
-        // Just changing the VNode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
-        if (node && node.data && node.data.attrs) {
-            // Update transform while off the canvas
-            // node.data.attrs["transform"] = transformString;
-            // Update transform while on the canvas
-            // document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`)?.replaceWith(<g>{node}</g>);
+    private updateOpacity(node: VNode, opacity: string): void {
+        // Just changing the VNode's style is insufficient as it doesn't change the document's style while on the canvas
+        if (node.data) {
+            if (!node.data.style) {
+                node.data.style = {};
+            }
+            // Update opacity while off the canvas
+            node.data.style["opacity"] = opacity.toString();
+
+            // Update opacity while on the canvas
+            const element = document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`);
+            if (element) {
+                element.style.opacity = opacity.toString();
+            }
         }
     }
 
@@ -844,9 +878,9 @@ export class ProxyView extends AbstractUIExtension {
     private choiceToRange(choice: string): number {
         switch (choice) {
             case ProxyViewFilterDistant.CHOICE_CLOSE:
-                return 300;
+                return ProxyView.DISTANCE_CLOSE;
             case ProxyViewFilterDistant.CHOICE_DISTANT:
-                return 700;
+                return ProxyView.DISTANCE_DISTANT;
         }
         return -1;
     }
@@ -877,6 +911,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // Debug
         this.highlightSelected = renderOptionsRegistry.getValue(ProxyViewHighlightSelected);
+        this.opacityBySelected = renderOptionsRegistry.getValue(ProxyViewOpacityBySelected);
 
         const useSynthesisProxyRendering = renderOptionsRegistry.getValue(ProxyViewUseSynthesisProxyRendering);
         if (this.useSynthesisProxyRendering !== useSynthesisProxyRendering) {

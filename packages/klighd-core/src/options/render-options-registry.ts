@@ -19,7 +19,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { ICommand } from "sprotty";
 import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "../proxy-view/proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "../proxy-view/proxy-view-options";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
@@ -306,6 +306,7 @@ export class RenderOptionsRegistry extends Registry {
         // Proxy-view debug
         this.register(ProxyViewDebugCategory)
         this.register(ProxyViewHighlightSelected);
+        this.register(ProxyViewOpacityBySelected);
         this.register(ProxyViewUseSynthesisProxyRendering);
         this.register(ProxyViewStackingOrderByDistance);
         this.register(ProxyViewCapScaleToOne);

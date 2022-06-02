@@ -180,7 +180,7 @@ export class ProxyViewHighlightSelected implements RenderOption {
     static readonly ID: string = 'proxy-view-highlight-selected';
     static readonly NAME: string = 'Highlight Proxies by Selection';
     static readonly DESCRIPTION: string = 'Whether proxies that are connected to the selected node should be highlighted.';
-    static readonly DEFAULT: boolean = true;
+    static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewHighlightSelected.ID;
     readonly name: string = ProxyViewHighlightSelected.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
@@ -189,6 +189,22 @@ export class ProxyViewHighlightSelected implements RenderOption {
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
     currentValue = ProxyViewHighlightSelected.DEFAULT;
+}
+
+/** Whether to decrease opacity of proxies that are not connected to the selected node and increase otherwise. */
+export class ProxyViewOpacityBySelected implements RenderOption {
+    static readonly ID: string = 'proxy-view-opacity-by-selected';
+    static readonly NAME: string = 'Transparent Proxies by Selection';
+    static readonly DESCRIPTION: string = 'Whether proxies that are not connected to the selected node should be more transparent.';
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewOpacityBySelected.ID;
+    readonly name: string = ProxyViewOpacityBySelected.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewOpacityBySelected.DEFAULT;
+    readonly description: string = ProxyViewOpacityBySelected.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewOpacityBySelected.DEFAULT;
 }
 
 /** Whether to use the synthesis specified proxy-rendering. */

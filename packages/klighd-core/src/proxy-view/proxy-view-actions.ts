@@ -137,7 +137,12 @@ export class SelectedElementsUtil {
     /** The current root. */
     private static currRoot: SModelRoot;
     /** The currently selected elements. */
-    private static selectedElements: SKNode[] = [];
+    private static selectedElements: SKNode[];
+
+    /** Resets the SelectedElementsUtil. */
+    static reset(): void {
+        this.selectedElements = [];
+    }
 
     /** Sets the current root. */
     static setRoot(root: SModelRoot): void {
@@ -146,9 +151,11 @@ export class SelectedElementsUtil {
 
     /** Uses the selected and deselected elements' IDs to set the currently selected elements. */
     static setSelection(selectedElementsIDs: string[], deselectedElementsIDs: string[]): void {
-        if (!this.currRoot) {
+        if (!this.currRoot || !this.selectedElements) {
+            // Hasn't been initialized yet
             return;
         }
+
         // Remove deselected
         this.selectedElements = this.selectedElements.filter(node => !deselectedElementsIDs.includes(node.id));
         // Add selected
@@ -162,15 +169,25 @@ export class SelectedElementsUtil {
         return this.selectedElements;
     }
 
+    /** Returns whether there are any currently selected elements. */
+    static areElementsSelected(): boolean {
+        return this.selectedElements.length > 0;
+    }
 }
 
 /** Handles all actions regarding the {@link SelectedElementsUtil}. */
 @injectable()
 export class SelectedElementsUtilActionHandler implements IActionHandler, IActionHandlerInitializer {
     handle(action: Action): void | Action | ICommand {
-        if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
+        if (action.kind === SetModelAction.KIND) {
+            // Reset + set new root
+            const newRoot = (action as SetModelAction).newRoot;
+            SelectedElementsUtil.reset();
+            SelectedElementsUtil.setRoot(newRoot);
+        } else if (action.kind === UpdateModelAction.KIND) {
+            // FIXME: update currently selected node deselects it (but Util doesn't, old node)
             // Set new root
-            const newRoot = (action as SetModelAction | UpdateModelAction).newRoot;
+            const newRoot = (action as UpdateModelAction).newRoot;
             if (newRoot) {
                 SelectedElementsUtil.setRoot(newRoot);
             }
