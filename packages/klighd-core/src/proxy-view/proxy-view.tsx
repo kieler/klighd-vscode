@@ -145,7 +145,17 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: add proxy actions
+    // TODO: add proxy actions (addEventListener?)
+    /* Seit letztem mal:
+    - connected to selected filter
+    - getNodeByID()
+    - SelectedElementsUtil
+    - stacking order
+    - opacity by distance
+    - distances cache
+    - opacity by selected
+    - transparent clusters
+    */
 
     /** Update step of the proxy-view. */
     update(model: SGraph, ctx: SKGraphModelRenderer): void {
@@ -540,7 +550,7 @@ export class ProxyView extends AbstractUIExtension {
             if (vnode && vnode.data && vnode.data.style) {
                 const clickThrough = false;
                 if (!clickThrough) {
-                    vnode.data.style["opacity"] = "pointer-events: auto";
+                    vnode.data.style["pointer-events"] = "auto";
                 }
             }
         }
@@ -552,7 +562,6 @@ export class ProxyView extends AbstractUIExtension {
             this.updateTransform(vnode, transformString);
             // Update its opacity
             this.updateOpacity(vnode, opacity);
-            console.log(vnode);
         }
 
         return vnode;
@@ -773,28 +782,6 @@ export class ProxyView extends AbstractUIExtension {
      */
     private checkOverlap(b1: Bounds, b2: Bounds): boolean {
         return this.isInBounds(b1, b2) || this.isInBounds(b2, b1);
-        // OLD:
-        // const left1 = b1.x;
-        // const right1 = left1 + b1.width;
-        // const top1 = b1.y;
-        // const bottom1 = top1 + b1.height;
-        // const left2 = b2.x;
-        // const right2 = left2 + b2.width;
-        // const top2 = b2.y;
-        // const bottom2 = top2 + b2.height;
-
-        // // 1 in 2
-        // const horizontalOverlap1 = left1 >= left2 && left1 <= right2 || right1 >= left2 && right1 <= right2;
-        // const verticalOverlap1 = bottom1 >= top2 && bottom1 <= bottom2 || top1 >= top2 && top1 <= bottom2;
-        // if (horizontalOverlap1 && verticalOverlap1) {
-        //     return true;
-        // }
-
-        // // 2 in 1
-        // const horizontalOverlap2 = left2 >= left1 && left2 <= right1 || right2 >= left1 && right2 <= right1;
-        // const verticalOverlap2 = bottom2 >= top1 && bottom2 <= bottom1 || top2 >= top1 && top2 <= bottom1;
-
-        // return horizontalOverlap2 && verticalOverlap2;
     }
 
     /**
