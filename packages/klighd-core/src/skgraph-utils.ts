@@ -106,15 +106,30 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
  * @param id The ID to search for.
  * @returns The node matching the given id or `undefined` if there is none.
  */
- export function getNodeByID(root: SModelRoot, id: string): SKNode | undefined {
+export function getNodeByID(root: SModelRoot, id: string): SKNode | undefined {
     let curr = root as unknown as SKNode;
     const idPath = id.split('$');
     // The node id is build hierarchically and the root is already given, so start with i=1
     for (let i = 1; i < idPath.length; i++) {
         // Cannot check if next is undefined as a stopping criterion here
         // since ids allow for $$ (e.g. comments in sccharts)
+
+        // TODO: allow searching for any SKGraphElement?
+        // let next = undefined;
+        // switch (idPath[i].charAt(0)) {
+        //     case '$':
+        //         continue;
+        //     case 'N':
+        //         // Node
+        //         next = curr.children.find(node => id.startsWith(node.id)) as unknown as SKGraphElement;
+        //         break;
+        //     case 'E':
+        //         // Edge
+        //         next = (curr.outgoingEdges as SKEdge[]).find(edge => id.startsWith(edge.id)) as SKGraphElement;
+        // }
+
         const next = curr.children.find(node => id.startsWith(node.id)) as SKNode;
-        curr = next ? next : curr;
+        curr = next ?? curr;
     }
 
     // Now currNode should be the node searched for by the id

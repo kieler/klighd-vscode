@@ -17,6 +17,24 @@
 
 import { Range, RangeOption, RenderOption, TransformationOptionType } from "../options/option-models";
 
+/*
+ * Final options should be:
+ * 
+ * Enable Proxy-View
+ *   true/false
+ * Size of Proxies?
+ *   range
+ * Decrease Proxy Clutter
+ *   Off
+ *   Clustering
+ *   Stacking Order + Transparency by Distance
+ * Cap Proxy to parent
+ *   true/false
+ * Filters (...)
+ * 
+ * Debug
+ */
+
 /** The category containing proxy-view options. */
 export class ProxyViewCategory implements RenderOption {
     static readonly ID: string = 'proxy-view-category';
@@ -81,7 +99,6 @@ export class ProxyViewClusteringEnabled implements RenderOption {
 
 /** Whether proxies should be more transparent the further away they are. */
 export class ProxyViewOpacityByDistance implements RenderOption {
-    // TODO: use opacity by distance + stacking order instead of clustering, e.g. choice option
     static readonly ID: string = 'proxy-view-opacity-by-distance';
     static readonly NAME: string = 'Transparent Distant Proxies';
     static readonly DESCRIPTION: string = 'Whether proxies should be more transparent the further away they are.';
@@ -237,6 +254,22 @@ export class ProxyViewStackingOrderByDistance implements RenderOption {
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
     currentValue = ProxyViewStackingOrderByDistance.DEFAULT;
+}
+
+/** Whether clusters should be transparent according to their contained proxies. */
+export class ProxyViewClusterTransparent implements RenderOption {
+    static readonly ID: string = 'proxy-view-cluster-transparent';
+    static readonly NAME: string = 'Allow Transparent Cluster';
+    static readonly DESCRIPTION: string = 'Whether clusters should be transparent according to their contained proxies.';
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewClusterTransparent.ID;
+    readonly name: string = ProxyViewClusterTransparent.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewClusterTransparent.DEFAULT;
+    readonly description: string = ProxyViewClusterTransparent.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewClusterTransparent.DEFAULT;
 }
 
 /** Whether to cap scaling of proxies to 1. */

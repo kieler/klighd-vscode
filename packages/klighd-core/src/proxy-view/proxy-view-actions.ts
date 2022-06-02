@@ -18,7 +18,7 @@
 import { inject, injectable } from "inversify";
 import { VNode } from "snabbdom";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SetUIExtensionVisibilityAction } from "sprotty";
-import { Action, Bounds, SelectAction, SetModelAction, SModelRoot, UpdateModelAction, Viewport } from "sprotty-protocol";
+import { Action, Bounds, SelectAction, SelectAllAction, SetModelAction, SModelRoot, UpdateModelAction, Viewport } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
@@ -139,14 +139,30 @@ export class SelectedElementsUtil {
     /** The currently selected elements. */
     private static selectedElements: SKNode[];
 
-    /** Resets the SelectedElementsUtil. */
-    static reset(): void {
+    //// Set methods ////
+
+    /** Resets the selected elements. */
+    static resetSelection(): void {
         this.selectedElements = [];
     }
 
     /** Sets the current root. */
     static setRoot(root: SModelRoot): void {
         this.currRoot = root;
+    }
+
+    // TODO: only allows for selecting nodes yet
+
+    /** Filters the currently selected elements by checking if they can be reached from the current root. */
+    static filterSelectionByRoot(): void {
+        if (!this.currRoot || !this.selectedElements) {
+            // Hasn't been initialized yet
+            return;
+        }
+
+        // Remove all nodes that cannot be reached by currRoot
+        // TODO: doing this works but results in the console logging an error
+        this.selectedElements = this.selectedElements.filter(node => getNodeByID(this.currRoot, node.id));
     }
 
     /** Uses the selected and deselected elements' IDs to set the currently selected elements. */
@@ -157,12 +173,32 @@ export class SelectedElementsUtil {
         }
 
         // Remove deselected
-        this.selectedElements = this.selectedElements.filter(node => !deselectedElementsIDs.includes(node.id));
+        this.selectedElements = this.selectedElements.filter(node => node instanceof SKNode && !deselectedElementsIDs.includes(node.id));
         // Add selected
         this.selectedElements.push(...(selectedElementsIDs
             .map(id => getNodeByID(this.currRoot, id))
             .filter((node): node is SKNode => !!node))); // Type guard since getNodeByID() can return undefined
     }
+
+    /** Sets all elements as currently selected. */
+    static setSelectAll(): void {
+        if (!this.currRoot || !this.selectedElements) {
+            // Hasn't been initialized yet
+            return;
+        }
+        this.selectedElements = [];
+
+        // BFS to select all
+        const queue = [this.currRoot as unknown as SKNode];
+        let next = queue.pop();
+        while (next) {
+            this.selectedElements.push(next);
+            queue.push(...(next.children as SKNode[]));
+            next = queue.pop();
+        }
+    }
+
+    //// Util methods ////
 
     /** Returns the currently selected elements. */
     static getSelectedElements(): SKNode[] {
@@ -181,20 +217,29 @@ export class SelectedElementsUtilActionHandler implements IActionHandler, IActio
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SetModelAction.KIND) {
             // Reset + set new root
-            const newRoot = (action as SetModelAction).newRoot;
-            SelectedElementsUtil.reset();
-            SelectedElementsUtil.setRoot(newRoot);
+            const setModelAction = action as SetModelAction;
+            SelectedElementsUtil.resetSelection();
+            SelectedElementsUtil.setRoot(setModelAction.newRoot);
         } else if (action.kind === UpdateModelAction.KIND) {
-            // FIXME: update currently selected node deselects it (but Util doesn't, old node)
-            // Set new root
-            const newRoot = (action as UpdateModelAction).newRoot;
-            if (newRoot) {
-                SelectedElementsUtil.setRoot(newRoot);
+            // Set new root + filter previously selected nodes that aren't part of newRoot
+            const updateModelAction = action as UpdateModelAction;
+            if (updateModelAction.newRoot) {
+                SelectedElementsUtil.setRoot(updateModelAction.newRoot);
+                SelectedElementsUtil.filterSelectionByRoot();
             }
         } else if (action.kind === SelectAction.KIND) {
             // Set selection
             const selectAction = action as SelectAction;
             SelectedElementsUtil.setSelection(selectAction.selectedElementsIDs, selectAction.deselectedElementsIDs);
+        } else if (action.kind === SelectAllAction.KIND) {
+            const selectAllAction = action as SelectAllAction;
+            if (selectAllAction.select) {
+                // Selected all
+                SelectedElementsUtil.setSelectAll();
+            } else {
+                // Deselected all
+                SelectedElementsUtil.resetSelection();
+            }
         }
     }
 
@@ -204,5 +249,6 @@ export class SelectedElementsUtilActionHandler implements IActionHandler, IActio
         registry.register(UpdateModelAction.KIND, this);
         // Selected elements
         registry.register(SelectAction.KIND, this);
+        registry.register(SelectAllAction.KIND, this);
     }
 }

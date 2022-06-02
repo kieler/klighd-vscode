@@ -27,7 +27,7 @@ import { SKEdge, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
 import { CanvasAttributes, ProxyVNode, SelectedElementsUtil, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -99,6 +99,8 @@ export class ProxyView extends AbstractUIExtension {
     private useSynthesisProxyRendering: boolean;
     /** @see {@link ProxyViewStackingOrderByDistance} */
     private stackingOrderByDistance: boolean;
+    /** @see {@link ProxyViewClusterTransparent} */
+    private clusterTransparent: boolean;
     /** @see {@link ProxyViewCapScaleToOne} */
     private capScaleToOne: boolean;
     /** @see {@link ProxyViewUsePositionsCache} */
@@ -157,7 +159,6 @@ export class ProxyView extends AbstractUIExtension {
         } else if (!this.currHTMLRoot) {
             return;
         }
-        console.log(SelectedElementsUtil.getSelectedElements());
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
@@ -287,6 +288,7 @@ export class ProxyView extends AbstractUIExtension {
                 node.opacity = Math.max(0, node.opacity - this.getDistanceToCanvas(node, canvas) / ProxyView.DISTANCE_DISTANT);
             }
         }
+
         if (this.opacityBySelected && SelectedElementsUtil.areElementsSelected()) {
             // Only change opacity if there are selected nodes
             for (const node of res) {
@@ -440,20 +442,29 @@ export class ProxyView extends AbstractUIExtension {
                 let numProxiesInCluster = 0;
                 let x = 0;
                 let y = 0;
-                for (const { transform } of currGroupNodes) {
+                let opacity = 1;
+                for (const { node, transform } of currGroupNodes) {
                     // Weigh coordinates by the number of proxies in the current proxy (which might be a cluster)
                     const numProxiesInCurr = (transform as any).numProxies ?? 1;
 
                     numProxiesInCluster += numProxiesInCurr;
                     x += transform.x * numProxiesInCurr;
                     y += transform.y * numProxiesInCurr;
+                    if (this.clusterTransparent) {
+                        opacity += ((node as any).opacity ?? 1) * numProxiesInCurr;
+                    }
                 }
                 x /= numProxiesInCluster;
                 y /= numProxiesInCluster;
+                if (this.clusterTransparent) {
+                    // +1 since it starts at 1
+                    opacity /= numProxiesInCluster + 1;
+                }
 
                 // Make sure the calculated positions don't leave the canvas bounds
                 x = Math.max(0, Math.min(canvas.width - size, x));
                 y = Math.max(0, Math.min(canvas.height - size, y));
+                opacity = Math.max(0, Math.min(1, opacity));
                 // Also make sure the calculated positions are still capped to the border (no floating proxies)
                 if (y > 0 && y < canvas.height - size && (x < canvas.width - size || x > 0)) {
                     x = x > (canvas.width - size) / 2 ? canvas.width - size : 0;
@@ -462,9 +473,9 @@ export class ProxyView extends AbstractUIExtension {
                     y = y > (canvas.height - size) / 2 ? canvas.height - size : 0;
                 }
 
-                const clusterNode = getClusterRendering(`cluster-${clusterIDOffset + i}-proxy`, numProxiesInCluster, size, x, y);
+                const clusterNode = getClusterRendering(`cluster-${clusterIDOffset + i}-proxy`, numProxiesInCluster, size, x, y, opacity);
                 res.push({
-                    node: clusterNode,
+                    node: clusterNode || { opacity: opacity },
                     transform: {
                         x: x, y: y, scale: 1, width: size, height: size,
                         numProxies: numProxiesInCluster // Store the number of proxies in this cluster in case the cluster is clustered later on
@@ -496,7 +507,6 @@ export class ProxyView extends AbstractUIExtension {
             return undefined;
         }
 
-        // TODO: instead of highlighting selected, make other proxies more transparent
         // Check if this node's proxy should be highlighted
         const highlight = node.selected || this.highlightSelected && this.isSelectedOrConnectedToSelected(node);
         const opacity = node.opacity.toString();
@@ -527,10 +537,10 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             // OLD: code to make a proxy non-click-through
-            if (vnode && vnode.data && vnode.data.attrs) {
-                const clickThrough = true;
+            if (vnode && vnode.data && vnode.data.style) {
+                const clickThrough = false;
                 if (!clickThrough) {
-                    vnode.data.attrs["style"] = "pointer-events: auto; " + (vnode.data.attrs["style"] ?? "");
+                    vnode.data.style["opacity"] = "pointer-events: auto";
                 }
             }
         }
@@ -542,6 +552,7 @@ export class ProxyView extends AbstractUIExtension {
             this.updateTransform(vnode, transformString);
             // Update its opacity
             this.updateOpacity(vnode, opacity);
+            console.log(vnode);
         }
 
         return vnode;
@@ -838,7 +849,7 @@ export class ProxyView extends AbstractUIExtension {
     private applyFilters(offScreenNodes: SKNode[],
         onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
         // TODO: filters for node type?, mega nodes (num children, size, ...?)
-        // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check TODO: or other way around?
+        // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check
         const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
@@ -921,6 +932,8 @@ export class ProxyView extends AbstractUIExtension {
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
         this.stackingOrderByDistance = renderOptionsRegistry.getValue(ProxyViewStackingOrderByDistance);
+
+        this.clusterTransparent = renderOptionsRegistry.getValue(ProxyViewClusterTransparent);
 
         this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
 

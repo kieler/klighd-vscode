@@ -20,14 +20,15 @@ import { VNode } from "snabbdom";
 import { svg } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /** Returns the rendering of clusters. */
-export function getClusterRendering(id: string, numProxies: number, size: number, x: number, y: number): VNode {
+export function getClusterRendering(id: string, numProxies: number, size: number, x: number, y: number, opacity?: number): VNode {
+    opacity = opacity ?? 1;
     const squareSize = size * 0.9;
     const squareOffset = size * 0.1;
     const textSize = size * 0.5;
     const color = "rgb(220,220,220)";
     const innerID = `$ProxyView$${id}`;
     const outerID = `keith-diagram_sprotty_${innerID}`;
-    return <g id={`${outerID}1`} transform={`translate(${x}, ${y})`}>
+    return <g id={`${outerID}1`} transform={`translate(${x}, ${y})`} style={{opacity: opacity.toString()}}>
         {/* Bottom right square in background */}
         <g id={`${innerID}1`}>
             <rect width={`${squareSize}`} height={`${squareSize}`} x={`${squareOffset}`} y={`${squareOffset}`} stroke="black" fill={color} style={{ opacity: "1" }}>
