@@ -261,13 +261,6 @@ export class DepthMap {
 
         const scaleThreshold = renderingOptions.getValueOrDefault(FullDetailScaleThreshold)
 
-        if (this.viewport?.scroll === viewport.scroll
-            && this.viewport?.zoom === viewport.zoom
-            && this.lastThreshold === relativeThreshold) {
-            // the viewport did not change, no need to update
-            return
-        }
-
         this.viewport = { zoom: viewport.zoom, scroll: viewport.scroll }
         this.lastThreshold = relativeThreshold;
 

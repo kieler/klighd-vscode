@@ -25,7 +25,6 @@ import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPor
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
 export interface SKGraphElement extends KGraphElement {
-    tooltip?: string
     properties: Record<string, unknown>
 }
 
@@ -38,7 +37,6 @@ export const LABEL_TYPE = 'label'
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
 export class SKNode extends KNode {
-    tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
             || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
@@ -52,7 +50,6 @@ export class SKNode extends KNode {
 export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
     data: KGraphData[]
-    tooltip?: string
     areChildAreaChildrenRendered = false
     areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
@@ -67,7 +64,6 @@ export class SKPort extends RectangularPort implements SKGraphElement {
 export class SKLabel extends SLabel implements SKGraphElement {
     trace?: string
     data: KGraphData[]
-    tooltip?: string
     areChildAreaChildrenRendered = false
     areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
@@ -82,7 +78,6 @@ export class SKLabel extends SLabel implements SKGraphElement {
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
 export class SKEdge extends KEdge {
-    tooltip?: string
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }

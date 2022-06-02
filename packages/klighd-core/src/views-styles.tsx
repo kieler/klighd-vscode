@@ -23,7 +23,7 @@ import {
     HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
     KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
     KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge,
-    SKGraphElement, SKNode, VerticalAlignment
+    SKGraphElement, SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
 import {
     camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText,
@@ -54,8 +54,6 @@ export const K_VERTICAL_ALIGNMENT = 'KVerticalAlignmentImpl'
 
 // constants for string building
 const GRADIENT_UNIT_OBJECT_BOUNDING_BOX = 'objectBoundingBox'
-const GRADIENT_TRANSFORM_ROTATE_START = 'rotate('
-const GRADIENT_TRANSFORM_ROTATE_END = ')'
 
 const RGB_START = 'rgb('
 const RGB_END = ')'
@@ -240,7 +238,7 @@ export function applyKStyle(style: KStyle, styles: KStyles, stylesToPropagage?: 
             break
         }
         case K_FONT_NAME: {
-            styles.kFontName = style as KFontName // TODO: have a deeper look at svg fonts
+            styles.kFontName = style as KFontName
             if (style.propagateToChildren === true && stylesToPropagage !== undefined) {
                 stylesToPropagage.kFontName = styles.kFontName
             }
@@ -394,13 +392,64 @@ export function colorDefinition(colorId: string, start: ColorStyle, end: ColorSt
             ...(end.opacity ? {'stop-opacity': end.opacity} : {})
         }}
     />
-    const angleFloat = angle === undefined ? 0 : angle
+    let angleFloat = angle === undefined ? 0 : angle
+
+    // Calculate the x and y lengths a line of angle 'angle' would have in a 1x1 box.
+    
+    // First, normalize the angle to be 0<=angle<360
+    angleFloat = angleFloat % 360
+    if (angleFloat < 0) {
+        angleFloat += 360
+    }
+    // Convert the angle to radians
+    const angleRad = angleFloat / 180 * Math.PI
+
+    let x, y
+    if (angleRad <= 1/4 * Math.PI || angleRad > 7/4 * Math.PI) {
+        x = 1
+        y = - Math.tan(0/2 * Math.PI - angleRad)
+    } else if (angleRad <= 3/4 * Math.PI) {
+        x = Math.tan(1/2 * Math.PI - angleRad)
+        y = 1
+    } else if (angleRad <= 5/4 * Math.PI) {
+        x = -1
+        y = Math.tan(2/2 * Math.PI - angleRad)
+    } else { // or: else if (angleRad <= 7/4 * Math.PI) {
+        x = - Math.tan(3/2 * Math.PI - angleRad)
+        y = -1
+    }
+
+    // Now, turn these lengths into x1/x2 and y1/y2 coordinates within the box such that 0<=var<=1,
+    // centered within the box.
+    let x1, x2, y1, y2
+    if (x >= 0) {
+        const halfRemain = (1 - x) / 2
+        x1 = halfRemain
+        x2 =  halfRemain + x
+    } else {
+        const halfRemain = (1 + x) / 2
+        x1 = halfRemain - x
+        x2 = halfRemain
+    }
+
+    if (y >= 0) {
+        const halfRemain = (1 - y) / 2
+        y1 = halfRemain
+        y2 = halfRemain + y
+    } else {
+        const halfRemain = (1 + y) / 2
+        y1 = halfRemain - y
+        y2 = halfRemain
+    }
 
     const gradientAttributes = {
         id: colorId,
         // If the gradient is not rotated, the attributes for rotation should not be added.
         ...(angleFloat === 0 ? {} : { gradientUnits: GRADIENT_UNIT_OBJECT_BOUNDING_BOX }),
-        ...(angleFloat === 0 ? {} : { gradientTransform: GRADIENT_TRANSFORM_ROTATE_START + angle + GRADIENT_TRANSFORM_ROTATE_END })
+        ...(angleFloat === 0 ? {} : { x1: x1 }),
+        ...(angleFloat === 0 ? {} : { x2: x2 }),
+        ...(angleFloat === 0 ? {} : { y1: y1 }),
+        ...(angleFloat === 0 ? {} : { y2: y2 })
     }
     return <linearGradient {...gradientAttributes}>
         {startColorStop}
@@ -684,7 +733,7 @@ export function getSvgTextStyles(styles: KStyles): TextStyles {
         fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size * 96 / 72 + 'px',
         fontStyle: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
         fontWeight: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
-        textDecorationLine: styles.kTextUnderline === undefined ? undefined : 'underline',
+        textDecorationLine: styles.kTextUnderline === undefined || styles.kTextUnderline.underline === Underline.NONE ? undefined : 'underline',
         textDecorationStyle: styles.kTextUnderline === undefined ? undefined : textDecorationStyleText(styles.kTextUnderline as KTextUnderline)
         // textDecorationColor: styles.kTextUnderline === undefined ? undefined : textDecorationColor(styles.kTextUnderline as KTextUnderline),
         // TODO: textDecorationColorDefinition:
