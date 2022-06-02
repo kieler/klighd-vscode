@@ -27,7 +27,7 @@ import { SKEdge, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
 import { CanvasAttributes, ProxyVNode, SelectedElementsUtil, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewSize, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -57,6 +57,11 @@ export class ProxyView extends AbstractUIExtension {
      * Always make sure the ids ending with "-proxy" are used.
      */
     private positions: Map<string, Point>;
+    /**
+     * Stores the distances of nodes to the canvas.
+     * Always make sure the ids ending with "-proxy" are used.
+     */
+    private distances: Map<string, number>;
 
     //// Sidebar options ////
     /** @see {@link ProxyViewEnabled} */
@@ -67,6 +72,8 @@ export class ProxyView extends AbstractUIExtension {
     private sizePercentage: number;
     /** @see {@link ProxyViewClusteringEnabled} */
     private clusteringEnabled: boolean;
+    /** @see {@link ProxyViewOpacityByDistance} */
+    private opacityByDistance: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
     /** @see {@link ProxyViewFilterUnconnected} */
@@ -84,6 +91,8 @@ export class ProxyView extends AbstractUIExtension {
     private highlightSelected: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
     private useSynthesisProxyRendering: boolean;
+    /** @see {@link ProxyViewStackingOrderByDistance} */
+    private stackingOrderByDistance: boolean;
     /** @see {@link ProxyViewCapScaleToOne} */
     private capScaleToOne: boolean;
     /** @see {@link ProxyViewUsePositionsCache} */
@@ -107,8 +116,10 @@ export class ProxyView extends AbstractUIExtension {
         this.actionDispatcher.dispatch(SendProxyViewAction.create(this));
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
         this.patcher = this.patcherProvider.patcher;
+        // Initialize caches
         this.renderings = new Map;
         this.positions = new Map;
+        this.distances = new Map;
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
@@ -172,12 +183,18 @@ export class ProxyView extends AbstractUIExtension {
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
             onScreenNodes, canvas); // Additional arguments for filters
 
+        //// Clone nodes ////
+        const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
+
+        //// Stacking order ////
+        const distanceOrderedOffScreenNodes = this.orderByDistance(clonedNodes, canvas);
+
         //// Use proxy-rendering as specified by synthesis ////
-        const synthesisRenderingOffScreenNodes = this.getSynthesisProxyRendering(filteredOffScreenNodes, ctx);
+        const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(distanceOrderedOffScreenNodes, ctx);
 
         //// Calculate transformations ////
         const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
-        const transformedOffScreenNodes = synthesisRenderingOffScreenNodes.map(({ node, proxyBounds }) => ({
+        const transformedOffScreenNodes = synthesisRenderedOffScreenNodes.map(({ node, proxyBounds }) => ({
             node: node,
             transform: this.getTransform(node, size, proxyBounds, canvas)
         }));
@@ -195,8 +212,9 @@ export class ProxyView extends AbstractUIExtension {
             }
         }
 
-        // Clear positions for the next model
+        // Clear caches for the next model
         this.clearPositions();
+        this.clearDistances();
 
         return proxies;
     }
@@ -233,13 +251,40 @@ export class ProxyView extends AbstractUIExtension {
         return { offScreenNodes: offScreenNodes, onScreenNodes: onScreenNodes };
     }
 
+    /** Performs a shallow copy of the nodes so that the original nodes aren't mutated. */
+    private cloneNodes(offScreenNodes: SKNode[]): SKNode[] {
+        return offScreenNodes.map(node => Object.create(node));
+    }
+
+    /**
+     * Orders `offScreenNodes` by distance to the canvas,
+     * such that closer nodes appear at the end - therefore being rendered above distant nodes.
+     */
+    private orderByDistance(offScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        const res = [...offScreenNodes];
+        if (this.stackingOrderByDistance && !this.clusteringEnabled) {
+            // Makes no sense to order when clustering is enabled -> proxies cannot be stacked
+            res.sort((n1, n2) => this.getDistanceToCanvas(n2, canvas) - this.getDistanceToCanvas(n1, canvas));
+        }
+        if (this.opacityByDistance) {
+            for (const node of res) {
+                console.log(node.id)
+                console.log("Before");
+                console.log(node.opacity);
+                node.opacity = Math.max(0, 1 - this.getDistanceToCanvas(node, canvas) / 700);
+                console.log("After");
+                console.log(node.opacity);
+            }
+        }
+        return res;
+    }
+
     /** Returns the nodes updated to use the rendering specified by the synthesis. */
     private getSynthesisProxyRendering(offScreenNodes: SKNode[], ctx: SKGraphModelRenderer): { node: SKNode, proxyBounds: Bounds }[] {
         const res = [];
         for (const node of offScreenNodes) {
             // Fallback, if property undefined use universal proxy rendering for this node
             let proxyBounds = node.bounds;
-            let clone = node;
 
             if (this.useSynthesisProxyRendering && node.properties && node.properties[ProxyView.PROXY_RENDERING_PROPERTY]) {
                 const data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
@@ -247,13 +292,12 @@ export class ProxyView extends AbstractUIExtension {
 
                 if (kRendering && kRendering.properties['klighd.lsp.calculated.bounds']) {
                     // Proxy rendering available, update data
-                    clone = Object.create(node);
-                    clone.data = data;
+                    node.data = data;
                     // Also update the bounds
                     proxyBounds = kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds;
                 }
             }
-            res.push({ node: clone, proxyBounds: proxyBounds });
+            res.push({ node: node, proxyBounds: proxyBounds });
         }
         return res;
     }
@@ -424,6 +468,9 @@ export class ProxyView extends AbstractUIExtension {
             // VNode, this is a predefined rendering (e.g. cluster)
             this.updateTransform(node, transformString);
             return node;
+        } else if (node.opacity <= 0) {
+            // Don't render invisible nodes
+            return undefined;
         }
 
         // TODO: instead of highlighting selected, make other proxies more transparent
@@ -436,20 +483,18 @@ export class ProxyView extends AbstractUIExtension {
         if (!vnode || vnode.selected !== highlight) {
             // Node hasn't been rendered yet (cache empty for this node) or the attributes don't match
 
-            // Clone the node
-            const clone: SKNode = Object.create(node);
             // Change its id for good measure
-            clone.id = id;
+            node.id = id;
             // Clear children, proxies don't show nested nodes (but keep labels)
-            clone.children = clone.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
+            node.children = node.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
             // Update bounds
-            clone.bounds = transform;
+            node.bounds = transform;
             // Proxies should never appear to be selected (even if their on-screen counterpart is selected)
             // unless highlighting is enabled
-            clone.selected = highlight;
+            node.selected = highlight;
             // TODO: further specify what to change?
 
-            vnode = ctx.renderProxy(clone);
+            vnode = ctx.renderProxy(node);
             if (vnode) {
                 // New rendering, set ProxyVNode attributes
                 vnode.selected = highlight;
@@ -467,6 +512,10 @@ export class ProxyView extends AbstractUIExtension {
         if (vnode) {
             // Place proxy at the calculated position
             this.updateTransform(vnode, transformString);
+
+            console.log(vnode); // FIXME:
+            this.updateOpacity(vnode, node.opacity);
+            
             // Store this node
             this.renderings.set(id, vnode);
         }
@@ -576,6 +625,14 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns the distance between the node and the canvas. */
     private getDistanceToCanvas(node: SKNode, canvas: CanvasAttributes): number {
+        const id = this.getProxyId(node.id);
+        let dist = this.distances.get(id);
+        if (dist) {
+            return dist;
+        } else {
+            dist = 0;
+        }
+
         const translated = this.getTranslatedBounds(node, canvas);
         const nodeLeft = translated.x;
         const nodeRight = nodeLeft + translated.width;
@@ -598,7 +655,6 @@ export class ProxyView extends AbstractUIExtension {
          * 2,8: only take y-coordinate into consideration for calculating the distance
          * 4,6: only take x-coordinate into consideration for calculating the distance
          */
-        let dist = 0;
         if (nodeBottom < canvasTop) {
             // Above canvas (1,2,3)
             if (nodeRight < canvasLeft) {
@@ -637,6 +693,9 @@ export class ProxyView extends AbstractUIExtension {
             }
         }
 
+        // Store the calculated distance
+        this.distances.set(id, dist);
+
         return dist;
     }
 
@@ -648,6 +707,18 @@ export class ProxyView extends AbstractUIExtension {
             node.data.attrs["transform"] = transformString;
             // Update transform while on the canvas
             document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`)?.setAttribute("transform", transformString);
+        }
+    }
+
+    /** Updates a VNode's opacity. */
+    private updateOpacity(node: VNode, opacity: number): void {
+        // TODO:
+        // Just changing the VNode's attribute is insufficient as it doesn't change the document's attribute while on the canvas
+        if (node && node.data && node.data.attrs) {
+            // Update transform while off the canvas
+            // node.data.attrs["transform"] = transformString;
+            // Update transform while on the canvas
+            // document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`)?.replaceWith(<g>{node}</g>);
         }
     }
 
@@ -751,12 +822,12 @@ export class ProxyView extends AbstractUIExtension {
         const ids = nodes.map(node => node.id);
         return (
             (node.outgoingEdges as SKEdge[])
-                .map(edge => edge.target as SKNode)
-                .some(target => ids.includes(target.id))
+                .map(edge => edge.targetId)
+                .some(targetId => ids.includes(targetId))
             ||
             (node.incomingEdges as SKEdge[])
-                .map(edge => edge.source as SKNode)
-                .some(source => ids.includes(source.id))
+                .map(edge => edge.sourceId)
+                .some(sourceId => ids.includes(sourceId))
         );
     }
 
@@ -782,8 +853,6 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Checks if the distance between `node` and the canvas is in the given range. */
     private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
-        // TODO: transparency/size by distance
-        // TODO: stacking order (which proxy is on top) by distance + transparency?
         return this.getDistanceToCanvas(node, canvas) <= range;
     }
 
@@ -798,6 +867,7 @@ export class ProxyView extends AbstractUIExtension {
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * fromPercent;
 
         this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
+        this.opacityByDistance = renderOptionsRegistry.getValue(ProxyViewOpacityByDistance);
 
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
 
@@ -815,6 +885,8 @@ export class ProxyView extends AbstractUIExtension {
         }
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
+        this.stackingOrderByDistance = renderOptionsRegistry.getValue(ProxyViewStackingOrderByDistance);
+
         this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
 
         this.usePositionsCache = renderOptionsRegistry.getValue(ProxyViewUsePositionsCache);
@@ -831,6 +903,7 @@ export class ProxyView extends AbstractUIExtension {
     reset(): void {
         this.clearPositions();
         this.clearRenderings();
+        this.clearDistances();
     }
     /** Clears the {@link renderings} map. */
     clearRenderings(): void {
@@ -840,5 +913,10 @@ export class ProxyView extends AbstractUIExtension {
     /** Clears the {@link positions} map. */
     clearPositions(): void {
         this.positions.clear();
+    }
+
+    /** Clears the {@link distances} map. */
+    clearDistances(): void {
+        this.distances.clear();
     }
 }

@@ -79,6 +79,22 @@ export class ProxyViewClusteringEnabled implements RenderOption {
     currentValue = ProxyViewClusteringEnabled.DEFAULT;
 }
 
+/** Whether proxies should be more transparent the further away they are. */
+export class ProxyViewOpacityByDistance implements RenderOption {
+    // TODO: use opacity by distance + stacking order instead of clustering, e.g. choice option
+    static readonly ID: string = 'proxy-view-opacity-by-distance';
+    static readonly NAME: string = 'Transparent Distant Proxies';
+    static readonly DESCRIPTION: string = 'Whether proxies should be more transparent the further away they are.';
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewOpacityByDistance.ID;
+    readonly name: string = ProxyViewOpacityByDistance.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewOpacityByDistance.DEFAULT;
+    readonly description: string = ProxyViewOpacityByDistance.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewOpacityByDistance.DEFAULT;
+}
+
 /** Whether to cap proxies in their parent node. */
 export class ProxyViewCapProxyToParent implements RenderOption {
     static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
@@ -189,6 +205,22 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
     currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
+}
+
+/** Whether to change stacking order such that close proxies are stacked above distant ones. */
+export class ProxyViewStackingOrderByDistance implements RenderOption {
+    static readonly ID: string = 'proxy-view-stacking-order-by-distance';
+    static readonly NAME: string = 'Render Close Nodes At Top';
+    static readonly DESCRIPTION: string = 'Whether close proxies should be stacked above distant proxies.';
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewStackingOrderByDistance.ID;
+    readonly name: string = ProxyViewStackingOrderByDistance.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewStackingOrderByDistance.DEFAULT;
+    readonly description: string = ProxyViewStackingOrderByDistance.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewStackingOrderByDistance.DEFAULT;
 }
 
 /** Whether to cap scaling of proxies to 1. */
