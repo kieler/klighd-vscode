@@ -28,6 +28,8 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
  *   Off
  *   Clustering
  *   Stacking Order + Transparency by Distance
+ * Enable Actions
+ *   true/false
  * Cap Proxy to parent
  *   true/false
  * Filters (...)
@@ -110,6 +112,21 @@ export class ProxyViewOpacityByDistance implements RenderOption {
     readonly description: string = ProxyViewOpacityByDistance.DESCRIPTION;
     readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
     currentValue = ProxyViewOpacityByDistance.DEFAULT;
+}
+
+/** Whether proxies should be interactable. */
+export class ProxyViewActionsEnabled implements RenderOption {
+    static readonly ID: string = 'proxy-view-actions-enabled';
+    static readonly NAME: string = 'Enable Actions';
+    static readonly DESCRIPTION: string = 'Whether proxies should be interactable.';
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewActionsEnabled.ID;
+    readonly name: string = ProxyViewActionsEnabled.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewActionsEnabled.DEFAULT;
+    readonly description: string = ProxyViewActionsEnabled.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewActionsEnabled.DEFAULT;
 }
 
 /** Whether to cap proxies in their parent node. */

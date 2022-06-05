@@ -30,6 +30,7 @@ export const proxyViewModule = new ContainerModule((bind) => {
 
     bind(ProxyViewActionHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler);
+    bind(TYPES.MouseListener).toService(ProxyViewActionHandler);
 
     bind(SelectedElementsUtilActionHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(SelectedElementsUtilActionHandler);

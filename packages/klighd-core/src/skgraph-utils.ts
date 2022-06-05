@@ -14,8 +14,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
 */
-import { SModelRoot } from 'sprotty-protocol'
-import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKGraphElement, SKNode } from './skgraph-models'
+import { SModelRoot } from 'sprotty'
+import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from './skgraph-models'
 
 /**
  * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
@@ -101,44 +101,43 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
 }
 
 /**
- * Finds the SKNode that matches the given ID.
+ * Finds the SKGraphElement that matches the given ID.
  * @param root The root.
  * @param id The ID to search for.
- * @returns The node matching the given id or `undefined` if there is none.
+ * @returns The element matching the given id or `undefined` if there is none.
  */
-export function getNodeByID(root: SModelRoot, id: string): SKNode | undefined {
-    let curr = root as unknown as SKNode;
+export function getElementByID(root: SModelRoot, id: string, suppressErrors = false): SKGraphElement | undefined {
+    let curr = root as unknown as SKGraphElement;
     const idPath = id.split('$');
-    // The node id is build hierarchically and the root is already given, so start with i=1
-    for (let i = 1; i < idPath.length; i++) {
-        // Cannot check if next is undefined as a stopping criterion here
-        // since ids allow for $$ (e.g. comments in sccharts)
+    // The node id is build hierarchically and the root is already given, so start with i=1 ($root)
+    for (let i = 1; i < idPath.length && curr; i++) {
+        if (idPath[i].length <= 0) {
+            // $$ in id (e.g. comments in sccharts)
+            continue;
+        }
 
-        // TODO: allow searching for any SKGraphElement?
-        // let next = undefined;
-        // switch (idPath[i].charAt(0)) {
-        //     case '$':
-        //         continue;
-        //     case 'N':
-        //         // Node
-        //         next = curr.children.find(node => id.startsWith(node.id)) as unknown as SKGraphElement;
-        //         break;
-        //     case 'E':
-        //         // Edge
-        //         next = (curr.outgoingEdges as SKEdge[]).find(edge => id.startsWith(edge.id)) as SKGraphElement;
-        // }
-
-        const next = curr.children.find(node => id.startsWith(node.id)) as SKNode;
-        curr = next ?? curr;
+        const nextType = idPath[i].charAt(0);
+        if (nextType === 'E') {
+            // Edge
+            curr = ((curr as SKNode | SKPort).outgoingEdges as SKEdge[]).find(edge => id.startsWith(edge.id)) as SKEdge;
+        } else if (['N', 'L', 'P'].includes(nextType) || idPath[i] === 'root') {
+            // Node, label or port
+            curr = curr.children.find(node => id.startsWith(node.id)) as SKNode | SKLabel | SKPort;
+        }
     }
 
     // Now currNode should be the node searched for by the id
     if (!curr) {
-        console.error('No node found matching the id:', id);
+        if (!suppressErrors) {
+            console.error('No node found matching the id:', id);
+        }
         return undefined;
     } else if (curr.id !== id) {
-        console.error('The found node does not match the searched id! id:', id, ', found node:', curr);
+        if (!suppressErrors) {
+            console.error('The found node does not match the searched id! id:', id, ', found node:', curr);
+        }
         return undefined;
     }
+
     return curr;
 }
