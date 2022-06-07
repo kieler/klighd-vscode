@@ -56,6 +56,8 @@ export class ProxyView extends AbstractUIExtension {
     /** Whether the proxies should be click-through. */
     private clickThrough: boolean;
 
+    private test = 0;
+
     //// Caches ////
     /**
      * Stores the proxy renderings of already rendered nodes.
@@ -156,7 +158,7 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: decorator placement, depthmap DetailLevel, API for filters
+    // TODO: depthmap DetailLevel, API for filters
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -568,7 +570,11 @@ export class ProxyView extends AbstractUIExtension {
         return res;
     }
 
-    /** Returns an edge rerouted to the proxy. `nodeConnector` and `proxyConnector` are the endpoints of the original edge. */
+    /**
+     * Returns an edge rerouted to the proxy.
+     * `nodeConnector` and `proxyConnector` are the endpoints of the original edge.
+     * @param `outgoing` Whether the edge is outgoing from the proxy.
+     */
     private rerouteEdge(node: SKNode, transform: TransformAttributes, edge: SKEdge,
         nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): SKEdge {
         // Connected to node, just calculate absolute coordinates + basic translation
@@ -591,8 +597,11 @@ export class ProxyView extends AbstractUIExtension {
         // Set attributes
         clone.routingPoints = [source, target];
         clone.junctionPoints = [];
-        clone.opacity = node.opacity;
+        // OLD: cannot change these, edges won't be rendered
+        // clone.sourceId = outgoing ? this.getProxyId(clone.sourceId) : clone.sourceId;
+        // clone.targetId = outgoing ? clone.targetId : this.getProxyId(clone.targetId);
         clone.data = this.placeDecorator(edge.data, ctx, target);
+        clone.opacity = node.opacity;
 
         return clone;
     }
@@ -668,7 +677,9 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // Change its id to differ from the original edge
-        edge.id = this.getProxyId(edge.id);
+        // FIXME:
+        // If ids aren't unique, errors like "TypeError: Cannot read property 'removeChild' of null" or "DOMException: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node." or "TypeError: Cannot read property 'sel' of undefined" can occur
+        edge.id = this.getProxyId(edge.id) + this.test++;
         // Clear children to remove label decorators,
         // use assign() since children is readonly for SKEdges (but not for SKNodes)
         Object.assign(edge, { children: [] });
@@ -884,7 +895,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // Keep going recursively
         clone.children = this.placeDecorator(clone.children, ctx, target);
-        
+
         res.push(clone);
         return res;
     }

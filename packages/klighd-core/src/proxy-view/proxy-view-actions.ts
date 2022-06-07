@@ -153,7 +153,7 @@ export interface ProxyVNode extends VNode {
     selected?: boolean;
 }
 
-// TODO: GetSelectionAction 
+// TODO: GetSelectionAction
 /** Util class for easyily accessing the currently selected elements. */
 export class SelectedElementsUtil {
     /** The current root. */
