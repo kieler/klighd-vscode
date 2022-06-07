@@ -63,17 +63,7 @@ export namespace SendProxyViewAction {
     }
 }
 
-/** Handles all mouse events regarding the {@link ProxyView}. */
-// export class ProxyViewMouseListener extends MouseListener {
-//     /** The proxy-view. */
-//     private proxyView: ProxyView;
-
-//     setProxyView(proxyView: ProxyView): void {
-//         this.proxyView = proxyView;
-//     }
-// }
-
-/** Handles all actions regarding the {@link ProxyView}. */
+/** Handles all actions and mouse events regarding the {@link ProxyView}. */
 @injectable()
 export class ProxyViewActionHandler extends MouseListener implements IActionHandler, IActionHandlerInitializer {
     /** The proxy-view. */
@@ -84,8 +74,6 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
     /** Whether the proxy-view was registered in the registries' onchange() method. Prevents registering multiple times. */
     private onChangeRegistered: boolean;
-    /** Send the proxy-view to its respective mouse listener. */
-    // @inject(ProxyViewMouseListener) mouseListener: ProxyViewMouseListener;
 
     //// Mouse events ////
 
@@ -336,19 +324,12 @@ export class SelectedElementsUtilActionHandler implements IActionHandler, IActio
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SetModelAction.KIND) {
-            // Reset + set new root
+            // Reset
             SelectedElementsUtil.resetSelection();
-            // const setModelAction = action as SetModelAction;
-            // SelectedElementsUtil.setRoot(setModelAction.newRoot);
-            // FIXME: newRoot is from model.ts, not sgraph.ts -> missing edges etc. SendModelContextAction?
         } else if (action.kind === UpdateModelAction.KIND) {
             // Set new root + filter previously selected nodes that aren't part of newRoot
             const updateModelAction = action as UpdateModelAction;
             this.filterSelectionByRoot ||= !!updateModelAction.newRoot;
-            // if (updateModelAction.newRoot) {
-            //     SelectedElementsUtil.setRoot(updateModelAction.newRoot);
-            //     SelectedElementsUtil.filterSelectionByRoot();
-            // }
         } else if (action.kind === SendModelContextAction.KIND) {
             // Set new root
             const sMCAction = action as SendModelContextAction;

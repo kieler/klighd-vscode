@@ -129,6 +129,21 @@ export class ProxyViewActionsEnabled implements RenderOption {
     currentValue = ProxyViewActionsEnabled.DEFAULT;
 }
 
+/** Whether straight edges to proxies should be drawn. */
+export class ProxyViewDrawStraightEdges implements RenderOption {
+    static readonly ID: string = 'proxy-view-draw-edges';
+    static readonly NAME: string = 'Draw Straight Edges to Proxies';
+    static readonly DESCRIPTION: string = 'Whether straight edges to proxies should be drawn.';
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewDrawStraightEdges.ID;
+    readonly name: string = ProxyViewDrawStraightEdges.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewDrawStraightEdges.DEFAULT;
+    readonly description: string = ProxyViewDrawStraightEdges.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewDrawStraightEdges.DEFAULT;
+}
+
 /** Whether to cap proxies in their parent node. */
 export class ProxyViewCapProxyToParent implements RenderOption {
     static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
