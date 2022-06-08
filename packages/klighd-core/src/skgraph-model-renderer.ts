@@ -80,10 +80,10 @@ export class SKGraphModelRenderer extends ModelRenderer {
     }
 
     /** Renders an element as a proxy. */
-    renderProxy(node: SKGraphElement): VNode | undefined {
+    renderProxy(element: SKGraphElement): VNode | undefined {
         const prevForceRendering = this.forceRendering;
         this.forceRendering = true;
-        const vnode = super.renderElement(node);
+        const vnode = super.renderElement(element);
         this.forceRendering = prevForceRendering;
         return vnode;
     }

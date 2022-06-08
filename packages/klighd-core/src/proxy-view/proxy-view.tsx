@@ -56,7 +56,7 @@ export class ProxyView extends AbstractUIExtension {
     /** Whether the proxies should be click-through. */
     private clickThrough: boolean;
 
-    private test = 0;
+    private test = 0; // FIXME:
 
     //// Caches ////
     /**
@@ -184,7 +184,7 @@ export class ProxyView extends AbstractUIExtension {
         const canvas = { ...model.canvasBounds, scroll: viewport.scroll, zoom: viewport.zoom };
         const root = model.children[0] as SKNode;
         // Actually update the document
-        console.log(this.currHTMLRoot); // FIXME: motor example once the black dot is off-screen, probably id-related ?
+        // console.log(this.currHTMLRoot); // FIXME:
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
                 {
@@ -243,9 +243,6 @@ export class ProxyView extends AbstractUIExtension {
             // Create an edge proxy
             const edgeProxy = this.createEdgeProxy(edge, ctx);
             if (edgeProxy) {
-                // FIXME:
-                // console.log(edge)
-                // console.log(edgeProxy)
                 proxies.push(edgeProxy);
             }
         }
@@ -498,16 +495,23 @@ export class ProxyView extends AbstractUIExtension {
                     opacity /= numProxiesInCluster + 1;
                 }
 
-                // Make sure the calculated positions don't leave the canvas bounds
-                x = Math.max(0, Math.min(canvas.width - size, x));
-                y = Math.max(0, Math.min(canvas.height - size, y));
+                // Cap opacity in [0,1]
                 opacity = Math.max(0, Math.min(1, opacity));
+                // Make sure the calculated positions don't leave the canvas bounds
+                ({x, y} = this.capToCanvas({x, y, width: size, height: size}, canvas));
+                let floating = false;
                 // Also make sure the calculated positions are still capped to the border (no floating proxies)
                 if (y > 0 && y < canvas.height - size && (x < canvas.width - size || x > 0)) {
                     x = x > (canvas.width - size) / 2 ? canvas.width - size : 0;
+                    floating = true;
                 }
                 if (x > 0 && x < canvas.width - size && (y < canvas.height - size || y > 0)) {
                     y = y > (canvas.height - size) / 2 ? canvas.height - size : 0;
+                    floating = true;
+                }
+                if (floating) {
+                    // Readjust
+                    ({x, y} = this.capToCanvas({x, y, width: size, height: size}, canvas));
                 }
 
                 const clusterNode = getClusterRendering(`cluster-${clusterIDOffset + i}-proxy`, numProxiesInCluster, size, x, y, opacity);
@@ -601,7 +605,17 @@ export class ProxyView extends AbstractUIExtension {
         // clone.sourceId = outgoing ? this.getProxyId(clone.sourceId) : clone.sourceId;
         // clone.targetId = outgoing ? clone.targetId : this.getProxyId(clone.targetId);
         clone.data = this.placeDecorator(edge.data, ctx, target);
+        this.placeDecorator
         clone.opacity = node.opacity;
+        // Change its id to differ from the original edge
+        // FIXME:
+        // If ids aren't unique, errors like "TypeError: Cannot read property 'removeChild' of null" or "DOMException: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node." or "TypeError: Cannot read property 'sel' of undefined" can occur
+        clone.id = this.getProxyId(clone.id) //+ this.test++;
+        this.test
+        // Clear children to remove label decorators,
+        // use assign() since children is readonly for SKEdges (but not for SKNodes)
+        Object.assign(clone, { children: [] });
+        console.log(edge.id + "\n" + clone.id);
 
         return clone;
     }
@@ -676,14 +690,6 @@ export class ProxyView extends AbstractUIExtension {
             return undefined;
         }
 
-        // Change its id to differ from the original edge
-        // FIXME:
-        // If ids aren't unique, errors like "TypeError: Cannot read property 'removeChild' of null" or "DOMException: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node." or "TypeError: Cannot read property 'sel' of undefined" can occur
-        edge.id = this.getProxyId(edge.id) + this.test++;
-        // Clear children to remove label decorators,
-        // use assign() since children is readonly for SKEdges (but not for SKNodes)
-        Object.assign(edge, { children: [] });
-
         const vnode = ctx.renderProxy(edge);
         return vnode;
     }
@@ -737,17 +743,8 @@ export class ProxyView extends AbstractUIExtension {
         let x = translated.x + offsetX;
         let y = translated.y + offsetY;
 
-        // Cap proxy at canvas border
-        x = Math.max(0, Math.min(canvas.width - proxyWidth, x));
-        y = Math.max(0, Math.min(canvas.height - proxyHeight, y));
-
-        // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
-        // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
-        const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
-        const isSidebarOpen = document.querySelector('.sidebar--open');
-        if (!isSidebarOpen && rect && y < rect.bottom && x > rect.left - proxyWidth) {
-            x = rect.left - proxyWidth;
-        }
+        // Cap proxy to canvas
+        ({ x, y } = this.capToCanvas({ x, y, width: proxyWidth, height: proxyHeight }, canvas));
 
         if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
             const translatedParent = this.getTranslatedNodeBounds(node.parent as SKNode, canvas);
@@ -756,6 +753,23 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         return { x, y, scale, width: proxyWidth, height: proxyHeight };
+    }
+
+    /** Returns a point of the given bounds capped to the canvas border w.r.t the sidebar. */
+    private capToCanvas(bounds: Bounds, canvas: CanvasAttributes): Point {
+        // Cap proxy at canvas border
+        let x = Math.max(0, Math.min(canvas.width - bounds.width, bounds.x));
+        const y = Math.max(0, Math.min(canvas.height - bounds.height, bounds.y));
+
+        // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
+        // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
+        const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
+        const isSidebarOpen = document.querySelector('.sidebar--open');
+        if (!isSidebarOpen && rect && y < rect.bottom && x > rect.left - bounds.width) {
+            x = rect.left - bounds.width;
+        }
+
+        return { x, y };
     }
 
     /** Returns the translated bounds for the given `node`, e.g. calculates its absolute position & width/height according to scroll and zoom. */
@@ -877,24 +891,36 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns a copy of `edgeData` with the decorators placed at `target`. */
     private placeDecorator(edgeData: KGraphData[], ctx: SKGraphModelRenderer, target: Point): KGraphData[] {
+        if (!edgeData || edgeData.length <= 0) {
+            return edgeData;
+        }
         const data = getKRendering(edgeData, ctx);
         if (!data) {
             return edgeData;
         }
 
         const res = [];
-        const clone = Object.create(data);
+        const clone = { ...data } as any;//Object.create(data);
         const props = { ...clone.properties };
         clone.properties = props;
-        props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
+        // props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
+        console.log(edgeData); // FIXME:
 
         if (clone.type === K_POLYGON) {
             // Arrow head
-            props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target };
+            if (props["klighd.lsp.calculated.decoration"]) {
+                // Move arrow head if actually defined
+                props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target };
+            } else {
+                // Better not to show it as it would be floating around somewhere
+                return [];
+            }
         }
 
-        // Keep going recursively
-        clone.children = this.placeDecorator(clone.children, ctx, target);
+        if ((clone as any).children) {
+            // Keep going recursively
+            (clone as any).children = this.placeDecorator((clone as any).children, ctx, target);
+        }
 
         res.push(clone);
         return res;
