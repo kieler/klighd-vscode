@@ -39,8 +39,8 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
 
 /** The category containing proxy-view options. */
 export class ProxyViewCategory implements RenderOption {
-    static readonly ID: string = 'proxy-view-category';
-    static readonly NAME: string = 'Proxy-View Options';
+    static readonly ID: string = "proxy-view-category";
+    static readonly NAME: string = "Proxy-View Options";
     static readonly INSTANCE: ProxyViewCategory = new ProxyViewCategory;
     readonly id: string = ProxyViewCategory.ID;
     readonly name: string = ProxyViewCategory.NAME;
@@ -51,9 +51,9 @@ export class ProxyViewCategory implements RenderOption {
 
 /** Whether the proxy-view is enabled. */
 export class ProxyViewEnabled implements RenderOption {
-    static readonly ID: string = 'proxy-view-enabled';
-    static readonly NAME: string = 'Enable Proxy-View';
-    static readonly DESCRIPTION: string = 'Whether the Proxy-View is enabled.';
+    static readonly ID: string = "proxy-view-enabled";
+    static readonly NAME: string = "Enable Proxy-View";
+    static readonly DESCRIPTION: string = "Whether the Proxy-View is enabled.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewEnabled.ID;
     readonly name: string = ProxyViewEnabled.NAME;
@@ -66,8 +66,8 @@ export class ProxyViewEnabled implements RenderOption {
 
 /** Part of calculating the proxies' size. */
 export class ProxyViewSize implements RangeOption {
-    static readonly ID: string = 'proxy-view-size';
-    static readonly NAME: string = 'Size of Proxies in %';
+    static readonly ID: string = "proxy-view-size";
+    static readonly NAME: string = "Size of Proxies in %";
     static readonly DESCRIPTION: string = "Percentage to which the proxies are scaled regarding the minimum of the canvas' height and width.";
     static readonly DEFAULT: number = 8;
     static readonly RANGE: Range = { first: 1, second: 25 };
@@ -86,9 +86,9 @@ export class ProxyViewSize implements RangeOption {
 
 /** Whether clustering is enabled. */
 export class ProxyViewClusteringEnabled implements RenderOption {
-    static readonly ID: string = 'proxy-view-clustering-enabled';
-    static readonly NAME: string = 'Enable Clustering';
-    static readonly DESCRIPTION: string = 'Whether overlapping proxies should be clustered.';
+    static readonly ID: string = "proxy-view-clustering-enabled";
+    static readonly NAME: string = "Enable Clustering";
+    static readonly DESCRIPTION: string = "Whether overlapping proxies should be clustered.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewClusteringEnabled.ID;
     readonly name: string = ProxyViewClusteringEnabled.NAME;
@@ -101,9 +101,9 @@ export class ProxyViewClusteringEnabled implements RenderOption {
 
 /** Whether proxies should be more transparent the further away they are. */
 export class ProxyViewOpacityByDistance implements RenderOption {
-    static readonly ID: string = 'proxy-view-opacity-by-distance';
-    static readonly NAME: string = 'Transparent Distant Proxies';
-    static readonly DESCRIPTION: string = 'Whether proxies should be more transparent the further away they are.';
+    static readonly ID: string = "proxy-view-opacity-by-distance";
+    static readonly NAME: string = "Transparent Distant Proxies";
+    static readonly DESCRIPTION: string = "Whether proxies should be more transparent the further away they are.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewOpacityByDistance.ID;
     readonly name: string = ProxyViewOpacityByDistance.NAME;
@@ -116,9 +116,9 @@ export class ProxyViewOpacityByDistance implements RenderOption {
 
 /** Whether proxies should be interactable. */
 export class ProxyViewActionsEnabled implements RenderOption {
-    static readonly ID: string = 'proxy-view-actions-enabled';
-    static readonly NAME: string = 'Enable Actions';
-    static readonly DESCRIPTION: string = 'Whether proxies should be interactable.';
+    static readonly ID: string = "proxy-view-actions-enabled";
+    static readonly NAME: string = "Enable Actions";
+    static readonly DESCRIPTION: string = "Whether proxies should be interactable.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewActionsEnabled.ID;
     readonly name: string = ProxyViewActionsEnabled.NAME;
@@ -131,9 +131,9 @@ export class ProxyViewActionsEnabled implements RenderOption {
 
 /** Whether straight edges to proxies should be drawn. */
 export class ProxyViewDrawStraightEdges implements RenderOption {
-    static readonly ID: string = 'proxy-view-draw-edges';
-    static readonly NAME: string = 'Draw Straight Edges to Proxies';
-    static readonly DESCRIPTION: string = 'Whether straight edges to proxies should be drawn.';
+    static readonly ID: string = "proxy-view-draw-edges";
+    static readonly NAME: string = "Draw Straight Edges to Proxies";
+    static readonly DESCRIPTION: string = "Whether straight edges to proxies should be drawn.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewDrawStraightEdges.ID;
     readonly name: string = ProxyViewDrawStraightEdges.NAME;
@@ -146,9 +146,9 @@ export class ProxyViewDrawStraightEdges implements RenderOption {
 
 /** Whether to cap proxies in their parent node. */
 export class ProxyViewCapProxyToParent implements RenderOption {
-    static readonly ID: string = 'proxy-view-cap-proxy-to-parent';
-    static readonly NAME: string = 'Cap Proxy to Parent';
-    static readonly DESCRIPTION: string = 'Whether proxies should be capped inside their parent node.';
+    static readonly ID: string = "proxy-view-cap-proxy-to-parent";
+    static readonly NAME: string = "Cap Proxy to Parent";
+    static readonly DESCRIPTION: string = "Whether proxies should be capped inside their parent node.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewCapProxyToParent.ID;
     readonly name: string = ProxyViewCapProxyToParent.NAME;
@@ -161,9 +161,9 @@ export class ProxyViewCapProxyToParent implements RenderOption {
 
 /** Whether proxies should be filtered by removing unconnected nodes regarding all on-screen nodes. */
 export class ProxyViewFilterUnconnected implements RenderOption {
-    static readonly ID: string = 'proxy-view-filter-unconnected';
-    static readonly NAME: string = 'Filter Nodes Unconnected to On-Screen';
-    static readonly DESCRIPTION: string = 'Whether proxies should be filtered by removing unconnected nodes regarding all on-screen nodes.';
+    static readonly ID: string = "proxy-view-filter-unconnected";
+    static readonly NAME: string = "Filter Nodes Unconnected to On-Screen";
+    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding all on-screen nodes.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewFilterUnconnected.ID;
     readonly name: string = ProxyViewFilterUnconnected.NAME;
@@ -176,9 +176,9 @@ export class ProxyViewFilterUnconnected implements RenderOption {
 
 /** Whether proxies should be filtered by removing unconnected nodes regarding the selected node. */
 export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
-    static readonly ID: string = 'proxy-view-filter-unconnected-to-selected';
-    static readonly NAME: string = 'Filter Nodes Unconnected to Selection';
-    static readonly DESCRIPTION: string = 'Whether proxies should be filtered by removing unconnected nodes regarding the selected node.';
+    static readonly ID: string = "proxy-view-filter-unconnected-to-selected";
+    static readonly NAME: string = "Filter Nodes Unconnected to Selection";
+    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding the selected node.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewFilterUnconnectedToSelected.ID;
     readonly name: string = ProxyViewFilterUnconnectedToSelected.NAME;
@@ -191,12 +191,12 @@ export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
 
 /** Whether proxies should be filtered by removing distant nodes. */
 export class ProxyViewFilterDistant implements RenderOption {
-    static readonly ID: string = 'proxy-view-filter-distant';
-    static readonly NAME: string = 'Filter Distant Nodes';
-    static readonly DESCRIPTION: string = 'Whether proxies should be filtered by removing nodes that are far away from the center.';
-    static readonly CHOICE_OFF: string = 'Off';
-    static readonly CHOICE_CLOSE: string = 'Close';
-    static readonly CHOICE_DISTANT: string = 'Distant';
+    static readonly ID: string = "proxy-view-filter-distant";
+    static readonly NAME: string = "Filter Distant Nodes";
+    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing nodes that are far away from the center.";
+    static readonly CHOICE_OFF: string = "Off";
+    static readonly CHOICE_CLOSE: string = "Close";
+    static readonly CHOICE_DISTANT: string = "Distant";
     static readonly DEFAULT: string = ProxyViewFilterDistant.CHOICE_OFF;
     static readonly CHOICES: string[] = [ProxyViewFilterDistant.CHOICE_OFF, ProxyViewFilterDistant.CHOICE_CLOSE, ProxyViewFilterDistant.CHOICE_DISTANT];
     readonly id: string = ProxyViewFilterDistant.ID;
@@ -213,8 +213,8 @@ export class ProxyViewFilterDistant implements RenderOption {
 
 /** The category containing debug proxy-view options. */
 export class ProxyViewDebugCategory implements RenderOption {
-    static readonly ID: string = 'proxy-view-debug-category';
-    static readonly NAME: string = 'Proxy-View Debug Options';
+    static readonly ID: string = "proxy-view-debug-category";
+    static readonly NAME: string = "Proxy-View Debug Options";
     static readonly INSTANCE: ProxyViewDebugCategory = new ProxyViewDebugCategory;
     readonly id: string = ProxyViewDebugCategory.ID;
     readonly name: string = ProxyViewDebugCategory.NAME;
@@ -226,9 +226,9 @@ export class ProxyViewDebugCategory implements RenderOption {
 
 /** Whether to highlight proxies that are connected to the selected node. */
 export class ProxyViewHighlightSelected implements RenderOption {
-    static readonly ID: string = 'proxy-view-highlight-selected';
-    static readonly NAME: string = 'Highlight Proxies by Selection';
-    static readonly DESCRIPTION: string = 'Whether proxies that are connected to the selected node should be highlighted.';
+    static readonly ID: string = "proxy-view-highlight-selected";
+    static readonly NAME: string = "Highlight Proxies by Selection";
+    static readonly DESCRIPTION: string = "Whether proxies that are connected to the selected node should be highlighted.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewHighlightSelected.ID;
     readonly name: string = ProxyViewHighlightSelected.NAME;
@@ -242,9 +242,9 @@ export class ProxyViewHighlightSelected implements RenderOption {
 
 /** Whether to decrease opacity of proxies that are not connected to the selected node and increase otherwise. */
 export class ProxyViewOpacityBySelected implements RenderOption {
-    static readonly ID: string = 'proxy-view-opacity-by-selected';
-    static readonly NAME: string = 'Transparent Proxies by Selection';
-    static readonly DESCRIPTION: string = 'Whether proxies that are not connected to the selected node should be more transparent.';
+    static readonly ID: string = "proxy-view-opacity-by-selected";
+    static readonly NAME: string = "Transparent Proxies by Selection";
+    static readonly DESCRIPTION: string = "Whether proxies that are not connected to the selected node should be more transparent.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewOpacityBySelected.ID;
     readonly name: string = ProxyViewOpacityBySelected.NAME;
@@ -258,9 +258,9 @@ export class ProxyViewOpacityBySelected implements RenderOption {
 
 /** Whether to use the synthesis specified proxy-rendering. */
 export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
-    static readonly ID: string = 'proxy-view-use-synthesis-proxy-rendering';
-    static readonly NAME: string = 'Use Synthesis Proxy-Rendering';
-    static readonly DESCRIPTION: string = 'Whether proxies should be rendered as specified by the synthesis (if specified).';
+    static readonly ID: string = "proxy-view-use-synthesis-proxy-rendering";
+    static readonly NAME: string = "Use Synthesis Proxy-Rendering";
+    static readonly DESCRIPTION: string = "Whether proxies should be rendered as specified by the synthesis (if specified).";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewUseSynthesisProxyRendering.ID;
     readonly name: string = ProxyViewUseSynthesisProxyRendering.NAME;
@@ -274,9 +274,9 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
 
 /** Whether to change stacking order such that close proxies are stacked above distant ones. */
 export class ProxyViewStackingOrderByDistance implements RenderOption {
-    static readonly ID: string = 'proxy-view-stacking-order-by-distance';
-    static readonly NAME: string = 'Render Close Nodes At Top';
-    static readonly DESCRIPTION: string = 'Whether close proxies should be stacked above distant proxies.';
+    static readonly ID: string = "proxy-view-stacking-order-by-distance";
+    static readonly NAME: string = "Render Close Nodes At Top";
+    static readonly DESCRIPTION: string = "Whether close proxies should be stacked above distant proxies.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewStackingOrderByDistance.ID;
     readonly name: string = ProxyViewStackingOrderByDistance.NAME;
@@ -288,27 +288,27 @@ export class ProxyViewStackingOrderByDistance implements RenderOption {
     currentValue = ProxyViewStackingOrderByDistance.DEFAULT;
 }
 
-/** Whether clusters should be transparent according to their contained proxies. */
-export class ProxyViewClusterTransparent implements RenderOption {
-    static readonly ID: string = 'proxy-view-cluster-transparent';
-    static readonly NAME: string = 'Allow Transparent Cluster';
-    static readonly DESCRIPTION: string = 'Whether clusters should be transparent according to their contained proxies.';
-    static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewClusterTransparent.ID;
-    readonly name: string = ProxyViewClusterTransparent.NAME;
+/** Whether proxies should be shown for nodes that aren't rendered because of the parent's detail level. */
+export class ProxyViewUseDetailLevel implements RenderOption {
+    static readonly ID: string = "proxy-view-use-detail-level";
+    static readonly NAME: string = "Use Detail Level";
+    static readonly DESCRIPTION: string = "Whether proxies should be shown for nodes that aren't rendered because of the parent's detail level.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewUseDetailLevel.ID;
+    readonly name: string = ProxyViewUseDetailLevel.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewClusterTransparent.DEFAULT;
-    readonly description: string = ProxyViewClusterTransparent.DESCRIPTION;
+    readonly initialValue: boolean = ProxyViewUseDetailLevel.DEFAULT;
+    readonly description: string = ProxyViewUseDetailLevel.DESCRIPTION;
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
-    currentValue = ProxyViewClusterTransparent.DEFAULT;
+    currentValue = ProxyViewUseDetailLevel.DEFAULT;
 }
 
 /** Whether to cap scaling of proxies to 1. */
 export class ProxyViewCapScaleToOne implements RenderOption {
-    static readonly ID: string = 'proxy-view-cap-scale-to-one';
-    static readonly NAME: string = 'Cap Scaling to 1';
-    static readonly DESCRIPTION: string = 'Whether proxies should be upscaled more than their original size.';
+    static readonly ID: string = "proxy-view-cap-scale-to-one";
+    static readonly NAME: string = "Cap Scaling to 1";
+    static readonly DESCRIPTION: string = "Whether proxies should be upscaled more than their original size.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewCapScaleToOne.ID;
     readonly name: string = ProxyViewCapScaleToOne.NAME;
@@ -320,27 +320,27 @@ export class ProxyViewCapScaleToOne implements RenderOption {
     currentValue = ProxyViewCapScaleToOne.DEFAULT;
 }
 
-/** Whether to use the positions cache. */
-export class ProxyViewUsePositionsCache implements RenderOption {
-    static readonly ID: string = 'proxy-view-use-positions-cache';
-    static readonly NAME: string = 'Cache positions';
-    static readonly DESCRIPTION: string = 'Whether the absolute positions of nodes should be cached by the proxy-view.';
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewUsePositionsCache.ID;
-    readonly name: string = ProxyViewUsePositionsCache.NAME;
+/** Whether clusters should be transparent according to their contained proxies. */
+export class ProxyViewClusterTransparent implements RenderOption {
+    static readonly ID: string = "proxy-view-cluster-transparent";
+    static readonly NAME: string = "Allow Transparent Cluster";
+    static readonly DESCRIPTION: string = "Whether clusters should be transparent according to their contained proxies.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewClusterTransparent.ID;
+    readonly name: string = ProxyViewClusterTransparent.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewUsePositionsCache.DEFAULT;
-    readonly description: string = ProxyViewUsePositionsCache.DESCRIPTION;
+    readonly initialValue: boolean = ProxyViewClusterTransparent.DEFAULT;
+    readonly description: string = ProxyViewClusterTransparent.DESCRIPTION;
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
-    currentValue = ProxyViewUsePositionsCache.DEFAULT;
+    currentValue = ProxyViewClusterTransparent.DEFAULT;
 }
 
 /** Whether cascading clustering should be used, i.e. take transitive overlap into consideration. */
 export class ProxyViewClusteringCascading implements RenderOption {
-    static readonly ID: string = 'proxy-view-clustering-cascading';
-    static readonly NAME: string = 'Cascading Clustering';
-    static readonly DESCRIPTION: string = 'Whether clustering should be cascading.';
+    static readonly ID: string = "proxy-view-clustering-cascading";
+    static readonly NAME: string = "Cascading Clustering";
+    static readonly DESCRIPTION: string = "Whether clustering should be cascading.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewClusteringCascading.ID;
     readonly name: string = ProxyViewClusteringCascading.NAME;
@@ -354,9 +354,9 @@ export class ProxyViewClusteringCascading implements RenderOption {
 
 /** Whether the sweep line algorithm should be used for clustering. */
 export class ProxyViewClusteringSweepLine implements RenderOption {
-    static readonly ID: string = 'proxy-view-clustering-sweep-line';
-    static readonly NAME: string = 'Sweep Line Clustering';
-    static readonly DESCRIPTION: string = 'Whether clustering should be done via sweep line algorithm.';
+    static readonly ID: string = "proxy-view-clustering-sweep-line";
+    static readonly NAME: string = "Sweep Line Clustering";
+    static readonly DESCRIPTION: string = "Whether clustering should be done via sweep line algorithm.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewClusteringSweepLine.ID;
     readonly name: string = ProxyViewClusteringSweepLine.NAME;
@@ -366,4 +366,20 @@ export class ProxyViewClusteringSweepLine implements RenderOption {
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
     currentValue = ProxyViewClusteringSweepLine.DEFAULT;
+}
+
+/** Whether to use the positions cache. */
+export class ProxyViewUsePositionsCache implements RenderOption {
+    static readonly ID: string = "proxy-view-use-positions-cache";
+    static readonly NAME: string = "Cache positions";
+    static readonly DESCRIPTION: string = "Whether the absolute positions of nodes should be cached by the proxy-view.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewUsePositionsCache.ID;
+    readonly name: string = ProxyViewUsePositionsCache.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewUsePositionsCache.DEFAULT;
+    readonly description: string = ProxyViewUsePositionsCache.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewUsePositionsCache.DEFAULT;
 }

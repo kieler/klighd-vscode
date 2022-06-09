@@ -19,7 +19,7 @@ import { inject, injectable, postConstruct } from "inversify";
 import { ICommand } from "sprotty";
 import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewDebugCategory, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges } from "../proxy-view/proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewDebugCategory, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "../proxy-view/proxy-view-options";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
@@ -42,7 +42,7 @@ export class DebugEnabled implements RenderOption {
  * Resize the diagram to fit the viewport if it is redrawn after a model update
  * or a viewport resize.
  */
- export class ResizeToFit implements RenderOption {
+export class ResizeToFit implements RenderOption {
     static readonly ID: string = 'resize-to-fit';
     static readonly NAME: string = 'Resize To Fit';
     static readonly DEFAULT: boolean = true
@@ -304,18 +304,19 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewFilterUnconnected);
         this.register(ProxyViewFilterUnconnectedToSelected);
         this.register(ProxyViewFilterDistant);
-        
+
         // Proxy-view debug
         this.register(ProxyViewDebugCategory)
         this.register(ProxyViewHighlightSelected);
         this.register(ProxyViewOpacityBySelected);
         this.register(ProxyViewUseSynthesisProxyRendering);
         this.register(ProxyViewStackingOrderByDistance);
-        this.register(ProxyViewClusterTransparent);
+        this.register(ProxyViewUseDetailLevel);
         this.register(ProxyViewCapScaleToOne);
-        this.register(ProxyViewUsePositionsCache);
+        this.register(ProxyViewClusterTransparent);
         this.register(ProxyViewClusteringCascading);
         this.register(ProxyViewClusteringSweepLine);
+        this.register(ProxyViewUsePositionsCache);
     }
 
     @postConstruct()

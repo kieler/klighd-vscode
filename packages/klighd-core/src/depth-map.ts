@@ -38,7 +38,7 @@ type DetailWithChildren = DetailLevel.FullDetails
 /**
  * Type predicate to determine whether a DetailLevel is a DetailWithChildren level
  */
-function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
+export function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
     return detail === DetailLevel.FullDetails
 }
 

@@ -21,13 +21,14 @@ import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds, CenterAction, Point } from "sprotty-protocol";
+import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
 import { CanvasAttributes, ProxyVNode, SelectedElementsUtil, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "./proxy-view-options";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -46,8 +47,9 @@ export class ProxyView extends AbstractUIExtension {
     static readonly PROXY_SUFFIX = "-proxy";
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
-    /** Used to replace HTML elements. */
+    /** Provides the utensil to replace HTML elements. */
     @inject(TYPES.PatcherProvider) private patcherProvider: PatcherProvider;
+    /** Used to replace HTML elements. */
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
@@ -109,16 +111,18 @@ export class ProxyView extends AbstractUIExtension {
     private useSynthesisProxyRendering: boolean;
     /** @see {@link ProxyViewStackingOrderByDistance} */
     private stackingOrderByDistance: boolean;
-    /** @see {@link ProxyViewClusterTransparent} */
-    private clusterTransparent: boolean;
+    /** @see {@link ProxyViewUseDetailLevel} */
+    private useDetailLevel: boolean;
     /** @see {@link ProxyViewCapScaleToOne} */
     private capScaleToOne: boolean;
-    /** @see {@link ProxyViewUsePositionsCache} */
-    private usePositionsCache: boolean;
+    /** @see {@link ProxyViewClusterTransparent} */
+    private clusterTransparent: boolean;
     /** @see {@link ProxyViewClusteringCascading} */
     private clusteringCascading: boolean;
     /** @see {@link ProxyViewClusteringSweepLine} */
     private clusteringSweepLine: boolean;
+    /** @see {@link ProxyViewUsePositionsCache} */
+    private usePositionsCache: boolean;
 
     id(): string {
         return ProxyView.ID;
@@ -156,7 +160,7 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: depthmap DetailLevel, API for filters
+    // TODO: API for filters
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -200,7 +204,7 @@ export class ProxyView extends AbstractUIExtension {
         // out of bounds         -> proxy
 
         //// Initial nodes ////
-        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas);
+        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas, ctx);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
@@ -265,7 +269,7 @@ export class ProxyView extends AbstractUIExtension {
      * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
      * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
      */
-    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
+    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
         // For each node check if it's off-screen
         const offScreenNodes = [];
         const onScreenNodes = [];
@@ -281,10 +285,14 @@ export class ProxyView extends AbstractUIExtension {
                     onScreenNodes.push(node);
 
                     if (node.children.length > 0) {
-                        // Has children, recursively check them
-                        const childRes = this.getOffAndOnScreenNodes(node, canvas);
-                        offScreenNodes.push(...childRes.offScreenNodes);
-                        onScreenNodes.push(...childRes.onScreenNodes);
+                        const region = ctx.depthMap?.getProvidingRegion(node, ctx.viewport, ctx.renderOptionsRegistry);
+
+                        if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
+                            // Has children, recursively check them
+                            const childRes = this.getOffAndOnScreenNodes(node, canvas, ctx);
+                            offScreenNodes.push(...childRes.offScreenNodes);
+                            onScreenNodes.push(...childRes.onScreenNodes);
+                        }
                     }
                 }
             }
@@ -346,11 +354,11 @@ export class ProxyView extends AbstractUIExtension {
                 const data = node.properties[ProxyView.PROXY_RENDERING_PROPERTY] as KGraphData[];
                 const kRendering = getKRendering(data, ctx);
 
-                if (kRendering && kRendering.properties['klighd.lsp.calculated.bounds']) {
+                if (kRendering && kRendering.properties["klighd.lsp.calculated.bounds"]) {
                     // Proxy rendering available, update data
                     node.data = data;
                     // Also update the bounds
-                    proxyBounds = kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds;
+                    proxyBounds = kRendering.properties["klighd.lsp.calculated.bounds"] as Bounds;
                 }
             }
             res.push({ node, proxyBounds });
@@ -768,8 +776,8 @@ export class ProxyView extends AbstractUIExtension {
 
         // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
         // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
-        const rect = document.querySelector('.sidebar__toggle-container')?.getBoundingClientRect();
-        const isSidebarOpen = document.querySelector('.sidebar--open');
+        const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
+        const isSidebarOpen = document.querySelector(".sidebar--open");
         if (!isSidebarOpen && rect && y < rect.bottom && x > rect.left - bounds.width) {
             x = rect.left - bounds.width;
         }
@@ -1167,18 +1175,19 @@ export class ProxyView extends AbstractUIExtension {
 
         this.stackingOrderByDistance = renderOptionsRegistry.getValue(ProxyViewStackingOrderByDistance);
 
-        this.clusterTransparent = renderOptionsRegistry.getValue(ProxyViewClusterTransparent);
+        this.useDetailLevel = renderOptionsRegistry.getValue(ProxyViewUseDetailLevel);
 
         this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
+
+        this.clusterTransparent = renderOptionsRegistry.getValue(ProxyViewClusterTransparent);
+        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
+        this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
 
         this.usePositionsCache = renderOptionsRegistry.getValue(ProxyViewUsePositionsCache);
         if (this.usePositionsCache) {
             // Make sure to also clear previously cached positions
             this.clearPositions();
         }
-
-        this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
-        this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
     }
 
     /** Resets the proxy-view, i.e. when the model is updated. */
