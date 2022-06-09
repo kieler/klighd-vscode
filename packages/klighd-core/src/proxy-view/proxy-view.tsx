@@ -20,7 +20,7 @@ import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Bounds, CenterAction, Point } from "sprotty-protocol";
+import { angleBetweenPoints, Bounds, CenterAction, Point } from "sprotty-protocol";
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
@@ -258,6 +258,7 @@ export class ProxyView extends AbstractUIExtension {
                 this.currProxies.push({ proxy, transform });
             }
         }
+        proxies.reverse() // FIXME:
 
         // Clear caches for the next model
         this.clearPositions();
@@ -611,9 +612,9 @@ export class ProxyView extends AbstractUIExtension {
         // OLD: cannot change these, edges won't be rendered
         // clone.sourceId = outgoing ? this.getProxyId(clone.sourceId) : clone.sourceId;
         // clone.targetId = outgoing ? clone.targetId : this.getProxyId(clone.targetId);
-        clone.data = this.placeDecorator(edge.data, ctx, target);
-        this.placeDecorator
+        clone.data = this.placeDecorator(edge.data, ctx, source, target);
         clone.opacity = node.opacity;
+        console.log(edge, clone);
 
         return clone;
     }
@@ -810,7 +811,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns a copy of `edgeData` with the decorators placed at `target`. */
-    private placeDecorator(edgeData: KGraphData[], ctx: SKGraphModelRenderer, target: Point): KGraphData[] {
+    private placeDecorator(edgeData: KGraphData[], ctx: SKGraphModelRenderer, source: Point, target: Point): KGraphData[] {
         if (!edgeData || edgeData.length <= 0) {
             return edgeData;
         }
@@ -823,24 +824,30 @@ export class ProxyView extends AbstractUIExtension {
         const clone = { ...data } as any;
         const props = { ...clone.properties };
         clone.properties = props;
-        // OLD: changing the rendering id doesn't work for kgraphs
+        const id = props["klighd.lsp.rendering.id"];
+        // OLD: changing the rendering doesn't work when renderingrefs are used
         // props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
 
         if (clone.type === K_POLYGON) {
             // Arrow head
+            let angle = angleBetweenPoints(source, target); // TODO:
+            angle = isNaN(angle) ? 0 : angle;
+            console.log(angle)
             if (props["klighd.lsp.calculated.decoration"]) {
-                // TODO: maybe adjust rotation?
                 // Move arrow head if actually defined
-                props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target };
+                props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target, rotation: angle };
+            } else if (ctx.decorationMap[id]) {
+                // Arrow head was in rendering refs
+                props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id], origin: target, rotation: angle };
             } else {
-                // Better not to show it as it would be floating around somewhere
+                // Better not to show arrow head as it would be floating around somewhere
                 return [];
             }
         }
 
         if ((clone as any).children) {
             // Keep going recursively
-            (clone as any).children = this.placeDecorator((clone as any).children, ctx, target);
+            (clone as any).children = this.placeDecorator((clone as any).children, ctx, source, target);
         }
 
         res.push(clone);
