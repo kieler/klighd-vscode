@@ -56,8 +56,6 @@ export class ProxyView extends AbstractUIExtension {
     /** Whether the proxies should be click-through. */
     private clickThrough: boolean;
 
-    private test = 0; // FIXME:
-
     //// Caches ////
     /**
      * Stores the proxy renderings of already rendered nodes.
@@ -184,7 +182,6 @@ export class ProxyView extends AbstractUIExtension {
         const canvas = { ...model.canvasBounds, scroll: viewport.scroll, zoom: viewport.zoom };
         const root = model.children[0] as SKNode;
         // Actually update the document
-        // console.log(this.currHTMLRoot); // FIXME:
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
                 {
@@ -498,7 +495,7 @@ export class ProxyView extends AbstractUIExtension {
                 // Cap opacity in [0,1]
                 opacity = Math.max(0, Math.min(1, opacity));
                 // Make sure the calculated positions don't leave the canvas bounds
-                ({x, y} = this.capToCanvas({x, y, width: size, height: size}, canvas));
+                ({ x, y } = this.capToCanvas({ x, y, width: size, height: size }, canvas));
                 let floating = false;
                 // Also make sure the calculated positions are still capped to the border (no floating proxies)
                 if (y > 0 && y < canvas.height - size && (x < canvas.width - size || x > 0)) {
@@ -510,8 +507,8 @@ export class ProxyView extends AbstractUIExtension {
                     floating = true;
                 }
                 if (floating) {
-                    // Readjust
-                    ({x, y} = this.capToCanvas({x, y, width: size, height: size}, canvas));
+                    // Readjust if it was previously floating
+                    ({ x, y } = this.capToCanvas({ x, y, width: size, height: size }, canvas));
                 }
 
                 const clusterNode = getClusterRendering(`cluster-${clusterIDOffset + i}-proxy`, numProxiesInCluster, size, x, y, opacity);
@@ -607,15 +604,6 @@ export class ProxyView extends AbstractUIExtension {
         clone.data = this.placeDecorator(edge.data, ctx, target);
         this.placeDecorator
         clone.opacity = node.opacity;
-        // Change its id to differ from the original edge
-        // FIXME:
-        // If ids aren't unique, errors like "TypeError: Cannot read property 'removeChild' of null" or "DOMException: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node." or "TypeError: Cannot read property 'sel' of undefined" can occur
-        clone.id = this.getProxyId(clone.id) //+ this.test++;
-        this.test
-        // Clear children to remove label decorators,
-        // use assign() since children is readonly for SKEdges (but not for SKNodes)
-        Object.assign(clone, { children: [] });
-        console.log(edge.id + "\n" + clone.id);
 
         return clone;
     }
@@ -689,6 +677,23 @@ export class ProxyView extends AbstractUIExtension {
             // Don't draw an invisible edge
             return undefined;
         }
+
+        // Change its id to differ from the original edge
+        /*
+        If ids aren't unique, errors like
+        - "TypeError: Cannot read property 'removeChild' of null"
+        - "DOMException: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node."
+        - "TypeError: Cannot read property 'sel' of undefined"
+        can occur
+        */
+        let id = this.getProxyId(edge.id);
+        while (document.getElementById(`keith-diagram_sprotty_${id}`)) {
+            id += "-temp";
+        }
+        edge.id = id;
+        // Clear children to remove label decorators,
+        // use assign() since children is readonly for SKEdges (but not for SKNodes)
+        Object.assign(edge, { children: [] });
 
         const vnode = ctx.renderProxy(edge);
         return vnode;
@@ -903,8 +908,8 @@ export class ProxyView extends AbstractUIExtension {
         const clone = { ...data } as any;//Object.create(data);
         const props = { ...clone.properties };
         clone.properties = props;
+        // OLD: changing the rendering id doesn't work for kgraphs
         // props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
-        console.log(edgeData); // FIXME:
 
         if (clone.type === K_POLYGON) {
             // Arrow head
