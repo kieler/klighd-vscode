@@ -26,9 +26,10 @@ import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
-import { CanvasAttributes, ProxyVNode, SelectedElementsUtil, SendProxyViewAction, ShowProxyViewAction, TransformAttributes } from "./proxy-view-actions";
+import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "./proxy-view-options";
+import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isConnectedToAny, isInBounds, isIncomingToAny, isOutgoingToAny, joinTransitiveGroups, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -277,7 +278,7 @@ export class ProxyView extends AbstractUIExtension {
             if (node instanceof SKNode) {
                 const translated = this.getTranslatedNodeBounds(node, canvas);
 
-                if (!this.isInBounds(translated, canvas)) {
+                if (!isInBounds(translated, canvas)) {
                     // Node out of bounds
                     offScreenNodes.push(node);
                 } else {
@@ -314,7 +315,7 @@ export class ProxyView extends AbstractUIExtension {
         const res = [...offScreenNodes];
         if (this.stackingOrderByDistance && !this.clusteringEnabled) {
             // Makes no sense to order when clustering is enabled since proxies cannot be stacked
-            res.sort((n1, n2) => this.getDistanceToCanvas(n2, canvas) - this.getDistanceToCanvas(n1, canvas));
+            res.sort((n1, n2) => this.getNodeDistanceToCanvas(n2, canvas) - this.getNodeDistanceToCanvas(n1, canvas));
         }
         return res;
     }
@@ -324,7 +325,7 @@ export class ProxyView extends AbstractUIExtension {
         const res = offScreenNodes;
         if (this.opacityByDistance) {
             for (const node of res) {
-                node.opacity = Math.max(0, node.opacity - this.getDistanceToCanvas(node, canvas) / ProxyView.DISTANCE_DISTANT);
+                node.opacity = Math.max(0, node.opacity - this.getNodeDistanceToCanvas(node, canvas) / ProxyView.DISTANCE_DISTANT);
             }
         }
 
@@ -396,7 +397,7 @@ export class ProxyView extends AbstractUIExtension {
                     });
 
                 for (let i = 0; i < res.length; i++) {
-                    if (!this.clusteringCascading && this.anyContains(overlapIndexGroups, i)) {
+                    if (!this.clusteringCascading && anyContains(overlapIndexGroups, i)) {
                         // i already in an overlapIndexGroup, prevent redundant clustering
                         continue;
                     }
@@ -409,7 +410,7 @@ export class ProxyView extends AbstractUIExtension {
                     const right = transform1.x + transform1.width;
                     const bottom = transform1.y + transform1.height;
                     for (let j = 0; j < res.length; j++) {
-                        if (i == j || this.anyContains(overlapIndexGroups, j)) {
+                        if (i == j || anyContains(overlapIndexGroups, j)) {
                             // Every proxy overlaps with itself or
                             // j already in an overlapIndexGroup, prevent redundant clustering
                             continue;
@@ -422,7 +423,7 @@ export class ProxyView extends AbstractUIExtension {
                         } else if (transform2.x == right && transform2.y > bottom) {
                             // Too far down, no need to check
                             break;
-                        } else if (this.checkOverlap(transform1, transform2)) {
+                        } else if (checkOverlap(transform1, transform2)) {
                             // Proxies at i and j overlap
                             currOverlapIndexGroup.push(j);
                         }
@@ -436,7 +437,7 @@ export class ProxyView extends AbstractUIExtension {
                 }
             } else {
                 for (let i = 0; i < res.length; i++) {
-                    if (!this.clusteringCascading && this.anyContains(overlapIndexGroups, i)) {
+                    if (!this.clusteringCascading && anyContains(overlapIndexGroups, i)) {
                         // i already in an overlapIndexGroup, prevent redundant clustering
                         continue;
                     }
@@ -446,7 +447,7 @@ export class ProxyView extends AbstractUIExtension {
 
                     // Check next proxies for overlap
                     for (let j = i + 1; j < res.length; j++) {
-                        if (this.checkOverlap(res[i].transform, res[j].transform)) {
+                        if (checkOverlap(res[i].transform, res[j].transform)) {
                             // Proxies at i and j overlap
                             currOverlapIndexGroup.push(j);
                         }
@@ -467,7 +468,7 @@ export class ProxyView extends AbstractUIExtension {
 
             if (this.clusteringCascading) {
                 // Join groups containing at least 1 same index
-                overlapIndexGroups = this.joinTransitiveGroups(overlapIndexGroups);
+                overlapIndexGroups = joinTransitiveGroups(overlapIndexGroups);
             }
 
             // Add cluster proxies
@@ -503,9 +504,10 @@ export class ProxyView extends AbstractUIExtension {
                 // Cap opacity in [0,1]
                 opacity = Math.max(0, Math.min(1, opacity));
                 // Make sure the calculated positions don't leave the canvas bounds
-                ({ x, y } = this.capToCanvas({ x, y, width: size, height: size }, canvas));
-                let floating = false;
+                ({ x, y } = capToCanvas({ x, y, width: size, height: size }, canvas));
+
                 // Also make sure the calculated positions are still capped to the border (no floating proxies)
+                let floating = false;
                 if (y > 0 && y < canvas.height - size && (x < canvas.width - size || x > 0)) {
                     x = x > (canvas.width - size) / 2 ? canvas.width - size : 0;
                     floating = true;
@@ -516,7 +518,7 @@ export class ProxyView extends AbstractUIExtension {
                 }
                 if (floating) {
                     // Readjust if it was previously floating
-                    ({ x, y } = this.capToCanvas({ x, y, width: size, height: size }, canvas));
+                    ({ x, y } = capToCanvas({ x, y, width: size, height: size }, canvas));
                 }
 
                 const clusterNode = getClusterRendering(`cluster-${clusterIDOffset + i}-proxy`, numProxiesInCluster, size, x, y, opacity);
@@ -530,7 +532,7 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             // Filter all overlapping nodes
-            res = res.filter((_, index) => !this.anyContains(overlapIndexGroups, index));
+            res = res.filter((_, index) => !anyContains(overlapIndexGroups, index));
             clusterIDOffset += overlapIndexGroups.length;
         }
 
@@ -549,7 +551,7 @@ export class ProxyView extends AbstractUIExtension {
         for (const { node, transform } of nodes) {
             if (node instanceof SKNode) {
                 // Incoming edges
-                if (this.isConnectedToAnyByIncoming(node, onScreenNodes)) {
+                if (isIncomingToAny(node, onScreenNodes)) {
                     for (const edge of node.incomingEdges as SKEdge[]) {
                         if (edge.routingPoints.length > 1) {
                             // Only reroute actual edges with start and end
@@ -562,7 +564,7 @@ export class ProxyView extends AbstractUIExtension {
                     }
                 }
                 // Outgoing edges
-                if (this.isConnectedToAnyByOutgoing(node, onScreenNodes)) {
+                if (isOutgoingToAny(node, onScreenNodes)) {
                     for (const edge of node.outgoingEdges as SKEdge[]) {
                         if (edge.routingPoints.length > 1) {
                             // Only reroute actual edges with start and end
@@ -587,9 +589,9 @@ export class ProxyView extends AbstractUIExtension {
     private rerouteEdge(node: SKNode, transform: TransformAttributes, edge: SKEdge,
         nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): SKEdge {
         // Connected to node, just calculate absolute coordinates + basic translation
-        const parentPos = this.getPosition(node.parent as SKNode);
+        const parentPos = this.getAbsolutePosition(node.parent as SKNode);
         nodeConnector = Point.add(parentPos, nodeConnector);
-        const nodeTranslated = this.getTranslatedPoint(nodeConnector, canvas);
+        const nodeTranslated = getTranslatedBounds(nodeConnector, canvas);
 
         // Connected to proxy, use ratio to calculate where to connect to the proxy
         const proxyPointRelative = node.parentToLocal(proxyConnector);
@@ -618,14 +620,9 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Returns the proxy rendering for an off-screen node. */
     private createProxy(node: SKNode | VNode, transform: TransformAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
-        let transformString = `translate(${transform.x}, ${transform.y})`;
-        if (transform.scale) {
-            transformString += ` scale(${transform.scale})`;
-        }
-
         if (!(node instanceof SKNode)) {
             // VNode, this is a predefined rendering (e.g. cluster)
-            this.updateTransform(node, transformString);
+            updateTransform(node, transform);
             return node;
         } else if (node.opacity <= 0) {
             // Don't render invisible nodes
@@ -634,7 +631,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // Check if this node's proxy should be highlighted
         const highlight = node.selected || this.highlightSelected && this.isSelectedOrConnectedToSelected(node);
-        const opacity = node.opacity.toString();
+        const opacity = node.opacity;
 
         // Get VNode
         const id = this.getProxyId(node.id);
@@ -669,11 +666,11 @@ export class ProxyView extends AbstractUIExtension {
             // Store this node
             this.renderings.set(id, vnode);
             // Place proxy at the calculated position
-            this.updateTransform(vnode, transformString);
+            updateTransform(vnode, transform);
             // Update its opacity
-            this.updateOpacity(vnode, opacity);
+            updateOpacity(vnode, opacity);
             // Update whether it should be click-through
-            this.updateClickThrough(vnode, !this.actionsEnabled || this.clickThrough);
+            updateClickThrough(vnode, !this.actionsEnabled || this.clickThrough);
         }
 
         return vnode;
@@ -708,13 +705,6 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     //////// General helper methods ////////
-
-    /** Checks if `b1` is (partially) in `b2`. */
-    private isInBounds(b1: Bounds, b2: Bounds) {
-        const horizontalOverlap = b1.x + b1.width >= b2.x && b1.x <= b2.x + b2.width;
-        const verticalOverlap = b1.y + b1.height >= b2.y && b1.y <= b2.y + b2.height
-        return horizontalOverlap && verticalOverlap;
-    }
 
     /** Appends {@link PROXY_SUFFIX} to the given id if the given id isn't already a proxy's id. */
     private getProxyId(id: string): string {
@@ -757,7 +747,7 @@ export class ProxyView extends AbstractUIExtension {
         let y = translated.y + offsetY;
 
         // Cap proxy to canvas
-        ({ x, y } = this.capToCanvas({ x, y, width: proxyWidth, height: proxyHeight }, canvas));
+        ({ x, y } = capToCanvas({ x, y, width: proxyWidth, height: proxyHeight }, canvas));
 
         if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
             const translatedParent = this.getTranslatedNodeBounds(node.parent as SKNode, canvas);
@@ -768,44 +758,17 @@ export class ProxyView extends AbstractUIExtension {
         return { x, y, scale, width: proxyWidth, height: proxyHeight };
     }
 
-    /** Returns a point of the given bounds capped to the canvas border w.r.t. the sidebar. */
-    private capToCanvas(bounds: Bounds, canvas: CanvasAttributes): Point {
-        // Cap proxy at canvas border
-        let x = Math.max(0, Math.min(canvas.width - bounds.width, bounds.x));
-        const y = Math.max(0, Math.min(canvas.height - bounds.height, bounds.y));
-
-        // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
-        // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
-        const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
-        const isSidebarOpen = document.querySelector(".sidebar--open");
-        if (!isSidebarOpen && rect && y < rect.bottom && x > rect.left - bounds.width) {
-            x = rect.left - bounds.width;
-        }
-
-        return { x, y };
-    }
-
-    /** Returns the translated bounds for the given `node`, e.g. calculates its absolute position & width/height according to scroll and zoom. */
+    /**
+     * Returns the translated bounds for the given `node`.
+     * @see {@link getTranslatedBounds()}
+     */
     private getTranslatedNodeBounds(node: SKNode, canvas: CanvasAttributes): Bounds {
-        const absoluteBounds = { ...node.bounds, ...this.getPosition(node) };
-        return this.getTranslatedBounds(absoluteBounds, canvas);
-    }
-
-    /** Returns the translated bounds, e.g. calculates its position & width/height according to scroll and zoom. */
-    private getTranslatedBounds(b: Bounds, canvas: CanvasAttributes): Bounds {
-        const z = canvas.zoom;
-        return { ...this.getTranslatedPoint(b, canvas), width: b.width * z, height: b.height * z };
-    }
-
-    /** Returns the translated point, e.g. calculates its position according to scroll and zoom. */
-    private getTranslatedPoint(p: Point, canvas: CanvasAttributes): Point {
-        const s = canvas.scroll;
-        const z = canvas.zoom;
-        return { x: (p.x - s.x) * z, y: (p.y - s.y) * z };
+        const absoluteBounds = { ...node.bounds, ...this.getAbsolutePosition(node) };
+        return getTranslatedBounds(absoluteBounds, canvas);
     }
 
     /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
-    private getPosition(node: SKNode | SKEdge | SKPort | SKLabel): Point {
+    private getAbsolutePosition(node: SKNode | SKEdge | SKPort | SKLabel): Point {
         if (!node) {
             return { x: 0, y: 0 };
         }
@@ -815,7 +778,7 @@ export class ProxyView extends AbstractUIExtension {
         let point = this.positions.get(id);
         if (!point) {
             // Point hasn't been stored yet, get parent position
-            point = this.getPosition(node.parent as SKNode | SKEdge | SKPort | SKLabel);
+            point = this.getAbsolutePosition(node.parent as SKNode | SKEdge | SKPort | SKLabel);
             point = Point.add(point, node.bounds);
 
             // Also store this point
@@ -826,77 +789,21 @@ export class ProxyView extends AbstractUIExtension {
         return point;
     }
 
-    /** Returns the distance between the node and the canvas. */
-    private getDistanceToCanvas(node: SKNode, canvas: CanvasAttributes): number {
+    /**
+     * Returns the distance between the node and the canvas.
+     * @see {@link getDistanceToCanvas()}
+     */
+    private getNodeDistanceToCanvas(node: SKNode, canvas: CanvasAttributes): number {
         const id = this.getProxyId(node.id);
         let dist = this.distances.get(id);
         if (dist) {
+            // Cached
             return dist;
-        } else {
-            dist = 0;
         }
 
+        // Calculate distance
         const translated = this.getTranslatedNodeBounds(node, canvas);
-        const nodeLeft = translated.x;
-        const nodeRight = nodeLeft + translated.width;
-        const nodeTop = translated.y;
-        const nodeBottom = nodeTop + translated.height;
-        const canvasLeft = 0;
-        const canvasRight = canvas.width;
-        const canvasTop = 0;
-        const canvasBottom = canvas.height;
-
-        /* Partition the screen plane into 9 segments (as in tic-tac-toe):
-         * 1 | 2 | 3
-         * --+---+--
-         * 4 | 5 | 6
-         * --+---+--
-         * 7 | 8 | 9
-         * Now 5 correlates to the canvas, e.g. the 'on-screen area'.
-         * Using the other segments we can figure out the distance to the canvas:
-         * 1,3,7,9: calculate euclidean distance to nearest corner of 5
-         * 2,8: only take y-coordinate into consideration for calculating the distance
-         * 4,6: only take x-coordinate into consideration for calculating the distance
-         */
-        if (nodeBottom < canvasTop) {
-            // Above canvas (1,2,3)
-            if (nodeRight < canvasLeft) {
-                // Top left (1)
-                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeRight }, { y: canvasTop, x: canvasLeft });
-            } else if (nodeLeft > canvasRight) {
-                // Top right (3)
-                dist = Point.euclideanDistance({ y: nodeBottom, x: nodeLeft }, { y: canvasTop, x: canvasRight });
-            } else {
-                // Top middle (2)
-                dist = canvasTop - nodeBottom;
-            }
-        } else if (nodeTop > canvasBottom) {
-            // Below canvas (7,8,9)
-            if (nodeRight < canvasLeft) {
-                // Bottom left (7)
-                dist = Point.euclideanDistance({ y: nodeTop, x: nodeRight }, { y: canvasBottom, x: canvasLeft });
-            } else if (nodeLeft > canvasRight) {
-                // Bottom right (9)
-                dist = Point.euclideanDistance({ y: nodeTop, x: nodeLeft }, { y: canvasBottom, x: canvasRight });
-            } else {
-                // Bottom middle (8)
-                dist = nodeTop - canvasBottom;
-            }
-        } else {
-            // Same height as canvas (4,5,6)
-            if (nodeRight < canvasLeft) {
-                // Left of canvas (4)
-                dist = canvasLeft - nodeRight;
-            } else if (nodeLeft > canvasRight) {
-                // Right of canvas (6)
-                dist = nodeLeft - canvasRight;
-            } else {
-                // On the canvas (5)
-                // Should never be the case, would be on-screen
-            }
-        }
-
-        // Store the calculated distance
+        dist = getDistanceToCanvas(translated, canvas);
         this.distances.set(id, dist);
 
         return dist;
@@ -922,6 +829,7 @@ export class ProxyView extends AbstractUIExtension {
         if (clone.type === K_POLYGON) {
             // Arrow head
             if (props["klighd.lsp.calculated.decoration"]) {
+                // TODO: maybe adjust rotation?
                 // Move arrow head if actually defined
                 props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target };
             } else {
@@ -939,61 +847,6 @@ export class ProxyView extends AbstractUIExtension {
         return res;
     }
 
-    /** Updates a VNode's transform attribute. */
-    private updateTransform(node: VNode, transformString: string): void {
-        // Just changing the VNode's transform attribute is insufficient
-        // as it doesn't change the document's transform attribute while on the canvas
-        if (node.data) {
-            if (!node.data.attrs) {
-                node.data.attrs = {};
-            }
-            // Update transform while off the canvas
-            node.data.attrs["transform"] = transformString;
-
-            // Update transform while on the canvas
-            document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`)?.setAttribute("transform", transformString);
-        }
-    }
-
-    /** Updates a VNode's opacity. */
-    private updateOpacity(node: VNode, opacity: string): void {
-        // Just changing the VNode's opacity is insufficient
-        // as it doesn't change the document's opacity while on the canvas
-        if (node.data) {
-            if (!node.data.style) {
-                node.data.style = {};
-            }
-            // Update opacity while off the canvas
-            node.data.style["opacity"] = opacity.toString();
-
-            // Update opacity while on the canvas
-            const element = document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`);
-            if (element) {
-                element.style.opacity = opacity.toString();
-            }
-        }
-    }
-
-    /** Updates a VNode's pointer-events to make it click-through. */
-    private updateClickThrough(node: VNode, clickThrough: boolean): void {
-        // Just changing the VNode's pointer-events is insufficient
-        // as it doesn't change the document's pointer-events while on the canvas
-        if (node.data) {
-            if (!node.data.style) {
-                node.data.style = {};
-            }
-            const pointerEvent = clickThrough ? "none" : "auto";
-            // Update pointer-events while off the canvas
-            node.data.style["pointer-events"] = pointerEvent;
-
-            // Update pointer-events while on the canvas
-            const element = document.getElementById(`keith-diagram_sprotty_${node.key?.toString()}`);
-            if (element) {
-                element.style.pointerEvents = pointerEvent;
-            }
-        }
-    }
-
     /** Adds actions on events to the vnode. */
     private addEventActions(vnode: VNode, node: SKNode): void {
         if (!this.actionsEnabled) {
@@ -1005,62 +858,12 @@ export class ProxyView extends AbstractUIExtension {
                 vnode.data.on = {};
             }
 
+            // TODO: zoom out (fit to screen) if node is larger than canvas
             // Center on node when proxy is clicked
             vnode.data.on.click = () => this.actionDispatcher.dispatch(
                 CenterAction.create([this.getNodeId(node.id)], { animate: true, retainZoom: true })
             );
         }
-    }
-
-    /**
-     * Checks if the given bounds overlap.
-     * @returns `true` if there is overlap.
-     */
-    private checkOverlap(b1: Bounds, b2: Bounds): boolean {
-        return this.isInBounds(b1, b2) || this.isInBounds(b2, b1);
-    }
-
-    /**
-     * Checks if `item` is contained in any (nested) group.
-     * @example anyContains([[0, 1], [1, 2]], 2) == true
-     */
-    private anyContains<T>(groups: T[][], item: T): boolean {
-        return groups.reduce((acc, group) => acc.concat(group), []).includes(item);
-    }
-
-    /**
-     * Join groups containing at least 1 same element. Transitive joining applies:
-     * @example joinTransitiveGroups([[0, 1], [1, 2], [2, 3]]) == [[0, 1, 2, 3]]
-     */
-    private joinTransitiveGroups<T>(groups: T[][]): T[][] {
-        const res = [];
-        while (groups.length > 0) {
-            // Use a set for removing duplicates
-            let firstGroup = Array.from(new Set(groups.shift()));
-            let remainingGroups = [...groups];
-
-            let prevLength = -1;
-            while (firstGroup.length > prevLength) {
-                // Iterate until no group can be joined with firstGroup anymore
-                prevLength = firstGroup.length;
-                const nextRemainingGroups = [];
-                for (const group of remainingGroups) {
-                    if (new Set([...firstGroup].filter(x => group.includes(x))).size > 0) {
-                        // Intersection of firstGroup and group is not empty, join both groups
-                        firstGroup = Array.from(new Set(firstGroup.concat(group)));
-                    } else {
-                        // firstGroup and group share no element
-                        nextRemainingGroups.push(group);
-                    }
-                }
-                remainingGroups = nextRemainingGroups;
-            }
-
-            // firstGroup has been fully joined, add to res and continue with remainingGroups
-            res.push(Array.from(new Set(firstGroup)));
-            groups = remainingGroups;
-        }
-        return res;
     }
 
     //////// Filter methods ////////
@@ -1078,33 +881,14 @@ export class ProxyView extends AbstractUIExtension {
             this.canRenderNode(node) &&
             node.opacity > 0 &&
             (!this.filterUnconnectedToSelected || this.isSelectedOrConnectedToSelected(node)) &&
-            (!this.filterUnconnected || this.isConnectedToAny(node, onScreenNodes)) &&
+            (!this.filterUnconnected || isConnectedToAny(node, onScreenNodes)) &&
             (range <= 0 || this.isInRange(node, canvas, range)));
-    }
-
-    /** Checks if `node` is connected to at least one of the other given `nodes`. */
-    private isConnectedToAny(node: SKNode, nodes: SKNode[]): boolean {
-        return this.isConnectedToAnyByIncoming(node, nodes) || this.isConnectedToAnyByOutgoing(node, nodes);
-    }
-
-    /** Checks if `node` has an incoming edge to at least one of the other given `nodes`. */
-    private isConnectedToAnyByIncoming(node: SKNode, nodes: SKNode[]): boolean {
-        const ids = nodes.map(node => node.id);
-        return ids.length > 0 && (node.incomingEdges as SKEdge[])
-            .some(edge => ids.includes(edge.sourceId));
-    }
-
-    /** Checks if `node` has an outgoing edge to at least one of the other given `nodes`. */
-    private isConnectedToAnyByOutgoing(node: SKNode, nodes: SKNode[]): boolean {
-        const ids = nodes.map(node => node.id);
-        return ids.length > 0 && (node.outgoingEdges as SKEdge[])
-            .some(edge => ids.includes(edge.targetId));
     }
 
     /** Checks if `node` is selected or connected to any selected element. */
     private isSelectedOrConnectedToSelected(node: SKNode): boolean {
         const selectedNodes = SelectedElementsUtil.getSelectedNodes();
-        return node.selected || this.isConnectedToAny(node, selectedNodes);
+        return node.selected || isConnectedToAny(node, selectedNodes);
     }
 
     /**
@@ -1123,7 +907,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Checks if the distance between `node` and the canvas is in the given range. */
     private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
-        return this.getDistanceToCanvas(node, canvas) <= range;
+        return this.getNodeDistanceToCanvas(node, canvas) <= range;
     }
 
     //////// Misc public methods ////////
@@ -1138,7 +922,7 @@ export class ProxyView extends AbstractUIExtension {
     setMouseUp(event: MouseEvent): void {
         // Upon release, proxies shouldn't be click-through
         this.clickThrough = false;
-        this.currProxies.forEach(({ proxy }) => this.updateClickThrough(proxy, !this.actionsEnabled));
+        this.currProxies.forEach(({ proxy }) => updateClickThrough(proxy, !this.actionsEnabled));
     }
 
     /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */

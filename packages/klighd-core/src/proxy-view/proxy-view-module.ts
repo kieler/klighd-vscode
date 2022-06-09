@@ -19,7 +19,8 @@ import { ContainerModule } from "inversify";
 import { TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import { ProxyView } from "./proxy-view";
-import { ProxyViewActionHandler, SelectedElementsUtilActionHandler } from "./proxy-view-actions";
+import { ProxyViewActionHandler } from "./proxy-view-actions";
+import { SelectedElementsUtilActionHandler } from "./proxy-view-util";
 
 export const proxyViewModule = new ContainerModule((bind) => {
     // The class needs to be bound to itself and
