@@ -768,7 +768,7 @@ export class ProxyView extends AbstractUIExtension {
         return { x, y, scale, width: proxyWidth, height: proxyHeight };
     }
 
-    /** Returns a point of the given bounds capped to the canvas border w.r.t the sidebar. */
+    /** Returns a point of the given bounds capped to the canvas border w.r.t. the sidebar. */
     private capToCanvas(bounds: Bounds, canvas: CanvasAttributes): Point {
         // Cap proxy at canvas border
         let x = Math.max(0, Math.min(canvas.width - bounds.width, bounds.x));
@@ -814,7 +814,7 @@ export class ProxyView extends AbstractUIExtension {
         const id = this.getProxyId(node.id);
         let point = this.positions.get(id);
         if (!point) {
-            // Point hasn't been stored yet, check parent
+            // Point hasn't been stored yet, get parent position
             point = this.getPosition(node.parent as SKNode | SKEdge | SKPort | SKLabel);
             point = Point.add(point, node.bounds);
 
@@ -913,7 +913,7 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         const res = [];
-        const clone = { ...data } as any;//Object.create(data);
+        const clone = { ...data } as any;
         const props = { ...clone.properties };
         clone.properties = props;
         // OLD: changing the rendering id doesn't work for kgraphs
