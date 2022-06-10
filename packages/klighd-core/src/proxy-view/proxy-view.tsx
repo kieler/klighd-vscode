@@ -29,7 +29,7 @@ import { getKRendering } from "../views-rendering";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "./proxy-view-options";
-import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isConnectedToAny, isInBounds, isIncomingToAny, isOutgoingToAny, joinTransitiveGroups, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isConnectedToAny, isInBounds, joinTransitiveGroups, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -258,7 +258,7 @@ export class ProxyView extends AbstractUIExtension {
                 this.currProxies.push({ proxy, transform });
             }
         }
-        proxies.reverse() // FIXME:
+        proxies.reverse() // FIXME: used for decorator placemenet
 
         // Clear caches for the next model
         this.clearPositions();
@@ -552,29 +552,25 @@ export class ProxyView extends AbstractUIExtension {
         for (const { node, transform } of nodes) {
             if (node instanceof SKNode) {
                 // Incoming edges
-                if (isIncomingToAny(node, onScreenNodes)) {
-                    for (const edge of node.incomingEdges as SKEdge[]) {
-                        if (edge.routingPoints.length > 1) {
-                            // Only reroute actual edges with start and end
-                            // Proxy is target, node is source
-                            const proxyConnector = edge.routingPoints[edge.routingPoints.length - 1];
-                            const nodeConnector = edge.routingPoints[0];
-                            const proxyEdge = this.rerouteEdge(node, transform, edge, nodeConnector, proxyConnector, false, canvas, ctx);
-                            res.push(proxyEdge);
-                        }
+                for (const edge of node.incomingEdges as SKEdge[]) {
+                    if (edge.routingPoints.length > 1 && onScreenNodes.some(node => node.id === edge.sourceId)) {
+                        // Only reroute actual edges with end at on-screen node
+                        // Proxy is target, node is source
+                        const proxyConnector = edge.routingPoints[edge.routingPoints.length - 1];
+                        const nodeConnector = edge.routingPoints[0];
+                        const proxyEdge = this.rerouteEdge(node, transform, edge, nodeConnector, proxyConnector, false, canvas, ctx);
+                        res.push(proxyEdge);
                     }
                 }
                 // Outgoing edges
-                if (isOutgoingToAny(node, onScreenNodes)) {
-                    for (const edge of node.outgoingEdges as SKEdge[]) {
-                        if (edge.routingPoints.length > 1) {
-                            // Only reroute actual edges with start and end
-                            // Proxy is source, node is target
-                            const proxyConnector = edge.routingPoints[0];
-                            const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
-                            const proxyEdge = this.rerouteEdge(node, transform, edge, nodeConnector, proxyConnector, true, canvas, ctx);
-                            res.push(proxyEdge);
-                        }
+                for (const edge of node.outgoingEdges as SKEdge[]) {
+                    if (edge.routingPoints.length > 1 && onScreenNodes.some(node => node.id === edge.targetId)) {
+                        // Only reroute actual edges with start at on-screen node
+                        // Proxy is source, node is target
+                        const proxyConnector = edge.routingPoints[0];
+                        const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
+                        const proxyEdge = this.rerouteEdge(node, transform, edge, nodeConnector, proxyConnector, true, canvas, ctx);
+                        res.push(proxyEdge);
                     }
                 }
             }
@@ -692,11 +688,7 @@ export class ProxyView extends AbstractUIExtension {
         - "TypeError: Cannot read property 'sel' of undefined"
         can occur
         */
-        let id = this.getProxyId(edge.id);
-        while (document.getElementById(`keith-diagram_sprotty_${id}`)) {
-            id += "-temp";
-        }
-        edge.id = id;
+        edge.id = this.getProxyId(edge.id);
         // Clear children to remove label decorators,
         // use assign() since children is readonly for SKEdges (but not for SKNodes)
         Object.assign(edge, { children: [] });
