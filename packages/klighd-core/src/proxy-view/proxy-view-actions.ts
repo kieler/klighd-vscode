@@ -93,7 +93,6 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             // Save the proxy-view instance
             const sPVAction = action as SendProxyViewAction;
             this.proxyView = sPVAction.proxyView;
-            // this.mouseListener.setProxyView(sPVAction.proxyView);
 
             // Register to receive updates on registry changes
             if (!this.onChangeRegistered) {

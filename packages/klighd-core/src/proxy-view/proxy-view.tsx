@@ -26,10 +26,11 @@ import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
+import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewFilterDistant, ProxyViewFilterUnconnected, ProxyViewFilterUnconnectedToSelected, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "./proxy-view-options";
-import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isConnectedToAny, isInBounds, joinTransitiveGroups, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "./proxy-view-options";
+import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -54,6 +55,8 @@ export class ProxyView extends AbstractUIExtension {
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
+    /** The registered filters. */
+    private filters: ProxyFilter[];
     /** The currently rendered proxies. */
     private currProxies: { proxy: VNode, transform: TransformAttributes }[];
     /** Whether the proxies should be click-through. */
@@ -93,12 +96,6 @@ export class ProxyView extends AbstractUIExtension {
     private drawStraightEdges: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
-    /** @see {@link ProxyViewFilterUnconnected} */
-    private filterUnconnected: boolean;
-    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
-    private filterUnconnectedToSelected: boolean;
-    /** @see {@link ProxyViewFilterDistant} */
-    private filterDistant: string;
 
     //// Sidebar debug options ////
     /** 
@@ -140,6 +137,7 @@ export class ProxyView extends AbstractUIExtension {
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
         this.patcher = this.patcherProvider.patcher;
         // Initialize caches
+        this.filters = [];
         this.renderings = new Map;
         this.positions = new Map;
         this.distances = new Map;
@@ -179,7 +177,7 @@ export class ProxyView extends AbstractUIExtension {
         } else if (!this.currHTMLRoot) {
             return;
         }
-
+        console.log(this.filters);
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
@@ -333,7 +331,7 @@ export class ProxyView extends AbstractUIExtension {
         if (this.opacityBySelected && SelectedElementsUtil.areNodesSelected()) {
             // Only change opacity if there are selected nodes
             for (const node of res) {
-                if (this.isSelectedOrConnectedToSelected(node)) {
+                if (isSelectedOrConnectedToSelected(node)) {
                     // If selected itself or connected to a selected node, this node should be opaque
                     node.opacity = 1;
                 } else {
@@ -553,7 +551,7 @@ export class ProxyView extends AbstractUIExtension {
             if (node instanceof SKNode) {
                 // Incoming edges
                 for (const edge of node.incomingEdges as SKEdge[]) {
-                    if (edge.routingPoints.length > 1 && onScreenNodes.some(node => node.id === edge.sourceId)) {
+                    if (edge.routingPoints.length > 1 && onScreenNodes.some(node2 => node2.id === edge.sourceId)) {
                         // Only reroute actual edges with end at on-screen node
                         // Proxy is target, node is source
                         const proxyConnector = edge.routingPoints[edge.routingPoints.length - 1];
@@ -564,7 +562,7 @@ export class ProxyView extends AbstractUIExtension {
                 }
                 // Outgoing edges
                 for (const edge of node.outgoingEdges as SKEdge[]) {
-                    if (edge.routingPoints.length > 1 && onScreenNodes.some(node => node.id === edge.targetId)) {
+                    if (edge.routingPoints.length > 1 && onScreenNodes.some(node2 => node2.id === edge.targetId)) {
                         // Only reroute actual edges with start at on-screen node
                         // Proxy is source, node is target
                         const proxyConnector = edge.routingPoints[0];
@@ -627,7 +625,7 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // Check if this node's proxy should be highlighted
-        const highlight = node.selected || this.highlightSelected && this.isSelectedOrConnectedToSelected(node);
+        const highlight = node.selected || this.highlightSelected && isSelectedOrConnectedToSelected(node);
         const opacity = node.opacity;
 
         // Get VNode
@@ -873,40 +871,10 @@ export class ProxyView extends AbstractUIExtension {
      */
     private applyFilters(offScreenNodes: SKNode[],
         onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
-        // TODO: filters for node type?, mega nodes (num children, size, ...?)
-        // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check
-        const range = this.choiceToRange(this.filterDistant);
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
             node.opacity > 0 &&
-            (!this.filterUnconnectedToSelected || this.isSelectedOrConnectedToSelected(node)) &&
-            (!this.filterUnconnected || isConnectedToAny(node, onScreenNodes)) &&
-            (range <= 0 || this.isInRange(node, canvas, range)));
-    }
-
-    /** Checks if `node` is selected or connected to any selected element. */
-    private isSelectedOrConnectedToSelected(node: SKNode): boolean {
-        const selectedNodes = SelectedElementsUtil.getSelectedNodes();
-        return node.selected || isConnectedToAny(node, selectedNodes);
-    }
-
-    /**
-     * Maps the filterDistant choice to a range.
-     * If the filter is turned off, returns `-1`.
-     */
-    private choiceToRange(choice: string): number {
-        switch (choice) {
-            case ProxyViewFilterDistant.CHOICE_CLOSE:
-                return ProxyView.DISTANCE_CLOSE;
-            case ProxyViewFilterDistant.CHOICE_DISTANT:
-                return ProxyView.DISTANCE_DISTANT;
-        }
-        return -1;
-    }
-
-    /** Checks if the distance between `node` and the canvas is in the given range. */
-    private isInRange(node: SKNode, canvas: CanvasAttributes, range: number): boolean {
-        return this.getNodeDistanceToCanvas(node, canvas) <= range;
+            this.filters.every(filter => filter({ node, offScreenNodes, onScreenNodes, canvas, distance: this.getNodeDistanceToCanvas(node, canvas) })));
     }
 
     //////// Misc public methods ////////
@@ -941,10 +909,6 @@ export class ProxyView extends AbstractUIExtension {
 
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
 
-        this.filterUnconnected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnected);
-        this.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
-        this.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
-
         // Debug
         this.highlightSelected = renderOptionsRegistry.getValue(ProxyViewHighlightSelected);
         this.opacityBySelected = renderOptionsRegistry.getValue(ProxyViewOpacityBySelected);
@@ -971,6 +935,11 @@ export class ProxyView extends AbstractUIExtension {
             // Make sure to also clear previously cached positions
             this.clearPositions();
         }
+    }
+
+    /** Registers all given `filters` to be evaluated before showing a proxy. */
+    registerFilters(...filters: ProxyFilter[]): void {
+        this.filters = filters;
     }
 
     /** Resets the proxy-view, i.e. when the model is updated. */

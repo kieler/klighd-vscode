@@ -22,7 +22,6 @@ import { Action, Bounds, isBounds, Point, SelectAction, SelectAllAction, SetMode
 import { SendModelContextAction } from "../actions/actions";
 import { SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getElementByID } from "../skgraph-utils";
-// import { ProxyView } from "./proxy-view"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 //////// Interfaces ////////
 
@@ -311,14 +310,6 @@ export function joinTransitiveGroups<T>(groups: T[][]): T[][] {
 }
 
 /**
- * Checks if `node` is connected to at least one of the other given `nodes`.
- * @returns `true` if `node` is connected to at least one of the other given `nodes`.
- */
-export function isConnectedToAny(node: SKNode, nodes: SKNode[]): boolean {
-    return isIncomingToAny(node, nodes) || isOutgoingToAny(node, nodes);
-}
-
-/**
  * Checks if `node` has an incoming edge to at least one of the other given `nodes`.
  * @returns `true` if `node` has an incoming edge to at least one of the other given `nodes`.
  */
@@ -336,6 +327,20 @@ export function isOutgoingToAny(node: SKNode, nodes: SKNode[]): boolean {
     const ids = nodes.map(node => node.id);
     return ids.length > 0 && (node.outgoingEdges as SKEdge[])
         .some(edge => ids.includes(edge.targetId));
+}
+
+/**
+ * Checks if `node` is connected to at least one of the other given `nodes`.
+ * @returns `true` if `node` is connected to at least one of the other given `nodes`.
+ */
+export function isConnectedToAny(node: SKNode, nodes: SKNode[]): boolean {
+    return isIncomingToAny(node, nodes) || isOutgoingToAny(node, nodes);
+}
+
+/** Checks if `node` is selected or connected to any selected element. */
+export function isSelectedOrConnectedToSelected(node: SKNode): boolean {
+    const selectedNodes = SelectedElementsUtil.getSelectedNodes();
+    return node.selected || isConnectedToAny(node, selectedNodes);
 }
 
 //////// Classes ////////
