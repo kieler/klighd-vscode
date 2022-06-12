@@ -18,7 +18,7 @@
 import { injectable } from "inversify";
 import { VNode } from "snabbdom";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SModelRoot } from "sprotty";
-import { Action, Bounds, isBounds, Point, SelectAction, SelectAllAction, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
+import { Action, Bounds, isBounds, Dimension, Point, SelectAction, SelectAllAction, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getElementByID } from "../skgraph-utils";
@@ -67,16 +67,21 @@ export function checkOverlap(b1: Bounds, b2: Bounds): boolean {
 }
 
 /**
+ * Returns `bpd` if given bounds, otherwise fills the empty attributes with zeros.
+ * @param bpd The bounds/point/dimension.
+ */
+export function toBounds(bpd: Bounds | Point | Dimension): Bounds {
+    return isBounds(bpd) ? bpd : { ...Bounds.EMPTY, ...bpd };
+}
+
+/**
  * Returns the translated bounds, e.g. calculates its position & width/height according to scroll and zoom.
- * @param b The bounds/point to translate.
+ * @param bpd The bounds/point/dimension to translate.
  * @param canvas The canvas' attributes.
  * @returns The translated bounds.
  */
-export function getTranslatedBounds(b: Bounds | Point, canvas: CanvasAttributes): Bounds {
-    if (!isBounds(b)) {
-        // Actually a point, just set width and height to 0
-        b = { ...b, width: 0, height: 0 };
-    }
+export function getTranslatedBounds(bpd: Bounds | Point | Dimension, canvas: CanvasAttributes): Bounds {
+    const b = toBounds(bpd);
 
     const s = canvas.scroll;
     const z = canvas.zoom;
@@ -86,15 +91,12 @@ export function getTranslatedBounds(b: Bounds | Point, canvas: CanvasAttributes)
 /**
  * Returns the given bounds capped to the canvas border w.r.t. the sidebar.
  * Note that the bounds need to be translated and contain the absolute position (not relative to parent).
- * @param bounds The bounds/point to cap to the canvas border, absolute and translated.
+ * @param bp The bounds/point to cap to the canvas border, absolute and translated.
  * @param canvas The canvas' attributes.
  * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
  */
-export function capToCanvas(bounds: Bounds | Point, canvas: CanvasAttributes): Bounds {
-    if (!isBounds(bounds)) {
-        // Actually a point, just set width and height to 0
-        bounds = { ...bounds, width: 0, height: 0 };
-    }
+export function capToCanvas(bp: Bounds | Point, canvas: CanvasAttributes): Bounds {
+    const bounds = toBounds(bp);
 
     // Cap proxy at canvas border
     let x = Math.max(0, Math.min(canvas.width - bounds.width, bounds.x));
@@ -113,15 +115,12 @@ export function capToCanvas(bounds: Bounds | Point, canvas: CanvasAttributes): B
 
 /**
  * Returns the distance between the bounds and the canvas.
- * @param bounds The bounds/point to calculate the distance for.
+ * @param bp The bounds/point to calculate the distance for.
  * @param canvas The canvas' attributes.
  * @returns The distance between the bounds and the canvas.
  */
-export function getDistanceToCanvas(bounds: Bounds | Point, canvas: CanvasAttributes): number {
-    if (!isBounds(bounds)) {
-        // Actually a point, just set width and height to 0
-        bounds = { ...bounds, width: 0, height: 0 };
-    }
+export function getDistanceToCanvas(bp: Bounds | Point, canvas: CanvasAttributes): number {
+    const bounds = toBounds(bp);
 
     const nodeLeft = bounds.x;
     const nodeRight = nodeLeft + bounds.width;

@@ -65,17 +65,17 @@ export class ProxyView extends AbstractUIExtension {
     //// Caches ////
     /**
      * Stores the proxy renderings of already rendered nodes.
-     * Always make sure the ids ending with "-proxy" are used.
+     * Always make sure the ids from {@link getProxyId()} are used.
      */
     private renderings: Map<string, ProxyVNode>;
     /**
      * Stores the absolute coordinates (without scroll and zoom) of already rendered nodes.
-     * Always make sure the ids ending with "-proxy" are used.
+     * Always make sure the ids from {@link getProxyId()} are used.
      */
     private positions: Map<string, Point>;
     /**
      * Stores the distances of nodes to the canvas.
-     * Always make sure the ids ending with "-proxy" are used.
+     * Always make sure the ids from {@link getProxyId()} are used.
      */
     private distances: Map<string, number>;
 
@@ -893,7 +893,7 @@ export class ProxyView extends AbstractUIExtension {
 
             // Center on node when proxy is clicked
             let action: Action;
-            const translated = this.getTranslatedNodeBounds(node, canvas);
+            const translated = getTranslatedBounds(node.bounds, canvas);
             if (translated.width > canvas.width || translated.height > canvas.height) {
                 // Node is larger than canvas, zoom out so the node is fully on-screen
                 action = FitToScreenAction.create([this.getNodeId(node.id)], { animate: true, padding: 10 });
@@ -902,6 +902,11 @@ export class ProxyView extends AbstractUIExtension {
                 action = CenterAction.create([this.getNodeId(node.id)], { animate: true, retainZoom: true });
             }
             vnode.data.on.click = () => this.actionDispatcher.dispatch(action);
+
+            // TODO: if implementing a double click action, either make on click wait a bit before panning:
+            // vnode.data.on.click = async () => {await new Promise(f => setTimeout(f, 150)); this.actionDispatcher.dispatch(action);};
+            // or pan on swap double click and click actions (pan on double click)
+            // vnode.data.on.dblclick = () => console.log("Test");
         }
     }
 
