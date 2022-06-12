@@ -20,7 +20,7 @@ import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { angleBetweenPoints, Bounds, CenterAction, Point } from "sprotty-protocol";
+import { angleOfPoint, Bounds, CenterAction, Point } from "sprotty-protocol";
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
@@ -29,7 +29,7 @@ import { getKRendering } from "../views-rendering";
 import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected } from "./proxy-view-options";
 import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
@@ -109,6 +109,10 @@ export class ProxyView extends AbstractUIExtension {
     private useSynthesisProxyRendering: boolean;
     /** @see {@link ProxyViewStackingOrderByDistance} */
     private stackingOrderByDistance: boolean;
+    /** @see {@link ProxyViewStackingOrderByOpacity} */
+    private stackingOrderByOpacity: boolean;
+    /** @see {@link ProxyViewStackingOrderBySelected} */
+    private stackingOrderBySelected: boolean;
     /** @see {@link ProxyViewUseDetailLevel} */
     private useDetailLevel: boolean;
     /** @see {@link ProxyViewCapScaleToOne} */
@@ -177,7 +181,6 @@ export class ProxyView extends AbstractUIExtension {
         } else if (!this.currHTMLRoot) {
             return;
         }
-        console.log(this.filters);
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
@@ -212,14 +215,14 @@ export class ProxyView extends AbstractUIExtension {
         //// Clone nodes ////
         const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
 
-        //// Stacking order ////
-        const distanceOrderedOffScreenNodes = this.orderByDistance(clonedNodes, canvas);
-
         //// Opacity ////
-        const opacityOffScreenNodes = this.calculateOpacity(distanceOrderedOffScreenNodes, canvas);
+        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvas);
+
+        //// Stacking order ////
+        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvas);
 
         //// Use proxy-rendering as specified by synthesis ////
-        const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(opacityOffScreenNodes, ctx);
+        const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(orderedOffScreenNodes, ctx);
 
         //// Calculate transformations ////
         const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
@@ -256,7 +259,6 @@ export class ProxyView extends AbstractUIExtension {
                 this.currProxies.push({ proxy, transform });
             }
         }
-        proxies.reverse() // FIXME: used for decorator placemenet
 
         // Clear caches for the next model
         this.clearPositions();
@@ -306,19 +308,6 @@ export class ProxyView extends AbstractUIExtension {
         return offScreenNodes.map(node => Object.create(node));
     }
 
-    /**
-     * Orders `offScreenNodes` by distance to the canvas,
-     * such that closer nodes appear at the end - therefore being rendered above distant nodes.
-     */
-    private orderByDistance(offScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
-        const res = [...offScreenNodes];
-        if (this.stackingOrderByDistance && !this.clusteringEnabled) {
-            // Makes no sense to order when clustering is enabled since proxies cannot be stacked
-            res.sort((n1, n2) => this.getNodeDistanceToCanvas(n2, canvas) - this.getNodeDistanceToCanvas(n1, canvas));
-        }
-        return res;
-    }
-
     /** Calculates the opacities of `offScreenNodes`. */
     private calculateOpacity(offScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
         const res = offScreenNodes;
@@ -338,6 +327,32 @@ export class ProxyView extends AbstractUIExtension {
                     // Node not relevant to current selection context, decrease opacity
                     node.opacity = Math.max(0, node.opacity - 0.5);
                 }
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Orders `offScreenNodes` such that the contextually most relevant
+     * nodes appear at the end - therefore being rendered on top.
+     */
+    private orderNodes(offScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        const res = [...offScreenNodes];
+        if (!this.clusteringEnabled) {
+            // Makes no sense to order when clustering is enabled since proxies cannot be stacked
+
+            /*
+            Order these stacking order criteria such that each criterion is more important the previous one,
+            i.e. the least important criterion is at the start and the most important one is at the end
+            */
+            if (this.stackingOrderByDistance) {
+                res.sort((n1, n2) => this.getNodeDistanceToCanvas(n2, canvas) - this.getNodeDistanceToCanvas(n1, canvas));
+            }
+            if (this.stackingOrderByOpacity) {
+                res.sort((n1, n2) => n1.opacity - n2.opacity);
+            }
+            if (this.stackingOrderBySelected) {
+                res.sort((n1, n2) => n1.selected === n2.selected ? 0 : n1.selected ? 1 : -1);
             }
         }
         return res;
@@ -608,7 +623,6 @@ export class ProxyView extends AbstractUIExtension {
         // clone.targetId = outgoing ? clone.targetId : this.getProxyId(clone.targetId);
         clone.data = this.placeDecorator(edge.data, ctx, source, target);
         clone.opacity = node.opacity;
-        console.log(edge, clone);
 
         return clone;
     }
@@ -820,9 +834,7 @@ export class ProxyView extends AbstractUIExtension {
 
         if (clone.type === K_POLYGON) {
             // Arrow head
-            let angle = angleBetweenPoints(source, target); // TODO:
-            angle = isNaN(angle) ? 0 : angle;
-            console.log(angle)
+            const angle = angleOfPoint(Point.subtract(target, source));
             if (props["klighd.lsp.calculated.decoration"]) {
                 // Move arrow head if actually defined
                 props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target, rotation: angle };
@@ -921,6 +933,8 @@ export class ProxyView extends AbstractUIExtension {
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
         this.stackingOrderByDistance = renderOptionsRegistry.getValue(ProxyViewStackingOrderByDistance);
+        this.stackingOrderByOpacity = renderOptionsRegistry.getValue(ProxyViewStackingOrderByOpacity);
+        this.stackingOrderBySelected = renderOptionsRegistry.getValue(ProxyViewStackingOrderBySelected);
 
         this.useDetailLevel = renderOptionsRegistry.getValue(ProxyViewUseDetailLevel);
 

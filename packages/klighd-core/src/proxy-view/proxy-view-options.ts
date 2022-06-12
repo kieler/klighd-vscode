@@ -239,6 +239,38 @@ export class ProxyViewStackingOrderByDistance implements RenderOption {
     currentValue = ProxyViewStackingOrderByDistance.DEFAULT;
 }
 
+/** Whether to change stacking order such that fully opaque proxies are stacked above transparent ones. */
+export class ProxyViewStackingOrderByOpacity implements RenderOption {
+    static readonly ID: string = "proxy-view-stacking-order-by-opacity";
+    static readonly NAME: string = "Render Opaque Nodes At Top";
+    static readonly DESCRIPTION: string = "Whether fully opaque proxies should be stacked above transparent proxies.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewStackingOrderByOpacity.ID;
+    readonly name: string = ProxyViewStackingOrderByOpacity.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewStackingOrderByOpacity.DEFAULT;
+    readonly description: string = ProxyViewStackingOrderByOpacity.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewStackingOrderByOpacity.DEFAULT;
+}
+
+/** Whether to change stacking order such that selected proxies are stacked above others. */
+export class ProxyViewStackingOrderBySelected implements RenderOption {
+    static readonly ID: string = "proxy-view-stacking-order-by-selected";
+    static readonly NAME: string = "Render Selected Nodes At Top";
+    static readonly DESCRIPTION: string = "Whether selected proxies should be stacked above other proxies.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewStackingOrderBySelected.ID;
+    readonly name: string = ProxyViewStackingOrderBySelected.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewStackingOrderBySelected.DEFAULT;
+    readonly description: string = ProxyViewStackingOrderBySelected.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewStackingOrderBySelected.DEFAULT;
+}
+
 /** Whether proxies should be shown for nodes that aren't rendered because of the parent's detail level. */
 export class ProxyViewUseDetailLevel implements RenderOption {
     static readonly ID: string = "proxy-view-use-detail-level";

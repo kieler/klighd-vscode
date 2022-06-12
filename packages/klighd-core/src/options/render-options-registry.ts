@@ -20,7 +20,7 @@ import { ICommand } from "sprotty";
 import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { ProxyViewFilterCategory, ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected } from "../proxy-view/filters/proxy-view-filter-options";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewDebugCategory, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel } from "../proxy-view/proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewDebugCategory, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected } from "../proxy-view/proxy-view-options";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
@@ -315,6 +315,8 @@ export class RenderOptionsRegistry extends Registry {
         this.register(ProxyViewOpacityBySelected);
         this.register(ProxyViewUseSynthesisProxyRendering);
         this.register(ProxyViewStackingOrderByDistance);
+        this.register(ProxyViewStackingOrderByOpacity);
+        this.register(ProxyViewStackingOrderBySelected);
         this.register(ProxyViewUseDetailLevel);
         this.register(ProxyViewCapScaleToOne);
         this.register(ProxyViewClusterTransparent);
