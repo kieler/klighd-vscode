@@ -418,7 +418,7 @@ export function renderKText(rendering: KText,
     // Replace text with rectangle, if the text is too small.
     const simplifySmallTextOption = context.renderOptionsRegistry.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && !rendering.properties['klighd.isNodeTitle'] as boolean && !childOfNodeTitle) {
+    if (!context.forceRendering &&simplifySmallText && !rendering.properties['klighd.isNodeTitle'] as boolean && !childOfNodeTitle) {
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height

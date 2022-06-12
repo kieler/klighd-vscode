@@ -685,7 +685,7 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
     const useLineWidthOption = context.renderOptionsRegistry.getValue(UseMinimumLineWidth)
     // Only enable, if option is found.
     const useMinimumLineWidth = useLineWidthOption ?? false
-    if (useMinimumLineWidth) {
+    if (!context.forceRendering && useMinimumLineWidth) {
         // The line witdh in px that the drawn line should not be less than.
         const minimumLineWidth = context.renderOptionsRegistry.getValueOrDefault(MinimumLineWidth)
         // The line width the requested one would have when rendered in the current zoom level.
