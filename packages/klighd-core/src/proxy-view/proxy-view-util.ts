@@ -268,7 +268,7 @@ export function updateClickThrough(vnode: VNode, clickThrough: boolean): void {
 /**
  * Checks if `item` is contained in any (nested) group, e.g. if `item` is contained in a flattened version of `groups`.
  * @returns `true` if `item` is contained in any (nested) group.
- * @example anyContains([[0, 1], [1, 2]], 2) == true
+ * @example anyContains([[0, 1], [1, 2]], 2) === true
  */
 export function anyContains<T>(groups: T[][], item: T): boolean {
     return groups.reduce((acc, group) => acc.concat(group), []).includes(item);
@@ -276,7 +276,7 @@ export function anyContains<T>(groups: T[][], item: T): boolean {
 
 /**
  * Join groups containing at least 1 same element. Transitive joining applies:
- * @example joinTransitiveGroups([[0, 1], [1, 2], [2, 3]]) == [[0, 1, 2, 3]]
+ * @example joinTransitiveGroups([[0, 1], [1, 2], [2, 3]]) === [[0, 1, 2, 3]]
  */
 export function joinTransitiveGroups<T>(groups: T[][]): T[][] {
     const res = [];

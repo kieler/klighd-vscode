@@ -20,7 +20,7 @@ import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { angleOfPoint, Bounds, CenterAction, Point } from "sprotty-protocol";
+import { Action, angleOfPoint, Bounds, CenterAction, FitToScreenAction, Point } from "sprotty-protocol";
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
@@ -163,7 +163,14 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: API for filters
+    /*
+    - depthmap detail level children
+    - outsourced & generalized methods into proxy-view-util (further outsource to different util?)
+    - fixed edge bug (creating edge proxies between proxies)
+    - filter API
+    - arrow head angle
+    - stacking order opacity + selected
+    */
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -253,7 +260,7 @@ export class ProxyView extends AbstractUIExtension {
         // Nodes
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
-            const proxy = this.createProxy(node, transform, ctx);
+            const proxy = this.createProxy(node, transform, canvas, ctx);
             if (proxy) {
                 proxies.push(proxy);
                 this.currProxies.push({ proxy, transform });
@@ -301,6 +308,20 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         return { offScreenNodes, onScreenNodes };
+    }
+
+    /**
+     * Returns all `offScreenNodes` matching the enabled filters.
+     * @param offScreenNodes The nodes to filter.
+     * @param onScreenNodes Argument for filters.
+     * @param canvas Argument for filters.
+     */
+    private applyFilters(offScreenNodes: SKNode[],
+        onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        return offScreenNodes.filter(node =>
+            this.canRenderNode(node) &&
+            node.opacity > 0 &&
+            this.filters.every(filter => filter({ node, offScreenNodes, onScreenNodes, canvas, distance: this.getNodeDistanceToCanvas(node, canvas) })));
     }
 
     /** Performs a shallow copy of the nodes so that the original nodes aren't mutated. */
@@ -405,10 +426,10 @@ export class ProxyView extends AbstractUIExtension {
                 // Sort res primarily by leftmost x value, secondarily by uppermost y value, i.e.
                 // res[0] has leftmost proxy (and of all leftmost proxies it's the uppermost one)
                 res = res.sort(
-                    ({ transform: transform1 }, { transform: transform2 }) => {
-                        let res = transform1.x - transform2.x;
-                        if (res == 0) {
-                            res = transform1.y - transform2.y;
+                    ({ transform: t1 }, { transform: t2 }) => {
+                        let res = t1.x - t2.x;
+                        if (res === 0) {
+                            res = t1.y - t2.y;
                         }
                         return res;
                     });
@@ -631,7 +652,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the proxy rendering for an off-screen node. */
-    private createProxy(node: SKNode | VNode, transform: TransformAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
+    private createProxy(node: SKNode | VNode, transform: TransformAttributes, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
         if (!(node instanceof SKNode)) {
             // VNode, this is a predefined rendering (e.g. cluster)
             updateTransform(node, transform);
@@ -657,8 +678,8 @@ export class ProxyView extends AbstractUIExtension {
             node.children = node.children.filter(node => node instanceof SKLabel);
             // OLD:
             // node.children = node.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
-            // Update bounds
-            node.bounds = transform;
+            // OLD: Update bounds
+            // node.bounds = transform;
             // Proxies should never appear to be selected (even if their on-screen counterpart is selected)
             // unless highlighting is enabled
             node.selected = highlight;
@@ -669,8 +690,6 @@ export class ProxyView extends AbstractUIExtension {
             if (vnode) {
                 // New rendering, set ProxyVNode attributes
                 vnode.selected = highlight;
-                // Add actions
-                this.addEventActions(vnode, node);
             }
         }
 
@@ -683,6 +702,8 @@ export class ProxyView extends AbstractUIExtension {
             updateOpacity(vnode, opacity);
             // Update whether it should be click-through
             updateClickThrough(vnode, !this.actionsEnabled || this.clickThrough);
+            // Add actions
+            this.addEventActions(vnode, node, canvas);
         }
 
         return vnode;
@@ -860,7 +881,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Adds actions on events to the vnode. */
-    private addEventActions(vnode: VNode, node: SKNode): void {
+    private addEventActions(vnode: VNode, node: SKNode, canvas: CanvasAttributes): void {
         if (!this.actionsEnabled) {
             return;
         }
@@ -870,26 +891,18 @@ export class ProxyView extends AbstractUIExtension {
                 vnode.data.on = {};
             }
 
-            // TODO: zoom out (fit to screen) if node is larger than canvas
             // Center on node when proxy is clicked
-            vnode.data.on.click = () => this.actionDispatcher.dispatch(
-                CenterAction.create([this.getNodeId(node.id)], { animate: true, retainZoom: true })
-            );
+            let action: Action;
+            const translated = this.getTranslatedNodeBounds(node, canvas);
+            if (translated.width > canvas.width || translated.height > canvas.height) {
+                // Node is larger than canvas, zoom out so the node is fully on-screen
+                action = FitToScreenAction.create([this.getNodeId(node.id)], { animate: true, padding: 10 });
+            } else {
+                // Retain the zoom, e.g. don't zoom in
+                action = CenterAction.create([this.getNodeId(node.id)], { animate: true, retainZoom: true });
+            }
+            vnode.data.on.click = () => this.actionDispatcher.dispatch(action);
         }
-    }
-
-    //////// Filter methods ////////
-
-    /**
-     * Returns all `offScreenNodes` matching the enabled filters.
-     * @param `onScreenNodes` is needed by since some filters.
-     */
-    private applyFilters(offScreenNodes: SKNode[],
-        onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
-        return offScreenNodes.filter(node =>
-            this.canRenderNode(node) &&
-            node.opacity > 0 &&
-            this.filters.every(filter => filter({ node, offScreenNodes, onScreenNodes, canvas, distance: this.getNodeDistanceToCanvas(node, canvas) })));
     }
 
     //////// Misc public methods ////////
