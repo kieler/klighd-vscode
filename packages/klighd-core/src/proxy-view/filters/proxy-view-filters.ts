@@ -49,78 +49,81 @@ export interface ProxyFilterArgs {
  */
 export type ProxyFilter = (args: ProxyFilterArgs) => boolean;
 
-/** FIXME: */
-@injectable()
-export class ProxyViewFilter implements IActionHandler, IActionHandlerInitializer {
-    /** The registry containing the filter options. */
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+//////// Filters ////////
 
+/** @see {@link ProxyViewFilterUnconnectedToOnScreen} */
+export function filterUnconnectedToOnScreen({ node, onScreenNodes }: ProxyFilterArgs): boolean {
+    return !ProxyFilterHandler.filterUnconnectedToOnScreen || isConnectedToAny(node, onScreenNodes);
+}
+
+/** @see {@link ProxyViewFilterUnconnectedToSelected} */
+export function filterUnconnectedToSelected({ node }: ProxyFilterArgs): boolean {
+    return !ProxyFilterHandler.filterUnconnectedToSelected || isSelectedOrConnectedToSelected(node);
+}
+
+/** @see {@link ProxyViewFilterDistant} */
+export function filterDistant({ distance }: ProxyFilterArgs): boolean {
+    let range = -1;
+    switch (ProxyFilterHandler.filterDistant) {
+        case ProxyViewFilterDistant.CHOICE_CLOSE:
+            range = ProxyView.DISTANCE_CLOSE;
+            break;
+        case ProxyViewFilterDistant.CHOICE_DISTANT:
+            range = ProxyView.DISTANCE_DISTANT;
+            break;
+    }
+    return range <= 0 || distance <= range;
+}
+
+//////// Registering filters ////////
+
+/**
+ * Registers {@link ProxyFilter}s at the {@link ProxyView} and holds the current
+ * values of their respective options as specified by the sidebar.
+ */
+@injectable()
+export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitializer {
+    //// Sidebar filter options ////
+    /** @see {@link ProxyViewFilterUnconnectedToOnScreen} */
+    static filterUnconnectedToOnScreen: boolean;
+    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
+    static filterUnconnectedToSelected: boolean;
+    /** @see {@link ProxyViewFilterDistant} */
+    static filterDistant: string;
+
+    //// Get filter option values ////
+    /** Updates the proxy-view filter options specified in the {@link RenderOptionsRegistry}. */
+    updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
+        ProxyFilterHandler.filterUnconnectedToOnScreen = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToOnScreen);
+        ProxyFilterHandler.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
+        ProxyFilterHandler.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
+    }
+
+    //// Register the filters ////
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SendProxyViewAction.KIND) {
-            // Save the proxy-view instance
-            const sPVAction = action as SendProxyViewAction;
-            //// Register the filters
+            const proxyView = (action as SendProxyViewAction).proxyView;
             // TODO: filters for node type?, mega nodes (num children, size, ...?)
             // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check
-            sPVAction.proxyView.registerFilters(
-                this.filterUnconnectedToSelected,
-                this.filterUnconnectedToOnScreen,
-                this.filterDistant
+            proxyView.registerFilters(
+                filterUnconnectedToSelected,
+                filterUnconnectedToOnScreen,
+                filterDistant
             );
         }
     }
 
     initialize(registry: ActionHandlerRegistry): void {
+        // Register to receive SendProxyViewActions
         registry.register(SendProxyViewAction.KIND, this);
     }
 
-    //// Sidebar filter options ////
-    /** @see {@link ProxyViewFilterUnconnectedToOnScreen} */
-    private filterUnconnectedToOnScreenOption: boolean;
-    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
-    private filterUnconnectedToSelectedOption: boolean;
-    /** @see {@link ProxyViewFilterDistant} */
-    private filterDistantOption: string;
-
-    //////// Registering filters ////////
+    /** The registry containing the filter options. */
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
 
     @postConstruct()
     init(): void {
-        //// Register to receive updates on registry changes
+        // Register to receive updates on registry changes
         this.renderOptionsRegistry.onChange(() => this.updateFilterOptions(this.renderOptionsRegistry));
-    }
-
-    /** Updates the proxy-view filter options specified in the {@link RenderOptionsRegistry}. */
-    updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
-        // Filters
-        this.filterUnconnectedToOnScreenOption = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToOnScreen);
-        this.filterUnconnectedToSelectedOption = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
-        this.filterDistantOption = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
-    }
-
-    //////// Filters ////////
-
-    /** @see {@link ProxyViewFilterUnconnectedToOnScreen} */
-    filterUnconnectedToOnScreen({ node, onScreenNodes }: ProxyFilterArgs): boolean {
-        return !this.filterUnconnectedToOnScreenOption || isConnectedToAny(node, onScreenNodes);
-    }
-
-    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
-    filterUnconnectedToSelected({ node }: ProxyFilterArgs): boolean {
-        return !this.filterUnconnectedToSelectedOption || isSelectedOrConnectedToSelected(node);
-    }
-
-    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
-    filterDistant({ distance }: ProxyFilterArgs): boolean {
-        let range = -1;
-        switch (this.filterDistantOption) {
-            case ProxyViewFilterDistant.CHOICE_CLOSE:
-                range = ProxyView.DISTANCE_CLOSE;
-                break;
-            case ProxyViewFilterDistant.CHOICE_DISTANT:
-                range = ProxyView.DISTANCE_DISTANT;
-                break;
-        }
-        return range <= 0 || distance <= range;
     }
 }
