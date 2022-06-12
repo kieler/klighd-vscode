@@ -346,12 +346,15 @@ export class ProxyView extends AbstractUIExtension {
             i.e. the least important criterion is at the start and the most important one is at the end
             */
             if (this.stackingOrderByDistance) {
+                // Distant nodes at start, close nodes at end
                 res.sort((n1, n2) => this.getNodeDistanceToCanvas(n2, canvas) - this.getNodeDistanceToCanvas(n1, canvas));
             }
             if (this.stackingOrderByOpacity) {
+                // Most transparent nodes at start, least transparent ones at end
                 res.sort((n1, n2) => n1.opacity - n2.opacity);
             }
             if (this.stackingOrderBySelected) {
+                // Move selected nodes at end (and keep previous ordering, e.g. "grouping" by selected)
                 res.sort((n1, n2) => n1.selected === n2.selected ? 0 : n1.selected ? 1 : -1);
             }
         }
