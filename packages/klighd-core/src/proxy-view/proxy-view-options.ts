@@ -160,6 +160,21 @@ export class ProxyViewCapProxyToParent implements RenderOption {
     currentValue = ProxyViewCapProxyToParent.DEFAULT;
 }
 
+/** Whether to use title scaling if smart zoom is enabled. */
+export class ProxyViewTitleScaling implements RenderOption {
+    static readonly ID: string = "proxy-view-title-scaling";
+    static readonly NAME: string = "Scale Proxy Titles";
+    static readonly DESCRIPTION: string = "Whether a proxy's title should be scaled if smart zoom is enabled.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewTitleScaling.ID;
+    readonly name: string = ProxyViewTitleScaling.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewTitleScaling.DEFAULT;
+    readonly description: string = ProxyViewTitleScaling.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewTitleScaling.DEFAULT;
+}
+
 //////// DEBUG ////////
 
 /** The category containing debug proxy-view options. */

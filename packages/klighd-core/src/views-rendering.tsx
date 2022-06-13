@@ -902,15 +902,20 @@ export function renderKRendering(kRendering: KRendering,
 
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
-    if (!context.forceRendering && context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.properties['klighd.isNodeTitle'] as boolean) {
+    if (context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.properties['klighd.isNodeTitle'] as boolean) {
         // Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
+        const isProxy = "proxyScale" in kRendering
         let maxScale = titleScalingFactorOption
-        if (context.viewport) {
+        if (isProxy) {
+            // maxScale independant of zoom, use scale of proxy instead
+            maxScale = titleScalingFactorOption / (kRendering as any).proxyScale
+        } else if (context.viewport) {
             maxScale = maxScale / context.viewport.zoom
         }
+
         if (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
-            || context.viewport.zoom <= titleScalingFactorOption) {
+            || context.viewport.zoom <= titleScalingFactorOption || isProxy) {
             isOverlay = true
 
             let boundingBox = boundsAndTransformation.bounds
@@ -992,8 +997,8 @@ export function renderKRendering(kRendering: KRendering,
                 providingRegion.regionTitleIndentation = newX
             }
             // Draw white background for overlaying titles
-            if (!context.forceRendering && context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
-                && context.viewport.zoom <= titleScalingFactorOption
+            if (context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean && (!providingRegion || providingRegion.detail === DetailLevel.FullDetails || isProxy)
+                && (context.viewport.zoom <= titleScalingFactorOption || isProxy && (kRendering as any).proxyScale < 1)
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
                 overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />

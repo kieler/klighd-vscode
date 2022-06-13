@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { injectable } from "inversify";
 import { VNode } from "snabbdom";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SModelRoot } from "sprotty";
@@ -43,7 +44,14 @@ export interface CanvasAttributes extends Viewport, Bounds { }
 
 /** A VNode containing some additional information to be used only by the {@link ProxyView}. */
 export interface ProxyVNode extends VNode {
+    /** Whether this vnode is selected. */
     selected?: boolean;
+}
+
+/** KGraphData containing some additional information to be used only by the {@link ProxyView}. */
+export interface ProxyKGraphData extends KGraphData {
+    /** The proxy's scale. */
+    proxyScale?: number;
 }
 
 //////// Functions ////////

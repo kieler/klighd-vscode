@@ -29,8 +29,8 @@ import { getKRendering } from "../views-rendering";
 import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected } from "./proxy-view-options";
-import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling } from "./proxy-view-options";
+import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -96,6 +96,8 @@ export class ProxyView extends AbstractUIExtension {
     private drawStraightEdges: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
+    /** @see {@link ProxyViewTitleScaling} */
+    private useTitleScaling: boolean;
 
     //// Sidebar debug options ////
     /** 
@@ -170,6 +172,9 @@ export class ProxyView extends AbstractUIExtension {
     - filter API
     - arrow head angle
     - stacking order opacity + selected
+    - zoom out onclick
+    - scchart max label length
+    - remove smart zoom influence (simplify label, minimal line width)
     */
 
     /**
@@ -676,15 +681,20 @@ export class ProxyView extends AbstractUIExtension {
             node.id = id;
             // Clear children, proxies don't show nested nodes (but keep labels)
             node.children = node.children.filter(node => node instanceof SKLabel);
-            // OLD:
-            // node.children = node.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
-            // OLD: Update bounds
-            // node.bounds = transform;
+            if (this.useTitleScaling && transform.scale) {
+                // Add the proxy's scale to scale its title if smart zoom is enabled
+                node.data = this.getNodeData(node.data, transform.scale);
+            }
             // Proxies should never appear to be selected (even if their on-screen counterpart is selected)
             // unless highlighting is enabled
             node.selected = highlight;
             // Render this node as opaque to change opacity later on
             node.opacity = 1;
+
+            // OLD:
+            // node.children = node.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
+            // OLD: Update bounds
+            // node.bounds = transform;
 
             vnode = ctx.renderProxy(node);
             if (vnode) {
@@ -838,6 +848,29 @@ export class ProxyView extends AbstractUIExtension {
         return dist;
     }
 
+    /** Transforms the KGraphData[] to ProxyKGraphData[], e.g. adds the proxyScale attribute to each data. */
+    private getNodeData(data: KGraphData[], scale: number): ProxyKGraphData[] {
+        if (!data) {
+            return data;
+        }
+
+        const res = [];
+        for (const d of data) {
+            // Add the proxyScale
+            const dClone = { ...d, proxyScale: scale };
+            if ("children" in dClone) {
+                // Has children, keep going
+                (dClone as any).children = this.getNodeData((dClone as any).children, scale);
+            }
+            res.push(dClone);
+
+            // OLD: add dClone only if it's a title, doesn't work because if present,
+            // only the title has this property - not the declarations etc.
+            // !("properties" in d) || ((d as any).properties['klighd.isNodeTitle'] ?? true)
+        }
+        return res;
+    }
+
     /** Returns a copy of `edgeData` with the decorators placed at `target`. */
     private placeDecorator(edgeData: KGraphData[], ctx: SKGraphModelRenderer, source: Point, target: Point): KGraphData[] {
         if (!edgeData || edgeData.length <= 0) {
@@ -871,7 +904,7 @@ export class ProxyView extends AbstractUIExtension {
             }
         }
 
-        if ((clone as any).children) {
+        if ("children" in clone) {
             // Keep going recursively
             (clone as any).children = this.placeDecorator((clone as any).children, ctx, source, target);
         }
@@ -941,6 +974,8 @@ export class ProxyView extends AbstractUIExtension {
         this.drawStraightEdges = renderOptionsRegistry.getValue(ProxyViewDrawStraightEdges);
 
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+
+        this.useTitleScaling = renderOptionsRegistry.getValue(ProxyViewTitleScaling);
 
         // Debug
         this.highlightSelected = renderOptionsRegistry.getValue(ProxyViewHighlightSelected);
