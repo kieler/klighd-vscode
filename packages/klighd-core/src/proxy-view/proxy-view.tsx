@@ -177,6 +177,10 @@ export class ProxyView extends AbstractUIExtension {
     - remove smart zoom influence (simplify label, minimal line width)
     - title scaling for proxies
     */
+    // TODO: title scaling
+    // TODO: semantic filter in vscode for node type
+    // TODO: für polylines along-edge-routing
+    // Nächstes K-Meeting ^^^ along-edge-routing vs straight
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -1010,7 +1014,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Registers all given `filters` to be evaluated before showing a proxy. */
     registerFilters(...filters: ProxyFilter[]): void {
-        this.filters = filters;
+        this.filters = this.filters.concat(filters);
     }
 
     /** Resets the proxy-view, i.e. when the model is updated. */

@@ -104,6 +104,7 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
         if (action.kind === SendProxyViewAction.KIND) {
             const proxyView = (action as SendProxyViewAction).proxyView;
             // TODO: filters for node type?, mega nodes (num children, size, ...?), nodes with labels starting with ...
+            // TODO: Nvm this is semantics and a whole new topic
             // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check
             proxyView.registerFilters(
                 filterUnconnectedToSelected,
