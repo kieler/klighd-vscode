@@ -175,6 +175,7 @@ export class ProxyView extends AbstractUIExtension {
     - zoom out onclick
     - scchart max label length
     - remove smart zoom influence (simplify label, minimal line width)
+    - title scaling for proxies
     */
 
     /**
