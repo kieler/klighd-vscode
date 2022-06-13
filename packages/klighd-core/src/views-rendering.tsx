@@ -993,7 +993,7 @@ export function renderKRendering(kRendering: KRendering,
             }
             // Draw white background for overlaying titles
             if (!context.forceRendering && context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
-                && kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height
+                && context.viewport.zoom <= titleScalingFactorOption
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
                 overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />
