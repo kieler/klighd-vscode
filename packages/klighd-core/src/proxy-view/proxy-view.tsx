@@ -165,22 +165,11 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    /*
-    - depthmap detail level children
-    - outsourced & generalized methods into proxy-view-util (further outsource to different util?)
-    - fixed edge bug (creating edge proxies between proxies)
-    - filter API
-    - arrow head angle
-    - stacking order opacity + selected
-    - zoom out onclick
-    - scchart max label length
-    - remove smart zoom influence (simplify label, minimal line width)
-    - title scaling for proxies
-    */
     // TODO: title scaling
-    // TODO: semantic filter in vscode for node type
+    // TODO: edge opacity
     // TODO: für polylines along-edge-routing
     // Nächstes K-Meeting ^^^ along-edge-routing vs straight
+    // TODO: semantic filter in vscode for node type
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -690,10 +679,9 @@ export class ProxyView extends AbstractUIExtension {
             node.id = id;
             // Clear children, proxies don't show nested nodes (but keep labels)
             node.children = node.children.filter(node => node instanceof SKLabel);
-            if (this.useTitleScaling && transform.scale) {
-                // Add the proxy's scale to scale its title if smart zoom is enabled
-                node.data = this.getNodeData(node.data, transform.scale);
-            }
+            const scale = transform.scale ?? 1;
+            // Add the proxy's scale to the data
+            node.data = this.getNodeData(node.data, scale);
             // Proxies should never appear to be selected (even if their on-screen counterpart is selected)
             // unless highlighting is enabled
             node.selected = highlight;
@@ -866,7 +854,7 @@ export class ProxyView extends AbstractUIExtension {
         const res = [];
         for (const d of data) {
             // Add the proxyScale
-            const dClone = { ...d, proxyScale: scale };
+            const dClone = { ...d, proxyScale: scale, useTitleScaling: this.useTitleScaling };
             if ("children" in dClone) {
                 // Has children, keep going
                 (dClone as any).children = this.getNodeData((dClone as any).children, scale);

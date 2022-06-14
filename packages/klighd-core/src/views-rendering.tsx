@@ -418,7 +418,7 @@ export function renderKText(rendering: KText,
     // Replace text with rectangle, if the text is too small.
     const simplifySmallTextOption = context.renderOptionsRegistry.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (!context.forceRendering &&simplifySmallText && !rendering.properties['klighd.isNodeTitle'] as boolean && !childOfNodeTitle) {
+    if (!context.forceRendering && simplifySmallText && !rendering.properties['klighd.isNodeTitle'] as boolean && !childOfNodeTitle) {
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
@@ -905,9 +905,12 @@ export function renderKRendering(kRendering: KRendering,
     if (context.depthMap && boundsAndTransformation.bounds.width && boundsAndTransformation.bounds.height && kRendering.properties['klighd.isNodeTitle'] as boolean) {
         // Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
-        // Whether the kRendering belongs to a proxy and scaling should be applied
-        const scaleProxy = "proxyScale" in kRendering && (kRendering as any).proxyScale < 1
         let maxScale = titleScalingFactorOption
+
+        // Whether the kRendering belongs to a proxy
+        const isProxy = "proxyScale" in kRendering
+        // Whether the proxy's title should be scaled
+        const scaleProxy = isProxy && (kRendering as any).useTitleScaling && (kRendering as any).proxyScale < 1
         if (scaleProxy) {
             // maxScale independant of zoom, use scale of proxy instead
             maxScale = titleScalingFactorOption / (kRendering as any).proxyScale
@@ -915,8 +918,8 @@ export function renderKRendering(kRendering: KRendering,
             maxScale = maxScale / context.viewport.zoom
         }
 
-        if (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
-            || context.viewport.zoom <= titleScalingFactorOption || scaleProxy) {
+        if ((providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1
+            || context.viewport.zoom <= titleScalingFactorOption) && !isProxy || scaleProxy) {
             isOverlay = true
 
             let boundingBox = boundsAndTransformation.bounds
@@ -998,8 +1001,9 @@ export function renderKRendering(kRendering: KRendering,
                 providingRegion.regionTitleIndentation = newX
             }
             // Draw white background for overlaying titles
-            if (context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean && (!providingRegion || providingRegion.detail === DetailLevel.FullDetails || scaleProxy)
-                && (context.viewport.zoom <= titleScalingFactorOption || scaleProxy)
+            if (context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean
+                && ((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && !isProxy || scaleProxy)
+                && (context.viewport.zoom <= titleScalingFactorOption && !isProxy || scaleProxy)
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
                 overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />

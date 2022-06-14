@@ -51,7 +51,9 @@ export interface ProxyVNode extends VNode {
 /** KGraphData containing some additional information to be used only by the {@link ProxyView}. */
 export interface ProxyKGraphData extends KGraphData {
     /** The proxy's scale. */
-    proxyScale?: number;
+    proxyScale: number;
+    /** Whether title scaling should be used if smart zoom is enabled. */
+    useTitleScaling: boolean;
 }
 
 //////// Functions ////////
