@@ -17,7 +17,7 @@
 
 import { Range, RangeOption, RenderOption, TransformationOptionType } from "../options/option-models";
 
-/*
+/**
  * Final options should be:
  * 
  * Enable Proxy-View
@@ -28,7 +28,7 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
  *   Off
  *   Clustering
  *   Stacking Order + Transparency by Distance
- * Enable Actions
+ * Enable Actions ({@link ProxyViewActionsEnabled})
  *   true/false
  * Cap Proxy to parent
  *   true/false

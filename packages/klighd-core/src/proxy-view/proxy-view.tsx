@@ -344,7 +344,9 @@ export class ProxyView extends AbstractUIExtension {
         const res = offScreenNodes;
         if (this.opacityByDistance) {
             for (const node of res) {
-                node.opacity = Math.max(0, node.opacity - this.getNodeDistanceToCanvas(node, canvas) / ProxyView.DISTANCE_DISTANT);
+                // Reduce opacity such that the node is fully transparent when the node's distance is >= DISTANCE_DISTANT
+                const opacityReduction = this.getNodeDistanceToCanvas(node, canvas) / ProxyView.DISTANCE_DISTANT;
+                node.opacity = Math.max(0, node.opacity - opacityReduction);
             }
         }
 
@@ -356,7 +358,9 @@ export class ProxyView extends AbstractUIExtension {
                     node.opacity = 1;
                 } else {
                     // Node not relevant to current selection context, decrease opacity
-                    node.opacity = Math.max(0, node.opacity - 0.5);
+                    // If opaque, the node should be 50% transparent
+                    const opacityReduction = 0.5;
+                    node.opacity = Math.max(0, node.opacity - opacityReduction);
                 }
             }
         }
@@ -1012,7 +1016,15 @@ export class ProxyView extends AbstractUIExtension {
         }
     }
 
-    /** Registers all given `filters` to be evaluated before showing a proxy. */
+    /**
+     * Registers all given `filters` to be evaluated before showing a proxy.
+     * 
+     * Try ordering the given filters by strongest filter criterion first,
+     * secondary ordering by simplicity/cost of check. This ensures:
+     * - proxies being filtered out early, therefore reducing the number of filters
+     * that need to be evaluated
+     * - less costly filters being applied first, potentially avoiding more expensive ones
+     */
     registerFilters(...filters: ProxyFilter[]): void {
         this.filters = this.filters.concat(filters);
     }

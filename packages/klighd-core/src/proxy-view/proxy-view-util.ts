@@ -123,73 +123,98 @@ export function capToCanvas(bp: Bounds | Point, canvas: CanvasAttributes): Bound
 
 /**
  * Returns the distance between the bounds and the canvas.
- * @param bp The bounds/point to calculate the distance for.
+ * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
+ * 
+ * @param bp The translated bounds/point to calculate the distance for.
  * @param canvas The canvas' attributes.
  * @returns The distance between the bounds and the canvas.
  */
 export function getDistanceToCanvas(bp: Bounds | Point, canvas: CanvasAttributes): number {
-    const bounds = toBounds(bp);
+    return distanceBetweenBounds(bp, canvas);
+}
 
-    const nodeLeft = bounds.x;
-    const nodeRight = nodeLeft + bounds.width;
-    const nodeTop = bounds.y;
-    const nodeBottom = nodeTop + bounds.height;
-    const canvasLeft = 0;
-    const canvasRight = canvas.width;
-    const canvasTop = 0;
-    const canvasBottom = canvas.height;
+/**
+ * Returns the distance between two bounds. If given two points, this
+ * basically just calculates the euclidean distance between the two.
+ * Explanation on how the distance is calculated:
+ * 
+ * Partition the plane into 9 segments (as in tic-tac-toe):
+ * 
+ * 1 | 2 | 3
+ * 
+ * --+---+--
+ * 
+ * 4 | 5 | 6
+ * 
+ * --+---+--
+ * 
+ * 7 | 8 | 9
+ * 
+ * Now 5 correlates to b2.
+ * 
+ * Using the other segments we can figure out the distance from b1 to b2:
+ * 
+ * 1,3,7,9: calculate euclidean distance to nearest corner of 5
+ * 
+ * 2,8: only take y-coordinate into consideration for calculating the distance
+ * 
+ * 4,6: only take x-coordinate into consideration for calculating the distance
+ * 
+ * @param bp1 The first bounds/point to calculate the distance for.
+ * @param bp2 The second bounds/point to calculate the distance for.
+ * @returns The distance between the two bounds.
+ */
+export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point): number {
+    const b1 = toBounds(bp1);
+    const b2 = toBounds(bp2);
 
-    /* Partition the screen plane into 9 segments (as in tic-tac-toe):
-     * 1 | 2 | 3
-     * --+---+--
-     * 4 | 5 | 6
-     * --+---+--
-     * 7 | 8 | 9
-     * Now 5 correlates to the canvas, e.g. the 'on-screen area'.
-     * Using the other segments we can figure out the distance to the canvas:
-     * 1,3,7,9: calculate euclidean distance to nearest corner of 5
-     * 2,8: only take y-coordinate into consideration for calculating the distance
-     * 4,6: only take x-coordinate into consideration for calculating the distance
-     */
+    const b1Left = b1.x;
+    const b1Right = b1Left + b1.width;
+    const b1Top = b1.y;
+    const b1Bottom = b1Top + b1.height;
+    const b2Left = b2.x;
+    const b2Right = b2Left + b2.width;
+    const b2Top = b2.y;
+    const b2Bottom = b2Top + b2.height;
+
     let dist = 0;
-    if (nodeBottom < canvasTop) {
-        // Above canvas (1,2,3)
-        if (nodeRight < canvasLeft) {
-            // Top left (1)
-            dist = Point.euclideanDistance({ y: nodeBottom, x: nodeRight }, { y: canvasTop, x: canvasLeft });
-        } else if (nodeLeft > canvasRight) {
-            // Top right (3)
-            dist = Point.euclideanDistance({ y: nodeBottom, x: nodeLeft }, { y: canvasTop, x: canvasRight });
+    if (b1Bottom < b2Top) {
+        // b1 above b2 (1,2,3)
+        if (b1Right < b2Left) {
+            // b1 top left of b2 (1)
+            dist = Point.euclideanDistance({ y: b1Bottom, x: b1Right }, { y: b2Top, x: b2Left });
+        } else if (b1Left > b2Right) {
+            // b1 top right of b2 (3)
+            dist = Point.euclideanDistance({ y: b1Bottom, x: b1Left }, { y: b2Top, x: b2Right });
         } else {
-            // Top middle (2)
-            dist = canvasTop - nodeBottom;
+            // b1 top middle of b2 (2)
+            dist = b2Top - b1Bottom;
         }
-    } else if (nodeTop > canvasBottom) {
-        // Below canvas (7,8,9)
-        if (nodeRight < canvasLeft) {
-            // Bottom left (7)
-            dist = Point.euclideanDistance({ y: nodeTop, x: nodeRight }, { y: canvasBottom, x: canvasLeft });
-        } else if (nodeLeft > canvasRight) {
-            // Bottom right (9)
-            dist = Point.euclideanDistance({ y: nodeTop, x: nodeLeft }, { y: canvasBottom, x: canvasRight });
+    } else if (b2Top > b2Bottom) {
+        // b1 below b2 (7,8,9)
+        if (b1Right < b2Left) {
+            // b1 bottom left of b2 (7)
+            dist = Point.euclideanDistance({ y: b2Top, x: b1Right }, { y: b2Bottom, x: b2Left });
+        } else if (b1Left > b2Right) {
+            // b1 bottom right of b2 (9)
+            dist = Point.euclideanDistance({ y: b2Top, x: b1Left }, { y: b2Bottom, x: b2Right });
         } else {
-            // Bottom middle (8)
-            dist = nodeTop - canvasBottom;
+            // b1 bottom middle of b2 (8)
+            dist = b2Top - b2Bottom;
         }
     } else {
-        // Same height as canvas (4,5,6)
-        if (nodeRight < canvasLeft) {
-            // Left of canvas (4)
-            dist = canvasLeft - nodeRight;
-        } else if (nodeLeft > canvasRight) {
-            // Right of canvas (6)
-            dist = nodeLeft - canvasRight;
+        // b1 same height as b2 (4,5,6)
+        if (b1Right < b2Left) {
+            // b1 left of b2 (4)
+            dist = b2Left - b1Right;
+        } else if (b1Left > b2Right) {
+            // b1 right of b2 (6)
+            dist = b1Left - b2Right;
         } else {
-            // On the canvas (5)
+            // b1 on b2 (overlap) (5)
             dist = 0;
         }
     }
-
     return dist;
 }
 

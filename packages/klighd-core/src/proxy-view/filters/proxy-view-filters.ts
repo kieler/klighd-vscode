@@ -28,22 +28,24 @@ import { ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyView
 
 //////// Types ////////
 
-/** The arguments that can be used by {@link ProxyView} filters. */
+/** The arguments that can be used by {@link ProxyFilter}s. */
 export interface ProxyFilterArgs {
-    /** The node to show a proxy for. */
+    /** The node to show a proxy for - which the filter is applied to. */
     node: SKNode;
+
     /** List of all off-screen nodes. */
     offScreenNodes: SKNode[];
     /** List of all on-screen nodes. */
     onScreenNodes: SKNode[];
     /** The canvas' attributes. */
     canvas: CanvasAttributes;
-    /** The distance to the canvas. */
+    /** The distance to the canvas as specified by {@link ../proxy-view-util#getDistanceToCanvas()}. */
     distance: number;
 }
 
 /**
  * A filter to be used by the {@link ProxyView}. Decides whether a node's proxy should be shown.
+ * The filter may be registered using the {@link ProxyView.registerFilters()} method.
  * @param args The arguments that can be used by the filter.
  * @returns `true` if the proxy should be shown.
  */
@@ -105,7 +107,6 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
             const proxyView = (action as SendProxyViewAction).proxyView;
             // TODO: filters for node type?, mega nodes (num children, size, ...?), nodes with labels starting with ...
             // TODO: Nvm this is semantics and a whole new topic
-            // Order by strongest filter criterion first, secondary ordering by simplicity/cost of check
             proxyView.registerFilters(
                 filterUnconnectedToSelected,
                 filterUnconnectedToOnScreen,
