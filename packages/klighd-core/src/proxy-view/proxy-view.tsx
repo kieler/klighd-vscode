@@ -29,7 +29,7 @@ import { getKRendering } from "../views-rendering";
 import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewDrawStraightEdges, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges } from "./proxy-view-options";
 import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
@@ -61,6 +61,11 @@ export class ProxyView extends AbstractUIExtension {
     private currProxies: { proxy: VNode, transform: TransformAttributes }[];
     /** Whether the proxies should be click-through. */
     private clickThrough: boolean;
+    /**
+     * Stores the previous opacity of edges whose opacity was modified.
+     * Always make sure the ids from {@link getProxyId()} are used.
+     */
+    private prevModifiedEdges: Map<string, [SKEdge, number]>;
 
     //// Caches ////
     /**
@@ -94,8 +99,6 @@ export class ProxyView extends AbstractUIExtension {
     private actionsEnabled: boolean;
     /** @see {@link ProxyViewDrawStraightEdges} */
     private drawStraightEdges: boolean;
-    /** @see {@link ProxyViewCapProxyToParent} */
-    private capProxyToParent: boolean;
     /** @see {@link ProxyViewTitleScaling} */
     private useTitleScaling: boolean;
 
@@ -109,6 +112,8 @@ export class ProxyView extends AbstractUIExtension {
     private opacityBySelected: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
     private useSynthesisProxyRendering: boolean;
+    /** @see {@link ProxyViewCapProxyToParent} */
+    private capProxyToParent: boolean;
     /** @see {@link ProxyViewStackingOrderByDistance} */
     private stackingOrderByDistance: boolean;
     /** @see {@link ProxyViewStackingOrderByOpacity} */
@@ -117,6 +122,8 @@ export class ProxyView extends AbstractUIExtension {
     private stackingOrderBySelected: boolean;
     /** @see {@link ProxyViewUseDetailLevel} */
     private useDetailLevel: boolean;
+    /** @see {@link ProxyViewTransparentEdges} */
+    private transparentEdges: boolean;
     /** @see {@link ProxyViewCapScaleToOne} */
     private capScaleToOne: boolean;
     /** @see {@link ProxyViewClusterTransparent} */
@@ -144,10 +151,11 @@ export class ProxyView extends AbstractUIExtension {
         this.patcher = this.patcherProvider.patcher;
         // Initialize caches
         this.filters = [];
+        this.currProxies = [];
+        this.prevModifiedEdges = new Map;
         this.renderings = new Map;
         this.positions = new Map;
         this.distances = new Map;
-        this.currProxies = [];
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
@@ -165,8 +173,6 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: title scaling
-    // TODO: edge opacity
     // TODO: für polylines along-edge-routing
     // Nächstes K-Meeting ^^^ along-edge-routing vs straight
     // TODO: semantic filter in vscode for node type
@@ -588,6 +594,8 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // TODO: could set opacity of original edge to 0 (and reset later on)
+        this.resetEdgeOpacity(Array.from(this.prevModifiedEdges.entries()));
+        const modifiedEdges = new Map;
         const res = [];
         for (const { node, transform } of nodes) {
             if (node instanceof SKNode) {
@@ -598,7 +606,7 @@ export class ProxyView extends AbstractUIExtension {
                         // Proxy is target, node is source
                         const proxyConnector = edge.routingPoints[edge.routingPoints.length - 1];
                         const nodeConnector = edge.routingPoints[0];
-                        const proxyEdge = this.rerouteEdge(node, transform, edge, nodeConnector, proxyConnector, false, canvas, ctx);
+                        const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, ctx);
                         res.push(proxyEdge);
                     }
                 }
@@ -609,12 +617,16 @@ export class ProxyView extends AbstractUIExtension {
                         // Proxy is source, node is target
                         const proxyConnector = edge.routingPoints[0];
                         const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
-                        const proxyEdge = this.rerouteEdge(node, transform, edge, nodeConnector, proxyConnector, true, canvas, ctx);
+                        const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, ctx);
                         res.push(proxyEdge);
                     }
                 }
             }
         }
+
+        // New modified edges
+        this.prevModifiedEdges = modifiedEdges;
+
         return res;
     }
 
@@ -623,7 +635,7 @@ export class ProxyView extends AbstractUIExtension {
      * `nodeConnector` and `proxyConnector` are the endpoints of the original edge.
      * @param `outgoing` Whether the edge is outgoing from the proxy.
      */
-    private rerouteEdge(node: SKNode, transform: TransformAttributes, edge: SKEdge,
+    private rerouteEdge(node: SKNode, transform: TransformAttributes, edge: SKEdge, modifiedEdges: Map<string, [SKEdge, number]>,
         nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): SKEdge {
         // Connected to node, just calculate absolute coordinates + basic translation
         const parentPos = this.getAbsolutePosition(node.parent as SKNode);
@@ -651,7 +663,24 @@ export class ProxyView extends AbstractUIExtension {
         clone.data = this.placeDecorator(edge.data, ctx, source, target);
         clone.opacity = node.opacity;
 
+        if (this.transparentEdges) {
+            // Fade out the original edge TODO: if not already transparent?
+            const id = this.getProxyId(edge.id);
+            modifiedEdges.set(id, [edge, edge.opacity]);
+            edge.opacity = 0;
+        }
+
         return clone;
+    }
+
+    /**
+     * Resets the opacity of the given edges.
+     * @param modifiedEdges The entries of the map containing the edges to reset the opacity for.
+     */
+    private resetEdgeOpacity(modifiedEdges: [string, [SKEdge, number]][]): void {
+        for (const [, [edge, opacity]] of modifiedEdges) {
+            edge.opacity = opacity;
+        }
     }
 
     /** Returns the proxy rendering for an off-screen node. */
@@ -970,8 +999,6 @@ export class ProxyView extends AbstractUIExtension {
 
         this.drawStraightEdges = renderOptionsRegistry.getValue(ProxyViewDrawStraightEdges);
 
-        this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
-
         this.useTitleScaling = renderOptionsRegistry.getValue(ProxyViewTitleScaling);
 
         // Debug
@@ -985,11 +1012,21 @@ export class ProxyView extends AbstractUIExtension {
         }
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
+        this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+
         this.stackingOrderByDistance = renderOptionsRegistry.getValue(ProxyViewStackingOrderByDistance);
         this.stackingOrderByOpacity = renderOptionsRegistry.getValue(ProxyViewStackingOrderByOpacity);
         this.stackingOrderBySelected = renderOptionsRegistry.getValue(ProxyViewStackingOrderBySelected);
 
         this.useDetailLevel = renderOptionsRegistry.getValue(ProxyViewUseDetailLevel);
+
+        this.transparentEdges = renderOptionsRegistry.getValue(ProxyViewTransparentEdges);
+        if (!this.transparentEdges && this.prevModifiedEdges.size > 0) {
+            // Reset opacity of all edges TODO:
+            const resetEdges = Array.from(this.prevModifiedEdges.entries());
+            this.resetEdgeOpacity(resetEdges);
+            this.prevModifiedEdges.clear();
+        }
 
         this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
 

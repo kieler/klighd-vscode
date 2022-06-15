@@ -145,21 +145,6 @@ export class ProxyViewDrawStraightEdges implements RenderOption {
     currentValue = ProxyViewDrawStraightEdges.DEFAULT;
 }
 
-/** Whether to cap proxies in their parent node. */
-export class ProxyViewCapProxyToParent implements RenderOption {
-    static readonly ID: string = "proxy-view-cap-proxy-to-parent";
-    static readonly NAME: string = "Cap Proxy to Parent";
-    static readonly DESCRIPTION: string = "Whether proxies should be capped inside their parent node.";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewCapProxyToParent.ID;
-    readonly name: string = ProxyViewCapProxyToParent.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewCapProxyToParent.DEFAULT;
-    readonly description: string = ProxyViewCapProxyToParent.DESCRIPTION;
-    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
-    currentValue = ProxyViewCapProxyToParent.DEFAULT;
-}
-
 /** Whether to use title scaling if smart zoom is enabled. */
 export class ProxyViewTitleScaling implements RenderOption {
     static readonly ID: string = "proxy-view-title-scaling";
@@ -238,6 +223,22 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
 }
 
+/** Whether to cap proxies in their parent node. */
+export class ProxyViewCapProxyToParent implements RenderOption {
+    static readonly ID: string = "proxy-view-cap-proxy-to-parent";
+    static readonly NAME: string = "Cap Proxy to Parent";
+    static readonly DESCRIPTION: string = "Whether proxies should be capped inside their parent node.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewCapProxyToParent.ID;
+    readonly name: string = ProxyViewCapProxyToParent.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewCapProxyToParent.DEFAULT;
+    readonly description: string = ProxyViewCapProxyToParent.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewCapProxyToParent.DEFAULT;
+}
+
 /** Whether to change stacking order such that close proxies are stacked above distant ones. */
 export class ProxyViewStackingOrderByDistance implements RenderOption {
     static readonly ID: string = "proxy-view-stacking-order-by-distance";
@@ -300,6 +301,22 @@ export class ProxyViewUseDetailLevel implements RenderOption {
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
     currentValue = ProxyViewUseDetailLevel.DEFAULT;
+}
+
+/** Whether edges should become transparent when the corresponding edge proxies are on-screen. */
+export class ProxyViewTransparentEdges implements RenderOption {
+    static readonly ID: string = "proxy-view-transparent-edges";
+    static readonly NAME: string = "Fade Out Edges";
+    static readonly DESCRIPTION: string = "Whether edges should become transparent when the corresponding edge proxies are on-screen.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewTransparentEdges.ID;
+    readonly name: string = ProxyViewTransparentEdges.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewTransparentEdges.DEFAULT;
+    readonly description: string = ProxyViewTransparentEdges.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewTransparentEdges.DEFAULT;
 }
 
 /** Whether to cap scaling of proxies to 1. */
