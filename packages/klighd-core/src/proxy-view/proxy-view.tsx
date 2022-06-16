@@ -175,7 +175,7 @@ export class ProxyView extends AbstractUIExtension {
     // TODO: performance in developer options for measuring performance
     // TODO: along-edge-routing for polylines
     // Next K-Meeting ^^^ along-edge-routing vs straight
-    // TODO: semantic filter in vscode repo for node type
+    // TODO: semantic filter in vscode repo for node type of sccharts
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
