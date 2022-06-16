@@ -258,7 +258,7 @@ export class ProxyView extends AbstractUIExtension {
         //// Render the proxies ////
         const proxies = [];
         this.currProxies = [];
-        
+
         // Nodes
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
@@ -283,7 +283,7 @@ export class ProxyView extends AbstractUIExtension {
                 }
             }
         }
-        
+
         // Clear caches for the next model
         this.clearPositions();
         this.clearDistances();
@@ -657,8 +657,7 @@ export class ProxyView extends AbstractUIExtension {
         nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): SKEdge | undefined {
         // Connected to node, just calculate absolute coordinates + basic translation
         const parentPos = this.getAbsolutePosition(node.parent as SKNode);
-        nodeConnector = Point.add(parentPos, nodeConnector);
-        const nodeTranslated = getTranslatedBounds(nodeConnector, canvas);
+        const nodeTranslated = getTranslatedBounds(Point.add(parentPos, nodeConnector), canvas);
 
         if (!this.edgesToOffScreenPoint && !Bounds.includes(canvas, nodeTranslated)) {
             // Would be connected to an off-screen point, don't show the edge
@@ -678,14 +677,47 @@ export class ProxyView extends AbstractUIExtension {
         // Calculate all routing points
         const routingPoints = [source];
         if (this.alongEdgeRouting) {
+            // Still TODO: potentially reverse list depending on outgoing?
             // Potentially need more points than just source and target
 
             // Calculate point where edge leaves canvas
-            // let prevPoint = source;
-            // let canvasEdgeIntersection;
-            // for (const p of edge.routingPoints) {
-            //     if () // TODO: check if out of bounds, then get intersection
-            // }
+            let prevPoint = source;
+            let canvasEdgeIntersection;
+            for (let p of edge.routingPoints) {
+                // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
+                p = getTranslatedBounds(Point.add(parentPos, p), canvas);
+                const offset = 10;
+                const canvasLeft = canvas.x + offset;
+                const canvasRight = canvas.x + canvas.width - offset;
+                const canvasTop = canvas.y + offset;
+                const canvasBottom = canvas.y + canvas.height - offset;
+                if (p.x <= canvasLeft || p.x >= canvasRight) {
+                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
+                    const canvasLeftOrRight = p.x <= canvasLeft ? canvasLeft : canvasRight;
+                    let scalar = (canvasLeftOrRight - prevPoint.x) / (p.x - prevPoint.x);
+                    scalar = Math.max(0, Math.min(1, scalar));
+                    // Find y
+                    const intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
+                    canvasEdgeIntersection = { x: canvasLeftOrRight, y: intersectY };
+                } else if (p.y <= canvasTop || p.y >= canvasBottom) {
+                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
+                    const canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
+                    let scalar = (canvasTopOrBottom - prevPoint.y) / (p.y - prevPoint.y);
+                    scalar = Math.max(0, Math.min(1, scalar));
+                    // Find x
+                    const intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
+                    canvasEdgeIntersection = { x: intersectX, y: canvasTopOrBottom };
+                }
+
+                if (canvasEdgeIntersection) {
+                    // Done
+                    routingPoints.push(canvasEdgeIntersection);
+                    break;
+                }
+
+                prevPoint = p;
+                routingPoints.push(p);
+            }
         }
         routingPoints.push(target);
 
