@@ -335,11 +335,11 @@ export class ProxyViewCapScaleToOne implements RenderOption {
     currentValue = ProxyViewCapScaleToOne.DEFAULT;
 }
 
-/** Whether clusters should be transparent according to their contained proxies. */
+/** Whether clusters should be transparent according to the average of their contained proxies' opacities. */
 export class ProxyViewClusterTransparent implements RenderOption {
     static readonly ID: string = "proxy-view-cluster-transparent";
     static readonly NAME: string = "Allow Transparent Cluster";
-    static readonly DESCRIPTION: string = "Whether clusters should be transparent according to their contained proxies.";
+    static readonly DESCRIPTION: string = "Whether clusters should be transparent according to the average of their contained proxies' opacities.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewClusterTransparent.ID;
     readonly name: string = ProxyViewClusterTransparent.NAME;

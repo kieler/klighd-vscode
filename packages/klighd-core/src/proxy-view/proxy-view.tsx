@@ -173,9 +173,9 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: für polylines along-edge-routing
-    // Nächstes K-Meeting ^^^ along-edge-routing vs straight
-    // TODO: semantic filter in vscode for node type
+    // TODO: along-edge-routing for polylines
+    // Next K-Meeting ^^^ along-edge-routing vs straight
+    // TODO: semantic filter in vscode repo for node type
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
