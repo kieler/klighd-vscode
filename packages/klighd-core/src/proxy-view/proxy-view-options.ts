@@ -28,9 +28,10 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
  *   Off
  *   Clustering
  *   Stacking Order + Transparency by Distance
+ * Show Edges to Proxies
+ *   Straight Edges
+ *   Along-Edge-Routing
  * Enable Actions ({@link ProxyViewActionsEnabled})
- *   true/false
- * Cap Proxy to parent
  *   true/false
  * 
  * Filters (...)
@@ -131,18 +132,33 @@ export class ProxyViewActionsEnabled implements RenderOption {
 }
 
 /** Whether straight edges to proxies should be drawn. */
-export class ProxyViewDrawStraightEdges implements RenderOption {
-    static readonly ID: string = "proxy-view-draw-edges";
+export class ProxyViewStraightEdgeRouting implements RenderOption {
+    static readonly ID: string = "proxy-view-straight-edge-routing";
     static readonly NAME: string = "Draw Straight Edges to Proxies";
     static readonly DESCRIPTION: string = "Whether straight edges to proxies should be drawn.";
     static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewDrawStraightEdges.ID;
-    readonly name: string = ProxyViewDrawStraightEdges.NAME;
+    readonly id: string = ProxyViewStraightEdgeRouting.ID;
+    readonly name: string = ProxyViewStraightEdgeRouting.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewDrawStraightEdges.DEFAULT;
-    readonly description: string = ProxyViewDrawStraightEdges.DESCRIPTION;
+    readonly initialValue: boolean = ProxyViewStraightEdgeRouting.DEFAULT;
+    readonly description: string = ProxyViewStraightEdgeRouting.DESCRIPTION;
     readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
-    currentValue = ProxyViewDrawStraightEdges.DEFAULT;
+    currentValue = ProxyViewStraightEdgeRouting.DEFAULT;
+}
+
+/** Whether edges to proxies should be drawn via along-edge-routing. */
+export class ProxyViewAlongEdgeRouting implements RenderOption {
+    static readonly ID: string = "proxy-view-along-edge-routing";
+    static readonly NAME: string = "Along-Edge-Routing";
+    static readonly DESCRIPTION: string = "Whether edges to proxies should be drawn via along-edge-routing.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewAlongEdgeRouting.ID;
+    readonly name: string = ProxyViewAlongEdgeRouting.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewAlongEdgeRouting.DEFAULT;
+    readonly description: string = ProxyViewAlongEdgeRouting.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewAlongEdgeRouting.DEFAULT;
 }
 
 /** Whether to use title scaling if smart zoom is enabled. */
@@ -301,6 +317,38 @@ export class ProxyViewUseDetailLevel implements RenderOption {
     readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
     readonly debug: boolean = true;
     currentValue = ProxyViewUseDetailLevel.DEFAULT;
+}
+
+/** Whether edge proxies should be drawn above node proxies. */
+export class ProxyViewDrawEdgesAboveNodes implements RenderOption {
+    static readonly ID: string = "proxy-view-draw-edges-above-nodes";
+    static readonly NAME: string = "Draw Edges Over Nodes";
+    static readonly DESCRIPTION: string = "Whether edge proxies should be drawn above node proxies.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewDrawEdgesAboveNodes.ID;
+    readonly name: string = ProxyViewDrawEdgesAboveNodes.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewDrawEdgesAboveNodes.DEFAULT;
+    readonly description: string = ProxyViewDrawEdgesAboveNodes.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewDrawEdgesAboveNodes.DEFAULT;
+}
+
+/** Whether edge proxies should be drawn when the source or target point is off-screen. */
+export class ProxyViewEdgesToOffScreenPoint implements RenderOption {
+    static readonly ID: string = "proxy-view-draw-edges-to-off-screen-point";
+    static readonly NAME: string = "Draw Edges to Off-Screen Point";
+    static readonly DESCRIPTION: string = "Whether edge proxies should be drawn when the source or target point is off-screen.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewEdgesToOffScreenPoint.ID;
+    readonly name: string = ProxyViewEdgesToOffScreenPoint.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewEdgesToOffScreenPoint.DEFAULT;
+    readonly description: string = ProxyViewEdgesToOffScreenPoint.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewEdgesToOffScreenPoint.DEFAULT;
 }
 
 /** Whether edges should become transparent when the corresponding edge proxies are on-screen. */
