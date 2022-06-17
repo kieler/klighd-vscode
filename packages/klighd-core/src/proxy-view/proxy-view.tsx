@@ -30,7 +30,7 @@ import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongEdgeRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint } from "./proxy-view-options";
-import { anyContains, CanvasAttributes, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -561,7 +561,7 @@ export class ProxyView extends AbstractUIExtension {
                 }
 
                 // Cap opacity in [0,1]
-                opacity = Math.max(0, Math.min(1, opacity));
+                opacity = capNumber(opacity, 0, 1);
                 // Make sure the calculated positions don't leave the canvas bounds
                 ({ x, y } = capToCanvas({ x, y, width: size, height: size }, canvas));
 
@@ -684,7 +684,7 @@ export class ProxyView extends AbstractUIExtension {
             // TODO: doesn't fully work for outgoing edges yet, incoming seem fine
 
             // Calculate point where edge leaves canvas
-            let prevPoint = source;
+            let prevPoint = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[0]), canvas);
             let canvasEdgeIntersection;
             for (let i = 0; i < edge.routingPoints.length; i++) {
                 // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
@@ -697,30 +697,32 @@ export class ProxyView extends AbstractUIExtension {
 
                 if (p.x <= canvasLeft || p.x >= canvasRight) {
                     // Intersection at x, find y
-                    const canvasLeftOrRight = p.x <= canvasLeft ? canvasLeft : canvasRight;
+                    let canvasLeftOrRight = p.x <= canvasLeft ? canvasLeft : canvasRight;
 
                     // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
                     let scalar = (canvasLeftOrRight - prevPoint.x) / (p.x - prevPoint.x);
-                    scalar = Math.max(0, Math.min(1, scalar));
+                    scalar = capNumber(scalar, 0, 1);
 
-                    const intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
+                    let intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
+                    ({ x: canvasLeftOrRight, y: intersectY } = capToCanvas({ x: canvasLeftOrRight, y: intersectY }, canvas, offset));
                     canvasEdgeIntersection = { x: canvasLeftOrRight, y: intersectY };
                 } else if (p.y <= canvasTop || p.y >= canvasBottom) {
                     // Intersection at y, find x
-                    const canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
+                    let canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
 
                     // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
                     let scalar = (canvasTopOrBottom - prevPoint.y) / (p.y - prevPoint.y);
-                    scalar = Math.max(0, Math.min(1, scalar));
+                    scalar = capNumber(scalar, 0, 1);
 
-                    const intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
+                    let intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
+                    ({ x: intersectX, y: canvasTopOrBottom } = capToCanvas({ x: intersectX, y: canvasTopOrBottom }, canvas, offset));
                     canvasEdgeIntersection = { x: intersectX, y: canvasTopOrBottom };
                 }
 
                 if (canvasEdgeIntersection) {
                     // Done
                     // if (!Bounds.includes(transform, canvasEdgeIntersection)) {
-                        routingPoints.push(canvasEdgeIntersection);
+                    routingPoints.push(canvasEdgeIntersection);
                     // }
                     break;
                 }
@@ -728,7 +730,7 @@ export class ProxyView extends AbstractUIExtension {
                 // Push p to keep routing points consistent
                 prevPoint = p;
                 // if (!Bounds.includes(transform, p)) { // TODO: don't add points when inside proxy (more relevant for canvasEdgeIntersection)?
-                    routingPoints.push(p);
+                routingPoints.push(p);
                 // }
             }
         } else {
@@ -891,8 +893,8 @@ export class ProxyView extends AbstractUIExtension {
 
         if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
             const translatedParent = this.getTranslatedNodeBounds(node.parent as SKNode, canvas);
-            x = Math.max(translatedParent.x, Math.min(translatedParent.x + translatedParent.width - proxyWidth, x));
-            y = Math.max(translatedParent.y, Math.min(translatedParent.y + translatedParent.height - proxyHeight, y));
+            x = capNumber(x, translatedParent.x, translatedParent.x + translatedParent.width - proxyWidth);
+            y = capNumber(y, translatedParent.y, translatedParent.y + translatedParent.height - proxyHeight);
         }
 
         return { x, y, scale, width: proxyWidth, height: proxyHeight };
