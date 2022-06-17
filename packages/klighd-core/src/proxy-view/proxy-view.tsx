@@ -676,16 +676,18 @@ export class ProxyView extends AbstractUIExtension {
 
         // Calculate all routing points
         const routingPoints = [source];
-        if (this.alongEdgeRouting) {
-            // Still TODO: potentially reverse list depending on outgoing?
+        if (this.straightEdgeRouting) {
+            // Straight edge from source to target
+            // Nothing to do here as both points are already added outside of if
+        } else if (this.alongEdgeRouting) {
             // Potentially need more points than just source and target
 
             // Calculate point where edge leaves canvas
             let prevPoint = source;
             let canvasEdgeIntersection;
-            for (let p of edge.routingPoints) {
+            for (let i = 0; i < edge.routingPoints.length; i++) {
                 // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
-                p = getTranslatedBounds(Point.add(parentPos, p), canvas);
+                const p = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[i]), canvas);
                 const offset = 10;
                 const canvasLeft = canvas.x + offset;
                 const canvasRight = canvas.x + canvas.width - offset;
@@ -711,13 +713,21 @@ export class ProxyView extends AbstractUIExtension {
 
                 if (canvasEdgeIntersection) {
                     // Done
-                    routingPoints.push(canvasEdgeIntersection);
+                    if (!Bounds.includes(transform, canvasEdgeIntersection)) {
+                        routingPoints.push(canvasEdgeIntersection);
+                    }
                     break;
                 }
 
+                // Push p to keep routing points consistent
                 prevPoint = p;
-                routingPoints.push(p);
+                if (!Bounds.includes(transform, p)) { // TODO: ?
+                    routingPoints.push(p);
+                }
             }
+        } else {
+            // Should never be the case, must be called with a routing strategy enabled
+            return undefined;
         }
         routingPoints.push(target);
 
@@ -726,7 +736,7 @@ export class ProxyView extends AbstractUIExtension {
         // Set attributes
         clone.routingPoints = routingPoints;
         clone.junctionPoints = [];
-        clone.data = this.placeDecorator(edge.data, ctx, routingPoints[routingPoints.length - 2], target);
+        clone.data = this.placeDecorator(edge.data, ctx, routingPoints[routingPoints.length - 2], routingPoints[routingPoints.length - 1]);
         clone.opacity = node.opacity;
         // OLD: cannot change these, edges won't be rendered
         // clone.sourceId = outgoing ? this.getProxyId(clone.sourceId) : clone.sourceId;
