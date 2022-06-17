@@ -682,13 +682,19 @@ export class ProxyView extends AbstractUIExtension {
         } else if (this.alongEdgeRouting) {
             // Potentially need more points than just source and target
             // TODO: doesn't fully work for outgoing edges yet, incoming seem fine
+            // TODO: problem occurs when first p already intersects, then p = prevPoint,
+            // TODO: resulting in y = p.y or x = p.x respectively (not on the line since vector prevPoint to p = 0)
+            // TODO: can't just place initial prevPoint on another point on the line, messes up other stuff
+            // TODO: probably just literally need to traverse routingPoints in reverse order for outgoing edges
+            // TODO: seems to mostly work now, still check out n1 -> n4 though
 
             // Calculate point where edge leaves canvas
-            let prevPoint = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[0]), canvas);
+            let prevPoint = nodeTranslated;
             let canvasEdgeIntersection;
             for (let i = 0; i < edge.routingPoints.length; i++) {
                 // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
-                const p = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[i]), canvas);
+                const p = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i]), canvas);
+
                 const offset = 10;
                 const canvasLeft = canvas.x + offset;
                 const canvasRight = canvas.x + canvas.width - offset;
@@ -700,23 +706,22 @@ export class ProxyView extends AbstractUIExtension {
                     let canvasLeftOrRight = p.x <= canvasLeft ? canvasLeft : canvasRight;
 
                     // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
-                    let scalar = (canvasLeftOrRight - prevPoint.x) / (p.x - prevPoint.x);
-                    scalar = capNumber(scalar, 0, 1);
+                    const scalar = capNumber((canvasLeftOrRight - prevPoint.x) / (p.x - prevPoint.x), 0, 1);
 
+                    // Intersection point, cap to canvas with offset (and to sidebar aswell)
                     let intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
                     ({ x: canvasLeftOrRight, y: intersectY } = capToCanvas({ x: canvasLeftOrRight, y: intersectY }, canvas, offset));
                     canvasEdgeIntersection = { x: canvasLeftOrRight, y: intersectY };
                 } else if (p.y <= canvasTop || p.y >= canvasBottom) {
                     // Intersection at y, find x
-                    let canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
+                    const canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
 
                     // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
-                    let scalar = (canvasTopOrBottom - prevPoint.y) / (p.y - prevPoint.y);
-                    scalar = capNumber(scalar, 0, 1);
+                    const scalar = capNumber((canvasTopOrBottom - prevPoint.y) / (p.y - prevPoint.y), 0, 1);
 
-                    let intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
-                    ({ x: intersectX, y: canvasTopOrBottom } = capToCanvas({ x: intersectX, y: canvasTopOrBottom }, canvas, offset));
-                    canvasEdgeIntersection = { x: intersectX, y: canvasTopOrBottom };
+                    // Intersection point, cap to canvas with offset (and to sidebar aswell)
+                    const intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
+                    canvasEdgeIntersection = capToCanvas({ x: intersectX, y: canvasTopOrBottom }, canvas, offset);
                 }
 
                 if (canvasEdgeIntersection) {
