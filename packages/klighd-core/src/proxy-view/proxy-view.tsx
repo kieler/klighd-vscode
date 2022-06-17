@@ -681,6 +681,7 @@ export class ProxyView extends AbstractUIExtension {
             // Nothing to do here as both points are already added outside of if
         } else if (this.alongEdgeRouting) {
             // Potentially need more points than just source and target
+            // TODO: doesn't fully work for outgoing edges yet, incoming seem fine
 
             // Calculate point where edge leaves canvas
             let prevPoint = source;
@@ -693,37 +694,42 @@ export class ProxyView extends AbstractUIExtension {
                 const canvasRight = canvas.x + canvas.width - offset;
                 const canvasTop = canvas.y + offset;
                 const canvasBottom = canvas.y + canvas.height - offset;
+
                 if (p.x <= canvasLeft || p.x >= canvasRight) {
-                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
+                    // Intersection at x, find y
                     const canvasLeftOrRight = p.x <= canvasLeft ? canvasLeft : canvasRight;
+
+                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
                     let scalar = (canvasLeftOrRight - prevPoint.x) / (p.x - prevPoint.x);
                     scalar = Math.max(0, Math.min(1, scalar));
-                    // Find y
+
                     const intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
                     canvasEdgeIntersection = { x: canvasLeftOrRight, y: intersectY };
                 } else if (p.y <= canvasTop || p.y >= canvasBottom) {
-                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
+                    // Intersection at y, find x
                     const canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
+
+                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
                     let scalar = (canvasTopOrBottom - prevPoint.y) / (p.y - prevPoint.y);
                     scalar = Math.max(0, Math.min(1, scalar));
-                    // Find x
+
                     const intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
                     canvasEdgeIntersection = { x: intersectX, y: canvasTopOrBottom };
                 }
 
                 if (canvasEdgeIntersection) {
                     // Done
-                    if (!Bounds.includes(transform, canvasEdgeIntersection)) {
+                    // if (!Bounds.includes(transform, canvasEdgeIntersection)) {
                         routingPoints.push(canvasEdgeIntersection);
-                    }
+                    // }
                     break;
                 }
 
                 // Push p to keep routing points consistent
                 prevPoint = p;
-                if (!Bounds.includes(transform, p)) { // TODO: ?
+                // if (!Bounds.includes(transform, p)) { // TODO: don't add points when inside proxy (more relevant for canvasEdgeIntersection)?
                     routingPoints.push(p);
-                }
+                // }
             }
         } else {
             // Should never be the case, must be called with a routing strategy enabled
