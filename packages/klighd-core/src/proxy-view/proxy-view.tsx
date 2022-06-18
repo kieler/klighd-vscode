@@ -675,10 +675,10 @@ export class ProxyView extends AbstractUIExtension {
         const target = outgoing ? nodeTranslated : proxyTranslated;
 
         // Calculate all routing points
-        const routingPoints = [source];
+        const routingPoints = [];
         if (this.straightEdgeRouting) {
             // Straight edge from source to target
-            // Nothing to do here as both points are already added outside of if
+            routingPoints.push(source, target);
         } else if (this.alongEdgeRouting) {
             // Potentially need more points than just source and target
             // TODO: doesn't fully work for outgoing edges yet, incoming seem fine
@@ -691,10 +691,12 @@ export class ProxyView extends AbstractUIExtension {
             // Calculate point where edge leaves canvas
             let prevPoint = nodeTranslated;
             let canvasEdgeIntersection;
-            for (let i = 0; i < edge.routingPoints.length; i++) {
+            for (let i = 1; i < edge.routingPoints.length; i++) {
                 // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
+                // Traverse routingPoints from the end for outgoing edges to match with prevPoint
                 const p = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i]), canvas);
 
+                // Canvas dimensions with offset, so as to keep the edge on the canvas
                 const offset = 10;
                 const canvasLeft = canvas.x + offset;
                 const canvasRight = canvas.x + canvas.width - offset;
@@ -726,23 +728,33 @@ export class ProxyView extends AbstractUIExtension {
 
                 if (canvasEdgeIntersection) {
                     // Done
-                    // if (!Bounds.includes(transform, canvasEdgeIntersection)) {
-                    routingPoints.push(canvasEdgeIntersection);
-                    // }
+                    if (!Bounds.includes(transform, canvasEdgeIntersection)) {
+                        // Don't add a point inside of the proxy
+                        routingPoints.push(canvasEdgeIntersection);
+                    }
                     break;
                 }
 
                 // Push p to keep routing points consistent
                 prevPoint = p;
-                // if (!Bounds.includes(transform, p)) { // TODO: don't add points when inside proxy (more relevant for canvasEdgeIntersection)?
-                routingPoints.push(p);
-                // }
+                if (!Bounds.includes(transform, p)) {
+                    // Don't add a point inside of the proxy
+                    routingPoints.push(p);
+                }
             }
+
+            if (outgoing) {
+                // Since routingpoints was traversed from the end, it needs to be reversed
+                routingPoints.reverse();
+            }
+
+            // Add source and target
+            routingPoints.unshift(source);
+            routingPoints.push(target);
         } else {
             // Should never be the case, must be called with a routing strategy enabled
             return undefined;
         }
-        routingPoints.push(target);
 
         // Clone the edge so as to not change the real one
         const clone = Object.create(edge) as SKEdge;
