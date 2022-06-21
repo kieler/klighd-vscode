@@ -24,7 +24,7 @@ import { SKNode } from "../../skgraph-models";
 import { ProxyView } from "../proxy-view";
 import { SendProxyViewAction } from "../proxy-view-actions";
 import { CanvasAttributes, isConnectedToAny, isSelectedOrConnectedToSelected } from "../proxy-view-util";
-import { ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected } from "./proxy-view-filter-options";
+import { ProxyViewFilterCategory, ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected } from "./proxy-view-filter-options";
 
 //////// Types ////////
 
@@ -95,7 +95,7 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
 
     //// Get filter option values ////
     /** Updates the proxy-view filter options specified in the {@link RenderOptionsRegistry}. */
-    updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
+    private updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
         ProxyFilterHandler.filterUnconnectedToOnScreen = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToOnScreen);
         ProxyFilterHandler.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
         ProxyFilterHandler.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
@@ -125,6 +125,13 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
 
     @postConstruct()
     init(): void {
+        // Register proxy-view filters in registry
+        this.renderOptionsRegistry.registerAll(
+            ProxyViewFilterCategory,
+            ProxyViewFilterUnconnectedToOnScreen,
+            ProxyViewFilterUnconnectedToSelected,
+            ProxyViewFilterDistant
+        );
         // Register to receive updates on registry changes
         this.renderOptionsRegistry.onChange(() => this.updateFilterOptions(this.renderOptionsRegistry));
     }

@@ -70,7 +70,11 @@ export class ProxyViewFilterDistant implements RenderOption {
     static readonly CHOICE_CLOSE: string = "Close";
     static readonly CHOICE_DISTANT: string = "Distant";
     static readonly DEFAULT: string = ProxyViewFilterDistant.CHOICE_OFF;
-    static readonly CHOICES: string[] = [ProxyViewFilterDistant.CHOICE_OFF, ProxyViewFilterDistant.CHOICE_CLOSE, ProxyViewFilterDistant.CHOICE_DISTANT];
+    static readonly CHOICES: string[] = [
+        ProxyViewFilterDistant.CHOICE_OFF,
+        ProxyViewFilterDistant.CHOICE_CLOSE,
+        ProxyViewFilterDistant.CHOICE_DISTANT
+    ];
     readonly id: string = ProxyViewFilterDistant.ID;
     readonly name: string = ProxyViewFilterDistant.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHOICE;

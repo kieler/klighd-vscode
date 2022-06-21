@@ -19,8 +19,6 @@ import { inject, injectable, postConstruct } from "inversify";
 import { ICommand } from "sprotty";
 import { Action, UpdateModelAction } from "sprotty-protocol";
 import { Registry } from "../base/registry";
-import { ProxyViewFilterCategory, ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected } from "../proxy-view/filters/proxy-view-filter-options";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewDebugCategory, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongEdgeRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint } from "../proxy-view/proxy-view-options";
 import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
@@ -292,42 +290,6 @@ export class RenderOptionsRegistry extends Registry {
 
         this.register(PaperShadows)
         this.register(AnimateGoToBookmark);
-
-        // Proxy-view
-        this.register(ProxyViewCategory);
-        this.register(ProxyViewEnabled);
-        this.register(ProxyViewSize);
-        this.register(ProxyViewClusteringEnabled);
-        this.register(ProxyViewOpacityByDistance);
-        this.register(ProxyViewActionsEnabled);
-        this.register(ProxyViewStraightEdgeRouting);
-        this.register(ProxyViewAlongEdgeRouting);
-        this.register(ProxyViewTitleScaling);
-
-        // Proxy-view filters
-        this.register(ProxyViewFilterCategory);
-        this.register(ProxyViewFilterUnconnectedToOnScreen);
-        this.register(ProxyViewFilterUnconnectedToSelected);
-        this.register(ProxyViewFilterDistant);
-
-        // Proxy-view debug
-        this.register(ProxyViewDebugCategory)
-        this.register(ProxyViewHighlightSelected);
-        this.register(ProxyViewOpacityBySelected);
-        this.register(ProxyViewUseSynthesisProxyRendering);
-        this.register(ProxyViewCapProxyToParent);
-        this.register(ProxyViewStackingOrderByDistance);
-        this.register(ProxyViewStackingOrderByOpacity);
-        this.register(ProxyViewStackingOrderBySelected);
-        this.register(ProxyViewUseDetailLevel);
-        this.register(ProxyViewDrawEdgesAboveNodes);
-        this.register(ProxyViewEdgesToOffScreenPoint);
-        this.register(ProxyViewTransparentEdges);
-        this.register(ProxyViewCapScaleToOne);
-        this.register(ProxyViewClusterTransparent);
-        this.register(ProxyViewClusteringCascading);
-        this.register(ProxyViewClusteringSweepLine);
-        this.register(ProxyViewUsePositionsCache);
     }
 
     @postConstruct()
@@ -353,6 +315,11 @@ export class RenderOptionsRegistry extends Registry {
 
     register(Option: RenderOptionType): void {
         this._renderOptions.set(Option.ID, new Option())
+    }
+
+    /** Convenience method to register all given options in order. */
+    registerAll(...options: RenderOptionType[]): void {
+        options.forEach(option => this.register(option));
     }
 
     handle(action: Action): void | Action | ICommand {

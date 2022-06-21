@@ -182,6 +182,7 @@ export class ProxyView extends AbstractUIExtension {
     // TODO: along-edge-routing for polylines
     // Next K-Meeting ^^^ along-edge-routing vs straight
     // TODO: semantic filter in vscode repo for node type of sccharts
+    // TODO: go x layers deep for off-screen nodes (specify in synthesis)
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -690,9 +691,10 @@ export class ProxyView extends AbstractUIExtension {
             const canvasTop = canvas.y + yOffset;
             const canvasBottom = canvas.y + canvas.height - yOffset;
 
+            // TODO: spline type
+
             // Appends or prepends the object to the array accordingly using outgoing
             const add = outgoing ? routingPoints.unshift.bind(routingPoints) : routingPoints.push.bind(routingPoints);
-
             //// Calculate point where edge leaves canvas
             let prevPoint = nodeTranslated;
             let canvasEdgeIntersection;
@@ -747,6 +749,7 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             //// Calculate points on path to proxy near canvas
+            // TODO: does this work? + cleanup
             let x, y;
             if (canvasEdgeIntersection.x === canvasLeft) {
                 // Intersection at the left

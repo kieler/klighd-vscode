@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable } from "inversify";
+import { inject, injectable, postConstruct } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, MouseListener, SetUIExtensionVisibilityAction, SModelElement } from "sprotty";
 import { Action, SetModelAction, UpdateModelAction } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
@@ -24,6 +24,7 @@ import { OptionsRegistry } from "../options/options-registry";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { ProxyView } from "./proxy-view";
+import { ProxyViewActionsEnabled, ProxyViewAlongEdgeRouting, ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewDebugCategory, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewStraightEdgeRouting, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 
 /**
  * Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
@@ -88,6 +89,44 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
 
     //// Actions ////
 
+    @postConstruct()
+    init(): void {
+        //// Register options
+        // Proxy-view
+        this.renderOptionsRegistry.registerAll(
+            ProxyViewCategory,
+            ProxyViewEnabled,
+            ProxyViewSize,
+            ProxyViewClusteringEnabled,
+            ProxyViewOpacityByDistance,
+            ProxyViewActionsEnabled,
+            ProxyViewStraightEdgeRouting,
+            ProxyViewAlongEdgeRouting,
+            ProxyViewTitleScaling
+        );
+
+        // Proxy-view debug
+        this.renderOptionsRegistry.registerAll(
+            ProxyViewDebugCategory,
+            ProxyViewHighlightSelected,
+            ProxyViewOpacityBySelected,
+            ProxyViewUseSynthesisProxyRendering,
+            ProxyViewCapProxyToParent,
+            ProxyViewStackingOrderByDistance,
+            ProxyViewStackingOrderByOpacity,
+            ProxyViewStackingOrderBySelected,
+            ProxyViewUseDetailLevel,
+            ProxyViewDrawEdgesAboveNodes,
+            ProxyViewEdgesToOffScreenPoint,
+            ProxyViewTransparentEdges,
+            ProxyViewCapScaleToOne,
+            ProxyViewClusterTransparent,
+            ProxyViewClusteringCascading,
+            ProxyViewClusteringSweepLine,
+            ProxyViewUsePositionsCache
+        );
+    }
+
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SendProxyViewAction.KIND) {
             // Save the proxy-view instance
@@ -95,6 +134,7 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             this.proxyView = sPVAction.proxyView;
 
             // Register to receive updates on registry changes
+            // Do this here instead of in init() to ensure proxyView isn't undefined
             if (!this.onChangeRegistered) {
                 // Make sure the rendering cache is cleared when the renderings change
                 this.synthesesRegistry.onChange(() => this.proxyView.reset());
@@ -106,8 +146,8 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
         } else if (this.proxyView) {
             if (action.kind === SendModelContextAction.KIND) {
                 // Redirect the content to the proxy-view
-                const sMCAction = action as SendModelContextAction;
-                this.proxyView.update(sMCAction.model, sMCAction.context);
+                const { model, context } = action as SendModelContextAction;
+                this.proxyView.update(model, context);
             } else if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
                 // Layout has changed, new model
                 this.proxyView.reset();
