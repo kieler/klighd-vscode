@@ -96,7 +96,7 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
     } else if (rule instanceof AndConnective) {
         return evaluateRule(rule.leftOperand, tags) && evaluateRule(rule.rightOperand, tags);
     } else if (rule instanceof OrConnective) {
-        return evaluateRule(rule.leftOperand, tags) && evaluateRule(rule.rightOperand, tags);
+        return evaluateRule(rule.leftOperand, tags) || evaluateRule(rule.rightOperand, tags);
     } else {
         return true;
     }
