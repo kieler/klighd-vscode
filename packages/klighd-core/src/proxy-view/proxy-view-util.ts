@@ -42,6 +42,37 @@ export interface TransformAttributes extends Bounds {
  */
 export interface CanvasAttributes extends Viewport, Bounds { }
 
+/** Like {@link Bounds} but contains coordinates instead of width and height. */
+export interface Rect {
+    readonly left: number;
+    readonly right: number;
+    readonly top: number;
+    readonly bottom: number;
+}
+
+export namespace Rect {
+    /** A Rect with all coordinates as zeros. */
+    export const EMPTY: Rect = Object.freeze({ left: 0, right: 0, top: 0, bottom: 0 });
+
+    /**
+     * Returns `b` as a Rect.
+     * @param b The Bounds to transform into a Rect.
+     * @returns The Rect corresponding to `b`.
+     */
+    export function fromBounds(b: Bounds): Rect {
+        return { left: b.x, right: b.x + b.width, top: b.y, bottom: b.y + b.height };
+    }
+
+    /**
+     * Returns `r` as Bounds.
+     * @param r The Rect to transform into Bounds.
+     * @returns The Bounds corresponding to `r`.
+     */
+    export function toBounds(r: Rect): Bounds {
+        return { x: r.left, y: r.top, width: r.right - r.left, height: r.bottom - r.top };
+    }
+}
+
 /** A VNode containing some additional information to be used only by the {@link ProxyView}. */
 export interface ProxyVNode extends VNode {
     /** Whether this vnode is selected. */
@@ -117,25 +148,22 @@ export function capNumber(n: number, min: number, max: number): number {
  * Note that the bounds need to be translated and contain the absolute position (not relative to parent).
  * @param bp The bounds/point to cap to the canvas border, absolute and translated.
  * @param canvas The canvas' attributes.
- * @param xOffset Offsets the canvas' bounds, e.g. shrinks the canvas as if `xOffset` pixels of padding were added
- *                to the left and right. Positive values result in shrinking, negative values in growing the canvas.
- * @param yOffset Offsets the canvas' bounds, e.g. shrinks the canvas as if `yOffset` pixels of padding were added
- *                to the top and bottom. Positive values result in shrinking, negative values in growing the canvas.
+ * @param offset FIXME:
  * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
  */
-export function capToCanvas(bp: Bounds | Point, canvas: CanvasAttributes, xOffset = 0, yOffset = 0): Bounds {
+export function capToCanvas(bp: Bounds | Point, canvas: CanvasAttributes, offset = Rect.EMPTY): Bounds {
     const bounds = toBounds(bp);
 
     // Cap proxy at canvas border
-    let x = capNumber(bounds.x, canvas.x + xOffset, canvas.x + canvas.width - bounds.width - xOffset);
-    const y = capNumber(bounds.y, canvas.y + yOffset, canvas.y + canvas.height - bounds.height - yOffset);
+    let x = capNumber(bounds.x, canvas.x + offset.left, canvas.x + canvas.width - bounds.width - offset.right);
+    const y = capNumber(bounds.y, canvas.y + offset.top, canvas.y + canvas.height - bounds.height - offset.bottom);
 
     // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
     // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
     const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
     const isSidebarOpen = document.querySelector(".sidebar--open");
-    if (!isSidebarOpen && rect && y < rect.bottom + yOffset && x > rect.left - bounds.width - xOffset) {
-        x = rect.left - bounds.width - xOffset;
+    if (!isSidebarOpen && rect && y < rect.bottom + offset.top && x > rect.left - bounds.width - offset.right) {
+        x = rect.left - bounds.width - offset.right;
     }
 
     return { x, y, width: bounds.width, height: bounds.height };

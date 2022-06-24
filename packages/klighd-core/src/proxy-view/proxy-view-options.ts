@@ -30,7 +30,7 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
  *   Stacking Order + Transparency by Distance
  * Show Edges to Proxies
  *   Straight Edges
- *   Along-Edge-Routing
+ *   Along-Border-Routing
  * Enable Actions ({@link ProxyViewActionsEnabled})
  *   true/false
  * 
@@ -146,19 +146,19 @@ export class ProxyViewStraightEdgeRouting implements RenderOption {
     currentValue = ProxyViewStraightEdgeRouting.DEFAULT;
 }
 
-/** Whether edges to proxies should be drawn via along-edge-routing. */
-export class ProxyViewAlongEdgeRouting implements RenderOption {
-    static readonly ID: string = "proxy-view-along-edge-routing";
-    static readonly NAME: string = "Along-Edge-Routing";
-    static readonly DESCRIPTION: string = "Whether edges to proxies should be drawn via along-edge-routing.";
+/** Whether edges to proxies should be drawn via along-border-routing. */
+export class ProxyViewAlongBorderRouting implements RenderOption {
+    static readonly ID: string = "proxy-view-along-border-routing";
+    static readonly NAME: string = "Along-Border-Routing";
+    static readonly DESCRIPTION: string = "Whether edges to proxies should be drawn via along-border-routing.";
     static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewAlongEdgeRouting.ID;
-    readonly name: string = ProxyViewAlongEdgeRouting.NAME;
+    readonly id: string = ProxyViewAlongBorderRouting.ID;
+    readonly name: string = ProxyViewAlongBorderRouting.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewAlongEdgeRouting.DEFAULT;
-    readonly description: string = ProxyViewAlongEdgeRouting.DESCRIPTION;
+    readonly initialValue: boolean = ProxyViewAlongBorderRouting.DEFAULT;
+    readonly description: string = ProxyViewAlongBorderRouting.DESCRIPTION;
     readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
-    currentValue = ProxyViewAlongEdgeRouting.DEFAULT;
+    currentValue = ProxyViewAlongBorderRouting.DEFAULT;
 }
 
 /** Whether to use title scaling if smart zoom is enabled. */
@@ -372,7 +372,7 @@ export class ProxyViewCapScaleToOne implements RenderOption {
     static readonly ID: string = "proxy-view-cap-scale-to-one";
     static readonly NAME: string = "Cap Scaling to 1";
     static readonly DESCRIPTION: string = "Whether proxies should be upscaled more than their original size.";
-    static readonly DEFAULT: boolean = false;
+    static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewCapScaleToOne.ID;
     readonly name: string = ProxyViewCapScaleToOne.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;

@@ -24,13 +24,14 @@ import { Action, angleOfPoint, Bounds, CenterAction, FitToScreenAction, Point } 
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
+import { K_POLYGON, K_POLYLINE, K_SPLINE, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
+import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongEdgeRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint } from "./proxy-view-options";
-import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint } from "./proxy-view-options";
+import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -99,8 +100,8 @@ export class ProxyView extends AbstractUIExtension {
     private actionsEnabled: boolean;
     /** @see {@link ProxyViewStraightEdgeRouting} */
     private straightEdgeRouting: boolean;
-    /** @see {@link ProxyViewAlongEdgeRouting} */
-    private alongEdgeRouting: boolean;
+    /** @see {@link ProxyViewAlongBorderRouting} */
+    private alongBorderRouting: boolean;
     /** @see {@link ProxyViewTitleScaling} */
     private useTitleScaling: boolean;
 
@@ -179,8 +180,8 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: along-edge-routing for polylines
-    // Next K-Meeting ^^^ along-edge-routing vs straight
+    // TODO: along-border-routing for polylines
+    // Next K-Meeting ^^^ along-border-routing vs straight
     // TODO: semantic filter in vscode repo for node type of sccharts
     // TODO: go x layers deep for off-screen nodes (specify in synthesis)
 
@@ -602,7 +603,7 @@ export class ProxyView extends AbstractUIExtension {
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
         onScreenNodes: SKNode[], canvas: CanvasAttributes, ctx: SKGraphModelRenderer): SKEdge[] {
-        if (!(this.straightEdgeRouting || this.alongEdgeRouting)) {
+        if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
             // Don't create edge proxies
             return [];
         }
@@ -610,6 +611,10 @@ export class ProxyView extends AbstractUIExtension {
         // Reset opacity before changing it
         this.resetEdgeOpacity(this.prevModifiedEdges);
         const modifiedEdges = new Map;
+
+        // Color/opacity for fade out effect
+        const color = { red: 255, green: 255, blue: 255 };
+        const opacity = 0.5;
 
         const res = [];
         for (const { node, transform } of nodes) {
@@ -624,6 +629,19 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, ctx);
                         if (proxyEdge) {
                             res.push(proxyEdge);
+                            // TODO: overlay original edge with transparent white edge (same scale) when proxy edge exists
+                            // Draw over original node to simulate a fade out effect
+                            const clone = Object.create(edge) as SKEdge;
+                            const parentPos = this.getAbsolutePosition(node.parent as SKNode);
+                            clone.id = this.getProxyId(clone.id) + "-temp";
+                            clone.data = this.changeColor(clone.data, ctx, color);
+                            clone.opacity = opacity;
+                            clone.routingPoints = clone.routingPoints.map(p => getTranslatedBounds(Point.add(parentPos, p), canvas));
+                            console.log("edge");
+                            console.log(edge.data);
+                            console.log("clone");
+                            console.log(clone.data);
+                            res.push(clone);
                         }
                     }
                 }
@@ -637,6 +655,7 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, ctx);
                         if (proxyEdge) {
                             res.push(proxyEdge);
+                            // FIXME: also overlay here
                         }
                     }
                 }
@@ -680,21 +699,29 @@ export class ProxyView extends AbstractUIExtension {
         if (this.straightEdgeRouting) {
             // Straight edge from source to target
             routingPoints.push(source, target);
-        } else if (this.alongEdgeRouting) {
+        } else if (this.alongBorderRouting) {
             // Potentially need more points than just source and target
             // Canvas dimensions with offset, so as to keep the edge on the canvas
+            // TODO: just offset or x and y?
             const offset = 10;
-            const xOffset = offset;//transform.width + offset; // TODO: just offset or x and y?
-            const yOffset = offset;//transform.height + offset;
-            const canvasLeft = canvas.x + xOffset;
-            const canvasRight = canvas.x + canvas.width - xOffset;
-            const canvasTop = canvas.y + yOffset;
-            const canvasBottom = canvas.y + canvas.height - yOffset;
+            const leftOffset = offset //+ transform.width;
+            const rightOffset = offset //+ transform.width;
+            const topOffset = offset //+ transform.height;
+            const bottomOffset = offset //+ transform.height;
+            const canvasOffset = { left: leftOffset, right: rightOffset, top: topOffset, bottom: bottomOffset };
+            const canvasLeft = canvas.x + leftOffset;
+            const canvasRight = canvas.x + canvas.width - rightOffset;
+            const canvasTop = canvas.y + topOffset;
+            const canvasBottom = canvas.y + canvas.height - bottomOffset;
 
-            // TODO: spline type
+            // TODO: actual proxy edge (connecting on-screen edges that have parts off-screen)
+            // TODO: fix wrong route in polyline2 example
 
-            // Appends or prepends the object to the array accordingly using outgoing
-            const add = outgoing ? routingPoints.unshift.bind(routingPoints) : routingPoints.push.bind(routingPoints);
+            // Appends or prepends the point to routingPoints accordingly using outgoing
+            const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
+            // Same as add but also caps the point to the canvas
+            const addCap = (p: Point) => add(capToCanvas(p, canvas, canvasOffset));
+
             //// Calculate point where edge leaves canvas
             let prevPoint = nodeTranslated;
             let canvasEdgeIntersection;
@@ -712,7 +739,7 @@ export class ProxyView extends AbstractUIExtension {
 
                     // Intersection point, cap to canvas with offset (and to sidebar aswell)
                     const intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
-                    canvasEdgeIntersection = capToCanvas({ x: canvasLeftOrRight, y: intersectY }, canvas, xOffset, yOffset);
+                    canvasEdgeIntersection = { x: canvasLeftOrRight, y: intersectY };
                 } else if (p.y <= canvasTop || p.y >= canvasBottom) {
                     // Intersection at y, find x
                     const canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
@@ -722,14 +749,14 @@ export class ProxyView extends AbstractUIExtension {
 
                     // Intersection point, cap to canvas with offset (and to sidebar aswell)
                     const intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
-                    canvasEdgeIntersection = capToCanvas({ x: intersectX, y: canvasTopOrBottom }, canvas, xOffset, yOffset);
+                    canvasEdgeIntersection = { x: intersectX, y: canvasTopOrBottom };
                 }
 
                 if (canvasEdgeIntersection) {
                     // Found the intersection, done
                     if (!Bounds.includes(transform, canvasEdgeIntersection)) {
                         // Don't add a point inside of the proxy
-                        add(canvasEdgeIntersection);
+                        addCap(canvasEdgeIntersection);
                     }
                     break;
                 }
@@ -749,20 +776,22 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             //// Calculate points on path to proxy near canvas
-            // TODO: does this work? + cleanup
+            // TODO: cleanup
+            const transformRect = Rect.fromBounds(transform);
+            const canvasRect = Rect.fromBounds(canvas);
             let x, y;
             if (canvasEdgeIntersection.x === canvasLeft) {
                 // Intersection at the left
                 x = canvasLeft;
-                if (transform.x === canvas.x) {
+                if (transformRect.left === canvasRect.left) {
                     // Proxy at the left
                     // Nothing to do
-                } else if (transform.x + transform.width === canvas.x + canvas.width) {
+                } else if (transformRect.right === canvasRect.right) {
                     // Proxy at the right
-                    if (transform.y === canvas.y) {
+                    if (transformRect.top === canvasRect.top) {
                         // Proxy at the top, add a point to top left
                         y = canvasTop;
-                    } else if (transform.y + transform.height === canvas.y + canvas.height) {
+                    } else if (transformRect.bottom === canvasRect.bottom) {
                         // Proxy at the bottom, add a point to bottom left
                         y = canvasBottom;
                     } else {
@@ -771,17 +800,17 @@ export class ProxyView extends AbstractUIExtension {
                         y = proxyTranslated.y < (canvasTop + canvasBottom) / 2 ? canvasTop : canvasBottom;
                         if (!Bounds.includes(transform, { x, y })) {
                             // Add the new routing point
-                            add({ x, y });
+                            addCap({ x, y });
                         }
                         // 2nd routing point
                         x = canvasRight;
                     }
                 } else {
                     // Proxy in between left and right
-                    if (transform.y === canvas.y) {
+                    if (transformRect.top === canvasRect.top) {
                         // Proxy at the top, add a point to top left
                         y = canvasTop;
-                    } else if (transform.y + transform.height === canvas.y + canvas.height) {
+                    } else if (transformRect.bottom === canvasRect.bottom) {
                         // Proxy at the bottom, add a point to bottom left
                         y = canvasBottom;
                     } else {
@@ -791,12 +820,12 @@ export class ProxyView extends AbstractUIExtension {
             } else if (canvasEdgeIntersection.x === canvasRight) {
                 // Intersection at the right
                 x = canvasRight;
-                if (transform.x === canvas.x) {
+                if (transformRect.left === canvasRect.left) {
                     // Proxy at the left
-                    if (transform.y === canvas.y) {
+                    if (transformRect.top === canvasRect.top) {
                         // Proxy at the top, add a point to top right
                         y = canvasTop;
-                    } else if (transform.y + transform.height === canvas.y + canvas.height) {
+                    } else if (transformRect.bottom === canvasRect.bottom) {
                         // Proxy at the bottom, add a point to bottom right
                         y = canvasBottom;
                     } else {
@@ -805,20 +834,20 @@ export class ProxyView extends AbstractUIExtension {
                         y = proxyTranslated.y < (canvasTop + canvasBottom) / 2 ? canvasTop : canvasBottom;
                         if (!Bounds.includes(transform, { x, y })) {
                             // Add the new routing point
-                            add({ x, y });
+                            addCap({ x, y });
                         }
                         // 2nd routing point
                         x = canvasLeft;
                     }
-                } else if (transform.x + transform.width === canvas.x + canvas.width) {
+                } else if (transformRect.right === canvasRect.right) {
                     // Proxy at the right
                     // Nothing to do
                 } else {
                     // Proxy in between left and right
-                    if (transform.y === canvas.y) {
+                    if (transformRect.top === canvasRect.top) {
                         // Proxy at the top, add a point to top right
                         y = canvasTop;
-                    } else if (transform.y + transform.height === canvas.y + canvas.height) {
+                    } else if (transformRect.bottom === canvasRect.bottom) {
                         // Proxy at the bottom, add a point to bottom right
                         y = canvasBottom;
                     } else {
@@ -828,16 +857,16 @@ export class ProxyView extends AbstractUIExtension {
             } else if (canvasEdgeIntersection.y === canvasTop) {
                 // Intersection at the top
                 y = canvasTop;
-                if (transform.y === canvas.y) {
+                if (transformRect.top === canvasRect.top) {
                     // Proxy at the top
                     // Nothing to do
-                } else if (transform.y + transform.height === canvas.y + canvas.height) {
+                } else if (transformRect.bottom === canvasRect.bottom) {
                     // Proxy at the bottom
-                    if (transform.x === canvas.x) {
-                        // Proxy at the left, add a point to bottom left
+                    if (transformRect.left === canvasRect.left) {
+                        // Proxy at the left, add a point to top left
                         x = canvasLeft;
-                    } else if (transform.x + transform.width === canvas.x + canvas.width) {
-                        // Proxy at the right, add a point to bottom right
+                    } else if (transformRect.right === canvasRect.right) {
+                        // Proxy at the right, add a point to top right
                         x = canvasRight;
                     } else {
                         // Proxy in between left and right
@@ -845,19 +874,19 @@ export class ProxyView extends AbstractUIExtension {
                         x = proxyTranslated.x < (canvasLeft + canvasRight) / 2 ? canvasLeft : canvasRight;
                         if (!Bounds.includes(transform, { x, y })) {
                             // Add the new routing point
-                            add({ x, y });
+                            addCap({ x, y });
                         }
                         // 2nd routing point
                         y = canvasBottom;
                     }
                 } else {
                     // Proxy in between top and bottom
-                    if (transform.x === canvas.x) {
+                    if (transformRect.left === canvasRect.left) {
                         // Proxy at the left, add a point to top left
-                        x = canvasRight;
-                    } else if (transform.x + transform.width === canvas.x + canvas.width) {
-                        // Proxy at the right, add a point to top right
                         x = canvasLeft;
+                    } else if (transformRect.right === canvasRect.right) {
+                        // Proxy at the right, add a point to top right
+                        x = canvasRight;
                     } else {
                         // Should never be the case, would be hovering somewhere
                     }
@@ -865,12 +894,12 @@ export class ProxyView extends AbstractUIExtension {
             } else if (canvasEdgeIntersection.y === canvasBottom) {
                 // Intersection at the bottom
                 y = canvasBottom;
-                if (transform.y === canvas.y) {
+                if (transformRect.top === canvasRect.top) {
                     // Proxy at the top
-                    if (transform.x === canvas.x) {
+                    if (transformRect.left === canvasRect.left) {
                         // Proxy at the left, add a point to bottom left
                         x = canvasLeft;
-                    } else if (transform.x + transform.width === canvas.x + canvas.width) {
+                    } else if (transformRect.right === canvasRect.right) {
                         // Proxy at the right, add a point to bottom right
                         x = canvasRight;
                     } else {
@@ -879,22 +908,22 @@ export class ProxyView extends AbstractUIExtension {
                         x = proxyTranslated.x < (canvasLeft + canvasRight) / 2 ? canvasLeft : canvasRight;
                         if (!Bounds.includes(transform, { x, y })) {
                             // Add the new routing point
-                            add({ x, y });
+                            addCap({ x, y });
                         }
                         // 2nd routing point
                         y = canvasTop;
                     }
-                } else if (transform.y + transform.height === canvas.y + canvas.height) {
+                } else if (transformRect.bottom === canvasRect.bottom) {
                     // Proxy at the bottom
                     // Nothing to do
                 } else {
                     // Proxy in between top and bottom
-                    if (transform.x === canvas.x) {
+                    if (transformRect.left === canvasRect.left) {
                         // Proxy at the left, add a point to top left
-                        x = canvasRight;
-                    } else if (transform.x + transform.width === canvas.x + canvas.width) {
-                        // Proxy at the right, add a point to top right
                         x = canvasLeft;
+                    } else if (transformRect.right === canvasRect.right) {
+                        // Proxy at the right, add a point to top right
+                        x = canvasRight;
                     } else {
                         // Should never be the case, would be hovering somewhere
                     }
@@ -903,7 +932,7 @@ export class ProxyView extends AbstractUIExtension {
 
             if (x && y && !Bounds.includes(transform, { x, y })) {
                 // Add the new routing point
-                add({ x, y });
+                addCap({ x, y });
             }
 
             //// Finally, add source and target
@@ -1180,11 +1209,60 @@ export class ProxyView extends AbstractUIExtension {
                 // Better not to show arrow head as it would be floating around somewhere
                 return [];
             }
+        } else if (clone.type === K_SPLINE) {
+            // TODO: spline type, for now just change type
+            K_POLYLINE
+            // clone.type = K_POLYLINE;
         }
 
         if ("children" in clone) {
             // Keep going recursively
             (clone as any).children = this.placeDecorator((clone as any).children, ctx, prev, target);
+        }
+
+        res.push(clone);
+        return res;
+    }
+
+    /** Returns a copy of `edgeData` with the colors changed to `color`. */
+    private changeColor(edgeData: KGraphData[], ctx: SKGraphModelRenderer, color: { red: number, green: number, blue: number }): KGraphData[] {
+        if (!edgeData || edgeData.length <= 0) {
+            return edgeData;
+        }
+        const data = getKRendering(edgeData, ctx);
+        if (!data) {
+            return edgeData;
+        }
+
+        const res = [];
+        const clone = { ...data } as any;
+        const props = { ...clone.properties };
+        const styles = { ...clone.styles };
+        clone.properties = props;
+        clone.styles = styles;
+        // const id = props["klighd.lsp.rendering.id"];
+        // OLD: changing the rendering doesn't work when renderingrefs are used
+        // props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
+
+        if ([K_POLYLINE, K_SPLINE].includes(clone.type)) {
+            // Line
+            for (const i in styles) {
+                if ([K_FOREGROUND, K_BACKGROUND].includes(styles[i].type)) {
+                    // Move arrow head if actually defined
+                    styles[i] = { ...styles[i], color: color };
+                    // } else if (ctx.decorationMap[id]) {
+                    //     // Arrow head was in rendering refs
+                    //     props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id], origin: target, rotation: angle };
+                    // } else {
+                    //     // Better not to show arrow head as it would be floating around somewhere
+                    //     return [];
+                }
+            }
+        }
+
+        if ("children" in clone) {
+            // Keep going recursively
+            (clone as any).children = this.changeColor((clone as any).children, ctx, color);
         }
 
         res.push(clone);
@@ -1260,7 +1338,7 @@ export class ProxyView extends AbstractUIExtension {
         this.actionsEnabled = renderOptionsRegistry.getValue(ProxyViewActionsEnabled);
 
         this.straightEdgeRouting = renderOptionsRegistry.getValue(ProxyViewStraightEdgeRouting);
-        this.alongEdgeRouting = renderOptionsRegistry.getValue(ProxyViewAlongEdgeRouting);
+        this.alongBorderRouting = renderOptionsRegistry.getValue(ProxyViewAlongBorderRouting);
 
         this.useTitleScaling = renderOptionsRegistry.getValue(ProxyViewTitleScaling);
 
