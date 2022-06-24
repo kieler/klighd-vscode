@@ -89,16 +89,24 @@ export function createFilter(rule: SemanticFilterRule): Filter {
 function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): boolean {
     
     
-    if (rule instanceof SemanticFilterTag) {
-        return tags.some((tag: SemanticFilterTag) => {return tag.tag == rule.tag});
-    } else if (rule instanceof NegationConnective) {
-        return !(evaluateRule(rule.operand, tags));
-    } else if (rule instanceof AndConnective) {
-        return evaluateRule(rule.leftOperand, tags) && evaluateRule(rule.rightOperand, tags);
-    } else if (rule instanceof OrConnective) {
-        return evaluateRule(rule.leftOperand, tags) || evaluateRule(rule.rightOperand, tags);
+    if ((rule as SemanticFilterTag).tag != undefined) {
+        return tags.some((tag: SemanticFilterTag) => {
+            return tag.tag == (rule as SemanticFilterTag).tag
+        });
     } else {
-        return true;
+        // rule is a connective
+        switch ((rule as Connective).name) {
+            case "NOT":
+                return !(evaluateRule((rule as NegationConnective).operand, tags));
+            case "AND":
+                return evaluateRule((rule as AndConnective).leftOperand, tags) 
+                    && evaluateRule((rule as AndConnective).rightOperand, tags);
+            case "OR":
+                return evaluateRule((rule as OrConnective).leftOperand, tags) 
+                    || evaluateRule((rule as OrConnective).rightOperand, tags);
+            default:
+                return true;
+        }
     }
 }
 
