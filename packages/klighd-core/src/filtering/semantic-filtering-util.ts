@@ -59,15 +59,29 @@ export class OrConnective implements BinaryConnective {
     ruleName?: String | undefined
 }
 
-export function createFilter(rule: SemanticFilterRule): (el: SKGraphElement) => boolean {
+export interface Filter {
+    name?: String
+    filterFun(el: SKGraphElement):boolean
+}
 
-    return (el) => {
-        var tags = Array<SemanticFilterTag>();
-        if (el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] != undefined) {
-            tags = el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as Array<SemanticFilterTag>;
+export function createFilter(rule: SemanticFilterRule): Filter {
+
+    var ruleName;
+    if (rule instanceof SemanticFilterTag) {
+        ruleName = rule.tag;
+    } else {
+        ruleName = rule.ruleName;
+    }
+    return {
+        name: ruleName,
+        filterFun: (el) => {
+            var tags = Array<SemanticFilterTag>();
+            if (el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] != undefined) {
+                tags = el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as Array<SemanticFilterTag>;
+            }
+
+            return evaluateRule(rule, tags);
         }
-
-        return evaluateRule(rule, tags);
     }
 
 }
@@ -86,5 +100,17 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
     } else {
         return true;
     }
-    
+}
+
+export function getFilters(graph:SKGraphElement): Array<Filter> {
+    if (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] != undefined) {
+        var filters:Array<Filter> = [];
+        (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] as Array<SemanticFilterRule>)
+            .forEach((rule) => {
+                filters.push(createFilter(rule));
+            });
+        return filters;
+    } else {
+        return []
+    }
 }
