@@ -38,10 +38,23 @@ import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, ge
 export class ProxyView extends AbstractUIExtension {
     /** ID. */
     static readonly ID = "proxy-view";
-    /** ID used for proxy rendering property of SKNodes. */
-    static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxyRendering";
-    /** ID used to indicate whether an SKNode should be rendered as a proxy. */
-    static readonly RENDER_NODE_AS_PROXY_PROPERTY = "de.cau.cs.kieler.klighd.renderNodeAsProxy";
+    /**
+     * ID used for proxy rendering property of SKNodes.
+     * The corresponding property contains the proxy's data.
+     */
+    static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxy-view.proxyRendering";
+    /**
+     * ID used to indicate whether an SKNode should be rendered as a proxy.
+     * The corresponding property can be `true` or `false`.
+     */
+    static readonly RENDER_NODE_AS_PROXY_PROPERTY = "de.cau.cs.kieler.klighd.proxy-view.renderNodeAsProxy";
+    /**
+     * ID used for specifying depth of going into hierarchical off-screen nodes.
+     * `0` indicates default behavior, showing only the outermost node as a proxy.
+     * A value `x>0` indicates showing proxies up to x layers deep inside a hierarchical node.
+     * A value `x<0` indicates always showing proxies for all layers.
+     */
+    static readonly HIERARCHICAL_OFF_SCREEN_DEPTH = "de.cau.cs.kieler.klighd.proxy-view.hierarchicalOffScreenDepth";
     /** Number indicating at what distance a node is close. */
     static readonly DISTANCE_CLOSE = 300;
     /** Number indicating at what distance a node is distant. */
@@ -183,7 +196,6 @@ export class ProxyView extends AbstractUIExtension {
     // TODO: along-border-routing for polylines
     // Next K-Meeting ^^^ along-border-routing vs straight
     // TODO: semantic filter in vscode repo for node type of sccharts
-    // TODO: go x layers deep for off-screen nodes (specify in synthesis)
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -226,7 +238,8 @@ export class ProxyView extends AbstractUIExtension {
         // out of bounds         -> proxy
 
         //// Initial nodes ////
-        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas, ctx);
+        const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
+        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas, depth, ctx);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
@@ -272,9 +285,9 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // Edges
-        for (const edge of edges) {
+        for (const { edge, scale } of edges) {
             // Create an edge proxy
-            const edgeProxy = this.createEdgeProxy(edge, ctx);
+            const edgeProxy = this.createEdgeProxy(edge, scale, ctx);
             if (edgeProxy) {
                 if (this.edgesAboveNodes) {
                     // Insert at end to be rendered above nodes
@@ -297,7 +310,7 @@ export class ProxyView extends AbstractUIExtension {
      * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
      * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
      */
-    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
+    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes, depth: number, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
         // For each node check if it's off-screen
         const offScreenNodes = [];
         const onScreenNodes = [];
@@ -308,6 +321,13 @@ export class ProxyView extends AbstractUIExtension {
                 if (!isInBounds(translated, canvas)) {
                     // Node out of bounds
                     offScreenNodes.push(node);
+
+                    if (depth !== 0 && node.children.length > 0) {
+                        // depth > 0 or < 0 (see HIERARCHICAL_OFF_SCREEN_DEPTH), go further in
+                        const childRes = this.getOffAndOnScreenNodes(node, canvas, depth - 1, ctx);
+                        offScreenNodes.push(...childRes.offScreenNodes);
+                        onScreenNodes.push(...childRes.onScreenNodes);
+                    }
                 } else {
                     // Node in bounds
                     onScreenNodes.push(node);
@@ -317,7 +337,7 @@ export class ProxyView extends AbstractUIExtension {
 
                         if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
                             // Has children, recursively check them
-                            const childRes = this.getOffAndOnScreenNodes(node, canvas, ctx);
+                            const childRes = this.getOffAndOnScreenNodes(node, canvas, depth, ctx);
                             offScreenNodes.push(...childRes.offScreenNodes);
                             onScreenNodes.push(...childRes.onScreenNodes);
                         }
@@ -602,7 +622,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
-        onScreenNodes: SKNode[], canvas: CanvasAttributes, ctx: SKGraphModelRenderer): SKEdge[] {
+        onScreenNodes: SKNode[], canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, scale: number }[] {
         if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
             // Don't create edge proxies
             return [];
@@ -613,8 +633,8 @@ export class ProxyView extends AbstractUIExtension {
         const modifiedEdges = new Map;
 
         // Color/opacity for fade out effect
-        const color = { red: 255, green: 255, blue: 255 };
-        const opacity = 0.5;
+        const color = { red: 255, green: 0, blue: 0 };
+        const opacity = 1//0.5;
 
         const res = [];
         for (const { node, transform } of nodes) {
@@ -628,20 +648,20 @@ export class ProxyView extends AbstractUIExtension {
                         const nodeConnector = edge.routingPoints[0];
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, ctx);
                         if (proxyEdge) {
-                            res.push(proxyEdge);
+                            res.push({ edge: proxyEdge, scale: 1 });
                             // TODO: overlay original edge with transparent white edge (same scale) when proxy edge exists
                             // Draw over original node to simulate a fade out effect
                             const clone = Object.create(edge) as SKEdge;
                             const parentPos = this.getAbsolutePosition(node.parent as SKNode);
                             clone.id = this.getProxyId(clone.id) + "-temp";
-                            clone.data = this.changeColor(clone.data, ctx, color);
+                            clone.data = this.changeColor(clone.data, parentPos, canvas, ctx, color);
                             clone.opacity = opacity;
                             clone.routingPoints = clone.routingPoints.map(p => getTranslatedBounds(Point.add(parentPos, p), canvas));
-                            console.log("edge");
-                            console.log(edge.data);
-                            console.log("clone");
-                            console.log(clone.data);
-                            res.push(clone);
+                            // console.log("edge");
+                            // console.log(edge);
+                            // console.log("clone");
+                            // console.log(clone);
+                            res.push({ edge: clone, scale: canvas.zoom });
                         }
                     }
                 }
@@ -654,7 +674,7 @@ export class ProxyView extends AbstractUIExtension {
                         const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, ctx);
                         if (proxyEdge) {
-                            res.push(proxyEdge);
+                            res.push({ edge: proxyEdge, scale: 1 });
                             // FIXME: also overlay here
                         }
                     }
@@ -715,7 +735,6 @@ export class ProxyView extends AbstractUIExtension {
             const canvasBottom = canvas.y + canvas.height - bottomOffset;
 
             // TODO: actual proxy edge (connecting on-screen edges that have parts off-screen)
-            // TODO: fix wrong route in polyline2 example
 
             // Appends or prepends the point to routingPoints accordingly using outgoing
             const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
@@ -1027,7 +1046,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the proxy rendering for an edge. */
-    private createEdgeProxy(edge: SKEdge, ctx: SKGraphModelRenderer): VNode | undefined {
+    private createEdgeProxy(edge: SKEdge, scale: number, ctx: SKGraphModelRenderer): VNode | undefined {
         if (edge.opacity <= 0) {
             // Don't draw an invisible edge
             return undefined;
@@ -1047,6 +1066,11 @@ export class ProxyView extends AbstractUIExtension {
         Object.assign(edge, { children: [] });
 
         const vnode = ctx.renderProxy(edge);
+
+        if (vnode) {
+            updateTransform(vnode, { x: 0, y: 0, height: 0, width: 0, scale });
+        }
+
         return vnode;
     }
 
@@ -1225,7 +1249,8 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns a copy of `edgeData` with the colors changed to `color`. */
-    private changeColor(edgeData: KGraphData[], ctx: SKGraphModelRenderer, color: { red: number, green: number, blue: number }): KGraphData[] {
+    private changeColor(edgeData: KGraphData[], parentPos: Point, canvas: CanvasAttributes, ctx: SKGraphModelRenderer,
+        color: { red: number, green: number, blue: number }): KGraphData[] {
         if (!edgeData || edgeData.length <= 0) {
             return edgeData;
         }
@@ -1240,29 +1265,34 @@ export class ProxyView extends AbstractUIExtension {
         const styles = { ...clone.styles };
         clone.properties = props;
         clone.styles = styles;
-        // const id = props["klighd.lsp.rendering.id"];
+        const id = props["klighd.lsp.rendering.id"];
         // OLD: changing the rendering doesn't work when renderingrefs are used
-        // props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
+        props["klighd.lsp.rendering.id"] = this.getProxyId(id);
 
-        if ([K_POLYLINE, K_SPLINE].includes(clone.type)) {
-            // Line
-            for (const i in styles) {
-                if ([K_FOREGROUND, K_BACKGROUND].includes(styles[i].type)) {
-                    // Move arrow head if actually defined
-                    styles[i] = { ...styles[i], color: color };
-                    // } else if (ctx.decorationMap[id]) {
-                    //     // Arrow head was in rendering refs
-                    //     props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id], origin: target, rotation: angle };
-                    // } else {
-                    //     // Better not to show arrow head as it would be floating around somewhere
-                    //     return [];
-                }
+        // Change color FIXME: how?
+        for (const i in styles) {
+            if ([K_FOREGROUND, K_BACKGROUND].includes(styles[i].type)) {
+                // Move arrow head if actually defined
+                styles[i] = { ...styles[i], color, alpha: 125, targetAlpha: 125 };
+            }
+        }
+
+        if (clone.type === K_POLYGON) {
+            // Arrow head, also need to move this
+            if (props["klighd.lsp.calculated.decoration"]) {
+                // Move arrow head if actually defined
+                const origin = getTranslatedBounds(Point.add(parentPos, props["klighd.lsp.calculated.decoration"]["origin"]), canvas);
+                props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin };
+            } else if (ctx.decorationMap[id]) {
+                // Arrow head was in rendering refs
+                const origin = getTranslatedBounds(Point.add(parentPos, ctx.decorationMap[id]["origin"]), canvas);
+                props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id], origin };
             }
         }
 
         if ("children" in clone) {
             // Keep going recursively
-            (clone as any).children = this.changeColor((clone as any).children, ctx, color);
+            (clone as any).children = this.changeColor((clone as any).children, parentPos, canvas, ctx, color);
         }
 
         res.push(clone);
@@ -1365,7 +1395,7 @@ export class ProxyView extends AbstractUIExtension {
         this.edgesToOffScreenPoint = renderOptionsRegistry.getValue(ProxyViewEdgesToOffScreenPoint);
         this.transparentEdges = renderOptionsRegistry.getValue(ProxyViewTransparentEdges);
         if (!this.transparentEdges && this.prevModifiedEdges.size > 0) {
-            // Reset opacity of all edges TODO:
+            // Reset opacity of all edges
             this.resetEdgeOpacity(this.prevModifiedEdges);
             this.prevModifiedEdges.clear();
         }
