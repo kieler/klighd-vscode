@@ -131,6 +131,21 @@ export class ProxyViewActionsEnabled implements RenderOption {
     currentValue = ProxyViewActionsEnabled.DEFAULT;
 }
 
+/** Whether edge proxies connecting the intersections of an edge and the canvas should be created. */
+export class ProxyViewConnectOffScreenEdges implements RenderOption {
+    static readonly ID: string = "proxy-view-edge-proxies-between-edges";
+    static readonly NAME: string = "Connect Off-Screen Edges";
+    static readonly DESCRIPTION: string = "Whether edge proxies connecting the intersections of an edge and the canvas should be created.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewConnectOffScreenEdges.ID;
+    readonly name: string = ProxyViewConnectOffScreenEdges.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewConnectOffScreenEdges.DEFAULT;
+    readonly description: string = ProxyViewConnectOffScreenEdges.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    currentValue = ProxyViewConnectOffScreenEdges.DEFAULT;
+}
+
 /** Whether straight edges to proxies should be drawn. */
 export class ProxyViewStraightEdgeRouting implements RenderOption {
     static readonly ID: string = "proxy-view-straight-edge-routing";

@@ -30,7 +30,7 @@ import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges } from "./proxy-view-options";
 import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
@@ -111,6 +111,8 @@ export class ProxyView extends AbstractUIExtension {
     private opacityByDistance: boolean;
     /** @see {@link ProxyViewActionsEnabled} */
     private actionsEnabled: boolean;
+    /** @see {@link ProxyViewConnectOffScreenEdges} */
+    private connectOffScreenEdges: boolean;
     /** @see {@link ProxyViewStraightEdgeRouting} */
     private straightEdgeRouting: boolean;
     /** @see {@link ProxyViewAlongBorderRouting} */
@@ -263,12 +265,16 @@ export class ProxyView extends AbstractUIExtension {
             node,
             transform: this.getTransform(node, size, proxyBounds, canvas)
         }));
+        const offset = 10; // TODO: maybe make this dependant of canvas size
 
         //// Apply clustering ////
         const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvas);
 
-        //// Create edges ////
-        const edges = this.routeEdges(clusteredNodes, onScreenNodes, canvas, ctx);
+        //// Route edges to proxies ////
+        let edges = this.routeEdges(clusteredNodes, onScreenNodes, canvas, offset, ctx);
+
+        //// Connect off-screen edges ////
+        edges = edges.concat();
 
         //// Render the proxies ////
         const proxies = [];
@@ -625,7 +631,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
-        onScreenNodes: SKNode[], canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
+        onScreenNodes: SKNode[], canvas: CanvasAttributes, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
         if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
             // Don't create edge proxies
             return [];
@@ -634,11 +640,6 @@ export class ProxyView extends AbstractUIExtension {
         // Reset opacity before changing it
         this.resetEdgeOpacity(this.prevModifiedEdges);
         const modifiedEdges = new Map;
-
-        // Color/opacity for fade out effect
-        // TODO: stroke
-        const color = { red: 0, green: 255, blue: 0 };
-        const opacity = 0.8;
 
         const res = [];
         for (const { node, transform } of nodes) {
@@ -650,23 +651,13 @@ export class ProxyView extends AbstractUIExtension {
                         // Proxy is target, node is source
                         const proxyConnector = edge.routingPoints[edge.routingPoints.length - 1];
                         const nodeConnector = edge.routingPoints[0];
-                        const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, ctx);
+                        const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, offset, ctx);
                         if (proxyEdge) {
                             // Can't use transform for proxyEdge since it's already translated
                             res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
-                            // TODO: overlay original edge with transparent white edge (same scale) when proxy edge exists
-                            // Draw over original edge to simulate a fade out effect
-                            const overlay = Object.create(edge) as SKEdge;
-                            const parentPos = getTranslatedBounds(this.getAbsolutePosition(node.parent as SKNode), canvas);
-                            overlay.id = this.getProxyId(overlay.id + "-overlay");
-                            overlay.opacity = opacity;
-                            overlay.data = this.changeColor(overlay.data, ctx, color);
-                            console.log("edge");
-                            console.log(edge);
-                            console.log("overlay");
-                            console.log(overlay);
+
                             // Use unshift so overlays are always rendered below edge proxies
-                            res.unshift({ edge: overlay, transform: { ...parentPos, width: 0, height: 0, scale: canvas.zoom } });
+                            res.unshift(this.overlayEdge(edge, canvas, ctx));
                         }
                     }
                 }
@@ -677,7 +668,7 @@ export class ProxyView extends AbstractUIExtension {
                         // Proxy is source, node is target
                         const proxyConnector = edge.routingPoints[0];
                         const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
-                        const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, ctx);
+                        const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, offset, ctx);
                         if (proxyEdge) {
                             res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
                             // FIXME: also overlay here
@@ -699,7 +690,7 @@ export class ProxyView extends AbstractUIExtension {
      * @param `outgoing` Whether the edge is outgoing from the proxy.
      */
     private rerouteEdge(node: SKNode, transform: TransformAttributes, edge: SKEdge, modifiedEdges: Map<string, [SKEdge, number]>,
-        nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): SKEdge | undefined {
+        nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: CanvasAttributes, offset: number, ctx: SKGraphModelRenderer): SKEdge | undefined {
         // Connected to node, just calculate absolute coordinates + basic translation
         const parentPos = this.getAbsolutePosition(node.parent as SKNode);
         const nodeTranslated = getTranslatedBounds(Point.add(parentPos, nodeConnector), canvas);
@@ -728,7 +719,6 @@ export class ProxyView extends AbstractUIExtension {
             // Potentially need more points than just source and target
             // Canvas dimensions with offset, so as to keep the edge on the canvas
             // TODO: just offset or x and y?
-            const offset = 10;
             const leftOffset = offset //+ transform.width;
             const rightOffset = offset //+ transform.width;
             const topOffset = offset //+ transform.height;
@@ -988,6 +978,73 @@ export class ProxyView extends AbstractUIExtension {
         return clone;
     }
 
+    /** Returns an edge that can be overlayed over the given `edge` to simulate a fade-out effect. */
+    private overlayEdge(edge: SKEdge, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } {
+        // Color/opacity for fade out effect
+        // FIXME: stroke in html, this doesn't seem to work yet?
+        const color = { red: 255, green: 255, blue: 255 };
+        const opacity = 0.8;
+
+        const parentPos = getTranslatedBounds(this.getAbsolutePosition(edge.parent as SKNode), canvas);
+        const overlay = Object.create(edge) as SKEdge;
+        overlay.id = this.getProxyId(overlay.id + "-overlay");
+        overlay.opacity = opacity;
+        overlay.data = this.changeColor(overlay.data, ctx, color);
+        console.log("edge");
+        console.log(edge);
+        console.log("overlay");
+        console.log(overlay);
+        return { edge: overlay, transform: { ...parentPos, width: 0, height: 0, scale: canvas.zoom } };
+    }
+
+    /** Connects off-screen edges. */
+    private connectEdges(root: SKNode, canvas: CanvasAttributes, offset: number): SKEdge[] {
+        if (!this.connectOffScreenEdges) {
+            return [];
+        }
+        // Get all edges that are partially off-screen
+        const partiallyOffScreenEdges = this.getPartiallyOffScreenEdges(root, canvas);
+        // Connect intersections with canvas
+        for (const edge of partiallyOffScreenEdges) {
+            // TODO: make sure to only connect on-off-on, not off-on-off
+        }
+        return [];
+    }
+
+    /** Returns all edges that are both on- & off-screen. */
+    private getPartiallyOffScreenEdges(currRoot: SKNode, canvas: CanvasAttributes): SKEdge[] {
+        // For each edge check if it's partially off-screen
+        const partiallyOffScreenEdges = [];
+        const pos = this.getAbsolutePosition(currRoot);
+
+        // Can just use this one loop since both edges and nodes are present in children
+        for (const child of currRoot.children) {
+            if (child instanceof SKEdge) {
+                // Check if it's on- & off-screen
+                let offScreen = false;
+                let onScreen = false;
+                for (let p of child.routingPoints) {
+                    p = getTranslatedBounds(Point.add(pos, p), canvas);
+                    if (Bounds.includes(canvas, p)) {
+                        onScreen = true;
+                    } else {
+                        offScreen = true;
+                    }
+
+                    if (onScreen && offScreen) {
+                        partiallyOffScreenEdges.push(child);
+                        break;
+                    }
+                }
+            } else if (child instanceof SKNode) {
+                // Recursively check its children
+                partiallyOffScreenEdges.push(...this.getPartiallyOffScreenEdges(child, canvas));
+            }
+        }
+
+        return partiallyOffScreenEdges;
+    }
+
     /** Returns the proxy rendering for an off-screen node. */
     private createProxy(node: SKNode | VNode, transform: TransformAttributes, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
         if (!(node instanceof SKNode)) {
@@ -1223,7 +1280,7 @@ export class ProxyView extends AbstractUIExtension {
         const props = { ...clone.properties };
         clone.properties = props;
         const id = props["klighd.lsp.rendering.id"];
-        // OLD: changing the rendering doesn't work when renderingrefs are used
+        // OLD: changing the rendering id doesn't work when renderingrefs are used
         // props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
 
         if (clone.type === K_POLYGON) {
@@ -1270,13 +1327,13 @@ export class ProxyView extends AbstractUIExtension {
         const styles = { ...clone.styles };
         clone.properties = props;
         clone.styles = styles;
-        const id = props["klighd.lsp.rendering.id"];
-        // OLD: changing the rendering doesn't work when renderingrefs are used
-        props["klighd.lsp.rendering.id"] = this.getProxyId(id);
+        // OLD: changing the rendering id doesn't work when renderingrefs are used
+        // const id = props["klighd.lsp.rendering.id"];
+        // props["klighd.lsp.rendering.id"] = this.getProxyId(id);
 
         for (const i in styles) {
             if ([K_FOREGROUND, K_BACKGROUND].includes(styles[i].type)) {
-                // Move arrow head if actually defined
+                // Change color
                 styles[i] = { ...styles[i], color };
             }
         }
@@ -1357,6 +1414,8 @@ export class ProxyView extends AbstractUIExtension {
         this.opacityByDistance = renderOptionsRegistry.getValue(ProxyViewOpacityByDistance);
 
         this.actionsEnabled = renderOptionsRegistry.getValue(ProxyViewActionsEnabled);
+
+        this.connectOffScreenEdges = renderOptionsRegistry.getValue(ProxyViewConnectOffScreenEdges);
 
         this.straightEdgeRouting = renderOptionsRegistry.getValue(ProxyViewStraightEdgeRouting);
         this.alongBorderRouting = renderOptionsRegistry.getValue(ProxyViewAlongBorderRouting);
