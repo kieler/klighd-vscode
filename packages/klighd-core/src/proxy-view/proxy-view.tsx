@@ -31,7 +31,7 @@ import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges } from "./proxy-view-options";
-import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getIntersection, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { anyContains, Canvas, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -234,7 +234,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
-    private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvas: CanvasAttributes): VNode[] {
+    private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvas: Canvas): VNode[] {
         // Iterate through nodes starting by root, check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
@@ -320,7 +320,7 @@ export class ProxyView extends AbstractUIExtension {
      * Returns an object containing lists of all off-screen and on-screen nodes in `currRoot`.
      * Note that an off-screen node's children aren't included in the list, e.g. only outer-most off-screen nodes are returned.
      */
-    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: CanvasAttributes, depth: number, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
+    private getOffAndOnScreenNodes(currRoot: SKNode, canvas: Canvas, depth: number, ctx: SKGraphModelRenderer): { offScreenNodes: SKNode[], onScreenNodes: SKNode[] } {
         // For each node check if it's off-screen
         const offScreenNodes = [];
         const onScreenNodes = [];
@@ -328,7 +328,7 @@ export class ProxyView extends AbstractUIExtension {
             if (node instanceof SKNode) {
                 const translated = this.getTranslatedNodeBounds(node, canvas);
 
-                if (!isInBounds(translated, canvas)) {
+                if (!Canvas.isOnScreen(translated, canvas)) {
                     // Node out of bounds
                     offScreenNodes.push(node);
 
@@ -366,7 +366,7 @@ export class ProxyView extends AbstractUIExtension {
      * @param canvas Argument for filters.
      */
     private applyFilters(offScreenNodes: SKNode[],
-        onScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+        onScreenNodes: SKNode[], canvas: Canvas): SKNode[] {
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
             node.opacity > 0 &&
@@ -379,7 +379,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Calculates the opacities of `offScreenNodes`. */
-    private calculateOpacity(offScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+    private calculateOpacity(offScreenNodes: SKNode[], canvas: Canvas): SKNode[] {
         const res = offScreenNodes;
         if (this.opacityByDistance) {
             for (const node of res) {
@@ -410,7 +410,7 @@ export class ProxyView extends AbstractUIExtension {
      * Orders `offScreenNodes` such that the contextually most relevant
      * nodes appear at the end - therefore being rendered on top.
      */
-    private orderNodes(offScreenNodes: SKNode[], canvas: CanvasAttributes): SKNode[] {
+    private orderNodes(offScreenNodes: SKNode[], canvas: Canvas): SKNode[] {
         const res = [...offScreenNodes];
         if (!this.clusteringEnabled) {
             // Makes no sense to order when clustering is enabled since proxies cannot be stacked
@@ -460,7 +460,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Applies clustering to all `offScreenNodes` until there's no more overlap. Cluster-proxies are returned as VNodes. */
     private applyClustering(offScreenNodes: { node: SKNode, transform: TransformAttributes }[],
-        size: number, canvas: CanvasAttributes): { node: SKNode | VNode, transform: TransformAttributes }[] {
+        size: number, canvas: Canvas): { node: SKNode | VNode, transform: TransformAttributes }[] {
         if (!this.clusteringEnabled) {
             return offScreenNodes;
         }
@@ -501,7 +501,7 @@ export class ProxyView extends AbstractUIExtension {
                     const right = transform1.x + transform1.width;
                     const bottom = transform1.y + transform1.height;
                     for (let j = 0; j < res.length; j++) {
-                        if (i == j || anyContains(overlapIndexGroups, j)) {
+                        if (i === j || anyContains(overlapIndexGroups, j)) {
                             // Every proxy overlaps with itself or
                             // j already in an overlapIndexGroup, prevent redundant clustering
                             continue;
@@ -511,7 +511,7 @@ export class ProxyView extends AbstractUIExtension {
                         if (transform2.x > right) {
                             // Too far right, no need to check
                             break;
-                        } else if (transform2.x == right && transform2.y > bottom) {
+                        } else if (transform2.x === right && transform2.y > bottom) {
                             // Too far down, no need to check
                             break;
                         } else if (checkOverlap(transform1, transform2)) {
@@ -632,7 +632,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
-        onScreenNodes: SKNode[], canvas: CanvasAttributes, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
+        onScreenNodes: SKNode[], canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
         if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
             // Don't create edge proxies
             return [];
@@ -655,7 +655,7 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, offset, ctx);
                         if (proxyEdge) {
                             // Can't use transform for proxyEdge since it's already translated
-                            res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
+                            res.push(proxyEdge);
 
                             // Use unshift so overlays are always rendered below edge proxies
                             res.unshift(this.getOverlayEdge(edge, canvas, ctx));
@@ -672,7 +672,7 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, offset, ctx);
                         if (proxyEdge) {
                             // Can't use transform for proxyEdge since it's already translated
-                            res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
+                            res.push(proxyEdge);
 
                             // Use unshift so overlays are always rendered below edge proxies
                             res.unshift(this.getOverlayEdge(edge, canvas, ctx));
@@ -694,10 +694,10 @@ export class ProxyView extends AbstractUIExtension {
      * @param `outgoing` Whether the edge is outgoing from the proxy.
      */
     private rerouteEdge(node: SKNode, transform: TransformAttributes, edge: SKEdge, modifiedEdges: Map<string, [SKEdge, number]>,
-        nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: CanvasAttributes, offset: number, ctx: SKGraphModelRenderer): SKEdge | undefined {
+        nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } | undefined {
         // Connected to node, just calculate absolute coordinates + basic translation
         const parentPos = this.getAbsolutePosition(node.parent as SKNode);
-        const nodeTranslated = getTranslatedBounds(Point.add(parentPos, nodeConnector), canvas);
+        const nodeTranslated = Canvas.translateAdd(parentPos, nodeConnector, canvas);
 
         if (!this.edgesToOffScreenPoint && !Bounds.includes(canvas, nodeTranslated)) {
             // Would be connected to an off-screen point, don't show the edge
@@ -746,7 +746,7 @@ export class ProxyView extends AbstractUIExtension {
             for (let i = 1; i < edge.routingPoints.length; i++) {
                 // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
                 // Traverse routingPoints from the end for outgoing edges to match with prevPoint
-                const p = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i]), canvas);
+                const p = Canvas.translateAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvas);
 
                 if (p.x <= canvasLeft || p.x >= canvasRight) {
                     // Intersection at x, find y
@@ -966,6 +966,7 @@ export class ProxyView extends AbstractUIExtension {
         // Set attributes
         clone.routingPoints = routingPoints;
         clone.junctionPoints = [];
+        clone.id = clone.id + "-rerouted";
         clone.data = this.placeDecorator(edge.data, ctx, routingPoints[routingPoints.length - 2], routingPoints[routingPoints.length - 1]);
         clone.opacity = node.opacity;
         // OLD: cannot change these, edges won't be rendered
@@ -979,30 +980,30 @@ export class ProxyView extends AbstractUIExtension {
             edge.opacity = 0;
         }
 
-        return clone;
+        return { edge: clone, transform: Bounds.EMPTY }; // FIXME:
     }
 
     /** Returns an edge that can be overlayed over the given `edge` to simulate a fade-out effect. */
-    private getOverlayEdge(edge: SKEdge, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } {
+    private getOverlayEdge(edge: SKEdge, canvas: Canvas, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } {
         // Color/opacity for fade out effect
         // FIXME: stroke in html, this doesn't seem to work yet?
         const color = { red: 255, green: 255, blue: 255 };
         const opacity = 0.8;
 
-        const parentPos = getTranslatedBounds(this.getAbsolutePosition(edge.parent as SKNode), canvas);
+        const parentPos = Canvas.toTranslated(this.getAbsolutePosition(edge.parent as SKNode), canvas);
         const overlay = Object.create(edge) as SKEdge;
-        overlay.id = this.getProxyId(overlay.id + "-overlay");
+        overlay.id = overlay.id + "-overlay";
         overlay.opacity = opacity;
         overlay.data = this.changeColor(overlay.data, ctx, color);
         console.log("edge");
         console.log(edge);
         console.log("overlay");
         console.log(overlay);
-        return { edge: overlay, transform: { ...parentPos, width: 0, height: 0, scale: canvas.zoom } };
+        return { edge: overlay, transform: { ...parentPos, scale: canvas.zoom } };
     }
 
     /** Connects off-screen edges. */
-    private connectEdges(root: SKNode, canvas: CanvasAttributes, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
+    private connectEdges(root: SKNode, canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
         if (!this.connectOffScreenEdges) {
             return [];
         }
@@ -1014,10 +1015,10 @@ export class ProxyView extends AbstractUIExtension {
             const parentPos = this.getAbsolutePosition(edge.parent as SKNode);
 
             // Find all intersections
-            let prevPoint = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[0]), canvas);
+            let prevPoint = Canvas.translateAdd(parentPos, edge.routingPoints[0], canvas);
             const canvasEdgeIntersections = [];
             for (let i = 1; i < edge.routingPoints.length; i++) {
-                const p = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[i]), canvas);
+                const p = Canvas.translateAdd(parentPos, edge.routingPoints[i], canvas);
                 const intersection = getIntersection(prevPoint, p, canvas);
                 if (intersection) {
                     // Found an intersection, offset to not draw edges at border
@@ -1037,8 +1038,11 @@ export class ProxyView extends AbstractUIExtension {
                 }
                 prevPoint = p;
             }
-            // FIXME: still buggy, too many intersections and they seem incorrect, maybe try without offset for now
-            console.log(canvasEdgeIntersections);
+
+            if (canvasEdgeIntersections.length < 2) {
+                // Not enoug intersections to form a connection
+                continue;
+            }
 
             // Make sure to only connect on-off-on intersections, not off-on-off
             const routingPointIndices = [];
@@ -1055,30 +1059,37 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             // Finally, reconstruct the original path with the connecting points
-            if (routingPointIndices.length > 1) {
+            if (routingPointIndices.length > 0) {
                 const connector = Object.create(edge) as SKEdge;
+                connector.id = connector.id + "-connector";
                 const routingPoints = [];
 
                 let prevFrom = 0;
-                for (const { to, from, p1, p2 } of routingPointIndices) {
-                    routingPoints.push(...connector.routingPoints.slice(prevFrom, to + 1), p1, p2);
-                    prevFrom = from;
+                let points;
+                for (const { to, from, p1, p2 } of routingPointIndices) { // FIXME: .map
+                    points = connector.routingPoints.slice(prevFrom, to + 1)//.map(p => Canvas.translateAdd(parentPos, p, canvas));
+                    routingPoints.push(...points, p1, p2);
+                    prevFrom = from + 1;
                 }
-                routingPoints.push(...connector.routingPoints.slice(prevFrom, connector.routingPoints.length));
+                points = connector.routingPoints.slice(prevFrom, connector.routingPoints.length)//.map(p => Canvas.translateAdd(parentPos, p, canvas));
+                routingPoints.push(...points);
 
                 connector.routingPoints = routingPoints;
-                res.push({ edge: connector, transform: { ...Bounds.EMPTY, scale: canvas.zoom } });
+                res.push({ edge: connector, transform: { ...Bounds.EMPTY, ...parentPos, scale: canvas.zoom } });
 
                 // Remember to fade out original edge
                 res.unshift(this.getOverlayEdge(edge, canvas, ctx));
             }
+            // FIXME: still buggy, too many intersections and they seem incorrect, maybe try without offset for now
+            console.log(edge.id);
+            console.log(res);
         }
 
         return res;
     }
 
     /** Returns all edges that are both on- & off-screen. */
-    private getPartiallyOffScreenEdges(currRoot: SKNode, canvas: CanvasAttributes): SKEdge[] {
+    private getPartiallyOffScreenEdges(currRoot: SKNode, canvas: Canvas): SKEdge[] {
         // For each edge check if it's partially off-screen
         const partiallyOffScreenEdges = [];
         const pos = this.getAbsolutePosition(currRoot);
@@ -1090,7 +1101,7 @@ export class ProxyView extends AbstractUIExtension {
                 let offScreen = false;
                 let onScreen = false;
                 for (let p of child.routingPoints) {
-                    p = getTranslatedBounds(Point.add(pos, p), canvas);
+                    p = Canvas.translateAdd(pos, p, canvas);
                     if (Bounds.includes(canvas, p)) {
                         onScreen = true;
                     } else {
@@ -1112,7 +1123,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the proxy rendering for an off-screen node. */
-    private createProxy(node: SKNode | VNode, transform: TransformAttributes, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
+    private createProxy(node: SKNode | VNode, transform: TransformAttributes, canvas: Canvas, ctx: SKGraphModelRenderer): VNode | undefined {
         if (!(node instanceof SKNode)) {
             // VNode, this is a predefined rendering (e.g. cluster)
             updateTransform(node, transform);
@@ -1225,7 +1236,7 @@ export class ProxyView extends AbstractUIExtension {
      * Calculates the TransformAttributes for this node's proxy, e.g. the position to place the proxy at aswell as its scale and bounds.
      * Note that the position is pre-scaling. To get position post-scaling, divide `x` and `y` by `scale`.
      */
-    private getTransform(node: SKNode, desiredSize: number, proxyBounds: Bounds, canvas: CanvasAttributes): TransformAttributes {
+    private getTransform(node: SKNode, desiredSize: number, proxyBounds: Bounds, canvas: Canvas): TransformAttributes {
         // OLD: size dependant on node's bounds
         // const proxyWidth = size * 0.001;
         // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
@@ -1259,11 +1270,11 @@ export class ProxyView extends AbstractUIExtension {
 
     /**
      * Returns the translated bounds for the given `node`.
-     * @see {@link getTranslatedBounds()}
+     * @see {@link Canvas.toTranslated()}
      */
-    private getTranslatedNodeBounds(node: SKNode, canvas: CanvasAttributes): Bounds {
+    private getTranslatedNodeBounds(node: SKNode, canvas: Canvas): Bounds {
         const absoluteBounds = { ...node.bounds, ...this.getAbsolutePosition(node) };
-        return getTranslatedBounds(absoluteBounds, canvas);
+        return Canvas.toTranslated(absoluteBounds, canvas);
     }
 
     /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
@@ -1292,7 +1303,7 @@ export class ProxyView extends AbstractUIExtension {
      * Returns the distance between the node and the canvas.
      * @see {@link getDistanceToCanvas()}
      */
-    private getNodeDistanceToCanvas(node: SKNode, canvas: CanvasAttributes): number {
+    private getNodeDistanceToCanvas(node: SKNode, canvas: Canvas): number {
         const id = this.getProxyId(node.id);
         let dist = this.distances.get(id);
         if (dist) {
@@ -1424,7 +1435,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Adds actions on events to the vnode. */
-    private addEventActions(vnode: VNode, node: SKNode, canvas: CanvasAttributes): void {
+    private addEventActions(vnode: VNode, node: SKNode, canvas: Canvas): void {
         if (!this.actionsEnabled) {
             return;
         }
@@ -1436,8 +1447,11 @@ export class ProxyView extends AbstractUIExtension {
 
             // Center on node when proxy is clicked
             let action: Action;
-            const translated = getTranslatedBounds(node.bounds, canvas);
-            if (translated.width > canvas.width || translated.height > canvas.height) {
+            const canvas2 = Canvas.fromTranslated(canvas, canvas); // FIXME:
+            // OLD:
+            // const translated = Canvas.toTranslated(node.bounds, canvas);
+            // if (translated.width > canvas.width || translated.height > canvas.height) {
+            if (node.bounds.width > canvas2.width || node.bounds.height > canvas2.height) {
                 // Node is larger than canvas, zoom out so the node is fully on-screen
                 action = FitToScreenAction.create([this.getNodeId(node.id)], { animate: true, padding: 10 });
             } else {

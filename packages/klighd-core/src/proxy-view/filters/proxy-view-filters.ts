@@ -23,7 +23,7 @@ import { RenderOptionsRegistry } from "../../options/render-options-registry";
 import { SKNode } from "../../skgraph-models";
 import { ProxyView } from "../proxy-view";
 import { SendProxyViewAction } from "../proxy-view-actions";
-import { CanvasAttributes, isConnectedToAny, isSelectedOrConnectedToSelected } from "../proxy-view-util";
+import { Canvas, isConnectedToAny, isSelectedOrConnectedToSelected } from "../proxy-view-util";
 import { ProxyViewFilterCategory, ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected } from "./proxy-view-filter-options";
 
 //////// Types ////////
@@ -38,7 +38,7 @@ export interface ProxyFilterArgs {
     /** List of all on-screen nodes. */
     onScreenNodes: SKNode[];
     /** The canvas' attributes. */
-    canvas: CanvasAttributes;
+    canvas: Canvas;
     /** The distance to the canvas as specified by {@link ../proxy-view-util#getDistanceToCanvas()}. */
     distance: number;
 }

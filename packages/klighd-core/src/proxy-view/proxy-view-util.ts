@@ -37,10 +37,61 @@ export interface TransformAttributes extends Bounds {
 }
 
 /** 
- * Contains all canvas-related attributes - though `x` and `y` are unused.
+ * Contains all canvas-related attributes.
  * @example (x, y, width, height, scroll, zoom)
  */
-export interface CanvasAttributes extends Viewport, Bounds { }
+export interface Canvas extends Viewport, Bounds { }
+
+export namespace Canvas {
+    /**
+     * Returns the bounds translated to the canvas' frame of reference.
+     * E.g. calculates its position & width/height according to scroll and zoom.
+     * Inverse to {@link fromTranslated()}.
+     * @param bpd The bounds/point/dimension to translate.
+     * @param canvas The canvas' attributes.
+     * @returns The bounds translated to the canvas' frame of reference.
+     */
+    export function toTranslated(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+        const b = toBounds(bpd);
+
+        const s = canvas.scroll;
+        const z = canvas.zoom;
+        return { x: (b.x - s.x) * z, y: (b.y - s.y) * z, width: b.width * z, height: b.height * z };
+    }
+
+    /**
+     * Returns the bounds translated back to their original frame of reference.
+     * Inverse to {@link toTranslated()}.
+     * @param bpd The bounds/point/dimension translated to the canvas' frame of reference.
+     * @param canvas The canvas' attributes.
+     * @returns The bounds in their original frame of reference.
+     */
+    export function fromTranslated(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+        const b = toBounds(bpd);
+
+        const s = canvas.scroll;
+        const z = canvas.zoom;
+        return { x: b.x / z + s.x, y: b.y / z + s.y, width: b.width / z, height: b.height / z };
+    }
+
+    /**
+     * Convenience function. Adds `p1` and `p2` and translates the result to the canvas' frame of reference.
+     * @param p1 The first point.
+     * @param p2 The second point.
+     * @param canvas The canvas' attributes.
+     */
+    export function translateAdd(p1: Point, p2: Point, canvas: Canvas): Point {
+        return toTranslated(Point.add(p1, p2), canvas);
+    }
+
+    /**
+     * Checks if `b` is (partially) on-screen.
+     * @returns `true` if `b` is (partially) on-screen.
+     */
+    export function isOnScreen(b: Bounds, canvas: Canvas): boolean {
+        return isInBounds(b, canvas);
+    }
+}
 
 /** Like {@link Bounds} but contains coordinates instead of width and height. */
 export interface Rect {
@@ -116,20 +167,6 @@ export function toBounds(bpd: Bounds | Point | Dimension): Bounds {
 }
 
 /**
- * Returns the translated bounds, e.g. calculates its position & width/height according to scroll and zoom.
- * @param bpd The bounds/point/dimension to translate.
- * @param canvas The canvas' attributes.
- * @returns The translated bounds.
- */
-export function getTranslatedBounds(bpd: Bounds | Point | Dimension, canvas: CanvasAttributes): Bounds {
-    const b = toBounds(bpd);
-
-    const s = canvas.scroll;
-    const z = canvas.zoom;
-    return { x: (b.x - s.x) * z, y: (b.y - s.y) * z, width: b.width * z, height: b.height * z };
-}
-
-/**
  * Returns `n` capped to the range given by `min` and `max` (inclusive), e.g. `n` in `[min, max]`.
  * @param n The number to cap.
  * @param min The lower bound of the range.
@@ -148,10 +185,10 @@ export function capNumber(n: number, min: number, max: number): number {
  * Note that the bounds need to be translated and contain the absolute position (not relative to parent).
  * @param bp The bounds/point to cap to the canvas border, absolute and translated.
  * @param canvas The canvas' attributes.
- * @param offset FIXME:
+ * @param offset An optional offset. Values `>0` reduce the canvas size.
  * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
  */
-export function capToCanvas(bp: Bounds | Point, canvas: CanvasAttributes, offset = Rect.EMPTY): Bounds {
+export function capToCanvas(bp: Bounds | Point, canvas: Canvas, offset = Rect.EMPTY): Bounds {
     const bounds = toBounds(bp);
 
     // Cap proxy at canvas border
@@ -177,7 +214,7 @@ export function capToCanvas(bp: Bounds | Point, canvas: CanvasAttributes, offset
  * @param canvas The canvas' attributes.
  * @returns The distance between the bounds and the canvas.
  */
-export function getDistanceToCanvas(bp: Bounds | Point, canvas: CanvasAttributes): number {
+export function getDistanceToCanvas(bp: Bounds | Point, canvas: Canvas): number {
     return distanceBetweenBounds(bp, canvas);
 }
 
@@ -274,8 +311,9 @@ export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point):
  * @returns The intersection between the line and bounds or `undefined` if there is none.
  */
 export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefined {
-    const inBounds = Bounds.includes(b, p1);
-    if (inBounds) {
+    // Intersection iff one of [p1, p2] in bounds and the other one out of bounds
+
+    if (Bounds.includes(b, p1)) {
         // Intersection if p2 out of bounds
         if (p2.x < b.x || p2.x > b.x + b.width) {
             // Intersection at x, find y
@@ -298,27 +336,26 @@ export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefi
             const intersectX = p1.x + scalar * (p2.x - p1.x);
             return { x: intersectX, y: topOrBottom };
         }
-    } else {
-        // Intersection if p2 in bounds
-        if (p2.x >= b.x || p2.x <= b.x + b.width) {
+    } else if (Bounds.includes(b, p2)) {
+        if (p1.x < b.x || p1.x > b.x + b.width) {
             // Intersection at x, find y
-            const leftOrRight = p2.x >= b.x ? b.x : b.x + b.width;
+            const leftOrRight = p1.x < b.x ? b.x : b.x + b.width;
 
-            // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
-            const scalar = capNumber((leftOrRight - p1.x) / (p2.x - p1.x), 0, 1);
+            // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
+            const scalar = capNumber((leftOrRight - p2.x) / (p1.x - p2.x), 0, 1);
 
             // Intersection point, cap to canvas with offset (and to sidebar aswell)
-            const intersectY = p1.y + scalar * (p2.y - p1.y);
+            const intersectY = p2.y + scalar * (p1.y - p2.y);
             return { x: leftOrRight, y: intersectY };
-        } else if (p2.y >= b.y || p2.y <= b.y + b.height) {
+        } else {
             // Intersection at y, find x
-            const topOrBottom = p2.y >= b.y ? b.y : b.y + b.height;
+            const topOrBottom = p1.y < b.y ? b.y : b.y + b.height;
 
-            // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
-            const scalar = capNumber((topOrBottom - p1.y) / (p2.y - p1.y), 0, 1);
+            // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
+            const scalar = capNumber((topOrBottom - p2.y) / (p1.y - p2.y), 0, 1);
 
             // Intersection point
-            const intersectX = p1.x + scalar * (p2.x - p1.x);
+            const intersectX = p2.x + scalar * (p1.x - p2.x);
             return { x: intersectX, y: topOrBottom };
         }
     }
