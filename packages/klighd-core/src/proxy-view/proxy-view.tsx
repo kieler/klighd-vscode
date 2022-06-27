@@ -284,19 +284,22 @@ export class ProxyView extends AbstractUIExtension {
             }
         }
 
+        const edgeProxies = [];
         // Edges
-        for (const { edge, scale } of edges) {
+        for (const { edge, transform } of edges) {
             // Create an edge proxy
-            const edgeProxy = this.createEdgeProxy(edge, scale, ctx);
+            const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
             if (edgeProxy) {
-                if (this.edgesAboveNodes) {
-                    // Insert at end to be rendered above nodes
-                    proxies.push(edgeProxy);
-                } else {
-                    // Insert at start to be rendered below nodes
-                    proxies.unshift(edgeProxy);
-                }
+                edgeProxies.push(edgeProxy);
             }
+        }
+
+        if (this.edgesAboveNodes) {
+            // Insert at end to be rendered above nodes
+            proxies.push(...edgeProxies);
+        } else {
+            // Insert at start to be rendered below nodes
+            proxies.unshift(...edgeProxies);
         }
 
         // Clear caches for the next model
@@ -622,7 +625,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
-        onScreenNodes: SKNode[], canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, scale: number }[] {
+        onScreenNodes: SKNode[], canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
         if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
             // Don't create edge proxies
             return [];
@@ -633,8 +636,9 @@ export class ProxyView extends AbstractUIExtension {
         const modifiedEdges = new Map;
 
         // Color/opacity for fade out effect
-        const color = { red: 255, green: 0, blue: 0 };
-        const opacity = 1//0.5;
+        // TODO: stroke
+        const color = { red: 0, green: 255, blue: 0 };
+        const opacity = 0.8;
 
         const res = [];
         for (const { node, transform } of nodes) {
@@ -648,20 +652,21 @@ export class ProxyView extends AbstractUIExtension {
                         const nodeConnector = edge.routingPoints[0];
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, ctx);
                         if (proxyEdge) {
-                            res.push({ edge: proxyEdge, scale: 1 });
+                            // Can't use transform for proxyEdge since it's already translated
+                            res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
                             // TODO: overlay original edge with transparent white edge (same scale) when proxy edge exists
-                            // Draw over original node to simulate a fade out effect
-                            const clone = Object.create(edge) as SKEdge;
-                            const parentPos = this.getAbsolutePosition(node.parent as SKNode);
-                            clone.id = this.getProxyId(clone.id) + "-temp";
-                            clone.data = this.changeColor(clone.data, parentPos, canvas, ctx, color);
-                            clone.opacity = opacity;
-                            clone.routingPoints = clone.routingPoints.map(p => getTranslatedBounds(Point.add(parentPos, p), canvas));
-                            // console.log("edge");
-                            // console.log(edge);
-                            // console.log("clone");
-                            // console.log(clone);
-                            res.push({ edge: clone, scale: canvas.zoom });
+                            // Draw over original edge to simulate a fade out effect
+                            const overlay = Object.create(edge) as SKEdge;
+                            const parentPos = getTranslatedBounds(this.getAbsolutePosition(node.parent as SKNode), canvas);
+                            overlay.id = this.getProxyId(overlay.id + "-overlay");
+                            overlay.opacity = opacity;
+                            overlay.data = this.changeColor(overlay.data, ctx, color);
+                            console.log("edge");
+                            console.log(edge);
+                            console.log("overlay");
+                            console.log(overlay);
+                            // Use unshift so overlays are always rendered below edge proxies
+                            res.unshift({ edge: overlay, transform: { ...parentPos, width: 0, height: 0, scale: canvas.zoom } });
                         }
                     }
                 }
@@ -674,7 +679,7 @@ export class ProxyView extends AbstractUIExtension {
                         const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, ctx);
                         if (proxyEdge) {
-                            res.push({ edge: proxyEdge, scale: 1 });
+                            res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
                             // FIXME: also overlay here
                         }
                     }
@@ -1046,7 +1051,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns the proxy rendering for an edge. */
-    private createEdgeProxy(edge: SKEdge, scale: number, ctx: SKGraphModelRenderer): VNode | undefined {
+    private createEdgeProxy(edge: SKEdge, transform: TransformAttributes, ctx: SKGraphModelRenderer): VNode | undefined {
         if (edge.opacity <= 0) {
             // Don't draw an invisible edge
             return undefined;
@@ -1054,7 +1059,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // Change its id to differ from the original edge
         /*
-        If ids aren't unique, errors like
+        If ids aren't unique (e.g. by the same edge being drawn twice), errors like
         - "TypeError: Cannot read property 'removeChild' of null"
         - "DOMException: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node."
         - "TypeError: Cannot read property 'sel' of undefined"
@@ -1068,7 +1073,8 @@ export class ProxyView extends AbstractUIExtension {
         const vnode = ctx.renderProxy(edge);
 
         if (vnode) {
-            updateTransform(vnode, { x: 0, y: 0, height: 0, width: 0, scale });
+            console.log(vnode)
+            updateTransform(vnode, transform);
         }
 
         return vnode;
@@ -1249,8 +1255,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns a copy of `edgeData` with the colors changed to `color`. */
-    private changeColor(edgeData: KGraphData[], parentPos: Point, canvas: CanvasAttributes, ctx: SKGraphModelRenderer,
-        color: { red: number, green: number, blue: number }): KGraphData[] {
+    private changeColor(edgeData: KGraphData[], ctx: SKGraphModelRenderer, color: { red: number, green: number, blue: number }): KGraphData[] {
         if (!edgeData || edgeData.length <= 0) {
             return edgeData;
         }
@@ -1269,30 +1274,16 @@ export class ProxyView extends AbstractUIExtension {
         // OLD: changing the rendering doesn't work when renderingrefs are used
         props["klighd.lsp.rendering.id"] = this.getProxyId(id);
 
-        // Change color FIXME: how?
         for (const i in styles) {
             if ([K_FOREGROUND, K_BACKGROUND].includes(styles[i].type)) {
                 // Move arrow head if actually defined
-                styles[i] = { ...styles[i], color, alpha: 125, targetAlpha: 125 };
-            }
-        }
-
-        if (clone.type === K_POLYGON) {
-            // Arrow head, also need to move this
-            if (props["klighd.lsp.calculated.decoration"]) {
-                // Move arrow head if actually defined
-                const origin = getTranslatedBounds(Point.add(parentPos, props["klighd.lsp.calculated.decoration"]["origin"]), canvas);
-                props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin };
-            } else if (ctx.decorationMap[id]) {
-                // Arrow head was in rendering refs
-                const origin = getTranslatedBounds(Point.add(parentPos, ctx.decorationMap[id]["origin"]), canvas);
-                props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id], origin };
+                styles[i] = { ...styles[i], color };
             }
         }
 
         if ("children" in clone) {
             // Keep going recursively
-            (clone as any).children = this.changeColor((clone as any).children, parentPos, canvas, ctx, color);
+            (clone as any).children = this.changeColor((clone as any).children, ctx, color);
         }
 
         res.push(clone);
