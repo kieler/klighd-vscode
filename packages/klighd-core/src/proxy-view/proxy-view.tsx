@@ -31,7 +31,7 @@ import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges } from "./proxy-view-options";
-import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { anyContains, CanvasAttributes, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getIntersection, getTranslatedBounds, isInBounds, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -274,7 +274,7 @@ export class ProxyView extends AbstractUIExtension {
         let edges = this.routeEdges(clusteredNodes, onScreenNodes, canvas, offset, ctx);
 
         //// Connect off-screen edges ////
-        edges = edges.concat();
+        edges = edges.concat(this.connectEdges(root, canvas, offset, ctx));
 
         //// Render the proxies ////
         const proxies = [];
@@ -657,7 +657,7 @@ export class ProxyView extends AbstractUIExtension {
                             res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
 
                             // Use unshift so overlays are always rendered below edge proxies
-                            res.unshift(this.overlayEdge(edge, canvas, ctx));
+                            res.unshift(this.getOverlayEdge(edge, canvas, ctx));
                         }
                     }
                 }
@@ -775,7 +775,7 @@ export class ProxyView extends AbstractUIExtension {
                     break;
                 }
 
-                // Push p to keep routing points consistent
+                // Add p to keep routing points consistent
                 prevPoint = p;
                 if (!Bounds.includes(transform, p)) {
                     // Don't add a point inside of the proxy
@@ -979,7 +979,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Returns an edge that can be overlayed over the given `edge` to simulate a fade-out effect. */
-    private overlayEdge(edge: SKEdge, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } {
+    private getOverlayEdge(edge: SKEdge, canvas: CanvasAttributes, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } {
         // Color/opacity for fade out effect
         // FIXME: stroke in html, this doesn't seem to work yet?
         const color = { red: 255, green: 255, blue: 255 };
@@ -998,17 +998,77 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Connects off-screen edges. */
-    private connectEdges(root: SKNode, canvas: CanvasAttributes, offset: number): SKEdge[] {
+    private connectEdges(root: SKNode, canvas: CanvasAttributes, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
         if (!this.connectOffScreenEdges) {
             return [];
         }
+        const res = [];
         // Get all edges that are partially off-screen
         const partiallyOffScreenEdges = this.getPartiallyOffScreenEdges(root, canvas);
         // Connect intersections with canvas
         for (const edge of partiallyOffScreenEdges) {
-            // TODO: make sure to only connect on-off-on, not off-on-off
+            const parentPos = this.getAbsolutePosition(edge.parent as SKNode);
+
+            // Find all intersections
+            let prevPoint = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[0]), canvas);
+            const canvasEdgeIntersections = [];
+            for (let i = 1; i < edge.routingPoints.length; i++) {
+                const p = getTranslatedBounds(Point.add(parentPos, edge.routingPoints[i]), canvas);
+                const intersection = getIntersection(prevPoint, p, canvas);
+                if (intersection) {
+                    // Found an intersection, offset to not draw edges at border
+                    let x = intersection.x;
+                    let y = intersection.y;
+                    if (x === canvas.x) {
+                        x += offset;
+                    } else {
+                        x -= offset;
+                    }
+                    if (y === canvas.y) {
+                        y += offset;
+                    } else {
+                        y -= offset;
+                    }
+                    canvasEdgeIntersections.push({ intersection: { x, y }, fromOnScreen: Bounds.includes(canvas, prevPoint), index: i - 1 });
+                }
+                prevPoint = p;
+            }
+
+            // Make sure to only connect on-off-on intersections, not off-on-off
+            const routingPointIndices = [];
+            let { intersection: prevIntersection, fromOnScreen: prevFromOnScreen, index: prevIndex } = canvasEdgeIntersections[0];
+            for (let i = 1; i < canvasEdgeIntersections.length; i++) {
+                const { intersection, fromOnScreen, index } = canvasEdgeIntersections[i];
+                if (prevFromOnScreen) {
+                    // Can safely be connected, therefore store routing point indices and both intersections
+                    routingPointIndices.push({ to: prevIndex, from: index, p1: prevIntersection, p2: intersection });
+                }
+                prevIntersection = intersection;
+                prevFromOnScreen = fromOnScreen;
+                prevIndex = index;
+            }
+
+            // Finally, reconstruct the original path with the connecting points
+            if (routingPointIndices.length > 1) {
+                const connector = Object.create(edge) as SKEdge;
+                const routingPoints = [];
+
+                let prevFrom = 0;
+                for (const { to, from, p1, p2 } of routingPointIndices) {
+                    routingPoints.push(...connector.routingPoints.slice(prevFrom, to + 1), p1, p2);
+                    prevFrom = from;
+                }
+                routingPoints.push(...connector.routingPoints.slice(prevFrom, connector.routingPoints.length));
+
+                connector.routingPoints = routingPoints;
+                res.push({ edge: connector, transform: { ...Bounds.EMPTY, scale: canvas.zoom } });
+
+                // Remember to fade out original edge
+                res.unshift(this.getOverlayEdge(edge, canvas, ctx));
+            }
         }
-        return [];
+
+        return res;
     }
 
     /** Returns all edges that are both on- & off-screen. */
