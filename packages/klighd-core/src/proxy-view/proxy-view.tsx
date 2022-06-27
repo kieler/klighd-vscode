@@ -271,6 +271,7 @@ export class ProxyView extends AbstractUIExtension {
         const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvas);
 
         //// Route edges to proxies ////
+        // TODO: destruct for overlay edges to not have overlay edges of connectEdges over edgeProxies of routeEdges
         let edges = this.routeEdges(clusteredNodes, onScreenNodes, canvas, offset, ctx);
 
         //// Connect off-screen edges ////
@@ -670,8 +671,11 @@ export class ProxyView extends AbstractUIExtension {
                         const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, offset, ctx);
                         if (proxyEdge) {
+                            // Can't use transform for proxyEdge since it's already translated
                             res.push({ edge: proxyEdge, transform: Bounds.EMPTY });
-                            // FIXME: also overlay here
+
+                            // Use unshift so overlays are always rendered below edge proxies
+                            res.unshift(this.getOverlayEdge(edge, canvas, ctx));
                         }
                     }
                 }
@@ -1033,6 +1037,8 @@ export class ProxyView extends AbstractUIExtension {
                 }
                 prevPoint = p;
             }
+            // FIXME: still buggy, too many intersections and they seem incorrect, maybe try without offset for now
+            console.log(canvasEdgeIntersections);
 
             // Make sure to only connect on-off-on intersections, not off-on-off
             const routingPointIndices = [];
