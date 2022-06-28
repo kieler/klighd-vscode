@@ -199,6 +199,11 @@ export class ProxyView extends AbstractUIExtension {
     // Next K-Meeting ^^^ along-border-routing vs straight
     // TODO: semantic filter in vscode repo for node type of sccharts
 
+    // TODO: merge klighd & klighd-vscode semantic filtering, implement semantic filters
+    // TODO: color fade out of polygons (arrow heads)
+    // TODO: change canvas frame of reference instead of nodes etc.
+    // TODO: connector edge placement
+
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
      * @param model The current SGraph.
@@ -233,25 +238,14 @@ export class ProxyView extends AbstractUIExtension {
             </svg>);
     }
 
-    private temp = false;
-
     /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
     private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvas: Canvas): VNode[] {
         // Iterate through nodes starting by root, check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
-        if (ctx.kRenderingLibrary && !this.temp) {
-            const res = [];
-            for (const kRendering of ctx.kRenderingLibrary.renderings) {
-                res.push(this.changeIds([kRendering as any], ctx)[0] as any);
-            }
-            ctx.kRenderingLibrary.renderings.push(...res);
-            this.temp = true;
-        }
-
         //// Initial nodes ////
-        const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
+        const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 1;
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas, depth, ctx);
 
         //// Apply filters ////
@@ -1405,39 +1399,6 @@ export class ProxyView extends AbstractUIExtension {
         return res;
     }
 
-    private changeIds(d: KGraphData[], ctx: SKGraphModelRenderer): KGraphData[] {
-        if (!d || d.length <= 0) {
-            return d;
-        }
-        const data = getKRendering(d, ctx);
-        if (!data) {
-            return d;
-        }
-
-        const res = [];
-        const clone = { ...data } as any;
-        const props = { ...clone.properties };
-        clone.properties = props;
-        const id = props["klighd.lsp.rendering.id"];
-        if (clone.id) {
-            clone.id = this.getProxyId(clone.id);
-        }
-        props["klighd.lsp.rendering.id"] = this.getProxyId(id);
-
-        if ("children" in clone) {
-            // Keep going recursively
-            (clone as any).children = this.changeIds((clone as any).children, ctx);
-        }
-
-        if ("junctionPointRendering" in clone) {
-            // Keep going recursively
-            (clone as any).junctionPointRendering = this.changeIds([(clone as any).junctionPointRendering], ctx)[0];
-        }
-
-        res.push(clone);
-        return res;
-    }
-
     /** Returns a copy of `edgeData` with the colors changed to `color`. */
     private changeColor(edgeData: KGraphData[], ctx: SKGraphModelRenderer, color: { red: number, green: number, blue: number }): KGraphData[] {
         if (!edgeData || edgeData.length <= 0) {
@@ -1461,8 +1422,8 @@ export class ProxyView extends AbstractUIExtension {
         // OLD: changing the rendering id doesn't work when renderingrefs are used
         const id = props["klighd.lsp.rendering.id"];
         const proxyId = this.getProxyId(id);
-            props["klighd.lsp.rendering.id"] = proxyId;
         if (props["klighd.lsp.calculated.decoration"]) {
+            props["klighd.lsp.rendering.id"] = proxyId;
             ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
         } else if (ctx.decorationMap[id]) {
             props["klighd.lsp.rendering.id"] = proxyId;
