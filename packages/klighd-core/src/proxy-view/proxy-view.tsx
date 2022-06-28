@@ -233,11 +233,22 @@ export class ProxyView extends AbstractUIExtension {
             </svg>);
     }
 
+    private temp = false;
+
     /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
     private createAllProxies(root: SKNode, ctx: SKGraphModelRenderer, canvas: Canvas): VNode[] {
         // Iterate through nodes starting by root, check if node is: 
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
+
+        if (ctx.kRenderingLibrary && !this.temp) {
+            const res = [];
+            for (const kRendering of ctx.kRenderingLibrary.renderings) {
+                res.push(this.changeIds([kRendering as any], ctx)[0] as any);
+            }
+            ctx.kRenderingLibrary.renderings.push(...res);
+            this.temp = true;
+        }
 
         //// Initial nodes ////
         const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
@@ -1357,8 +1368,14 @@ export class ProxyView extends AbstractUIExtension {
         const props = { ...clone.properties };
         clone.properties = props;
         const id = props["klighd.lsp.rendering.id"];
-        // OLD: changing the rendering id doesn't work when renderingrefs are used
-        // props["klighd.lsp.rendering.id"] = this.getProxyId(props["klighd.lsp.rendering.id"]);
+        const proxyId = this.getProxyId(id);
+        if (props["klighd.lsp.calculated.decoration"]) {
+            props["klighd.lsp.rendering.id"] = proxyId;
+            ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
+        } else if (ctx.decorationMap[id]) {
+            props["klighd.lsp.rendering.id"] = proxyId;
+            ctx.decorationMap[proxyId] = ctx.decorationMap[id];
+        }
 
         if (clone.type === K_POLYGON) {
             // Arrow head
@@ -1388,6 +1405,39 @@ export class ProxyView extends AbstractUIExtension {
         return res;
     }
 
+    private changeIds(d: KGraphData[], ctx: SKGraphModelRenderer): KGraphData[] {
+        if (!d || d.length <= 0) {
+            return d;
+        }
+        const data = getKRendering(d, ctx);
+        if (!data) {
+            return d;
+        }
+
+        const res = [];
+        const clone = { ...data } as any;
+        const props = { ...clone.properties };
+        clone.properties = props;
+        const id = props["klighd.lsp.rendering.id"];
+        if (clone.id) {
+            clone.id = this.getProxyId(clone.id);
+        }
+        props["klighd.lsp.rendering.id"] = this.getProxyId(id);
+
+        if ("children" in clone) {
+            // Keep going recursively
+            (clone as any).children = this.changeIds((clone as any).children, ctx);
+        }
+
+        if ("junctionPointRendering" in clone) {
+            // Keep going recursively
+            (clone as any).junctionPointRendering = this.changeIds([(clone as any).junctionPointRendering], ctx)[0];
+        }
+
+        res.push(clone);
+        return res;
+    }
+
     /** Returns a copy of `edgeData` with the colors changed to `color`. */
     private changeColor(edgeData: KGraphData[], ctx: SKGraphModelRenderer, color: { red: number, green: number, blue: number }): KGraphData[] {
         if (!edgeData || edgeData.length <= 0) {
@@ -1401,12 +1451,23 @@ export class ProxyView extends AbstractUIExtension {
         const res = [];
         const clone = { ...data } as any;
         const props = { ...clone.properties };
-        const styles = { ...clone.styles };
+        const styles = [...clone.styles];
         clone.properties = props;
         clone.styles = styles;
+        // OLD: so far this seems to only be used for "DefaultEdgeRendering" and doesn't seem to break anything if set
+        // if (clone.id) {
+        //     clone.id = undefined;
+        // }
         // OLD: changing the rendering id doesn't work when renderingrefs are used
-        // const id = props["klighd.lsp.rendering.id"];
-        // props["klighd.lsp.rendering.id"] = this.getProxyId(id);
+        const id = props["klighd.lsp.rendering.id"];
+        const proxyId = this.getProxyId(id);
+            props["klighd.lsp.rendering.id"] = proxyId;
+        if (props["klighd.lsp.calculated.decoration"]) {
+            ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
+        } else if (ctx.decorationMap[id]) {
+            props["klighd.lsp.rendering.id"] = proxyId;
+            ctx.decorationMap[proxyId] = ctx.decorationMap[id];
+        }
 
         for (const i in styles) {
             if ([K_FOREGROUND, K_BACKGROUND].includes(styles[i].type)) {
@@ -1414,10 +1475,19 @@ export class ProxyView extends AbstractUIExtension {
                 styles[i] = { ...styles[i], color };
             }
         }
+        styles.push({ color, type: K_FOREGROUND, selection: false });
+        styles.push({ color, type: K_BACKGROUND, selection: false });
+        styles.push({ color, type: K_FOREGROUND, selection: true });
+        styles.push({ color, type: K_BACKGROUND, selection: true });
 
         if ("children" in clone) {
             // Keep going recursively
             (clone as any).children = this.changeColor((clone as any).children, ctx, color);
+        }
+
+        if ("junctionPointRendering" in clone) {
+            // Keep going recursively
+            (clone as any).junctionPointRendering = this.changeColor([(clone as any).junctionPointRendering], ctx, color)[0];
         }
 
         res.push(clone);

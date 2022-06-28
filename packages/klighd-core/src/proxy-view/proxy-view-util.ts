@@ -159,7 +159,7 @@ export function checkOverlap(b1: Bounds, b2: Bounds): boolean {
 }
 
 /**
- * Returns `bpd` if given bounds, otherwise fills the empty attributes with zeros.
+ * Returns `bpd` if given bounds, otherwise fills the empty attributes with {@link Bounds.EMPTY}.
  * @param bpd The bounds/point/dimension.
  */
 export function toBounds(bpd: Bounds | Point | Dimension): Bounds {
