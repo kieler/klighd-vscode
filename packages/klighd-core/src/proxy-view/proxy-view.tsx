@@ -31,7 +31,7 @@ import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges } from "./proxy-view-options";
-import { anyContains, Canvas, capNumber, capToCanvas, checkOverlap, getDistanceToCanvas, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { anyContains, Canvas, capNumber, capToCanvas, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -244,22 +244,24 @@ export class ProxyView extends AbstractUIExtension {
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
+        const canvas2 = Canvas.fromTranslatedCanvas(canvas);
+
         //// Initial nodes ////
-        const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 1;
-        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas, depth, ctx);
+        const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
+        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas2, depth, ctx);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
-            onScreenNodes, canvas); // Additional arguments for filters
+            onScreenNodes, canvas2); // Additional arguments for filters
 
         //// Clone nodes ////
         const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
 
         //// Opacity ////
-        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvas);
+        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvas2);
 
         //// Stacking order ////
-        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvas);
+        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvas2);
 
         //// Use proxy-rendering as specified by synthesis ////
         const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(orderedOffScreenNodes, ctx);
@@ -331,9 +333,9 @@ export class ProxyView extends AbstractUIExtension {
         const onScreenNodes = [];
         for (const node of currRoot.children) {
             if (node instanceof SKNode) {
-                const translated = this.getTranslatedNodeBounds(node, canvas);
+                const b = this.getAbsoluteBounds(node);
 
-                if (!Canvas.isOnScreen(translated, canvas)) {
+                if (!Canvas.isOnScreen(b, canvas)) {
                     // Node out of bounds
                     offScreenNodes.push(node);
 
@@ -425,7 +427,7 @@ export class ProxyView extends AbstractUIExtension {
             i.e. the least important criterion is at the start and the most important one is at the end
             */
             if (this.stackingOrderByDistance) {
-                // Distant nodes at start, close nodes at end
+                // Distant nodes at start, close nodes at end#
                 res.sort((n1, n2) => this.getNodeDistanceToCanvas(n2, canvas) - this.getNodeDistanceToCanvas(n1, canvas));
             }
             if (this.stackingOrderByOpacity) {
@@ -433,7 +435,7 @@ export class ProxyView extends AbstractUIExtension {
                 res.sort((n1, n2) => n1.opacity - n2.opacity);
             }
             if (this.stackingOrderBySelected) {
-                // Move selected nodes at end (and keep previous ordering, e.g. "grouping" by selected)
+                // Move selected nodes to end (and keep previous ordering, e.g. "grouping" by selected)
                 res.sort((n1, n2) => n1.selected === n2.selected ? 0 : n1.selected ? 1 : -1);
             }
         }
@@ -991,7 +993,6 @@ export class ProxyView extends AbstractUIExtension {
     /** Returns an edge that can be overlayed over the given `edge` to simulate a fade-out effect. */
     private getOverlayEdge(edge: SKEdge, canvas: Canvas, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } {
         // Color/opacity for fade out effect
-        // FIXME: stroke in html, this doesn't seem to work yet?
         const color = { red: 255, green: 255, blue: 255 };
         const opacity = 0.8;
 
@@ -1278,8 +1279,13 @@ export class ProxyView extends AbstractUIExtension {
      * @see {@link Canvas.toTranslated()}
      */
     private getTranslatedNodeBounds(node: SKNode, canvas: Canvas): Bounds {
-        const absoluteBounds = { ...node.bounds, ...this.getAbsolutePosition(node) };
+        const absoluteBounds = this.getAbsoluteBounds(node);
         return Canvas.toTranslated(absoluteBounds, canvas);
+    }
+
+    /** Returns the `node`'s bounds with the absolute position. */
+    private getAbsoluteBounds(node: SKNode): Bounds {
+        return { ...node.bounds, ...this.getAbsolutePosition(node) };
     }
 
     /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
@@ -1317,8 +1323,8 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // Calculate distance
-        const translated = this.getTranslatedNodeBounds(node, canvas);
-        dist = getDistanceToCanvas(translated, canvas);
+        const b = this.getAbsoluteBounds(node);
+        dist = Canvas.distanceTranslatedCanvas(b, canvas);
         this.distances.set(id, dist);
 
         return dist;

@@ -48,7 +48,7 @@ export namespace Canvas {
      * E.g. calculates its position & width/height according to scroll and zoom.
      * Inverse to {@link fromTranslated()}.
      * @param bpd The bounds/point/dimension to translate.
-     * @param canvas The canvas' attributes.
+     * @param canvas The canvas.
      * @returns The bounds translated to the canvas' frame of reference.
      */
     export function toTranslated(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
@@ -60,11 +60,11 @@ export namespace Canvas {
     }
 
     /**
-     * Returns the bounds translated back to their original frame of reference.
+     * Returns the bounds translated back to their own frame of reference.
      * Inverse to {@link toTranslated()}.
      * @param bpd The bounds/point/dimension translated to the canvas' frame of reference.
-     * @param canvas The canvas' attributes.
-     * @returns The bounds in their original frame of reference.
+     * @param canvas The canvas.
+     * @returns The bounds in their own frame of reference.
      */
     export function fromTranslated(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
         const b = toBounds(bpd);
@@ -75,21 +75,70 @@ export namespace Canvas {
     }
 
     /**
-     * Convenience function. Adds `p1` and `p2` and translates the result to the canvas' frame of reference.
+     * Checks if `b` is (partially) on-screen.
+     * @returns `true` if `b` is (partially) on-screen.
+     */
+    export function isOnScreen(b: Bounds, canvas: Canvas): boolean {
+        return isInBounds(b, canvas);
+    }
+
+    /**
+     * Returns the distance between the translated bounds and the canvas.
+     * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
+     * 
+     * @param bp The translated bounds/point to calculate the distance for.
+     * @param canvas The canvas.
+     * @returns The distance between the bounds and the canvas.
+     */
+    export function distanceTranslatedBounds(bp: Bounds | Point, canvas: Canvas): number {
+        return distanceBetweenBounds(bp, canvas);
+    }
+
+    /**
+     * Returns the distance between the bounds and the translated canvas.
+     * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
+     * 
+     * @param bp The bounds/point to calculate the distance for.
+     * @param canvas The translated canvas.
+     * @returns The distance between the bounds and the canvas.
+     */
+    export function distanceTranslatedCanvas(bp: Bounds | Point, canvas: Canvas): number {
+        return distanceBetweenBounds(bp, canvas) * canvas.zoom;
+    }
+
+    //// Convenience functions ////
+
+    /**
+     * Convenience function.
+     * Adds `p1` and `p2` and translates the result to the canvas' frame of reference.
      * @param p1 The first point.
      * @param p2 The second point.
-     * @param canvas The canvas' attributes.
+     * @param canvas The canvas.
      */
     export function translateAdd(p1: Point, p2: Point, canvas: Canvas): Point {
         return toTranslated(Point.add(p1, p2), canvas);
     }
 
     /**
-     * Checks if `b` is (partially) on-screen.
-     * @returns `true` if `b` is (partially) on-screen.
+     * Convenience function.
+     * Translates the canvas from the root's frame of reference to its own
+     * frame of reference.
+     * @param canvas The canvas.
+     * @returns The canvas in its own frame of reference.
      */
-    export function isOnScreen(b: Bounds, canvas: Canvas): boolean {
-        return isInBounds(b, canvas);
+    export function toTranslatedCanvas(canvas: Canvas): Canvas {
+        return { ...canvas, ...toTranslated(canvas, canvas) };
+    }
+
+    /**
+     * Convenience function.
+     * Translates the canvas from its own frame of reference to the root's
+     * frame of reference.
+     * @param canvas The canvas.
+     * @returns The canvas in the root's frame of reference.
+     */
+    export function fromTranslatedCanvas(canvas: Canvas): Canvas {
+        return { ...canvas, ...fromTranslated(canvas, canvas) };
     }
 }
 
@@ -184,7 +233,7 @@ export function capNumber(n: number, min: number, max: number): number {
  * Returns the given bounds capped to the canvas border w.r.t. the sidebar.
  * Note that the bounds need to be translated and contain the absolute position (not relative to parent).
  * @param bp The bounds/point to cap to the canvas border, absolute and translated.
- * @param canvas The canvas' attributes.
+ * @param canvas The canvas.
  * @param offset An optional offset. Values `>0` reduce the canvas size.
  * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
  */
@@ -204,18 +253,6 @@ export function capToCanvas(bp: Bounds | Point, canvas: Canvas, offset = Rect.EM
     }
 
     return { x, y, width: bounds.width, height: bounds.height };
-}
-
-/**
- * Returns the distance between the bounds and the canvas.
- * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
- * 
- * @param bp The translated bounds/point to calculate the distance for.
- * @param canvas The canvas' attributes.
- * @returns The distance between the bounds and the canvas.
- */
-export function getDistanceToCanvas(bp: Bounds | Point, canvas: Canvas): number {
-    return distanceBetweenBounds(bp, canvas);
 }
 
 /**
@@ -275,17 +312,17 @@ export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point):
             // b1 top middle of b2 (2)
             dist = b2Top - b1Bottom;
         }
-    } else if (b2Top > b2Bottom) {
+    } else if (b1Top > b2Bottom) {
         // b1 below b2 (7,8,9)
         if (b1Right < b2Left) {
             // b1 bottom left of b2 (7)
-            dist = Point.euclideanDistance({ y: b2Top, x: b1Right }, { y: b2Bottom, x: b2Left });
+            dist = Point.euclideanDistance({ y: b1Top, x: b1Right }, { y: b2Bottom, x: b2Left });
         } else if (b1Left > b2Right) {
             // b1 bottom right of b2 (9)
-            dist = Point.euclideanDistance({ y: b2Top, x: b1Left }, { y: b2Bottom, x: b2Right });
+            dist = Point.euclideanDistance({ y: b1Top, x: b1Left }, { y: b2Bottom, x: b2Right });
         } else {
             // b1 bottom middle of b2 (8)
-            dist = b2Top - b2Bottom;
+            dist = b1Top - b2Bottom;
         }
     } else {
         // b1 same height as b2 (4,5,6)

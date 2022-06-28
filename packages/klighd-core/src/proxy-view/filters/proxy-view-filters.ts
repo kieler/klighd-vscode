@@ -37,7 +37,7 @@ export interface ProxyFilterArgs {
     offScreenNodes: SKNode[];
     /** List of all on-screen nodes. */
     onScreenNodes: SKNode[];
-    /** The canvas' attributes. */
+    /** The canvas. */
     canvas: Canvas;
     /** The distance to the canvas as specified by {@link ../proxy-view-util#getDistanceToCanvas()}. */
     distance: number;
