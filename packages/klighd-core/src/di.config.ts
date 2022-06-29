@@ -22,7 +22,6 @@ import {
     LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
     TYPES, updateModule, viewportModule, ViewRegistry, configureActionHandler
 } from 'sprotty';
-import { getImportModules } from './modules-temp';
 import actionModule from './actions/actions-module';
 import bookmarkModule from './bookmarks/bookmark-module'
 import { DISymbol } from './di.symbols';
@@ -99,9 +98,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
-        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule, proxyViewModule,
-        // Finally, load modules of projects importing this one
-        ...(getImportModules() as ContainerModule[]))
+        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule, proxyViewModule)
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
