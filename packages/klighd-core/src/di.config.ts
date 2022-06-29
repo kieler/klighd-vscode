@@ -22,6 +22,7 @@ import {
     LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
     TYPES, updateModule, viewportModule, ViewRegistry, configureActionHandler
 } from 'sprotty';
+import { getImportModules } from './modules-temp';
 import actionModule from './actions/actions-module';
 import bookmarkModule from './bookmarks/bookmark-module'
 import { DISymbol } from './di.symbols';
@@ -92,20 +93,6 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
 })
 
 /**
- * Stores custom modules of projects importing KLighD-vscode to be loaded.
- * Register modules via {@link registerModules}.
- */
-const importModules: ContainerModule[] = [];
-
-/**
- * Registers custom modules of projects importing KLighD-vscode to be loaded.
- * @param modules The modules that should be loaded.
- */
-export function registerModules(...modules: ContainerModule[]): void {
-    importModules.concat(modules);
-}
-
-/**
  * Dependency injection container that bundles all needed sprotty and custom modules to allow SKGraphs to be drawn with sprotty.
  */
 export default function createContainer(widgetId: string): Container {
@@ -114,7 +101,7 @@ export default function createContainer(widgetId: string): Container {
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
         actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule, proxyViewModule,
         // Finally, load modules of projects importing this one
-        ...importModules)
+        ...(getImportModules() as ContainerModule[]))
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
