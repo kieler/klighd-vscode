@@ -38,21 +38,35 @@ export interface TransformAttributes extends Bounds {
 
 /** 
  * Contains all canvas-related attributes.
+ * @acronym CRF - Canvas Reference Frame.
+ * @acronym LRF - Local Reference Frame.
  * @example (x, y, width, height, scroll, zoom)
  */
-export interface Canvas extends Viewport, Bounds { }
+export interface Canvas extends Viewport, Bounds {
+    /**
+     * Whether the canvas is in LRF, e.g. not in CRF.
+     * Usually doesn't need to be set explicitly - handled by translation methods.
+     * When the canvas hasn't been translated yet, this should be `undefined` or `false`,
+     * as the canvas should be in the CRF.
+     */
+    isInLRF?: boolean;
+}
 
 export namespace Canvas {
+
+    //// Translation ////
+
     /**
-     * Returns the bounds translated to the canvas' frame of reference.
+     * Returns the bounds translated from the LRF to the CRF.
      * E.g. calculates its position & width/height according to scroll and zoom.
-     * Inverse to {@link fromTranslated()}.
-     * @param bpd The bounds/point/dimension to translate.
+     * Inverse to {@link translateToLRF()}.
+     * @param bpd The bounds/point/dimension in the LRF.
      * @param canvas The canvas.
-     * @returns The bounds translated to the canvas' frame of reference.
+     * @returns The bounds translated to the CRF.
      */
-    export function toTranslated(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+    export function translateToCRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
         const b = toBounds(bpd);
+        console.log("Bounds LRF -> CRF");
 
         const s = canvas.scroll;
         const z = canvas.zoom;
@@ -60,14 +74,15 @@ export namespace Canvas {
     }
 
     /**
-     * Returns the bounds translated back to their own frame of reference.
-     * Inverse to {@link toTranslated()}.
-     * @param bpd The bounds/point/dimension translated to the canvas' frame of reference.
+     * Returns the bounds translated from the CRF to the LRF.
+     * Inverse to {@link translateToCRF()}.
+     * @param bpd The bounds/point/dimension in the CRF.
      * @param canvas The canvas.
-     * @returns The bounds in their own frame of reference.
+     * @returns The bounds translated to the LRF.
      */
-    export function fromTranslated(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+    export function translateToLRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
         const b = toBounds(bpd);
+        console.log("Bounds CRF -> LRF");
 
         const s = canvas.scroll;
         const z = canvas.zoom;
@@ -75,7 +90,51 @@ export namespace Canvas {
     }
 
     /**
+     * Convenience function.
+     * Adds `p1` and `p2` and translates the result to the CRF.
+     * @param p1 The first point.
+     * @param p2 The second point.
+     * @param canvas The canvas.
+     */
+    export function translateToCRFAdd(p1: Point, p2: Point, canvas: Canvas): Point {
+        return translateToCRF(Point.add(p1, p2), canvas);
+    }
+
+    /**
+     * Convenience function.
+     * Translates the canvas from the LRF to the CRF, if not already in CRF.
+     * Inverse to {@link translateCanvasToLRF()}.
+     * @param canvas The canvas.
+     * @returns The canvas translated to the CRF.
+     */
+    export function translateCanvasToCRF(canvas: Canvas): Canvas {
+        if (canvas.isInLRF) {
+            return { ...canvas, ...translateToCRF(canvas, canvas), isInLRF: false };
+        } else {
+            return canvas;
+        }
+    }
+
+    /**
+     * Convenience function.
+     * Translates the canvas from the CRF to the LRF, if not already in LRF.
+     * Inverse to {@link translateCanvasToCRF()}.
+     * @param canvas The canvas.
+     * @returns The canvas translated to the LRF.
+     */
+    export function translateCanvasToLRF(canvas: Canvas): Canvas {
+        if (canvas.isInLRF) {
+            return canvas;
+        } else {
+            return { ...canvas, ...translateToLRF(canvas, canvas), isInLRF: true };
+        }
+    }
+
+    //// Other Functions ////
+
+    /**
      * Checks if `b` is (partially) on-screen.
+     * Note that `b` and `canvas` need to be in the same Reference Frame.
      * @returns `true` if `b` is (partially) on-screen.
      */
     export function isOnScreen(b: Bounds, canvas: Canvas): boolean {
@@ -84,14 +143,16 @@ export namespace Canvas {
 
     /**
      * Returns the given bounds capped to the canvas border w.r.t. the sidebar.
-     * Note that the bounds need to be translated and contain the absolute position (not relative to parent).
-     * @param bp The bounds/point to cap to the canvas border, absolute and translated.
+     * Note that `bp` and `canvas` need to be in the same Reference Frame. TODO:
+     * Also, `bp` has to contain the absolute position (not relative to parent).
+     * @param bp The bounds/point to cap to the canvas border, absolute.
      * @param canvas The canvas.
      * @param offset An optional offset. Values `>0` reduce the canvas size.
      * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
      */
     export function capToCanvas(bp: Bounds | Point, canvas: Canvas, offset = Rect.EMPTY): Bounds {
         const bounds = toBounds(bp);
+        // canvas = translateCanvasToCRF(canvas); // TODO:
 
         // Cap proxy at canvas border
         let x = capNumber(bounds.x, canvas.x + offset.left, canvas.x + canvas.width - bounds.width - offset.right);
@@ -109,62 +170,17 @@ export namespace Canvas {
     }
 
     /**
-     * Returns the distance between the translated bounds and the canvas.
+     * Returns the distance between the bounds and the canvas.
      * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
+     * Note that `bp` and `canvas` need to be in the same Reference Frame.
      * 
-     * @param bp The translated bounds/point to calculate the distance for.
+     * @param bp The bounds/point to calculate the distance to the canvas for.
      * @param canvas The canvas.
      * @returns The distance between the bounds and the canvas.
      */
-    export function distanceTranslatedBounds(bp: Bounds | Point, canvas: Canvas): number {
-        return distanceBetweenBounds(bp, canvas);
-    }
-
-    /**
-     * Returns the distance between the bounds and the translated canvas.
-     * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
-     * 
-     * @param bp The bounds/point to calculate the distance for.
-     * @param canvas The translated canvas.
-     * @returns The distance between the bounds and the canvas.
-     */
-    export function distanceTranslatedCanvas(bp: Bounds | Point, canvas: Canvas): number {
-        return distanceBetweenBounds(bp, canvas) * canvas.zoom;
-    }
-
-    //// Convenience functions ////
-
-    /**
-     * Convenience function.
-     * Adds `p1` and `p2` and translates the result to the canvas' frame of reference.
-     * @param p1 The first point.
-     * @param p2 The second point.
-     * @param canvas The canvas.
-     */
-    export function translateAdd(p1: Point, p2: Point, canvas: Canvas): Point {
-        return toTranslated(Point.add(p1, p2), canvas);
-    }
-
-    /**
-     * Convenience function.
-     * Translates the canvas from the root's frame of reference to its own
-     * frame of reference.
-     * @param canvas The canvas.
-     * @returns The canvas in its own frame of reference.
-     */
-    export function toTranslatedCanvas(canvas: Canvas): Canvas {
-        return { ...canvas, ...toTranslated(canvas, canvas) };
-    }
-
-    /**
-     * Convenience function.
-     * Translates the canvas from its own frame of reference to the root's
-     * frame of reference.
-     * @param canvas The canvas.
-     * @returns The canvas in the root's frame of reference.
-     */
-    export function fromTranslatedCanvas(canvas: Canvas): Canvas {
-        return { ...canvas, ...fromTranslated(canvas, canvas) };
+    export function distance(bp: Bounds | Point, canvas: Canvas): number {
+        const dist = distanceBetweenBounds(bp, canvas);
+        return dist * (canvas.isInLRF ? canvas.zoom : 1);
     }
 }
 

@@ -244,46 +244,47 @@ export class ProxyView extends AbstractUIExtension {
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
-        // Translate canvas to root's frame of reference
-        const translatedCanvas = Canvas.fromTranslatedCanvas(canvas);
+        // Translate canvas to the LRF
+        const canvasCRF = Canvas.translateCanvasToCRF(canvas);
+        const canvasLRF = Canvas.translateCanvasToLRF(canvas);
 
         //// Initial nodes ////
         const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
-        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, translatedCanvas, depth, ctx);
+        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvasLRF, depth, ctx);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
-            onScreenNodes, translatedCanvas); // Additional arguments for filters
+            onScreenNodes, canvasLRF); // Additional arguments for filters
 
         //// Clone nodes ////
         const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
 
         //// Opacity ////
-        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, translatedCanvas);
+        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvasLRF);
 
         //// Stacking order ////
-        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, translatedCanvas);
+        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvasLRF);
 
         //// Use proxy-rendering as specified by synthesis ////
         const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(orderedOffScreenNodes, ctx);
 
         //// Calculate transformations ////
-        const size = Math.min(canvas.width, canvas.height) * this.sizePercentage;
+        const size = Math.min(canvasCRF.width, canvasCRF.height) * this.sizePercentage;
         const transformedOffScreenNodes = synthesisRenderedOffScreenNodes.map(({ node, proxyBounds }) => ({
             node,
-            transform: this.getTransform(node, size, proxyBounds, canvas)
+            transform: this.getTransform(node, size, proxyBounds, canvasCRF) // TODO: canvasLRF?
         }));
         const offset = 10; // TODO: maybe make this dependant of canvas size
 
         //// Apply clustering ////
-        const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvas);
+        const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasCRF);
 
         //// Route edges to proxies ////
         // TODO: destruct for overlay edges to not have overlay edges of connectEdges over edgeProxies of routeEdges
-        let edges = this.routeEdges(clusteredNodes, onScreenNodes, canvas, offset, ctx);
+        let edges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offset, ctx);
 
         //// Connect off-screen edges ////
-        edges = edges.concat(this.connectEdges(root, canvas, offset, ctx));
+        edges = edges.concat(this.connectEdges(root, canvasCRF, offset, ctx));
 
         //// Render the proxies ////
         const proxies = [];
@@ -292,7 +293,7 @@ export class ProxyView extends AbstractUIExtension {
         // Nodes
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
-            const proxy = this.createProxy(node, transform, canvas, ctx);
+            const proxy = this.createProxy(node, transform, canvasCRF, ctx);
             if (proxy) {
                 proxies.push(proxy);
                 this.currProxies.push({ proxy, transform });
@@ -705,7 +706,7 @@ export class ProxyView extends AbstractUIExtension {
         nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes } | undefined {
         // Connected to node, just calculate absolute coordinates + basic translation
         const parentPos = this.getAbsolutePosition(node.parent as SKNode);
-        const nodeTranslated = Canvas.translateAdd(parentPos, nodeConnector, canvas);
+        const nodeTranslated = Canvas.translateToCRFAdd(parentPos, nodeConnector, canvas);
 
         if (!this.edgesToOffScreenPoint && !Bounds.includes(canvas, nodeTranslated)) {
             // Would be connected to an off-screen point, don't show the edge
@@ -754,7 +755,7 @@ export class ProxyView extends AbstractUIExtension {
             for (let i = 1; i < edge.routingPoints.length; i++) {
                 // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
                 // Traverse routingPoints from the end for outgoing edges to match with prevPoint
-                const p = Canvas.translateAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvas);
+                const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvas);
 
                 if (p.x <= canvasLeft || p.x >= canvasRight) {
                     // Intersection at x, find y
@@ -997,7 +998,7 @@ export class ProxyView extends AbstractUIExtension {
         const color = { red: 255, green: 255, blue: 255 };
         const opacity = 0.8;
 
-        const parentPos = Canvas.toTranslated(this.getAbsolutePosition(edge.parent as SKNode), canvas);
+        const parentPos = Canvas.translateToCRF(this.getAbsolutePosition(edge.parent as SKNode), canvas);
         const overlay = Object.create(edge) as SKEdge;
         overlay.id = overlay.id + "-overlay";
         overlay.opacity = opacity;
@@ -1022,10 +1023,10 @@ export class ProxyView extends AbstractUIExtension {
             const parentPos = this.getAbsolutePosition(edge.parent as SKNode);
 
             // Find all intersections
-            let prevPoint = Canvas.translateAdd(parentPos, edge.routingPoints[0], canvas);
+            let prevPoint = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[0], canvas);
             const canvasEdgeIntersections = [];
             for (let i = 1; i < edge.routingPoints.length; i++) {
-                const p = Canvas.translateAdd(parentPos, edge.routingPoints[i], canvas);
+                const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[i], canvas);
                 const intersection = getIntersection(prevPoint, p, canvas);
                 if (intersection) {
                     // Found an intersection, offset to not draw edges at border
@@ -1108,7 +1109,7 @@ export class ProxyView extends AbstractUIExtension {
                 let offScreen = false;
                 let onScreen = false;
                 for (let p of child.routingPoints) {
-                    p = Canvas.translateAdd(pos, p, canvas);
+                    p = Canvas.translateToCRFAdd(pos, p, canvas);
                     if (Bounds.includes(canvas, p)) {
                         onScreen = true;
                     } else {
@@ -1257,7 +1258,7 @@ export class ProxyView extends AbstractUIExtension {
         const proxyHeight = proxyBounds.height * scale;
 
         // Center at middle of node
-        const translated = this.getTranslatedNodeBounds(node, canvas);
+        const translated = this.getTranslatedNodeBounds(node, canvas); // TODO:
         const offsetX = 0.5 * (translated.width - proxyWidth);
         const offsetY = 0.5 * (translated.height - proxyHeight);
         let x = translated.x + offsetX;
@@ -1277,11 +1278,11 @@ export class ProxyView extends AbstractUIExtension {
 
     /**
      * Returns the translated bounds for the given `node`.
-     * @see {@link Canvas.toTranslated()}
+     * @see {@link Canvas.translateToCRF()}
      */
     private getTranslatedNodeBounds(node: SKNode, canvas: Canvas): Bounds {
         const absoluteBounds = this.getAbsoluteBounds(node);
-        return Canvas.toTranslated(absoluteBounds, canvas);
+        return Canvas.translateToCRF(absoluteBounds, canvas);
     }
 
     /** Returns the `node`'s bounds with the absolute position. */
@@ -1325,7 +1326,7 @@ export class ProxyView extends AbstractUIExtension {
 
         // Calculate distance
         const b = this.getAbsoluteBounds(node);
-        dist = Canvas.distanceTranslatedCanvas(b, canvas);
+        dist = Canvas.distance(b, canvas);
         this.distances.set(id, dist);
 
         return dist;
@@ -1485,7 +1486,7 @@ export class ProxyView extends AbstractUIExtension {
 
             // Center on node when proxy is clicked
             let action: Action;
-            const canvas2 = Canvas.fromTranslated(canvas, canvas); // FIXME:
+            const canvas2 = Canvas.translateToLRF(canvas, canvas); // FIXME:
             // OLD:
             // const translated = Canvas.toTranslated(node.bounds, canvas);
             // if (translated.width > canvas.width || translated.height > canvas.height) {
