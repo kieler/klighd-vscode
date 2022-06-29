@@ -83,6 +83,32 @@ export namespace Canvas {
     }
 
     /**
+     * Returns the given bounds capped to the canvas border w.r.t. the sidebar.
+     * Note that the bounds need to be translated and contain the absolute position (not relative to parent).
+     * @param bp The bounds/point to cap to the canvas border, absolute and translated.
+     * @param canvas The canvas.
+     * @param offset An optional offset. Values `>0` reduce the canvas size.
+     * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
+     */
+    export function capToCanvas(bp: Bounds | Point, canvas: Canvas, offset = Rect.EMPTY): Bounds {
+        const bounds = toBounds(bp);
+
+        // Cap proxy at canvas border
+        let x = capNumber(bounds.x, canvas.x + offset.left, canvas.x + canvas.width - bounds.width - offset.right);
+        const y = capNumber(bounds.y, canvas.y + offset.top, canvas.y + canvas.height - bounds.height - offset.bottom);
+
+        // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
+        // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
+        const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
+        const isSidebarOpen = document.querySelector(".sidebar--open");
+        if (!isSidebarOpen && rect && y < rect.bottom + offset.top && x > rect.left - bounds.width - offset.right) {
+            x = rect.left - bounds.width - offset.right;
+        }
+
+        return { x, y, width: bounds.width, height: bounds.height };
+    }
+
+    /**
      * Returns the distance between the translated bounds and the canvas.
      * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
      * 
@@ -227,32 +253,6 @@ export function capNumber(n: number, min: number, max: number): number {
         return Number.NaN;
     }
     return Math.max(min, Math.min(max, n));
-}
-
-/**
- * Returns the given bounds capped to the canvas border w.r.t. the sidebar.
- * Note that the bounds need to be translated and contain the absolute position (not relative to parent).
- * @param bp The bounds/point to cap to the canvas border, absolute and translated.
- * @param canvas The canvas.
- * @param offset An optional offset. Values `>0` reduce the canvas size.
- * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
- */
-export function capToCanvas(bp: Bounds | Point, canvas: Canvas, offset = Rect.EMPTY): Bounds {
-    const bounds = toBounds(bp);
-
-    // Cap proxy at canvas border
-    let x = capNumber(bounds.x, canvas.x + offset.left, canvas.x + canvas.width - bounds.width - offset.right);
-    const y = capNumber(bounds.y, canvas.y + offset.top, canvas.y + canvas.height - bounds.height - offset.bottom);
-
-    // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
-    // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
-    const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
-    const isSidebarOpen = document.querySelector(".sidebar--open");
-    if (!isSidebarOpen && rect && y < rect.bottom + offset.top && x > rect.left - bounds.width - offset.right) {
-        x = rect.left - bounds.width - offset.right;
-    }
-
-    return { x, y, width: bounds.width, height: bounds.height };
 }
 
 /**

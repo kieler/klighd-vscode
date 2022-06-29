@@ -31,7 +31,7 @@ import { ProxyFilter } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges } from "./proxy-view-options";
-import { anyContains, Canvas, capNumber, capToCanvas, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -244,24 +244,25 @@ export class ProxyView extends AbstractUIExtension {
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
-        const canvas2 = Canvas.fromTranslatedCanvas(canvas);
+        // Translate canvas to root's frame of reference
+        const translatedCanvas = Canvas.fromTranslatedCanvas(canvas);
 
         //// Initial nodes ////
         const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
-        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, canvas2, depth, ctx);
+        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, translatedCanvas, depth, ctx);
 
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
-            onScreenNodes, canvas2); // Additional arguments for filters
+            onScreenNodes, translatedCanvas); // Additional arguments for filters
 
         //// Clone nodes ////
         const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
 
         //// Opacity ////
-        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvas2);
+        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, translatedCanvas);
 
         //// Stacking order ////
-        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvas2);
+        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, translatedCanvas);
 
         //// Use proxy-rendering as specified by synthesis ////
         const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(orderedOffScreenNodes, ctx);
@@ -602,7 +603,7 @@ export class ProxyView extends AbstractUIExtension {
                 // Cap opacity in [0,1]
                 opacity = capNumber(opacity, 0, 1);
                 // Make sure the calculated positions don't leave the canvas bounds
-                ({ x, y } = capToCanvas({ x, y, width: size, height: size }, canvas));
+                ({ x, y } = Canvas.capToCanvas({ x, y, width: size, height: size }, canvas));
 
                 // Also make sure the calculated positions are still capped to the border (no floating proxies)
                 let floating = false;
@@ -616,7 +617,7 @@ export class ProxyView extends AbstractUIExtension {
                 }
                 if (floating) {
                     // Readjust if it was previously floating
-                    ({ x, y } = capToCanvas({ x, y, width: size, height: size }, canvas));
+                    ({ x, y } = Canvas.capToCanvas({ x, y, width: size, height: size }, canvas));
                 }
 
                 const clusterNode = getClusterRendering(`cluster-${clusterIDOffset + i}-proxy`, numProxiesInCluster, size, x, y, opacity);
@@ -745,7 +746,7 @@ export class ProxyView extends AbstractUIExtension {
             // Appends or prepends the point to routingPoints accordingly using outgoing
             const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
             // Same as add but also caps the point to the canvas
-            const addCap = (p: Point) => add(capToCanvas(p, canvas, canvasOffset));
+            const addCap = (p: Point) => add(Canvas.capToCanvas(p, canvas, canvasOffset));
 
             //// Calculate point where edge leaves canvas
             let prevPoint = nodeTranslated;
@@ -1263,7 +1264,7 @@ export class ProxyView extends AbstractUIExtension {
         let y = translated.y + offsetY;
 
         // Cap proxy to canvas
-        ({ x, y } = capToCanvas({ x, y, width: proxyWidth, height: proxyHeight }, canvas));
+        ({ x, y } = Canvas.capToCanvas({ x, y, width: proxyWidth, height: proxyHeight }, canvas));
 
         if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
             const translatedParent = this.getTranslatedNodeBounds(node.parent as SKNode, canvas);
