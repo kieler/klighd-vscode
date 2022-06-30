@@ -365,7 +365,7 @@ export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point):
  * @param offset An optional offset. Values `>0` reduce `b`'s size.
  * @returns The intersection between the line and bounds or `undefined` if there is none.
  */
- export function getIntersection(p1: Point, p2: Point, b: Bounds, offset = Rect.EMPTY): Point | undefined {
+export function getIntersection(p1: Point, p2: Point, b: Bounds, offset = Rect.EMPTY): Point | undefined {
     // Intersection iff one of [p1, p2] in bounds and the other one out of bounds
     const r = {left: b.x + offset.left, right: b.x + b.width - offset.right, top: b.y + offset.top, bottom: b.y + b.height - offset.bottom};
 
