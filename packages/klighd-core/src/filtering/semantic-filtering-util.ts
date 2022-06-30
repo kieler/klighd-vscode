@@ -21,7 +21,7 @@ import { SKGraphElement } from "../skgraph-models"
  * Base interface for semantic filter rules.
  */
 export interface SemanticFilterRule {
-    ruleName?: String
+    ruleName?: string
 }
 
 /**
@@ -29,7 +29,7 @@ export interface SemanticFilterRule {
  * construct a new rule.
  */
 export interface Connective extends SemanticFilterRule {
-    name: String
+    name: string
 }
 
 /**
@@ -52,37 +52,37 @@ export interface BinaryConnective extends Connective {
  * on a graph element.
  */
 export class SemanticFilterTag implements SemanticFilterRule {
-    ruleName?: String
-    tag: String
+    ruleName?: string
+    tag: string
 }
 
 /**
  * A NOT Connective takes a rule R and evaluates to true iff R evaluates to false.
  */
 export class NegationConnective implements UnaryConnective {
-    name: String = "NOT"
+    name = "NOT"
     operand: SemanticFilterRule
-    ruleName?: String
+    ruleName?: string
 }
 
 /**
  * An AND Connective takes two rules R1 and R2 and evaluates to true iff both rules are true.
  */
 export class AndConnective implements BinaryConnective {
-    name: String = "AND"
+    name = "AND"
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
-    ruleName?: String | undefined
+    ruleName?: string | undefined
 }
 
 /**
  * An OR Connective takes two rules R1 and R2 and evaluates to true iff R1 or R2 evaluates to true.
  */
 export class OrConnective implements BinaryConnective {
-    name: String = "OR"
+    name = "OR"
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
-    ruleName?: String | undefined
+    ruleName?: string | undefined
 }
 
 /**
@@ -90,8 +90,8 @@ export class OrConnective implements BinaryConnective {
  * returns true if the element fulfils the filter rule and false otherwise.
  */
 export interface Filter {
-    name?: String
-    filterFun(el: SKGraphElement):boolean
+    name?: string
+    filterFun(el: SKGraphElement): boolean
 }
 
 /**
@@ -102,7 +102,7 @@ export interface Filter {
  */
 export function createFilter(rule: SemanticFilterRule): Filter {
 
-    var ruleName;
+    let ruleName;
     if (rule instanceof SemanticFilterTag) {
         ruleName = rule.tag;
     } else {
@@ -111,7 +111,7 @@ export function createFilter(rule: SemanticFilterRule): Filter {
     return {
         name: ruleName,
         filterFun: (el) => {
-            var tags = Array<SemanticFilterTag>();
+            let tags = Array<SemanticFilterTag>();
             if (el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] != undefined) {
                 tags = el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as Array<SemanticFilterTag>;
             }
@@ -123,7 +123,7 @@ export function createFilter(rule: SemanticFilterRule): Filter {
 }
 
 function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): boolean {
-    
+
     if ((rule as SemanticFilterTag).tag != undefined) {
         return tags.some((tag: SemanticFilterTag) => {
             return tag.tag == (rule as SemanticFilterTag).tag
@@ -134,10 +134,10 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
             case "NOT":
                 return !(evaluateRule((rule as NegationConnective).operand, tags));
             case "AND":
-                return evaluateRule((rule as AndConnective).leftOperand, tags) 
+                return evaluateRule((rule as AndConnective).leftOperand, tags)
                     && evaluateRule((rule as AndConnective).rightOperand, tags);
             case "OR":
-                return evaluateRule((rule as OrConnective).leftOperand, tags) 
+                return evaluateRule((rule as OrConnective).leftOperand, tags)
                     || evaluateRule((rule as OrConnective).rightOperand, tags);
             default:
                 return true;
@@ -150,10 +150,10 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
  * @param graph the graph element to check
  * @returns array of filters
  */
-export function getFilters(graph:SKGraphElement): Array<Filter> {
+export function getFilters(graph: SKGraphElement): Array<Filter> {
 
     if (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] != undefined) {
-        var filters:Array<Filter> = [];
+        const filters: Array<Filter> = [];
         (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] as Array<SemanticFilterRule>)
             .forEach((rule) => {
                 filters.push(createFilter(rule));
