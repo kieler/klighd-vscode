@@ -66,7 +66,7 @@ export namespace Canvas {
      */
     export function translateToCRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
         const b = toBounds(bpd);
-        console.log("Bounds LRF -> CRF");
+        // console.log("Bounds LRF -> CRF"); // FIXME:
 
         const s = canvas.scroll;
         const z = canvas.zoom;
@@ -82,7 +82,7 @@ export namespace Canvas {
      */
     export function translateToLRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
         const b = toBounds(bpd);
-        console.log("Bounds CRF -> LRF");
+        // console.log("Bounds CRF -> LRF"); // FIXME:
 
         const s = canvas.scroll;
         const z = canvas.zoom;

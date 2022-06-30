@@ -19,6 +19,7 @@ import { ContainerModule } from "inversify";
 import { TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
 import { ProxyFilterHandler } from "./filters/proxy-view-filters";
+import { ProxySemanticFilterHandler } from "./filters/proxy-view-semantic-filters";
 import { ProxyView } from "./proxy-view";
 import { ProxyViewActionHandler } from "./proxy-view-actions";
 import { SelectedElementsUtilActionHandler } from "./proxy-view-util";
@@ -39,5 +40,7 @@ export const proxyViewModule = new ContainerModule((bind) => {
 
     bind(ProxyFilterHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(ProxyFilterHandler);
+    bind(ProxySemanticFilterHandler).toSelf().inSingletonScope();
+    bind(TYPES.IActionHandlerInitializer).toService(ProxySemanticFilterHandler);
 });
 
