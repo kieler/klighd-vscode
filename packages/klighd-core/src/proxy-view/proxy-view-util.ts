@@ -362,16 +362,18 @@ export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point):
  * @param p1 The start of the line.
  * @param p2 The end of the line.
  * @param b The bounds.
+ * @param offset An optional offset. Values `>0` reduce `b`'s size.
  * @returns The intersection between the line and bounds or `undefined` if there is none.
  */
-export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefined {
+ export function getIntersection(p1: Point, p2: Point, b: Bounds, offset = Rect.EMPTY): Point | undefined {
     // Intersection iff one of [p1, p2] in bounds and the other one out of bounds
+    const r = {left: b.x + offset.left, right: b.x + b.width - offset.right, top: b.y + offset.top, bottom: b.y + b.height - offset.bottom};
 
-    if (Bounds.includes(b, p1)) {
+    if (p1.x >= r.left && p1.x <= r.right && p1.y >= r.top && p1.y <= r.bottom) {
         // Intersection if p2 out of bounds
-        if (p2.x < b.x || p2.x > b.x + b.width) {
+        if (p2.x < r.left || p2.x > r.right) {
             // Intersection at x, find y
-            const leftOrRight = p2.x < b.x ? b.x : b.x + b.width;
+            const leftOrRight = p2.x < r.left ? r.left : r.right;
 
             // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
             const scalar = capNumber((leftOrRight - p1.x) / (p2.x - p1.x), 0, 1);
@@ -379,9 +381,9 @@ export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefi
             // Intersection point, cap to canvas with offset (and to sidebar aswell)
             const intersectY = p1.y + scalar * (p2.y - p1.y);
             return { x: leftOrRight, y: intersectY };
-        } else if (p2.y < b.y || p2.y > b.y + b.height) {
+        } else if (p2.y < r.top || p2.y > r.bottom) {
             // Intersection at y, find x
-            const topOrBottom = p2.y < b.y ? b.y : b.y + b.height;
+            const topOrBottom = p2.y < r.top ? r.top : r.bottom;
 
             // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
             const scalar = capNumber((topOrBottom - p1.y) / (p2.y - p1.y), 0, 1);
@@ -390,10 +392,11 @@ export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefi
             const intersectX = p1.x + scalar * (p2.x - p1.x);
             return { x: intersectX, y: topOrBottom };
         }
-    } else if (Bounds.includes(b, p2)) {
-        if (p1.x < b.x || p1.x > b.x + b.width) {
+    } else if (p2.x >= r.left && p2.x <= r.right && p2.y >= r.top && p2.y <= r.bottom) {
+        // p1 out of bounds and p2 in bounds, definitely an intersection
+        if (p1.x < r.left || p1.x > r.right) {
             // Intersection at x, find y
-            const leftOrRight = p1.x < b.x ? b.x : b.x + b.width;
+            const leftOrRight = p1.x < r.left ? r.left : r.right;
 
             // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
             const scalar = capNumber((leftOrRight - p2.x) / (p1.x - p2.x), 0, 1);
@@ -403,7 +406,7 @@ export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefi
             return { x: leftOrRight, y: intersectY };
         } else {
             // Intersection at y, find x
-            const topOrBottom = p1.y < b.y ? b.y : b.y + b.height;
+            const topOrBottom = p1.y < r.top ? r.top : r.bottom;
 
             // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
             const scalar = capNumber((topOrBottom - p2.y) / (p1.y - p2.y), 0, 1);
