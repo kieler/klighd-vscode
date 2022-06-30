@@ -244,7 +244,7 @@ export class ProxyView extends AbstractUIExtension {
         // (partially) in bounds -> no proxy, check children
         // out of bounds         -> proxy
 
-        // Translate canvas to the LRF
+        // Translate canvas to both Reference Frames
         const canvasCRF = Canvas.translateCanvasToCRF(canvas);
         const canvasLRF = Canvas.translateCanvasToLRF(canvas);
 
@@ -272,7 +272,7 @@ export class ProxyView extends AbstractUIExtension {
         const size = Math.min(canvasCRF.width, canvasCRF.height) * this.sizePercentage;
         const transformedOffScreenNodes = synthesisRenderedOffScreenNodes.map(({ node, proxyBounds }) => ({
             node,
-            transform: this.getTransform(node, size, proxyBounds, canvasCRF) // TODO: canvasLRF?
+            transform: this.getTransform(node, size, proxyBounds, canvasCRF)
         }));
         const offset = 10; // TODO: maybe make this dependant of canvas size
 
@@ -293,7 +293,7 @@ export class ProxyView extends AbstractUIExtension {
         // Nodes
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
-            const proxy = this.createProxy(node, transform, canvasCRF, ctx);
+            const proxy = this.createProxy(node, transform, canvasLRF, ctx);
             if (proxy) {
                 proxies.push(proxy);
                 this.currProxies.push({ proxy, transform });
@@ -608,12 +608,11 @@ export class ProxyView extends AbstractUIExtension {
 
                 // Also make sure the calculated positions are still capped to the border (no floating proxies)
                 let floating = false;
-                if (y > 0 && y < canvas.height - size && (x < canvas.width - size || x > 0)) {
-                    x = x > (canvas.width - size) / 2 ? canvas.width - size : 0;
+                if (y > canvas.y && y < canvas.y + canvas.height - size && (x > canvas.x || x < canvas.x + canvas.width - size)) {
+                    x = x > (canvas.width - size) / 2 ? canvas.x + canvas.width - size : canvas.x;
                     floating = true;
-                }
-                if (x > 0 && x < canvas.width - size && (y < canvas.height - size || y > 0)) {
-                    y = y > (canvas.height - size) / 2 ? canvas.height - size : 0;
+                } else if (x > canvas.x && x < canvas.x + canvas.width - size && (y > canvas.y || y < canvas.y + canvas.height - size)) {
+                    y = y > (canvas.height - size) / 2 ? canvas.y + canvas.height - size : canvas.y;
                     floating = true;
                 }
                 if (floating) {
@@ -741,8 +740,6 @@ export class ProxyView extends AbstractUIExtension {
             const canvasRight = canvas.x + canvas.width - rightOffset;
             const canvasTop = canvas.y + topOffset;
             const canvasBottom = canvas.y + canvas.height - bottomOffset;
-
-            // TODO: actual proxy edge (connecting on-screen edges that have parts off-screen)
 
             // Appends or prepends the point to routingPoints accordingly using outgoing
             const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
@@ -989,7 +986,7 @@ export class ProxyView extends AbstractUIExtension {
             edge.opacity = 0;
         }
 
-        return { edge: clone, transform: Bounds.EMPTY }; // FIXME:
+        return { edge: clone, transform: Bounds.EMPTY };
     }
 
     /** Returns an edge that can be overlayed over the given `edge` to simulate a fade-out effect. */
@@ -998,7 +995,7 @@ export class ProxyView extends AbstractUIExtension {
         const color = { red: 255, green: 255, blue: 255 };
         const opacity = 0.8;
 
-        const parentPos = Canvas.translateToCRF(this.getAbsolutePosition(edge.parent as SKNode), canvas);
+        const parentTranslated = Canvas.translateToCRF(this.getAbsolutePosition(edge.parent as SKNode), canvas);
         const overlay = Object.create(edge) as SKEdge;
         overlay.id = overlay.id + "-overlay";
         overlay.opacity = opacity;
@@ -1007,7 +1004,7 @@ export class ProxyView extends AbstractUIExtension {
         console.log(edge);
         console.log("overlay");
         console.log(overlay);
-        return { edge: overlay, transform: { ...parentPos, scale: canvas.zoom } };
+        return { edge: overlay, transform: { ...parentTranslated, scale: canvas.zoom } };
     }
 
     /** Connects off-screen edges. */
@@ -1015,6 +1012,8 @@ export class ProxyView extends AbstractUIExtension {
         if (!this.connectOffScreenEdges) {
             return [];
         }
+
+        const offsetLRF = offset / canvas.zoom;
         const res = [];
         // Get all edges that are partially off-screen
         const partiallyOffScreenEdges = this.getPartiallyOffScreenEdges(root, canvas);
@@ -1029,20 +1028,8 @@ export class ProxyView extends AbstractUIExtension {
                 const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[i], canvas);
                 const intersection = getIntersection(prevPoint, p, canvas);
                 if (intersection) {
-                    // Found an intersection, offset to not draw edges at border
-                    let x = intersection.x;
-                    let y = intersection.y;
-                    if (x === canvas.x) {
-                        x += offset;
-                    } else {
-                        x -= offset;
-                    }
-                    if (y === canvas.y) {
-                        y += offset;
-                    } else {
-                        y -= offset;
-                    }
-                    canvasEdgeIntersections.push({ intersection: { x, y }, fromOnScreen: Bounds.includes(canvas, prevPoint), index: i - 1 });
+                    // Found an intersection
+                    canvasEdgeIntersections.push({ intersection, fromOnScreen: Bounds.includes(canvas, prevPoint), index: i - 1 });
                 }
                 prevPoint = p;
             }
@@ -1071,26 +1058,54 @@ export class ProxyView extends AbstractUIExtension {
                 const connector = Object.create(edge) as SKEdge;
                 connector.id = connector.id + "-connector";
                 const routingPoints = [];
+                const parentTranslated = Canvas.translateToCRF(parentPos, canvas);
 
                 let prevFrom = 0;
                 let points;
-                for (const { to, from, p1, p2 } of routingPointIndices) { // FIXME: .map
-                    points = connector.routingPoints.slice(prevFrom, to + 1)//.map(p => Canvas.translateAdd(parentPos, p, canvas));
-                    routingPoints.push(...points, p1, p2);
+                for (const { to, from, p1, p2 } of routingPointIndices) {
+                    // Points from previous intersection up to current one
+                    points = connector.routingPoints.slice(prevFrom, to + 1)
+
+                    // Translate p1, p2 to LRF so as to not translate points to CRF (also don't have to move decorator by hand)
+                    const p1LRF = Point.subtract(Canvas.translateToLRF(p1, canvas), parentPos);
+                    const p2LRF = Point.subtract(Canvas.translateToLRF(p2, canvas), parentPos);
+                    let x1 = p1LRF.x;
+                    let y1 = p1LRF.y;
+                    if (p1.x === canvas.x) {
+                        x1 += offsetLRF;
+                    } else if (p1.x === canvas.x + canvas.width) {
+                        x1 -= offsetLRF;
+                    }
+                    if (p1.y === canvas.y) {
+                        y1 += offsetLRF;
+                    } else if (p1.y === canvas.y + canvas.height) {
+                        y1 -= offsetLRF;
+                    }
+                    let x2 = p2LRF.x;
+                    let y2 = p2LRF.y;
+                    if (p2.x === canvas.x) {
+                        x2 += offsetLRF;
+                    } else if (p2.x === canvas.x + canvas.width) {
+                        x2 -= offsetLRF;
+                    }
+                    if (p2.y === canvas.y) {
+                        y2 += offsetLRF;
+                    } else if (p2.y === canvas.y + canvas.height) {
+                        y2 -= offsetLRF;
+                    }
+
+                    routingPoints.push(...points, { x: x1, y: y1 }, { x: x2, y: y2 });
                     prevFrom = from + 1;
                 }
-                points = connector.routingPoints.slice(prevFrom, connector.routingPoints.length)//.map(p => Canvas.translateAdd(parentPos, p, canvas));
+                points = connector.routingPoints.slice(prevFrom, connector.routingPoints.length)
                 routingPoints.push(...points);
 
                 connector.routingPoints = routingPoints;
-                res.push({ edge: connector, transform: { ...Bounds.EMPTY, ...parentPos, scale: canvas.zoom } });
+                res.push({ edge: connector, transform: { ...Bounds.EMPTY, ...parentTranslated, scale: canvas.zoom } });
 
                 // Remember to fade out original edge
                 res.unshift(this.getOverlayEdge(edge, canvas, ctx));
             }
-            // FIXME: still buggy, too many intersections and they seem incorrect, maybe try without offset for now
-            console.log(edge.id);
-            console.log(res);
         }
 
         return res;
@@ -1486,11 +1501,7 @@ export class ProxyView extends AbstractUIExtension {
 
             // Center on node when proxy is clicked
             let action: Action;
-            const canvas2 = Canvas.translateToLRF(canvas, canvas); // FIXME:
-            // OLD:
-            // const translated = Canvas.toTranslated(node.bounds, canvas);
-            // if (translated.width > canvas.width || translated.height > canvas.height) {
-            if (node.bounds.width > canvas2.width || node.bounds.height > canvas2.height) {
+            if (node.bounds.width > canvas.width || node.bounds.height > canvas.height) {
                 // Node is larger than canvas, zoom out so the node is fully on-screen
                 action = FitToScreenAction.create([this.getNodeId(node.id)], { animate: true, padding: 10 });
             } else {
