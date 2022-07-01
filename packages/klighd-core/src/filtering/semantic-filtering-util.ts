@@ -17,11 +17,24 @@
 
 import { SKGraphElement } from "../skgraph-models"
 
+//// Base constructs ////
+
 /**
  * Base interface for semantic filter rules.
  */
 export interface SemanticFilterRule {
     ruleName?: string
+}
+
+/**
+ * A semantic filter tag is used as a filter rule that evaluates to true iff the tag is present
+ * on a graph element.
+ */
+export class SemanticFilterTag implements SemanticFilterRule {
+    ruleName?: string
+    tag: string
+    /** Not defining num defaults it to 0. */
+    num?: number
 }
 
 /**
@@ -31,6 +44,8 @@ export interface SemanticFilterRule {
 export interface Connective extends SemanticFilterRule {
     name: string
 }
+
+//// Connectives ////
 
 /**
  * Base interface for unary connectives. Unary Connectives take exactly one operand.
@@ -56,14 +71,7 @@ export interface TernaryConnective extends Connective {
     thirdOperand: SemanticFilterRule
 }
 
-/**
- * A semantic filter tag is used as a filter rule that evaluates to true iff the tag is present
- * on a graph element.
- */
-export class SemanticFilterTag implements SemanticFilterRule {
-    ruleName?: string
-    tag: string
-}
+//// Logic Connectives ////
 
 /**
  * A Not Connective takes a rule R and evaluates to true
@@ -122,15 +130,15 @@ export class IfThenConnective implements BinaryConnective {
 }
 
 /**
- * An Equal Connective takes two rules R1 and R2 and evaluates to true
+ * A LogicEqual Connective takes two rules R1 and R2 and evaluates to true
  * iff
  * R1 and R2 evaluate to true or R1 and R2 evaluate to false.
  * @example R1 === R2
  * @example R1 && R2 || !R1 && !R2
  */
-export class EqualConnective implements BinaryConnective {
-    static NAME = "EQUAL"
-    name = EqualConnective.NAME
+export class LogicEqualConnective implements BinaryConnective {
+    static NAME = "LOGICEQUAL"
+    name = LogicEqualConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
     ruleName?: string
@@ -151,6 +159,49 @@ export class IfThenElseConnective implements TernaryConnective {
     thirdOperand: SemanticFilterRule
     ruleName?: string
 }
+
+//// Numeric Connectives ////
+
+/**
+ * A LessThan Connective takes one rule R and evaluates to true
+ * iff
+ * R evaluates to true and R.num < correspondingTag.num.
+ * @example R.num < correspondingTag.num
+ */
+export class LessThanConnective implements UnaryConnective {
+    static NAME = "LESSTHAN"
+    name = LessThanConnective.NAME
+    operand: SemanticFilterTag
+    ruleName?: string
+}
+
+/**
+ * A GreaterThan Connective takes one rule R and evaluates to true
+ * iff
+ * R evaluates to true and R.num > correspondingTag.num.
+ * @example R.num > correspondingTag.num
+ */
+export class GreaterThanConnective implements UnaryConnective {
+    static NAME = "GREATERTHAN"
+    name = GreaterThanConnective.NAME
+    operand: SemanticFilterTag
+    ruleName?: string
+}
+
+/**
+ * A NumericEqual Connective takes one rule R and evaluates to true
+ * iff
+ * R evaluates to true and R.num === correspondingTag.num.
+ * @example R.num === correspondingTag.num
+ */
+export class NumericEqualConnective implements UnaryConnective {
+    static NAME = "NUMERICEQUAL"
+    name = NumericEqualConnective.NAME
+    operand: SemanticFilterTag
+    ruleName?: string
+}
+
+//// Functions ////
 
 /**
  * A filter is used to apply a filter rule as a boolean function on a graph element. The function
@@ -193,26 +244,42 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
     if ((rule as SemanticFilterTag).tag !== undefined) {
         return tags.some((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag);
     }
+
     // Rule is a Connective
+    const unary = rule as UnaryConnective;
+    const binary = rule as BinaryConnective;
+    const ternary = rule as TernaryConnective;
+    let correspondingTag;
     switch ((rule as Connective).name) {
+        // Logic Connectives
         case NegationConnective.NAME:
-            return !(evaluateRule((rule as NegationConnective).operand, tags));
+            return !(evaluateRule(unary.operand, tags));
         case AndConnective.NAME:
-            return evaluateRule((rule as AndConnective).leftOperand, tags)
-                && evaluateRule((rule as AndConnective).rightOperand, tags);
+            return evaluateRule(binary.leftOperand, tags)
+                && evaluateRule(binary.rightOperand, tags);
         case OrConnective.NAME:
-            return evaluateRule((rule as OrConnective).leftOperand, tags)
-                || evaluateRule((rule as OrConnective).rightOperand, tags);
+            return evaluateRule(binary.leftOperand, tags)
+                || evaluateRule(binary.rightOperand, tags);
         case IfThenConnective.NAME:
-            return !evaluateRule((rule as IfThenConnective).leftOperand, tags)
-                || evaluateRule((rule as IfThenConnective).rightOperand, tags);
-        case EqualConnective.NAME:
-            return evaluateRule((rule as EqualConnective).leftOperand, tags)
-                === evaluateRule((rule as EqualConnective).rightOperand, tags);
+            return !evaluateRule(binary.leftOperand, tags)
+                || evaluateRule(binary.rightOperand, tags);
+        case LogicEqualConnective.NAME:
+            return evaluateRule(binary.leftOperand, tags)
+                === evaluateRule(binary.rightOperand, tags);
         case IfThenElseConnective.NAME:
-            return evaluateRule((rule as IfThenElseConnective).firstOperand, tags)
-                ? evaluateRule((rule as IfThenElseConnective).secondOperand, tags)
-                : evaluateRule((rule as IfThenElseConnective).thirdOperand, tags);
+            return evaluateRule(ternary.firstOperand, tags)
+                ? evaluateRule(ternary.secondOperand, tags)
+                : evaluateRule(ternary.thirdOperand, tags);
+        // Numeric Connectives
+        case LessThanConnective.NAME:
+            correspondingTag = tags.find(tag => tag.tag === (unary as LessThanConnective).operand.tag);
+            return correspondingTag !== undefined && ((unary as LessThanConnective).operand.num ?? 0) < (correspondingTag.num ?? 0);
+        case GreaterThanConnective.NAME:
+            correspondingTag = tags.find(tag => tag.tag === (unary as GreaterThanConnective).operand.tag);
+            return correspondingTag !== undefined && ((unary as GreaterThanConnective).operand.num ?? 0) > (correspondingTag.num ?? 0);
+        case NumericEqualConnective.NAME:
+            correspondingTag = tags.find(tag => tag.tag === (unary as NumericEqualConnective).operand.tag);
+            return correspondingTag !== undefined && ((unary as NumericEqualConnective).operand.num ?? 0) === (correspondingTag.num ?? 0);
         default:
             return true;
     }
