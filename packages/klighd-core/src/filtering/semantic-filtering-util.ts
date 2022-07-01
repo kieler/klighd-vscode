@@ -48,6 +48,15 @@ export interface BinaryConnective extends Connective {
 }
 
 /**
+ * Base interface for ternary connectives. Ternary Connectives take exactly three operands.
+ */
+export interface TernaryConnective extends Connective {
+    firstOperand: SemanticFilterRule
+    secondOperand: SemanticFilterRule
+    thirdOperand: SemanticFilterRule
+}
+
+/**
  * A semantic filter tag is used as a filter rule that evaluates to true iff the tag is present
  * on a graph element.
  */
@@ -57,32 +66,90 @@ export class SemanticFilterTag implements SemanticFilterRule {
 }
 
 /**
- * A NOT Connective takes a rule R and evaluates to true iff R evaluates to false.
+ * A Not Connective takes a rule R and evaluates to true
+ * iff
+ * R evaluates to false.
+ * @example !R
  */
 export class NegationConnective implements UnaryConnective {
-    name = "NOT"
+    static NAME = "NOT"
+    name = NegationConnective.NAME
     operand: SemanticFilterRule
     ruleName?: string
 }
 
 /**
- * An AND Connective takes two rules R1 and R2 and evaluates to true iff both rules are true.
+ * An And Connective takes two rules R1 and R2 and evaluates to true
+ * iff
+ * R1 and R2 evaluate to true.
+ * @example R1 && R2
  */
 export class AndConnective implements BinaryConnective {
-    name = "AND"
+    static NAME = "AND"
+    name = AndConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
-    ruleName?: string | undefined
+    ruleName?: string
 }
 
 /**
- * An OR Connective takes two rules R1 and R2 and evaluates to true iff R1 or R2 evaluates to true.
+ * An Or Connective takes two rules R1 and R2 and evaluates to true
+ * iff
+ * R1 or R2 evaluate to true.
+ * @example R1 || R2
  */
 export class OrConnective implements BinaryConnective {
-    name = "OR"
+    static NAME = "OR"
+    name = OrConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
-    ruleName?: string | undefined
+    ruleName?: string
+}
+
+/**
+ * An IfThen Connective takes two rules R1 and R2 and evaluates to true
+ * iff
+ * R1 evaluates to false or R2 evaluates to true.
+ * @example R1 ? R2 : true
+ * @example !R1 || R2
+ */
+export class IfThenConnective implements BinaryConnective {
+    static NAME = "IFTHEN"
+    name = IfThenConnective.NAME
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
+    ruleName?: string
+}
+
+/**
+ * An Equal Connective takes two rules R1 and R2 and evaluates to true
+ * iff
+ * R1 and R2 evaluate to true or R1 and R2 evaluate to false.
+ * @example R1 === R2
+ * @example R1 && R2 || !R1 && !R2
+ */
+export class EqualConnective implements BinaryConnective {
+    static NAME = "EQUAL"
+    name = EqualConnective.NAME
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
+    ruleName?: string
+}
+
+/**
+ * An IfThenElse Connective takes three rules R1, R2 and R3 and evaluates to true
+ * iff
+ * R1 and R2 evaluate to true or R1 evaluates to false and R3 evaluates to true.
+ * @example R1 ? R2 : R3
+ * @example R1 && R2 || !R1 && R3
+ */
+export class IfThenElseConnective implements TernaryConnective {
+    static NAME = "IFTHENELSE"
+    name = IfThenElseConnective.NAME
+    firstOperand: SemanticFilterRule
+    secondOperand: SemanticFilterRule
+    thirdOperand: SemanticFilterRule
+    ruleName?: string
 }
 
 /**
@@ -112,7 +179,7 @@ export function createFilter(rule: SemanticFilterRule): Filter {
         name: ruleName,
         filterFun: (el) => {
             let tags = Array<SemanticFilterTag>();
-            if (el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] != undefined) {
+            if (el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
                 tags = el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as Array<SemanticFilterTag>;
             }
 
@@ -123,25 +190,31 @@ export function createFilter(rule: SemanticFilterRule): Filter {
 }
 
 function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): boolean {
-
-    if ((rule as SemanticFilterTag).tag != undefined) {
-        return tags.some((tag: SemanticFilterTag) => {
-            return tag.tag == (rule as SemanticFilterTag).tag
-        });
-    } else {
-        // rule is a connective
-        switch ((rule as Connective).name) {
-            case "NOT":
-                return !(evaluateRule((rule as NegationConnective).operand, tags));
-            case "AND":
-                return evaluateRule((rule as AndConnective).leftOperand, tags)
-                    && evaluateRule((rule as AndConnective).rightOperand, tags);
-            case "OR":
-                return evaluateRule((rule as OrConnective).leftOperand, tags)
-                    || evaluateRule((rule as OrConnective).rightOperand, tags);
-            default:
-                return true;
-        }
+    if ((rule as SemanticFilterTag).tag !== undefined) {
+        return tags.some((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag);
+    }
+    // Rule is a Connective
+    switch ((rule as Connective).name) {
+        case NegationConnective.NAME:
+            return !(evaluateRule((rule as NegationConnective).operand, tags));
+        case AndConnective.NAME:
+            return evaluateRule((rule as AndConnective).leftOperand, tags)
+                && evaluateRule((rule as AndConnective).rightOperand, tags);
+        case OrConnective.NAME:
+            return evaluateRule((rule as OrConnective).leftOperand, tags)
+                || evaluateRule((rule as OrConnective).rightOperand, tags);
+        case IfThenConnective.NAME:
+            return !evaluateRule((rule as IfThenConnective).leftOperand, tags)
+                || evaluateRule((rule as IfThenConnective).rightOperand, tags);
+        case EqualConnective.NAME:
+            return evaluateRule((rule as EqualConnective).leftOperand, tags)
+                === evaluateRule((rule as EqualConnective).rightOperand, tags);
+        case IfThenElseConnective.NAME:
+            return evaluateRule((rule as IfThenElseConnective).firstOperand, tags)
+                ? evaluateRule((rule as IfThenElseConnective).secondOperand, tags)
+                : evaluateRule((rule as IfThenElseConnective).thirdOperand, tags);
+        default:
+            return true;
     }
 }
 
@@ -151,15 +224,12 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
  * @returns array of filters
  */
 export function getFilters(graph: SKGraphElement): Array<Filter> {
-
-    if (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] != undefined) {
-        const filters: Array<Filter> = [];
+    const filters: Array<Filter> = [];
+    if (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] !== undefined) {
         (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] as Array<SemanticFilterRule>)
             .forEach((rule) => {
                 filters.push(createFilter(rule));
             });
-        return filters;
-    } else {
-        return []
     }
+    return filters;
 }
