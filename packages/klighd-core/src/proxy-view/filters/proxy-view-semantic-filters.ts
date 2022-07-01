@@ -92,6 +92,7 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
      * and {@link semanticFilterOptionValues} using the given `filters`.
      */
     private initSemanticFilters(filters: Filter[]): void {
+        const temp = this.semanticFilterOptionValues;
         // Start by unregistering previous semantic filters from registry
         this.renderOptionsRegistry.unregisterAll(ProxyViewSemanticFilterCategory, ...this.semanticFilterOptions);
 
@@ -105,17 +106,19 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
                 `${filter.name ?? "unknown"}-${i}`)
         ));
         // Also map to RenderOption
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const self = this;
         this.semanticFilterOptions = filters.map((filter, i) => (
             class ProxyViewSemanticFilter extends ProxyViewAbstractSemanticFilter implements RenderOption {
-                static readonly ID: string = `proxy-view-semantic-filter-${filter.name ?? "unknown"}-${i}`;
+                static readonly ID: string = `proxy-view-semantic-filter-${filter.name ?? `unknown${Math.random()}`}-${i}`;
                 static readonly NAME: string = filter.name ?? "Unknown Filter";
-                static readonly DEFAULT: boolean = false;
+                static readonly DEFAULT: boolean = self.semanticFilterOptions.length > i && self.semanticFilterOptions[i].ID === ProxyViewSemanticFilter.ID ? temp[i] : false;
                 readonly id: string = ProxyViewSemanticFilter.ID;
                 readonly name: string = ProxyViewSemanticFilter.NAME;
                 readonly type: TransformationOptionType = TransformationOptionType.CHECK;
                 readonly initialValue: boolean = ProxyViewSemanticFilter.DEFAULT;
                 readonly renderCategory: RenderOption = ProxyViewSemanticFilterCategory.INSTANCE;
-                currentValue = ProxyViewSemanticFilter.DEFAULT;
+                currentValue: boolean = ProxyViewSemanticFilter.DEFAULT;
                 debug = false;
             }
         ));
