@@ -27,7 +27,7 @@ import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { K_POLYGON, K_POLYLINE, K_SPLINE, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
 import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
-import { ProxyFilter } from "./filters/proxy-view-filters";
+import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges } from "./proxy-view-options";
@@ -70,7 +70,7 @@ export class ProxyView extends AbstractUIExtension {
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
     /** The registered filters. */
-    private filters: ProxyFilter[];
+    private filters: Map<string, ProxyFilter>;
     /** The currently rendered proxies. */
     private currProxies: { proxy: VNode, transform: TransformAttributes }[];
     /** Whether the proxies should be click-through. */
@@ -172,7 +172,7 @@ export class ProxyView extends AbstractUIExtension {
         this.actionDispatcher.dispatch(ShowProxyViewAction.create());
         this.patcher = this.patcherProvider.patcher;
         // Initialize caches
-        this.filters = [];
+        this.filters = new Map;
         this.currProxies = [];
         this.prevModifiedEdges = new Map;
         this.renderings = new Map;
@@ -379,7 +379,9 @@ export class ProxyView extends AbstractUIExtension {
         return offScreenNodes.filter(node =>
             this.canRenderNode(node) &&
             node.opacity > 0 &&
-            this.filters.every(filter => filter({ node, offScreenNodes, onScreenNodes, canvas, distance: this.getNodeDistanceToCanvas(node, canvas) })));
+            Array.from(this.filters.values()).every(
+                filter => filter({ node, offScreenNodes, onScreenNodes, canvas, distance: this.getNodeDistanceToCanvas(node, canvas) })
+            ));
     }
 
     /** Performs a shallow copy of the nodes so that the original nodes aren't mutated. */
@@ -1602,8 +1604,14 @@ export class ProxyView extends AbstractUIExtension {
      * that need to be evaluated
      * - less costly filters being applied first, potentially avoiding more expensive ones
      */
-    registerFilters(...filters: ProxyFilter[]): void {
-        this.filters = this.filters.concat(filters);
+    registerFilters(...filters: ProxyFilterAndID[]): void {
+        console.log(filters);
+        filters.forEach(({ id, filter }) => this.filters.set(id, filter));
+    }
+
+    /** Unregisters all given `filters`. */
+    unregisterFilters(...filters: ProxyFilterAndID[]): boolean {
+        return filters.every(({ id }) => this.filters.delete(id));
     }
 
     /** Resets the proxy-view, i.e. when the model is updated. */

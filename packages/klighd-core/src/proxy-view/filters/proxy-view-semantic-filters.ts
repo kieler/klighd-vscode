@@ -17,7 +17,7 @@
 
 import { inject, injectable, postConstruct } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand } from "sprotty";
-import { Action, SetModelAction } from "sprotty-protocol";
+import { Action, SetModelAction, UpdateModelAction } from "sprotty-protocol";
 import { DISymbol } from "../../di.symbols";
 import { Filter, getFilters } from "../../filtering/semantic-filtering-util";
 import { RenderOption, TransformationOptionType } from "../../options/option-models";
@@ -26,7 +26,7 @@ import { getElementByID } from "../../skgraph-utils";
 import { ProxyView } from "../proxy-view";
 import { SendProxyViewAction } from "../proxy-view-actions";
 import { ProxyViewFilterCategory } from "./proxy-view-filter-options";
-import { ProxyFilter, ProxyFilterArgs } from "./proxy-view-filters";
+import { ProxyFilterAndID, ProxyFilterArgs } from "./proxy-view-filters";
 
 /**
  * Registers semantic {@link ProxyFilter}s at the {@link ProxyView} and holds the current
@@ -34,8 +34,10 @@ import { ProxyFilter, ProxyFilterArgs } from "./proxy-view-filters";
  */
 @injectable()
 export class ProxySemanticFilterHandler implements IActionHandler, IActionHandlerInitializer {
+    /** The previous semantic filters, only to be used for unregistering. */
+    private prevSemanticFilters: ProxyFilterAndID[] = [];
     /** The current semantic filters. */
-    private semanticFilters: ProxyFilter[] = [];
+    private semanticFilters: ProxyFilterAndID[] = [];
     /** The proxy-view. */
     private proxyView: ProxyView;
 
@@ -46,25 +48,35 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
             this.proxyView = proxyView;
 
             if (this.semanticFilters.length > 0) {
+                console.log("A")
                 // SetModelAction came in first, register filters
+                proxyView.unregisterFilters(...this.prevSemanticFilters);
                 proxyView.registerFilters(...this.semanticFilters);
             }
-        } else if (action.kind === SetModelAction.KIND) {
+        } else if ([SetModelAction.KIND, UpdateModelAction.KIND].includes(action.kind)) {
             // New root aka new semantic filters
-            const { newRoot } = (action as SetModelAction);
-            let actualRoot;
-            if (newRoot.children) {
-                actualRoot = getElementByID(newRoot as any, "$root");
-            }
-            if (actualRoot) {
-                this.initSemanticFilters(getFilters(actualRoot));
-            } else {
-                this.semanticFilters = [];
-            }
+            const { newRoot } = (action as SetModelAction | UpdateModelAction);
 
-            if (this.proxyView) {
-                // SendProxyViewAction came in first, register filters
-                this.proxyView.registerFilters(...this.semanticFilters);
+            if (newRoot) {
+                // Sprotty's new root is usually not $root but the file root
+                let actualRoot;
+                if (newRoot.children) {
+                    actualRoot = getElementByID(newRoot as any, "$root");
+                }
+
+                if (actualRoot) {
+                    this.initSemanticFilters(getFilters(actualRoot));
+                } else {
+                    this.prevSemanticFilters = this.semanticFilters;
+                    this.semanticFilters = [];
+                }
+
+                if (this.proxyView) {
+                    console.log("B")
+                    // SendProxyViewAction came in first, register filters
+                    this.proxyView.unregisterFilters(...this.prevSemanticFilters);
+                    this.proxyView.registerFilters(...this.semanticFilters);
+                }
             }
         }
     }
@@ -72,21 +84,30 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
     initialize(registry: ActionHandlerRegistry): void {
         registry.register(SendProxyViewAction.KIND, this);
         registry.register(SetModelAction.KIND, this);
+        registry.register(UpdateModelAction.KIND, this);
     }
 
     /** 
-     * Initializes {@link semanticFilters}, {@link semanticFilterOptions} and {@link semanticFilterOptionValues}
-     * using the given `filters`.
+     * Initializes {@link prevSemanticFilters}, {@link semanticFilters}, {@link semanticFilterOptions}
+     * and {@link semanticFilterOptionValues} using the given `filters`.
      */
     private initSemanticFilters(filters: Filter[]): void {
-        // Map Filters to ProxyFilters
+        // Start by unregistering previous semantic filters from registry
+        this.renderOptionsRegistry.unregisterAll(ProxyViewSemanticFilterCategory, ...this.semanticFilterOptions);
+
+        // Save previous semantic filters
+        this.prevSemanticFilters = this.semanticFilters;
+        // Map Filters to ProxyFilters + ids
         this.semanticFilters = filters.map((filter, i) => (
-            ({ node }: ProxyFilterArgs) => !this.semanticFilterOptionValues[i] || filter.filterFun(node)
+            ProxyFilterAndID.from(
+                ProxySemanticFilterHandler,
+                ({ node }: ProxyFilterArgs) => !this.semanticFilterOptionValues[i] || filter.filterFun(node),
+                `${filter.name ?? "unknown"}-${i}`)
         ));
         // Also map to RenderOption
         this.semanticFilterOptions = filters.map((filter, i) => (
             class ProxyViewSemanticFilter extends ProxyViewAbstractSemanticFilter implements RenderOption {
-                static readonly ID: string = `proxy-view-semantic-filter-${i}`;
+                static readonly ID: string = `proxy-view-semantic-filter-${filter.name ?? "unknown"}-${i}`;
                 static readonly NAME: string = filter.name ?? "Unknown Filter";
                 static readonly DEFAULT: boolean = false;
                 readonly id: string = ProxyViewSemanticFilter.ID;
@@ -101,8 +122,10 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
         // To ensure correct indexing, also initialize the values
         this.semanticFilterOptionValues = filters.map(() => false);
 
-        // Finally, register semantic filters in registry
-        this.renderOptionsRegistry.registerAll(ProxyViewSemanticFilterCategory, ...this.semanticFilterOptions);
+        if (filters.length > 0) {
+            // Finally, register semantic filters in registry. Make sure not to show the category if it would be empty
+            this.renderOptionsRegistry.registerAll(ProxyViewSemanticFilterCategory, ...this.semanticFilterOptions);
+        }
     }
 
     //// Sidebar filter options ////

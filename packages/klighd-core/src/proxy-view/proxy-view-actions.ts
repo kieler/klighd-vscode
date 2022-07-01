@@ -149,7 +149,7 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
                 // Redirect the content to the proxy-view
                 const { model, context } = action as SendModelContextAction;
                 this.proxyView.update(model, context);
-            } else if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
+            } else if ([SetModelAction.KIND, UpdateModelAction.KIND].includes(action.kind)) {
                 // Layout has changed, new model
                 this.proxyView.reset();
             }

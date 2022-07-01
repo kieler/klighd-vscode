@@ -51,6 +51,21 @@ export interface ProxyFilterArgs {
  */
 export type ProxyFilter = (args: ProxyFilterArgs) => boolean;
 
+/** Convenience type, needed for registering {@link ProxyFilter}s. */
+export type ProxyFilterAndID = { id: string, filter: ProxyFilter };
+
+export namespace ProxyFilterAndID {
+    /**
+     * Returns the corresponding {@link ProxyFilterAndID}.
+     * @param registeringClass The class registering the filter.
+     * @param filter The filter.
+     * @param filterName Optionally, a filter name can be self defined.
+     */
+    export function from(registeringClass: (new () => unknown), filter: ProxyFilter, filterName?: string): ProxyFilterAndID {
+        return { id: `${registeringClass.name}-${filterName ?? filter.name}`, filter };
+    }
+}
+
 //////// Filters ////////
 
 /** @see {@link ProxyViewFilterUnconnectedToOnScreen} */
@@ -103,12 +118,18 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
 
     //// Register the filters ////
     handle(action: Action): void | Action | ICommand {
+        // Filters can be registered here, keep the documentation of proxyView.registerFilters() in mind
+        const filters: ProxyFilter[] = [
+            filterUnconnectedToSelected,
+            filterUnconnectedToOnScreen,
+            filterDistant
+        ];
+
         if (action.kind === SendProxyViewAction.KIND) {
             const proxyView = (action as SendProxyViewAction).proxyView;
             proxyView.registerFilters(
-                filterUnconnectedToSelected,
-                filterUnconnectedToOnScreen,
-                filterDistant
+                // Ensure unique ids
+                ...filters.map(filter => ProxyFilterAndID.from(ProxyFilterHandler, filter))
             );
         }
     }

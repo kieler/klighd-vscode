@@ -318,8 +318,17 @@ export class RenderOptionsRegistry extends Registry {
     }
 
     /** Convenience method to register all given options in order. */
-    registerAll(...options: RenderOptionType[]): void {
-        options.forEach(option => this.register(option));
+    registerAll(...Options: RenderOptionType[]): void {
+        Options.forEach(Option => this.register(Option))
+    }
+
+    unregister(Option: RenderOptionType): boolean {
+        return this._renderOptions.delete(Option.ID)
+    }
+
+    /** Convenience method to unregister all given options in order. */
+    unregisterAll(...Options: RenderOptionType[]): boolean {
+        return Options.every(Option => this.unregister(Option))
     }
 
     handle(action: Action): void | Action | ICommand {
