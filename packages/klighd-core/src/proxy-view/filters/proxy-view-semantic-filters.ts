@@ -48,7 +48,6 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
             this.proxyView = proxyView;
 
             if (this.semanticFilters.length > 0) {
-                console.log("A")
                 // SetModelAction came in first, register filters
                 proxyView.unregisterFilters(...this.prevSemanticFilters);
                 proxyView.registerFilters(...this.semanticFilters);
@@ -72,7 +71,6 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
                 }
 
                 if (this.proxyView) {
-                    console.log("B")
                     // SendProxyViewAction came in first, register filters
                     this.proxyView.unregisterFilters(...this.prevSemanticFilters);
                     this.proxyView.registerFilters(...this.semanticFilters);

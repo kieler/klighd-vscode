@@ -165,7 +165,7 @@ export class IfThenElseConnective implements TernaryConnective {
 /**
  * A LessThan Connective takes one rule R and evaluates to true
  * iff
- * R evaluates to true and R.num < correspondingTag.num.
+ * R.num < correspondingTag.num.
  * @example R.num < correspondingTag.num
  */
 export class LessThanConnective implements UnaryConnective {
@@ -178,7 +178,7 @@ export class LessThanConnective implements UnaryConnective {
 /**
  * A GreaterThan Connective takes one rule R and evaluates to true
  * iff
- * R evaluates to true and R.num > correspondingTag.num.
+ * R.num > correspondingTag.num.
  * @example R.num > correspondingTag.num
  */
 export class GreaterThanConnective implements UnaryConnective {
@@ -191,7 +191,7 @@ export class GreaterThanConnective implements UnaryConnective {
 /**
  * A NumericEqual Connective takes one rule R and evaluates to true
  * iff
- * R evaluates to true and R.num === correspondingTag.num.
+ * R.num === correspondingTag.num.
  * @example R.num === correspondingTag.num
  */
 export class NumericEqualConnective implements UnaryConnective {
@@ -273,13 +273,13 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
         // Numeric Connectives
         case LessThanConnective.NAME:
             correspondingTag = tags.find(tag => tag.tag === (unary as LessThanConnective).operand.tag);
-            return correspondingTag !== undefined && ((unary as LessThanConnective).operand.num ?? 0) < (correspondingTag.num ?? 0);
+            return ((unary as LessThanConnective).operand.num ?? 0) < (correspondingTag?.num ?? 0);
         case GreaterThanConnective.NAME:
             correspondingTag = tags.find(tag => tag.tag === (unary as GreaterThanConnective).operand.tag);
-            return correspondingTag !== undefined && ((unary as GreaterThanConnective).operand.num ?? 0) > (correspondingTag.num ?? 0);
+            return ((unary as GreaterThanConnective).operand.num ?? 0) > (correspondingTag?.num ?? 0);
         case NumericEqualConnective.NAME:
             correspondingTag = tags.find(tag => tag.tag === (unary as NumericEqualConnective).operand.tag);
-            return correspondingTag !== undefined && ((unary as NumericEqualConnective).operand.num ?? 0) === (correspondingTag.num ?? 0);
+            return ((unary as NumericEqualConnective).operand.num ?? 0) === (correspondingTag?.num ?? 0);
         default:
             return true;
     }

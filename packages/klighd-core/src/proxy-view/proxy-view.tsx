@@ -1232,7 +1232,6 @@ export class ProxyView extends AbstractUIExtension {
         const vnode = ctx.renderProxy(edge);
 
         if (vnode) {
-            console.log(vnode)
             updateTransform(vnode, transform);
         }
 
@@ -1605,7 +1604,6 @@ export class ProxyView extends AbstractUIExtension {
      * - less costly filters being applied first, potentially avoiding more expensive ones
      */
     registerFilters(...filters: ProxyFilterAndID[]): void {
-        console.log(filters);
         filters.forEach(({ id, filter }) => this.filters.set(id, filter));
     }
 
