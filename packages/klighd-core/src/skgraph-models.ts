@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020, 2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -692,6 +692,18 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
         || type === K_SPLINE
         || type === K_RECTANGLE
         || type === K_ROUNDED_RECTANGLE
+}
+
+/**
+ * Returns if the given parameter is a KPolyline.
+ * @param test The potential KPolyline.
+ */
+export function isPolyline(test: KGraphData): test is KPolyline {
+    const type = test.type
+    return  type === K_POLYLINE
+        || type === K_POLYGON
+        || type === K_ROUNDED_BENDS_POLYLINE
+        || type === K_SPLINE
 }
 
 /**
