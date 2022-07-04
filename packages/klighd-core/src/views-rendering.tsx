@@ -27,6 +27,7 @@ import {
     KRoundedRectangle, KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
     K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
+import { hasAction } from './skgraph-utils';
 import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getPoints } from './views-common';
 import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
@@ -1049,6 +1050,18 @@ export function renderKRendering(kRendering: KRendering,
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
         context.titles[context.titles.length - 1].push(svgRendering)
+        // If the overlay does not define actions, make it non-interactable to allow clicking through to elements behind.
+        if (!hasAction(kRendering, true)) {
+            // add pointer-events: none to the style attribute of this overlay.
+            if (!svgRendering.data) {
+                svgRendering.data = {}
+            }
+            if (!svgRendering.data.style) {
+                svgRendering.data.style = {}
+            }
+            svgRendering.data.style['pointer-events'] = 'none'
+
+        }
         return <g></g>
     } else {
         return svgRendering
