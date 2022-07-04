@@ -240,6 +240,7 @@ export function createFilter(rule: SemanticFilterRule): Filter {
 
 }
 
+/** Evaluates `rule` using `tags`. See Connectives for further explanation on evaluation. */
 function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): boolean {
     if ((rule as SemanticFilterTag).tag !== undefined) {
         return tags.some((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag);
@@ -271,6 +272,13 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
                 ? evaluateRule(ternary.secondOperand, tags)
                 : evaluateRule(ternary.thirdOperand, tags);
         // Numeric Connectives
+        /*
+        For now, these are defined by an unset corresponding tag being treated as if its num was 0.
+        There is potential to redefine this so that an unset tag corresponding tag would automatically
+        be evaluated to false. However, this may result in three-valued logic which can be very dangerous
+        as some two-values logic laws may not hold.
+        Should this redefined, make sure to check all cases, e.g. !(x < y) === x >= y, de morgan, etc.
+        */
         case LessThanConnective.NAME:
             correspondingTag = tags.find(tag => tag.tag === (unary as LessThanConnective).operand.tag);
             return ((unary as LessThanConnective).operand.num ?? 0) < (correspondingTag?.num ?? 0);

@@ -195,14 +195,8 @@ export class ProxyView extends AbstractUIExtension {
 
     // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-    // TODO: along-border-routing for polylines
-    // Next K-Meeting ^^^ along-border-routing vs straight
-    // TODO: semantic filter in vscode repo for node type of sccharts
 
-    // TODO: merge klighd & klighd-vscode semantic filtering, implement semantic filters
     // TODO: color fade out of polygons (arrow heads)
-    // TODO: change canvas frame of reference instead of nodes etc.
-    // TODO: connector edge placement
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -1274,7 +1268,7 @@ export class ProxyView extends AbstractUIExtension {
         const proxyHeight = proxyBounds.height * scale;
 
         // Center at middle of node
-        const translated = this.getTranslatedNodeBounds(node, canvas); // TODO:
+        const translated = this.getTranslatedNodeBounds(node, canvas);
         const offsetX = 0.5 * (translated.width - proxyWidth);
         const offsetY = 0.5 * (translated.height - proxyHeight);
         let x = translated.x + offsetX;
