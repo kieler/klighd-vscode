@@ -268,17 +268,17 @@ export class ProxyView extends AbstractUIExtension {
             node,
             transform: this.getTransform(node, size, proxyBounds, canvasCRF)
         }));
-        const offset = 10; // TODO: maybe make this dependant of canvas size
+        const fromPercent = 0.01;
+        const offset = Math.min(canvasCRF.width, canvasCRF.height) * fromPercent;
 
         //// Apply clustering ////
         const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasCRF);
 
         //// Route edges to proxies ////
-        // TODO: destruct for overlay edges to not have overlay edges of connectEdges over edgeProxies of routeEdges
-        let edges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offset, ctx);
+        const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offset, ctx);
 
         //// Connect off-screen edges ////
-        edges = edges.concat(this.connectEdges(root, canvasCRF, offset, ctx));
+        const connectors = this.connectEdges(root, canvasCRF, offset, ctx);
 
         //// Render the proxies ////
         const proxies = [];
@@ -296,6 +296,9 @@ export class ProxyView extends AbstractUIExtension {
 
         const edgeProxies = [];
         // Edges
+        // Start with overlay to not have overlay edges over proxy edges
+        const edges = routedEdges.overlayEdges.concat(connectors.overlayEdges,
+            routedEdges.proxyEdges, connectors.proxyEdges);
         for (const { edge, transform } of edges) {
             // Create an edge proxy
             const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
@@ -636,17 +639,18 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
-        onScreenNodes: SKNode[], canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
+        onScreenNodes: SKNode[], canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { proxyEdges: { edge: SKEdge, transform: TransformAttributes }[], overlayEdges: { edge: SKEdge, transform: TransformAttributes }[] } {
         if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
             // Don't create edge proxies
-            return [];
+            return { proxyEdges: [], overlayEdges: [] };
         }
 
         // Reset opacity before changing it
         this.resetEdgeOpacity(this.prevModifiedEdges);
         const modifiedEdges = new Map;
+        const proxyEdges = [];
+        const overlayEdges = [];
 
-        const res = [];
         for (const { node, transform } of nodes) {
             if (node instanceof SKNode) {
                 // Incoming edges
@@ -659,10 +663,9 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false, canvas, offset, ctx);
                         if (proxyEdge) {
                             // Can't use transform for proxyEdge since it's already translated
-                            res.push(proxyEdge);
-
-                            // Use unshift so overlays are always rendered below edge proxies
-                            res.unshift(this.getOverlayEdge(edge, canvas, ctx));
+                            proxyEdges.push(proxyEdge);
+                            // Overlay original edge
+                            overlayEdges.push(this.getOverlayEdge(edge, canvas, ctx));
                         }
                     }
                 }
@@ -676,10 +679,9 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true, canvas, offset, ctx);
                         if (proxyEdge) {
                             // Can't use transform for proxyEdge since it's already translated
-                            res.push(proxyEdge);
-
-                            // Use unshift so overlays are always rendered below edge proxies
-                            res.unshift(this.getOverlayEdge(edge, canvas, ctx));
+                            proxyEdges.push(proxyEdge);
+                            // Overlay original edge
+                            overlayEdges.push(this.getOverlayEdge(edge, canvas, ctx));
                         }
                     }
                 }
@@ -689,7 +691,7 @@ export class ProxyView extends AbstractUIExtension {
         // New modified edges
         this.prevModifiedEdges = modifiedEdges;
 
-        return res;
+        return { proxyEdges, overlayEdges };
     }
 
     /**
@@ -796,7 +798,6 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             //// Calculate points on path to proxy near canvas
-            // TODO: cleanup
             const transformRect = Rect.fromBounds(transform);
             const canvasRect = Rect.fromBounds(canvas);
             let x, y;
@@ -1004,13 +1005,14 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Connects off-screen edges. */
-    private connectEdges(root: SKNode, canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { edge: SKEdge, transform: TransformAttributes }[] {
+    private connectEdges(root: SKNode, canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { proxyEdges: { edge: SKEdge, transform: TransformAttributes }[], overlayEdges: { edge: SKEdge, transform: TransformAttributes }[] } {
         if (!this.connectOffScreenEdges) {
-            return [];
+            return { proxyEdges: [], overlayEdges: [] };
         }
 
         const offsetLRF = offset / canvas.zoom;
-        const res = [];
+        const proxyEdges = [];
+        const overlayEdges = [];
         // Get all edges that are partially off-screen
         const partiallyOffScreenEdges = this.getPartiallyOffScreenEdges(root, canvas);
         // Connect intersections with canvas
@@ -1097,14 +1099,14 @@ export class ProxyView extends AbstractUIExtension {
                 routingPoints.push(...points);
 
                 connector.routingPoints = routingPoints;
-                res.push({ edge: connector, transform: { ...Bounds.EMPTY, ...parentTranslated, scale: canvas.zoom } });
+                proxyEdges.push({ edge: connector, transform: { ...Bounds.EMPTY, ...parentTranslated, scale: canvas.zoom } });
 
                 // Remember to fade out original edge
-                res.unshift(this.getOverlayEdge(edge, canvas, ctx));
+                overlayEdges.push(this.getOverlayEdge(edge, canvas, ctx));
             }
         }
 
-        return res;
+        return { proxyEdges, overlayEdges };
     }
 
     /** Returns all edges that are both on- & off-screen. */
@@ -1381,12 +1383,14 @@ export class ProxyView extends AbstractUIExtension {
         clone.properties = props;
         const id = props["klighd.lsp.rendering.id"];
         const proxyId = this.getProxyId(id);
-        if (props["klighd.lsp.calculated.decoration"]) {
-            props["klighd.lsp.rendering.id"] = proxyId;
-            ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
-        } else if (ctx.decorationMap[id]) {
-            props["klighd.lsp.rendering.id"] = proxyId;
-            ctx.decorationMap[proxyId] = ctx.decorationMap[id];
+        if (ctx.decorationMap) {
+            if (props["klighd.lsp.calculated.decoration"]) {
+                props["klighd.lsp.rendering.id"] = proxyId;
+                ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
+            } else if (ctx.decorationMap[id]) {
+                props["klighd.lsp.rendering.id"] = proxyId;
+                ctx.decorationMap[proxyId] = ctx.decorationMap[id];
+            }
         }
 
         if (clone.type === K_POLYGON) {
@@ -1395,7 +1399,7 @@ export class ProxyView extends AbstractUIExtension {
             if (props["klighd.lsp.calculated.decoration"]) {
                 // Move arrow head if actually defined
                 props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target, rotation: angle };
-            } else if (ctx.decorationMap[id]) {
+            } else if (ctx.decorationMap && ctx.decorationMap[id]) {
                 // Arrow head was in rendering refs
                 props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id], origin: target, rotation: angle };
             } else {
@@ -1440,12 +1444,14 @@ export class ProxyView extends AbstractUIExtension {
         // OLD: changing the rendering id doesn't work when renderingrefs are used
         const id = props["klighd.lsp.rendering.id"];
         const proxyId = this.getProxyId(id);
-        if (props["klighd.lsp.calculated.decoration"]) {
-            props["klighd.lsp.rendering.id"] = proxyId;
-            ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
-        } else if (ctx.decorationMap[id]) {
-            props["klighd.lsp.rendering.id"] = proxyId;
-            ctx.decorationMap[proxyId] = ctx.decorationMap[id];
+        if (ctx.decorationMap) {
+            if (props["klighd.lsp.calculated.decoration"]) {
+                props["klighd.lsp.rendering.id"] = proxyId;
+                ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
+            } else if (ctx.decorationMap[id]) {
+                props["klighd.lsp.rendering.id"] = proxyId;
+                ctx.decorationMap[proxyId] = ctx.decorationMap[id];
+            }
         }
 
         for (const i in styles) {

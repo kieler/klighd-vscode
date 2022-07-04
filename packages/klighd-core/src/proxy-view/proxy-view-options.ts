@@ -31,6 +31,7 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
  * Show Edges to Proxies
  *   Straight Edges
  *   Along-Border-Routing
+ * Connect Off-Screen Edges
  * Enable Actions ({@link ProxyViewActionsEnabled})
  *   true/false
  * 
