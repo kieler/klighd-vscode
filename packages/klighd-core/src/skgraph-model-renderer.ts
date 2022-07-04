@@ -42,7 +42,8 @@ export class SKGraphModelRenderer extends ModelRenderer {
     renderOptionsRegistry: RenderOptionsRegistry
     titles: VNode[][]
     viewport: Viewport
-    
+    /** Used to force rendering independant of the depthMap. Needed by the proxy-view. */
+    forceRendering = false;
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.
@@ -76,5 +77,14 @@ export class SKGraphModelRenderer extends ModelRenderer {
                 return this.renderElement(child)
             })
             .filter(vnode => vnode !== undefined) as VNode[]
+    }
+
+    /** Renders an element as a proxy. */
+    renderProxy(element: SKGraphElement): VNode | undefined {
+        const prevForceRendering = this.forceRendering;
+        this.forceRendering = true;
+        const vnode = super.renderElement(element);
+        this.forceRendering = prevForceRendering;
+        return vnode;
     }
 }

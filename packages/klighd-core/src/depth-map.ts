@@ -38,7 +38,7 @@ type DetailWithChildren = DetailLevel.FullDetails
 /**
  * Type predicate to determine whether a DetailLevel is a DetailWithChildren level
  */
-function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
+export function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
     return detail === DetailLevel.FullDetails
 }
 
@@ -143,7 +143,7 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static init(rootElement: SModelRoot): void {
+    public static init(rootElement: SModelRoot): DepthMap {
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement)
@@ -151,6 +151,7 @@ export class DepthMap {
             // Reset and reinitialize if the model changed
             DepthMap.instance.reset(rootElement)
         }
+        return DepthMap.instance;
     }
 
     /**

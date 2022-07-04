@@ -20,7 +20,8 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { findParentByFeature, IActionDispatcher, isViewport, IView, RenderingContext, SGraph, svg, TYPES } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { SendModelContextAction } from './actions/actions';
 import { DepthMap, DetailLevel } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
@@ -39,10 +40,16 @@ export class SKGraphView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     @inject(DISymbol.RenderOptionsRegistry) renderOptionsRegistry: RenderOptionsRegistry
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
 
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
-        ctx.renderingDefs = new Map
+        this.actionDispatcher.dispatch(SendModelContextAction.create(model, ctx))
+
+        if (!ctx.renderingDefs) {
+            // Make sure not to create a new map all the time
+            ctx.renderingDefs = new Map
+        }
         ctx.renderingDefs.set("font", fontDefinition())
         ctx.mListener = this.mListener
         ctx.renderOptionsRegistry = this.renderOptionsRegistry
@@ -54,8 +61,6 @@ export class SKGraphView implements IView {
         ctx.titles = []
         ctx.positions = []
 
-
-
         // Add depthMap to context for rendering, when required.
         const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
 
@@ -64,7 +69,7 @@ export class SKGraphView implements IView {
 
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
             ctx.depthMap = DepthMap.getDM()
-            if (ctx.viewport && ctx.depthMap) {
+            if (!ctx.forceRendering && ctx.viewport && ctx.depthMap) {
                 ctx.depthMap.updateDetailLevels(ctx.viewport, ctx.renderOptionsRegistry)
             }
         } else {
@@ -90,7 +95,7 @@ export class KNodeView implements IView {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 // Make sure this node and its children are not drawn as long as it is not on full details.
@@ -221,7 +226,7 @@ export class KPortView implements IView {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 port.areChildAreaChildrenRendered = true
@@ -281,7 +286,7 @@ export class KLabelView implements IView {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 label.areChildAreaChildrenRendered = true
@@ -345,7 +350,7 @@ export class KEdgeView implements IView {
     render(edge: SKEdge, context: RenderingContext): VNode | undefined {
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 edge.areChildAreaChildrenRendered = true

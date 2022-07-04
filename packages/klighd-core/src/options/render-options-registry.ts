@@ -23,12 +23,25 @@ import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
 
+/** Whether debug mode should be enabled. */
+export class DebugEnabled implements RenderOption {
+    static readonly ID: string = 'debug-enabled';
+    static readonly NAME: string = 'Enable Debug Mode';
+    static readonly DESCRIPTION: string = 'Shows further options used to debug the diagrams.';
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = DebugEnabled.ID;
+    readonly name: string = DebugEnabled.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: any = DebugEnabled.DEFAULT;
+    readonly description?: string = DebugEnabled.DESCRIPTION;
+    currentValue: any = DebugEnabled.DEFAULT;
+}
 
 /**
  * Resize the diagram to fit the viewport if it is redrawn after a model update
  * or a viewport resize.
  */
- export class ResizeToFit implements RenderOption {
+export class ResizeToFit implements RenderOption {
     static readonly ID: string = 'resize-to-fit';
     static readonly NAME: string = 'Resize To Fit';
     static readonly DEFAULT: boolean = true
@@ -237,7 +250,6 @@ export class AnimateGoToBookmark implements RenderOption {
     currentValue = true;
 }
 
-
 export interface RenderOptionType {
     readonly ID: string,
     readonly NAME: string,
@@ -258,6 +270,8 @@ export class RenderOptionsRegistry extends Registry {
     constructor() {
         super();
         // Add available render options to this registry
+        this.register(DebugEnabled);
+
         this.register(ResizeToFit);
         this.register(ForceLightBackground);
         this.register(ShowConstraintOption);
@@ -301,6 +315,20 @@ export class RenderOptionsRegistry extends Registry {
 
     register(Option: RenderOptionType): void {
         this._renderOptions.set(Option.ID, new Option())
+    }
+
+    /** Convenience method to register all given options in order. */
+    registerAll(...Options: RenderOptionType[]): void {
+        Options.forEach(Option => this.register(Option))
+    }
+
+    unregister(Option: RenderOptionType): boolean {
+        return this._renderOptions.delete(Option.ID)
+    }
+
+    /** Convenience method to unregister all given options in order. */
+    unregisterAll(...Options: RenderOptionType[]): boolean {
+        return Options.every(Option => this.unregister(Option))
     }
 
     handle(action: Action): void | Action | ICommand {

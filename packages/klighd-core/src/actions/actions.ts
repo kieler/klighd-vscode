@@ -14,9 +14,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+import { SGraph } from "sprotty";
 import {
     Action, FitToScreenAction, RequestAction, ResponseAction
 } from "sprotty-protocol";
+import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { KImage } from '../skgraph-models';
 
 /**
@@ -145,6 +147,25 @@ export namespace KlighdFitToScreenAction {
             elementIds: ["$root"],
             padding: 10,
             animate: animate ?? true
+        }
+    }
+}
+
+/** Contains the model and RenderingContext to be sent from the view to where it's needed. */
+export interface SendModelContextAction extends Action {
+    kind: typeof SendModelContextAction.KIND
+    model: SGraph
+    context: SKGraphModelRenderer
+}
+
+export namespace SendModelContextAction {
+    export const KIND = 'sendModelContextAction'
+
+    export function create(model: SGraph, context: SKGraphModelRenderer): SendModelContextAction {
+        return {
+            kind: KIND,
+            model,
+            context
         }
     }
 }

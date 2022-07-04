@@ -14,7 +14,8 @@
  *
  * SPDX-License-Identifier: EPL-2.0
 */
-import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKGraphElement } from './skgraph-models'
+import { SModelRoot } from 'sprotty'
+import { isContainerRendering, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from './skgraph-models'
 
 /**
  * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
@@ -97,4 +98,46 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         return
     }
     return currentElement
+}
+
+/**
+ * Finds the SKGraphElement that matches the given ID.
+ * @param root The root.
+ * @param id The ID to search for.
+ * @returns The element matching the given id or `undefined` if there is none.
+ */
+export function getElementByID(root: SModelRoot, id: string, suppressErrors = false): SKGraphElement | undefined {
+    let curr = root as unknown as SKGraphElement;
+    const idPath = id.split('$');
+    // The node id is build hierarchically and the root is already given, so start with i=1 ($root)
+    for (let i = 1; i < idPath.length && curr; i++) {
+        if (idPath[i].length <= 0) {
+            // $$ in id (e.g. comments in sccharts)
+            continue;
+        }
+
+        const nextType = idPath[i].charAt(0);
+        if (nextType === 'E') {
+            // Edge
+            curr = ((curr as SKNode | SKPort).outgoingEdges as SKEdge[]).find(edge => id.startsWith(edge.id)) as SKEdge;
+        } else if (['N', 'L', 'P'].includes(nextType) || idPath[i] === 'root') {
+            // Node, label or port
+            curr = curr.children.find(node => id.startsWith(node.id)) as SKNode | SKLabel | SKPort;
+        }
+    }
+
+    // Now currNode should be the node searched for by the id
+    if (!curr) {
+        if (!suppressErrors) {
+            console.error('No node found matching the id:', id);
+        }
+        return undefined;
+    } else if (curr.id !== id) {
+        if (!suppressErrors) {
+            console.error('The found node does not match the searched id! id:', id, ', found node:', curr);
+        }
+        return undefined;
+    }
+
+    return curr;
 }
