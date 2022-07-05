@@ -164,6 +164,171 @@ export namespace Canvas {
         return dist * (canvas.isInLRF ? canvas.zoom : 1);
     }
 
+    /**
+     * Performs along border routing from `from` to `to`, both of which need to be at their respective border already.
+     * Note that `from` and `to` are not part of the returned path.
+     * @param from The bounds/point to route along the border from.
+     * @param fromBorder The border for `from`.
+     * @param to The bounds/point to route along the border to.
+     * @param toBorder The border for `to`.
+     * @param preferLeft Whether routing left should be preferred when `from` and `to` are vertically opposite of each other.
+     * @param preferTop Whether routing top should be preferred when `from` and `to` are horizontally opposite of each other.
+     * @returns A path along the border from `from` to `to`. Exclusive, e.g. (from, to).
+     */
+    export function routeAlongBorder(from: Bounds | Point, fromBorder: Bounds, to: Bounds | Point, toBorder: Bounds, preferLeft = true, preferTop = false): Point[] {
+        const res = [];
+
+        const toRect = Rect.fromBounds(toBounds(to));
+        const toBorderRect = Rect.fromBounds(toBorder);
+        const fromRect = Rect.fromBounds(toBounds(from));
+        const fromBorderRect = Rect.fromBounds(fromBorder);
+        let x, y;
+        if (fromRect.left === fromBorderRect.left) {
+            // from at the left
+            x = fromBorderRect.left;
+            if (toRect.left === toBorderRect.left) {
+                // to at the left
+                // Nothing to do
+            } else if (toRect.right === toBorderRect.right) {
+                // to at the right
+                if (toRect.top === toBorderRect.top) {
+                    // to at the top, add a point to top left
+                    y = fromBorderRect.top;
+                } else if (toRect.bottom === toBorderRect.bottom) {
+                    // to at the bottom, add a point to bottom left
+                    y = fromBorderRect.bottom;
+                } else {
+                    // to in between top and bottom
+                    // Need 2 routing points, choose the preferred one
+                    y = preferTop ? fromBorderRect.top : fromBorderRect.bottom;
+                    res.push({ x, y });
+                    // 2nd routing point
+                    x = fromBorderRect.right;
+                }
+            } else {
+                // to in between left and right
+                if (toRect.top === toBorderRect.top) {
+                    // to at the top, add a point to top left
+                    y = fromBorderRect.top;
+                } else if (toRect.bottom === toBorderRect.bottom) {
+                    // to at the bottom, add a point to bottom left
+                    y = fromBorderRect.bottom;
+                } else {
+                    // Should never be the case, would be hovering somewhere
+                }
+            }
+        } else if (fromRect.right === fromBorderRect.right) {
+            // from at the right
+            x = fromBorderRect.right;
+            if (toRect.left === toBorderRect.left) {
+                // to at the left
+                if (toRect.top === toBorderRect.top) {
+                    // to at the top, add a point to top right
+                    y = fromBorderRect.top;
+                } else if (toRect.bottom === toBorderRect.bottom) {
+                    // to at the bottom, add a point to bottom right
+                    y = fromBorderRect.bottom;
+                } else {
+                    // to in between top and bottom
+                    // Need 2 routing points, choose the preferred one
+                    y = preferTop ? fromBorderRect.top : fromBorderRect.bottom;
+                    res.push({ x, y });
+                    // 2nd routing point
+                    x = fromBorderRect.left;
+                }
+            } else if (toRect.right === toBorderRect.right) {
+                // to at the right
+                // Nothing to do
+            } else {
+                // to in between left and right
+                if (toRect.top === toBorderRect.top) {
+                    // to at the top, add a point to top right
+                    y = fromBorderRect.top;
+                } else if (toRect.bottom === toBorderRect.bottom) {
+                    // to at the bottom, add a point to bottom right
+                    y = fromBorderRect.bottom;
+                } else {
+                    // Should never be the case, would be hovering somewhere
+                }
+            }
+        } else if (fromRect.top === fromBorderRect.top) {
+            // from at the top
+            y = fromBorderRect.top;
+            if (toRect.top === toBorderRect.top) {
+                // to at the top
+                // Nothing to do
+            } else if (toRect.bottom === toBorderRect.bottom) {
+                // to at the bottom
+                if (toRect.left === toBorderRect.left) {
+                    // to at the left, add a point to top left
+                    x = fromBorderRect.left;
+                } else if (toRect.right === toBorderRect.right) {
+                    // to at the right, add a point to top right
+                    x = fromBorderRect.right;
+                } else {
+                    // to in between left and right
+                    // Need 2 routing points, choose the preferred one
+                    x = preferLeft ? fromBorderRect.left : fromBorderRect.right;
+                    res.push({ x, y });
+                    // 2nd routing point
+                    y = fromBorderRect.bottom;
+                }
+            } else {
+                // to in between top and bottom
+                if (toRect.left === toBorderRect.left) {
+                    // to at the left, add a point to top left
+                    x = fromBorderRect.left;
+                } else if (toRect.right === toBorderRect.right) {
+                    // to at the right, add a point to top right
+                    x = fromBorderRect.right;
+                } else {
+                    // Should never be the case, would be hovering somewhere
+                }
+            }
+        } else if (fromRect.bottom === fromBorderRect.bottom) {
+            // from at the bottom
+            y = fromBorderRect.bottom;
+            if (toRect.top === toBorderRect.top) {
+                // to at the top
+                if (toRect.left === toBorderRect.left) {
+                    // to at the left, add a point to bottom left
+                    x = fromBorderRect.left;
+                } else if (toRect.right === toBorderRect.right) {
+                    // to at the right, add a point to bottom right
+                    x = fromBorderRect.right;
+                } else {
+                    // to in between left and right
+                    // Need 2 routing points, choose the preferred one
+                    x = preferLeft ? fromBorderRect.left : fromBorderRect.right;
+                    res.push({ x, y });
+                    // 2nd routing point
+                    y = fromBorderRect.top;
+                }
+            } else if (toRect.bottom === toBorderRect.bottom) {
+                // to at the bottom
+                // Nothing to do
+            } else {
+                // to in between top and bottom
+                if (toRect.left === toBorderRect.left) {
+                    // to at the left, add a point to top left
+                    x = fromBorderRect.left;
+                } else if (toRect.right === toBorderRect.right) {
+                    // to at the right, add a point to top right
+                    x = fromBorderRect.right;
+                } else {
+                    // Should never be the case, would be hovering somewhere
+                }
+            }
+        }
+
+        if (x && y) {
+            // Add the border routing point
+            res.push({ x, y });
+        }
+
+        return res;
+    }
+
     //// CRF Functions ////
 
     /**
@@ -178,7 +343,7 @@ export namespace Canvas {
     export function capToCanvas(bp: Bounds | Point, canvas: Canvas, offset = Rect.EMPTY): Bounds {
         const bounds = toBounds(bp);
 
-        // Cap proxy at canvas border
+        // Cap bounds at canvas border
         let x = capNumber(bounds.x, canvas.x + offset.left, canvas.x + canvas.width - bounds.width - offset.right);
         const y = capNumber(bounds.y, canvas.y + offset.top, canvas.y + canvas.height - bounds.height - offset.bottom);
 
@@ -187,7 +352,7 @@ export namespace Canvas {
         const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
         const isSidebarOpen = document.querySelector(".sidebar--open");
         if (!isSidebarOpen && rect) {
-            const rect2 = rect;//Canvas.translateToLRF(rect, canvas);
+            const rect2 = rect;//Canvas.translateToLRF(rect, canvas); // TODO:
             if (y < rect2.y + rect2.height + offset.top && x > rect2.x - bounds.width - offset.right) {
                 x = rect2.x - bounds.width - offset.right;
             }
@@ -263,11 +428,11 @@ export function checkOverlap(b1: Bounds, b2: Bounds): boolean {
 }
 
 /**
- * Returns `bpd` if given bounds, otherwise fills the empty attributes with {@link Bounds.EMPTY}.
+ * Returns `bpd` if given bounds, otherwise fills the empty attributes with zeros.
  * @param bpd The bounds/point/dimension.
  */
 export function toBounds(bpd: Bounds | Point | Dimension): Bounds {
-    return isBounds(bpd) ? bpd : { ...Bounds.EMPTY, ...bpd };
+    return isBounds(bpd) ? bpd : { x: 0, y: 0, width: 0, height: 0, ...bpd };
 }
 
 /**

@@ -732,16 +732,19 @@ export class ProxyView extends AbstractUIExtension {
             const rightOffset = offset //+ transform.width;
             const topOffset = offset //+ transform.height;
             const bottomOffset = offset //+ transform.height;
-            const canvasOffset = { left: leftOffset, right: rightOffset, top: topOffset, bottom: bottomOffset };
-            const canvasLeft = canvas.x + leftOffset;
-            const canvasRight = canvas.x + canvas.width - rightOffset;
-            const canvasTop = canvas.y + topOffset;
-            const canvasBottom = canvas.y + canvas.height - bottomOffset;
+            const offsetRect = { left: leftOffset, right: rightOffset, top: topOffset, bottom: bottomOffset };
+
+            const canvasOffLeft = canvas.x + leftOffset;
+            const canvasOffRight = canvas.x + canvas.width - rightOffset;
+            const canvasOffTop = canvas.y + topOffset;
+            const canvasOffBottom = canvas.y + canvas.height - bottomOffset;
 
             // Appends or prepends the point to routingPoints accordingly using outgoing
             const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
-            // Same as add but also caps the point to the canvas
-            const addCap = (p: Point) => add(Canvas.capToCanvas(p, canvas, canvasOffset));
+            // Caps the point to the canvas
+            const cap = (p: Point) => Canvas.capToCanvas(p, canvas, offsetRect);
+            // Composition add o cap
+            const addCap = (p: Point) => add(cap(p));
 
             //// Calculate point where edge leaves canvas
             let prevPoint = nodeTranslated;
@@ -751,9 +754,9 @@ export class ProxyView extends AbstractUIExtension {
                 // Traverse routingPoints from the end for outgoing edges to match with prevPoint
                 const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvas);
 
-                if (p.x <= canvasLeft || p.x >= canvasRight) {
+                if (p.x <= canvasOffLeft || p.x >= canvasOffRight) {
                     // Intersection at x, find y
-                    const canvasLeftOrRight = p.x <= canvasLeft ? canvasLeft : canvasRight;
+                    const canvasLeftOrRight = p.x <= canvasOffLeft ? canvasOffLeft : canvasOffRight;
 
                     // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
                     const scalar = capNumber((canvasLeftOrRight - prevPoint.x) / (p.x - prevPoint.x), 0, 1);
@@ -761,9 +764,9 @@ export class ProxyView extends AbstractUIExtension {
                     // Intersection point, cap to canvas with offset (and to sidebar aswell)
                     const intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
                     canvasEdgeIntersection = { x: canvasLeftOrRight, y: intersectY };
-                } else if (p.y <= canvasTop || p.y >= canvasBottom) {
+                } else if (p.y <= canvasOffTop || p.y >= canvasOffBottom) {
                     // Intersection at y, find x
-                    const canvasTopOrBottom = p.y <= canvasTop ? canvasTop : canvasBottom;
+                    const canvasTopOrBottom = p.y <= canvasOffTop ? canvasOffTop : canvasOffBottom;
 
                     // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
                     const scalar = capNumber((canvasTopOrBottom - prevPoint.y) / (p.y - prevPoint.y), 0, 1);
@@ -797,165 +800,14 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             //// Calculate points on path to proxy near canvas
-            const transformRect = Rect.fromBounds(transform);
-            const canvasRect = Rect.fromBounds(canvas);
-            let x, y;
-            if (canvasEdgeIntersection.x === canvasLeft) {
-                // Intersection at the left
-                x = canvasLeft;
-                if (transformRect.left === canvasRect.left) {
-                    // Proxy at the left
-                    // Nothing to do
-                } else if (transformRect.right === canvasRect.right) {
-                    // Proxy at the right
-                    if (transformRect.top === canvasRect.top) {
-                        // Proxy at the top, add a point to top left
-                        y = canvasTop;
-                    } else if (transformRect.bottom === canvasRect.bottom) {
-                        // Proxy at the bottom, add a point to bottom left
-                        y = canvasBottom;
-                    } else {
-                        // Proxy in between top and bottom
-                        // Need 2 routing points, choose the closer one
-                        y = proxyTranslated.y < (canvasTop + canvasBottom) / 2 ? canvasTop : canvasBottom;
-                        if (!Bounds.includes(transform, { x, y })) {
-                            // Add the new routing point
-                            addCap({ x, y });
-                        }
-                        // 2nd routing point
-                        x = canvasRight;
-                    }
-                } else {
-                    // Proxy in between left and right
-                    if (transformRect.top === canvasRect.top) {
-                        // Proxy at the top, add a point to top left
-                        y = canvasTop;
-                    } else if (transformRect.bottom === canvasRect.bottom) {
-                        // Proxy at the bottom, add a point to bottom left
-                        y = canvasBottom;
-                    } else {
-                        // Should never be the case, would be hovering somewhere
-                    }
-                }
-            } else if (canvasEdgeIntersection.x === canvasRight) {
-                // Intersection at the right
-                x = canvasRight;
-                if (transformRect.left === canvasRect.left) {
-                    // Proxy at the left
-                    if (transformRect.top === canvasRect.top) {
-                        // Proxy at the top, add a point to top right
-                        y = canvasTop;
-                    } else if (transformRect.bottom === canvasRect.bottom) {
-                        // Proxy at the bottom, add a point to bottom right
-                        y = canvasBottom;
-                    } else {
-                        // Proxy in between top and bottom
-                        // Need 2 routing points, choose the closer one
-                        y = proxyTranslated.y < (canvasTop + canvasBottom) / 2 ? canvasTop : canvasBottom;
-                        if (!Bounds.includes(transform, { x, y })) {
-                            // Add the new routing point
-                            addCap({ x, y });
-                        }
-                        // 2nd routing point
-                        x = canvasLeft;
-                    }
-                } else if (transformRect.right === canvasRect.right) {
-                    // Proxy at the right
-                    // Nothing to do
-                } else {
-                    // Proxy in between left and right
-                    if (transformRect.top === canvasRect.top) {
-                        // Proxy at the top, add a point to top right
-                        y = canvasTop;
-                    } else if (transformRect.bottom === canvasRect.bottom) {
-                        // Proxy at the bottom, add a point to bottom right
-                        y = canvasBottom;
-                    } else {
-                        // Should never be the case, would be hovering somewhere
-                    }
-                }
-            } else if (canvasEdgeIntersection.y === canvasTop) {
-                // Intersection at the top
-                y = canvasTop;
-                if (transformRect.top === canvasRect.top) {
-                    // Proxy at the top
-                    // Nothing to do
-                } else if (transformRect.bottom === canvasRect.bottom) {
-                    // Proxy at the bottom
-                    if (transformRect.left === canvasRect.left) {
-                        // Proxy at the left, add a point to top left
-                        x = canvasLeft;
-                    } else if (transformRect.right === canvasRect.right) {
-                        // Proxy at the right, add a point to top right
-                        x = canvasRight;
-                    } else {
-                        // Proxy in between left and right
-                        // Need 2 routing points, choose the closer one
-                        x = proxyTranslated.x < (canvasLeft + canvasRight) / 2 ? canvasLeft : canvasRight;
-                        if (!Bounds.includes(transform, { x, y })) {
-                            // Add the new routing point
-                            addCap({ x, y });
-                        }
-                        // 2nd routing point
-                        y = canvasBottom;
-                    }
-                } else {
-                    // Proxy in between top and bottom
-                    if (transformRect.left === canvasRect.left) {
-                        // Proxy at the left, add a point to top left
-                        x = canvasLeft;
-                    } else if (transformRect.right === canvasRect.right) {
-                        // Proxy at the right, add a point to top right
-                        x = canvasRight;
-                    } else {
-                        // Should never be the case, would be hovering somewhere
-                    }
-                }
-            } else if (canvasEdgeIntersection.y === canvasBottom) {
-                // Intersection at the bottom
-                y = canvasBottom;
-                if (transformRect.top === canvasRect.top) {
-                    // Proxy at the top
-                    if (transformRect.left === canvasRect.left) {
-                        // Proxy at the left, add a point to bottom left
-                        x = canvasLeft;
-                    } else if (transformRect.right === canvasRect.right) {
-                        // Proxy at the right, add a point to bottom right
-                        x = canvasRight;
-                    } else {
-                        // Proxy in between left and right
-                        // Need 2 routing points, choose the closer one
-                        x = proxyTranslated.x < (canvasLeft + canvasRight) / 2 ? canvasLeft : canvasRight;
-                        if (!Bounds.includes(transform, { x, y })) {
-                            // Add the new routing point
-                            addCap({ x, y });
-                        }
-                        // 2nd routing point
-                        y = canvasTop;
-                    }
-                } else if (transformRect.bottom === canvasRect.bottom) {
-                    // Proxy at the bottom
-                    // Nothing to do
-                } else {
-                    // Proxy in between top and bottom
-                    if (transformRect.left === canvasRect.left) {
-                        // Proxy at the left, add a point to top left
-                        x = canvasLeft;
-                    } else if (transformRect.right === canvasRect.right) {
-                        // Proxy at the right, add a point to top right
-                        x = canvasRight;
-                    } else {
-                        // Should never be the case, would be hovering somewhere
-                    }
-                }
-            }
+            const canvasOffset = Rect.toBounds({ left: canvasOffLeft, right: canvasOffRight, top: canvasOffTop, bottom: canvasOffBottom });
+            const preferLeft = proxyTranslated.x < (canvasOffLeft + canvasOffRight) / 2;
+            const preferTop = proxyTranslated.y < (canvasOffTop + canvasOffBottom) / 2;
+            const borderPoints = Canvas.routeAlongBorder(canvasEdgeIntersection, canvasOffset, transform, canvas, preferLeft, preferTop);
+            // Remove points inside of proxy and add remaining
+            borderPoints.filter(p => !Bounds.includes(transform, p)).forEach(p => addCap(p));
 
-            if (x && y && !Bounds.includes(transform, { x, y })) {
-                // Add the new routing point
-                addCap({ x, y });
-            }
-
-            //// Finally, add source and target
+            //// Finally, add source at its correct spot
             routingPoints.unshift(source);
             routingPoints.push(target);
         } else {
@@ -996,10 +848,10 @@ export class ProxyView extends AbstractUIExtension {
         overlay.id = overlay.id + "-overlay";
         overlay.opacity = opacity;
         overlay.data = this.changeColor(overlay.data, ctx, color);
-        console.log("edge");
-        console.log(edge);
-        console.log("overlay");
-        console.log(overlay);
+        // console.log("edge"); // FIXME:
+        // console.log(edge);
+        // console.log("overlay");
+        // console.log(overlay);
         return { edge: overlay, transform: { ...parentTranslated, scale: canvas.zoom } };
     }
 
@@ -1008,7 +860,6 @@ export class ProxyView extends AbstractUIExtension {
         if (!this.connectOffScreenEdges) {
             return { proxyEdges: [], overlayEdges: [] };
         }
-        // TODO: along border
         // TODO: klighdoptions to klighdproperties for semantic filters
         // TODO: something
 
@@ -1045,8 +896,11 @@ export class ProxyView extends AbstractUIExtension {
             for (let i = 1; i < canvasEdgeIntersections.length; i++) {
                 const { intersection, fromOnScreen, index } = canvasEdgeIntersections[i];
                 if (prevFromOnScreen) {
-                    // Can safely be connected, therefore store routing point indices and both intersections
-                    routingPointIndices.push({ to: prevIndex, from: index, p1: prevIntersection, p2: intersection });
+                    // Can safely be connected, therefore store routing point indices and path along border between intersections
+                    const ps = Canvas.routeAlongBorder(prevIntersection, canvas, intersection, canvas);
+                    ps.unshift(prevIntersection);
+                    ps.push(intersection);
+                    routingPointIndices.push({ to: prevIndex, from: index, ps });
                 }
                 prevIntersection = intersection;
                 prevFromOnScreen = fromOnScreen;
@@ -1060,47 +914,31 @@ export class ProxyView extends AbstractUIExtension {
                 const routingPoints = [];
 
                 let prevFrom = 0;
-                let points;
-                for (const { to, from, p1, p2 } of routingPointIndices) {
-                    // Points from previous intersection up to current one
-                    points = connector.routingPoints.slice(prevFrom, to + 1)
+                for (const { to, from, ps } of routingPointIndices) {
+                    // Add points from previous intersection up to current one
+                    routingPoints.push(...connector.routingPoints.slice(prevFrom, to + 1));
 
-                    // Translate p1, p2 to LRF so as to not translate all other points to CRF (also don't have to move decorator by hand)
-                    const p1LRF = Point.subtract(p1, parentPos);
-                    const p2LRF = Point.subtract(p2, parentPos);
-
-                    // Add an offset to the intersections
-                    let x1 = p1LRF.x;
-                    let y1 = p1LRF.y;
-                    if (p1.x === canvas.x) {
-                        x1 += offsetLRF;
-                    } else if (p1.x === canvas.x + canvas.width) {
-                        x1 -= offsetLRF;
-                    }
-                    if (p1.y === canvas.y) {
-                        y1 += offsetLRF;
-                    } else if (p1.y === canvas.y + canvas.height) {
-                        y1 -= offsetLRF;
-                    }
-                    let x2 = p2LRF.x;
-                    let y2 = p2LRF.y;
-                    if (p2.x === canvas.x) {
-                        x2 += offsetLRF;
-                    } else if (p2.x === canvas.x + canvas.width) {
-                        x2 -= offsetLRF;
-                    }
-                    if (p2.y === canvas.y) {
-                        y2 += offsetLRF;
-                    } else if (p2.y === canvas.y + canvas.height) {
-                        y2 -= offsetLRF;
+                    // Add intersection path, e.g. the connector
+                    for (const p of ps) {
+                        // Add the offset to the intersections
+                        let {x, y} = Point.subtract(p, parentPos);
+                        if (p.x === canvas.x) {
+                            x += offsetLRF;
+                        } else if (p.x === canvas.x + canvas.width) {
+                            x -= offsetLRF;
+                        }
+                        if (p.y === canvas.y) {
+                            y += offsetLRF;
+                        } else if (p.y === canvas.y + canvas.height) {
+                            y -= offsetLRF;
+                        }
+                        routingPoints.push({x,y});
                     }
 
-                    routingPoints.push(...points, { x: x1, y: y1 }, { x: x2, y: y2 });
                     prevFrom = from + 1;
                 }
                 // Add last couple points
-                points = connector.routingPoints.slice(prevFrom, connector.routingPoints.length)
-                routingPoints.push(...points);
+                routingPoints.push(...connector.routingPoints.slice(prevFrom, connector.routingPoints.length));
 
                 connector.routingPoints = routingPoints;
                 proxyEdges.push({ edge: connector, transform: { ...Canvas.translateToCRF(parentPos, canvas), scale: canvas.zoom } });
