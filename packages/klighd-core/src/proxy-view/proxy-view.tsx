@@ -295,9 +295,12 @@ export class ProxyView extends AbstractUIExtension {
 
         const edgeProxies = [];
         // Edges
-        // Start with overlay to not have overlay edges over proxy edges
-        const edges = routedEdges.overlayEdges.concat(connectors.overlayEdges,
-            routedEdges.proxyEdges, connectors.proxyEdges);
+        const edges = ([] as { edge: SKEdge, transform: TransformAttributes }[]).concat(
+            connectors.overlayEdges, // Start with overlays to not have overlays over proxy edges
+            connectors.proxyEdges,
+            routedEdges.overlayEdges, // But routing overlays should still be over connectors
+            routedEdges.proxyEdges
+        );
         for (const { edge, transform } of edges) {
             // Create an edge proxy
             const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
@@ -638,7 +641,10 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
-        onScreenNodes: SKNode[], canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { proxyEdges: { edge: SKEdge, transform: TransformAttributes }[], overlayEdges: { edge: SKEdge, transform: TransformAttributes }[] } {
+        onScreenNodes: SKNode[], canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): {
+            proxyEdges: { edge: SKEdge, transform: TransformAttributes }[],
+            overlayEdges: { edge: SKEdge, transform: TransformAttributes }[]
+        } {
         if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
             // Don't create edge proxies
             return { proxyEdges: [], overlayEdges: [] };
@@ -835,7 +841,10 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Connects off-screen edges. */
-    private connectEdges(root: SKNode, canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): { proxyEdges: { edge: SKEdge, transform: TransformAttributes }[], overlayEdges: { edge: SKEdge, transform: TransformAttributes }[] } {
+    private connectEdges(root: SKNode, canvas: Canvas, offset: number, ctx: SKGraphModelRenderer): {
+        proxyEdges: { edge: SKEdge, transform: TransformAttributes }[],
+        overlayEdges: { edge: SKEdge, transform: TransformAttributes }[]
+    } {
         if (!this.connectOffScreenEdges) {
             return { proxyEdges: [], overlayEdges: [] };
         }
