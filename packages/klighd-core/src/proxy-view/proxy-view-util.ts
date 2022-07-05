@@ -329,6 +329,20 @@ export namespace Canvas {
         return res;
     }
 
+    /**
+     * Offsets the canvas by the given values.
+     * @param canvas The canvas.
+     * @param offset The offset. Values `>0` reduce the canvas size.
+     * @returns An offset canvas.
+     */
+    export function offsetCanvas(canvas: Canvas, offset: Rect): Canvas {
+        const x = canvas.x + offset.left;
+        const width = canvas.width - offset.right - offset.left;
+        const y = canvas.y + offset.top;
+        const height = canvas.height - offset.bottom - offset.top;
+        return { ...canvas, x, y, width, height };
+    }
+
     //// CRF Functions ////
 
     /**
@@ -337,24 +351,23 @@ export namespace Canvas {
      * Also, `bp` has to contain the absolute position (not relative to parent).
      * @param bp The bounds/point to cap to the canvas border, absolute.
      * @param canvas The canvas.
-     * @param offset An optional offset. Values `>0` reduce the canvas size.
      * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
      */
-    export function capToCanvas(bp: Bounds | Point, canvas: Canvas, offset = Rect.EMPTY): Bounds {
+    export function capToCanvas(bp: Bounds | Point, canvas: Bounds): Bounds {
         const bounds = toBounds(bp);
 
         // Cap bounds at canvas border
-        let x = capNumber(bounds.x, canvas.x + offset.left, canvas.x + canvas.width - bounds.width - offset.right);
-        const y = capNumber(bounds.y, canvas.y + offset.top, canvas.y + canvas.height - bounds.height - offset.bottom);
+        let x = capNumber(bounds.x, canvas.x, canvas.x + canvas.width - bounds.width);
+        const y = capNumber(bounds.y, canvas.y, canvas.y + canvas.height - bounds.height);
 
         // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
         // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
         const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
         const isSidebarOpen = document.querySelector(".sidebar--open");
         if (!isSidebarOpen && rect) {
-            const rect2 = rect;//Canvas.translateToLRF(rect, canvas); // TODO:
-            if (y < rect2.y + rect2.height + offset.top && x > rect2.x - bounds.width - offset.right) {
-                x = rect2.x - bounds.width - offset.right;
+            const rect2 = rect;//Canvas.translateToLRF(rect, canvas); // TODO: RF
+            if (y < rect2.y + rect2.height && x > rect2.x - bounds.width) {
+                x = rect2.x - bounds.width;
             }
         }
 

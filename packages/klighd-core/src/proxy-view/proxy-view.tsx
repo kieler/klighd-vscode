@@ -31,7 +31,7 @@ import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
 import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges } from "./proxy-view-options";
-import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, Rect, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -268,16 +268,17 @@ export class ProxyView extends AbstractUIExtension {
             transform: this.getTransform(node, size, proxyBounds, canvasCRF)
         }));
         const fromPercent = 0.01;
-        const offset = Math.min(canvasCRF.width, canvasCRF.height) * fromPercent;
+        const offsetCRF = Math.min(canvasCRF.width, canvasCRF.height) * fromPercent;
+        const offsetLRF = Math.min(canvasLRF.width, canvasLRF.height) * fromPercent;
 
         //// Apply clustering ////
         const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasCRF);
 
         //// Route edges to proxies ////
-        const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offset, ctx);
+        const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offsetCRF, ctx);
 
         //// Connect off-screen edges ////
-        const connectors = this.connectEdges(root, canvasLRF, offset, ctx);
+        const connectors = this.connectEdges(root, canvasLRF, offsetLRF, ctx);
 
         //// Render the proxies ////
         const proxies = [];
@@ -744,12 +745,12 @@ export class ProxyView extends AbstractUIExtension {
             const canvasOffRight = canvas.x + canvas.width - rightOffset;
             const canvasOffTop = canvas.y + topOffset;
             const canvasOffBottom = canvas.y + canvas.height - bottomOffset;
-            const canvasOffset = Rect.toBounds({ left: canvasOffLeft, right: canvasOffRight, top: canvasOffTop, bottom: canvasOffBottom });
+            const canvasOffset = Canvas.offsetCanvas(canvas, offsetRect);
 
             // Appends or prepends the point to routingPoints accordingly using outgoing
             const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
             // Caps the point to the canvas
-            const cap = (p: Point) => Canvas.capToCanvas(p, canvas, offsetRect);
+            const cap = (p: Point) => Canvas.capToCanvas(p, canvasOffset);
             // Composition add o cap
             const addCap = (p: Point) => add(cap(p));
 
@@ -773,7 +774,7 @@ export class ProxyView extends AbstractUIExtension {
 
                 // Add p to keep routing points consistent
                 prevPoint = p;
-                if (Bounds.includes(canvas, p) && !Bounds.includes(transform, p)) {
+                if (Bounds.includes(canvasOffset, p) && !Bounds.includes(transform, p)) {
                     // Don't add a point that is off-screen or inside the proxy
                     add(p);
                 }
@@ -850,11 +851,12 @@ export class ProxyView extends AbstractUIExtension {
         }
         // TODO: klighdoptions to klighdproperties for semantic filters
 
-        const offsetLRF = offset / canvas.zoom;
+        const offsetRect = { left: offset, right: offset, top: offset, bottom: offset };
+        const canvasOffset = Canvas.offsetCanvas(canvas, offsetRect);
         const proxyEdges = [];
         const overlayEdges = [];
         // Get all edges that are partially off-screen
-        const partiallyOffScreenEdges = this.getPartiallyOffScreenEdges(root, canvas);
+        const partiallyOffScreenEdges = this.getPartiallyOffScreenEdges(root, canvasOffset);
         // Connect intersections with canvas
         for (const edge of partiallyOffScreenEdges) {
             const parentPos = this.getAbsolutePosition(edge.parent as SKNode);
@@ -864,10 +866,10 @@ export class ProxyView extends AbstractUIExtension {
             const canvasEdgeIntersections = [];
             for (let i = 1; i < edge.routingPoints.length; i++) {
                 const p = Point.add(parentPos, edge.routingPoints[i]);
-                const intersection = getIntersection(prevPoint, p, canvas);
+                const intersection = getIntersection(prevPoint, p, canvasOffset);
                 if (intersection) {
                     // Found an intersection
-                    canvasEdgeIntersections.push({ intersection, fromOnScreen: Bounds.includes(canvas, prevPoint), index: i - 1 });
+                    canvasEdgeIntersections.push({ intersection, fromOnScreen: Bounds.includes(canvasOffset, prevPoint), index: i - 1 });
                 }
                 prevPoint = p;
             }
@@ -884,7 +886,7 @@ export class ProxyView extends AbstractUIExtension {
                 const { intersection, fromOnScreen, index } = canvasEdgeIntersections[i];
                 if (prevFromOnScreen) {
                     // Can safely be connected, therefore store routing point indices and path along border between intersections
-                    const ps = Canvas.routeAlongBorder(prevIntersection, canvas, intersection, canvas);
+                    const ps = Canvas.routeAlongBorder(prevIntersection, canvasOffset, intersection, canvasOffset);
                     ps.unshift(prevIntersection);
                     ps.push(intersection);
                     routingPointIndices.push({ to: prevIndex, from: index, ps });
@@ -906,21 +908,7 @@ export class ProxyView extends AbstractUIExtension {
                     routingPoints.push(...connector.routingPoints.slice(prevFrom, to + 1));
 
                     // Add intersection path, e.g. the connector
-                    for (const p of ps) {
-                        // Add the offset to the intersections
-                        let { x, y } = Point.subtract(p, parentPos);
-                        if (p.x === canvas.x) {
-                            x += offsetLRF;
-                        } else if (p.x === canvas.x + canvas.width) {
-                            x -= offsetLRF;
-                        }
-                        if (p.y === canvas.y) {
-                            y += offsetLRF;
-                        } else if (p.y === canvas.y + canvas.height) {
-                            y -= offsetLRF;
-                        }
-                        routingPoints.push({ x, y });
-                    }
+                    routingPoints.push(...ps.map(p => Point.subtract(p, parentPos)));
 
                     prevFrom = from + 1;
                 }
@@ -1142,7 +1130,7 @@ export class ProxyView extends AbstractUIExtension {
         //     y = capNumber(y, translatedParent.y, translatedParent.y + translatedParent.height - proxyHeight);
         // }
 
-        // return Canvas.translateToCRF({ x, y, scale, width: proxyWidth, height: proxyHeight }, canvas);
+        // return {...Canvas.translateToCRF({ x, y, width: proxyWidth, height: proxyHeight }, canvas), scale};
     }
 
     /**
