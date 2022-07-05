@@ -738,6 +738,7 @@ export class ProxyView extends AbstractUIExtension {
             const canvasOffRight = canvas.x + canvas.width - rightOffset;
             const canvasOffTop = canvas.y + topOffset;
             const canvasOffBottom = canvas.y + canvas.height - bottomOffset;
+            const canvasOffset = Rect.toBounds({ left: canvasOffLeft, right: canvasOffRight, top: canvasOffTop, bottom: canvasOffBottom });
 
             // Appends or prepends the point to routingPoints accordingly using outgoing
             const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
@@ -754,41 +755,20 @@ export class ProxyView extends AbstractUIExtension {
                 // Traverse routingPoints from the end for outgoing edges to match with prevPoint
                 const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvas);
 
-                if (p.x <= canvasOffLeft || p.x >= canvasOffRight) {
-                    // Intersection at x, find y
-                    const canvasLeftOrRight = p.x <= canvasOffLeft ? canvasOffLeft : canvasOffRight;
-
-                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
-                    const scalar = capNumber((canvasLeftOrRight - prevPoint.x) / (p.x - prevPoint.x), 0, 1);
-
-                    // Intersection point, cap to canvas with offset (and to sidebar aswell)
-                    const intersectY = prevPoint.y + scalar * (p.y - prevPoint.y);
-                    canvasEdgeIntersection = { x: canvasLeftOrRight, y: intersectY };
-                } else if (p.y <= canvasOffTop || p.y >= canvasOffBottom) {
-                    // Intersection at y, find x
-                    const canvasTopOrBottom = p.y <= canvasOffTop ? canvasOffTop : canvasOffBottom;
-
-                    // Scalar of line equation, must be in [0,1] as to not be before prevPoint or after p, could be ±inf
-                    const scalar = capNumber((canvasTopOrBottom - prevPoint.y) / (p.y - prevPoint.y), 0, 1);
-
-                    // Intersection point, cap to canvas with offset (and to sidebar aswell)
-                    const intersectX = prevPoint.x + scalar * (p.x - prevPoint.x);
-                    canvasEdgeIntersection = { x: intersectX, y: canvasTopOrBottom };
-                }
-
-                if (canvasEdgeIntersection) {
-                    // Found the intersection, done
+                const intersection = getIntersection(prevPoint, p, canvasOffset);
+                if (intersection) {
+                    // Found an intersection
+                    canvasEdgeIntersection = intersection;
                     if (!Bounds.includes(transform, canvasEdgeIntersection)) {
                         // Don't add a point inside of the proxy
                         addCap(canvasEdgeIntersection);
                     }
-                    break;
                 }
 
                 // Add p to keep routing points consistent
                 prevPoint = p;
-                if (!Bounds.includes(transform, p)) {
-                    // Don't add a point inside of the proxy
+                if (Bounds.includes(canvas, p) && !Bounds.includes(transform, p)) {
+                    // Don't add a point that is off-screen or inside the proxy
                     add(p);
                 }
             }
@@ -800,7 +780,6 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             //// Calculate points on path to proxy near canvas
-            const canvasOffset = Rect.toBounds({ left: canvasOffLeft, right: canvasOffRight, top: canvasOffTop, bottom: canvasOffBottom });
             const preferLeft = proxyTranslated.x < (canvasOffLeft + canvasOffRight) / 2;
             const preferTop = proxyTranslated.y < (canvasOffTop + canvasOffBottom) / 2;
             const borderPoints = Canvas.routeAlongBorder(canvasEdgeIntersection, canvasOffset, transform, canvas, preferLeft, preferTop);
@@ -861,7 +840,6 @@ export class ProxyView extends AbstractUIExtension {
             return { proxyEdges: [], overlayEdges: [] };
         }
         // TODO: klighdoptions to klighdproperties for semantic filters
-        // TODO: something
 
         const offsetLRF = offset / canvas.zoom;
         const proxyEdges = [];
@@ -921,7 +899,7 @@ export class ProxyView extends AbstractUIExtension {
                     // Add intersection path, e.g. the connector
                     for (const p of ps) {
                         // Add the offset to the intersections
-                        let {x, y} = Point.subtract(p, parentPos);
+                        let { x, y } = Point.subtract(p, parentPos);
                         if (p.x === canvas.x) {
                             x += offsetLRF;
                         } else if (p.x === canvas.x + canvas.width) {
@@ -932,7 +910,7 @@ export class ProxyView extends AbstractUIExtension {
                         } else if (p.y === canvas.y + canvas.height) {
                             y -= offsetLRF;
                         }
-                        routingPoints.push({x,y});
+                        routingPoints.push({ x, y });
                     }
 
                     prevFrom = from + 1;
