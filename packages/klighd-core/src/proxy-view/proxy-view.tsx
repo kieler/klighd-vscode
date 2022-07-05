@@ -217,8 +217,7 @@ export class ProxyView extends AbstractUIExtension {
 
         const canvasWidth = model.canvasBounds.width;
         const canvasHeight = model.canvasBounds.height;
-        const viewport = ctx.viewport;
-        const canvas = { ...model.canvasBounds, scroll: viewport.scroll, zoom: viewport.zoom };
+        const canvas = Canvas.of(model, ctx.viewport);
         const root = model.children[0] as SKNode;
         // Actually update the document
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
@@ -1064,9 +1063,11 @@ export class ProxyView extends AbstractUIExtension {
                     // Points from previous intersection up to current one
                     points = connector.routingPoints.slice(prevFrom, to + 1)
 
-                    // Translate p1, p2 to LRF so as to not translate points to CRF (also don't have to move decorator by hand)
+                    // Translate p1, p2 to LRF so as to not translate all other points to CRF (also don't have to move decorator by hand)
                     const p1LRF = Point.subtract(Canvas.translateToLRF(p1, canvas), parentPos);
                     const p2LRF = Point.subtract(Canvas.translateToLRF(p2, canvas), parentPos);
+
+                    // Add an offset to the intersections
                     let x1 = p1LRF.x;
                     let y1 = p1LRF.y;
                     if (p1.x === canvas.x) {
@@ -1095,11 +1096,12 @@ export class ProxyView extends AbstractUIExtension {
                     routingPoints.push(...points, { x: x1, y: y1 }, { x: x2, y: y2 });
                     prevFrom = from + 1;
                 }
+                // Add last couple points
                 points = connector.routingPoints.slice(prevFrom, connector.routingPoints.length)
                 routingPoints.push(...points);
 
                 connector.routingPoints = routingPoints;
-                proxyEdges.push({ edge: connector, transform: { ...Bounds.EMPTY, ...parentTranslated, scale: canvas.zoom } });
+                proxyEdges.push({ edge: connector, transform: { ...parentTranslated, scale: canvas.zoom } });
 
                 // Remember to fade out original edge
                 overlayEdges.push(this.getOverlayEdge(edge, canvas, ctx));

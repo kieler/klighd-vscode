@@ -53,6 +53,17 @@ export interface Canvas extends Viewport, Bounds {
 }
 
 export namespace Canvas {
+    //// Get Canvas ////
+    /**
+     * Creates a canvas in CRF.
+     * @param boundsOrRoot The canvas' bounds or the root element.
+     * @param viewport The viewport.
+     * @returns The canvas.
+     */
+    export function of(boundsOrRoot: Bounds | SModelRoot, viewport: Viewport): Canvas {
+        const canvasBounds = isBounds(boundsOrRoot) ? boundsOrRoot : boundsOrRoot.canvasBounds;
+        return { ...canvasBounds, scroll: viewport.scroll, zoom: viewport.zoom };
+    }
 
     //// Translation ////
 
