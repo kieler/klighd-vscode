@@ -186,8 +186,11 @@ export namespace Canvas {
         // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
         const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
         const isSidebarOpen = document.querySelector(".sidebar--open");
-        if (!isSidebarOpen && rect && y < rect.bottom + offset.top && x > rect.left - bounds.width - offset.right) {
-            x = rect.left - bounds.width - offset.right;
+        if (!isSidebarOpen && rect) {
+            const rect2 = rect;//Canvas.translateToLRF(rect, canvas);
+            if (y < rect2.y + rect2.height + offset.top && x > rect2.x - bounds.width - offset.right) {
+                x = rect2.x - bounds.width - offset.right;
+            }
         }
 
         return { x, y, width: bounds.width, height: bounds.height };

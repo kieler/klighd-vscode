@@ -277,7 +277,7 @@ export class ProxyView extends AbstractUIExtension {
         const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offset, ctx);
 
         //// Connect off-screen edges ////
-        const connectors = this.connectEdges(root, canvasCRF, offset, ctx);
+        const connectors = this.connectEdges(root, canvasLRF, offset, ctx);
 
         //// Render the proxies ////
         const proxies = [];
@@ -1008,6 +1008,9 @@ export class ProxyView extends AbstractUIExtension {
         if (!this.connectOffScreenEdges) {
             return { proxyEdges: [], overlayEdges: [] };
         }
+        // TODO: along border
+        // TODO: klighdoptions to klighdproperties for semantic filters
+        // TODO: something
 
         const offsetLRF = offset / canvas.zoom;
         const proxyEdges = [];
@@ -1019,10 +1022,10 @@ export class ProxyView extends AbstractUIExtension {
             const parentPos = this.getAbsolutePosition(edge.parent as SKNode);
 
             // Find all intersections
-            let prevPoint = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[0], canvas);
+            let prevPoint = Point.add(parentPos, edge.routingPoints[0]);
             const canvasEdgeIntersections = [];
             for (let i = 1; i < edge.routingPoints.length; i++) {
-                const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[i], canvas);
+                const p = Point.add(parentPos, edge.routingPoints[i]);
                 const intersection = getIntersection(prevPoint, p, canvas);
                 if (intersection) {
                     // Found an intersection
@@ -1055,7 +1058,6 @@ export class ProxyView extends AbstractUIExtension {
                 const connector = Object.create(edge) as SKEdge;
                 connector.id = connector.id + "-connector";
                 const routingPoints = [];
-                const parentTranslated = Canvas.translateToCRF(parentPos, canvas);
 
                 let prevFrom = 0;
                 let points;
@@ -1064,8 +1066,8 @@ export class ProxyView extends AbstractUIExtension {
                     points = connector.routingPoints.slice(prevFrom, to + 1)
 
                     // Translate p1, p2 to LRF so as to not translate all other points to CRF (also don't have to move decorator by hand)
-                    const p1LRF = Point.subtract(Canvas.translateToLRF(p1, canvas), parentPos);
-                    const p2LRF = Point.subtract(Canvas.translateToLRF(p2, canvas), parentPos);
+                    const p1LRF = Point.subtract(p1, parentPos);
+                    const p2LRF = Point.subtract(p2, parentPos);
 
                     // Add an offset to the intersections
                     let x1 = p1LRF.x;
@@ -1101,7 +1103,7 @@ export class ProxyView extends AbstractUIExtension {
                 routingPoints.push(...points);
 
                 connector.routingPoints = routingPoints;
-                proxyEdges.push({ edge: connector, transform: { ...parentTranslated, scale: canvas.zoom } });
+                proxyEdges.push({ edge: connector, transform: { ...Canvas.translateToCRF(parentPos, canvas), scale: canvas.zoom } });
 
                 // Remember to fade out original edge
                 overlayEdges.push(this.getOverlayEdge(edge, canvas, ctx));
@@ -1124,7 +1126,7 @@ export class ProxyView extends AbstractUIExtension {
                 let offScreen = false;
                 let onScreen = false;
                 for (let p of child.routingPoints) {
-                    p = Canvas.translateToCRFAdd(pos, p, canvas);
+                    p = Point.add(pos, p);
                     if (Bounds.includes(canvas, p)) {
                         onScreen = true;
                     } else {
@@ -1288,6 +1290,34 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         return { x, y, scale, width: proxyWidth, height: proxyHeight };
+
+        // TODO: RF
+        // canvas = Canvas.translateCanvasToLRF(canvas);
+        // // Calculate the scale and the resulting proxy dimensions
+        // // The scale is calculated such that width & height are capped to a max value
+        // const proxyWidthScale = desiredSize / proxyBounds.width;
+        // const proxyHeightScale = desiredSize / proxyBounds.height;
+        // const scale = Math.min(proxyWidthScale, proxyHeightScale, this.capScaleToOne ? 1 : proxyHeightScale);
+        // const proxyWidth = proxyBounds.width * scale;
+        // const proxyHeight = proxyBounds.height * scale;
+
+        // // Center at middle of node
+        // const translated = this.getAbsoluteBounds(node);
+        // const offsetX = 0.5 * (translated.width - proxyWidth);
+        // const offsetY = 0.5 * (translated.height - proxyHeight);
+        // let x = translated.x + offsetX;
+        // let y = translated.y + offsetY;
+
+        // // Cap proxy to canvas
+        // ({ x, y } = Canvas.capToCanvas({ x, y, width: proxyWidth, height: proxyHeight }, canvas));
+
+        // if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
+        //     const translatedParent = this.getTranslatedNodeBounds(node.parent as SKNode, canvas);
+        //     x = capNumber(x, translatedParent.x, translatedParent.x + translatedParent.width - proxyWidth);
+        //     y = capNumber(y, translatedParent.y, translatedParent.y + translatedParent.height - proxyHeight);
+        // }
+
+        // return Canvas.translateToCRF({ x, y, scale, width: proxyWidth, height: proxyHeight }, canvas);
     }
 
     /**
