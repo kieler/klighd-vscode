@@ -152,7 +152,7 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
 /** The category containing semantic proxy-view filters. */
 export class ProxyViewSemanticFilterCategory implements RenderOption {
     static readonly ID: string = "proxy-view-semantic-filter-category";
-    static readonly NAME: string = "Proxy-View Semantic Filters";
+    static readonly NAME: string = "Semantic Filters";
     static readonly INSTANCE: ProxyViewSemanticFilterCategory = new ProxyViewSemanticFilterCategory;
     readonly id: string = ProxyViewSemanticFilterCategory.ID;
     readonly name: string = ProxyViewSemanticFilterCategory.NAME;

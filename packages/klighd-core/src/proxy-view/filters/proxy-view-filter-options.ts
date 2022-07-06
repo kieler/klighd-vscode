@@ -21,7 +21,7 @@ import { ProxyViewCategory } from "../proxy-view-options";
 /** The category containing proxy-view filters. */
 export class ProxyViewFilterCategory implements RenderOption {
     static readonly ID: string = "proxy-view-filter-category";
-    static readonly NAME: string = "Proxy-View Filters";
+    static readonly NAME: string = "Filters";
     static readonly INSTANCE: ProxyViewFilterCategory = new ProxyViewFilterCategory;
     readonly id: string = ProxyViewFilterCategory.ID;
     readonly name: string = ProxyViewFilterCategory.NAME;

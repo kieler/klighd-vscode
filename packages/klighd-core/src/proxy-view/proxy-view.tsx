@@ -193,9 +193,7 @@ export class ProxyView extends AbstractUIExtension {
 
     //////// Main methods ////////
 
-    // !!! TODO: might be a useful addition to save absolute coords in SKNode, not my task but also required here
     // TODO: performance in developer options for measuring performance
-
     // TODO: color fade out of polygons (arrow heads)
 
     /**
@@ -849,7 +847,6 @@ export class ProxyView extends AbstractUIExtension {
         if (!this.connectOffScreenEdges) {
             return { proxyEdges: [], overlayEdges: [] };
         }
-        // TODO: klighdoptions to klighdproperties for semantic filters
 
         const offsetRect = { left: offset, right: offset, top: offset, bottom: offset };
         const canvasOffset = Canvas.offsetCanvas(canvas, offsetRect);
