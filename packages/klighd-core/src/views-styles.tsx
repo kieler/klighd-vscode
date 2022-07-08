@@ -15,18 +15,19 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
+import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { VNode } from 'snabbdom';
-import { getZoom, isSelectable, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { getZoom, isSelectable, RGBColor, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
-    HorizontalAlignment, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
+    HorizontalAlignment, isKText, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
     KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
-    KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge,
+    KStyleHolder, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge,
     SKGraphElement, SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
 import {
-    camelToKebab, fillSingleColor, isSingleColor, lineCapText, lineJoinText, lineStyleText,
+    camelToKebab, fillSingleColor, getKRendering, isSingleColor, lineCapText, lineJoinText, lineStyleText,
     textDecorationStyleText, verticalAlignmentText
 } from './views-common';
 
@@ -167,16 +168,17 @@ export class KStyles {
  * Calculates the renderings for all styles contained in styleList into an object.
  * @param styleList The list of all styles that should have their rendering calculated.
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
- * @param stylesToPropagage The optional styles object that should be propagated further to children. It is modified in this method.
+ * @param stylesToPropagate The optional styles object that should be propagated further to children. It is modified in this method.
  */
-export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagatedStyles: KStyles, stylesToPropagage?: KStyles): KStyles {
+export function getKStyles(parent: SKGraphElement, styleHolder: KStyleHolder & KGraphData, propagatedStyles: KStyles, context: SKGraphModelRenderer, stylesToPropagate?: KStyles): KStyles {
     // TODO: not all of these are implemented yet
     const styles = new KStyles(false)
     // Include all propagated styles.
     copyStyles(propagatedStyles, styles)
-    if (stylesToPropagage !== undefined) {
-        copyStyles(propagatedStyles, stylesToPropagage)
+    if (stylesToPropagate !== undefined) {
+        copyStyles(propagatedStyles, stylesToPropagate)
     }
+    const styleList = styleHolder.styles
 
     if (styleList === undefined) {
         return styles
@@ -185,16 +187,86 @@ export function getKStyles(parent: SKGraphElement, styleList: KStyle[], propagat
     // First, apply all non-selection styles.
     for (const style of styleList) {
         if (style.selection === false) {
-            applyKStyle(style, styles, stylesToPropagage)
+            applyKStyle(style, styles, stylesToPropagate)
         }
     }
     // Then, override with selection styles, if any are available.
-    for (const style of styleList) {
-        if (isSelectable(parent) && parent.selected && style.selection === true) {
-            applyKStyle(style, styles, stylesToPropagage)
+    if (isSelectable(parent) && parent.selected) {
+        const selectionStyles = styleList.filter(style => style.selection === true)
+        if (selectionStyles.length !== 0) {
+            for (const style of selectionStyles) {
+                applyKStyle(style, styles, stylesToPropagate)
+            }
+        } else {
+            // ...if no selection styles are available, apply default ones.
+            if (isKText(styleHolder)) {
+                for (const style of getDefaultTextSelectionStyles()) {
+                    applyKStyle(style, styles, stylesToPropagate)
+                }
+            } else if (styleHolder === getKRendering(parent.data, context)) {
+                // For non-text renderings this only applies to the root rendering
+                for (const style of getDefaultNonTextSelectionStyles()) {
+                    applyKStyle(style, styles, stylesToPropagate)
+                }
+            }
         }
     }
     return styles
+}
+
+/**
+ * The default selection styles for text renderings.
+ * @returns A list of default selection text styles.
+ */
+export function getDefaultTextSelectionStyles(): KStyle[] {
+    return [
+        {
+            type: K_BACKGROUND,
+            propagateToChildren: false,
+            selection: true,
+            color: {
+                red: 190,
+                green: 190,
+                blue: 190
+            },
+            alpha: 255,
+            gradientAngle: 0
+        } as KBackground,
+        {
+            type: K_FONT_BOLD,
+            propagateToChildren: false,
+            selection: true,
+            bold: true
+        } as KFontBold
+    ]
+}
+
+/**
+ * The default selection styles for non-text renderings.
+ * @returns A list of default selection non-text styles.
+ */
+export function getDefaultNonTextSelectionStyles(): KStyle[] {
+    return [
+        {
+            type: K_BACKGROUND,
+            propagateToChildren: false,
+            selection: true,
+            color: {
+                red: 190,
+                green: 190,
+                blue: 190
+            },
+            alpha: 255,
+            gradientAngle: 0
+        } as KBackground,
+        {
+            type: K_LINE_STYLE,
+            propagateToChildren: false,
+            selection: true,
+            lineStyle: LineStyle.DASH,
+            dashOffset: 0
+        } as KLineStyle
+    ]
 }
 
 /**
@@ -637,9 +709,9 @@ export function getSvgColorStyle(coloring: KColoring | undefined, context: SKGra
     if (coloring.targetAlpha !== undefined && coloring.targetAlpha !== 255) {
         end.opacity = (coloring.targetAlpha / 255).toString()
     }
-    const endColor = coloring.targetColor.red + ','
-        + coloring.targetColor.green + ','
-        + coloring.targetColor.blue
+    const endColor = (coloring.targetColor as RGBColor).red + ','
+        + (coloring.targetColor as RGBColor).green + ','
+        + (coloring.targetColor as RGBColor).blue
     colorId += endColor
     end.color = RGB_START + endColor + RGB_END
 
