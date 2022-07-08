@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,11 +15,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { Bounds, Point, toDegrees } from 'sprotty-protocol';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
-    Decoration, HorizontalAlignment, KColoring, KHorizontalAlignment, KLineCap, KLineJoin, KLineStyle, KPolyline, KPosition, KRendering,
-    KRotation, KText, KTextUnderline, KVerticalAlignment, K_TEXT, LineCap, LineJoin, LineStyle, SKEdge, SKGraphElement, SKLabel, SKNode, Underline, VerticalAlignment
+    Decoration, HorizontalAlignment, isRendering, KColoring, KHorizontalAlignment, KLineCap,
+    KLineJoin, KLineStyle, KPolyline, KPosition, KRendering, KRenderingRef, KRotation, KText,
+    KTextUnderline, KVerticalAlignment, K_RENDERING_REF, K_TEXT, LineCap, LineJoin, LineStyle,
+    SKEdge, SKGraphElement, SKLabel, SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
 import { KStyles, ColorStyle } from './views-styles';
 
@@ -638,4 +641,34 @@ export function getPoints(parent: SKGraphElement | SKEdge, rendering: KPolyline,
         }
     }
     return points
+}
+
+/**
+ * Looks up the first KRendering in the list of data and returns it. KRenderingReferences are handled and dereferenced as well, so only 'real' renderings are returned.
+ * @param datas The list of possible renderings.
+ * @param context The rendering context for this rendering.
+ */
+export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer): KRendering | undefined {
+    for (const data of datas) {
+        if (data === null)
+            continue
+        if (data.type === K_RENDERING_REF) {
+            if (context.kRenderingLibrary) {
+                const id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
+                for (const rendering of context.kRenderingLibrary.renderings) {
+                    if ((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string === id) {
+                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map']
+                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map']
+                        return rendering as KRendering
+                    }
+                }
+            } else {
+                console.log("No KRenderingLibrary for KRenderingRef in context");
+            }
+        }
+        if (isRendering(data)) {
+            return data
+        }
+    }
+    return undefined
 }
