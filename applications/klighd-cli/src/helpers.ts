@@ -35,7 +35,11 @@ export function readSearchParam(param: string): string | null {
  * Read the sourceURI for that diagram that should be displayed from search params.
  */
 export function getDiagramSourceUri(): string | null {
-    return readSearchParam("source");
+    const uri = readSearchParam("source");
+    if (uri !== null) {
+        return encodeURI(uri);
+    }
+    return null;
 }
 
 /** Returns the file ending for a given uri string. */
