@@ -14,6 +14,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+import * as vscode from 'vscode';
 import {
     KlighdFitToScreenAction,
     RefreshDiagramAction,
@@ -23,7 +24,7 @@ import { RequestExportSvgAction } from "sprotty";
 import { Action, CenterAction } from "sprotty-protocol";
 import { serializeUri, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
-import { SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
+import { OpenInTextEditorMessage, SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
 import { commands, ExtensionContext, Uri } from "vscode";
 import { CommonLanguageClient } from "vscode-languageclient";
 import { command, diagramType, extensionId } from "./constants";
@@ -135,6 +136,28 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             uri: serializeUri(uri),
             clientId
         };
+    }
+
+    /**
+     * @override
+     */
+    protected openInTextEditor(message: OpenInTextEditorMessage): void {
+        // Overwrite buggy super implementation to care for the additional encoding of VS Code for endocings of additional colons.
+        // Only change to this method is this additional replace call to avoid the different encodings from the Server (with a colon)
+        // and the encoding from VS Code (first colon from protocol as is (file:///), other colons replaced with %3A (c%3A/...))
+        const editor = vscode.window.visibleTextEditors.find(visibleEditor => visibleEditor.document.uri.toString().replace('%3A', ':') === message.location.uri);
+        if (editor) {
+            const start = this.toPosition(message.location.range.start);
+            const end = this.toPosition(message.location.range.end);
+            editor.selection = new vscode.Selection(start, end);
+            editor.revealRange(editor.selection, vscode.TextEditorRevealType.InCenter);
+        } else if (message.forceOpen) {
+            vscode.window.showTextDocument(vscode.Uri.parse(message.location.uri), {
+                selection: new vscode.Range(this.toPosition(message.location.range.start),
+                                            this.toPosition(message.location.range.end)),
+                viewColumn: vscode.ViewColumn.One
+            });
+        }
     }
 
     /** All {@link KLighDWebview}s that are created by this {@link SprottyLspVscodeExtension}. */
