@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020, 2021 by
+ * Copyright 2019-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,8 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { Bounds, boundsFeature, moveFeature, Point, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
+import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
+import { Bounds, Point } from 'sprotty-protocol'
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -415,7 +416,7 @@ export enum Trigger {
 export interface KStyle {
     type: string
     propagateToChildren: boolean
-    modifierId: string
+    modifierId?: string
     selection: boolean
 }
 
@@ -426,8 +427,8 @@ export interface KStyle {
 export interface KColoring extends KStyle {
     color: RGBColor
     alpha: number
-    targetColor: RGBColor
-    targetAlpha: number
+    targetColor?: RGBColor
+    targetAlpha?: number
     gradientAngle: number
 }
 
@@ -514,7 +515,7 @@ export interface KLineJoin extends KStyle {
  */
 export interface KLineStyle extends KStyle {
     lineStyle: LineStyle
-    dashPattern: number[]
+    dashPattern?: number[]
     dashOffset: number
 }
 
@@ -692,6 +693,27 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
         || type === K_SPLINE
         || type === K_RECTANGLE
         || type === K_ROUNDED_RECTANGLE
+}
+
+/**
+ * Returns if the given parameter is a KPolyline.
+ * @param test The potential KPolyline.
+ */
+export function isPolyline(test: KGraphData): test is KPolyline {
+    const type = test.type
+    return  type === K_POLYLINE
+        || type === K_POLYGON
+        || type === K_ROUNDED_BENDS_POLYLINE
+        || type === K_SPLINE
+}
+
+/**
+ * Returns if the given parameter is a KText.
+ * @param test The potential KText
+ */
+export function isKText(test: KGraphData): test is KText {
+    const type = test.type
+    return type === K_TEXT
 }
 
 /**

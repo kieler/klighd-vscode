@@ -23,11 +23,12 @@ import { DetailLevel } from './depth-map';
 import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
-    Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
     KRoundedRectangle, KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
-    K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
+    K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
-import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getPoints } from './views-common';
+import { hasAction } from './skgraph-utils';
+import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints } from './views-common';
 import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
@@ -880,7 +881,7 @@ export function renderKRendering(kRendering: KRendering,
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(parent, kRendering.styles, propagatedStyles, stylesToPropagate)
+    const styles = getKStyles(parent, kRendering, propagatedStyles, context, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const isEdge = [K_POLYLINE, K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_SPLINE].includes(kRendering.type)
@@ -1049,40 +1050,22 @@ export function renderKRendering(kRendering: KRendering,
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
         context.titles[context.titles.length - 1].push(svgRendering)
+        // If the overlay does not define actions, make it non-interactable to allow clicking through to elements behind.
+        if (!hasAction(kRendering, true)) {
+            // add pointer-events: none to the style attribute of this overlay.
+            if (!svgRendering.data) {
+                svgRendering.data = {}
+            }
+            if (!svgRendering.data.style) {
+                svgRendering.data.style = {}
+            }
+            svgRendering.data.style['pointer-events'] = 'none'
+
+        }
         return <g></g>
     } else {
         return svgRendering
     }
-}
-
-/**
- * Looks up the first KRendering in the list of data and returns it. KRenderingReferences are handled and dereferenced as well, so only 'real' renderings are returned.
- * @param datas The list of possible renderings.
- * @param context The rendering context for this rendering.
- */
-export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer): KRendering | undefined {
-    for (const data of datas) {
-        if (data === null)
-            continue
-        if (data.type === K_RENDERING_REF) {
-            if (context.kRenderingLibrary) {
-                const id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
-                for (const rendering of context.kRenderingLibrary.renderings) {
-                    if ((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string === id) {
-                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map']
-                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map']
-                        return rendering as KRendering
-                    }
-                }
-            } else {
-                console.log("No KRenderingLibrary for KRenderingRef in context");
-            }
-        }
-        if (isRendering(data)) {
-            return data
-        }
-    }
-    return undefined
 }
 
 /**
