@@ -19,9 +19,10 @@ import "reflect-metadata";
 import { Action, isAction } from "sprotty-protocol";
 import * as vscode from "vscode";
 import { CommonLanguageClient } from "vscode-languageclient";
-import { command } from "./constants";
+import { command, diagramType } from "./constants";
 import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
-import { KlighdWebviewReopener } from "./klighd-webview-reopener";
+// import { KlighdWebviewReopener } from "./klighd-webview-reopener";
+import { KlighdWebviewSerializer } from "./klighd-webview-serializer";
 import { LspHandler } from "./lsp-handler";
 import { ReportChangeMessage } from "./storage/messages";
 import { StorageService } from "./storage/storage-service";
@@ -146,9 +147,11 @@ export function activate(context: vscode.ExtensionContext): void {
     );    
 
     // And make sure we register a serializer for our webview type
-    const reopener = new KlighdWebviewReopener()
+    // const reopener = new KlighdWebviewReopener()
+    const serializer = new KlighdWebviewSerializer(context)
+    vscode.window.registerWebviewPanelSerializer(diagramType, serializer)
     context.subscriptions.push(
-        klighdExtensionCreated(() => reopener.onExtensionCreated())
+        klighdExtensionCreated(() => serializer.onExtensionCreated())
     )
 }
 

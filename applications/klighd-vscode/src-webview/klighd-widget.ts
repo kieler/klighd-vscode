@@ -15,9 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { requestModel } from "@kieler/klighd-core";
 import { ServerStatusAction } from "sprotty";
 import { VscodeDiagramWidget } from "sprotty-vscode-webview";
-import { requestModel } from "@kieler/klighd-core";
+import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
 
 /**
  * Overwrite the {@link VscodeDiagramWidget} to dispatch a RequestModelAction instead
@@ -30,11 +31,17 @@ export class KlighdDiagramWidget extends VscodeDiagramWidget {
     override async requestModel(): Promise<void> {
         try {
             await requestModel(this.actionDispatcher, this.diagramIdentifier.uri);
+            vscodeApi.setState(this.diagramIdentifier)
         } catch (err) {
             const status = new ServerStatusAction();
             status.message = err instanceof Error ? err.message : (err as any).toString();
             status.severity = "FATAL";
             this.setStatus(status);
+            vscodeApi.setState(undefined)
         }
+    }
+
+    onDisposeWidget(): void {
+        vscodeApi.setState(undefined)
     }
 }

@@ -21,11 +21,4 @@ import { command } from "./constants";
 
 export class KlighdWebviewReopener {
 
-    onExtensionCreated(): void {
-        const uri = window.activeTextEditor?.document.fileName
-        if (uri) {
-            commands.executeCommand(command.diagramOpen, Uri.file(uri))
-        }
-    }
-
 }

@@ -80,12 +80,16 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
      * They are added to the web views created for their languageclient.
      */
     private actionHandlers: ActionHandlerClass[];
+    oldWebviewPanel: vscode.WebviewPanel | undefined;
+
+    context: ExtensionContext
 
     constructor(context: ExtensionContext, options: KLighDExtensionOptions) {
         // The static property has to be set before super is called. Otherwise,
         // the Sprotty glue-code has no language client.
         KLighDExtension.lsClient = options.lsClient;
         super(extensionId, context);
+        this.context = context;
 
         this.storageService = options.storageService;
         this.supportedFileEndings = options.supportedFileEnding;
@@ -112,6 +116,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             scriptUri: this.getExtensionFileUri("dist", "webview.js"),
             singleton: true,
         });
+        
 
         // Hook up the new webview so it can report data for persistence.
         this.storageService.addWebview(webview);
@@ -213,6 +218,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
                         (webView as KLighDWebview).forceReloadContent(identifier);
                         webView.diagramPanel.reveal(webView.diagramPanel.viewColumn);
                     } else {
+                        this.oldWebviewPanel = commandArgs[1]
                         webView = this.createWebView(identifier);
                         this.webviewMap.set(key, webView);
                         if (webView.singleton) {
@@ -248,7 +254,10 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         );
         this.context.subscriptions.push(
             commands.registerCommand(command.diagramRefresh, () => {
-                const activeWebview = this.findActiveWebview();
+                let activeWebview = this.findActiveWebview();
+                if (!activeWebview) {
+                    activeWebview = this.findActiveWebview();
+                }
                 if (activeWebview) {
                     activeWebview.dispatch(RefreshDiagramAction.create());
                 }

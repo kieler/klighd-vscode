@@ -39,7 +39,7 @@ export class KLighDWebview extends SprottyLspWebview {
 
     constructor(options: SprottyWebviewOptions) {
         super(options);
-
+        // this.diagramPanel = oldPanel;
         this.trackedIdentifier = options.identifier;
         this.setSyncWithEditor(true);
 
@@ -115,7 +115,7 @@ export class KLighDWebview extends SprottyLspWebview {
             title,
             {
                 viewColumn: ViewColumn.Beside,
-                preserveFocus: true // The original editor remains focused.
+                preserveFocus: false // The original editor remains focused.
             },
             {
                 localResourceRoots: this.localResourceRoots,
