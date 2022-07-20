@@ -19,12 +19,12 @@
 import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
-import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, SModelRoot, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Action, angleOfPoint, Bounds, CenterAction, FitToScreenAction, Point } from "sprotty-protocol";
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { K_POLYGON, K_POLYLINE, K_SPLINE, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
+import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-rendering";
 import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
@@ -55,7 +55,7 @@ export class ProxyView extends AbstractUIExtension {
      * A value `x<0` indicates always showing proxies for all layers.
      */
     static readonly HIERARCHICAL_OFF_SCREEN_DEPTH = "de.cau.cs.kieler.klighd.proxy-view.hierarchicalOffScreenDepth";
-    /** Number indicating at what distance a node is close. */
+    /** Number indicating at what distance a node is close. */ // TODO: let the synthesis define these values?
     static readonly DISTANCE_CLOSE = 300;
     /** Number indicating at what distance a node is distant. */
     static readonly DISTANCE_DISTANT = 700;
@@ -187,14 +187,10 @@ export class ProxyView extends AbstractUIExtension {
         containerElement.appendChild(temp);
     }
 
-    protected onBeforeShow(containerElement: HTMLElement, root: Readonly<SModelRoot>, ...contextElementIds: string[]): void {
-        // TODO: could be useful?
-    }
-
     //////// Main methods ////////
 
     // TODO: performance in developer options for measuring performance
-    // TODO: color fade out of polygons (arrow heads)
+    // TODO: pseudo bendpoints for artifacts, see induced dataflow green line bottom collapsed regions motor.sctx
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -292,22 +288,15 @@ export class ProxyView extends AbstractUIExtension {
             }
         }
 
+        // Edges that can be rendered above/below proxies
         const edgeProxies = [];
-        // Edges
-        const edges = ([] as { edge: SKEdge, transform: TransformAttributes }[]).concat(
-            connectors.overlayEdges, // Start with overlays to not have overlays over proxy edges
-            connectors.proxyEdges,
-            routedEdges.overlayEdges, // But routing overlays should still be over connectors
-            routedEdges.proxyEdges
-        );
-        for (const { edge, transform } of edges) {
+        for (const { edge, transform } of routedEdges.proxyEdges) {
             // Create an edge proxy
             const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
             if (edgeProxy) {
                 edgeProxies.push(edgeProxy);
             }
         }
-
         if (this.edgesAboveNodes) {
             // Insert at end to be rendered above nodes
             proxies.push(...edgeProxies);
@@ -315,6 +304,22 @@ export class ProxyView extends AbstractUIExtension {
             // Insert at start to be rendered below nodes
             proxies.unshift(...edgeProxies);
         }
+
+        // Edges that should always be rendered below proxies
+        const backEdgeProxies = [];
+        const backEdges = ([] as { edge: SKEdge, transform: TransformAttributes }[]).concat(
+            connectors.overlayEdges, // Start with overlays to not have overlays over proxy edges
+            connectors.proxyEdges,
+            routedEdges.overlayEdges // But routing overlays should still be over connectors
+        );
+        for (const { edge, transform } of backEdges) {
+            // Create an edge proxy
+            const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
+            if (edgeProxy) {
+                backEdgeProxies.push(edgeProxy);
+            }
+        }
+        proxies.unshift(...backEdgeProxies);
 
         // Clear caches for the next model
         this.clearPositions();
@@ -340,7 +345,7 @@ export class ProxyView extends AbstractUIExtension {
                     offScreenNodes.push(node);
 
                     if (depth !== 0 && node.children.length > 0) {
-                        // depth > 0 or < 0 (see HIERARCHICAL_OFF_SCREEN_DEPTH), go further in
+                        /** depth > 0 or < 0 (see {@link HIERARCHICAL_OFF_SCREEN_DEPTH}), go further in */
                         const childRes = this.getOffAndOnScreenNodes(node, canvas, depth - 1, ctx);
                         offScreenNodes.push(...childRes.offScreenNodes);
                         onScreenNodes.push(...childRes.onScreenNodes);
@@ -429,7 +434,7 @@ export class ProxyView extends AbstractUIExtension {
             i.e. the least important criterion is at the start and the most important one is at the end
             */
             if (this.stackingOrderByDistance) {
-                // Distant nodes at start, close nodes at end#
+                // Distant nodes at start, close nodes at end
                 res.sort((n1, n2) => this.getNodeDistanceToCanvas(n2, canvas) - this.getNodeDistanceToCanvas(n1, canvas));
             }
             if (this.stackingOrderByOpacity) {
@@ -731,14 +736,15 @@ export class ProxyView extends AbstractUIExtension {
             routingPoints.push(source, target);
         } else if (this.alongBorderRouting) {
             // Potentially need more points than just source and target
-            // Canvas dimensions with offset, so as to keep the edge on the canvas
-            // TODO: just offset or x and y?
-            const leftOffset = offset //+ transform.width;
-            const rightOffset = offset //+ transform.width;
-            const topOffset = offset //+ transform.height;
-            const bottomOffset = offset //+ transform.height;
+
+            // A bias could be added to some sides (even in relation to proxy width/height), not useful for now
+            const leftOffset = offset;
+            const rightOffset = offset;
+            const topOffset = offset;
+            const bottomOffset = offset;
             const offsetRect = { left: leftOffset, right: rightOffset, top: topOffset, bottom: bottomOffset };
 
+            // Canvas dimensions with offset, so as to keep the edge on the canvas
             const canvasOffLeft = canvas.x + leftOffset;
             const canvasOffRight = canvas.x + canvas.width - rightOffset;
             const canvasOffTop = canvas.y + topOffset;
@@ -807,9 +813,6 @@ export class ProxyView extends AbstractUIExtension {
         clone.id = clone.id + "-rerouted";
         clone.data = this.placeDecorator(edge.data, ctx, routingPoints[routingPoints.length - 2], routingPoints[routingPoints.length - 1]);
         clone.opacity = node.opacity;
-        // OLD: cannot change these, edges won't be rendered
-        // clone.sourceId = outgoing ? this.getProxyId(clone.sourceId) : clone.sourceId;
-        // clone.targetId = outgoing ? clone.targetId : this.getProxyId(clone.targetId);
 
         if (this.transparentEdges) {
             // Fade out the original edge and store its previous opacity
@@ -832,10 +835,6 @@ export class ProxyView extends AbstractUIExtension {
         overlay.id = overlay.id + "-overlay";
         overlay.opacity = opacity;
         overlay.data = this.changeColor(overlay.data, ctx, color);
-        // console.log("edge"); // FIXME:
-        // console.log(edge);
-        // console.log("overlay");
-        // console.log(overlay);
         return { edge: overlay, transform: { ...parentTranslated, scale: canvas.zoom } };
     }
 
@@ -876,7 +875,7 @@ export class ProxyView extends AbstractUIExtension {
                 continue;
             }
 
-            // Make sure to only connect on-off-on intersections, not off-on-off
+            // Make sure to only connect on-screen to off-screen to on-screen (on-off-on) intersections, not off-on-off
             const routingPointIndices = [];
             let { intersection: prevIntersection, fromOnScreen: prevFromOnScreen, index: prevIndex } = canvasEdgeIntersections[0];
             for (let i = 1; i < canvasEdgeIntersections.length; i++) {
@@ -991,11 +990,6 @@ export class ProxyView extends AbstractUIExtension {
             // Render this node as opaque to change opacity later on
             node.opacity = 1;
 
-            // OLD:
-            // node.children = node.children.filter(node => !(node instanceof SKNode || node instanceof SKEdge || node instanceof SKPort));
-            // OLD: Update bounds
-            // node.bounds = transform;
-
             vnode = ctx.renderProxy(node);
             if (vnode) {
                 // New rendering, set ProxyVNode attributes
@@ -1071,10 +1065,6 @@ export class ProxyView extends AbstractUIExtension {
      * Note that the position is pre-scaling. To get position post-scaling, divide `x` and `y` by `scale`.
      */
     private getTransform(node: SKNode, desiredSize: number, proxyBounds: Bounds, canvas: Canvas): TransformAttributes {
-        // OLD: size dependant on node's bounds
-        // const proxyWidth = size * 0.001;
-        // const proxySizeScale = Math.min(proxyHeightScale, proxyWidthScale);
-
         // Calculate the scale and the resulting proxy dimensions
         // The scale is calculated such that width & height are capped to a max value
         const proxyWidthScale = desiredSize / proxyBounds.width;
@@ -1100,34 +1090,6 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         return { x, y, scale, width: proxyWidth, height: proxyHeight };
-
-        // TODO: RF
-        // canvas = Canvas.translateCanvasToLRF(canvas);
-        // // Calculate the scale and the resulting proxy dimensions
-        // // The scale is calculated such that width & height are capped to a max value
-        // const proxyWidthScale = desiredSize / proxyBounds.width;
-        // const proxyHeightScale = desiredSize / proxyBounds.height;
-        // const scale = Math.min(proxyWidthScale, proxyHeightScale, this.capScaleToOne ? 1 : proxyHeightScale);
-        // const proxyWidth = proxyBounds.width * scale;
-        // const proxyHeight = proxyBounds.height * scale;
-
-        // // Center at middle of node
-        // const translated = this.getAbsoluteBounds(node);
-        // const offsetX = 0.5 * (translated.width - proxyWidth);
-        // const offsetY = 0.5 * (translated.height - proxyHeight);
-        // let x = translated.x + offsetX;
-        // let y = translated.y + offsetY;
-
-        // // Cap proxy to canvas
-        // ({ x, y } = Canvas.capToCanvas({ x, y, width: proxyWidth, height: proxyHeight }, canvas));
-
-        // if (this.capProxyToParent && node.parent && node.parent.id !== "$root") {
-        //     const translatedParent = this.getTranslatedNodeBounds(node.parent as SKNode, canvas);
-        //     x = capNumber(x, translatedParent.x, translatedParent.x + translatedParent.width - proxyWidth);
-        //     y = capNumber(y, translatedParent.y, translatedParent.y + translatedParent.height - proxyHeight);
-        // }
-
-        // return {...Canvas.translateToCRF({ x, y, width: proxyWidth, height: proxyHeight }, canvas), scale};
     }
 
     /**
@@ -1201,10 +1163,6 @@ export class ProxyView extends AbstractUIExtension {
                 (dClone as any).children = this.getNodeData((dClone as any).children, scale);
             }
             res.push(dClone);
-
-            // OLD: add dClone only if it's a title, doesn't work because if present,
-            // only the title has this property - not the declarations etc.
-            // !("properties" in d) || ((d as any).properties['klighd.isNodeTitle'] ?? true)
         }
         return res;
     }
@@ -1223,6 +1181,7 @@ export class ProxyView extends AbstractUIExtension {
         const clone = { ...data } as any;
         const props = { ...clone.properties };
         clone.properties = props;
+
         const id = props["klighd.lsp.rendering.id"];
         const proxyId = this.getProxyId(id);
         if (ctx.decorationMap) {
@@ -1248,10 +1207,6 @@ export class ProxyView extends AbstractUIExtension {
                 // Better not to show arrow head as it would be floating around somewhere
                 return [];
             }
-        } else if (clone.type === K_SPLINE) {
-            // TODO: spline type, for now just change type
-            K_POLYLINE
-            // clone.type = K_POLYLINE;
         }
 
         if ("children" in clone) {
@@ -1273,17 +1228,14 @@ export class ProxyView extends AbstractUIExtension {
             return edgeData;
         }
 
+        // TODO: color fade out of polygons (arrow heads)
         const res = [];
         const clone = { ...data } as any;
         const props = { ...clone.properties };
         const styles = [...clone.styles];
         clone.properties = props;
         clone.styles = styles;
-        // OLD: so far this seems to only be used for "DefaultEdgeRendering" and doesn't seem to break anything if set
-        // if (clone.id) {
-        //     clone.id = undefined;
-        // }
-        // OLD: changing the rendering id doesn't work when renderingrefs are used
+
         const id = props["klighd.lsp.rendering.id"];
         const proxyId = this.getProxyId(id);
         if (ctx.decorationMap) {

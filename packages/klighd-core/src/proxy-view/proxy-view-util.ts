@@ -80,7 +80,12 @@ export namespace Canvas {
 
         const s = canvas.scroll;
         const z = canvas.zoom;
-        return { x: (b.x - s.x) * z, y: (b.y - s.y) * z, width: b.width * z, height: b.height * z };
+        return {
+            x: (b.x - s.x) * z,
+            y: (b.y - s.y) * z,
+            width: b.width * z,
+            height: b.height * z
+        };
     }
 
     /**
@@ -95,7 +100,12 @@ export namespace Canvas {
 
         const s = canvas.scroll;
         const z = canvas.zoom;
-        return { x: b.x / z + s.x, y: b.y / z + s.y, width: b.width / z, height: b.height / z };
+        return {
+            x: b.x / z + s.x,
+            y: b.y / z + s.y,
+            width: b.width / z,
+            height: b.height / z
+        };
     }
 
     /**
@@ -365,9 +375,8 @@ export namespace Canvas {
         const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
         const isSidebarOpen = document.querySelector(".sidebar--open");
         if (!isSidebarOpen && rect) {
-            const rect2 = rect;//Canvas.translateToLRF(rect, canvas); // TODO: RF
-            if (y < rect2.y + rect2.height && x > rect2.x - bounds.width) {
-                x = rect2.x - bounds.width;
+            if (y < rect.y + rect.height && x > rect.x - bounds.width) {
+                x = rect.x - bounds.width;
             }
         }
 
@@ -548,7 +557,7 @@ export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point):
 }
 
 /**
- * Returns the intersection between the line spanned from `p1` to `p2` and `b`.
+ * Returns the intersection between the line spanning from `p1` to `p2` and `b`.
  * @param p1 The start of the line.
  * @param p2 The end of the line.
  * @param b The bounds.

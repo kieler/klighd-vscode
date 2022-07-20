@@ -118,7 +118,7 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
 
     //// Register the filters ////
     handle(action: Action): void | Action | ICommand {
-        // Filters can be registered here, keep the documentation of proxyView.registerFilters() in mind
+        /** Filters can be registered here, keep the documentation of {@link ProxyView.registerFilters()} in mind */
         const filters: ProxyFilter[] = [
             filterUnconnectedToSelected,
             filterUnconnectedToOnScreen,

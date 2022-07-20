@@ -46,12 +46,6 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
         if (action.kind === SendProxyViewAction.KIND) {
             const proxyView = (action as SendProxyViewAction).proxyView;
             this.proxyView = proxyView;
-
-            if (this.semanticFilters.length > 0) {
-                // SetModelAction came in first, register filters
-                proxyView.unregisterFilters(...this.prevSemanticFilters);
-                proxyView.registerFilters(...this.semanticFilters);
-            }
         } else if ([SetModelAction.KIND, UpdateModelAction.KIND].includes(action.kind)) {
             // New root aka new semantic filters
             const { newRoot } = (action as SetModelAction | UpdateModelAction);
@@ -69,13 +63,13 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
                     this.prevSemanticFilters = this.semanticFilters;
                     this.semanticFilters = [];
                 }
-
-                if (this.proxyView) {
-                    // SendProxyViewAction came in first, register filters
-                    this.proxyView.unregisterFilters(...this.prevSemanticFilters);
-                    this.proxyView.registerFilters(...this.semanticFilters);
-                }
             }
+        }
+
+        if (this.proxyView && this.semanticFilters.length > 0) {
+            // Both actions need to have happened so filters can be registered
+            this.proxyView.unregisterFilters(...this.prevSemanticFilters);
+            this.proxyView.registerFilters(...this.semanticFilters);
         }
     }
 
@@ -107,7 +101,7 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
             class ProxyViewSemanticFilter extends ProxyViewAbstractSemanticFilter implements RenderOption {
                 static readonly ID: string = `proxy-view-semantic-filter-${filter.name ?? "unknown"}-${i}`;
                 static readonly NAME: string = filter.name ?? "Unknown Filter";
-                static readonly DEFAULT: boolean = false;
+                static readonly DEFAULT: boolean = !!filter.defaultValue;
                 readonly id: string = ProxyViewSemanticFilter.ID;
                 readonly name: string = ProxyViewSemanticFilter.NAME;
                 readonly type: TransformationOptionType = TransformationOptionType.CHECK;

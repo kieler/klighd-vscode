@@ -23,7 +23,10 @@ import { SKGraphElement } from "../skgraph-models"
  * Base interface for semantic filter rules.
  */
 export interface SemanticFilterRule {
+    /** The rule name is used to identify rules and distinguish them from one another. */
     ruleName?: string
+    /** The default value is used to indicate whether the semantic filter should be on or off by default. */
+    defaultValue?: boolean
 }
 
 /**
@@ -209,6 +212,7 @@ export class NumericEqualConnective implements UnaryConnective {
  */
 export interface Filter {
     name?: string
+    defaultValue?: boolean
     filterFun(el: SKGraphElement): boolean
 }
 
@@ -228,6 +232,7 @@ export function createFilter(rule: SemanticFilterRule): Filter {
     }
     return {
         name: ruleName,
+        defaultValue: rule.defaultValue,
         filterFun: (el) => {
             let tags = Array<SemanticFilterTag>();
             if (el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
@@ -273,7 +278,7 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
                 : evaluateRule(ternary.thirdOperand, tags);
         // Numeric Connectives
         /*
-        For now, these are defined by an unset corresponding tag being treated as if its num was 0.
+        For now, these are defined by an unset corresponding tag being treated as if its num was 0. TODO:
         There is potential to redefine this so that an unset tag corresponding tag would automatically
         be evaluated to false. However, this may result in three-valued logic which can be very dangerous
         as some two-values logic laws may not hold.
@@ -281,13 +286,16 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
         */
         case LessThanConnective.NAME:
             correspondingTag = tags.find(tag => tag.tag === (unary as LessThanConnective).operand.tag);
-            return ((unary as LessThanConnective).operand.num ?? 0) < (correspondingTag?.num ?? 0);
+            return ((unary as LessThanConnective).operand.num ?? 0)
+                < (correspondingTag?.num ?? 0);
         case GreaterThanConnective.NAME:
             correspondingTag = tags.find(tag => tag.tag === (unary as GreaterThanConnective).operand.tag);
-            return ((unary as GreaterThanConnective).operand.num ?? 0) > (correspondingTag?.num ?? 0);
+            return ((unary as GreaterThanConnective).operand.num ?? 0)
+                > (correspondingTag?.num ?? 0);
         case NumericEqualConnective.NAME:
             correspondingTag = tags.find(tag => tag.tag === (unary as NumericEqualConnective).operand.tag);
-            return ((unary as NumericEqualConnective).operand.num ?? 0) === (correspondingTag?.num ?? 0);
+            return ((unary as NumericEqualConnective).operand.num ?? 0)
+                === (correspondingTag?.num ?? 0);
         default:
             return true;
     }
