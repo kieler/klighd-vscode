@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,20 +14,26 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import "reflect-metadata";
 import { nanoid } from "nanoid/non-secure";
+import "reflect-metadata";
+import { Action, isAction } from "sprotty-protocol";
 import * as vscode from "vscode";
 import { CommonLanguageClient } from "vscode-languageclient";
 import { command } from "./constants";
 import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
+import { KlighdWebviewReopener } from "./klighd-webview-reopener";
 import { LspHandler } from "./lsp-handler";
-import { StorageService } from "./storage/storage-service";
 import { ReportChangeMessage } from "./storage/messages";
-import { Action, isAction } from "sprotty-protocol";
+import { StorageService } from "./storage/storage-service";
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
 export { command };
+
+
+export const klighdExtensionCreatedEmitter = new vscode.EventEmitter<KLighDExtension | undefined>()
+export const klighdExtensionCreated: vscode.Event<KLighDExtension | undefined> = klighdExtensionCreatedEmitter.event
+
 
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext): void {
@@ -56,6 +62,7 @@ export function activate(context: vscode.ExtensionContext): void {
                         supportedFileEnding: fileEndings,
                         storageService,
                     });
+                    klighdExtensionCreatedEmitter.fire(extension)
                     // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
                     new LspHandler(client);
 
@@ -136,7 +143,13 @@ export function activate(context: vscode.ExtensionContext): void {
 
             extension.webviews.forEach((webview) => webview.dispatch(action));
         })
-    );
+    );    
+
+    // And make sure we register a serializer for our webview type
+    const reopener = new KlighdWebviewReopener()
+    context.subscriptions.push(
+        klighdExtensionCreated(() => reopener.onExtensionCreated())
+    )
 }
 
 function isLanguageClient(client: unknown): client is CommonLanguageClient {
