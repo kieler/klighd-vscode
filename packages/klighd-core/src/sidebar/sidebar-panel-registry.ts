@@ -20,8 +20,8 @@ import { ICommand } from "sprotty";
 import { Action } from "sprotty-protocol"
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
-import { ToggleSidebarPanelAction } from "./actions";
-import { ISidebarPanel } from "./sidebar-panel";
+import { PinSidebarAction, ToggleSidebarPanelAction } from "./actions";
+import { ISidebarPanel, SidebarPanel } from "./sidebar-panel";
 
 /**
  * {@link Registry} that stores all sidebar panels which are resolved by the DI container.
@@ -49,7 +49,7 @@ export class SidebarPanelRegistry extends Registry {
             if (this._currentPanelID === action.id && action.state === "show") return;
             if (this._currentPanelID !== action.id && action.state === "hide") return;
 
-            if (this._currentPanelID === action.id) {
+            if (this._currentPanelID === action.id && !(this.currentPanel as SidebarPanel).panelPinned) {
                 // Panel is active so it should either be hidden explicitly or toggled to be hidden
                 this._currentPanelID = null;
                 this.notifyListeners();
@@ -57,6 +57,12 @@ export class SidebarPanelRegistry extends Registry {
                 // Panel is inactive and the given id exists so it should either be shown explicitly or toggled to be shown
                 this._currentPanelID = action.id;
                 this.notifyListeners();
+            }
+        } else if (PinSidebarAction.isThisAction(action)) {
+            if (this.currentPanel) {
+                (this.currentPanel as SidebarPanel).panelPinned = !(this.currentPanel as SidebarPanel).panelPinned
+                this.notifyListeners();
+                (this.currentPanel as SidebarPanel).update()
             }
         }
     }

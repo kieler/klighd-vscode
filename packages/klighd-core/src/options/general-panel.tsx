@@ -27,6 +27,7 @@ import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
 import { SidebarPanel } from "../sidebar";
+import { PinSidebarAction } from "../sidebar/actions";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { SetPreferencesAction } from "./actions";
@@ -36,7 +37,7 @@ import { OptionsRenderer } from "./options-renderer";
 import { RenderOptionsRegistry } from "./render-options-registry";
 
 /** Type for available quick actions. */
-type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
+type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark" | "pin-sidebar";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -63,6 +64,18 @@ export class GeneralPanel extends SidebarPanel {
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
 
+        this.assignQuickActions()
+    }
+
+    get id(): string {
+        return "general-panel";
+    }
+
+    get title(): string {
+        return "General";
+    }
+
+    private assignQuickActions() {
         this.quickActions = [
             [
                 "center",
@@ -100,15 +113,18 @@ export class GeneralPanel extends SidebarPanel {
                 "bookmark",
                 CreateBookmarkAction.create()
             ],
+            [
+                "pin-sidebar",
+                this.panelPinned ? "Unpin Sidebar" : "Pin Sidebar",
+                this.panelPinned ? "lock" : "unlock",
+                PinSidebarAction.create()
+            ],
         ];
     }
 
-    get id(): string {
-        return "general-panel";
-    }
-
-    get title(): string {
-        return "General";
+    update(): void {
+        this.assignQuickActions()
+        super.update()
     }
 
     render(): VNode {

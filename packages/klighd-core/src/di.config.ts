@@ -18,12 +18,12 @@
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
-    configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
+    configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
     LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
-    TYPES, updateModule, viewportModule, ViewRegistry, configureActionHandler
+    TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty';
 import actionModule from './actions/actions-module';
-import bookmarkModule from './bookmarks/bookmark-module'
+import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols';
 import diagramPieceModule from './diagram-pieces/diagram-pieces-module';
 import { KlighdDiagramServer } from './diagram-server';
