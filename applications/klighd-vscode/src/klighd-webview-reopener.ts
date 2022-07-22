@@ -29,7 +29,7 @@ export class KlighdWebviewReopener {
 
     onExtensionCreated(): void {
         const diagramWasOpen = this.storage.getItem('diagramOpen')
-        if (diagramWasOpen) {
+        if (diagramWasOpen == undefined || diagramWasOpen) {
             const uri = window.activeTextEditor?.document.fileName
             if (uri) {
                 commands.executeCommand(command.diagramOpen, Uri.file(uri))
