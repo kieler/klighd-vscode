@@ -73,7 +73,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     private supportedFileEndings: string[];
 
     // This service is required here, so it can be hooked into created webviews.
-    private storageService: StorageService;
+    readonly storageService: StorageService;
 
     /**
      * Stored action handlers that where registered by another extension.
@@ -219,6 +219,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
                             this.singleton = webView;
                         }
                     }
+                    this.storageService.setItem('diagramOpen', true);
                 }
             })
         );
