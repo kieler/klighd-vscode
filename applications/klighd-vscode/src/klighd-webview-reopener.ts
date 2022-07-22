@@ -17,15 +17,25 @@
 
 import { commands, Uri, window } from "vscode";
 import { command } from "./constants";
-
+import { StorageService } from "./storage/storage-service";
 
 export class KlighdWebviewReopener {
 
+    private readonly storage: StorageService
+
+    constructor(storage: StorageService) {
+        this.storage = storage
+    }
+
     onExtensionCreated(): void {
-        const uri = window.activeTextEditor?.document.fileName
-        if (uri) {
-            commands.executeCommand(command.diagramOpen, Uri.file(uri))
+        const diagramWasOpen = this.storage.getItem('diagramOpen')
+        if (diagramWasOpen) {
+            const uri = window.activeTextEditor?.document.fileName
+            if (uri) {
+                commands.executeCommand(command.diagramOpen, Uri.file(uri))
+            }
         }
+
     }
 
 }

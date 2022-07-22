@@ -42,6 +42,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // This extension should persist data in workspace state, so it is different for
     // each project a user opens. To change this, assign another Memento to this constant.
     const mementoForPersistence = context.workspaceState;
+    // const storage = new LocalStorage()
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
@@ -57,6 +58,12 @@ export function activate(context: vscode.ExtensionContext): void {
 
                 try {
                     const storageService = new StorageService(mementoForPersistence, client);
+
+                    // And make sure we register a serializer for our webview type
+                    const reopener = new KlighdWebviewReopener(storageService)
+                    context.subscriptions.push(
+                        klighdExtensionCreated(() => reopener.onExtensionCreated())
+                    )
                     const extension = new KLighDExtension(context, {
                         lsClient: client,
                         supportedFileEnding: fileEndings,
@@ -143,13 +150,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
             extension.webviews.forEach((webview) => webview.dispatch(action));
         })
-    );    
-
-    // And make sure we register a serializer for our webview type
-    const reopener = new KlighdWebviewReopener()
-    context.subscriptions.push(
-        klighdExtensionCreated(() => reopener.onExtensionCreated())
-    )
+    );
 }
 
 function isLanguageClient(client: unknown): client is CommonLanguageClient {
