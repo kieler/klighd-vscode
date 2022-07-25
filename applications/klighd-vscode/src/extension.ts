@@ -42,7 +42,6 @@ export function activate(context: vscode.ExtensionContext): void {
     // This extension should persist data in workspace state, so it is different for
     // each project a user opens. To change this, assign another Memento to this constant.
     const mementoForPersistence = context.workspaceState;
-    // const storage = new LocalStorage()
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
