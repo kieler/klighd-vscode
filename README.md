@@ -25,6 +25,7 @@ related, web-based packages. The packages are seperated in two types:
 | 0.1.0         | 2.1.0  |
 | 0.2.0         | 2.1.0  |
 | 0.2.1         | 2.1.0  |
+| 0.3.0         | 2.2.0  |
 
 Moreover, the default branches of both repositories should be compatible but might experience regression.
 
