@@ -1,5 +1,5 @@
-# Workflow that publishes the VSCode extension to the VS Marketplace and attaches
-# assets to the new release.
+# Workflow that publishes the VS Code extension to the VS Marketplace and
+# Open VSX, the packages to npm, and attaches assets to the new release.
 
 name: publish
 
@@ -24,7 +24,14 @@ jobs:
               env:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
                   OVSX_PAT: ${{ secrets.OVSX_PAT }}
-            - run: yarn publish
+            - name: Publish klighd-interactive
+              run: yarn publish
+              working-directory: ./packages/klighd-interactive
+              env:
+                  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+            - name: Publish klighd-core
+              run: yarn publish
+              working-directory: ./packages/klighd-core
               env:
                   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
     release-assets:
