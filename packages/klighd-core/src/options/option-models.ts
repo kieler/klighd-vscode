@@ -23,6 +23,8 @@ export interface RenderOption {
     initialValue: any;
     currentValue: any;
     description?: string;
+    /** Per default undefined. */
+    invisible?: boolean
 }
 
 export interface Preference extends RenderOption {

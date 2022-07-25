@@ -262,7 +262,7 @@ export class OptionsRenderer {
     renderRenderOptions(renderOptions: RenderOption[]): (VNode | "")[] | "" {
         if (renderOptions.length === 0) return "";
 
-        return renderOptions.map((option) => {
+        return renderOptions.filter(option => !option.invisible).map((option) => {
             switch (option.type) {
                 case TransformationOptionType.CHECK:
                     return (

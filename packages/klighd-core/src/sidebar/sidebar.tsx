@@ -19,10 +19,10 @@
 import { inject, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
 import { DISymbol } from "../di.symbols";
-import { SidebarPanelRegistry } from "./sidebar-panel-registry";
+import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
 import { SidebarPanel } from "./sidebar-panel";
+import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
 /**
  * UIExtension that adds a sidebar to the Sprotty container. The content of the
@@ -70,7 +70,6 @@ export class Sidebar extends AbstractUIExtension {
         // VNode Root for the panel content is created.
         if (!this.oldPanelContentRoot) return;
 
-        console.time("sidebar-update");
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
 
         const content: VNode = (
@@ -103,7 +102,6 @@ export class Sidebar extends AbstractUIExtension {
         } else {
             this.containerElement.classList.remove("sidebar--open");
         }
-        console.timeEnd("sidebar-update");
     }
 
     protected onBeforeShow(): void {
@@ -138,8 +136,9 @@ export class Sidebar extends AbstractUIExtension {
             const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
 
             // See for information on detecting "click outside": https://stackoverflow.com/a/64665817/7569889
-            if (!currentPanelID || e.composedPath().includes(containerElement)) return;
-
+            if (currentPanelID && !e.composedPath().includes(containerElement)
+                && this.sidebarPanelRegistry.currentPanel
+                && !(this.sidebarPanelRegistry.currentPanel as SidebarPanel).panelPinned)
             this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
         });
     }
