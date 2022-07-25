@@ -74,8 +74,8 @@ export class UseSmartZoom implements RenderOption {
     readonly id: string = UseSmartZoom.ID
     readonly name: string = UseSmartZoom.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
-    readonly initialValue: boolean = true
-    currentValue = true
+    readonly initialValue: boolean = false
+    currentValue = false
 }
 
 /**
