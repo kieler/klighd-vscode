@@ -49,7 +49,7 @@ export class SidebarPanelRegistry extends Registry {
             if (this._currentPanelID === action.id && action.state === "show") return;
             if (this._currentPanelID !== action.id && action.state === "hide") return;
 
-            if (this._currentPanelID === action.id && !(this.currentPanel as SidebarPanel).panelPinned) {
+            if (this._currentPanelID === action.id) {
                 // Panel is active so it should either be hidden explicitly or toggled to be hidden
                 this._currentPanelID = null;
                 this.notifyListeners();

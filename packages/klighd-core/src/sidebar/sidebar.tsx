@@ -22,6 +22,7 @@ import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider,
 import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
 import { DISymbol } from "../di.symbols";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
+import { SidebarPanel } from "./sidebar-panel";
 
 /**
  * UIExtension that adds a sidebar to the Sprotty container. The content of the
@@ -149,7 +150,8 @@ export class Sidebar extends AbstractUIExtension {
     private addMouseLeaveListener(containerElement: HTMLElement): void {
         containerElement.addEventListener("mouseleave", (e) => {
             const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
-            if (currentPanelID) {
+            if (currentPanelID && this.sidebarPanelRegistry.currentPanel
+                    && !(this.sidebarPanelRegistry.currentPanel as SidebarPanel).panelPinned) {
                 this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
             }
 
