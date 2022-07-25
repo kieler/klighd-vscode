@@ -34,6 +34,7 @@ import { RangeOption, RenderOption, TransformationOptionType } from "./option-mo
     static readonly DEFAULT: boolean = true
     readonly id: string = ResizeToFit.ID;
     readonly name: string = ResizeToFit.NAME;
+    // readonly tooltip: string = ResizeToFit.TOOLTIP;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ResizeToFit.DEFAULT;
     currentValue = ResizeToFit.DEFAULT;
