@@ -24,11 +24,6 @@ jobs:
               env:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
                   OVSX_PAT: ${{ secrets.OVSX_PAT }}
-            - name: Publish klighd-interactive
-              run: yarn publish
-              working-directory: ./packages/klighd-interactive
-              env:
-                  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
             - name: Publish klighd-core
               run: yarn publish
               working-directory: ./packages/klighd-core
