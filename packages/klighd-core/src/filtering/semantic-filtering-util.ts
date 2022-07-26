@@ -264,7 +264,7 @@ export class LessThanConnective implements UnaryConnective {
 
 export namespace LessThanConnective {
     export function evaluate(conn: LessThanConnective, tags: Array<SemanticFilterTag>): boolean {
-        let correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
+        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
         return (conn.operand.num ?? 0) < (correspondingTag?.num ?? 0);
     }
 }
@@ -284,7 +284,7 @@ export class GreaterThanConnective implements UnaryConnective {
 
 export namespace GreaterThanConnective {
     export function evaluate(conn: GreaterThanConnective, tags: Array<SemanticFilterTag>): boolean {
-        let correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
+        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
         return (conn.operand.num ?? 0) > (correspondingTag?.num ?? 0);
     }
 }
@@ -304,7 +304,7 @@ export class NumericEqualConnective implements UnaryConnective {
 
 export namespace NumericEqualConnective {
     export function evaluate(conn: NumericEqualConnective, tags: Array<SemanticFilterTag>): boolean {
-        let correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
+        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
         return (conn.operand.num ?? 0) === (correspondingTag?.num ?? 0);
     }
 }
@@ -388,11 +388,11 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
         Should this redefined, make sure to check all cases, e.g. !(x < y) === x >= y, de morgan, etc.
         */
         case LessThanConnective.NAME:
-            LessThanConnective.evaluate(rule as LessThanConnective, tags);
+            return LessThanConnective.evaluate(rule as LessThanConnective, tags);
         case GreaterThanConnective.NAME:
-            GreaterThanConnective.evaluate(rule as GreaterThanConnective, tags);
+            return GreaterThanConnective.evaluate(rule as GreaterThanConnective, tags);
         case NumericEqualConnective.NAME:
-            NumericEqualConnective.evaluate(rule as NumericEqualConnective, tags);
+            return NumericEqualConnective.evaluate(rule as NumericEqualConnective, tags);
         default:
             return true;
     }
