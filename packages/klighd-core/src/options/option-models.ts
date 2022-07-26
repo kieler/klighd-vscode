@@ -23,6 +23,10 @@ export interface RenderOption {
     initialValue: any;
     currentValue: any;
     description?: string;
+    /** The category this RenderOption is part of. */
+    renderCategory?: string;
+    /** The values this RenderOption has, if it's type is {@link TransformationOptionType.CHOICE}. */
+    renderChoiceValues?: any[];
 }
 
 export interface Preference extends RenderOption {

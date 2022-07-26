@@ -30,13 +30,14 @@ import { RangeOption, RenderOption, TransformationOptionType } from "./option-mo
  */
  export class ResizeToFit implements RenderOption {
     static readonly ID: string = 'resize-to-fit';
-    static readonly NAME: string = 'Resize To Fit';
+    static readonly NAME: string = 'Resize To Fit on Refresh';
     static readonly DEFAULT: boolean = true
     readonly id: string = ResizeToFit.ID;
     readonly name: string = ResizeToFit.NAME;
     // readonly tooltip: string = ResizeToFit.TOOLTIP;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ResizeToFit.DEFAULT;
+    readonly description = 'Always resize to fit after diagram refresh.'
     currentValue = ResizeToFit.DEFAULT;
 }
 
@@ -51,6 +52,8 @@ export class ForceLightBackground implements RenderOption {
     readonly name: string = ForceLightBackground.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ForceLightBackground.DEFAULT;
+    readonly renderCategory: string = Appearance.ID
+    readonly description = 'Use light background regardless of the color scheme.'
     currentValue = ForceLightBackground.DEFAULT;
 }
 
@@ -61,7 +64,34 @@ export class ShowConstraintOption implements RenderOption {
     readonly name: string = ShowConstraintOption.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = false;
+    readonly renderCategory: string = Appearance.ID
+    readonly description = 'Show marker for nodes that have layout constraints set.'
     currentValue = false;
+}
+export class Appearance implements RenderOption {
+    static readonly ID: string = 'appearance'
+    static readonly NAME: string = 'Appearance'
+    readonly id: string = Appearance.ID
+    readonly name: string = Appearance.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CATEGORY
+    readonly initialValue: boolean = true
+    readonly description = 'Appearance Category'
+    currentValue = true
+}
+
+/**
+ * Smart Zoom category.
+ */
+export class SmartZoom implements RenderOption {
+    static readonly ID: string = 'smart-zoom'
+    static readonly NAME: string = 'Smart Zoom'
+    readonly id: string = SmartZoom.ID
+    readonly name: string = SmartZoom.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CATEGORY
+    readonly initialValue: boolean = true
+    readonly renderCategory: string = Appearance.ID
+    readonly description = 'Smart Zoom Category'
+    currentValue = true
 }
 
 /**
@@ -71,11 +101,13 @@ export class ShowConstraintOption implements RenderOption {
  */
 export class UseSmartZoom implements RenderOption {
     static readonly ID: string = 'use-smart-zoom'
-    static readonly NAME: string = 'Smart Zoom'
+    static readonly NAME: string = 'Enable Smart Zoom'
     readonly id: string = UseSmartZoom.ID
     readonly name: string = UseSmartZoom.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = 'Enable Smart Zoom'
     currentValue = true
 }
 
@@ -97,6 +129,9 @@ export class FullDetailRelativeThreshold implements RangeOption {
     }
     readonly stepSize = 0.01
     readonly initialValue: number = FullDetailRelativeThreshold.DEFAULT
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = 'Shows all children of an element that uses at least the amount of the canvas.'
+        + 'A value of 0.2 means an element is shown if its parent has at least 0.2 the size (minimum of width and height) of the canvas.'
     currentValue = 0.2
 }
 
@@ -118,6 +153,9 @@ export class FullDetailScaleThreshold implements RangeOption {
     }
     readonly stepSize = 0.01
     readonly initialValue: number = FullDetailScaleThreshold.DEFAULT
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = 'Show an element if it can be rendered in at least the given amount of it original size.'
+        + 'A value of 0.25 means an element is shown if it can be drawn in a fourth of its original height or width.'
     currentValue = 0.25
 }
 
@@ -132,6 +170,8 @@ export class SimplifySmallText implements RenderOption {
     readonly name: string = SimplifySmallText.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = 'Whether small text is simplified to colored rectangles.'
     currentValue = true
 }
 
@@ -152,6 +192,8 @@ export class TextSimplificationThreshold implements RangeOption {
     }
     readonly stepSize = 0.1
     readonly initialValue: number = TextSimplificationThreshold.DEFAULT
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = 'The threshold font size to simplify text.\nIf set to 3 a text which is 3 or less pixel high is simplified.'
     currentValue = 3
 }
 
@@ -173,6 +215,8 @@ export class TitleScalingFactor implements RangeOption {
     }
     readonly stepSize = 0.01
     readonly initialValue: number = TitleScalingFactor.DEFAULT
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = 'Factor to scale region titles compared to their original size.\nIf set to 1 a region title will never exceed their original size.'
     currentValue = 1
 }
 
@@ -186,6 +230,8 @@ export class UseMinimumLineWidth implements RenderOption {
     readonly name: string = UseMinimumLineWidth.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = "Whether all borders and lines are at least as wide as set by the corresponding 'Minimum Line Width' option."
     currentValue = true
 }
 
@@ -206,22 +252,37 @@ export class MinimumLineWidth implements RangeOption {
     }
     readonly stepSize = 0.01
     readonly initialValue: number = 0.5
+    readonly renderCategory: string = SmartZoom.ID
+    readonly description = "The minium border or line width.\nIf set to 0.5 each edge or border is at least 0.5 pixel wide."
     currentValue = 0.5
+}
+
+export enum ShadowOption {
+    /** A real svg shadow. */
+    PAPER_MODE = 'Paper Mode',
+    /** The shape of the node drawn with different opacity multiple times behind the node. */
+    KIELER_STYLE = 'KIELER Style'
 }
 
 /**
  * The style shadows should be drawn in, either the paper mode shadows (nice, but slow in
  * performance) or in default KIELER-style (fast, not as nice looking).
  */
-export class PaperShadows implements RenderOption {
+export class Shadows implements RenderOption {
     static readonly ID: string = 'paper-shadows'
-    static readonly NAME: string = 'Paper Mode Shadows'
-    static readonly DEFAULT: boolean = false
-    readonly id: string = PaperShadows.ID
-    readonly name: string = PaperShadows.NAME
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK
-    readonly initialValue: boolean = PaperShadows.DEFAULT
-    currentValue = PaperShadows.DEFAULT
+    static readonly NAME: string = 'Shadow Mode'
+    static readonly DEFAULT: ShadowOption = ShadowOption.KIELER_STYLE
+    readonly id: string = Shadows.ID
+    readonly name: string = Shadows.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHOICE
+    readonly initialValue: ShadowOption = Shadows.DEFAULT
+    readonly renderCategory: string = Appearance.ID
+    readonly renderChoiceValues? = [ShadowOption.PAPER_MODE, ShadowOption.KIELER_STYLE]
+    readonly description = 'The style shadows should be drawn in, either the paper mode shadows (nice, but slow in performance)'
+     + 'or in default KIELER Style (fast, not as nice looking).'
+     + 'KIELER Style multiple shapes in form of the node behind it.'
+     + 'Paper Mode uses SVG shadows.'
+    currentValue = Shadows.DEFAULT
 }
 
 /**
@@ -260,9 +321,18 @@ export class RenderOptionsRegistry extends Registry {
         super();
         // Add available render options to this registry
         this.register(ResizeToFit);
+        this.register(AnimateGoToBookmark);
+
+        // Appearance
+        this.register(Appearance)
+
         this.register(ForceLightBackground);
         this.register(ShowConstraintOption);
+        this.register(Shadows)
 
+        // Smart Zoom
+        this.register(SmartZoom)
+        
         this.register(UseSmartZoom);
         this.register(FullDetailRelativeThreshold)
         this.register(FullDetailScaleThreshold)
@@ -274,9 +344,6 @@ export class RenderOptionsRegistry extends Registry {
 
         this.register(UseMinimumLineWidth);
         this.register(MinimumLineWidth);
-
-        this.register(PaperShadows)
-        this.register(AnimateGoToBookmark);
     }
 
     @postConstruct()

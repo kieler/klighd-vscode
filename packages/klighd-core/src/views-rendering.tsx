@@ -15,12 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
+import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol';
-import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
+import { ShadowOption, Shadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
@@ -94,7 +94,7 @@ export function renderRectangularShape(
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) == ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
 
     const lineStyles = getSvgLineStyles(styles, parent, context)
@@ -279,7 +279,7 @@ export function renderLine(rendering: KPolyline,
         colorStyles.background = DEFAULT_FILL
     }
 
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
@@ -424,7 +424,7 @@ export function renderKText(rendering: KText,
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
 
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const textStyles = getSvgTextStyles(styles)
 

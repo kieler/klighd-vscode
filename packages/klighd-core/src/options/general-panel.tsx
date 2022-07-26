@@ -85,7 +85,7 @@ export class GeneralPanel extends SidebarPanel {
             [
                 "refresh",
                 "Refresh diagram",
-                "refresh-cw",
+                "rotate-cw",
                 RefreshDiagramAction.create(),
             ],
             [
