@@ -51,6 +51,11 @@ export interface Connective extends SemanticFilterRule {
 //// Connectives ////
 
 /**
+ * Base interface for nullary connectives. Nullary Connectives take no operands and are constants.
+ */
+export interface NullaryConnective extends Connective {}
+
+/**
  * Base interface for unary connectives. Unary Connectives take exactly one operand.
  */
 export interface UnaryConnective extends Connective {
@@ -76,6 +81,33 @@ export interface TernaryConnective extends Connective {
 
 //// Logic Connectives ////
 
+/**
+ * A True Connective always evaluates to true.
+ */
+export class TrueConnective implements NullaryConnective {
+    static NAME = "TRUE"
+    name = TrueConnective.NAME
+    ruleName?: string
+}
+
+/**
+ * A False Connective always evaluates to false.
+ */
+export class FalseConnective implements NullaryConnective {
+    static NAME = "FALSE"
+    name = TrueConnective.NAME
+    ruleName?: string
+}
+
+/**
+ * An Identity Connective evaluates to its operand i.e. ID (R) is equivalent to R.
+ */
+export class IdentityConnective implements UnaryConnective {
+    static NAME = "ID"
+    name = IdentityConnective.NAME
+    operand: SemanticFilterRule
+    ruleName?: string
+}
 /**
  * A Not Connective takes a rule R and evaluates to true
  * iff
@@ -258,6 +290,12 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
     let correspondingTag;
     switch ((rule as Connective).name) {
         // Logic Connectives
+        case TrueConnective.NAME:
+            return true;
+        case FalseConnective.NAME:
+            return false;
+        case IdentityConnective.NAME:
+            return evaluateRule(unary.operand, tags)
         case NegationConnective.NAME:
             return !(evaluateRule(unary.operand, tags));
         case AndConnective.NAME:
