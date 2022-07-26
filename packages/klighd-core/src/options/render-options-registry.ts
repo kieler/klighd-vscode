@@ -41,9 +41,10 @@ export class PinSidebarOption implements RenderOption {
 /**
  * Resize the diagram to fit the viewport if it is redrawn after a model update
  * or a viewport resize.
+ * This has to have the same id as the corresponding FitToScreenAction.
  */
 export class ResizeToFit implements RenderOption {
-    static readonly ID: string = 'resize-to-fit';
+    static readonly ID: string = 'fit';
     static readonly NAME: string = 'Resize To Fit on Refresh';
     static readonly DEFAULT: boolean = true
     readonly id: string = ResizeToFit.ID;
@@ -53,6 +54,7 @@ export class ResizeToFit implements RenderOption {
     readonly initialValue: boolean = ResizeToFit.DEFAULT;
     readonly description = 'Always resize to fit after diagram refresh.'
     currentValue = ResizeToFit.DEFAULT;
+    invisible = true
 }
 
 /**
@@ -334,7 +336,10 @@ export class RenderOptionsRegistry extends Registry {
     constructor() {
         super();
         // Add available render options to this registry
+        // Invisible
         this.register(ResizeToFit);
+        this.register(PinSidebarOption);
+
         this.register(AnimateGoToBookmark);
 
         // Appearance
@@ -388,7 +393,6 @@ export class RenderOptionsRegistry extends Registry {
     handle(action: Action): void | Action | ICommand {
         if (SetRenderOptionAction.isThisAction(action)) {
             const option = this._renderOptions.get(action.id);
-
             if (!option) return;
 
             option.currentValue = action.value;

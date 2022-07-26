@@ -65,7 +65,6 @@ export interface ISidebarPanel {
 @injectable()
 export abstract class SidebarPanel implements ISidebarPanel {
     private _updateCallbacks: (() => void)[] = [];
-    panelPinned: boolean
 
     abstract get id(): string;
     abstract get title(): string;

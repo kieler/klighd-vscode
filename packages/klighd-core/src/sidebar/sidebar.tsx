@@ -20,8 +20,8 @@ import { inject, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DISymbol } from "../di.symbols";
+import { PinSidebarOption, RenderOptionsRegistry } from "../options/render-options-registry";
 import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
-import { SidebarPanel } from "./sidebar-panel";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
 /**
@@ -40,6 +40,7 @@ export class Sidebar extends AbstractUIExtension {
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SidebarPanelRegistry) private sidebarPanelRegistry: SidebarPanelRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
 
     @postConstruct()
     init(): void {
@@ -137,9 +138,9 @@ export class Sidebar extends AbstractUIExtension {
 
             // See for information on detecting "click outside": https://stackoverflow.com/a/64665817/7569889
             if (currentPanelID && !e.composedPath().includes(containerElement)
-                && this.sidebarPanelRegistry.currentPanel
-                && !(this.sidebarPanelRegistry.currentPanel as SidebarPanel).panelPinned)
-            this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+                && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
+                    this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+                }
         });
     }
 
@@ -149,8 +150,7 @@ export class Sidebar extends AbstractUIExtension {
     private addMouseLeaveListener(containerElement: HTMLElement): void {
         containerElement.addEventListener("mouseleave", (e) => {
             const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
-            if (currentPanelID && this.sidebarPanelRegistry.currentPanel
-                    && !(this.sidebarPanelRegistry.currentPanel as SidebarPanel).panelPinned) {
+            if (currentPanelID && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
                 this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
             }
 

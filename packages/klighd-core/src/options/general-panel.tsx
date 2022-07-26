@@ -26,16 +26,14 @@ import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
-import { PersistenceStorage } from "../services";
 import { SidebarPanel } from "../sidebar";
-import { PinSidebarAction } from "../sidebar/actions";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { SetPreferencesAction } from "./actions";
+import { SetPreferencesAction, SetRenderOptionAction } from "./actions";
 import { CheckOption } from "./components/option-inputs";
 import { SynthesisPicker } from "./components/synthesis-picker";
 import { OptionsRenderer } from "./options-renderer";
-import { PinSidebarOption, RenderOptionsRegistry } from "./render-options-registry";
+import { PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "./render-options-registry";
 
 /** Type for available quick actions. */
 type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark" | "pin-sidebar";
@@ -50,14 +48,13 @@ export class GeneralPanel extends SidebarPanel {
     readonly position = -10;
 
     /** Quick actions reference for this panel */
-    private quickActions: [key: PossibleAction, title: string, iconId: string, action: Action][];
+    private quickActions: [key: PossibleAction, title: string, iconId: string, action: Action | undefined, state?: boolean, effect?: () => void][];
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
-    @inject(PersistenceStorage) private storage: PersistenceStorage;
 
     @postConstruct()
     async init(): Promise<void> {
@@ -65,9 +62,6 @@ export class GeneralPanel extends SidebarPanel {
         this.synthesesRegistry.onChange(() => this.update());
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
-
-        // Load value of panel pinned option.
-        this.panelPinned = !!await this.storage.getItem(PinSidebarOption.ID)
 
         this.assignQuickActions()
     }
@@ -92,7 +86,12 @@ export class GeneralPanel extends SidebarPanel {
                 "fit",
                 "Fit to screen",
                 "maximize-2",
-                KlighdFitToScreenAction.create(true),
+                this.renderOptionsRegistry.getValue(ResizeToFit) ? undefined : KlighdFitToScreenAction.create(true),
+                this.renderOptionsRegistry.getValue(ResizeToFit),
+                () => {
+                        this.actionDispatcher.dispatch(SetRenderOptionAction.create(ResizeToFit.ID, !this.renderOptionsRegistry.getValue(ResizeToFit)));
+                        this.update()
+                }
             ],
             [
                 "layout",
@@ -120,9 +119,9 @@ export class GeneralPanel extends SidebarPanel {
             ],
             [
                 "pin-sidebar",
-                this.panelPinned ? "Unpin Sidebar" : "Pin Sidebar",
-                this.panelPinned ? "lock" : "unlock",
-                PinSidebarAction.create()
+                this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "Unpin Sidebar" : "Pin Sidebar",
+                this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "lock" : "unlock",
+                SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)),
             ],
         ];
     }
@@ -142,7 +141,13 @@ export class GeneralPanel extends SidebarPanel {
                             <button
                                 title={action[1]}
                                 class-options__icon-button="true"
-                                on-click={() => this.handleQuickActionClick(action[0])}
+                                class-sidebar__enabled-button={!!action[4]}
+                                on-click={() => {
+                                    if (action[5]) {
+                                        action[5].apply(this)
+                                    }
+                                    this.handleQuickActionClick(action[0])
+                                }}
                             >
                                 <FeatherIcon iconId={action[2]}/>
                             </button>

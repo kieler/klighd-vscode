@@ -22,8 +22,8 @@ import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
 import { PinSidebarOption } from "../options/render-options-registry";
 import { PersistenceStorage } from "../services";
-import { PinSidebarAction, ToggleSidebarPanelAction } from "./actions";
-import { ISidebarPanel, SidebarPanel } from "./sidebar-panel";
+import { ToggleSidebarPanelAction } from "./actions";
+import { ISidebarPanel } from "./sidebar-panel";
 
 /**
  * {@link Registry} that stores all sidebar panels which are resolved by the DI container.
@@ -49,10 +49,17 @@ export class SidebarPanelRegistry extends Registry {
     @postConstruct()
     async init(): Promise<void> {
         // Reopen general panel if a panel was pinned.
-        const panelPinned = await this.storage.getItem(PinSidebarOption.ID)
-        if (panelPinned && this.allPanels.length > 0) {
-            this._currentPanelID = this.allPanels[0].id
-        }
+        // Record has to be retrieved manually since the renderOptionsRegistry is not yet initialized and
+        // cannot be changed to distribute a ready signal.
+        this.storage.getItem<Record<string, unknown>>('render').then((data: Record<string, unknown>) => {
+            for (const entry of Object.entries(data)) {
+                if (entry[0] == PinSidebarOption.ID) {
+                    if (entry[1] && this.allPanels.length > 0) {
+                        this._currentPanelID = this.allPanels[0].id
+                    }
+                }
+            }
+        })
     }
 
     handle(action: Action): void | Action | ICommand {
@@ -69,15 +76,6 @@ export class SidebarPanelRegistry extends Registry {
                 // Panel is inactive and the given id exists so it should either be shown explicitly or toggled to be shown
                 this._currentPanelID = action.id;
                 this.notifyListeners();
-            }
-        } else if (PinSidebarAction.isThisAction(action)) {
-            if (this.currentPanel) {
-                this.storage.setItem(PinSidebarOption.ID, (value => {
-                        (this.currentPanel as SidebarPanel).panelPinned = !value;
-                        this.notifyListeners();
-                        (this.currentPanel as SidebarPanel).update();
-                        return !value
-                }))
             }
         }
     }

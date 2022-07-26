@@ -65,22 +65,3 @@ export namespace ToggleSidebarPanelAction {
         return action.kind === ToggleSidebarPanelAction.KIND;
     }
 }
-
-export interface PinSidebarAction extends Action {
-    kind: typeof PinSidebarAction.KIND
-}
-
-export namespace PinSidebarAction {
-    export const KIND = 'pin-sidebar'
-
-    export function create(): PinSidebarAction {
-        return {
-            kind: KIND
-        }
-    }
-
-    /** Type predicate to narrow an action to this action. */
-    export function isThisAction(action: Action): action is PinSidebarAction {
-        return action.kind === PinSidebarAction.KIND;
-    }
-}

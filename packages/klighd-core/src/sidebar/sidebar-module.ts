@@ -18,7 +18,7 @@
 import { ContainerModule } from "inversify";
 import { configureActionHandler, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
-import { PinSidebarAction, ToggleSidebarPanelAction } from "./actions";
+import { ToggleSidebarPanelAction } from "./actions";
 import { Sidebar } from "./sidebar";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
@@ -31,5 +31,4 @@ export const sidebarModule = new ContainerModule((bind, _, isBound) => {
 
     const ctx = { bind, isBound };
     configureActionHandler(ctx, ToggleSidebarPanelAction.KIND, DISymbol.SidebarPanelRegistry);
-    configureActionHandler(ctx, PinSidebarAction.KIND, DISymbol.SidebarPanelRegistry)
 });
