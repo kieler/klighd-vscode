@@ -36,8 +36,8 @@ export interface SemanticFilterRule {
 export class SemanticFilterTag implements SemanticFilterRule {
     ruleName?: string
     tag: string
-    /** Not defining num defaults it to 0. */
-    num?: number
+    /** If num is not defined, the server will set the value 0 by default. */
+    num: number
 }
 
 /**
