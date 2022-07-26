@@ -309,6 +309,63 @@ export namespace NumericEqualConnective {
     }
 }
 
+/**
+ * A GreaterEquals Connective takes one rule R and evaluates to true
+ * iff
+ * @example R.num >= correspondingTag.num.
+ */
+export class GreaterEqualsConnective implements UnaryConnective {
+    static NAME = "GREATEREQUALS"
+    name = GreaterEqualsConnective.NAME
+    operand: SemanticFilterTag
+    ruleName?: string
+}
+
+export namespace GreaterEqualsConnective {
+    export function evaluate(conn: GreaterEqualsConnective, tags: Array<SemanticFilterTag>): boolean {
+        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
+        return (conn.operand.num ?? 0) >= (correspondingTag?.num ?? 0);
+    }
+}
+
+/**
+ * A LessEquals Connective takes one rule R and evaluates to true
+ * iff
+ * @example R.num <= correspondingTag.num.
+ */
+ export class LessEqualsConnective implements UnaryConnective {
+    static NAME = "LESSEQUALS"
+    name = GreaterEqualsConnective.NAME
+    operand: SemanticFilterTag
+    ruleName?: string
+}
+
+export namespace LessEqualsConnective {
+    export function evaluate(conn: LessEqualsConnective, tags: Array<SemanticFilterTag>): boolean {
+        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
+        return (conn.operand.num ?? 0) <= (correspondingTag?.num ?? 0);
+    }
+}
+
+/**
+ * A NumericNotEqual Connective takes one rule R and evaluates to true
+ * iff
+ * @example R.num != correspondingTag.num.
+ */
+ export class NumericNotEqualConnective implements UnaryConnective {
+    static NAME = "NUMERICNOTEQUAL"
+    name = GreaterEqualsConnective.NAME
+    operand: SemanticFilterTag
+    ruleName?: string
+}
+
+export namespace NumericNotEqualConnective {
+    export function evaluate(conn: NumericNotEqualConnective, tags: Array<SemanticFilterTag>): boolean {
+        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
+        return (conn.operand.num ?? 0) !== (correspondingTag?.num ?? 0);
+    }
+}
+
 //// Functions ////
 
 /**
@@ -393,6 +450,12 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
             return GreaterThanConnective.evaluate(rule as GreaterThanConnective, tags);
         case NumericEqualConnective.NAME:
             return NumericEqualConnective.evaluate(rule as NumericEqualConnective, tags);
+        case GreaterEqualsConnective.NAME:
+            return GreaterEqualsConnective.evaluate(rule as GreaterEqualsConnective, tags);
+        case LessEqualsConnective.NAME:
+            return LessEqualsConnective.evaluate(rule as LessEqualsConnective, tags);
+        case NumericNotEqualConnective.NAME:
+            return NumericNotEqualConnective.evaluate(rule as NumericNotEqualConnective, tags);    
         default:
             return true;
     }
