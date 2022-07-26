@@ -51,11 +51,6 @@ export interface Connective extends SemanticFilterRule {
 //// Connectives ////
 
 /**
- * Base interface for nullary connectives. Nullary Connectives take no operands and are constants.
- */
-export interface NullaryConnective extends Connective {}
-
-/**
  * Base interface for unary connectives. Unary Connectives take exactly one operand.
  */
 export interface UnaryConnective extends Connective {
@@ -84,7 +79,7 @@ export interface TernaryConnective extends Connective {
 /**
  * A True Connective always evaluates to true.
  */
-export class TrueConnective implements NullaryConnective {
+export class TrueConnective implements Connective {
     static NAME = "TRUE"
     name = TrueConnective.NAME
     ruleName?: string
@@ -93,7 +88,7 @@ export class TrueConnective implements NullaryConnective {
 /**
  * A False Connective always evaluates to false.
  */
-export class FalseConnective implements NullaryConnective {
+export class FalseConnective implements Connective {
     static NAME = "FALSE"
     name = TrueConnective.NAME
     ruleName?: string
