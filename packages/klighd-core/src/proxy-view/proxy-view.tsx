@@ -995,50 +995,21 @@ export class ProxyView extends AbstractUIExtension {
                 // New rendering, set ProxyVNode attributes
                 vnode.selected = highlight;
 
-                // This animates the proxy by scaling it upwards. There are still some bugs that could be fixed,
-                // however, this doesn't fully work with or without cache
-                // With cache: when the proxy should be moved during its animation, it isn't actually moved until its animation is finished
-                //             fixing this requires changing the transform given in the animation
-                // Without cache: it's not possible to differentiate between new proxies and old ones, e.g. they are always/never animated
-                // TODO: cache
-                const dur = 1;
 
-                const canvas2 = Canvas.translateCanvasToCRF(canvas);
-
-                const centerX = canvas2.x === transform.x || canvas2.x + canvas2.width === transform.x + transform.width ? transform.x : transform.x + transform.width / 2;
-                const centerY = canvas2.y === transform.y || canvas2.y + canvas2.height === transform.y + transform.height ? transform.y : transform.y + transform.height / 2;
-                console.log(canvas2.x, transform.x)
-                const test1 =
-                    <animateTransform
-                        attributeName="transform"
-                        type="translate"
-                        dur={`${dur}s`}
-                        values={`${centerX}, ${centerY}; ${transform.x}, ${transform.y}`}
-                        repeatCount="indefinite"
-                        id={`${id}-anim-translate`}
-                    /> as VNode;
-                test1.data = test1.data ?? [];
-                test1.data.props = test1.data.props ?? [];
-                test1.data.attrs = test1.data.props;
-
-                const test2 =
-                    <animateTransform
-                        attributeName="transform"
-                        type="scale"
-                        additive="sum"
-                        from="0"
-                        to={scale}
-                        dur={`${dur}s`}
-                        repeatCount="indefinite"
-                        id={`${id}-anim-scale`}
-                    /> as VNode;
-                test2.data = test2.data ?? [];
-                test2.data.props = test2.data.props ?? [];
-                test2.data.attrs = test2.data.props;
-
+                // TODO: this is global (dur, repeatCount), not per object
+                // Also, this may be confusing as opacity is already being used for other metrics
+                const dur = 4;
+                const test = 
+                <animate
+                    attributeName="opacity"
+                    values={`0; ${opacity}`}
+                    dur={`${dur}s`}
+                    repeatCount="1"
+                /> as VNode;
+                test.data = test.data ?? [];
+                test.data.attrs = test.data.props ?? [];
                 vnode.children?.push(
-                    test1,
-                    test2
+                    test
                 )
             }
         }
