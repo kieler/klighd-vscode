@@ -26,17 +26,19 @@ import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
+import { PersistenceStorage } from "../services";
 import { SidebarPanel } from "../sidebar";
+import { PinSidebarAction } from "../sidebar/actions";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { SetPreferencesAction } from "./actions";
 import { CheckOption } from "./components/option-inputs";
 import { SynthesisPicker } from "./components/synthesis-picker";
 import { OptionsRenderer } from "./options-renderer";
-import { RenderOptionsRegistry } from "./render-options-registry";
+import { PinSidebarOption, RenderOptionsRegistry } from "./render-options-registry";
 
 /** Type for available quick actions. */
-type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
+type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark" | "pin-sidebar";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -55,14 +57,30 @@ export class GeneralPanel extends SidebarPanel {
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
+    @inject(PersistenceStorage) private storage: PersistenceStorage;
 
     @postConstruct()
-    init(): void {
+    async init(): Promise<void> {
         // Subscribe to different registry changes to make this panel reactive
         this.synthesesRegistry.onChange(() => this.update());
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
 
+        // Load value of panel pinned option.
+        this.panelPinned = !!await this.storage.getItem(PinSidebarOption.ID)
+
+        this.assignQuickActions()
+    }
+
+    get id(): string {
+        return "general-panel";
+    }
+
+    get title(): string {
+        return "General";
+    }
+
+    private assignQuickActions() {
         this.quickActions = [
             [
                 "center",
@@ -100,15 +118,18 @@ export class GeneralPanel extends SidebarPanel {
                 "bookmark",
                 CreateBookmarkAction.create()
             ],
+            [
+                "pin-sidebar",
+                this.panelPinned ? "Unpin Sidebar" : "Pin Sidebar",
+                this.panelPinned ? "lock" : "unlock",
+                PinSidebarAction.create()
+            ],
         ];
     }
 
-    get id(): string {
-        return "general-panel";
-    }
-
-    get title(): string {
-        return "General";
+    update(): void {
+        this.assignQuickActions()
+        super.update()
     }
 
     render(): VNode {

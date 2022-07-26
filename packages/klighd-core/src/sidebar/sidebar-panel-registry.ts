@@ -15,13 +15,15 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable, multiInject, optional } from "inversify";
+import { inject, injectable, multiInject, optional, postConstruct } from "inversify";
 import { ICommand } from "sprotty";
-import { Action } from "sprotty-protocol"
+import { Action } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
-import { ToggleSidebarPanelAction } from "./actions";
-import { ISidebarPanel } from "./sidebar-panel";
+import { PinSidebarOption } from "../options/render-options-registry";
+import { PersistenceStorage } from "../services";
+import { PinSidebarAction, ToggleSidebarPanelAction } from "./actions";
+import { ISidebarPanel, SidebarPanel } from "./sidebar-panel";
 
 /**
  * {@link Registry} that stores all sidebar panels which are resolved by the DI container.
@@ -32,6 +34,7 @@ import { ISidebarPanel } from "./sidebar-panel";
 export class SidebarPanelRegistry extends Registry {
     private _panels: Map<string, ISidebarPanel>;
     private _currentPanelID: string | null;
+    @inject(PersistenceStorage) private storage: PersistenceStorage;
 
     constructor(@multiInject(DISymbol.SidebarPanel) @optional() panels: ISidebarPanel[] = []) {
         super();
@@ -40,6 +43,15 @@ export class SidebarPanelRegistry extends Registry {
 
         for (const panel of panels) {
             this._panels.set(panel.id, panel);
+        }
+    }
+
+    @postConstruct()
+    async init(): Promise<void> {
+        // Reopen general panel if a panel was pinned.
+        const panelPinned = await this.storage.getItem(PinSidebarOption.ID)
+        if (panelPinned && this.allPanels.length > 0) {
+            this._currentPanelID = this.allPanels[0].id
         }
     }
 
@@ -57,6 +69,15 @@ export class SidebarPanelRegistry extends Registry {
                 // Panel is inactive and the given id exists so it should either be shown explicitly or toggled to be shown
                 this._currentPanelID = action.id;
                 this.notifyListeners();
+            }
+        } else if (PinSidebarAction.isThisAction(action)) {
+            if (this.currentPanel) {
+                this.storage.setItem(PinSidebarOption.ID, (value => {
+                        (this.currentPanel as SidebarPanel).panelPinned = !value;
+                        this.notifyListeners();
+                        (this.currentPanel as SidebarPanel).update();
+                        return !value
+                }))
             }
         }
     }

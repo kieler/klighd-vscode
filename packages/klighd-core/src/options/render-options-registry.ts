@@ -23,12 +23,26 @@ import { PersistenceStorage } from "../services";
 import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
 import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
 
+/**
+ * Whether the sidebar panel is pinned or not. 
+ */
+export class PinSidebarOption implements RenderOption {
+    static readonly ID: string = 'pin-sidebar';
+    static readonly NAME: string = 'Pin Sidebar';
+    static readonly DEFAULT: boolean = true
+    readonly id: string = PinSidebarOption.ID;
+    readonly name: string = PinSidebarOption.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = PinSidebarOption.DEFAULT;
+    currentValue = PinSidebarOption.DEFAULT;
+    invisible = true
+}
 
 /**
  * Resize the diagram to fit the viewport if it is redrawn after a model update
  * or a viewport resize.
  */
- export class ResizeToFit implements RenderOption {
+export class ResizeToFit implements RenderOption {
     static readonly ID: string = 'resize-to-fit';
     static readonly NAME: string = 'Resize To Fit on Refresh';
     static readonly DEFAULT: boolean = true

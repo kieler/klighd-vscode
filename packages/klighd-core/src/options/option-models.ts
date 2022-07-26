@@ -27,6 +27,8 @@ export interface RenderOption {
     renderCategory?: string;
     /** The values this RenderOption has, if it's type is {@link TransformationOptionType.CHOICE}. */
     renderChoiceValues?: any[];
+    /** Per default undefined. */
+    invisible?: boolean
 }
 
 export interface Preference extends RenderOption {

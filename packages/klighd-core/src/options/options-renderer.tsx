@@ -263,6 +263,7 @@ export class OptionsRenderer {
         if (renderOptions.length === 0) return "";
 
         return renderOptions
+            .filter(option => !option.invisible)
             .filter(option => option.renderCategory === renderCategory?.id)
             .map((option) => {
             switch (option.type) {
