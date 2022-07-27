@@ -15,18 +15,22 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-/** Base option that can be rendered as an ui input*/
-export interface RenderOption {
+/** Base option.*/
+export interface Option {
     id: string;
     name: string;
     type: TransformationOptionType;
     initialValue: any;
     currentValue: any;
     description?: string;
+    /** The values this RenderOption has, if it's type is {@link TransformationOptionType.CHOICE}. */
+    values?: any[];
+}
+
+/** Option that is rendered as a UI input.*/
+export interface RenderOption extends Option {
     /** The category this RenderOption is part of. */
     renderCategory?: string;
-    /** The values this RenderOption has, if it's type is {@link TransformationOptionType.CHOICE}. */
-    renderChoiceValues?: any[];
     /** Per default undefined. */
     invisible?: boolean
 }
@@ -52,7 +56,7 @@ export enum TransformationOptionType {
  * This is the counterpart to the KLighD's java implementation of the SynthesisOption.
  * Also adds a sourceHash that contains the hash code of the corresponding java instance for this option.
  */
-export interface SynthesisOption extends RenderOption {
+export interface SynthesisOption extends Option {
     values: any[]
     category?: SynthesisOption
 }

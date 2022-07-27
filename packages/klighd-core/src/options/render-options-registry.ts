@@ -296,7 +296,7 @@ export class Shadows implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHOICE
     readonly initialValue: ShadowOption = Shadows.DEFAULT
     readonly renderCategory: string = Appearance.ID
-    readonly renderChoiceValues? = [ShadowOption.PAPER_MODE, ShadowOption.KIELER_STYLE]
+    readonly values? = [ShadowOption.PAPER_MODE, ShadowOption.KIELER_STYLE]
     readonly description = 'The style shadows should be drawn in, either the paper mode shadows (nice, but slow in performance)'
      + 'or in default KIELER Style (fast, not as nice looking).'
      + 'KIELER Style draws multiple shapes in form of the node behind the node.'

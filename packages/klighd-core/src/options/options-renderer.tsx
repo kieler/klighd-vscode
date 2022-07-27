@@ -309,14 +309,14 @@ export class OptionsRenderer {
                         </CategoryOption>
                     );
                 case TransformationOptionType.CHOICE:
-                    if (option.renderChoiceValues) {
+                    if (option.values) {
                         return (
                             <ChoiceOption
                                 key={option.id}
                                 id={option.id}
                                 name={option.name}
                                 value={option.currentValue}
-                                availableValues={option.renderChoiceValues}
+                                availableValues={option.values}
                                 description={option.description}
                                 onChange={this.handleRenderOptionChange.bind(this, option)}
                             />
