@@ -15,6 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { Action } from "sprotty-protocol";
+
 /** Base option.*/
 export interface Option {
     id: string;
@@ -33,6 +35,25 @@ export interface RenderOption extends Option {
     renderCategory?: string;
     /** Per default undefined. */
     invisible?: boolean
+}
+
+/** Type for available quick actions. */
+export type PossibleQuickAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark" | "pin-sidebar";
+
+export interface QuickActionOption {
+    key: PossibleQuickAction
+    title: string
+    /** Icon id of a feather icon. */
+    iconId: string
+    /** Action to be executed on click. */
+    action: Action | undefined
+    /** If the quick action button should be marked as clicked. */
+    state?: boolean
+    /**
+     * An additional effect which does not have to be an action to be executed
+     * on click before executing the action.
+     */
+    effect?: () => void
 }
 
 export interface Preference extends RenderOption {
