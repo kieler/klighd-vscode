@@ -15,13 +15,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { commands, Uri, window } from "vscode";
+import { commands, Disposable, Uri, window } from "vscode";
 import { command } from "./constants";
 import { StorageService } from "./storage/storage-service";
 
 export class KlighdWebviewReopener {
 
     private readonly storage: StorageService
+    private toDispose: Disposable[] = []
 
     constructor(storage: StorageService) {
         this.storage = storage
@@ -29,13 +30,23 @@ export class KlighdWebviewReopener {
 
     onExtensionCreated(): void {
         const diagramWasOpen = this.storage.getItem('diagramOpen')
-        if (diagramWasOpen == undefined || diagramWasOpen) {
-            const uri = window.activeTextEditor?.document.fileName
-            if (uri) {
+        if (diagramWasOpen === undefined || diagramWasOpen) {
+            const activeTextEditor = window.activeTextEditor
+            if (activeTextEditor) {
+                const uri = activeTextEditor.document.fileName
                 commands.executeCommand(command.diagramOpen, Uri.file(uri))
+            } else {
+                // Register this an active editor changed to open the diagram then.
+                this.toDispose.push(window.onDidChangeActiveTextEditor(editor => {
+                    let uri = undefined
+                    if (editor) {
+                        uri = editor.document.uri
+                    }
+                    commands.executeCommand(command.diagramOpen, uri)
+                    // Remove listener again
+                    this.toDispose.forEach(element => element.dispose())
+                }))
             }
         }
-
     }
-
 }
