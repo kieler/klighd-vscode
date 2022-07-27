@@ -15,14 +15,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { commands, Uri, window } from "vscode";
+import { commands, Disposable, Uri, window } from "vscode";
 import { command } from "./constants";
 import { StorageService } from "./storage/storage-service";
 
 export class KlighdWebviewReopener {
 
     private readonly storage: StorageService
-    private toDispose: { dispose(): any }[] = []
+    private toDispose: Disposable[] = []
 
     constructor(storage: StorageService) {
         this.storage = storage
