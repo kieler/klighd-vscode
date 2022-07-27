@@ -15,11 +15,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable, multiInject, optional } from "inversify";
+import { inject, injectable, multiInject, optional, postConstruct } from "inversify";
 import { ICommand } from "sprotty";
-import { Action } from "sprotty-protocol"
+import { Action } from "sprotty-protocol";
 import { Registry } from "../base/registry";
 import { DISymbol } from "../di.symbols";
+import { PinSidebarOption } from "../options/render-options-registry";
+import { PersistenceStorage } from "../services";
 import { ToggleSidebarPanelAction } from "./actions";
 import { ISidebarPanel } from "./sidebar-panel";
 
@@ -32,6 +34,7 @@ import { ISidebarPanel } from "./sidebar-panel";
 export class SidebarPanelRegistry extends Registry {
     private _panels: Map<string, ISidebarPanel>;
     private _currentPanelID: string | null;
+    @inject(PersistenceStorage) private storage: PersistenceStorage;
 
     constructor(@multiInject(DISymbol.SidebarPanel) @optional() panels: ISidebarPanel[] = []) {
         super();
@@ -41,6 +44,20 @@ export class SidebarPanelRegistry extends Registry {
         for (const panel of panels) {
             this._panels.set(panel.id, panel);
         }
+    }
+
+    @postConstruct()
+    async init(): Promise<void> {
+        // Reopen general panel if a panel was pinned.
+        // Record has to be retrieved manually since the renderOptionsRegistry is not yet initialized and
+        // cannot be changed to distribute a ready signal.
+        this.storage.getItem<Record<string, unknown>>('render').then((data: Record<string, unknown>) => {
+            for (const entry of Object.entries(data)) {
+                if (entry[0] == PinSidebarOption.ID && entry[1] && this.allPanels.length > 0) {
+                    this._currentPanelID = this.allPanels[0].id
+                }
+            }
+        })
     }
 
     handle(action: Action): void | Action | ICommand {
