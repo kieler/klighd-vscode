@@ -81,9 +81,10 @@ export class ShowConstraintOption implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = false;
     readonly renderCategory: string = Appearance.ID
-    readonly description = 'Show marker for nodes that have layout constraints set.'
+    readonly description = 'Show marker for nodes that have interactive layout constraints set.'
     currentValue = false;
 }
+
 export class Appearance implements RenderOption {
     static readonly ID: string = 'appearance'
     static readonly NAME: string = 'Appearance'
@@ -117,13 +118,13 @@ export class SmartZoom implements RenderOption {
  */
 export class UseSmartZoom implements RenderOption {
     static readonly ID: string = 'use-smart-zoom'
-    static readonly NAME: string = 'Enable Smart Zoom'
+    static readonly NAME: string = 'Smart Zoom'
     readonly id: string = UseSmartZoom.ID
     readonly name: string = UseSmartZoom.NAME
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = 'Enable Smart Zoom'
+    readonly description = 'Enables Smart Zoom'
     currentValue = true
 }
 
@@ -187,7 +188,7 @@ export class SimplifySmallText implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
     readonly initialValue: boolean = true
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = 'Whether small text is simplified to colored rectangles.'
+    readonly description = 'Whether illegible text is simplified to colored rectangles.'
     currentValue = true
 }
 
@@ -232,7 +233,9 @@ export class TitleScalingFactor implements RangeOption {
     readonly stepSize = 0.01
     readonly initialValue: number = TitleScalingFactor.DEFAULT
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = 'Factor to scale region titles compared to their original size.\nIf set to 1 a region title will never exceed their original size.'
+    readonly description = 'Factor to scale region titles compared to their original size.'
+        + 'If set to 1 a region title be its original size (if the space permits) regardless of the zoom level.'
+        + 'If it was 10 pixel high before it will always be 10 pixel high if the label can fit the region.'
     currentValue = 1
 }
 
@@ -296,7 +299,7 @@ export class Shadows implements RenderOption {
     readonly renderChoiceValues? = [ShadowOption.PAPER_MODE, ShadowOption.KIELER_STYLE]
     readonly description = 'The style shadows should be drawn in, either the paper mode shadows (nice, but slow in performance)'
      + 'or in default KIELER Style (fast, not as nice looking).'
-     + 'KIELER Style multiple shapes in form of the node behind it.'
+     + 'KIELER Style draws multiple shapes in form of the node behind the node.'
      + 'Paper Mode uses SVG shadows.'
     currentValue = Shadows.DEFAULT
 }
