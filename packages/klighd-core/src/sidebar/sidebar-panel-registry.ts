@@ -53,10 +53,8 @@ export class SidebarPanelRegistry extends Registry {
         // cannot be changed to distribute a ready signal.
         this.storage.getItem<Record<string, unknown>>('render').then((data: Record<string, unknown>) => {
             for (const entry of Object.entries(data)) {
-                if (entry[0] == PinSidebarOption.ID) {
-                    if (entry[1] && this.allPanels.length > 0) {
-                        this._currentPanelID = this.allPanels[0].id
-                    }
+                if (entry[0] == PinSidebarOption.ID && entry[1] && this.allPanels.length > 0) {
+                    this._currentPanelID = this.allPanels[0].id
                 }
             }
         })
