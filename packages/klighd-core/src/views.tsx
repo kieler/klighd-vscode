@@ -214,7 +214,7 @@ export class KNodeView implements IView {
         result.push(...(ctx.titles.pop() ?? []))
         ctx.positions.pop()
 
-        result.map(rendering => scaleRendering(rendering, node))
+        //result.map(rendering => scaleRendering(rendering, node))
         // scalerendering has SIDE EFFECTS, not so nice when combining it with the functional map
         // TODO: here instead of scaling the result we need either scale exactly the child area or if there is no child area, all child nodes wrapped in one <g>
         return <g>{...result}</g> // <-- this for stuff with child areas (sccharts), there is an extra element in between children and parent
@@ -430,6 +430,7 @@ function fontDefinition(): VNode {
     </style>
 }
 
+/** 
 function scaleRendering(rendering: VNode, parent: SKNode) {
 
     // This code would need to be called one parent higher so that we always have access to all the children correctly
@@ -449,4 +450,4 @@ function scaleRendering(rendering: VNode, parent: SKNode) {
         }
     }
     return rendering
-}
+}*/

@@ -55,7 +55,13 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
         {context.renderChildAreaChildren(parent)}
     </g>
 
-    return element
+
+    // get scale factor and apply to child area
+    if ((parent as any).properties == undefined || (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
+        return element
+    }
+    const topdownScaleFactor = (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
+    return <g transform={`scale (${topdownScaleFactor})`}>${element}</g>
 }
 
 /**
