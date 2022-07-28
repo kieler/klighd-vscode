@@ -118,7 +118,7 @@ export class KNodeView implements IView {
             shadow = getRendering(node.data, node, new KStyles, ctx)
         }
         if (isChildSelected(node as SKNode)) {
-            if (((node as SKNode).properties.interactiveLayout) && ctx.mListener.hasDragged) {
+            if (((node as SKNode).properties['org.eclipse.elk.interactiveLayout']) && ctx.mListener.hasDragged) {
                 // Render the objects indicating the layer and positions in the graph
                 interactiveNodes = renderInteractiveLayout(node as SKNode)
             }
@@ -131,7 +131,7 @@ export class KNodeView implements IView {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx)
 
-            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties.interactiveLayout) {
+            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties['org.eclipse.elk.interactiveLayout']) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }
@@ -177,7 +177,6 @@ export class KNodeView implements IView {
             result.push(...(ctx.titles.pop() ?? []))
             ctx.positions.pop()
             return <g>{...result}</g>
-            // return scaleRendering(<g>{...result}</g>, node)
         }
 
         // Add renderings that are not undefined
@@ -188,13 +187,9 @@ export class KNodeView implements IView {
             result.push(rendering)
         } else {
             ctx.positions.pop()
-            // return scaleRendering(<g>
-            //     {ctx.titles.pop() ?? []}
-            //     {ctx.renderChildren(node)}
-            // </g>, node)
             return <g>
-               {ctx.titles.pop() ?? []}
-               {ctx.renderChildren(node)}
+                {ctx.titles.pop() ?? []}
+                {ctx.renderChildren(node)}
             </g>
         }
         if (interactiveNodes) {
@@ -206,20 +201,12 @@ export class KNodeView implements IView {
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!node.areChildAreaChildrenRendered) {
             result.push(...ctx.renderChildren(node))
-            console.log("child area children are not rendered: " + node.id) // elkgraphs completely land here
         } else if (!node.areNonChildAreaChildrenRendered) {
-            console.log("non-child area children are not rendered: " + node.id) // nodes with children in sccharts land here
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
         result.push(...(ctx.titles.pop() ?? []))
         ctx.positions.pop()
-
-        //result.map(rendering => scaleRendering(rendering, node))
-        // scalerendering has SIDE EFFECTS, not so nice when combining it with the functional map
-        // TODO: here instead of scaling the result we need either scale exactly the child area or if there is no child area, all child nodes wrapped in one <g>
-        return <g>{...result}</g> // <-- this for stuff with child areas (sccharts), there is an extra element in between children and parent
-        // return scaleRendering(<g>{...result}</g>, node) <-- this for stuff without child areas + different internals of scaleRendering necessary, because 
-        //                                                     children are siblings of other renderings that belong to the parent such as the parents rectangle
+        return <g>{...result}</g>
     }
 }
 
@@ -429,25 +416,3 @@ function fontDefinition(): VNode {
         {overpass_mono_regular_style}
     </style>
 }
-
-/** 
-function scaleRendering(rendering: VNode, parent: SKNode) {
-
-    // This code would need to be called one parent higher so that we always have access to all the children correctly
-    // The problem still remains though how to manipulate the svg in the right places
-    // A better solution handles this more abstractly somewhere else, but I'm not sure where
-
-    if ((parent as any).properties == undefined || (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
-        return rendering
-    }
-    // FIXME: this only works correctly for SCCharts
-    const topdownScaleFactor = (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
-
-    if (rendering.children != undefined) {
-        if (rendering.children.length >= 2) {
-
-            rendering.children[1] = <g transform={`scale (${topdownScaleFactor})`}>${rendering.children[1]}</g>
-        }
-    }
-    return rendering
-}*/

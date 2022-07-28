@@ -21,7 +21,7 @@
             "address": "127.0.0.1:8000",
             "outputCapture": "std",
             "program": "${workspaceFolder}/applications/klighd-cli/lib/main.js",
-            "preLaunchTask": "${defaultBuildTask}",
+            "preLaunchTask": "${defaultBuildTask}"
         },
         {
             "name": "Start CLI Webserver (Port)",
