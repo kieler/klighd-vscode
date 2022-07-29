@@ -5,7 +5,7 @@
 
 ## Getting started
 
-The `kligh-core` package is nearly self-contained and is almost able to display generated KGraph
+The `klighd-core` package is nearly self-contained and is almost able to display generated KGraph
 models. An application that uses this packages has to provide a few platform dependent services that
 can not be implemented by the core package before-hand.
 
