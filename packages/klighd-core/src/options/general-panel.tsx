@@ -20,7 +20,7 @@ import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { html, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Action, CenterAction } from "sprotty-protocol";
+import { CenterAction } from "sprotty-protocol";
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
 import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { DISymbol } from "../di.symbols";
@@ -29,14 +29,12 @@ import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDia
 import { SidebarPanel } from "../sidebar";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { SetPreferencesAction } from "./actions";
+import { SetPreferencesAction, SetRenderOptionAction } from "./actions";
 import { CheckOption } from "./components/option-inputs";
 import { SynthesisPicker } from "./components/synthesis-picker";
+import { PossibleQuickAction, QuickActionOption } from "./option-models";
 import { OptionsRenderer } from "./options-renderer";
-import { RenderOptionsRegistry } from "./render-options-registry";
-
-/** Type for available quick actions. */
-type PossibleAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark";
+import { PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "./render-options-registry";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -48,7 +46,7 @@ export class GeneralPanel extends SidebarPanel {
     readonly position = -10;
 
     /** Quick actions reference for this panel */
-    private quickActions: [key: PossibleAction, title: string, iconId: string, action: Action][];
+    private quickActions: QuickActionOption[];
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
@@ -57,50 +55,13 @@ export class GeneralPanel extends SidebarPanel {
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
     @postConstruct()
-    init(): void {
+    async init(): Promise<void> {
         // Subscribe to different registry changes to make this panel reactive
         this.synthesesRegistry.onChange(() => this.update());
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
 
-        this.quickActions = [
-            [
-                "center",
-                "Center diagram",
-                "maximize",
-                CenterAction.create([], { animate: true }),
-            ],
-            [
-                "fit",
-                "Fit to screen",
-                "maximize-2",
-                KlighdFitToScreenAction.create(true),
-            ],
-            [
-                "layout",
-                "Layout diagram",
-                "layout",
-                RefreshLayoutAction.create(),
-            ],
-            [
-                "refresh",
-                "Refresh diagram",
-                "refresh-cw",
-                RefreshDiagramAction.create(),
-            ],
-            [
-                "export",
-                "Export as SVG",
-                "save",
-                RequestExportSvgAction.create(),
-            ],
-            [
-                "create-bookmark",
-                "Bookmark",
-                "bookmark",
-                CreateBookmarkAction.create()
-            ],
-        ];
+        this.assignQuickActions()
     }
 
     get id(): string {
@@ -111,6 +72,63 @@ export class GeneralPanel extends SidebarPanel {
         return "General";
     }
 
+    private assignQuickActions() {
+        this.quickActions = [
+            {
+                key: "center",
+                title: "Center diagram",
+                iconId: "maximize",
+                action: CenterAction.create([], { animate: true }),
+            },
+            {
+                key: "fit",
+                title: "Fit to screen",
+                iconId: "maximize-2",
+                action: this.renderOptionsRegistry.getValue(ResizeToFit) ? undefined : KlighdFitToScreenAction.create(true),
+                state: this.renderOptionsRegistry.getValue(ResizeToFit),
+                effect: () => {
+                        this.actionDispatcher.dispatch(SetRenderOptionAction.create(ResizeToFit.ID, !this.renderOptionsRegistry.getValue(ResizeToFit)));
+                        this.update()
+                }
+            },
+            {
+                key: "layout",
+                title: "Layout diagram",
+                iconId: "layout",
+                action: RefreshLayoutAction.create(),
+            },
+            {
+                key: "refresh",
+                title: "Refresh diagram",
+                iconId: "rotate-cw",
+                action: RefreshDiagramAction.create(),
+            },
+            {
+                key: "export",
+                title: "Export as SVG",
+                iconId: "save",
+                action: RequestExportSvgAction.create(),
+            },
+            {
+                key: "create-bookmark",
+                title: "Bookmark",
+                iconId: "bookmark",
+                action: CreateBookmarkAction.create()
+            },
+            {
+                key: "pin-sidebar",
+                title: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "Unpin Sidebar" : "Pin Sidebar",
+                iconId: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "lock" : "unlock",
+                action: SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)),
+            },
+        ];
+    }
+
+    update(): void {
+        this.assignQuickActions()
+        super.update()
+    }
+
     render(): VNode {
         return (
             <div>
@@ -119,11 +137,17 @@ export class GeneralPanel extends SidebarPanel {
                     <div class-options__button-group="true">
                         {this.quickActions.map((action) => (
                             <button
-                                title={action[1]}
+                                title={action.title}
                                 class-options__icon-button="true"
-                                on-click={() => this.handleQuickActionClick(action[0])}
+                                class-sidebar__enabled-button={!!action.state}
+                                on-click={() => {
+                                    if (action.effect) {
+                                        action.effect.apply(this)
+                                    }
+                                    this.handleQuickActionClick(action.key)
+                                }}
                             >
-                                <FeatherIcon iconId={action[2]}/>
+                                <FeatherIcon iconId={action.iconId}/>
                             </button>
                         ))}
                     </div>
@@ -175,8 +199,8 @@ export class GeneralPanel extends SidebarPanel {
         this.actionDispatcher.dispatch(SetPreferencesAction.create([{id:key, value:newValue}]));
     }
 
-    private handleQuickActionClick(type: PossibleAction) {
-        const action = this.quickActions.find((a) => a[0] === type)?.[3];
+    private handleQuickActionClick(type: PossibleQuickAction) {
+        const action = this.quickActions.find((a) => a.key === type)?.action;
 
         if (!action) return;
 

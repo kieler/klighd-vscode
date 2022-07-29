@@ -19,8 +19,9 @@
 import { inject, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
 import { DISymbol } from "../di.symbols";
+import { PinSidebarOption, RenderOptionsRegistry } from "../options/render-options-registry";
+import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
 import { SidebarPanelRegistry } from "./sidebar-panel-registry";
 
 /**
@@ -39,6 +40,7 @@ export class Sidebar extends AbstractUIExtension {
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     @inject(DISymbol.SidebarPanelRegistry) private sidebarPanelRegistry: SidebarPanelRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
 
     @postConstruct()
     init(): void {
@@ -69,7 +71,6 @@ export class Sidebar extends AbstractUIExtension {
         // VNode Root for the panel content is created.
         if (!this.oldPanelContentRoot) return;
 
-        console.time("sidebar-update");
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
 
         const content: VNode = (
@@ -102,7 +103,6 @@ export class Sidebar extends AbstractUIExtension {
         } else {
             this.containerElement.classList.remove("sidebar--open");
         }
-        console.timeEnd("sidebar-update");
     }
 
     protected onBeforeShow(): void {
@@ -120,6 +120,7 @@ export class Sidebar extends AbstractUIExtension {
         // Notice that an AbstractUIExtension only calls initializeContents once,
         // so this handler is also only registered once.
         this.addClickOutsideListenser(containerElement);
+        this.addMouseLeaveListener(containerElement)
     }
 
     private handlePanelButtonClick(id: string) {
@@ -136,9 +137,23 @@ export class Sidebar extends AbstractUIExtension {
             const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
 
             // See for information on detecting "click outside": https://stackoverflow.com/a/64665817/7569889
-            if (!currentPanelID || e.composedPath().includes(containerElement)) return;
+            if (currentPanelID && !e.composedPath().includes(containerElement)
+                && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
+                    this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+                }
+        });
+    }
 
-            this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+    /**
+     * Register a mouse left handler that hides the content if the mouse leaves the sidebar.
+     */
+    private addMouseLeaveListener(containerElement: HTMLElement): void {
+        containerElement.addEventListener("mouseleave", (e) => {
+            const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
+            if (currentPanelID && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
+                this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+            }
+
         });
     }
 }

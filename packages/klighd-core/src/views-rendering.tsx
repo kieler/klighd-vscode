@@ -15,12 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
+import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol';
-import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
+import { ShadowOption, Shadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
@@ -100,7 +100,7 @@ export function renderRectangularShape(
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) == ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
 
     const lineStyles = getSvgLineStyles(styles, parent, context)
@@ -207,7 +207,20 @@ export function renderRectangularShape(
             throw new Error('Rendering is neither an KArc, KEllipse, KImage, nor a KRectangle or KRoundedRectangle!')
         }
     }
+    // Do not draw smart zoom placeholder/magnifying glass
+    // addSmartZoomAreaPlaceholder(element, parent, context)
 
+    return element as VNode
+}
+
+/**
+ * Renders the default magnifying symbol for smart zoom.
+ * 
+ * @param element The element to add the symbol to.
+ * @param parent The parent graph element.
+ * @param context The rendering context.
+ */
+export function addSmartZoomAreaPlaceholder(element: VNode | undefined, parent: SKGraphElement, context: SKGraphModelRenderer): void {
     if (element && context.depthMap) {
         const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
         if (region && region.detail !== DetailLevel.FullDetails && parent.children.length >= 1) {
@@ -223,18 +236,17 @@ export function renderRectangularShape(
 
             const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
             const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
-            const placeholder = <g
+            // Draw a loupe/magnifying glass.
+            const magnifyingSymbol = <g
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
                 <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
                 <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{ 'stroke-linecap': 'round', 'stroke-width': '2' }} />
                 <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
                 <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
             </g>
-            element.children ? element.children.push(placeholder) : element.children = [placeholder]
+            element.children ? element.children.push(magnifyingSymbol) : element.children = [magnifyingSymbol]
         }
     }
-
-    return element as VNode
 }
 
 /**
@@ -273,7 +285,7 @@ export function renderLine(rendering: KPolyline,
         colorStyles.background = DEFAULT_FILL
     }
 
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
@@ -418,7 +430,7 @@ export function renderKText(rendering: KText,
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
 
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const textStyles = getSvgTextStyles(styles)
 
@@ -999,11 +1011,11 @@ export function renderKRendering(kRendering: KRendering,
                 providingRegion.regionTitleIndentation = newX
             }
             // Draw white background for overlaying titles
-            if (context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean && ((providingRegion && providingRegion.detail === DetailLevel.FullDetails) || !providingRegion)
+            if (context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean
                 && kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
-                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />
+                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8"/>
             }
         }
     }

@@ -259,10 +259,13 @@ export class OptionsRenderer {
     }
 
     /** Renders render options that are stored in the client. An example would be "show constraints" */
-    renderRenderOptions(renderOptions: RenderOption[]): (VNode | "")[] | "" {
+    renderRenderOptions(renderOptions: RenderOption[], renderCategory?: RenderOption): (VNode | "")[] | "" {
         if (renderOptions.length === 0) return "";
 
-        return renderOptions.map((option) => {
+        return renderOptions
+            .filter(option => !option.invisible)
+            .filter(option => option.renderCategory === renderCategory?.id)
+            .map((option) => {
             switch (option.type) {
                 case TransformationOptionType.CHECK:
                     return (
@@ -289,6 +292,39 @@ export class OptionsRenderer {
                             onChange={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );
+                case TransformationOptionType.CATEGORY:
+                    return (
+                        <CategoryOption
+                            key={option.id}
+                            id={option.id}
+                            name={option.name}
+                            value={option.currentValue}
+                            description={option.description}
+                            onChange={this.handleRenderOptionChange.bind(this, option)}
+                        >
+                            {/* Skip rendering the children if the category is closed */}
+                            {!option.currentValue
+                                ? ""
+                                : this.renderRenderOptions(renderOptions, option)}
+                        </CategoryOption>
+                    );
+                case TransformationOptionType.CHOICE:
+                    if (option.values) {
+                        return (
+                            <ChoiceOption
+                                key={option.id}
+                                id={option.id}
+                                name={option.name}
+                                value={option.currentValue}
+                                availableValues={option.values}
+                                description={option.description}
+                                onChange={this.handleRenderOptionChange.bind(this, option)}
+                            />
+                        );
+                    } else {
+                        console.error("No choice values for option:", option.name);
+                        return "";
+                    }
                 default:
                     console.error("Unsupported option type for option:", option.name);
                     return "";

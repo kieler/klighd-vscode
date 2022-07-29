@@ -61,6 +61,18 @@ export class StorageService {
         return this.memento.get<Record<string, any>>(StorageService.key) ?? {};
     }
 
+    setItem(key: string, value: any): void {
+        const data = this.getData();
+        data[key] = value;
+
+        this.updateData(data);
+    }
+
+    getItem(key: string): any {
+        const data = this.getData();
+        return data[key]
+    }
+
     private updateData(data: Record<string, any>) {
         this.memento.update(StorageService.key, data);
     }
