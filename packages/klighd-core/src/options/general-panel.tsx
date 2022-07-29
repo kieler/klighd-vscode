@@ -120,6 +120,7 @@ export class GeneralPanel extends SidebarPanel {
                 title: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "Unpin Sidebar" : "Pin Sidebar",
                 iconId: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "lock" : "unlock",
                 action: SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)),
+                state: this.renderOptionsRegistry.getValue(PinSidebarOption)
             },
         ];
     }
