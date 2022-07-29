@@ -102,3 +102,7 @@
 .sidebar__toggle-button--active {
     --background: var(--kdc-color-sidebar-trigger-background-active);
 }
+
+.sidebar__enabled-button {
+    --background: var(--kdc-color-sidebar-trigger-background-active);
+}
