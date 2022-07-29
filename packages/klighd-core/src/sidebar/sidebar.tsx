@@ -36,6 +36,10 @@ export class Sidebar extends AbstractUIExtension {
     /** Snabbdom patcher function and VDom root */
     private patcher: Patcher;
     private oldPanelContentRoot: VNode;
+    /**
+     * Maximum width of all opened panels.
+     */
+    private maxWidth = 0;
 
     @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
@@ -72,6 +76,8 @@ export class Sidebar extends AbstractUIExtension {
         if (!this.oldPanelContentRoot) return;
 
         const currentPanel = this.sidebarPanelRegistry.currentPanel;
+        // Reset fit to fit content to calculate the desired width at the end.
+        document.documentElement.style.setProperty('--sidebar-width', 'fit-content');
 
         const content: VNode = (
             <div class-sidebar__content="true">
@@ -103,6 +109,10 @@ export class Sidebar extends AbstractUIExtension {
         } else {
             this.containerElement.classList.remove("sidebar--open");
         }
+        // Set width of sidebar to maximum width of all opened panels.
+        this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
+        document.documentElement.style.setProperty('--sidebar-width', this.maxWidth + 'px');
+
     }
 
     protected onBeforeShow(): void {
