@@ -20,6 +20,13 @@ import { SKGraphElement } from "../skgraph-models"
 //// Base constructs ////
 
 /**
+ * 
+ */
+export interface NumericResult {
+    num: number
+}
+
+/**
  * Base interface for semantic filter rules.
  */
 export interface SemanticFilterRule {
@@ -33,7 +40,7 @@ export interface SemanticFilterRule {
  * A semantic filter tag is used as a filter rule that evaluates to true iff the tag is present
  * on a graph element.
  */
-export class SemanticFilterTag implements SemanticFilterRule {
+export class SemanticFilterTag implements SemanticFilterRule, NumericResult {
     ruleName?: string
     tag: string
     /** If num is not defined, the server will set the value 0 by default. */
@@ -366,6 +373,74 @@ export namespace NumericNotEqualConnective {
     }
 }
 
+/**
+ * A Numeric Plus Connective takes two numeric operands and evaluates
+ * to their sum.
+ */
+export class NumericPlusConnective implements BinaryConnective {
+    static NAME = "NUMERICPLUS"
+    name = NumericPlusConnective.NAME
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
+}
+
+export namespace NumericPlusConnective {
+    export function evaluate(conn: NumericPlusConnective): number {
+        return evaluateNumeric(conn.leftOperand) + evaluateNumeric(conn.rightOperand);
+    }
+}
+
+/**
+ * A Numeric Minus Connective takes two numeric operands and evaluates
+ * to their difference.
+ */
+export class NumericMinusConnective implements BinaryConnective {
+    static NAME = "NUMERICMINUS"
+    name = NumericMinusConnective.NAME
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
+}
+
+export namespace NumericMinusConnective {
+    export function evaluate(conn: NumericMinusConnective): number {
+        return evaluateNumeric(conn.leftOperand) - evaluateNumeric(conn.rightOperand);
+    }
+}
+
+/**
+ * A Numeric Times Connective takes two numeric operands and evaluates
+ * to their product.
+ */
+ export class NumericTimesConnective implements BinaryConnective {
+    static NAME = "NUMERICTIMES"
+    name = NumericTimesConnective.NAME
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
+}
+
+export namespace NumericTimesConnective {
+    export function evaluate(conn: NumericTimesConnective): number {
+        return evaluateNumeric(conn.leftOperand) * evaluateNumeric(conn.rightOperand);
+    }
+}
+
+/**
+ * A Numeric Divides Connective takes two numeric operands and evaluates
+ * to their product.
+ */
+ export class NumericDividesConnective implements BinaryConnective {
+    static NAME = "NUMERICDIVIDES"
+    name = NumericDividesConnective.NAME
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
+}
+
+export namespace NumericDividesConnective {
+    export function evaluate(conn: NumericDividesConnective): number {
+        return evaluateNumeric(conn.leftOperand) / evaluateNumeric(conn.rightOperand);
+    }
+}
+
 //// Functions ////
 
 /**
@@ -405,6 +480,26 @@ export function createFilter(rule: SemanticFilterRule): Filter {
         }
     }
 
+}
+
+function evaluateNumeric(rule: SemanticFilterRule): number {
+    // Rule is a Tag
+    if ((rule as SemanticFilterTag).tag !== undefined) {
+        return (rule as SemanticFilterTag).num;
+    } else {
+        switch  ((rule as Connective).name) {
+            case NumericPlusConnective.NAME:
+                return NumericPlusConnective.evaluate(rule as NumericPlusConnective);
+            case NumericMinusConnective.NAME:
+                return NumericMinusConnective.evaluate(rule as NumericMinusConnective);
+            case NumericTimesConnective.NAME:
+                return NumericTimesConnective.evaluate(rule as NumericTimesConnective);
+            case NumericDividesConnective.NAME:
+                return NumericDividesConnective.evaluate(rule as NumericDividesConnective);
+            default:
+                return 0
+        }
+    }
 }
 
 /** Evaluates `rule` using `tags`. See Connectives for further explanation on evaluation. */
