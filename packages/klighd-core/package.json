@@ -30,6 +30,7 @@
     },
     "devDependencies": {
         "@types/feather-icons": "^4.7.0",
+        "@types/file-saver": "^2.0.5",
         "semver": "^7.3.5"
     },
     "files": [
