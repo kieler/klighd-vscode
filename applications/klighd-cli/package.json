@@ -20,7 +20,7 @@
     "clean": "rm -rf lib dist bin",
     "lint": "eslint .",
     "build": "run-p --print-label \"build:*\"",
-    "build:app": "webpack --mode production --devtool hidden-source-map",
+    "build:app": "webpack --mode production",
     "build:server": "tsc -p ./tsconfig.server.json",
     "watch": "run-p --print-label \"watch:*\"",
     "watch:app": "webpack --watch",
