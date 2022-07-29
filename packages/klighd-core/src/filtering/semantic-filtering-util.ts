@@ -374,69 +374,69 @@ export namespace NumericNotEqualConnective {
 }
 
 /**
- * A Numeric Plus Connective takes two numeric operands and evaluates
+ * A Numeric Addition Connective takes two numeric operands and evaluates
  * to their sum.
  */
-export class NumericPlusConnective implements BinaryConnective {
-    static NAME = "NUMERICPLUS"
-    name = NumericPlusConnective.NAME
+export class NumericAdditionConnective implements BinaryConnective {
+    static NAME = "NUMERICAddition"
+    name = NumericAdditionConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
-export namespace NumericPlusConnective {
-    export function evaluate(conn: NumericPlusConnective): number {
+export namespace NumericAdditionConnective {
+    export function evaluate(conn: NumericAdditionConnective): number {
         return evaluateNumeric(conn.leftOperand) + evaluateNumeric(conn.rightOperand);
     }
 }
 
 /**
- * A Numeric Minus Connective takes two numeric operands and evaluates
+ * A Numeric Subtraction Connective takes two numeric operands and evaluates
  * to their difference.
  */
-export class NumericMinusConnective implements BinaryConnective {
-    static NAME = "NUMERICMINUS"
-    name = NumericMinusConnective.NAME
+export class NumericSubtractionConnective implements BinaryConnective {
+    static NAME = "NUMERICSubtraction"
+    name = NumericSubtractionConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
-export namespace NumericMinusConnective {
-    export function evaluate(conn: NumericMinusConnective): number {
+export namespace NumericSubtractionConnective {
+    export function evaluate(conn: NumericSubtractionConnective): number {
         return evaluateNumeric(conn.leftOperand) - evaluateNumeric(conn.rightOperand);
     }
 }
 
 /**
- * A Numeric Times Connective takes two numeric operands and evaluates
+ * A Numeric Multiplication Connective takes two numeric operands and evaluates
  * to their product.
  */
- export class NumericTimesConnective implements BinaryConnective {
-    static NAME = "NUMERICTIMES"
-    name = NumericTimesConnective.NAME
+ export class NumericMultiplicationConnective implements BinaryConnective {
+    static NAME = "NUMERICMultiplication"
+    name = NumericMultiplicationConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
-export namespace NumericTimesConnective {
-    export function evaluate(conn: NumericTimesConnective): number {
+export namespace NumericMultiplicationConnective {
+    export function evaluate(conn: NumericMultiplicationConnective): number {
         return evaluateNumeric(conn.leftOperand) * evaluateNumeric(conn.rightOperand);
     }
 }
 
 /**
- * A Numeric Divides Connective takes two numeric operands and evaluates
+ * A Numeric Division Connective takes two numeric operands and evaluates
  * to their product.
  */
- export class NumericDividesConnective implements BinaryConnective {
-    static NAME = "NUMERICDIVIDES"
-    name = NumericDividesConnective.NAME
+ export class NumericDivisionConnective implements BinaryConnective {
+    static NAME = "NUMERICDivision"
+    name = NumericDivisionConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
-export namespace NumericDividesConnective {
-    export function evaluate(conn: NumericDividesConnective): number {
+export namespace NumericDivisionConnective {
+    export function evaluate(conn: NumericDivisionConnective): number {
         return evaluateNumeric(conn.leftOperand) / evaluateNumeric(conn.rightOperand);
     }
 }
@@ -488,14 +488,14 @@ function evaluateNumeric(rule: SemanticFilterRule): number {
         return (rule as SemanticFilterTag).num;
     } else {
         switch  ((rule as Connective).name) {
-            case NumericPlusConnective.NAME:
-                return NumericPlusConnective.evaluate(rule as NumericPlusConnective);
-            case NumericMinusConnective.NAME:
-                return NumericMinusConnective.evaluate(rule as NumericMinusConnective);
-            case NumericTimesConnective.NAME:
-                return NumericTimesConnective.evaluate(rule as NumericTimesConnective);
-            case NumericDividesConnective.NAME:
-                return NumericDividesConnective.evaluate(rule as NumericDividesConnective);
+            case NumericAdditionConnective.NAME:
+                return NumericAdditionConnective.evaluate(rule as NumericAdditionConnective);
+            case NumericSubtractionConnective.NAME:
+                return NumericSubtractionConnective.evaluate(rule as NumericSubtractionConnective);
+            case NumericMultiplicationConnective.NAME:
+                return NumericMultiplicationConnective.evaluate(rule as NumericMultiplicationConnective);
+            case NumericDivisionConnective.NAME:
+                return NumericDivisionConnective.evaluate(rule as NumericDivisionConnective);
             default:
                 return 0
         }
