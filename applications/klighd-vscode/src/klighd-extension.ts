@@ -14,22 +14,22 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import * as vscode from 'vscode';
 import {
     KlighdFitToScreenAction,
+    KlighdRequestExportSvgAction,
     RefreshDiagramAction,
-    RefreshLayoutAction,
+    RefreshLayoutAction
 } from "@kieler/klighd-core";
-import { RequestExportSvgAction } from "sprotty";
 import { Action, CenterAction } from "sprotty-protocol";
 import { serializeUri, SprottyWebview } from "sprotty-vscode";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
 import { OpenInTextEditorMessage, SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
+import * as vscode from 'vscode';
 import { commands, ExtensionContext, Uri } from "vscode";
 import { CommonLanguageClient } from "vscode-languageclient";
 import { command, diagramType, extensionId } from "./constants";
-import { StorageService } from "./storage/storage-service";
 import { KLighDWebview } from "./klighd-webview";
+import { StorageService } from "./storage/storage-service";
 
 /** Options required to construct a KLighDExtension */
 interface KLighDExtensionOptions {
@@ -259,7 +259,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             commands.registerCommand(command.diagramExport, () => {
                 const activeWebview = this.findActiveWebview();
                 if (activeWebview) {
-                    activeWebview.dispatch(RequestExportSvgAction.create());
+                    activeWebview.dispatch(KlighdRequestExportSvgAction.create());
                 }
             })
         );
