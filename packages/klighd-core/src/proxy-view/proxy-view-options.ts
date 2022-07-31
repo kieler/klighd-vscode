@@ -271,6 +271,43 @@ export class ProxyViewCapProxyToParent implements RenderOption {
     currentValue = ProxyViewCapProxyToParent.DEFAULT;
 }
 
+/** Whether to show proxies early, e.g. whether proxies should be created before a node is fully off-screen. */
+export class ProxyViewShowProxiesEarly implements RenderOption {
+    static readonly ID: string = "proxy-view-show-proxies-early";
+    static readonly NAME: string = "Show Proxies Early";
+    static readonly DESCRIPTION: string = "Whether proxies should be created before a node is fully off-screen.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewShowProxiesEarly.ID;
+    readonly name: string = ProxyViewShowProxiesEarly.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewShowProxiesEarly.DEFAULT;
+    readonly description: string = ProxyViewShowProxiesEarly.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly debug: boolean = true;
+    currentValue = ProxyViewShowProxiesEarly.DEFAULT;
+}
+
+/** The amount by which to show proxies early if enabled. The number indicates a multiple of the offset used by i.e. Along-Border-Routing. */
+export class ProxyViewShowProxiesEarlyNumber implements RangeOption {
+    static readonly ID: string = "proxy-view-decrease-canvas-size-number";
+    static readonly NAME: string = "Show Proxies Early Number";
+    static readonly DESCRIPTION: string = "The amount by which to show proxies early if enabled. The number indicates a multiple of the offset used by i.e. Along-Border-Routing.";
+    static readonly DEFAULT: number = 5;
+    static readonly RANGE: Range = { first: 1, second: 15 };
+    static readonly STEPSIZE: number = 1;
+    readonly id: string = ProxyViewShowProxiesEarlyNumber.ID;
+    readonly name: string = ProxyViewShowProxiesEarlyNumber.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.RANGE;
+    readonly initialValue: number = ProxyViewShowProxiesEarlyNumber.DEFAULT;
+    readonly description: string = ProxyViewShowProxiesEarlyNumber.DESCRIPTION;
+    readonly renderCategory: RenderOption = ProxyViewDebugCategory.INSTANCE;
+    readonly range: Range = ProxyViewShowProxiesEarlyNumber.RANGE;
+    readonly stepSize: number = ProxyViewShowProxiesEarlyNumber.STEPSIZE;
+    readonly values: any[] = [];
+    readonly debug: boolean = true;
+    currentValue = ProxyViewShowProxiesEarlyNumber.DEFAULT;
+}
+
 /** Whether to change stacking order such that close proxies are stacked above distant ones. */
 export class ProxyViewStackingOrderByDistance implements RenderOption {
     static readonly ID: string = "proxy-view-stacking-order-by-distance";

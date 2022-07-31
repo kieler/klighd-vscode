@@ -76,7 +76,7 @@ export namespace Canvas {
      * @returns The bounds translated to the CRF.
      */
     export function translateToCRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
-        const b = toBounds(bpd);
+        const b = asBounds(bpd);
 
         const s = canvas.scroll;
         const z = canvas.zoom;
@@ -96,7 +96,7 @@ export namespace Canvas {
      * @returns The bounds translated to the LRF.
      */
     export function translateToLRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
-        const b = toBounds(bpd);
+        const b = asBounds(bpd);
 
         const s = canvas.scroll;
         const z = canvas.zoom;
@@ -188,9 +188,9 @@ export namespace Canvas {
     export function routeAlongBorder(from: Bounds | Point, fromBorder: Bounds, to: Bounds | Point, toBorder: Bounds, preferLeft = true, preferTop = false): Point[] {
         const res = [];
 
-        const toRect = Rect.fromBounds(toBounds(to));
+        const toRect = Rect.fromBounds(asBounds(to));
         const toBorderRect = Rect.fromBounds(toBorder);
-        const fromRect = Rect.fromBounds(toBounds(from));
+        const fromRect = Rect.fromBounds(asBounds(from));
         const fromBorderRect = Rect.fromBounds(fromBorder);
         let x, y;
         if (fromRect.left === fromBorderRect.left) {
@@ -345,11 +345,12 @@ export namespace Canvas {
      * @param offset The offset. Values `>0` reduce the canvas size.
      * @returns An offset canvas.
      */
-    export function offsetCanvas(canvas: Canvas, offset: Rect): Canvas {
-        const x = canvas.x + offset.left;
-        const width = canvas.width - offset.right - offset.left;
-        const y = canvas.y + offset.top;
-        const height = canvas.height - offset.bottom - offset.top;
+    export function offsetCanvas(canvas: Canvas, offset: number | Rect): Canvas {
+        const o = typeof offset === "number" ? { left: offset, right: offset, top: offset, bottom: offset } : offset;
+        const x = canvas.x + o.left;
+        const width = canvas.width - o.right - o.left;
+        const y = canvas.y + o.top;
+        const height = canvas.height - o.bottom - o.top;
         return { ...canvas, x, y, width, height };
     }
 
@@ -364,7 +365,7 @@ export namespace Canvas {
      * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
      */
     export function capToCanvas(bp: Bounds | Point, canvas: Bounds): Bounds {
-        const bounds = toBounds(bp);
+        const bounds = asBounds(bp);
 
         // Cap bounds at canvas border
         let x = capNumber(bounds.x, canvas.x, canvas.x + canvas.width - bounds.width);
@@ -398,10 +399,11 @@ export namespace Rect {
 
     /**
      * Returns `b` as a Rect.
-     * @param b The Bounds to transform into a Rect.
+     * @param bd The Bounds/Dimension to transform into a Rect.
      * @returns The Rect corresponding to `b`.
      */
-    export function fromBounds(b: Bounds): Rect {
+    export function fromBounds(bd: Bounds | Dimension): Rect {
+        const b = asBounds(bd);
         return { left: b.x, right: b.x + b.width, top: b.y, bottom: b.y + b.height };
     }
 
@@ -453,7 +455,7 @@ export function checkOverlap(b1: Bounds, b2: Bounds): boolean {
  * Returns `bpd` if given bounds, otherwise fills the empty attributes with zeros.
  * @param bpd The bounds/point/dimension.
  */
-export function toBounds(bpd: Bounds | Point | Dimension): Bounds {
+export function asBounds(bpd: Bounds | Point | Dimension): Bounds {
     return isBounds(bpd) ? bpd : { x: 0, y: 0, width: 0, height: 0, ...bpd };
 }
 
@@ -503,8 +505,8 @@ export function capNumber(n: number, min: number, max: number): number {
  * @returns The distance between the two bounds.
  */
 export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point): number {
-    const b1 = toBounds(bp1);
-    const b2 = toBounds(bp2);
+    const b1 = asBounds(bp1);
+    const b2 = asBounds(bp2);
 
     const b1Left = b1.x;
     const b1Right = b1Left + b1.width;
