@@ -437,6 +437,21 @@ export namespace NumericDivisionConnective {
     }
 }
 
+/**
+ * A Numeric Constant Connective returns a constant value.
+ */
+export class NumericConstantConnective implements Connective {
+    static NAME = "CONST"
+    name = NumericConstantConnective.NAME
+    num: number
+}
+
+export namespace NumericConstantConnective {
+    export function evaluate(conn: NumericConstantConnective): number {
+        return conn.num;
+    }
+}
+
 //// Functions ////
 
 /**
@@ -489,6 +504,8 @@ function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag
         }
     } else {
         switch  ((rule as Connective).name) {
+            case NumericConstantConnective.NAME:
+                return NumericConstantConnective.evaluate(rule as NumericConstantConnective);
             case NumericAdditionConnective.NAME:
                 return NumericAdditionConnective.evaluate(rule as NumericAdditionConnective, tags);
             case NumericSubtractionConnective.NAME:
