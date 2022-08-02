@@ -18,17 +18,17 @@
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
-    configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
-    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory,
-    TYPES, updateModule, viewportModule, ViewRegistry, configureActionHandler
+    configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
+    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty';
 import actionModule from './actions/actions-module';
-import bookmarkModule from './bookmarks/bookmark-module'
+import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols';
 import diagramPieceModule from './diagram-pieces/diagram-pieces-module';
 import { KlighdDiagramServer } from './diagram-server';
 import { KlighdHoverMouseListener } from './hover/hover';
 import { PopupModelProvider } from './hover/popup-provider';
+import { KlighdSvgExporter } from './klighd-svg-exporter';
 import { KlighdModelViewer } from './model-viewer';
 import { ResetPreferencesAction, SetPreferencesAction } from './options/actions';
 import { optionsModule } from './options/options-module';
@@ -89,6 +89,8 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     bind(DISymbol.PreferencesRegistry).to(PreferencesRegistry).inSingletonScope();
     configureActionHandler(context, SetPreferencesAction.KIND, DISymbol.PreferencesRegistry);
     configureActionHandler(context, ResetPreferencesAction.KIND, DISymbol.PreferencesRegistry);
+
+    rebind(TYPES.SvgExporter).to(KlighdSvgExporter).inSingletonScope()
 })
 
 /**

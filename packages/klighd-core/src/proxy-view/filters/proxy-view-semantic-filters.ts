@@ -106,9 +106,9 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
                 readonly name: string = ProxyViewSemanticFilter.NAME;
                 readonly type: TransformationOptionType = TransformationOptionType.CHECK;
                 readonly initialValue: boolean = ProxyViewSemanticFilter.DEFAULT;
-                readonly renderCategory: RenderOption = ProxyViewSemanticFilterCategory.INSTANCE;
+                readonly renderCategory: string = ProxyViewSemanticFilterCategory.ID;
                 currentValue: boolean = ProxyViewSemanticFilter.DEFAULT;
-                debug = false;
+                invisible = false;
             }
         ));
         // To ensure correct indexing, also initialize the values
@@ -152,7 +152,7 @@ export class ProxyViewSemanticFilterCategory implements RenderOption {
     readonly name: string = ProxyViewSemanticFilterCategory.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CATEGORY;
     readonly initialValue: any;
-    readonly renderCategory: RenderOption = ProxyViewFilterCategory.INSTANCE;
+    readonly renderCategory: string = ProxyViewFilterCategory.ID;
     currentValue: any;
 }
 
@@ -168,5 +168,5 @@ export class ProxyViewAbstractSemanticFilter implements RenderOption {
     type: TransformationOptionType;
     initialValue: any;
     currentValue: any;
-    debug = true;
+    invisible = true;
 }

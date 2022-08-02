@@ -27,7 +27,7 @@ export class ProxyViewFilterCategory implements RenderOption {
     readonly name: string = ProxyViewFilterCategory.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CATEGORY;
     readonly initialValue: any;
-    readonly renderCategory: RenderOption = ProxyViewCategory.INSTANCE;
+    readonly renderCategory: string = ProxyViewCategory.ID;
     currentValue: any;
 }
 
@@ -42,7 +42,7 @@ export class ProxyViewFilterUnconnectedToOnScreen implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ProxyViewFilterUnconnectedToOnScreen.DEFAULT;
     readonly description: string = ProxyViewFilterUnconnectedToOnScreen.DESCRIPTION;
-    readonly renderCategory: RenderOption = ProxyViewFilterCategory.INSTANCE;
+    readonly renderCategory: string = ProxyViewFilterCategory.ID;
     currentValue = ProxyViewFilterUnconnectedToOnScreen.DEFAULT;
 }
 
@@ -57,7 +57,7 @@ export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = ProxyViewFilterUnconnectedToSelected.DEFAULT;
     readonly description: string = ProxyViewFilterUnconnectedToSelected.DESCRIPTION;
-    readonly renderCategory: RenderOption = ProxyViewFilterCategory.INSTANCE;
+    readonly renderCategory: string = ProxyViewFilterCategory.ID;
     currentValue = ProxyViewFilterUnconnectedToSelected.DEFAULT;
 }
 
@@ -80,7 +80,7 @@ export class ProxyViewFilterDistant implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHOICE;
     readonly initialValue: string = ProxyViewFilterDistant.DEFAULT;
     readonly description: string = ProxyViewFilterDistant.DESCRIPTION;
-    readonly renderCategory: RenderOption = ProxyViewFilterCategory.INSTANCE;
-    readonly renderChoiceValues: string[] = ProxyViewFilterDistant.CHOICES;
+    readonly renderCategory: string = ProxyViewFilterCategory.ID;
+    readonly values: string[] = ProxyViewFilterDistant.CHOICES;
     currentValue = ProxyViewFilterDistant.DEFAULT;
 }

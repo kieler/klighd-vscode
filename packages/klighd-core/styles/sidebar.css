@@ -15,6 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+:root {
+    --sidebar-width: "fit-content";
+}
+
 .sidebar {
     box-sizing: border-box;
     position: fixed;
@@ -26,7 +30,7 @@
     min-width: min(400px, 35vw);
     /* Sidebar should consume at max 3/4th of the screen. */
     max-width: 75vw;
-    width: fit-content;
+    width: var(--sidebar-width);
     border-radius: var(--kdc-border-radius-default) 0 0 var(--kdc-border-radius-default);
 
     background-color: var(--kdc-color-sidebar-background);
@@ -100,5 +104,9 @@
 }
 
 .sidebar__toggle-button--active {
+    --background: var(--kdc-color-sidebar-trigger-background-active);
+}
+
+.sidebar__enabled-button {
     --background: var(--kdc-color-sidebar-trigger-background-active);
 }

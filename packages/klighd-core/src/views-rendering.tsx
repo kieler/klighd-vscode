@@ -15,19 +15,20 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
+import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol';
-import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { DetailLevel } from './depth-map';
-import { PaperShadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
+import { ShadowOption, Shadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
-    Arc, HorizontalAlignment, isRendering, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRenderingRef, KRoundedBendsPolyline,
+    Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
     KRoundedRectangle, KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
-    K_RENDERING_REF, K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
+    K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
-import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getPoints } from './views-common';
+import { hasAction } from './skgraph-utils';
+import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints } from './views-common';
 import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
@@ -93,7 +94,7 @@ export function renderRectangularShape(
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
     }
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) == ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
 
     const lineStyles = getSvgLineStyles(styles, parent, context)
@@ -200,7 +201,20 @@ export function renderRectangularShape(
             throw new Error('Rendering is neither an KArc, KEllipse, KImage, nor a KRectangle or KRoundedRectangle!')
         }
     }
+    // Do not draw smart zoom placeholder/magnifying glass
+    // addSmartZoomAreaPlaceholder(element, parent, context)
 
+    return element as VNode
+}
+
+/**
+ * Renders the default magnifying symbol for smart zoom.
+ * 
+ * @param element The element to add the symbol to.
+ * @param parent The parent graph element.
+ * @param context The rendering context.
+ */
+export function addSmartZoomAreaPlaceholder(element: VNode | undefined, parent: SKGraphElement, context: SKGraphModelRenderer): void {
     if (!context.forceRendering && element && context.depthMap) {
         const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
         if (region && region.detail !== DetailLevel.FullDetails && parent.children.length >= 1) {
@@ -216,18 +230,17 @@ export function renderRectangularShape(
 
             const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
             const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
-            const placeholder = <g
+            // Draw a loupe/magnifying glass.
+            const magnifyingSymbol = <g
                 transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
                 <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
                 <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{ 'stroke-linecap': 'round', 'stroke-width': '2' }} />
                 <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
                 <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
             </g>
-            element.children ? element.children.push(placeholder) : element.children = [placeholder]
+            element.children ? element.children.push(magnifyingSymbol) : element.children = [magnifyingSymbol]
         }
     }
-
-    return element as VNode
 }
 
 /**
@@ -266,7 +279,7 @@ export function renderLine(rendering: KPolyline,
         colorStyles.background = DEFAULT_FILL
     }
 
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const lineStyles = getSvgLineStyles(styles, parent, context)
 
@@ -411,7 +424,7 @@ export function renderKText(rendering: KText,
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
 
-    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(PaperShadows)
+    const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
     const textStyles = getSvgTextStyles(styles)
 
@@ -880,7 +893,7 @@ export function renderKRendering(kRendering: KRendering,
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
     const stylesToPropagate = new KStyles
     // Extract the styles of the rendering into a more presentable object.
-    const styles = getKStyles(parent, kRendering.styles, propagatedStyles, stylesToPropagate)
+    const styles = getKStyles(parent, kRendering, propagatedStyles, context, stylesToPropagate)
 
     // Determine the bounds of the rendering first and where it has to be placed.
     const isEdge = [K_POLYLINE, K_POLYGON, K_ROUNDED_BENDS_POLYLINE, K_SPLINE].includes(kRendering.type)
@@ -1006,7 +1019,7 @@ export function renderKRendering(kRendering: KRendering,
                 && (context.viewport.zoom <= titleScalingFactorOption && !isProxy || scaleProxy)
                 // Don't draw if the rendering is an empty KText
                 && (kRendering.type !== K_TEXT || (kRendering as KText).text !== "")) {
-                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" stroke="black" />
+                overlayRectangle = <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8"/>
             }
         }
     }
@@ -1059,40 +1072,22 @@ export function renderKRendering(kRendering: KRendering,
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
         context.titles[context.titles.length - 1].push(svgRendering)
+        // If the overlay does not define actions, make it non-interactable to allow clicking through to elements behind.
+        if (!hasAction(kRendering, true)) {
+            // add pointer-events: none to the style attribute of this overlay.
+            if (!svgRendering.data) {
+                svgRendering.data = {}
+            }
+            if (!svgRendering.data.style) {
+                svgRendering.data.style = {}
+            }
+            svgRendering.data.style['pointer-events'] = 'none'
+
+        }
         return <g></g>
     } else {
         return svgRendering
     }
-}
-
-/**
- * Looks up the first KRendering in the list of data and returns it. KRenderingReferences are handled and dereferenced as well, so only 'real' renderings are returned.
- * @param datas The list of possible renderings.
- * @param context The rendering context for this rendering.
- */
-export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer): KRendering | undefined {
-    for (const data of datas) {
-        if (data === null)
-            continue
-        if (data.type === K_RENDERING_REF) {
-            if (context.kRenderingLibrary) {
-                const id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
-                for (const rendering of context.kRenderingLibrary.renderings) {
-                    if ((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string === id) {
-                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map']
-                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map']
-                        return rendering as KRendering
-                    }
-                }
-            } else {
-                console.log("No KRenderingLibrary for KRenderingRef in context");
-            }
-        }
-        if (isRendering(data)) {
-            return data
-        }
-    }
-    return undefined
 }
 
 /**

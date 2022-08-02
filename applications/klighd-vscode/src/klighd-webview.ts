@@ -17,8 +17,9 @@
 
 import { SprottyDiagramIdentifier, SprottyWebviewOptions } from "sprotty-vscode";
 import { SprottyLspWebview } from "sprotty-vscode/lib/lsp";
-import { commands } from "vscode";
+import { commands, ViewColumn, WebviewPanel, window } from "vscode";
 import { contextKeys } from "./constants";
+import { KLighDExtension } from "./klighd-extension";
 
 /**
  * Extends the SprottyLspWebview to communicate user preferences to the container,
@@ -106,5 +107,30 @@ export class KLighDWebview extends SprottyLspWebview {
     /** Registers a message listener to handle received messages */
     onMessage(handler: (msg: any) => void): void {
         this.disposables.push(this.diagramPanel.webview.onDidReceiveMessage(handler));
+    }
+
+    protected createWebviewPanel(): WebviewPanel {
+        const title = this.createTitle();
+        const diagramPanel = window.createWebviewPanel(
+            this.diagramIdentifier.diagramType || 'diagram',
+            title,
+            {
+                viewColumn: ViewColumn.Two,
+                preserveFocus: true // The original editor remains focused.
+            },
+            {
+                localResourceRoots: this.localResourceRoots,
+                enableScripts: true,
+                retainContextWhenHidden: true
+            });
+        this.initializeWebview(diagramPanel.webview, title);
+        return diagramPanel;
+    }
+
+    protected async connect(): Promise<void> {
+        super.connect();
+        this.disposables.push(this.diagramPanel.onDidDispose(() => {
+            (this.extension as KLighDExtension).storageService.setItem('diagramOpen', false)
+        }));
     }
 }

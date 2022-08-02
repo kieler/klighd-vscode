@@ -25,7 +25,7 @@ import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
-import { getKRendering } from "../views-rendering";
+import { getKRendering } from "../views-common";
 import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";

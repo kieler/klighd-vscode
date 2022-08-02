@@ -15,20 +15,45 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-/** Base option that can be rendered as an ui input*/
-export interface RenderOption {
+import { Action } from "sprotty-protocol";
+
+/** Base option.*/
+export interface Option {
     id: string;
     name: string;
     type: TransformationOptionType;
     initialValue: any;
     currentValue: any;
     description?: string;
-    /** The category this RenderOption is part of. */
-    renderCategory?: RenderOption;
     /** The values this RenderOption has, if it's type is {@link TransformationOptionType.CHOICE}. */
-    renderChoiceValues?: any[];
-    /** Whether this RenderOption is used for debugging purposes, e.g. only shown when debug mode is enabled. */
-    debug?: boolean;
+    values?: any[];
+}
+
+/** Option that is rendered as a UI input.*/
+export interface RenderOption extends Option {
+    /** The category this RenderOption is part of. */
+    renderCategory?: string;
+    /** Per default undefined. */
+    invisible?: boolean
+}
+
+/** Type for available quick actions. */
+export type PossibleQuickAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark" | "pin-sidebar";
+
+export interface QuickActionOption {
+    key: PossibleQuickAction
+    title: string
+    /** Icon id of a feather icon. */
+    iconId: string
+    /** Action to be executed on click. */
+    action: Action | undefined
+    /** If the quick action button should be marked as clicked. */
+    state?: boolean
+    /**
+     * An additional effect which does not have to be an action to be executed
+     * on click before executing the action.
+     */
+    effect?: () => void
 }
 
 export interface Preference extends RenderOption {
@@ -52,7 +77,7 @@ export enum TransformationOptionType {
  * This is the counterpart to the KLighD's java implementation of the SynthesisOption.
  * Also adds a sourceHash that contains the hash code of the corresponding java instance for this option.
  */
-export interface SynthesisOption extends RenderOption {
+export interface SynthesisOption extends Option {
     values: any[]
     category?: SynthesisOption
 }

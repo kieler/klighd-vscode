@@ -14,9 +14,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { SGraph } from "sprotty";
+import { ExportSvgAction, RequestExportSvgAction, SGraph } from "sprotty";
 import {
-    Action, FitToScreenAction, RequestAction, ResponseAction
+    Action, FitToScreenAction, generateRequestId, RequestAction, ResponseAction
 } from "sprotty-protocol";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
 import { KImage } from '../skgraph-models';
@@ -167,5 +167,38 @@ export namespace SendModelContextAction {
             model,
             context
         }
+    }
+}
+
+/** 
+ * Extended {@link RequestExportSvgAction} to create a request action of a {@link KlighdExportSvgAction}.
+ */
+export type KlighdRequestExportSvgAction = RequestExportSvgAction
+
+export namespace KlighdRequestExportSvgAction {
+    export function create(): RequestAction<KlighdExportSvgAction> {
+        return {
+            kind: RequestExportSvgAction.KIND,
+            requestId: generateRequestId()
+        }
+    }
+}
+
+/** 
+ * Extended {@link ExportSvgAction} by a uri for a better name of the saved diagram.
+ */
+export interface KlighdExportSvgAction extends ExportSvgAction {
+    uri: string
+}
+export namespace KlighdExportSvgAction {
+    export const KIND = 'exportSvg';
+
+    export function create(svg: string, requestId: string, uri: string): KlighdExportSvgAction {
+        return {
+            kind: KIND,
+            svg,
+            responseId: requestId,
+            uri
+        };
     }
 }
