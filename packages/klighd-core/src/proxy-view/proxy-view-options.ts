@@ -287,11 +287,11 @@ export class ProxyViewShowProxiesEarly implements RenderOption {
     currentValue = ProxyViewShowProxiesEarly.DEFAULT;
 }
 
-/** The amount by which to show proxies early if enabled. The number indicates a multiple of the offset used by i.e. Along-Border-Routing. */
+/** The amount by which to show proxies early if enabled. The number indicates a percentage of the minimum of the canvas' dimensions. */
 export class ProxyViewShowProxiesEarlyNumber implements RangeOption {
     static readonly ID: string = "proxy-view-decrease-canvas-size-number";
     static readonly NAME: string = "Show Proxies Early Number";
-    static readonly DESCRIPTION: string = "The amount by which to show proxies early if enabled. The number indicates a multiple of the offset used by i.e. Along-Border-Routing.";
+    static readonly DESCRIPTION: string = "The amount by which to show proxies early if enabled. The number indicates a percentage of the minimum of the canvas' dimensions.";
     static readonly DEFAULT: number = 5;
     static readonly RANGE: Range = { first: 1, second: 15 };
     static readonly STEPSIZE: number = 1;
