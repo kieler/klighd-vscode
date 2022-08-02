@@ -758,6 +758,9 @@ export class ProxyView extends AbstractUIExtension {
         } else if (this.alongBorderRouting) {
             // Potentially need more points than just source and target
 
+            // TODO: cap bendpoints to canvas
+            // TODO: merge semantic filtering
+
             // A bias could be added to some sides (even in relation to proxy width/height), not useful for now
             const leftOffset = offsetCRF;
             const rightOffset = offsetCRF;
