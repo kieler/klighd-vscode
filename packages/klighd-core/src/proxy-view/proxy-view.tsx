@@ -195,7 +195,6 @@ export class ProxyView extends AbstractUIExtension {
 
     // TODO: performance in developer options for measuring performance
     // TODO: pseudo bendpoints for artifacts, see induced dataflow green line bottom collapsed regions motor.sctx
-    // TODO: option to create proxy not when fully off-screen but partially
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.
@@ -222,8 +221,10 @@ export class ProxyView extends AbstractUIExtension {
         this.currHTMLRoot = this.patcher(this.currHTMLRoot,
             <svg style={
                 {
-                    width: canvasWidth.toString(), height: canvasHeight.toString(), // Set size to whole canvas
-                    pointerEvents: "none" // Make click-through
+                    // Set size to whole canvas
+                    width: canvasWidth.toString(), height: canvasHeight.toString(),
+                    // Make click-through
+                    pointerEvents: "none"
                 }
             }>
                 {...this.createAllProxies(root, ctx, canvas)}
@@ -253,8 +254,12 @@ export class ProxyView extends AbstractUIExtension {
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, sizedCanvas, depth, ctx);
 
         //// Apply filters ////
-        const filteredOffScreenNodes = this.applyFilters(offScreenNodes, // The nodes to filter
-            onScreenNodes, canvasCRF, canvasLRF); // Additional arguments for filters
+        const filteredOffScreenNodes = this.applyFilters(
+            // The nodes to filter
+            offScreenNodes,
+            // Additional arguments for filters
+            onScreenNodes, canvasCRF, canvasLRF
+        );
 
         //// Clone nodes ////
         const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
@@ -317,9 +322,11 @@ export class ProxyView extends AbstractUIExtension {
         // Edges that should always be rendered below proxies
         const backEdgeProxies = [];
         const backEdges = ([] as { edge: SKEdge, transform: TransformAttributes }[]).concat(
-            segmentConnectors.overlayEdges, // Start with overlays to not have overlays over proxy edges
+            // Start with overlays to not have overlays over proxy edges
+            segmentConnectors.overlayEdges,
             segmentConnectors.proxyEdges,
-            routedEdges.overlayEdges // But routing overlays should still be over segment connectors
+            // But routing overlays should still be over segment connectors
+            routedEdges.overlayEdges
         );
         for (const { edge, transform } of backEdges) {
             // Create an edge proxy
@@ -640,7 +647,8 @@ export class ProxyView extends AbstractUIExtension {
                     node: clusterNode || { opacity: opacity },
                     transform: {
                         x, y, scale: 1, width: size, height: size,
-                        numProxies: numProxiesInCluster // Store the number of proxies in this cluster in case the cluster is clustered later on
+                        // Store the number of proxies in this cluster in case the cluster is clustered later on
+                        numProxies: numProxiesInCluster
                     } as any as TransformAttributes
                 });
             }
@@ -1320,7 +1328,7 @@ export class ProxyView extends AbstractUIExtension {
 
             // TODO: if implementing a double click action, either make on click wait a bit before panning:
             // vnode.data.on.click = async () => {await new Promise(f => setTimeout(f, 150)); this.actionDispatcher.dispatch(action);};
-            // or pan on swap double click and click actions (pan on double click)
+            // or swap double click and click actions (pan on double click)
             // vnode.data.on.dblclick = () => console.log("Test");
         }
     }
