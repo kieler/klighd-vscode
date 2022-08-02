@@ -257,119 +257,115 @@ export namespace IfThenElseConnective {
 //// Numeric Connectives ////
 
 /**
- * A LessThan Connective takes one rule R and evaluates to true
+ * A LessThan Connective takes two numeric rules R1 and R2 and evaluates to true
  * iff
- * R.num < correspondingTag.num.
- * @example R.num < correspondingTag.num
+ * R1 < R2
  */
-export class LessThanConnective implements UnaryConnective {
+export class LessThanConnective implements BinaryConnective {
     static NAME = "LESSTHAN"
     name = LessThanConnective.NAME
-    operand: SemanticFilterTag
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
     ruleName?: string
 }
 
 export namespace LessThanConnective {
     export function evaluate(conn: LessThanConnective, tags: Array<SemanticFilterTag>): boolean {
-        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
-        return (conn.operand.num ?? 0) < (correspondingTag?.num ?? 0);
+        return evaluateNumeric(conn.leftOperand, tags) < evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
 /**
- * A GreaterThan Connective takes one rule R and evaluates to true
+ * A GreaterThan Connective takes two numeric rules R1 and R2 and evaluates to true
  * iff
- * R.num > correspondingTag.num.
- * @example R.num > correspondingTag.num
+ * R1 > R2
  */
-export class GreaterThanConnective implements UnaryConnective {
+export class GreaterThanConnective implements BinaryConnective {
     static NAME = "GREATERTHAN"
     name = GreaterThanConnective.NAME
-    operand: SemanticFilterTag
+    leftOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule
     ruleName?: string
 }
 
 export namespace GreaterThanConnective {
     export function evaluate(conn: GreaterThanConnective, tags: Array<SemanticFilterTag>): boolean {
-        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
-        return (conn.operand.num ?? 0) > (correspondingTag?.num ?? 0);
+        return evaluateNumeric(conn.leftOperand, tags) > evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
 /**
- * A NumericEqual Connective takes one rule R and evaluates to true
+ * A NumericEqual Connective takes two rules R1 and R2 and evaluates to true
  * iff
- * R.num === correspondingTag.num.
- * @example R.num === correspondingTag.num
+ * R1 === R2
  */
-export class NumericEqualConnective implements UnaryConnective {
+export class NumericEqualConnective implements BinaryConnective {
     static NAME = "NUMERICEQUAL"
     name = NumericEqualConnective.NAME
-    operand: SemanticFilterTag
+    leftOperand: SemanticFilterTag
+    rightOperand: SemanticFilterRule
     ruleName?: string
 }
 
 export namespace NumericEqualConnective {
     export function evaluate(conn: NumericEqualConnective, tags: Array<SemanticFilterTag>): boolean {
-        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
-        return (conn.operand.num ?? 0) === (correspondingTag?.num ?? 0);
+        return evaluateNumeric(conn.leftOperand, tags) === evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
 /**
- * A GreaterEquals Connective takes one rule R and evaluates to true
+ * A GreaterEquals Connective takes two numeric rules R1 and R2 and evaluates to true
  * iff
- * @example R.num >= correspondingTag.num.
  */
-export class GreaterEqualsConnective implements UnaryConnective {
+export class GreaterEqualsConnective implements BinaryConnective {
     static NAME = "GREATEREQUALS"
     name = GreaterEqualsConnective.NAME
-    operand: SemanticFilterTag
+    leftOperand: SemanticFilterTag
+    rightOperand: SemanticFilterRule
     ruleName?: string
 }
 
 export namespace GreaterEqualsConnective {
     export function evaluate(conn: GreaterEqualsConnective, tags: Array<SemanticFilterTag>): boolean {
-        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
-        return (conn.operand.num ?? 0) >= (correspondingTag?.num ?? 0);
+        return evaluateNumeric(conn.leftOperand, tags) >= evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
 /**
- * A LessEquals Connective takes one rule R and evaluates to true
+ * A LessEquals Connective takes two numeric rules R1 and R2 and evaluates to true
  * iff
- * @example R.num <= correspondingTag.num.
+ * R1 <= R2
  */
- export class LessEqualsConnective implements UnaryConnective {
+ export class LessEqualsConnective implements BinaryConnective {
     static NAME = "LESSEQUALS"
     name = GreaterEqualsConnective.NAME
-    operand: SemanticFilterTag
+    leftOperand: SemanticFilterTag
+    rightOperand: SemanticFilterRule
     ruleName?: string
 }
 
 export namespace LessEqualsConnective {
     export function evaluate(conn: LessEqualsConnective, tags: Array<SemanticFilterTag>): boolean {
-        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
-        return (conn.operand.num ?? 0) <= (correspondingTag?.num ?? 0);
+        return evaluateNumeric(conn.leftOperand, tags) <= evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
 /**
- * A NumericNotEqual Connective takes one rule R and evaluates to true
+ * A NumericNotEqual Connective takes two rules R1 and R2 and evaluates to true
  * iff
- * @example R.num != correspondingTag.num.
+ * R1 != R2
  */
- export class NumericNotEqualConnective implements UnaryConnective {
+ export class NumericNotEqualConnective implements BinaryConnective {
     static NAME = "NUMERICNOTEQUAL"
     name = GreaterEqualsConnective.NAME
-    operand: SemanticFilterTag
+    leftOperand: SemanticFilterTag
+    rightOperand: SemanticFilterRule
     ruleName?: string
 }
 
 export namespace NumericNotEqualConnective {
     export function evaluate(conn: NumericNotEqualConnective, tags: Array<SemanticFilterTag>): boolean {
-        const correspondingTag = tags.find(tag => tag.tag === conn.operand.tag);
-        return (conn.operand.num ?? 0) !== (correspondingTag?.num ?? 0);
+        return evaluateNumeric(conn.leftOperand, tags) !== evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
