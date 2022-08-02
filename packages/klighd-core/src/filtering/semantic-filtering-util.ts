@@ -378,15 +378,15 @@ export namespace NumericNotEqualConnective {
  * to their sum.
  */
 export class NumericAdditionConnective implements BinaryConnective {
-    static NAME = "NUMERICAddition"
+    static NAME = "NUMERICADDITION"
     name = NumericAdditionConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
 export namespace NumericAdditionConnective {
-    export function evaluate(conn: NumericAdditionConnective): number {
-        return evaluateNumeric(conn.leftOperand) + evaluateNumeric(conn.rightOperand);
+    export function evaluate(conn: NumericAdditionConnective, tags: Array<SemanticFilterTag>): number {
+        return evaluateNumeric(conn.leftOperand, tags) + evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
@@ -395,15 +395,15 @@ export namespace NumericAdditionConnective {
  * to their difference.
  */
 export class NumericSubtractionConnective implements BinaryConnective {
-    static NAME = "NUMERICSubtraction"
+    static NAME = "NUMERICSUBBTRACTION"
     name = NumericSubtractionConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
 export namespace NumericSubtractionConnective {
-    export function evaluate(conn: NumericSubtractionConnective): number {
-        return evaluateNumeric(conn.leftOperand) - evaluateNumeric(conn.rightOperand);
+    export function evaluate(conn: NumericSubtractionConnective, tags: Array<SemanticFilterTag>): number {
+        return evaluateNumeric(conn.leftOperand, tags) - evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
@@ -412,15 +412,15 @@ export namespace NumericSubtractionConnective {
  * to their product.
  */
  export class NumericMultiplicationConnective implements BinaryConnective {
-    static NAME = "NUMERICMultiplication"
+    static NAME = "NUMERICMULTIPLICATION"
     name = NumericMultiplicationConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
 export namespace NumericMultiplicationConnective {
-    export function evaluate(conn: NumericMultiplicationConnective): number {
-        return evaluateNumeric(conn.leftOperand) * evaluateNumeric(conn.rightOperand);
+    export function evaluate(conn: NumericMultiplicationConnective, tags: Array<SemanticFilterTag>): number {
+        return evaluateNumeric(conn.leftOperand, tags) * evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
@@ -429,15 +429,15 @@ export namespace NumericMultiplicationConnective {
  * to their product.
  */
  export class NumericDivisionConnective implements BinaryConnective {
-    static NAME = "NUMERICDivision"
+    static NAME = "NUMERICDIVISION"
     name = NumericDivisionConnective.NAME
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
 
 export namespace NumericDivisionConnective {
-    export function evaluate(conn: NumericDivisionConnective): number {
-        return evaluateNumeric(conn.leftOperand) / evaluateNumeric(conn.rightOperand);
+    export function evaluate(conn: NumericDivisionConnective, tags: Array<SemanticFilterTag>): number {
+        return evaluateNumeric(conn.leftOperand, tags) / evaluateNumeric(conn.rightOperand, tags);
     }
 }
 
@@ -482,20 +482,25 @@ export function createFilter(rule: SemanticFilterRule): Filter {
 
 }
 
-function evaluateNumeric(rule: SemanticFilterRule): number {
+function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): number {
     // Rule is a Tag
     if ((rule as SemanticFilterTag).tag !== undefined) {
-        return (rule as SemanticFilterTag).num;
+        let nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag)
+        if (nodeTag != undefined) {
+            return nodeTag.num;
+        } else {
+            return 0;
+        }
     } else {
         switch  ((rule as Connective).name) {
             case NumericAdditionConnective.NAME:
-                return NumericAdditionConnective.evaluate(rule as NumericAdditionConnective);
+                return NumericAdditionConnective.evaluate(rule as NumericAdditionConnective, tags);
             case NumericSubtractionConnective.NAME:
-                return NumericSubtractionConnective.evaluate(rule as NumericSubtractionConnective);
+                return NumericSubtractionConnective.evaluate(rule as NumericSubtractionConnective, tags);
             case NumericMultiplicationConnective.NAME:
-                return NumericMultiplicationConnective.evaluate(rule as NumericMultiplicationConnective);
+                return NumericMultiplicationConnective.evaluate(rule as NumericMultiplicationConnective, tags);
             case NumericDivisionConnective.NAME:
-                return NumericDivisionConnective.evaluate(rule as NumericDivisionConnective);
+                return NumericDivisionConnective.evaluate(rule as NumericDivisionConnective, tags);
             default:
                 return 0
         }
