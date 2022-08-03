@@ -496,7 +496,7 @@ export function createFilter(rule: SemanticFilterRule): Filter {
 function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): number {
     // Rule is a Tag
     if ((rule as SemanticFilterTag).tag !== undefined) {
-        let nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag)
+        const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag)
         if (nodeTag != undefined) {
             return nodeTag.num;
         } else {
