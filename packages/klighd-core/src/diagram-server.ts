@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { saveAs } from 'file-saver';
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import {
     DeleteLayerConstraintAction,
@@ -54,6 +55,7 @@ import {
 import {
     CheckedImagesAction,
     CheckImagesAction,
+    KlighdExportSvgAction,
     KlighdFitToScreenAction,
     Pair,
     PerformActionAction,
@@ -158,8 +160,23 @@ export class KlighdDiagramServer extends DiagramServerProxy {
                 return true;
             case SetSynthesisAction.KIND:
                 return true;
+            case KlighdExportSvgAction.KIND:
+                return this.handleExportSvgAction(action as KlighdExportSvgAction);
         }
         return super.handleLocally(action);
+    }
+
+
+    protected handleExportSvgAction(action: KlighdExportSvgAction): boolean {
+        const blob = new Blob([action.svg], {type: "text/plain;charset=utf-8"});
+        const fileName = action.uri.split('/').pop()
+        let name = 'diagram'
+        if (fileName) {
+            // Get file name
+            name = fileName.split('.')[0]
+        }
+        saveAs(blob, name + '.svg');
+        return false;
     }
 
     initialize(registry: ActionHandlerRegistry): void {

@@ -17,23 +17,23 @@
 
 import "reflect-metadata";
 // Load styles to make the diagram pretty
+import "@kieler/klighd-core/styles/main.css";
 import "sprotty-vscode-webview/css/sprotty-vscode.css";
 import "./main.css";
-import "@kieler/klighd-core/styles/main.css";
 
+import { bindServices, createKlighdDiagramContainer } from "@kieler/klighd-core";
 import { Container } from "inversify";
+import { KeyTool } from "sprotty";
+import { ActionMessage, isActionMessage } from "sprotty-protocol";
 import {
     SprottyDiagramIdentifier,
     SprottyStarter,
     VscodeDiagramWidget,
-    VscodeDiagramWidgetFactory,
+    VscodeDiagramWidgetFactory
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { createKlighdDiagramContainer, bindServices } from "@kieler/klighd-core";
-import { MessageConnection } from "./message-connection";
-import { KeyTool } from "sprotty";
-import { ActionMessage, isActionMessage } from "sprotty-protocol";
 import { KlighdDiagramWidget } from "./klighd-widget";
+import { MessageConnection } from "./message-connection";
 import { MessagePersistenceStorage } from "./persistence-storage";
 
 /** Uses `klighd-core` and {@link SprottyStarter} to create a diagram container in a webview. */
