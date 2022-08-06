@@ -256,6 +256,22 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
 }
 
+/** Whether to use a simple version of {@link ProxyViewAlongBorderRouting}. Can cause strange artifacts if an edge e.g. oscillates. */
+export class ProxyViewSimpleAlongBorderRouting implements RenderOption {
+    static readonly ID: string = "proxy-view-simple-along-border-routing";
+    static readonly NAME: string = "Use Simple Along-Border-Routing";
+    static readonly DESCRIPTION: string = "Whether to use a simple version of Along-Border-Routing. Can cause strange artifacts if an edge e.g. oscillates.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewSimpleAlongBorderRouting.ID;
+    readonly name: string = ProxyViewSimpleAlongBorderRouting.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewSimpleAlongBorderRouting.DEFAULT;
+    readonly description: string = ProxyViewSimpleAlongBorderRouting.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewDebugCategory.ID;
+    readonly invisible: boolean = false;
+    currentValue = ProxyViewSimpleAlongBorderRouting.DEFAULT;
+}
+
 /** Whether to cap proxies in their parent node. */
 export class ProxyViewCapProxyToParent implements RenderOption {
     static readonly ID: string = "proxy-view-cap-proxy-to-parent";
@@ -419,6 +435,22 @@ export class ProxyViewTransparentEdges implements RenderOption {
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
     readonly invisible: boolean = false;
     currentValue = ProxyViewTransparentEdges.DEFAULT;
+}
+
+/** Whether proxies should be as big as their corresponding node. */
+export class ProxyViewOriginalNodeScale implements RenderOption {
+    static readonly ID: string = "proxy-view-original-node-scale";
+    static readonly NAME: string = "Original Node Scale";
+    static readonly DESCRIPTION: string = "Whether proxies should be as big as their corresponding node.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewOriginalNodeScale.ID;
+    readonly name: string = ProxyViewOriginalNodeScale.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewOriginalNodeScale.DEFAULT;
+    readonly description: string = ProxyViewOriginalNodeScale.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewDebugCategory.ID;
+    readonly invisible: boolean = false;
+    currentValue = ProxyViewOriginalNodeScale.DEFAULT;
 }
 
 /** Whether to cap scaling of proxies to 1. */

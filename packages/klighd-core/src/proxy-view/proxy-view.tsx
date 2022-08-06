@@ -30,7 +30,7 @@ import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale } from "./proxy-view-options";
 import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
@@ -130,6 +130,8 @@ export class ProxyView extends AbstractUIExtension {
     private opacityBySelected: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
     private useSynthesisProxyRendering: boolean;
+    /** @see {@link ProxyViewUseAlongBorderRoutingV2} */
+    private simpleAlongBorderRouting: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
     /** @see {@link ProxyViewDecreaseCanvasSize} */
@@ -150,6 +152,8 @@ export class ProxyView extends AbstractUIExtension {
     private edgesToOffScreenPoint: boolean;
     /** @see {@link ProxyViewTransparentEdges} */
     private transparentEdges: boolean;
+    /** @see {@link ProxyViewOriginalNodeScale} */
+    private originalNodeScale: boolean;
     /** @see {@link ProxyViewCapScaleToOne} */
     private capScaleToOne: boolean;
     /** @see {@link ProxyViewClusterTransparent} */
@@ -758,9 +762,6 @@ export class ProxyView extends AbstractUIExtension {
         } else if (this.alongBorderRouting) {
             // Potentially need more points than just source and target
 
-            // TODO: cap bendpoints to canvas
-            // TODO: merge semantic filtering
-
             // A bias could be added to some sides (even in relation to proxy width/height), not useful for now
             const leftOffset = offsetCRF;
             const rightOffset = offsetCRF;
@@ -782,44 +783,61 @@ export class ProxyView extends AbstractUIExtension {
             // Composition add o cap
             const addCap = (p: Point) => add(cap(p));
 
-            //// Calculate point where edge leaves canvas
-            let prevPoint = nodeTranslated;
-            let canvasEdgeIntersection;
-            for (let i = 1; i < edge.routingPoints.length; i++) {
-                // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
-                // Traverse routingPoints from the end for outgoing edges to match with prevPoint
-                const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvasCRF);
+            if (this.simpleAlongBorderRouting) {
+                // Just cap each routing point to the canvas, can cause strange artifacts if an edge e.g. oscillates
+                edge.routingPoints
+                    // Translate
+                    .map(p => cap(Canvas.translateToCRFAdd(parentPos, p, canvasCRF)))
+                    // Don't add points that are inside the proxy
+                    .filter(p => !Bounds.includes(transform, p))
+                    // Cap to canvas and add to routingPoints
+                    .forEach(p => routingPoints.push(p));
+                // Remove source/target accordingly
+                if (outgoing) {
+                    routingPoints.pop();
+                } else {
+                    routingPoints.shift();
+                }
+            } else {
+                //// Calculate point where edge leaves canvas
+                let prevPoint = nodeTranslated;
+                let canvasEdgeIntersection;
+                for (let i = 1; i < edge.routingPoints.length; i++) {
+                    // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
+                    // Traverse routingPoints from the end for outgoing edges to match with prevPoint
+                    const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvasCRF);
 
-                const intersection = getIntersection(prevPoint, p, canvasOffset);
-                if (intersection) {
-                    // Found an intersection
-                    canvasEdgeIntersection = intersection;
-                    if (!Bounds.includes(transform, canvasEdgeIntersection)) {
-                        // Don't add a point inside of the proxy
-                        addCap(canvasEdgeIntersection);
+                    const intersection = getIntersection(prevPoint, p, canvasOffset);
+                    if (intersection) {
+                        // Found an intersection
+                        canvasEdgeIntersection = intersection;
+                        if (!Bounds.includes(transform, canvasEdgeIntersection)) {
+                            // Don't add a point inside of the proxy
+                            addCap(canvasEdgeIntersection);
+                        }
+                    }
+
+                    // Add p to keep routing points consistent
+                    prevPoint = p;
+                    if (Bounds.includes(canvasOffset, p) && !Bounds.includes(transform, p)) {
+                        // Don't add a point that is off-screen or inside the proxy
+                        add(p);
                     }
                 }
 
-                // Add p to keep routing points consistent
-                prevPoint = p;
-                if (Bounds.includes(canvasOffset, p) && !Bounds.includes(transform, p)) {
-                    // Don't add a point that is off-screen or inside the proxy
-                    add(p);
+                if (!canvasEdgeIntersection) {
+                    // Should never be the case since one node has to be off-screen for a proxy to be created
+                    // Therefore the edge must intersect with the canvas
+                    return undefined;
                 }
-            }
 
-            if (!canvasEdgeIntersection) {
-                // Should never be the case since one node has to be off-screen for a proxy to be created
-                // Therefore the edge must intersect with the canvas
-                return undefined;
+                //// Calculate points on path to proxy near canvas
+                const preferLeft = proxyTranslated.x < (canvasOffLeft + canvasOffRight) / 2;
+                const preferTop = proxyTranslated.y < (canvasOffTop + canvasOffBottom) / 2;
+                const borderPoints = Canvas.routeAlongBorder(canvasEdgeIntersection, canvasOffset, transform, canvasCRF, preferLeft, preferTop);
+                // Remove points inside of proxy and add remaining
+                borderPoints.filter(p => !Bounds.includes(transform, p)).forEach(p => addCap(p));
             }
-
-            //// Calculate points on path to proxy near canvas
-            const preferLeft = proxyTranslated.x < (canvasOffLeft + canvasOffRight) / 2;
-            const preferTop = proxyTranslated.y < (canvasOffTop + canvasOffBottom) / 2;
-            const borderPoints = Canvas.routeAlongBorder(canvasEdgeIntersection, canvasOffset, transform, canvasCRF, preferLeft, preferTop);
-            // Remove points inside of proxy and add remaining
-            borderPoints.filter(p => !Bounds.includes(transform, p)).forEach(p => addCap(p));
 
             //// Finally, add source at its correct spot
             routingPoints.unshift(source);
@@ -1093,7 +1111,8 @@ export class ProxyView extends AbstractUIExtension {
         // The scale is calculated such that width & height are capped to a max value
         const proxyWidthScale = desiredSize / proxyBounds.width;
         const proxyHeightScale = desiredSize / proxyBounds.height;
-        const scale = Math.min(proxyWidthScale, proxyHeightScale, this.capScaleToOne ? 1 : proxyHeightScale);
+        let scale = this.originalNodeScale ? canvas.zoom : Math.min(proxyWidthScale, proxyHeightScale);
+        scale = this.capScaleToOne ? Math.min(1, scale) : scale;
         const proxyWidth = proxyBounds.width * scale;
         const proxyHeight = proxyBounds.height * scale;
 
@@ -1382,6 +1401,8 @@ export class ProxyView extends AbstractUIExtension {
         }
         this.useSynthesisProxyRendering = useSynthesisProxyRendering;
 
+        this.simpleAlongBorderRouting = renderOptionsRegistry.getValue(ProxyViewSimpleAlongBorderRouting);
+
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
         this.showProxiesEarly = renderOptionsRegistry.getValue(ProxyViewShowProxiesEarly);
         this.showProxiesEarlyNumber = renderOptionsRegistry.getValue(ProxyViewShowProxiesEarlyNumber);
@@ -1401,6 +1422,7 @@ export class ProxyView extends AbstractUIExtension {
             this.prevModifiedEdges.clear();
         }
 
+        this.originalNodeScale = renderOptionsRegistry.getValue(ProxyViewOriginalNodeScale);
         this.capScaleToOne = renderOptionsRegistry.getValue(ProxyViewCapScaleToOne);
 
         this.clusterTransparent = renderOptionsRegistry.getValue(ProxyViewClusterTransparent);
