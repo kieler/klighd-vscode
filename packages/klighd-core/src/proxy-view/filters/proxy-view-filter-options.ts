@@ -61,6 +61,21 @@ export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
     currentValue = ProxyViewFilterUnconnectedToSelected.DEFAULT;
 }
 
+/** Whether proxies of unselected nodes should be filtered. */
+export class ProxyViewFilterUnselected implements RenderOption {
+    static readonly ID: string = "proxy-view-filter-unselected";
+    static readonly NAME: string = "Filter Unselected Nodes";
+    static readonly DESCRIPTION: string = "Whether proxies of unselected nodes should be filtered.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewFilterUnselected.ID;
+    readonly name: string = ProxyViewFilterUnselected.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewFilterUnselected.DEFAULT;
+    readonly description: string = ProxyViewFilterUnselected.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewFilterCategory.ID;
+    currentValue = ProxyViewFilterUnselected.DEFAULT;
+}
+
 /** Whether proxies should be filtered by removing distant nodes. */
 export class ProxyViewFilterDistant implements RenderOption {
     static readonly ID: string = "proxy-view-filter-distant";

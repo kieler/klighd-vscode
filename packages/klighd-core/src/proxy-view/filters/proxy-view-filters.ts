@@ -24,7 +24,7 @@ import { SKNode } from "../../skgraph-models";
 import { ProxyView } from "../proxy-view";
 import { SendProxyViewAction } from "../proxy-view-actions";
 import { Canvas, isConnectedToAny, isSelectedOrConnectedToSelected } from "../proxy-view-util";
-import { ProxyViewFilterCategory, ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected } from "./proxy-view-filter-options";
+import { ProxyViewFilterCategory, ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected, ProxyViewFilterUnselected } from "./proxy-view-filter-options";
 
 //////// Types ////////
 
@@ -80,6 +80,11 @@ export function filterUnconnectedToSelected({ node }: ProxyFilterArgs): boolean 
     return !ProxyFilterHandler.filterUnconnectedToSelected || isSelectedOrConnectedToSelected(node);
 }
 
+/** @see {@link ProxyViewFilterUnselected} */
+export function filterUnselected({ node }: ProxyFilterArgs): boolean {
+    return !ProxyFilterHandler.filterUnselected || node.selected;
+}
+
 /** @see {@link ProxyViewFilterDistant} */
 export function filterDistant({ distance }: ProxyFilterArgs): boolean {
     let range = -1;
@@ -107,6 +112,8 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
     static filterUnconnectedToOnScreen: boolean;
     /** @see {@link ProxyViewFilterUnconnectedToSelected} */
     static filterUnconnectedToSelected: boolean;
+    /** @see {@link ProxyViewFilterUnselected} */
+    static filterUnselected: boolean;
     /** @see {@link ProxyViewFilterDistant} */
     static filterDistant: string;
 
@@ -115,6 +122,7 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
     private updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
         ProxyFilterHandler.filterUnconnectedToOnScreen = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToOnScreen);
         ProxyFilterHandler.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
+        ProxyFilterHandler.filterUnselected = renderOptionsRegistry.getValue(ProxyViewFilterUnselected);
         ProxyFilterHandler.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
     }
 
@@ -122,6 +130,7 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
     handle(action: Action): void | Action | ICommand {
         /** Filters can be registered here, keep the documentation of {@link ProxyView.registerFilters()} in mind */
         const filters: ProxyFilter[] = [
+            filterUnselected,
             filterUnconnectedToSelected,
             filterUnconnectedToOnScreen,
             filterDistant
@@ -151,6 +160,7 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
             ProxyViewFilterCategory,
             ProxyViewFilterUnconnectedToOnScreen,
             ProxyViewFilterUnconnectedToSelected,
+            ProxyViewFilterUnselected,
             ProxyViewFilterDistant
         );
         // Register to receive updates on registry changes
