@@ -288,6 +288,22 @@ export class ProxyViewCapProxyToParent implements RenderOption {
     currentValue = ProxyViewCapProxyToParent.DEFAULT;
 }
 
+/** Whether to show proxies immediately, e.g. whether proxies should be created once a node is partially off-screen. */
+export class ProxyViewShowProxiesImmediately implements RenderOption {
+    static readonly ID: string = "proxy-view-show-proxies-immediately";
+    static readonly NAME: string = "Show Proxies Immediately";
+    static readonly DESCRIPTION: string = "Whether proxies should be created once a node is partially off-screen.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewShowProxiesImmediately.ID;
+    readonly name: string = ProxyViewShowProxiesImmediately.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewShowProxiesImmediately.DEFAULT;
+    readonly description: string = ProxyViewShowProxiesImmediately.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewDebugCategory.ID;
+    readonly invisible: boolean = false;
+    currentValue = ProxyViewShowProxiesImmediately.DEFAULT;
+}
+
 /** Whether to show proxies early, e.g. whether proxies should be created before a node is fully off-screen. */
 export class ProxyViewShowProxiesEarly implements RenderOption {
     static readonly ID: string = "proxy-view-show-proxies-early";

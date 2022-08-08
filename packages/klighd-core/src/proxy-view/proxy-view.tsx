@@ -30,7 +30,7 @@ import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately } from "./proxy-view-options";
 import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
@@ -130,13 +130,15 @@ export class ProxyView extends AbstractUIExtension {
     private opacityBySelected: boolean;
     /** @see {@link ProxyViewUseSynthesisProxyRendering} */
     private useSynthesisProxyRendering: boolean;
-    /** @see {@link ProxyViewUseAlongBorderRoutingV2} */
+    /** @see {@link ProxyViewSimpleAlongBorderRouting} */
     private simpleAlongBorderRouting: boolean;
     /** @see {@link ProxyViewCapProxyToParent} */
     private capProxyToParent: boolean;
-    /** @see {@link ProxyViewDecreaseCanvasSize} */
+    /** @see {@link ProxyViewShowProxiesImmediately} */
+    private showProxiesImmediately: boolean;
+    /** @see {@link ProxyViewShowProxiesEarly} */
     private showProxiesEarly: boolean;
-    /** @see {@link ProxyViewDecreaseCanvasSizeNumber} */
+    /** @see {@link ProxyViewShowProxiesEarlyNumber} */
     private showProxiesEarlyNumber: number;
     /** @see {@link ProxyViewStackingOrderByDistance} */
     private stackingOrderByDistance: boolean;
@@ -361,28 +363,72 @@ export class ProxyView extends AbstractUIExtension {
             if (node instanceof SKNode) {
                 const b = this.getAbsoluteBounds(node);
 
-                if (!Canvas.isOnScreen(b, canvasLRF)) {
-                    // Node out of bounds
-                    offScreenNodes.push(node);
+                if (this.showProxiesImmediately) {
+                    // Show proxies as soon as a node is not completely on-screen
+                    if ((b.x < canvasLRF.x || b.x + b.width > canvasLRF.x + canvasLRF.width || b.y < canvasLRF.y || b.y + b.height > canvasLRF.y + canvasLRF.height) &&
+                        !((canvasLRF.x >= b.x && canvasLRF.x + canvasLRF.width <= b.x + b.width) || (canvasLRF.y >= b.y && canvasLRF.y + canvasLRF.height <= b.y + b.height))) {
+                        // Node partially out of bounds and doesn't envelop canvas
+                        offScreenNodes.push(node);
 
-                    if (depth !== 0 && node.children.length > 0) {
-                        /** depth > 0 or < 0 (see {@link HIERARCHICAL_OFF_SCREEN_DEPTH}), go further in */
-                        const childRes = this.getOffAndOnScreenNodes(node, canvasLRF, depth - 1, ctx);
-                        offScreenNodes.push(...childRes.offScreenNodes);
-                        onScreenNodes.push(...childRes.onScreenNodes);
-                    }
-                } else {
-                    // Node in bounds
-                    onScreenNodes.push(node);
+                        if (Canvas.isOnScreen(b, canvasLRF)) {
+                            // Just partially out of bounds
+                            if (node.children.length > 0) {
+                                const region = ctx.depthMap?.getProvidingRegion(node, ctx.viewport, ctx.renderOptionsRegistry);
 
-                    if (node.children.length > 0) {
-                        const region = ctx.depthMap?.getProvidingRegion(node, ctx.viewport, ctx.renderOptionsRegistry);
-
-                        if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
-                            // Has children, recursively check them
-                            const childRes = this.getOffAndOnScreenNodes(node, canvasLRF, depth, ctx);
+                                if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
+                                    // Has children, recursively check them
+                                    const childRes = this.getOffAndOnScreenNodes(node, canvasLRF, depth, ctx);
+                                    offScreenNodes.push(...childRes.offScreenNodes);
+                                    onScreenNodes.push(...childRes.onScreenNodes);
+                                }
+                            }
+                        } else if (depth !== 0 && node.children.length > 0) {
+                            // Fully out of bounds
+                            /** depth > 0 or < 0 (see {@link HIERARCHICAL_OFF_SCREEN_DEPTH}), go further in */
+                            const childRes = this.getOffAndOnScreenNodes(node, canvasLRF, depth - 1, ctx);
                             offScreenNodes.push(...childRes.offScreenNodes);
                             onScreenNodes.push(...childRes.onScreenNodes);
+                        }
+                    } else {
+                        // Node completely in bounds or envelops canvas
+                        onScreenNodes.push(node);
+
+                        if (node.children.length > 0) {
+                            const region = ctx.depthMap?.getProvidingRegion(node, ctx.viewport, ctx.renderOptionsRegistry);
+
+                            if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
+                                // Has children, recursively check them
+                                const childRes = this.getOffAndOnScreenNodes(node, canvasLRF, depth, ctx);
+                                offScreenNodes.push(...childRes.offScreenNodes);
+                                onScreenNodes.push(...childRes.onScreenNodes);
+                            }
+                        }
+                    }
+                } else {
+                    // Normal proxy-view behaviour
+                    if (!Canvas.isOnScreen(b, canvasLRF)) {
+                        // Node out of bounds
+                        offScreenNodes.push(node);
+
+                        if (depth !== 0 && node.children.length > 0) {
+                            /** depth > 0 or < 0 (see {@link HIERARCHICAL_OFF_SCREEN_DEPTH}), go further in */
+                            const childRes = this.getOffAndOnScreenNodes(node, canvasLRF, depth - 1, ctx);
+                            offScreenNodes.push(...childRes.offScreenNodes);
+                            onScreenNodes.push(...childRes.onScreenNodes);
+                        }
+                    } else {
+                        // Node in bounds
+                        onScreenNodes.push(node);
+
+                        if (node.children.length > 0) {
+                            const region = ctx.depthMap?.getProvidingRegion(node, ctx.viewport, ctx.renderOptionsRegistry);
+
+                            if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
+                                // Has children, recursively check them
+                                const childRes = this.getOffAndOnScreenNodes(node, canvasLRF, depth, ctx);
+                                offScreenNodes.push(...childRes.offScreenNodes);
+                                onScreenNodes.push(...childRes.onScreenNodes);
+                            }
                         }
                     }
                 }
@@ -1404,6 +1450,7 @@ export class ProxyView extends AbstractUIExtension {
         this.simpleAlongBorderRouting = renderOptionsRegistry.getValue(ProxyViewSimpleAlongBorderRouting);
 
         this.capProxyToParent = renderOptionsRegistry.getValue(ProxyViewCapProxyToParent);
+        this.showProxiesImmediately = renderOptionsRegistry.getValue(ProxyViewShowProxiesImmediately);
         this.showProxiesEarly = renderOptionsRegistry.getValue(ProxyViewShowProxiesEarly);
         this.showProxiesEarlyNumber = renderOptionsRegistry.getValue(ProxyViewShowProxiesEarlyNumber);
 
