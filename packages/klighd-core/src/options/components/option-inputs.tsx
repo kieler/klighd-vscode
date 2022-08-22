@@ -104,7 +104,7 @@ export function RangeOption(props: RangeOptionProps): VNode {
                 max={props.maxValue}
                 attrs={{ "value": props.value }}
                 step={props.stepSize}
-                on-change={(e: any) => props.onChange(e.target.value)}
+                on-input={(e: any) => props.onChange(e.target.value)}
             />
         </div>
     );
