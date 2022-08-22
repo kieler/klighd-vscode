@@ -95,9 +95,9 @@ export class OptionsRegistry extends Registry implements IActionHandlerInitializ
         } else if (SetLayoutOptionsAction.isThisAction(action)) {
             this.handleSetLayoutOptions(action);
         } else if (ResetSynthesisOptionsAction.isThisAction(action)) {
-            this.handleResetSynthesisOptions();
+            this.handleResetSynthesisOptions(action);
         } else if (ResetLayoutOptionsAction.isThisAction(action)) {
-            this.handleResetLayoutOptions();
+            this.handleResetLayoutOptions(action);
         }
     }
 
@@ -141,10 +141,12 @@ export class OptionsRegistry extends Registry implements IActionHandlerInitializ
         );
         this.notifyListeners();
 
-        this.connection.sendNotification(NotificationType.SetSynthesisOption, {
-            synthesisOptions: action.options,
-            uri: this.modelUri,
-        });
+        if (action.sendToServer) {
+            this.connection.sendNotification(NotificationType.SetSynthesisOption, {
+                synthesisOptions: action.options,
+                uri: this.modelUri,
+            });
+        }
     }
 
     private handleSetLayoutOptions(action: SetLayoutOptionsAction) {
@@ -155,38 +157,44 @@ export class OptionsRegistry extends Registry implements IActionHandlerInitializ
         });
         this.notifyListeners();
 
-        this.connection.sendNotification(NotificationType.SetLayoutOption, {
-            layoutOptions: action.options,
-            uri: this.modelUri,
-        });
+        if (action.sendToServer) {
+            this.connection.sendNotification(NotificationType.SetLayoutOption, {
+                layoutOptions: action.options,
+                uri: this.modelUri,
+            });
+        }
     }
 
-    private handleResetSynthesisOptions() {
+    private handleResetSynthesisOptions(action: ResetSynthesisOptionsAction) {
         this._synthesisOptions = this._synthesisOptions.map((option) => ({
             ...option,
             currentValue: option.initialValue,
         }));
         this.notifyListeners();
 
-        this.connection.sendNotification(NotificationType.SetSynthesisOption, {
-            synthesisOptions: this._synthesisOptions,
-            uri: this.modelUri,
-        });
+        if (action.sendToServer) {
+            this.connection.sendNotification(NotificationType.SetSynthesisOption, {
+                synthesisOptions: this._synthesisOptions,
+                uri: this.modelUri,
+            });
+        }
     }
 
-    private handleResetLayoutOptions() {
+    private handleResetLayoutOptions(action: ResetLayoutOptionsAction) {
         this._layoutOptions = this._layoutOptions.map((option) => ({
             ...option,
             currentValue: option.defaultValue.k,
         }));
         this.notifyListeners();
 
-        this.connection.sendNotification(NotificationType.SetLayoutOption, {
-            layoutOptions: this._layoutOptions.map<LayoutOptionValue>((o) => ({
-                optionId: o.optionId,
-                value: o.currentValue,
-            })),
-            uri: this.modelUri,
-        });
+        if (action.sendToServer) {
+            this.connection.sendNotification(NotificationType.SetLayoutOption, {
+                layoutOptions: this._layoutOptions.map<LayoutOptionValue>((o) => ({
+                    optionId: o.optionId,
+                    value: o.currentValue,
+                })),
+                uri: this.modelUri,
+            });
+        }
     }
 }

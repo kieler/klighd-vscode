@@ -125,14 +125,17 @@ export namespace ResetPreferencesAction {
 export interface SetSynthesisOptionsAction extends Action {
     kind: typeof SetSynthesisOptionsAction.KIND
     options: SynthesisOption[]
+    /** Boolean indicating whether the options should be sent to the server. */
+    sendToServer: boolean;
 }
 
 export namespace SetSynthesisOptionsAction {
     export const KIND = "setSynthesisOptions"
 
-    export function create(options: SynthesisOption[]): SetSynthesisOptionsAction {
+    export function create(options: SynthesisOption[], sendToServer = true): SetSynthesisOptionsAction {
         return {
             kind: KIND,
+            sendToServer,
             options,
         }
     }
@@ -145,14 +148,17 @@ export namespace SetSynthesisOptionsAction {
 /** Resets all synthesis options to default for both server and client. */
 export interface ResetSynthesisOptionsAction extends Action {
     kind: typeof ResetSynthesisOptionsAction.KIND
+    /** Boolean indicating whether the options should be sent to the server. */
+    sendToServer: boolean;
 }
 
 export namespace ResetSynthesisOptionsAction {
     export const KIND = "resetSynthesisOptions"
 
-    export function create(): ResetSynthesisOptionsAction {
+    export function create(sendToServer = true): ResetSynthesisOptionsAction {
         return {
             kind: KIND,
+            sendToServer
         }
     }
 
@@ -165,14 +171,17 @@ export namespace ResetSynthesisOptionsAction {
 export interface SetLayoutOptionsAction extends Action {
     kind: typeof SetLayoutOptionsAction.KIND
     options: LayoutOptionValue[]
+    /** Boolean indicating whether the options should be sent to the server. */
+    sendToServer: boolean;
 }
 
 export namespace SetLayoutOptionsAction {
     export const KIND = 'setLayoutOptions'
 
-    export function create(options: LayoutOptionValue[]): SetLayoutOptionsAction {
+    export function create(options: LayoutOptionValue[], sendToServer = true): SetLayoutOptionsAction {
         return {
             kind: KIND,
+            sendToServer,
             options
         }
     }
@@ -185,14 +194,17 @@ export namespace SetLayoutOptionsAction {
 /** Resets all layout options to default for both server and client. */
 export interface ResetLayoutOptionsAction extends Action {
     kind: typeof ResetLayoutOptionsAction.KIND
+    /** Boolean indicating whether the options should be sent to the server. */
+    sendToServer: boolean;
 }
 
 export namespace ResetLayoutOptionsAction {
     export const KIND = "resetLayoutOptions"
 
-    export function create(): ResetLayoutOptionsAction {
+    export function create(sendToServer = true): ResetLayoutOptionsAction {
         return {
             kind: KIND,
+            sendToServer
         }
     }
 

@@ -159,6 +159,7 @@ export class OptionsRenderer {
                                 stepSize={(option as RangeOptionData).stepSize}
                                 description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                                onInput={this.handleSynthesisOptionInput.bind(this, option)}
                             />
                         );
                     case TransformationOptionType.TEXT:
@@ -203,6 +204,12 @@ export class OptionsRenderer {
         );
     }
 
+    private handleSynthesisOptionInput(option: SynthesisOption, newValue: any) {
+        this.actionDispatcher.dispatch(
+            SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }], false)
+        );
+    }
+
     private renderLayoutOptions(layoutOptions: LayoutOptionUIData[]): (VNode | "")[] | "" {
         return layoutOptions.map((option) => {
             switch (option.type) {
@@ -219,6 +226,7 @@ export class OptionsRenderer {
                             stepSize={option.type === Type.INT ? 1 : 0.01}
                             description={option.description}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
+                            onInput={this.handleLayoutOptionInput.bind(this, option)}
                         />
                     );
                 case Type.BOOLEAN:
@@ -258,6 +266,12 @@ export class OptionsRenderer {
         );
     }
 
+    private handleLayoutOptionInput(option: LayoutOptionUIData, newValue: any) {
+        this.actionDispatcher.dispatch(
+            SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }], false)
+        );
+    }
+
     /** Renders render options that are stored in the client. An example would be "show constraints" */
     renderRenderOptions(renderOptions: RenderOption[], renderCategory?: RenderOption): (VNode | "")[] | "" {
         if (renderOptions.length === 0) return "";
@@ -290,6 +304,8 @@ export class OptionsRenderer {
                             stepSize={(option as RangeOptionData).stepSize}
                             description={option.description}
                             onChange={this.handleRenderOptionChange.bind(this, option)}
+                            // Same as onChange
+                            onInput={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );
                 case TransformationOptionType.CATEGORY:
