@@ -24,7 +24,7 @@ import { OptionsRegistry } from "../options/options-registry";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { ProxyView } from "./proxy-view";
-import { ProxyViewActionsEnabled, ProxyViewAlongBorderRouting, ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewConnectOffScreenEdges, ProxyViewDebugCategory, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewStraightEdgeRouting, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately } from "./proxy-view-options";
+import { ProxyViewInteractiveProxies, ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewEnableSegmentProxies, ProxyViewDebugCategory, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies } from "./proxy-view-options";
 
 /**
  * Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
@@ -97,12 +97,10 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             ProxyViewCategory,
             ProxyViewEnabled,
             ProxyViewSize,
-            ProxyViewClusteringEnabled,
-            ProxyViewOpacityByDistance,
-            ProxyViewActionsEnabled,
-            ProxyViewConnectOffScreenEdges,
-            ProxyViewStraightEdgeRouting,
-            ProxyViewAlongBorderRouting,
+            ProxyViewDecreaseProxyClutter,
+            ProxyViewEnableEdgeProxies,
+            ProxyViewEnableSegmentProxies,
+            ProxyViewInteractiveProxies,
             ProxyViewTitleScaling
         );
 
@@ -128,8 +126,7 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             ProxyViewCapScaleToOne,
             ProxyViewClusterTransparent,
             ProxyViewClusteringCascading,
-            ProxyViewClusteringSweepLine,
-            ProxyViewUsePositionsCache
+            ProxyViewClusteringSweepLine
         );
     }
 

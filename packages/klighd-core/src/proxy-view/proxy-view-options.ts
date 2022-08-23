@@ -22,17 +22,21 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
  * 
  * Enable Proxy-View
  *   true/false
- * Size of Proxies?
+ * Size of Proxies in %
  *   range
  * Decrease Proxy Clutter
  *   Off
  *   Clustering
  *   Stacking Order + Transparency by Distance
- * Show Edges to Proxies
- *   Straight Edges
+ * Enable Edge-Proxies
+ *   Off
+ *   Straight-Edge-Routing
  *   Along-Border-Routing
- * Connect Off-Screen Edges
- * Enable Actions ({@link ProxyViewActionsEnabled})
+ * Enable Segment Proxies
+ *   true/false
+ * Interactive Proxies ({@link ProxyViewInteractiveProxies})
+ *   true/false
+ * Scale Proxy Titles
  *   true/false
  * 
  * Filters (...)
@@ -87,94 +91,103 @@ export class ProxyViewSize implements RangeOption {
     currentValue = ProxyViewSize.DEFAULT;
 }
 
-/** Whether clustering is enabled. */
-export class ProxyViewClusteringEnabled implements RenderOption {
-    static readonly ID: string = "proxy-view-clustering-enabled";
-    static readonly NAME: string = "Enable Clustering";
-    static readonly DESCRIPTION: string = "Whether overlapping proxies should be clustered.";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewClusteringEnabled.ID;
-    readonly name: string = ProxyViewClusteringEnabled.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewClusteringEnabled.DEFAULT;
-    readonly description: string = ProxyViewClusteringEnabled.DESCRIPTION;
+/**
+ * What strategy to use to decrease proxy clutter.
+ * Clustering clusters overlapping proxies into a single cluster.
+ * Opacity by Distance increases transparency for distant proxies.
+ */
+export class ProxyViewDecreaseProxyClutter implements RenderOption {
+    static readonly ID: string = "proxy-view-decrease-proxy-clutter";
+    static readonly NAME: string = "Decrease Proxy Clutter";
+    static readonly DESCRIPTION: string =
+        "What strategy to use to decrease proxy clutter. " +
+        "Clustering clusters overlapping proxies into a single cluster. " +
+        "Opacity by Distance increases transparency for distant proxies.";
+    static readonly CHOICE_OFF: string = "Off";
+    static readonly CHOICE_CLUSTERING: string = "Clustering";
+    static readonly CHOICE_OPACITY: string = "Opacity by Distance";
+    static readonly DEFAULT: string = ProxyViewDecreaseProxyClutter.CHOICE_OPACITY;
+    static readonly CHOICES: string[] = [
+        ProxyViewDecreaseProxyClutter.CHOICE_OFF,
+        ProxyViewDecreaseProxyClutter.CHOICE_CLUSTERING,
+        ProxyViewDecreaseProxyClutter.CHOICE_OPACITY
+    ];
+    readonly id: string = ProxyViewDecreaseProxyClutter.ID;
+    readonly name: string = ProxyViewDecreaseProxyClutter.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHOICE;
+    readonly initialValue: string = ProxyViewDecreaseProxyClutter.DEFAULT;
+    readonly description: string = ProxyViewDecreaseProxyClutter.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
-    currentValue = ProxyViewClusteringEnabled.DEFAULT;
+    readonly values: string[] = ProxyViewDecreaseProxyClutter.CHOICES;
+    currentValue = ProxyViewDecreaseProxyClutter.DEFAULT;
 }
 
-/** Whether proxies should be more transparent the further away they are. */
-export class ProxyViewOpacityByDistance implements RenderOption {
-    static readonly ID: string = "proxy-view-opacity-by-distance";
-    static readonly NAME: string = "Transparent Distant Proxies";
-    static readonly DESCRIPTION: string = "Whether proxies should be more transparent the further away they are.";
-    static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewOpacityByDistance.ID;
-    readonly name: string = ProxyViewOpacityByDistance.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewOpacityByDistance.DEFAULT;
-    readonly description: string = ProxyViewOpacityByDistance.DESCRIPTION;
+/**
+ * What strategy to use for routing edge proxies, if enabled.
+ * Edge proxies connect on-screen nodes with proxies instead of their off-screen counterparts.
+ * Straight-Edge-Routing draws a straight line between node and proxy.
+ * Along-Border-Routing reuses most of the original edge's path and routes the remaining path to the proxy along the border.
+ */
+export class ProxyViewEnableEdgeProxies implements RenderOption {
+    static readonly ID: string = "proxy-view-enable-edge-proxies";
+    static readonly NAME: string = "Enable Edge Proxies";
+    static readonly DESCRIPTION: string =
+        "What strategy to use for routing edge proxies, if enabled. " +
+        "Edge proxies connect on-screen nodes with proxies instead of their off-screen counterparts. " +
+        "Straight-Edge-Routing draws a straight line between node and proxy. " +
+        "Along-Border-Routing reuses most of the original edge's path and routes the remaining path to the proxy along the border.";
+    static readonly CHOICE_OFF: string = "Off";
+    static readonly CHOICE_STRAIGHT_EDGE_ROUTING: string = "Straight-Edge-Routing";
+    static readonly CHOICE_ALONG_BORDER_ROUTING: string = "Along-Border-Routing";
+    static readonly DEFAULT: string = ProxyViewEnableEdgeProxies.CHOICE_OFF;
+    static readonly CHOICES: string[] = [
+        ProxyViewEnableEdgeProxies.CHOICE_OFF,
+        ProxyViewEnableEdgeProxies.CHOICE_STRAIGHT_EDGE_ROUTING,
+        ProxyViewEnableEdgeProxies.CHOICE_ALONG_BORDER_ROUTING
+    ];
+    readonly id: string = ProxyViewEnableEdgeProxies.ID;
+    readonly name: string = ProxyViewEnableEdgeProxies.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHOICE;
+    readonly initialValue: string = ProxyViewEnableEdgeProxies.DEFAULT;
+    readonly description: string = ProxyViewEnableEdgeProxies.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
-    currentValue = ProxyViewOpacityByDistance.DEFAULT;
+    readonly values: string[] = ProxyViewEnableEdgeProxies.CHOICES;
+    currentValue = ProxyViewEnableEdgeProxies.DEFAULT;
+}
+
+/**
+ * Whether segment proxies should be created.
+ * Segment proxies connect off-screen segments of an edge.
+ */
+export class ProxyViewEnableSegmentProxies implements RenderOption {
+    static readonly ID: string = "proxy-view-enable-segment-proxies";
+    static readonly NAME: string = "Enable Segment Proxies";
+    static readonly DESCRIPTION: string =
+        "Whether segment proxies should be created. " +
+        "Segment proxies connect off-screen segments of an edge.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewEnableSegmentProxies.ID;
+    readonly name: string = ProxyViewEnableSegmentProxies.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewEnableSegmentProxies.DEFAULT;
+    readonly description: string = ProxyViewEnableSegmentProxies.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewCategory.ID;
+    currentValue = ProxyViewEnableSegmentProxies.DEFAULT;
 }
 
 /** Whether proxies should be interactable. */
-export class ProxyViewActionsEnabled implements RenderOption {
-    static readonly ID: string = "proxy-view-actions-enabled";
-    static readonly NAME: string = "Enable Actions";
-    static readonly DESCRIPTION: string = "Whether proxies should be interactable.";
+export class ProxyViewInteractiveProxies implements RenderOption {
+    static readonly ID: string = "proxy-view-interactive-proxies";
+    static readonly NAME: string = "Interactive Proxies";
+    static readonly DESCRIPTION: string = "Whether proxies should be interactable. Clicking on a proxy hops to its off-screen counterpart.";
     static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewActionsEnabled.ID;
-    readonly name: string = ProxyViewActionsEnabled.NAME;
+    readonly id: string = ProxyViewInteractiveProxies.ID;
+    readonly name: string = ProxyViewInteractiveProxies.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewActionsEnabled.DEFAULT;
-    readonly description: string = ProxyViewActionsEnabled.DESCRIPTION;
+    readonly initialValue: boolean = ProxyViewInteractiveProxies.DEFAULT;
+    readonly description: string = ProxyViewInteractiveProxies.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
-    currentValue = ProxyViewActionsEnabled.DEFAULT;
-}
-
-/** Whether edge proxies connecting the intersections of an edge and the canvas should be created. */
-export class ProxyViewConnectOffScreenEdges implements RenderOption {
-    static readonly ID: string = "proxy-view-edge-proxies-between-edges";
-    static readonly NAME: string = "Connect Off-Screen Edges";
-    static readonly DESCRIPTION: string = "Whether edge proxies connecting the intersections of an edge and the canvas should be created.";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewConnectOffScreenEdges.ID;
-    readonly name: string = ProxyViewConnectOffScreenEdges.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewConnectOffScreenEdges.DEFAULT;
-    readonly description: string = ProxyViewConnectOffScreenEdges.DESCRIPTION;
-    readonly renderCategory: string = ProxyViewCategory.ID;
-    currentValue = ProxyViewConnectOffScreenEdges.DEFAULT;
-}
-
-/** Whether straight edges to proxies should be drawn. */
-export class ProxyViewStraightEdgeRouting implements RenderOption {
-    static readonly ID: string = "proxy-view-straight-edge-routing";
-    static readonly NAME: string = "Draw Straight Edges to Proxies";
-    static readonly DESCRIPTION: string = "Whether straight edges to proxies should be drawn.";
-    static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewStraightEdgeRouting.ID;
-    readonly name: string = ProxyViewStraightEdgeRouting.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewStraightEdgeRouting.DEFAULT;
-    readonly description: string = ProxyViewStraightEdgeRouting.DESCRIPTION;
-    readonly renderCategory: string = ProxyViewCategory.ID;
-    currentValue = ProxyViewStraightEdgeRouting.DEFAULT;
-}
-
-/** Whether edges to proxies should be drawn via along-border-routing. */
-export class ProxyViewAlongBorderRouting implements RenderOption {
-    static readonly ID: string = "proxy-view-along-border-routing";
-    static readonly NAME: string = "Along-Border-Routing";
-    static readonly DESCRIPTION: string = "Whether edges to proxies should be drawn via along-border-routing.";
-    static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewAlongBorderRouting.ID;
-    readonly name: string = ProxyViewAlongBorderRouting.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewAlongBorderRouting.DEFAULT;
-    readonly description: string = ProxyViewAlongBorderRouting.DESCRIPTION;
-    readonly renderCategory: string = ProxyViewCategory.ID;
-    currentValue = ProxyViewAlongBorderRouting.DEFAULT;
+    currentValue = ProxyViewInteractiveProxies.DEFAULT;
 }
 
 /** Whether to use title scaling if smart zoom is enabled. */
@@ -256,7 +269,7 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
 }
 
-/** Whether to use a simple version of {@link ProxyViewAlongBorderRouting}. Can cause strange artifacts if an edge e.g. oscillates. */
+/** Whether to use a simple version of Along-Border-Routing. Can cause strange artifacts if an edge e.g. oscillates. */
 export class ProxyViewSimpleAlongBorderRouting implements RenderOption {
     static readonly ID: string = "proxy-view-simple-along-border-routing";
     static readonly NAME: string = "Use Simple Along-Border-Routing";
@@ -531,20 +544,4 @@ export class ProxyViewClusteringSweepLine implements RenderOption {
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
     readonly invisible: boolean = false;
     currentValue = ProxyViewClusteringSweepLine.DEFAULT;
-}
-
-/** Whether to use the positions cache. */
-export class ProxyViewUsePositionsCache implements RenderOption {
-    static readonly ID: string = "proxy-view-use-positions-cache";
-    static readonly NAME: string = "Cache positions";
-    static readonly DESCRIPTION: string = "Whether the absolute positions of nodes should be cached by the proxy-view.";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewUsePositionsCache.ID;
-    readonly name: string = ProxyViewUsePositionsCache.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewUsePositionsCache.DEFAULT;
-    readonly description: string = ProxyViewUsePositionsCache.DESCRIPTION;
-    readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = false;
-    currentValue = ProxyViewUsePositionsCache.DEFAULT;
 }

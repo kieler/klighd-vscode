@@ -30,7 +30,7 @@ import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringEnabled, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewActionsEnabled, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityByDistance, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUsePositionsCache, ProxyViewUseSynthesisProxyRendering, ProxyViewStraightEdgeRouting, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewAlongBorderRouting, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewConnectOffScreenEdges, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewInteractiveProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUseSynthesisProxyRendering, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableSegmentProxies, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies } from "./proxy-view-options";
 import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
@@ -39,22 +39,22 @@ export class ProxyView extends AbstractUIExtension {
     /** ID. */
     static readonly ID = "proxy-view";
     /**
-     * ID used for proxy rendering property of SKNodes.
-     * The corresponding property contains the proxy's data.
-     */
-    static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxy-view.proxyRendering";
-    /**
      * ID used to indicate whether an SKNode should be rendered as a proxy.
      * The corresponding property can be `true` or `false`.
      */
-    static readonly RENDER_NODE_AS_PROXY_PROPERTY = "de.cau.cs.kieler.klighd.proxy-view.renderNodeAsProxy";
+    static readonly RENDER_NODE_AS_PROXY_PROPERTY = "de.cau.cs.kieler.klighd.proxyView.renderNodeAsProxy";
+    /**
+     * ID used for proxy rendering property of SKNodes.
+     * The corresponding property contains the proxy's data.
+     */
+    static readonly PROXY_RENDERING_PROPERTY = "de.cau.cs.kieler.klighd.proxyView.proxyRendering";
     /**
      * ID used for specifying depth of going into hierarchical off-screen nodes.
      * `0` indicates default behavior, showing only the outermost node as a proxy.
      * A value `x>0` indicates showing proxies up to x layers deep inside a hierarchical node.
      * A value `x<0` indicates always showing proxies for all layers.
      */
-    static readonly HIERARCHICAL_OFF_SCREEN_DEPTH = "de.cau.cs.kieler.klighd.proxy-view.hierarchicalOffScreenDepth";
+    static readonly HIERARCHICAL_OFF_SCREEN_DEPTH = "de.cau.cs.kieler.klighd.proxyView.hierarchicalOffScreenDepth";
     /** Number indicating at what distance a node is close. */ // TODO: let the synthesis define these values?
     static readonly DISTANCE_CLOSE = 300;
     /** Number indicating at what distance a node is distant. */
@@ -105,20 +105,20 @@ export class ProxyView extends AbstractUIExtension {
     private prevProxyViewEnabled: boolean;
     /** @see {@link ProxyViewSize} */
     private sizePercentage: number;
-    /** @see {@link ProxyViewClusteringEnabled} */
+    /** @see {@link ProxyViewDecreaseProxyClutter} */
     private clusteringEnabled: boolean;
-    /** @see {@link ProxyViewOpacityByDistance} */
-    private opacityByDistance: boolean;
-    /** @see {@link ProxyViewActionsEnabled} */
-    private actionsEnabled: boolean;
-    /** @see {@link ProxyViewConnectOffScreenEdges} */
-    private connectOffScreenEdges: boolean;
-    /** @see {@link ProxyViewStraightEdgeRouting} */
-    private straightEdgeRouting: boolean;
-    /** @see {@link ProxyViewAlongBorderRouting} */
-    private alongBorderRouting: boolean;
+    /** @see {@link ProxyViewDecreaseProxyClutter} */
+    private opacityByDistanceEnabled: boolean;
+    /** @see {@link ProxyViewEnableEdgeProxies} */
+    private straightEdgeRoutingEnabled: boolean;
+    /** @see {@link ProxyViewEnableEdgeProxies} */
+    private alongBorderRoutingEnabled: boolean;
+    /** @see {@link ProxyViewEnableSegmentProxies} */
+    private segmentProxiesEnabled: boolean;
+    /** @see {@link ProxyViewInteractiveProxies} */
+    private interactiveProxiesEnabled: boolean;
     /** @see {@link ProxyViewTitleScaling} */
-    private useTitleScaling: boolean;
+    private titleScalingEnabled: boolean;
 
     //// Sidebar debug options ////
     /** 
@@ -164,8 +164,6 @@ export class ProxyView extends AbstractUIExtension {
     private clusteringCascading: boolean;
     /** @see {@link ProxyViewClusteringSweepLine} */
     private clusteringSweepLine: boolean;
-    /** @see {@link ProxyViewUsePositionsCache} */
-    private usePositionsCache: boolean;
 
     id(): string {
         return ProxyView.ID;
@@ -235,6 +233,8 @@ export class ProxyView extends AbstractUIExtension {
             }>
                 {...this.createAllProxies(root, ctx, canvas)}
             </svg>);
+        // FIXME:
+        // this.actionDispatcher.dispatch(CenterAction.create([], {retainZoom: true}))
     }
 
     /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
@@ -462,10 +462,10 @@ export class ProxyView extends AbstractUIExtension {
     /** Calculates the opacities of `offScreenNodes`. */
     private calculateOpacity(offScreenNodes: SKNode[], canvasLRF: Canvas): SKNode[] {
         const res = offScreenNodes;
-        if (this.opacityByDistance) {
+        if (this.opacityByDistanceEnabled) {
             for (const node of res) {
                 // Reduce opacity such that the node is fully transparent when the node's distance is >= DISTANCE_DISTANT
-                const opacityReduction = this.getNodeDistanceToCanvas(node, canvasLRF) / ProxyView.DISTANCE_DISTANT;
+                const opacityReduction = this.getNodeDistanceToCanvas(node, canvasLRF) / 600//FIXME: ProxyView.DISTANCE_DISTANT;
                 node.opacity = Math.max(0, node.opacity - opacityReduction);
             }
         }
@@ -717,7 +717,7 @@ export class ProxyView extends AbstractUIExtension {
             proxyEdges: { edge: SKEdge, transform: TransformAttributes }[],
             overlayEdges: { edge: SKEdge, transform: TransformAttributes }[]
         } {
-        if (!(this.straightEdgeRouting || this.alongBorderRouting)) {
+        if (!(this.straightEdgeRoutingEnabled || this.alongBorderRoutingEnabled)) {
             // Don't create edge proxies
             return { proxyEdges: [], overlayEdges: [] };
         }
@@ -802,10 +802,10 @@ export class ProxyView extends AbstractUIExtension {
 
         // Calculate all routing points
         const routingPoints: Point[] = [];
-        if (this.straightEdgeRouting) {
+        if (this.straightEdgeRoutingEnabled) {
             // Straight edge from source to target
             routingPoints.push(source, target);
-        } else if (this.alongBorderRouting) {
+        } else if (this.alongBorderRoutingEnabled) {
             // Potentially need more points than just source and target
 
             // A bias could be added to some sides (even in relation to proxy width/height), not useful for now
@@ -931,7 +931,7 @@ export class ProxyView extends AbstractUIExtension {
         proxyEdges: { edge: SKEdge, transform: TransformAttributes }[],
         overlayEdges: { edge: SKEdge, transform: TransformAttributes }[]
     } {
-        if (!this.connectOffScreenEdges) {
+        if (!this.segmentProxiesEnabled) {
             return { proxyEdges: [], overlayEdges: [] };
         }
 
@@ -1093,7 +1093,7 @@ export class ProxyView extends AbstractUIExtension {
             // Update its opacity
             updateOpacity(vnode, opacity);
             // Update whether it should be click-through
-            updateClickThrough(vnode, !this.actionsEnabled || this.clickThrough);
+            updateClickThrough(vnode, !this.interactiveProxiesEnabled || this.clickThrough);
             // Add actions
             this.addEventActions(vnode, node, canvasLRF);
         }
@@ -1145,7 +1145,12 @@ export class ProxyView extends AbstractUIExtension {
     /** Returns whether the given `node` is valid for rendering. */
     private canRenderNode(node: SKNode): boolean {
         // Specified by rendering, otherwise all nodes should be rendered
-        return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
+        return !this.useSynthesisProxyRendering ||
+            JSON.parse(
+                (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as any)?.value // FIXME: for setting property in kgraph
+                ?? node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean
+                ?? true
+            );
     }
 
     /**
@@ -1210,9 +1215,7 @@ export class ProxyView extends AbstractUIExtension {
             point = Point.add(point, node.bounds);
 
             // Also store this point
-            if (this.usePositionsCache) {
-                this.positions.set(id, point);
-            }
+            this.positions.set(id, point);
         }
         return point;
     }
@@ -1246,7 +1249,7 @@ export class ProxyView extends AbstractUIExtension {
         const res = [];
         for (const d of data) {
             // Add the proxyScale
-            const dClone = { ...d, proxyScale: scale, useTitleScaling: this.useTitleScaling };
+            const dClone = { ...d, proxyScale: scale, useTitleScaling: this.titleScalingEnabled };
             if ("children" in dClone) {
                 // Has children, keep going
                 (dClone as any).children = this.getNodeData((dClone as any).children, scale);
@@ -1374,7 +1377,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Adds actions on events to the vnode. */
     private addEventActions(vnode: VNode, node: SKNode, canvas: Canvas): void {
-        if (!this.actionsEnabled) {
+        if (!this.interactiveProxiesEnabled) {
             return;
         }
 
@@ -1413,7 +1416,7 @@ export class ProxyView extends AbstractUIExtension {
     setMouseUp(event: MouseEvent): void {
         // Upon release, proxies shouldn't be click-through
         this.clickThrough = false;
-        this.currProxies.forEach(({ proxy }) => updateClickThrough(proxy, !this.actionsEnabled));
+        this.currProxies.forEach(({ proxy }) => updateClickThrough(proxy, !this.interactiveProxiesEnabled));
     }
 
     /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
@@ -1424,17 +1427,41 @@ export class ProxyView extends AbstractUIExtension {
         const fromPercent = 0.01;
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * fromPercent;
 
-        this.clusteringEnabled = renderOptionsRegistry.getValue(ProxyViewClusteringEnabled);
-        this.opacityByDistance = renderOptionsRegistry.getValue(ProxyViewOpacityByDistance);
+        switch (renderOptionsRegistry.getValue(ProxyViewDecreaseProxyClutter)) {
+            case ProxyViewDecreaseProxyClutter.CHOICE_OFF:
+                this.clusteringEnabled = false;
+                this.opacityByDistanceEnabled = false;
+                break;
+            case ProxyViewDecreaseProxyClutter.CHOICE_CLUSTERING:
+                this.clusteringEnabled = true;
+                this.opacityByDistanceEnabled = false;
+                break;
+            case ProxyViewDecreaseProxyClutter.CHOICE_OPACITY:
+                this.clusteringEnabled = false;
+                this.opacityByDistanceEnabled = true;
+                break;
+        }
 
-        this.actionsEnabled = renderOptionsRegistry.getValue(ProxyViewActionsEnabled);
+        switch (renderOptionsRegistry.getValue(ProxyViewEnableEdgeProxies)) {
+            case ProxyViewEnableEdgeProxies.CHOICE_OFF:
+                this.straightEdgeRoutingEnabled = false;
+                this.alongBorderRoutingEnabled = false;
+                break;
+            case ProxyViewEnableEdgeProxies.CHOICE_STRAIGHT_EDGE_ROUTING:
+                this.straightEdgeRoutingEnabled = true;
+                this.alongBorderRoutingEnabled = false;
+                break;
+            case ProxyViewEnableEdgeProxies.CHOICE_ALONG_BORDER_ROUTING:
+                this.straightEdgeRoutingEnabled = false;
+                this.alongBorderRoutingEnabled = true;
+                break;
+        }
 
-        this.connectOffScreenEdges = renderOptionsRegistry.getValue(ProxyViewConnectOffScreenEdges);
+        this.segmentProxiesEnabled = renderOptionsRegistry.getValue(ProxyViewEnableSegmentProxies);
 
-        this.straightEdgeRouting = renderOptionsRegistry.getValue(ProxyViewStraightEdgeRouting);
-        this.alongBorderRouting = renderOptionsRegistry.getValue(ProxyViewAlongBorderRouting);
+        this.interactiveProxiesEnabled = renderOptionsRegistry.getValue(ProxyViewInteractiveProxies);
 
-        this.useTitleScaling = renderOptionsRegistry.getValue(ProxyViewTitleScaling);
+        this.titleScalingEnabled = renderOptionsRegistry.getValue(ProxyViewTitleScaling);
 
         // Debug
         this.highlightSelected = renderOptionsRegistry.getValue(ProxyViewHighlightSelected);
@@ -1475,12 +1502,6 @@ export class ProxyView extends AbstractUIExtension {
         this.clusterTransparent = renderOptionsRegistry.getValue(ProxyViewClusterTransparent);
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
         this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
-
-        this.usePositionsCache = renderOptionsRegistry.getValue(ProxyViewUsePositionsCache);
-        if (this.usePositionsCache) {
-            // Make sure to also clear previously cached positions
-            this.clearPositions();
-        }
     }
 
     /**
