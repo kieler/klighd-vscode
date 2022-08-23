@@ -198,12 +198,14 @@ export class OptionsRenderer {
             });
     }
 
+    /** Handler for synthesis options onChange. */
     private handleSynthesisOptionChange(option: SynthesisOption, newValue: any) {
         this.actionDispatcher.dispatch(
             SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }])
         );
     }
 
+    /** Handler for synthesis options onInput, e.g. while a slider is being dragged. */
     private handleSynthesisOptionInput(option: SynthesisOption, newValue: any) {
         this.actionDispatcher.dispatch(
             SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }], false)
@@ -260,12 +262,14 @@ export class OptionsRenderer {
         });
     }
 
+    /** Handler for layout options onChange. */
     private handleLayoutOptionChange(option: LayoutOptionUIData, newValue: any) {
         this.actionDispatcher.dispatch(
             SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }])
         );
     }
 
+    /** Handler for layout options onInput, e.g. while a slider is being dragged. */
     private handleLayoutOptionInput(option: LayoutOptionUIData, newValue: any) {
         this.actionDispatcher.dispatch(
             SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }], false)
@@ -348,6 +352,7 @@ export class OptionsRenderer {
         });
     }
 
+    /** Handler for render options onChange. */
     private handleRenderOptionChange(option: RenderOption, newValue: any) {
         this.actionDispatcher.dispatch(SetRenderOptionAction.create(option.id, newValue));
     }
