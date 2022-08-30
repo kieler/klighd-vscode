@@ -545,3 +545,19 @@ export class ProxyViewClusteringSweepLine implements RenderOption {
     readonly invisible: boolean = false;
     currentValue = ProxyViewClusteringSweepLine.DEFAULT;
 }
+
+/** Whether caches for positions, renderings and distances should be enabled. */
+export class ProxyViewCachesEnabled implements RenderOption {
+    static readonly ID: string = "proxy-view-caches-enabled";
+    static readonly NAME: string = "Enable Caches";
+    static readonly DESCRIPTION: string = "Whether caches for positions, renderings and distances should be enabled.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewCachesEnabled.ID;
+    readonly name: string = ProxyViewCachesEnabled.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewCachesEnabled.DEFAULT;
+    readonly description: string = ProxyViewCachesEnabled.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewDebugCategory.ID;
+    readonly invisible: boolean = false;
+    currentValue = ProxyViewCachesEnabled.DEFAULT;
+}

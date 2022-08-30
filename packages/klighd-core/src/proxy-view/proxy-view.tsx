@@ -30,7 +30,7 @@ import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewInteractiveProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUseSynthesisProxyRendering, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableSegmentProxies, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewInteractiveProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUseSynthesisProxyRendering, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableSegmentProxies, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies, ProxyViewCachesEnabled } from "./proxy-view-options";
 import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
@@ -164,6 +164,8 @@ export class ProxyView extends AbstractUIExtension {
     private clusteringCascading: boolean;
     /** @see {@link ProxyViewClusteringSweepLine} */
     private clusteringSweepLine: boolean;
+    /** @see {@link ProxyViewCachesEnabled} */
+    private cachesEnabled: boolean;
 
     id(): string {
         return ProxyView.ID;
@@ -1087,7 +1089,7 @@ export class ProxyView extends AbstractUIExtension {
 
         if (vnode) {
             // Store this node
-            this.renderings.set(id, vnode);
+            if (this.cachesEnabled) this.renderings.set(id, vnode);
             // Place proxy at the calculated position
             updateTransform(vnode, transform);
             // Update its opacity
@@ -1215,7 +1217,7 @@ export class ProxyView extends AbstractUIExtension {
             point = Point.add(point, node.bounds);
 
             // Also store this point
-            this.positions.set(id, point);
+            if (this.cachesEnabled) this.positions.set(id, point);
         }
         return point;
     }
@@ -1235,7 +1237,7 @@ export class ProxyView extends AbstractUIExtension {
         // Calculate distance
         const b = this.getAbsoluteBounds(node);
         dist = Canvas.distance(b, canvas);
-        this.distances.set(id, dist);
+        if (this.cachesEnabled) this.distances.set(id, dist);
 
         return dist;
     }
@@ -1502,6 +1504,8 @@ export class ProxyView extends AbstractUIExtension {
         this.clusterTransparent = renderOptionsRegistry.getValue(ProxyViewClusterTransparent);
         this.clusteringCascading = renderOptionsRegistry.getValue(ProxyViewClusteringCascading);
         this.clusteringSweepLine = renderOptionsRegistry.getValue(ProxyViewClusteringSweepLine);
+
+        this.cachesEnabled = renderOptionsRegistry.getValue(ProxyViewCachesEnabled);
     }
 
     /**
