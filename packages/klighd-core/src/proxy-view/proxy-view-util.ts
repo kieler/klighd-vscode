@@ -464,11 +464,13 @@ export function asBounds(bpd: Bounds | Point | Dimension): Bounds {
  * @param n The number to cap.
  * @param min The lower bound of the range.
  * @param max The upper bound of the range.
- * @returns `n` capped to the given range or `NaN` if `min > max`.
+ * @returns `n` capped to the given range. If `min > max`, the two are swapped.
  */
 export function capNumber(n: number, min: number, max: number): number {
     if (min > max) {
-        return Number.NaN;
+        const temp = min;
+        min = max;
+        max = temp;
     }
     return Math.max(min, Math.min(max, n));
 }
