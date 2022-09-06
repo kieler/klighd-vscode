@@ -450,12 +450,12 @@ export class ProxyViewEdgesToOffScreenPoint implements RenderOption {
     currentValue = ProxyViewEdgesToOffScreenPoint.DEFAULT;
 }
 
-/** Whether edges should become transparent when the corresponding edge proxies are on-screen. */
+/** Whether edges should become transparent when the corresponding edge proxies are on-screen. This actually modifies the diagram. */
 export class ProxyViewTransparentEdges implements RenderOption {
     static readonly ID: string = "proxy-view-transparent-edges";
     static readonly NAME: string = "Fade Out Edges";
-    static readonly DESCRIPTION: string = "Whether edges should become transparent when the corresponding edge proxies are on-screen.";
-    static readonly DEFAULT: boolean = true;
+    static readonly DESCRIPTION: string = "Whether edges should become transparent when the corresponding edge proxies are on-screen. This actually modifies the diagram.";
+    static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewTransparentEdges.ID;
     readonly name: string = ProxyViewTransparentEdges.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
@@ -530,12 +530,12 @@ export class ProxyViewClusteringCascading implements RenderOption {
     currentValue = ProxyViewClusteringCascading.DEFAULT;
 }
 
-/** Whether the sweep line algorithm should be used for clustering. */
+/** Whether the sweep line algorithm should be used for clustering. Defaults to false since evaluated to be slower in the current implementation as-is. */
 export class ProxyViewClusteringSweepLine implements RenderOption {
     static readonly ID: string = "proxy-view-clustering-sweep-line";
     static readonly NAME: string = "Sweep Line Clustering";
     static readonly DESCRIPTION: string = "Whether clustering should be done via sweep line algorithm.";
-    static readonly DEFAULT: boolean = true;
+    static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewClusteringSweepLine.ID;
     readonly name: string = ProxyViewClusteringSweepLine.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
