@@ -357,27 +357,33 @@ export namespace Canvas {
     //// CRF Functions ////
 
     /**
-     * Returns the given bounds capped to the canvas border w.r.t. the sidebar.
+     * Returns the given bounds capped to the canvas border w.r.t. the sidebar if enabled.
      * Note that `bp` and `canvas` need to be in CRF.
      * Also, `bp` has to contain the absolute position (not relative to parent).
      * @param bp The bounds/point to cap to the canvas border, absolute.
      * @param canvas The canvas.
-     * @returns The given bounds capped to the canvas border w.r.t. the sidebar.
+     * @param capToSidebar Whether the bounds should also be capped to the sidebar.
+     * @returns The given bounds capped to the canvas border w.r.t. the sidebar if enabled.
      */
-    export function capToCanvas(bp: Bounds | Point, canvas: Bounds): Bounds {
+    export function capToCanvas(bp: Bounds | Point, canvas: Bounds, capToSidebar = true): Bounds {
         const bounds = asBounds(bp);
 
         // Cap bounds at canvas border
         let x = capNumber(bounds.x, canvas.x, canvas.x + canvas.width - bounds.width);
         const y = capNumber(bounds.y, canvas.y, canvas.y + canvas.height - bounds.height);
 
-        // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
-        // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
-        const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
-        const isSidebarOpen = document.querySelector(".sidebar--open");
-        if (!isSidebarOpen && rect) {
-            if (y < rect.y + rect.height && x > rect.x - bounds.width) {
-                x = rect.x - bounds.width;
+        if (capToSidebar) {
+            // TODO: May be useful to cache the sidebar, since calling document.querySelector()
+            // can cause overhead if this function is called often
+
+            // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
+            // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
+            const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
+            const isSidebarOpen = document.querySelector(".sidebar--open");
+            if (!isSidebarOpen && rect) {
+                if (y < rect.y + rect.height && x > rect.x - bounds.width) {
+                    x = rect.x - bounds.width;
+                }
             }
         }
 
