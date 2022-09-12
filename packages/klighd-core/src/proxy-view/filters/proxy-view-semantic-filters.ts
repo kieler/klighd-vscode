@@ -112,7 +112,7 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
             }
         ));
         // To ensure correct indexing, also initialize the values
-        this.semanticFilterOptionValues = filters.map(() => false);
+        this.semanticFilterOptionValues = filters.map((filter) => !!filter.defaultValue);
 
         if (filters.length > 0) {
             // Finally, register semantic filters in registry. Make sure not to show the category if it would be empty

@@ -59,12 +59,13 @@ export type ProxyFilterAndID = { id: string, filter: ProxyFilter };
 export namespace ProxyFilterAndID {
     /**
      * Returns the corresponding {@link ProxyFilterAndID}.
+     * The ID is generated using the name of `registeringClass` and the filter name.
      * @param registeringClass The class registering the filter.
      * @param filter The filter.
      * @param filterName Optionally, a filter name can be self defined.
      */
-    export function from(registeringClass: (new () => unknown), filter: ProxyFilter, filterName?: string): ProxyFilterAndID {
-        return { id: `${registeringClass.name}-${filterName ?? filter.name}`, filter };
+    export function from(registeringClass: (new () => unknown), filter: ProxyFilter, filterName = filter.name): ProxyFilterAndID {
+        return { id: `${registeringClass.name}-${filterName}`, filter };
     }
 }
 

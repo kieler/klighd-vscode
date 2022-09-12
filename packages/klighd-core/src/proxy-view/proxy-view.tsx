@@ -55,7 +55,7 @@ export class ProxyView extends AbstractUIExtension {
      * A value `x<0` indicates always showing proxies for all layers.
      */
     static readonly HIERARCHICAL_OFF_SCREEN_DEPTH = "de.cau.cs.kieler.klighd.proxyView.hierarchicalOffScreenDepth";
-    /** Number indicating at what distance a node is close. */ // TODO: let the synthesis define these values?
+    /** Number indicating at what distance a node is close. */ // TODO: let the synthesis define the distances?
     static readonly DISTANCE_CLOSE = 300;
     /** Number indicating at what distance a node is distant. */
     static readonly DISTANCE_DISTANT = 700;
@@ -198,9 +198,6 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     //////// Main methods ////////
-
-    // TODO: performance in developer options for measuring performance
-    // TODO: pseudo bendpoints for artifacts, see induced dataflow green line bottom collapsed regions motor.sctx
 
     /**
      * Update step of the proxy-view. Handles everything proxy-view related.

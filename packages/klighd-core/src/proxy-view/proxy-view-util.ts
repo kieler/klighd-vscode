@@ -175,7 +175,7 @@ export namespace Canvas {
     }
 
     /**
-     * Performs along border routing from `from` to `to`, both of which need to be at their respective border already.
+     * Performs along-border-routing from `from` to `to`, both of which need to be at their respective border already.
      * Note that `from` and `to` are not part of the returned path.
      * @param from The bounds/point to route along the border from.
      * @param fromBorder The border for `from`.
