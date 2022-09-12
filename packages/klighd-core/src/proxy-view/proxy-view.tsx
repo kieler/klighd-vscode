@@ -1077,7 +1077,7 @@ export class ProxyView extends AbstractUIExtension {
             // Render this node as opaque to change opacity later on
             node.opacity = 1;
 
-            vnode = ctx.renderProxy(node);
+            vnode = ctx.forceRenderElement(node);
             if (vnode) {
                 // New rendering, set ProxyVNode attributes
                 vnode.selected = highlight;
@@ -1120,7 +1120,7 @@ export class ProxyView extends AbstractUIExtension {
         // use assign() since children is readonly for SKEdges (but not for SKNodes)
         Object.assign(edge, { children: [] });
 
-        const vnode = ctx.renderProxy(edge);
+        const vnode = ctx.forceRenderElement(edge);
 
         if (vnode) {
             updateTransform(vnode, transform);

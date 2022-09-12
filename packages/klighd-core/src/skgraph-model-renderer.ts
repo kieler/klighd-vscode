@@ -79,8 +79,8 @@ export class SKGraphModelRenderer extends ModelRenderer {
             .filter(vnode => vnode !== undefined) as VNode[]
     }
 
-    /** Renders an element as a proxy. */
-    renderProxy(element: SKGraphElement): VNode | undefined {
+    /** Renders an element forcefully, i.e. independant of the depthMap. */
+    forceRenderElement(element: SKGraphElement): VNode | undefined {
         const prevForceRendering = this.forceRendering;
         this.forceRendering = true;
         const vnode = super.renderElement(element);
