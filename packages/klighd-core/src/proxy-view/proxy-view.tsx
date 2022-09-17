@@ -1319,7 +1319,6 @@ export class ProxyView extends AbstractUIExtension {
             return edgeData;
         }
 
-        // TODO: color fade out of polygons (arrow heads)
         const res = [];
         const clone = { ...data } as any;
         const props = { ...clone.properties };
@@ -1328,15 +1327,10 @@ export class ProxyView extends AbstractUIExtension {
         clone.styles = styles;
 
         const id = props["klighd.lsp.rendering.id"];
-        const proxyId = this.getProxyId(id);
-        if (ctx.decorationMap) {
-            if (props["klighd.lsp.calculated.decoration"]) {
-                props["klighd.lsp.rendering.id"] = proxyId;
-                ctx.decorationMap[proxyId] = props["klighd.lsp.calculated.decoration"];
-            } else if (ctx.decorationMap[id]) {
-                props["klighd.lsp.rendering.id"] = proxyId;
-                ctx.decorationMap[proxyId] = ctx.decorationMap[id];
-            }
+        if (ctx.decorationMap && ctx.decorationMap[id]) {
+            // Dereference calculated decoration
+            props["klighd.lsp.rendering.id"] = this.getProxyId(id);
+            props['klighd.lsp.calculated.decoration'] = ctx.decorationMap[id];
         }
 
         for (const i in styles) {
