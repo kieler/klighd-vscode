@@ -55,7 +55,7 @@ export class ProxyView extends AbstractUIExtension {
      * A value `x<0` indicates always showing proxies for all layers.
      */
     static readonly HIERARCHICAL_OFF_SCREEN_DEPTH = "de.cau.cs.kieler.klighd.proxyView.hierarchicalOffScreenDepth";
-    /** Number indicating at what distance a node is close. */ // TODO: let the synthesis define the distances?
+    /** Number indicating at what distance a node is close. */ // TODO: could let the synthesis define the distance values
     static readonly DISTANCE_CLOSE = 300;
     /** Number indicating at what distance a node is distant. */
     static readonly DISTANCE_DISTANT = 700;
@@ -225,15 +225,13 @@ export class ProxyView extends AbstractUIExtension {
             <svg style={
                 {
                     // Set size to whole canvas
-                    width: canvasWidth.toString(), height: canvasHeight.toString(),
+                    width: `${canvasWidth}`, height: `${canvasHeight}`,
                     // Make click-through
                     pointerEvents: "none"
                 }
             }>
                 {...this.createAllProxies(root, ctx, canvas)}
             </svg>);
-        // FIXME:
-        // this.actionDispatcher.dispatch(CenterAction.create([], {retainZoom: true}))
     }
 
     /** Returns the proxy rendering for all of currRoot's off-screen children and applies logic, e.g. clustering. */
@@ -464,7 +462,7 @@ export class ProxyView extends AbstractUIExtension {
         if (this.opacityByDistanceEnabled) {
             for (const node of res) {
                 // Reduce opacity such that the node is fully transparent when the node's distance is >= DISTANCE_DISTANT
-                const opacityReduction = this.getNodeDistanceToCanvas(node, canvasLRF) / 600//FIXME: ProxyView.DISTANCE_DISTANT;
+                const opacityReduction = this.getNodeDistanceToCanvas(node, canvasLRF) / ProxyView.DISTANCE_DISTANT;
                 node.opacity = Math.max(0, node.opacity - opacityReduction);
             }
         }
@@ -1144,12 +1142,7 @@ export class ProxyView extends AbstractUIExtension {
     /** Returns whether the given `node` is valid for rendering. */
     private canRenderNode(node: SKNode): boolean {
         // Specified by rendering, otherwise all nodes should be rendered
-        return !this.useSynthesisProxyRendering ||
-            JSON.parse(
-                (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as any)?.value // FIXME: for setting property in kgraph
-                ?? node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean
-                ?? true
-            );
+        return !this.useSynthesisProxyRendering || (node.properties[ProxyView.RENDER_NODE_AS_PROXY_PROPERTY] as boolean ?? true);
     }
 
     /**
