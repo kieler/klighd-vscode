@@ -21,8 +21,9 @@ import { Action } from "sprotty-protocol"
 import { RefreshDiagramAction } from './actions';
 import { KNode } from './constraint-classes';
 import { filterKNodes } from './helper-methods';
-import { DeleteStaticConstraintAction } from './layered/actions';
+import { DeleteRelativeConstraintsAction, DeleteStaticConstraintAction } from './layered/actions';
 import { getLayers, setProperty } from './layered/constraint-utils';
+import { setRelativeConstraint } from './layered/relativeConstraint-utils';
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 import { setGenerateRectPackAction } from './rect-packing/constraint-util';
 
@@ -43,6 +44,8 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
      * The currently moved node.
      */
     private target: KNode | undefined
+
+    public relCons: boolean
 
     /**
      * Does not use super implementation, since it calls mouseUp
@@ -99,7 +102,13 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 this.target.shadowX = this.target.position.x
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
-                if (event.altKey) {
+                if (event.altKey && event.shiftKey) {
+                    if (algorithm === undefined || algorithm.endsWith('layered')) {
+                        return [new DeleteRelativeConstraintsAction({
+                            id: this.target.id
+                        })]
+                    }
+                } else if (event.altKey) {
                     if (algorithm === undefined || algorithm.endsWith('layered')) {
                         return [DeleteStaticConstraintAction.create({
                             id: this.target.id
@@ -109,6 +118,13 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                             id: this.target.id
                         })]
                     }
+                }
+
+                // determines which visualization should be rendered
+                if (event.shiftKey) {
+                    this.relCons = true
+                } else {
+                    this.relCons = false
                 }
                 return super.mouseDown(this.target as SModelElement, event)
             }
@@ -132,7 +148,11 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             let result = super.mouseUp(this.target, event)
             const algorithm = (this.target.parent as KNode).properties['org.eclipse.elk.algorithm'] as string
             if (algorithm === undefined || algorithm.endsWith('layered')) {
-                result = [setProperty(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
+                if (event.shiftKey) {
+                    result = [setRelativeConstraint(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
+                } else {
+                    result = [setProperty(this.nodes, this.data.get('layered'), this.target)].concat(super.mouseUp(this.target, event));
+                }
             } else if (algorithm.endsWith('rectpacking')) {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
                 result = [setGenerateRectPackAction(this.nodes, this.target, parent, event)].concat(super.mouseUp(this.target, event));

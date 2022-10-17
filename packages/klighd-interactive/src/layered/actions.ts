@@ -16,7 +16,7 @@
  */
 
 import { Action } from 'sprotty-protocol';
-import { DeleteConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types';
+import { DeleteConstraint, ILPredOfConstraint, LayerConstraint, PositionConstraint, StaticConstraint, ILSuccOfConstraint } from './constraint-types';
 
 /**
  * Sent from client to server to set a position and layer constraint.
@@ -131,5 +131,62 @@ export namespace SetPositionConstraintAction {
             kind: KIND,
             constraint,
         }
+    }
+}
+
+/**
+ * Sent from client to server to set a in layer predecessor of constraint on a node.
+ */
+ export class SetILPredOfConstraintAction implements Action {
+    static readonly KIND: string = 'setILPredOfConstraint'
+    readonly kind = SetILPredOfConstraintAction.KIND
+
+    constructor(public readonly constraint: ILPredOfConstraint) {
+    }
+}
+
+/**
+ * Sent from client to server to set a in layer successor of constraint on a node.
+ */
+export class SetILSuccOfConstraintAction implements Action {
+    static readonly KIND: string = 'setILSuccOfConstraint'
+    readonly kind = SetILSuccOfConstraintAction.KIND
+
+    constructor(public readonly constraint: ILSuccOfConstraint) {
+    }
+}
+
+/**
+ * Sent from client to server to delete relative constraints on a node.
+ */
+export class DeleteRelativeConstraintsAction implements Action {
+    static readonly KIND: string = 'deleteRelativeConstraints'
+    readonly kind = DeleteRelativeConstraintsAction.KIND
+
+    constructor(public readonly constraint: DeleteConstraint) {
+    }
+}
+
+/**
+ * Sent from client to server to delete iLSuccOf constraint on a node.
+ * Currently unused.
+ */
+export class DeleteILSuccOfConstraintAction implements Action {
+    static readonly KIND: string = 'deleteILSuccOfConstraint'
+    readonly kind = DeleteILSuccOfConstraintAction.KIND
+
+    constructor(public readonly constraint: DeleteConstraint) {
+    }
+}
+
+/**
+ * Sent from client to server to delete iLPredOf constraint on a node.
+ * Currently unused.
+ */
+export class DeleteILPredOfConstraintAction implements Action {
+    static readonly KIND: string = 'deleteILPredOfConstraint'
+    readonly kind = DeleteILPredOfConstraintAction.KIND
+
+    constructor(public readonly constraint: DeleteConstraint) {
     }
 }

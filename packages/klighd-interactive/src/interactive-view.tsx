@@ -18,20 +18,29 @@
 import { VNode } from "snabbdom";
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { KNode } from './constraint-classes';
-import { filterKNodes } from './helper-methods';
+import { filterKNodes, getSelectedNode } from './helper-methods';
 import { renderHierarchyLevel as renderHierarchyLevelLayered, renderLayeredConstraint } from './layered/layered-interactive-view';
 import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
+import { forbiddenNodes, renderPosIndicators, renderSetRelConstraint } from './layered/layered-relCons-view';
 
 /**
  * Visualize the layers and available positions in the graph
  * @param root Root of the hierarchical level for which the layers and positions should be visualized.
  */
-export function renderInteractiveLayout(root: KNode): VNode {
+export function renderInteractiveLayout(root: KNode, relCons: boolean): VNode {
     // Filter KNodes
     const nodes = filterKNodes(root.children)
     let result = undefined
     if (root.properties['org.eclipse.elk.algorithm'] === undefined || (root.properties['org.eclipse.elk.algorithm'] as string).endsWith('layered')) {
-        result = renderHierarchyLevelLayered(nodes)
+        if (relCons) {
+            const selNode = getSelectedNode(nodes)
+            if (selNode !== undefined) {
+                forbiddenNodes(nodes, selNode)
+                result = renderPosIndicators(nodes, selNode)
+            }
+        } else {
+            result = renderHierarchyLevelLayered(nodes)
+        }
     } else if ((root.properties['org.eclipse.elk.algorithm'] as string).endsWith('rectpacking')) {
         result = renderHierarchyLevelRectPacking(nodes)
     } else {
@@ -51,7 +60,7 @@ export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
     const algorithm = (node.parent as KNode).properties['org.eclipse.elk.algorithm'] as string
     if (algorithm === undefined || algorithm.endsWith('layered')) {
-        result = renderLayeredConstraint(node)
+        result = <g>{renderLayeredConstraint(node)}{renderSetRelConstraint(node)}</g>
     } else if (algorithm.endsWith('rectpacking')) {
         if (node.properties['org.eclipse.elk.alg.rectpacking.desiredPosition'] !== -1) {
             result = renderRectPackConstraint(node)

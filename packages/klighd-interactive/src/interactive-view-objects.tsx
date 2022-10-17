@@ -18,7 +18,7 @@
 import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Direction } from './constraint-classes';
-import { lockPath, arrowVertical, arrowHorizontal } from './svg-path';
+import { lockPath, arrowVertical, arrowHorizontal, arrowUp, arrowDown, arrowRight, arrowLeft } from './svg-path';
 
 const iconScale = 0.01
 
@@ -130,5 +130,47 @@ export function renderArrow(xTranslate: number, yTranslate: number, vertical: bo
             fill="grey" stroke="none">
             <path d={arrowHorizontal}/>
         </g>
+    }
+}
+
+/**
+ * Creates an arrow icon.
+ * @param xTranslate
+ * @param yTranslate
+ * @param direction Determines the direction of the arrow.
+ * @param color Determines the color of the arrow.
+ */
+export function renderDirArrow(xTranslate: number, yTranslate: number, direction: Direction, color: string): VNode {
+    let s = "translate(" + xTranslate + ","
+            + yTranslate + ")"
+    s += " scale(" + iconScale + ", " + iconScale + ")"
+    switch (direction) {
+        case Direction.UP:
+            // @ts-ignore
+            return <g transform={s}
+                fill={color} stroke="none">
+                <path d={arrowUp}/>
+            </g>
+        case Direction.DOWN:
+            // @ts-ignore
+            return <g transform={s}
+                fill={color} stroke="none">
+                <path d={arrowDown}/>
+            </g>
+        case Direction.LEFT:
+            // @ts-ignore
+            return <g transform={s}
+                fill={color} stroke="none">
+                <path d={arrowLeft}/>
+            </g>
+        case Direction.RIGHT:
+            // @ts-ignore
+            return <g transform={s}
+                fill={color} stroke="none">
+                <path d={arrowRight}/>
+            </g>
+        default:
+            // @ts-ignore
+            return <g></g>
     }
 }

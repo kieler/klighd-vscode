@@ -19,8 +19,10 @@ import { SModelElement } from 'sprotty';
 import { Action } from 'sprotty-protocol';
 import { RefreshDiagramAction } from '../actions';
 import { Direction, KEdge, KNode } from '../constraint-classes';
+import { filterKNodes } from '../helper-methods';
 import { SetLayerConstraintAction, SetPositionConstraintAction, SetStaticConstraintAction } from './actions';
 import { Layer } from './constraint-types';
+import { getChain } from './relativeConstraint-utils';
 
 /**
  * Offset for placement on below or above the first/last node in the layer.
@@ -42,24 +44,23 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
         ? node.position.x + node.size.width / 2 : node.position.y + node.size.height / 2
 
     // check for all layers if the node is in the layer
-    for (let i = 0; i < layers.length; i++) {
-        const layer = layers[i]
+    for (const layer of layers) {
         if (coordinateInLayoutDirection < layer.end &&
             (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ||
             coordinateInLayoutDirection > layer.end && (direction === Direction.LEFT || direction === Direction.UP)) {
-            return i
+            return layer.id
         }
     }
 
     // if the node is the only one in the last layer it can not be in a new last layer
-    const lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
+    const lastLNodes = getNodesOfLayer(layers[layers.length - 1].id, nodes)
     if (lastLNodes.length === 1 && lastLNodes[0].selected) {
         // node is in last layer
-        return layers.length - 1
+        return layers[layers.length - 1].id
     }
 
     // node is in a new last layer
-    return layers.length
+    return layers[layers.length - 1].id + 1
 }
 
 /**
@@ -141,14 +142,13 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
     let topBorder = Number.MAX_VALUE // naming fits to the RIGHT direction (1)
     let bottomBorder = Number.MIN_VALUE
     // calculate bounds of the layers
-    for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i]
+    for (const node of nodes) {
         if (node.properties['org.eclipse.elk.layered.layering.layerId'] !== layer) {
             // node is in the next layer
-            layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
+            layers[layers.length] = new Layer(layer, beginCoordinate, endCoordinate, beginCoordinate + (endCoordinate - beginCoordinate) / 2, direction)
             beginCoordinate = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ? Number.MAX_VALUE : Number.MIN_VALUE
             endCoordinate = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ? Number.MIN_VALUE : Number.MAX_VALUE
-            layer++
+            layer = node.properties['org.eclipse.elk.layered.layering.layerId'] as number
         }
 
         // coordinates of the current node for case 1
@@ -196,7 +196,7 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
         bottomBorder = Math.max(currentBottomBorder, bottomBorder)
     }
     // add last layer
-    layers[layer] = new Layer(beginCoordinate, endCoordinate, beginCoordinate + ((endCoordinate - beginCoordinate) / 2), direction)
+    layers[layers.length] = new Layer(layer, beginCoordinate, endCoordinate, beginCoordinate + ((endCoordinate - beginCoordinate) / 2), direction)
     // offset above & below the layers
     topBorder = topBorder - PLACEMENT_TOP_BOTTOM_OFFSET
     bottomBorder = bottomBorder + PLACEMENT_TOP_BOTTOM_OFFSET
@@ -288,20 +288,50 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
  * @param nodes Nodes of the layer the target is in.
  * @param target Node which position should be calculated.
  */
-export function getPositionInLayer(nodes: KNode[], target: KNode): number {
-    // Sort the layer array by y coordinate.
-    nodes.sort((a, b) => a.position.y - b.position.y)
+ export function getPositionInLayer(nodes: KNode[], target: KNode, direction: Direction): number {
+    // Sort the layer array by coordinates of the nodes.
+    switch (direction) {
+        case Direction.UNDEFINED:
+        case Direction.LEFT:
+        case Direction.RIGHT: {
+            nodes.sort((a, b) => a.position.y - b.position.y)
+            break;
+        }
+        case Direction.UP:
+        case Direction.DOWN: {
+            nodes.sort((a, b) => a.position.x - b.position.x)
+            break;
+        }
+    }
+
     // Find the position of the target
     if (nodes.indexOf(target) !== -1) {
         // target is already in the list
         return nodes.indexOf(target)
     }
 
-    for (let i = 0; i < nodes.length; i++) {
-        if (target.position.y < nodes[i].position.y) {
-            return i
+    switch (direction) {
+        case Direction.UNDEFINED:
+        case Direction.LEFT:
+        case Direction.RIGHT: {
+            for (let i = 0; i < nodes.length; i++) {
+                if (target.position.y < nodes[i].position.y) {
+                    return i
+                }
+            }
+            break;
+        }
+        case Direction.UP:
+        case Direction.DOWN: {
+            for (let i = 0; i < nodes.length; i++) {
+                if (target.position.x < nodes[i].position.x) {
+                    return i
+                }
+            }
+            break;
         }
     }
+
     return nodes.length
 }
 
@@ -312,16 +342,20 @@ export function getPositionInLayer(nodes: KNode[], target: KNode): number {
  * @param node The KNode.
  * @param layer The number indicating the layer.
  */
-export function isLayerForbidden(node: KNode, layer: number): boolean {
+ export function isLayerForbidden(node: KNode, layer: number): boolean {
+    const layerNodes = getNodesOfLayer(node.properties['org.eclipse.elk.layered.layering.layerId'] as number, filterKNodes(node.parent.children as KNode []))
+    const chainNodes = getChain(node, layerNodes)
     // collect the connected nodes
     const connectedNodes: KNode[] = []
-    let edges = node.outgoingEdges as any as KEdge[]
-    for (const edge of edges) {
-        connectedNodes[connectedNodes.length] = edge.target as KNode
-    }
-    edges = node.incomingEdges as any as KEdge[]
-    for (const edge of edges) {
-        connectedNodes[connectedNodes.length] = edge.source as KNode
+    for (const n of chainNodes) {
+        let edges = n.outgoingEdges as any as KEdge[]
+        for (const edge of edges) {
+            connectedNodes[connectedNodes.length] = edge.target as KNode
+        }
+        edges = n.incomingEdges as any as KEdge[]
+        for (const edge of edges) {
+            connectedNodes[connectedNodes.length] = edge.source as KNode
+        }
     }
 
     // check the connected nodes for layer constraints
@@ -364,7 +398,7 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
     // calculate layer and position the target has in the graph at the new position
     const layerOfTarget = getLayerOfNode(targetNode, nodes, layers, direction)
     const nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
-    const positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode)
+    const positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode, direction)
     const newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
     const newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)
     const forbidden = isLayerForbidden(targetNode, newLayerCons)

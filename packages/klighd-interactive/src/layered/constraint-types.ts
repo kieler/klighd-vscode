@@ -21,6 +21,7 @@ import { Direction } from "../constraint-classes"
  * A layer visualization data class for the interactive layered approach.
  */
 export class Layer {
+    id: number
     begin: number
     end: number
     mid: number
@@ -38,7 +39,8 @@ export class Layer {
      */
     direction: Direction
 
-    constructor(leftX: number, rightX: number, mid: number, direction: Direction) {
+    constructor(id: number, leftX: number, rightX: number, mid: number, direction: Direction) {
+        this.id = id
         this.begin = leftX
         this.end = rightX
         this.mid = mid
@@ -81,4 +83,20 @@ export class StaticConstraint {
     position: number
     posCons: number
     layerCons: number
+}
+
+/**
+ * data class for a in layer predecessor of constraint
+ */
+export class ILPredOfConstraint {
+    id: string
+    otherNode: string
+}
+
+/**
+ * data class for a in layer successor of constraint
+ */
+export class ILSuccOfConstraint {
+    id: string
+    otherNode: string
 }

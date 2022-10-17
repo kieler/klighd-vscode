@@ -18,6 +18,7 @@
 import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
+import { renderRelCons } from '@kieler/klighd-interactive/lib/layered/layered-relCons-view';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -86,6 +87,8 @@ export class SKGraphView implements IView {
 @injectable()
 export class KNodeView implements IView {
 
+    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
+
     render(node: SKNode, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
@@ -116,11 +119,16 @@ export class KNodeView implements IView {
         if (isShadow) {
             // Render shadow of the node
             shadow = getRendering(node.data, node, new KStyles, ctx)
+
+            if (this.mListener.relCons) {
+                // render visualization for relative constraints
+                result.push(renderRelCons(node.parent as SKNode, node))
+            }
         }
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties['org.eclipse.elk.interactiveLayout']) && ctx.mListener.hasDragged) {
-                // Render the objects indicating the layer and positions in the graph
-                interactiveNodes = renderInteractiveLayout(node as SKNode)
+                // Render the visualization for interactive layout
+                interactiveNodes = renderInteractiveLayout(node as SKNode, this.mListener.relCons)
             }
         }
 
@@ -128,6 +136,9 @@ export class KNodeView implements IView {
         node.shadow = false
         let rendering = undefined
         if (!ctx.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
+            if (node.forbidden) {
+                node.opacity = 0.1
+            }
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles, ctx)
 
@@ -159,6 +170,7 @@ export class KNodeView implements IView {
             rendering = getRendering(node.data, node, new KStyles, ctx)
         }
         node.shadow = isShadow
+        node.highlight = false
 
         if (node.id === '$root') {
             // The root node should not be rendered, only its children should.
@@ -198,6 +210,7 @@ export class KNodeView implements IView {
         if (interactiveConstraints) {
             result.push(interactiveConstraints)
         }
+        // FIXME
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!node.areChildAreaChildrenRendered) {
             result.push(...ctx.renderChildren(node))

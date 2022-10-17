@@ -24,6 +24,11 @@ import {
     SetLayerConstraintAction,
     SetPositionConstraintAction,
     SetStaticConstraintAction,
+    SetILPredOfConstraintAction,
+    SetILSuccOfConstraintAction,
+    DeleteRelativeConstraintsAction,
+    DeleteILPredOfConstraintAction,
+    DeleteILSuccOfConstraintAction
 } from "@kieler/klighd-interactive/lib/layered/actions";
 import {
     RectPackDeletePositionConstraintAction,
@@ -168,7 +173,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
 
 
     protected handleExportSvgAction(action: KlighdExportSvgAction): boolean {
-        const blob = new Blob([action.svg], {type: "text/plain;charset=utf-8"});
+        const blob = new Blob([action.svg], { type: "text/plain;charset=utf-8" });
         const fileName = action.uri.split('/').pop()
         let name = 'diagram'
         if (fileName) {
@@ -189,6 +194,9 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(DeleteLayerConstraintAction.KIND, this);
         registry.register(DeletePositionConstraintAction.KIND, this);
         registry.register(DeleteStaticConstraintAction.KIND, this);
+        registry.register(DeleteRelativeConstraintsAction.KIND, this)
+        registry.register(DeleteILPredOfConstraintAction.KIND, this)
+        registry.register(DeleteILSuccOfConstraintAction.KIND, this)
         registry.register(PerformActionAction.KIND, this);
         registry.register(RectPackSetPositionConstraintAction.KIND, this);
         registry.register(RectPackDeletePositionConstraintAction.KIND, this);
@@ -200,6 +208,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(SetLayerConstraintAction.KIND, this);
         registry.register(SetPositionConstraintAction.KIND, this);
         registry.register(SetStaticConstraintAction.KIND, this);
+        registry.register(SetILPredOfConstraintAction.KIND, this)
+        registry.register(SetILSuccOfConstraintAction.KIND, this)
         registry.register(SetSynthesisAction.KIND, this);
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
