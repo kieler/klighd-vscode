@@ -96,11 +96,8 @@ function renderILPredOf(x: number, y: number, direction: Direction, color: strin
  */
 export function renderSetRelConstraint(node: KNode): VNode {
     let result = <g></g>
-    console.log(KNode, "to set rel const")
     const iLPConstraint = node.properties['org.eclipse.elk.layered.crossingMinimization.inLayerPredOf']
     const iLSConstraint = node.properties['org.eclipse.elk.layered.crossingMinimization.inLayerSuccOf']
-
-    console.log(iLPConstraint, iLSConstraint)
 
     // relative constraint icon is shown to the right of the node
     const x = node.size.width
@@ -119,7 +116,6 @@ export function renderSetRelConstraint(node: KNode): VNode {
         result = <g>{renderILSuccOf(x + constraintOffset, y + constraintOffset, node.direction, "grey")}</g>
     }
     // @ts-ignore
-    console.log(result)
     return result
 }
 
