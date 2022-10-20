@@ -16,7 +16,7 @@
  */
 
 import { saveAs } from 'file-saver';
-import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
+import { RefreshDiagramAction, RefreshLayoutAction } from "@kieler/klighd-interactive/lib/actions";
 import {
     DeleteLayerConstraintAction,
     DeletePositionConstraintAction,
@@ -64,7 +64,6 @@ import {
     KlighdFitToScreenAction,
     Pair,
     PerformActionAction,
-    RefreshLayoutAction,
     StoreImagesAction,
 } from "./actions/actions";
 import { GoToBookmarkAction } from "./bookmarks/bookmark";

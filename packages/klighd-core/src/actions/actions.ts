@@ -116,23 +116,6 @@ export namespace PerformActionAction {
     }
 }
 
-/**
- * A sprotty action to refresh the layout. Send from client to server.
- */
-export interface RefreshLayoutAction extends Action {
-    kind: typeof RefreshLayoutAction.KIND
-}
-
-export namespace RefreshLayoutAction {
-    export const KIND = 'refreshLayout'
-
-    export function create(): RefreshLayoutAction {
-        return {
-            kind: KIND,
-        }
-    }
-}
-
 /** 
  * Extended {@link FitToScreenAction} that always fits the root element with a padding
  * of 10px. Most of the time this is the wanted behavior in the `klighd-core`.

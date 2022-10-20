@@ -36,6 +36,23 @@ export namespace RefreshDiagramAction {
 }
 
 /**
+ * A sprotty action to refresh the layout. Send from client to server.
+ */
+ export interface RefreshLayoutAction extends Action {
+    kind: typeof RefreshLayoutAction.KIND
+}
+
+export namespace RefreshLayoutAction {
+    export const KIND = 'refreshLayout'
+
+    export function create(): RefreshLayoutAction {
+        return {
+            kind: KIND,
+        }
+    }
+}
+
+/**
  * A sprotty action to delete a constraint on a specific node.
  */
 export interface DeleteConstraintAction extends Action {

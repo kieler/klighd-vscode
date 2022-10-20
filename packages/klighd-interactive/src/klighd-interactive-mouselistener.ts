@@ -17,8 +17,7 @@
 
 import { injectable } from 'inversify';
 import { MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
-import { Action } from "sprotty-protocol"
-import { RefreshDiagramAction } from './actions';
+import { Action } from "sprotty-protocol";
 import { KNode } from './constraint-classes';
 import { filterKNodes } from './helper-methods';
 import { DeleteRelativeConstraintsAction, DeleteStaticConstraintAction } from './layered/actions';
@@ -162,11 +161,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             this.target = undefined
 
             // Refresh the diagram according to the moved elements.
-            if (result.some(action => action.kind === RefreshDiagramAction.KIND)) {
-                return result
-            } else {
-                return result.concat([RefreshDiagramAction.create()])
-            }
+            return result
         } else if (this.target) {
             this.target.selected = false
             const result = super.mouseUp(this.target, event);

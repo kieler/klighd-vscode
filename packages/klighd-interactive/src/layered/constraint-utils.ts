@@ -17,7 +17,7 @@
 
 import { SModelElement } from 'sprotty';
 import { Action } from 'sprotty-protocol';
-import { RefreshDiagramAction } from '../actions';
+import { RefreshLayoutAction } from '../actions';
 import { Direction, KEdge, KNode } from '../constraint-classes';
 import { filterKNodes } from '../helper-methods';
 import { SetLayerConstraintAction, SetPositionConstraintAction, SetStaticConstraintAction } from './actions';
@@ -405,7 +405,7 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
 
     if (forbidden) {
         // If layer is forbidden just refresh
-        return RefreshDiagramAction.create()
+        return RefreshLayoutAction.create()
     } else if (targetNode.properties['org.eclipse.elk.layered.layering.layerId'] !== layerOfTarget) {
         // layer constraint should only be set if the layer index changed
         if (shouldOnlyLCBeSet(targetNode, layers, direction)) {
@@ -438,5 +438,5 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
         }
     }
     // If the node was moved without setting a constraint - let it snap back
-    return RefreshDiagramAction.create()
+    return RefreshLayoutAction.create()
 }

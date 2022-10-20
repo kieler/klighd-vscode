@@ -16,12 +16,12 @@
  */
 
 /** @jsx html */
-import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
+import { RefreshDiagramAction, RefreshLayoutAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
 import { html, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { CenterAction } from "sprotty-protocol";
-import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
+import { KlighdFitToScreenAction } from "../actions/actions";
 import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
