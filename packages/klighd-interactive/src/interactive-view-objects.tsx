@@ -43,7 +43,8 @@ export function createRect(begin: number, end: number, top: number, bottom: numb
                     height={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? bottom - top : Math.abs(begin - end)}
                     fill={forbidden ? forbiddenColor : backgroundColor}
                     stroke={forbidden ? forbiddenColor : 'grey'}
-                    style={{ 'stroke-dasharray': "4" }}>
+                    style={{ 'stroke-dasharray': "4" }}
+                    opacity="0.5">
                 </rect>
             </g>
 }
