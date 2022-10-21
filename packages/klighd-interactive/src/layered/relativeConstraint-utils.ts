@@ -62,104 +62,79 @@ export function determineCons(nodes: KNode[], layers: Layer[], target: SModelEle
 
     let pred = nodesOfLayer[positionOfTarget - 1]
     let succ = nodesOfLayer[positionOfTarget]
-    if (!succ === undefined && succ.id === targetNode.id) {
+
+    // Since targeted node is also in the layer it can be pred of succ.
+    // Make sure to select the next one (if it exists) in that case.
+    if (succ !== undefined && succ.id === targetNode.id) {
         // node should not be its own successor
         succ = nodesOfLayer[positionOfTarget + 1]
     }
-
-    // if node is in its original layer, it can be its own pred or succ
-    if (positionOfTarget === targetNode.properties['org.eclipse.elk.layered.crossingMinimization.positionId']
-        && layerOfTarget === targetNode.properties['org.eclipse.elk.layered.layering.layerId']) {
-        switch (direction) {
-            case Direction.UNDEFINED:
-            case Direction.LEFT:
-            case Direction.RIGHT: {
-                if (targetNode.position.y > targetNode.shadowY) {
-                    pred = targetNode
-                } else {
-                    succ = targetNode
-                }
-                break;
-            }
-            case Direction.UP:
-            case Direction.DOWN: {
-                if (targetNode.position.x > targetNode.shadowX) {
-                    pred = targetNode
-                } else {
-                    succ = targetNode
-                }
-                break;
-            }
-        }
+    if (pred !== undefined && pred.id === targetNode.id) {
+        // node should not be its own predecessor
+        pred = nodesOfLayer[positionOfTarget - 2]
     }
 
-
+    // Calculate whether an in-layer-predecessor-of (iLPredOf) or in-layer-successor-of (iLSuccOf) constraint
+    // will be added by comparing the distance from the middle of the target node
+    // to the biggest border of the predecessor and the smallest border of the successor.
     let iLPredOf = false
     let iLSuccOf = false
     const midY = targetNode.position.y + 0.5 * targetNode.size.height
     const midX = targetNode.position.x + 0.5 * targetNode.size.width
 
-    // coordinates for the case the node is its own pred/succ
-    let predY = 0
-    if (pred !== undefined) {
-        if (pred.id === targetNode.id) {
-            predY = targetNode.shadowY
-        } else {
-            predY = pred.position.y
-        }
+    let predX = Number.MIN_VALUE
+    let predY = Number.MIN_VALUE
+    if (pred) {
+        predX = pred.position.x
+        predY = pred.position.y
     }
-    let succY = 0
-    if (succ !== undefined) {
-        if (succ.id === targetNode.id) {
-            succY = targetNode.shadowY
-        } else {
-            succY = succ.position.y
-        }
+    let succX = Number.MIN_VALUE
+    let succY = Number.MIN_VALUE
+    if (succ) {
+        succX = succ.position.x
+        succY = succ.position.y
     }
 
     switch (direction) {
         case Direction.UNDEFINED:
         case Direction.LEFT:
         case Direction.RIGHT: {
-            if (succ === undefined || (pred !== undefined && midY - predY - pred.size.height < succY - midY)) {
-                // distance between current node and predecessor is lower
-                if (!pred === undefined && pred.id !== targetNode.id) {
-                    // no constraint should be set if the moved node is in range of its original position
-                    iLSuccOf = true
-                }
-            } else if (succ !== undefined && succ.id !== targetNode.id) {
-                // moved node must be in certain x range
+            if (succ === undefined && pred !== undefined && pred.id !== targetNode.id) {
+                iLSuccOf = true
+            } else if (succ !== undefined && pred !== undefined) {
+                iLSuccOf = Math.abs(midY - (predY + pred.size.height)) < Math.abs(midY - succY)
+                iLPredOf = Math.abs(midY - (predY + pred.size.height)) > Math.abs(midY - succY)
+            } else if (pred === undefined && succ !== undefined && succ.id !== targetNode.id) {
                 iLPredOf = true
             }
             break;
         }
         case Direction.UP:
         case Direction.DOWN: {
-            if (succ === undefined || (pred !== undefined && midX - pred.position.x - pred.size.width < succ.position.x - midX)) {
-                // distance between current node and predecessor is lower
-                if (pred !== undefined && pred.id !== targetNode.id) {
-                    // no constraint should be set if the moved node is in range of its original position
-                    iLSuccOf = true
-                }
-            } else if (succ !== undefined && succ.id !== targetNode.id) {
-                // moved node must be in certain y range
+            if (succ === undefined && pred !== undefined && pred.id !== targetNode.id) {
+                iLSuccOf = true
+            } else if (succ !== undefined && pred !== undefined) {
+                iLSuccOf = Math.abs(midX - (predX + pred.size.width)) < Math.abs(midX - succX)
+                iLPredOf = Math.abs(midX - (predX + pred.size.width)) > Math.abs(midX - succX)
+            } else if (pred === undefined && succ !== undefined && succ.id !== targetNode.id) {
                 iLPredOf = true
             }
             break;
         }
     }
 
+    // Check whether the target is allowed to be successors/predecessor of the preceding/succeeding node.
     if (iLSuccOf) {
         if (!forbiddenRC(targetNode, pred)) {
-            return {relCons: RelCons.IN_LAYER_SUCC_OF, node: pred, target: targetNode}
+            return new RelConsData(RelCons.IN_LAYER_SUCC_OF, pred, targetNode)
         }
     } else if (iLPredOf) {
         if (!forbiddenRC(targetNode, succ)) {
-            return {relCons: RelCons.IN_LAYER_PRED_OF, node: succ, target: targetNode}
+            return new RelConsData(RelCons.IN_LAYER_PRED_OF, succ, targetNode)
         }
     }
-
-    return {relCons: RelCons.UNDEFINED, node: targetNode, target: targetNode}
+    // If no successor or predecessor exist 
+    return new RelConsData(RelCons.UNDEFINED, targetNode, targetNode)
 }
 
 /**

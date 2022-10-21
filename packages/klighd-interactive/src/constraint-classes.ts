@@ -100,9 +100,9 @@ export class KEdge extends SEdge implements KGraphElement {
 }
 
 export class RelConsData {
-    relCons: RelCons
-    node: KNode
-    target: KNode
+    constructor(public readonly relCons: RelCons,
+        public readonly node: KNode,
+        public readonly target: KNode) {}
 }
 
 export enum RelCons {
