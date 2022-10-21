@@ -62,7 +62,7 @@ export function renderConstraints(node: KNode): VNode {
     if (algorithm === undefined || algorithm.endsWith('layered')) {
         result = <g>{renderLayeredConstraint(node)}{renderSetRelConstraint(node)}</g>
     } else if (algorithm.endsWith('rectpacking')) {
-        if (node.properties['org.eclipse.elk.alg.rectpacking.desiredPosition'] !== -1) {
+        if (node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined && node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1) {
             result = renderRectPackConstraint(node)
         }
     } else {

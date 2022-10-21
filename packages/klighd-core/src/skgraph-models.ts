@@ -38,6 +38,7 @@ export const LABEL_TYPE = 'label'
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
 export class SKNode extends KNode {
+    // TODO this might be wrong, interactiveLayout is enabled on the parent (I think)
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
             || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
