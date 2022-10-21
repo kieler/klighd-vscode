@@ -137,7 +137,7 @@ export function renderPosIndicators(nodes: KNode[], selNode: KNode): VNode {
         }
     }
     if (curLayer !== null) {
-        return renderPositions(curLayer, nodes, layers, true, direction, true)
+        return renderPositions(curLayer, nodes, layers, true, direction, true, false)
     }
     // @ts-ignore
     return <g></g>

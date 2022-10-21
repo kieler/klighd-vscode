@@ -67,18 +67,31 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
         const lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
         if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
             // Only show the layer if the moved node is not (the only node) in the last layer
-            // globalEndCoordinate = lastLayer.end + lastLayer.end - lastLayer.begin
             if (currentLayer === lastLayer.id + 1) {
                 result = <g>{result}{createRect(lastLayer.end, lastLayer.end + (lastLayer.end - lastLayer.begin), topBorder, bottomBorder, forbidden, onlyLC, direction)}</g>
             } else {
                 result = <g>{result}{createVerticalLine(lastLayer.mid + (lastLayer.end - lastLayer.begin), topBorder, bottomBorder, direction)}</g>
             }
         }
+        // Show a new empty first layer the node can be moved to
+        const firstLayer = layers[0]
+        const firstLNodes = getNodesOfLayer(0, nodes)
+        let newFirstLayer = false
+        if (firstLNodes.length !== 1 || !firstLNodes[0].selected) {
+            // Only show the layer if the moved node is not (the only node) in the first layer
+            if (currentLayer === -1) {
+                newFirstLayer = true
+                result = <g>{result}{createRect(firstLayer.begin - (firstLayer.end - firstLayer.begin), firstLayer.begin, topBorder, bottomBorder, forbidden, onlyLC, direction)}</g>
+            } else {
+                result = <g>{result}{createVerticalLine(firstLayer.begin - (firstLayer.end - firstLayer.begin) / 2, topBorder, bottomBorder, direction)}</g>
+            }
+        }
+
 
         // Positions should only be rendered if a position constraint will be set
         if (!onlyLC) {
             // @ts-ignore
-            return <g>{result}{renderPositions(curLayer, nodes, layers, forbidden, direction, false)}</g>
+            return <g>{result}{renderPositions(curLayer, nodes, layers, forbidden, direction, false, newFirstLayer)}</g>
         } else {
             // Add available positions
             // @ts-ignore
@@ -97,7 +110,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
  * @param layers All layers in the graph at the hierarchical level.
  * @param forbidden Determines whether the current layer is forbidden.
  */
- export function renderPositions(curLayer: Layer, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: Direction, relCons: boolean): VNode {
+ export function renderPositions(curLayer: Layer, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: Direction, relCons: boolean, newFirstLayer: boolean): VNode {
     let layerNodes: KNode[] = []
     if (curLayer !== null) {
         layerNodes = getNodesOfLayer(curLayer.id, nodes)
@@ -246,30 +259,56 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
         // there are no nodes in the layer
         // show a circle in the middle of the layer
         let x = 0, y = 0
-        switch (direction) {
-            case Direction.UNDEFINED: case Direction.RIGHT: {
-                const lastLayer = layers[layers.length - 1]
-                x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
+        if (newFirstLayer) {
+            const firstLayer = layers[0]
+            switch (direction) {
+                case Direction.UNDEFINED: case Direction.RIGHT: {
+                    x = firstLayer.begin - (firstLayer.end - firstLayer.begin)/2
+                    y = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                    break;
+                }
+                case Direction.LEFT: {
+                    x = firstLayer.begin + (firstLayer.end - firstLayer.begin)/2
+                    y = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                    break;
+                }
+                case Direction.DOWN: {
+                    y = firstLayer.begin - (firstLayer.end - firstLayer.begin)/2
+                    x = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                    break;
+                }
+                case Direction.UP: {
+                    y = firstLayer.begin + (firstLayer.end - firstLayer.begin)/2
+                    x = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                    break;
+                }
             }
-            case Direction.LEFT: {
-                const lastLayer = layers[layers.length - 1]
-                x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
-            }
-            case Direction.DOWN: {
-                const lastLayer = layers[layers.length - 1]
-                y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
-            }
-            case Direction.UP: {
-                const lastLayer = layers[layers.length - 1]
-                y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
+        } else {
+            switch (direction) {
+                case Direction.UNDEFINED: case Direction.RIGHT: {
+                    const lastLayer = layers[layers.length - 1]
+                    x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                    y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                    break;
+                }
+                case Direction.LEFT: {
+                    const lastLayer = layers[layers.length - 1]
+                    x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                    y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                    break;
+                }
+                case Direction.DOWN: {
+                    const lastLayer = layers[layers.length - 1]
+                    y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                    x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                    break;
+                }
+                case Direction.UP: {
+                    const lastLayer = layers[layers.length - 1]
+                    y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                    x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                    break;
+                }
             }
         }
         // @ts-ignore

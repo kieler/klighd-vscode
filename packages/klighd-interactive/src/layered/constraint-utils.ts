@@ -43,11 +43,12 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
     const coordinateInLayoutDirection = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
         ? node.position.x + node.size.width / 2 : node.position.y + node.size.height / 2
 
+    const firstLayerBegin = layers[0].begin
     // check for all layers if the node is in the layer
     for (const layer of layers) {
-        if (coordinateInLayoutDirection < layer.end &&
+        if (coordinateInLayoutDirection < layer.end && coordinateInLayoutDirection > layer.begin &&
             (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ||
-            coordinateInLayoutDirection > layer.end && (direction === Direction.LEFT || direction === Direction.UP)) {
+            coordinateInLayoutDirection > layer.end && coordinateInLayoutDirection < layer.begin && (direction === Direction.LEFT || direction === Direction.UP)) {
             return layer.id
         }
     }
@@ -60,7 +61,11 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
     }
 
     // node is in a new last layer
-    return layers[layers.length - 1].id + 1
+    if ((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) && coordinateInLayoutDirection < firstLayerBegin) {
+        return -1;
+    } else {
+        return layers[layers.length - 1].id + 1
+    }
 }
 
 /**
