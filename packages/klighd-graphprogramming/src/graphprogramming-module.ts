@@ -16,8 +16,10 @@
  */
 
 import { ContainerModule } from 'inversify';
-import { TYPES, configureCommand, MoveCommand, LocationPostprocessor, MouseListener } from 'sprotty';
+import { TYPES, MouseListener } from 'sprotty';
 import { graphprogrammingMouseListener } from './klightd-graphprogMouseListener'; 
+import { DeleteContextMenuItemProvider } from './menuproviders';
+//import { ContextMenueProvider } from './klightd-contextmenuprovider';
 
 /**
  * Bindings for the interactive mouse listener.
@@ -26,9 +28,9 @@ export const graphprogrammingModule = new ContainerModule((bind, _unbind, isBoun
     bind(graphprogrammingMouseListener).toSelf().inSingletonScope()
     bind(TYPES.MouseListener).toService(graphprogrammingMouseListener)
     bind(MouseListener).toService(graphprogrammingMouseListener)
-    configureCommand({ bind, isBound }, MoveCommand);
-    bind(TYPES.IVNodePostprocessor).to(LocationPostprocessor);
-    bind(TYPES.HiddenVNodePostprocessor).to(LocationPostprocessor);
+
+    //bind(TYPES.IContextMenuService).to(ContextMenueProvider);  
+    bind(TYPES.IContextMenuProviderRegistry).to(DeleteContextMenuItemProvider);
 });
 
 export default graphprogrammingModule;
