@@ -16,6 +16,7 @@
  */
 
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
+import { graphprogrammingModule } from '@kieler/klighd-graphprogramming/lib/graphprogramming-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
@@ -97,7 +98,7 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
  */
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
-    container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
+    container.load(defaultModule, selectModule, interactiveModule, graphprogrammingModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
         actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule)
     overrideViewerOptions(container, {

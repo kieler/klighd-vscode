@@ -1,12 +1,12 @@
 {
-  "name": "@kieler/klighd-interactive",
-  "version": "0.4.0",
-  "description": "A module for klighd-core to interactively apply constraints to the diagram",
-  "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
+  "name": "@kieler/klighd-graphprogramming",
+  "version": "0.0.1",
+  "description": "A module for klighd-core to graphprogramming apply constraints to the diagram",
+  "author": "Kiel University <fe.joehnk@gmail.com>",
   "license": "EPL-2.0",
   "keywords": [
     "klighd",
-    "interactive"
+    "graphprogramming"
   ],
   "repository": {
     "type": "git",
