@@ -20,7 +20,7 @@ import { inject, injectable } from "inversify";
 import { ServerStatusAction } from "sprotty";
 import { ActionMessage, isActionMessage } from "sprotty-protocol";
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
-import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
+import { VsCodeApi } from "sprotty-vscode-webview/lib/services";
 
 /**
  * Message based {@link Connection} to the VS Code extension. `sprotty-vscode` is used in
@@ -31,10 +31,13 @@ import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
 export class MessageConnection implements Connection {
     private messageHandlers: ((message: ActionMessage) => void)[] = [];
 
+    vscodeApi: VsCodeApi
+
     @inject(VscodeDiagramWidgetFactory)
     private diagramWidgetFactory!: VscodeDiagramWidgetFactory;
 
-    constructor() {
+    constructor(vscodeApi: VsCodeApi) {
+        this.vscodeApi = vscodeApi
         this.messageHandlers.push(this.statusMessageHandler);
         this.messageHandlers.push(this.logHandler);
 
@@ -63,8 +66,7 @@ export class MessageConnection implements Connection {
         console.groupCollapsed(`MessageConnection sends ${message.action.kind} action:`);
         console.log(message);
         console.groupEnd();
-
-        vscodeApi.postMessage(message);
+        this.vscodeApi.postMessage(message);
     }
 
     sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void {
@@ -75,7 +77,7 @@ export class MessageConnection implements Connection {
         // SprottyLSPWebview sends a message with the language client, if it
         // has a method property and passes a params property as the second argument
         // to languageClient.sendNotification.
-        vscodeApi.postMessage({ method: type, params: payload });
+        this.vscodeApi.postMessage({ method: type, params: payload });
     }
 
     onMessageReceived(handler: (message: ActionMessage) => void): void {
