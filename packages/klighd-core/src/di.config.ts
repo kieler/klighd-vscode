@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
 import { graphprogrammingModule } from '@kieler/klighd-graphprogramming/lib/graphprogramming-module';
+import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,

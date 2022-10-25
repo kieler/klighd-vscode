@@ -32,6 +32,7 @@ import {
     VscodeDiagramWidgetFactory
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
+import { VsCodeApi } from "sprotty-vscode-webview/lib/services";
 import { KlighdDiagramWidget } from "./klighd-widget";
 import { MessageConnection } from "./message-connection";
 import { MessagePersistenceStorage } from "./persistence-storage";
@@ -71,8 +72,8 @@ export class KLighDSprottyStarter extends SprottyStarter {
     }
 
     protected override createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
-        const connection = new MessageConnection();
-        const persistenceStorage = new MessagePersistenceStorage();
+        const connection = new MessageConnection(this.vscodeApi);
+        const persistenceStorage = new MessagePersistenceStorage(this.vscodeApi);
         const container = createKlighdDiagramContainer(diagramIdentifier.clientId);
         bindServices(container, { connection, sessionStorage, persistenceStorage });
 
@@ -90,6 +91,8 @@ export class KLighDSprottyStarter extends SprottyStarter {
         container: Container,
         diagramIdentifier: SprottyDiagramIdentifier
     ): void {
+        container.bind(VsCodeApi).toConstantValue(this.vscodeApi)
+
         container.bind(VscodeDiagramWidget).toSelf().inSingletonScope();
         container.bind(VscodeDiagramWidgetFactory).toFactory((context) => {
             return () => context.container.get<VscodeDiagramWidget>(VscodeDiagramWidget);
