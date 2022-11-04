@@ -15,28 +15,31 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { VNode } from "snabbdom";
+import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { KNode } from './constraint-classes';
 import { filterKNodes, getSelectedNode } from './helper-methods';
 import { renderHierarchyLevel as renderHierarchyLevelLayered, renderLayeredConstraint } from './layered/layered-interactive-view';
+import { setForbiddenOnNodes, renderPositionIndicators, renderSetRelativeConstraint } from './layered/layered-relative-constraint-view';
 import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
-import { forbiddenNodes, renderPosIndicators, renderSetRelConstraint } from './layered/layered-relCons-view';
 
 /**
  * Visualize the layers and available positions in the graph
+ * 
  * @param root Root of the hierarchical level for which the layers and positions should be visualized.
+ * @param relativeConstraint Whether a relative constraint should be rendered.
+ * @returns The VNode that represents the view overlay for interactive layout.
  */
-export function renderInteractiveLayout(root: KNode, relCons: boolean): VNode {
+export function renderInteractiveLayout(root: KNode, relativeConstraint: boolean): VNode {
     // Filter KNodes
     const nodes = filterKNodes(root.children)
     let result = undefined
     if (root.properties['org.eclipse.elk.algorithm'] === undefined || (root.properties['org.eclipse.elk.algorithm'] as string).endsWith('layered')) {
-        if (relCons) {
+        if (relativeConstraint) {
             const selNode = getSelectedNode(nodes)
             if (selNode !== undefined) {
-                forbiddenNodes(nodes, selNode)
-                result = renderPosIndicators(nodes, selNode)
+                setForbiddenOnNodes(nodes, selNode)
+                result = renderPositionIndicators(nodes, selNode)
             }
         } else {
             result = renderHierarchyLevelLayered(nodes)
@@ -46,21 +49,22 @@ export function renderInteractiveLayout(root: KNode, relCons: boolean): VNode {
     } else {
         // Not supported
     }
-    // @ts-ignore
     return <g>
         {result}
     </g>
 }
 
 /**
- * Generates an icon to visualize the set Constraints of the node.
+ * Generates an icon to visualize the set constraints of the node.
+ * 
  * @param node KNode which Constraints should be rendered.
+ * @returns The VNode that includes the node icons that indicate their constraint.
  */
 export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
     const algorithm = (node.parent as KNode).properties['org.eclipse.elk.algorithm'] as string
     if (algorithm === undefined || algorithm.endsWith('layered')) {
-        result = <g>{renderLayeredConstraint(node)}{renderSetRelConstraint(node)}</g>
+        result = <g>{renderLayeredConstraint(node)}{renderSetRelativeConstraint(node)}</g>
     } else if (algorithm.endsWith('rectpacking')) {
         if (node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined && node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1) {
             result = renderRectPackConstraint(node)
@@ -68,6 +72,5 @@ export function renderConstraints(node: KNode): VNode {
     } else {
         // Not supported
     }
-    // @ts-ignore
     return result
 }

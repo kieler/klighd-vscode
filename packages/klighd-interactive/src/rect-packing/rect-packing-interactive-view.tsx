@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { VNode } from "snabbdom";
+import { VNode } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { KNode } from '../constraint-classes';
 import { renderLock } from '../interactive-view-objects';

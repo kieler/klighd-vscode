@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020 by
+ * Copyright 2019 - 2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Direction } from "../constraint-classes"
+import { Direction } from '../constraint-classes';
 
 /**
  * A layer visualization data class for the interactive layered approach.
@@ -86,17 +86,17 @@ export class StaticConstraint {
 }
 
 /**
- * data class for a in layer predecessor of constraint
+ * Data class for a in layer predecessor of constraint.
  */
-export class ILPredOfConstraint {
+export class InLayerPredecessorOfConstraint {
     id: string
     otherNode: string
 }
 
 /**
- * data class for a in layer successor of constraint
+ * Data class for a in layer successor of constraint.
  */
-export class ILSuccOfConstraint {
+export class InLayerSuccessorOfConstraint {
     id: string
     otherNode: string
 }

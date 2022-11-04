@@ -17,12 +17,12 @@
 
 import { injectable } from 'inversify';
 import { MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
-import { Action } from "sprotty-protocol";
+import { Action } from 'sprotty-protocol';
 import { KNode } from './constraint-classes';
 import { filterKNodes } from './helper-methods';
 import { DeleteRelativeConstraintsAction, DeleteStaticConstraintAction } from './layered/actions';
 import { getLayers, setProperty } from './layered/constraint-utils';
-import { setRelativeConstraint } from './layered/relativeConstraint-utils';
+import { setRelativeConstraint } from './layered/relative-constraint-utils';
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 import { setGenerateRectPackAction } from './rect-packing/constraint-util';
 
@@ -44,17 +44,23 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
      */
     private target: KNode | undefined
 
-    public relCons: boolean
+    /**
+     * Whether relative constraints mode is activated.
+     */
+    public relativeConstraintMode: boolean
 
     /**
+     * Handle moving an element in the diagram.
      * Does not use super implementation, since it calls mouseUp
-     * @param target target node
-     * @param event target event
+     * 
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns The actions executed on mouse move.
      */
     mouseMove(target: SModelElement, event: MouseEvent): Action[] {
         if (!event.altKey && this.target) {
             if (target instanceof SLabel && target.parent instanceof SNode) {
-                // nodes should be movable when the user clicks on the label
+                // Nodes should be movable when the user clicks on the label.
                 target = target.parent
             }
             const result = []
@@ -67,7 +73,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 if (moveAction)
                     result.push(moveAction);
             }
-            // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
+            // Workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable.
             if (target instanceof SEdge) {
                 this.hasDragged = false
             }
@@ -76,10 +82,17 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
         return []
     }
 
+    /**
+     * Handles mouse down event.
+     * 
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns Actions executed on mouse down. THis might be any delete constraint action.
+     */
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
         let targetNode = target
         if (target instanceof SLabel && target.parent instanceof SNode) {
-            // nodes should be movable when the user clicks on the label
+            // Nodes should be movable when the user clicks on the label.
             targetNode = target.parent
         }
         if (targetNode && targetNode instanceof SNode) {
@@ -97,7 +110,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 }
 
                 this.target.selected = true
-                // save the coordinates as shadow coordinates
+                // Save the coordinates as shadow coordinates
                 this.target.shadowX = this.target.position.x
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
@@ -119,12 +132,8 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                     }
                 }
 
-                // determines which visualization should be rendered
-                if (event.shiftKey) {
-                    this.relCons = true
-                } else {
-                    this.relCons = false
-                }
+                // Determine which visualization should be rendered
+                this.relativeConstraintMode = !!event.shiftKey
                 return super.mouseDown(this.target as SModelElement, event)
             }
         }
@@ -132,14 +141,23 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
     }
 
     /**
-     * Override size mouseEnter to not call mouseUp.
-     * @param target target
-     * @param event event
+     * Override mouseEnter to do nothing such that mouseUp is not called.
+     * 
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns Always an empty list.
      */
     mouseEnter(): Action[] {
         return [];
     }
 
+    /**
+     * Returns the set-constraint actions that should be executed on mouseUp, additionally with the usual mouseUp actions.
+     * 
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns The list of set-constraint actions to be executed on mouseUp. 
+     */
     mouseUp(target: SModelElement, event: MouseEvent): Action[] {
         if (this.hasDragged && this.target) {
             // if a node is moved set properties

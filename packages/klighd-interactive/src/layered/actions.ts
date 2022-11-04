@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019 - 2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,7 @@
  */
 
 import { Action } from 'sprotty-protocol';
-import { DeleteConstraint, ILPredOfConstraint, LayerConstraint, PositionConstraint, StaticConstraint, ILSuccOfConstraint } from './constraint-types';
+import { DeleteConstraint, InLayerPredecessorOfConstraint, InLayerSuccessorOfConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types';
 
 /**
  * Sent from client to server to set a position and layer constraint.
@@ -137,22 +137,22 @@ export namespace SetPositionConstraintAction {
 /**
  * Sent from client to server to set a in layer predecessor of constraint on a node.
  */
- export class SetILPredOfConstraintAction implements Action {
+ export class SetInLayerPredecessorOfConstraintAction implements Action {
     static readonly KIND: string = 'setILPredOfConstraint'
-    readonly kind = SetILPredOfConstraintAction.KIND
+    readonly kind = SetInLayerPredecessorOfConstraintAction.KIND
 
-    constructor(public readonly constraint: ILPredOfConstraint) {
+    constructor(public readonly constraint: InLayerPredecessorOfConstraint) {
     }
 }
 
 /**
  * Sent from client to server to set a in layer successor of constraint on a node.
  */
-export class SetILSuccOfConstraintAction implements Action {
+export class SetInLayerSuccessorOfConstraintAction implements Action {
     static readonly KIND: string = 'setILSuccOfConstraint'
-    readonly kind = SetILSuccOfConstraintAction.KIND
+    readonly kind = SetInLayerSuccessorOfConstraintAction.KIND
 
-    constructor(public readonly constraint: ILSuccOfConstraint) {
+    constructor(public readonly constraint: InLayerSuccessorOfConstraint) {
     }
 }
 
@@ -168,24 +168,24 @@ export class DeleteRelativeConstraintsAction implements Action {
 }
 
 /**
- * Sent from client to server to delete iLSuccOf constraint on a node.
+ * Sent from client to server to delete InLayerSuccessorOf constraint on a node.
  * Currently unused.
  */
-export class DeleteILSuccOfConstraintAction implements Action {
+export class DeleteInLayerSuccessorOfConstraintAction implements Action {
     static readonly KIND: string = 'deleteILSuccOfConstraint'
-    readonly kind = DeleteILSuccOfConstraintAction.KIND
+    readonly kind = DeleteInLayerSuccessorOfConstraintAction.KIND
 
     constructor(public readonly constraint: DeleteConstraint) {
     }
 }
 
 /**
- * Sent from client to server to delete iLPredOf constraint on a node.
+ * Sent from client to server to delete inLayerPredecessorOf constraint on a node.
  * Currently unused.
  */
-export class DeleteILPredOfConstraintAction implements Action {
+export class DeleteInLayerPredecessorOfConstraintAction implements Action {
     static readonly KIND: string = 'deleteILPredOfConstraint'
-    readonly kind = DeleteILPredOfConstraintAction.KIND
+    readonly kind = DeleteInLayerPredecessorOfConstraintAction.KIND
 
     constructor(public readonly constraint: DeleteConstraint) {
     }

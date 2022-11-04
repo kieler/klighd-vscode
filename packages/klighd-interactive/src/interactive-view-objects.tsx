@@ -32,7 +32,7 @@ const iconScale = 0.01
  * @param selected Determines whether the layer represented by the rectangle is selected instead of a certain position.
  * @param direction The direction of the layer.
  */
-export function createRect(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: Direction): VNode {
+export function createRectangle(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: Direction): VNode {
     const forbiddenColor = 'indianred'
     const backgroundColor = selected ? 'grey' : 'lightgrey'
     // @ts-ignore
@@ -141,7 +141,7 @@ export function renderArrow(xTranslate: number, yTranslate: number, vertical: bo
  * @param direction Determines the direction of the arrow.
  * @param color Determines the color of the arrow.
  */
-export function renderDirArrow(xTranslate: number, yTranslate: number, direction: Direction, color: string): VNode {
+export function renderArrowInDirection(xTranslate: number, yTranslate: number, direction: Direction, color: string): VNode {
     let s = "translate(" + xTranslate + ","
             + yTranslate + ")"
     s += " scale(" + iconScale + ", " + iconScale + ")"

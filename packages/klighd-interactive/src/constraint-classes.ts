@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019 - 2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -99,14 +99,14 @@ export class KEdge extends SEdge implements KGraphElement {
     moved: boolean
 }
 
-export class RelConsData {
-    constructor(public readonly relCons: RelCons,
+export class RelativeConstraintData {
+    constructor(public readonly relCons: RelativeConstraintType,
         public readonly node: KNode,
         public readonly target: KNode) {}
 }
 
-export enum RelCons {
-    IN_LAYER_SUCC_OF,
-    IN_LAYER_PRED_OF,
+export enum RelativeConstraintType {
+    IN_LAYER_SUCCESSOR_OF,
+    IN_LAYER_PREDECESSOR_OF,
     UNDEFINED
 }

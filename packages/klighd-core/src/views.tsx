@@ -18,7 +18,7 @@
 import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods';
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
-import { renderRelCons } from '@kieler/klighd-interactive/lib/layered/layered-relCons-view';
+import { renderRelativeConstraint } from '@kieler/klighd-interactive/lib/layered/layered-relative-constraint-view';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
 import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -120,15 +120,15 @@ export class KNodeView implements IView {
             // Render shadow of the node
             shadow = getRendering(node.data, node, new KStyles, ctx)
 
-            if (this.mListener.relCons) {
+            if (this.mListener.relativeConstraintMode) {
                 // render visualization for relative constraints
-                result.push(renderRelCons(node.parent as SKNode, node))
+                result.push(renderRelativeConstraint(node.parent as SKNode, node))
             }
         }
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties['org.eclipse.elk.interactiveLayout']) && ctx.mListener.hasDragged) {
                 // Render the visualization for interactive layout
-                interactiveNodes = renderInteractiveLayout(node as SKNode, this.mListener.relCons)
+                interactiveNodes = renderInteractiveLayout(node as SKNode, this.mListener.relativeConstraintMode)
             }
         }
 
@@ -210,7 +210,6 @@ export class KNodeView implements IView {
         if (interactiveConstraints) {
             result.push(interactiveConstraints)
         }
-        // FIXME
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!node.areChildAreaChildrenRendered) {
             result.push(...ctx.renderChildren(node))
