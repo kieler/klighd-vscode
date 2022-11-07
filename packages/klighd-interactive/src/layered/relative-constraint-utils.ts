@@ -34,12 +34,12 @@ export function setRelativeConstraint(nodes: KNode[], layers: Layer[], target: S
         case RelativeConstraintType.IN_LAYER_SUCCESSOR_OF:
             return new SetInLayerSuccessorOfConstraintAction({
                 id: constraint.target.id,
-                otherNode: constraint.node.id
+                referencedNode: constraint.node.id
             })
         case RelativeConstraintType.IN_LAYER_PREDECESSOR_OF:
             return new SetInLayerPredecessorOfConstraintAction({
                 id: constraint.target.id,
-                otherNode: constraint.node.id
+                referencedNode: constraint.node.id
             })
         default:
             // If the node was moved without setting a constraint - let it snap back

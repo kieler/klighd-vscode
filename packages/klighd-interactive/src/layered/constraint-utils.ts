@@ -467,16 +467,16 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
             return SetLayerConstraintAction.create({
                 id: targetNode.id,
                 layer: layerOfTarget,
-                layerCons: newLayerCons
+                layerConstraint: newLayerCons
             })
         } else {
             // If layer and position constraint should be set - send them both in one StaticConstraint
             return SetStaticConstraintAction.create({
                 id: targetNode.id,
                 layer: layerOfTarget,
-                layerCons: newLayerCons,
+                layerConstraint: newLayerCons,
                 position: positionOfTarget,
-                posCons: newPositionCons
+                positionConstraint: newPositionCons
             })
         }
     } else {
@@ -487,7 +487,7 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
             return SetPositionConstraintAction.create({
                 id: targetNode.id,
                 position: positionOfTarget,
-                posCons: newPositionCons
+                positionConstraint: newPositionCons
             })
         }
     }

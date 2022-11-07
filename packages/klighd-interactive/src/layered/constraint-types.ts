@@ -62,7 +62,7 @@ export class DeleteConstraint {
 export class LayerConstraint {
     id: string
     layer: number
-    layerCons: number
+    layerConstraint: number
 }
 
 /**
@@ -71,7 +71,7 @@ export class LayerConstraint {
 export class PositionConstraint {
     id: string
     position: number
-    posCons: number
+    positionConstraint: number
 }
 
 /**
@@ -81,8 +81,8 @@ export class StaticConstraint {
     id: string
     layer: number
     position: number
-    posCons: number
-    layerCons: number
+    positionConstraint: number
+    layerConstraint: number
 }
 
 /**
@@ -90,7 +90,7 @@ export class StaticConstraint {
  */
 export class InLayerPredecessorOfConstraint {
     id: string
-    otherNode: string
+    referencedNode: string
 }
 
 /**
@@ -98,5 +98,5 @@ export class InLayerPredecessorOfConstraint {
  */
 export class InLayerSuccessorOfConstraint {
     id: string
-    otherNode: string
+    referencedNode: string
 }
