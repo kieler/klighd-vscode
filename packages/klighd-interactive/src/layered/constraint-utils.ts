@@ -66,7 +66,6 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
     const coordinateInLayoutDirection = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
         ? node.position.x + node.size.width / 2 : node.position.y + node.size.height / 2
 
-    const firstLayerBegin = layers[0].begin
     // Check for all layers if the node is in the layer
     for (const layer of layers) {
         if (coordinateInLayoutDirection < layer.end && coordinateInLayoutDirection > layer.begin &&
@@ -75,18 +74,24 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
             return layer.id
         }
     }
-
+            
+    const firstLayerBegin = layers[0].begin
+    const lastLayerEnd = layers[layers.length - 1].end
     // If the node is the only one in the last layer it can not be in a new last layer
     const lastLNodes = getNodesOfLayer(layers[layers.length - 1].id, nodes)
-    if (lastLNodes.length === 1 && lastLNodes[0].selected) {
+    if (lastLNodes.length === 1 && lastLNodes[0].selected &&
+        (((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) && coordinateInLayoutDirection > lastLayerEnd)
+            || (( direction === Direction.LEFT || direction === Direction.UP) && coordinateInLayoutDirection < lastLayerEnd))) {
         // node is in last layer
         return layers[layers.length - 1].id
     }
 
     // Node is in a new last layer
-    if ((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) && coordinateInLayoutDirection < firstLayerBegin) {
+    if (((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) && coordinateInLayoutDirection < firstLayerBegin)
+        || (( direction === Direction.LEFT || direction === Direction.UP) && coordinateInLayoutDirection > firstLayerBegin)) {
         return -1;
     } else {
+        // The node is added in a new last layer.
         return layers[layers.length - 1].id + 1
     }
 }
