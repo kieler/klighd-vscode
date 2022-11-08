@@ -21,10 +21,25 @@ import { RefreshLayoutAction } from '../actions';
 import { Direction, KEdge, KNode } from '../constraint-classes';
 import { TreeSetPositionConstraintAction } from './actions';
 
-export function dotProduct(vec1: [number, number], vec2: [number, number]): number {
-    return vec1[0] * vec2[0] + vec1[1] * vec2[1]
+/**
+ * Calculates dot product of two vectors of size 2.
+ * This is used for directional vectors.
+ * 
+ * @param vec1 First vector.
+ * @param vec2 Second vector.
+ * @returns The dot product.
+ */
+export function dotProduct(vector1: [number, number], vector2: [number, number]): number {
+    return vector1[0] * vector2[0] + vector1[1] * vector2[1]
 }
 
+/**
+ * Get directional vector for a node.
+ * UP is [0, -1], DOWN is [0, 1], RIGHT is [1, 0] and LEFT is [-1, 0].
+ * 
+ * @param node  The node.
+ * @returns The directional vector.
+ */
 export function getDirectionVector(node: KNode): [number, number] {
     const direction = node.direction
     if (!direction || direction === Direction.DOWN)
@@ -39,98 +54,179 @@ export function getDirectionVector(node: KNode): [number, number] {
         return [0, 1]
 }
 
+/**
+ * Get the sources of the graph.
+ * I.e. the node that is a source.
+ * 
+ * @param nodes The nodes of the graph.
+ * @returns The list of all sources of the graph.
+ */
 export function getRoot(nodes: KNode[]): KNode[] {
-    const re: KNode[] = [];
-    nodes.forEach(x => {
-        if ((x.incomingEdges as any as KEdge[]).length === 0 || x.position.y === 40)
-            re.push(x);
+    const sources: KNode[] = [];
+    nodes.forEach(n => {
+        if ((n.incomingEdges as any as KEdge[]).length === 0 || n.position.y === 40) {
+            sources.push(n);
+        }
     })
-    return re;
+    return sources;
 }
 
-export function rootDistance(n: KNode, root: KNode): number {
-    if (root.id === n.id) return 0;
-    const edges: KEdge[] = n.incomingEdges as any as KEdge[];
+/**
+ * Returns the distance to the root node.
+ * 
+ * @param node The node.
+ * @param root The root node.
+ * @returns The distance (i.e. the number of edges) from the node to the root.
+ */
+export function rootDistance(node: KNode, root: KNode): number {
+    if (root.id === node.id) return 0;
+    const edges: KEdge[] = node.incomingEdges as any as KEdge[];
     if (edges.length === 0) return 0;
-    const p: KNode = edges[0].source as KNode;
-    return rootDistance(p, root) + 1;
+    const ancestor: KNode = edges[0].source as KNode;
+    return rootDistance(ancestor, root) + 1;
 }
 
-export function getChildren(n: KNode): KNode[] {
-    const re: KNode[] = [];
-    (n.outgoingEdges as any as KEdge[]).forEach(x => {
-        re.push(x.target as KNode);
+/**
+ * Returns the outgoing nodes of a node.
+ * 
+ * @param node The node.
+ * @returns The list of children (i.e. the outgoing nodes).
+ */
+export function getChildren(node: KNode): KNode[] {
+    const children: KNode[] = [];
+    (node.outgoingEdges as any as KEdge[]).forEach(edge => {
+        children.push(edge.target as KNode);
     });
-    return re;
+    return children;
 }
 
+/**
+ * Returns the levels of a tree.
+ * 
+ * @param nodes The nodes of the tree.
+ * @returns A two dimensional array of node which assigns each node a level.
+ */
 export function getLevels(nodes: KNode[]): KNode[][] {
-    const re: KNode[][] = [getRoot(nodes)];
-    nodes.forEach(x => x.properties.treeLevel = -1);
+    // Initialize first level with root nodes.
+    const levels: KNode[][] = [getRoot(nodes)];
+    // Add an internal property treeLevel to remember the level of the tree.
+    nodes.forEach(node => node.properties.treeLevel = -1);
+
+    // Set tree level of first level.
+    let currentLevel: KNode[] = [];
+    levels[0].forEach(node => {
+        currentLevel.push(node);
+        node.properties.treeLevel = 0;
+    });
+    levels[0].forEach(node => node.properties.treeLevel = 0)
 
     let newNode = true;
-    let curLevel: KNode[] = [];
-    re[0].forEach(x => {
-        curLevel.push(x);
-        x.properties.treeLevel = 0;
-    });
-    re[0].forEach(x => x.properties.treeLevel = 0)
     for (let i = 1; newNode; i++) {
         newNode = false;
-        curLevel = curLevel.map(x => getChildren(x)).reduce((x, y) => x.concat(y), []);
-        re[i] = [];
-        curLevel.forEach(x => {
-            if (x.properties.treeLevel === -1) {
+        // Get all children of the last level as new current level.
+        currentLevel = currentLevel.map(node => getChildren(node)).reduce((node, otherNode) => node.concat(otherNode), []);
+        levels[i] = [];
+        currentLevel.forEach(node => {
+            // Assign nodes of new level to new array in levels and update the tree level.
+            if (node.properties.treeLevel === -1) {
                 newNode = true;
             }
-            if (x.properties.treeLevel !== 0) {
-                x.properties.treeLevel = i;
+            if (node.properties.treeLevel !== 0) {
+                node.properties.treeLevel = i;
             }
-            re[i].push(x);
+            levels[i].push(node);
         });
     }
 
-    return re;
+    return levels;
 }
 
+/**
+ * Returns the siblings of a node in a tree.
+ * Even though the graph should be a tree, we can handle non tree graphs partly
+ * and will work with the parent node with the lowest coordinate in layout direction as The Parent
+ * to calculate the siblings.
+ * 
+ * @param nodes All nodes of the tree.
+ * @param targetNode The node to find siblings for.
+ * @returns The siblings of a given node.
+ */
 export function getSiblings(nodes: KNode[], targetNode: KNode): KNode[] {
     const lowestParent = getLowestParent(nodes, targetNode);
     if (!lowestParent)
         return [];
-    const siblings = nodes.filter(x => lowestParent === getLowestParent(nodes, x))
+    const siblings = nodes.filter(node => lowestParent === getLowestParent(nodes, node))
     return siblings
 }
 
+/**
+ * Returns the parent with the lowest coordinate in layout direction.
+ * Even though the graph should be a tree, it might not and we have to handle this.
+ * 
+ * @param nodes All nodes of the tree.
+ * @param targetNode The node to find the lowest parent for.
+ * @returns The lowest parent or undefined if it could not be found, which is only the case if the node is a root node.
+ */
 function getLowestParent(nodes: KNode[], targetNode: KNode): KNode | undefined {
-    const dirVec = getDirectionVector(nodes[0])
-    const incomers = targetNode.incomingEdges as KEdge[];
-    if (incomers.length === 0)
+    const directionVector = getDirectionVector(nodes[0])
+    const incomingEdges = targetNode.incomingEdges as KEdge[];
+    if (incomingEdges.length === 0) {
         return undefined;
-    const parents = incomers.map(x => x.source)
-    const lowestParentPos = Math.max(...parents.
-        map(x => x === undefined ? 0 : dotProduct([x.position.x + x.size.width / 2, x.position.y + x.size.height / 2], dirVec)))
-    const lowestParent = parents.find(x => (x === undefined ?
-        0 : dotProduct([x.position.x + x.size.width / 2, x.position.y + x.size.height / 2], dirVec)) === lowestParentPos)
+    }
+    const parents = incomingEdges.map(edge => edge.source)
+    const lowestParentPosition = Math.max(...parents.
+        map(node => node === undefined ? 0 : dotProduct([node.position.x + node.size.width / 2, node.position.y + node.size.height / 2], directionVector)))
+    const lowestParent = parents.find(parent => (parent === undefined ?
+        0 : dotProduct([parent.position.x + parent.size.width / 2, parent.position.y + parent.size.height / 2], directionVector)) === lowestParentPosition)
 
     return lowestParent as KNode;
 }
 
+/**
+ * Returns the original node x coordinate.
+ * If a node is picked up, the coordinate of its shadow that remained in the
+ * original position is returned.
+ * 
+ * @param node The node.
+ * @returns The original x coordinate.
+ */
 export function getOriginalNodePositionX(node: KNode): number {
     return (node.shadow ? node.shadowX : node.position.x);
 }
+
+/**
+ * Returns the original node y coordinate.
+ * If a node is picked up, the coordinate of its shadow that remained in the
+ * original position is returned.
+ * 
+ * @param node The node.
+ * @returns The original y coordinate.
+ */
 export function getOriginalNodePositionY(node: KNode): number {
     return (node.shadow ? node.shadowY : node.position.y);
 }
 
-export function setTreeProperties(nodes: KNode[], data: Map<string, any>, event: MouseEvent, target: SModelElement): Action {
+/**
+ * Calculates the action that should be executed based on the position the node is moved to.
+ * Will return an refresh layout action if the node was not moved to a valid position.
+ * 
+ * @param nodes All nodes of the tree.
+ * @param event The mouse event. Currently unused.
+ * @param target The moved element.
+ * @returns The action to be executed after a node was moved.
+ */
+export function setTreeProperties(nodes: KNode[], event: MouseEvent, target: SModelElement): Action {
     const targetNode: KNode = target as KNode;
     const direction = nodes[0].direction
     const siblings: KNode[] = getSiblings(nodes, targetNode);
-    if (direction === Direction.LEFT || direction === Direction.RIGHT)
+    // Sort nodes by their coordinates.
+    // The target node will be sorted based on the position it was moved to.
+    if (direction === Direction.LEFT || direction === Direction.RIGHT) {
         siblings.sort((x, y) => x.position.y + x.size.height / 2 - y.position.y - y.size.height / 2);
-    else
+    } else {
         siblings.sort((x, y) => x.position.x + x.size.width / 2 - y.position.x - y.size.width / 2);
-
+    }
+    // There is no valid position if a node has no siblings.
     if (siblings.length === 0)
         return RefreshLayoutAction.create();
 

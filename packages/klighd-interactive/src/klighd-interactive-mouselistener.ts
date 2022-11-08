@@ -177,7 +177,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
                 result = [setGenerateRectPackAction(this.nodes, this.target, parent, event)].concat(super.mouseUp(this.target, event));
             } else if (algorithm.endsWith('mrtree')) {
-                result = [setTreeProperties(this.nodes, this.data, event, this.target)].concat(super.mouseUp(this.target, event));
+                result = [setTreeProperties(this.nodes, event, this.target)].concat(super.mouseUp(this.target, event));
             } else {
                 // Algorithm not supported
             }
