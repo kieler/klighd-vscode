@@ -96,6 +96,8 @@ export class KEdge extends SEdge implements KGraphElement {
         return feature === selectFeature
     }
 
+    properties: Record<string, unknown>
+
     moved: boolean
 }
 

@@ -25,6 +25,7 @@ import { getLayers, setProperty } from './layered/constraint-utils';
 import { setRelativeConstraint } from './layered/relative-constraint-utils';
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions';
 import { setGenerateRectPackAction } from './rect-packing/constraint-util';
+import { setTreeProperties } from './tree/constraint-util';
 
 @injectable()
 export class KlighdInteractiveMouseListener extends MoveMouseListener {
@@ -129,6 +130,8 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                         return [RectPackDeletePositionConstraintAction.create({
                             id: this.target.id
                         })]
+                    } else if (algorithm.endsWith('mrtree')) {
+                        // Init tree dataset, if needed.
                     }
                 }
 
@@ -173,6 +176,8 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             } else if (algorithm.endsWith('rectpacking')) {
                 const parent = this.nodes[0] ? this.nodes[0].parent as KNode : undefined
                 result = [setGenerateRectPackAction(this.nodes, this.target, parent, event)].concat(super.mouseUp(this.target, event));
+            } else if (algorithm.endsWith('mrtree')) {
+                result = [setTreeProperties(this.nodes, this.data, event, this.target)].concat(super.mouseUp(this.target, event));
             } else {
                 // Algorithm not supported
             }

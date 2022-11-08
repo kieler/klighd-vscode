@@ -30,6 +30,7 @@ import {
     DeleteInLayerPredecessorOfConstraintAction,
     DeleteInLayerSuccessorOfConstraintAction
 } from "@kieler/klighd-interactive/lib/layered/actions";
+import { TreeDeletePositionConstraintAction, TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions';
 import {
     RectPackDeletePositionConstraintAction,
     RectPackSetPositionConstraintAction,
@@ -212,6 +213,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(SetSynthesisAction.KIND, this);
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
+        registry.register(TreeSetPositionConstraintAction.KIND, this)
+        registry.register(TreeDeletePositionConstraintAction.KIND, this)
         registry.register(SelectAction.KIND, this);
         registry.register(SetDiagramPieceAction.KIND, this);
         registry.register(ViewportResult.KIND, this);
