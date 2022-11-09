@@ -74,13 +74,11 @@
             {
                 "command": "klighd-vscode.diagram.sync",
                 "title": "Enable Sync With Editor",
-                "icon": "$(sync-ignored)",
                 "enablement": "!klighd-vscode.syncWithEditor"
             },
             {
                 "command": "klighd-vscode.diagram.noSync",
                 "title": "Disable Sync With Editor",
-                "icon": "$(sync)",
                 "enablement": "klighd-vscode.syncWithEditor"
             }
         ],
@@ -126,12 +124,17 @@
                 {
                     "when": "keith-diagram-focused && !klighd-vscode.syncWithEditor",
                     "command": "klighd-vscode.diagram.sync",
-                    "group": "navigation"
+                    "group": "2_diagram-controls@1"
                 },
                 {
                     "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
                     "command": "klighd-vscode.diagram.noSync",
-                    "group": "navigation"
+                    "group": "2_diagram-controls@1"
+                },
+                {
+                    "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
+                    "command": "klighd-vscode.diagram.refresh",
+                    "group": "navigation@1"
                 }
             ]
         }
