@@ -16,7 +16,7 @@
  */
 
 import { SNode } from "sprotty"
-import { KNode } from "./constraint-classes"
+import { Direction, KNode } from "./constraint-classes"
 
 /**
  * Filters the KNodes out of graphElements.
@@ -60,4 +60,37 @@ export function isChildSelected(root: KNode): boolean {
         }
     }
     return false
+}
+
+/**
+ * Calculates dot product of two vectors of size 2.
+ * This is used for directional vectors.
+ * 
+ * @param vector1 First vector.
+ * @param vector2 Second vector.
+ * @returns The dot product.
+ */
+export function dotProduct(vector1: [number, number], vector2: [number, number]): number {
+    return vector1[0] * vector2[0] + vector1[1] * vector2[1]
+}
+
+/**
+ * Get directional vector for a node.
+ * UP is [0, -1], DOWN is [0, 1], RIGHT is [1, 0] and LEFT is [-1, 0].
+ * 
+ * @param node  The node.
+ * @returns The directional vector.
+ */
+export function getDirectionVector(node: KNode): [number, number] {
+    const direction = node.direction
+    if (!direction || direction === Direction.DOWN)
+        return [0, 1]
+    else if (direction === Direction.LEFT)
+        return [-1, 0]
+    else if (direction === Direction.RIGHT)
+        return [1, 0]
+    else if (direction === Direction.UP)
+        return [0, -1]
+    else
+        return [0, 1]
 }

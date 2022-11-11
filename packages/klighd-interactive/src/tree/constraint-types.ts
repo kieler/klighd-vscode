@@ -48,13 +48,6 @@ export class Level {
 }
 
 /**
- * A deletion constraint data class.
- */
-export class TreeDeletePositionConstraint {
-    id: string
-}
-
-/**
  * A set position constraint data class.
  */
 export class TreeSetPositionConstraint {

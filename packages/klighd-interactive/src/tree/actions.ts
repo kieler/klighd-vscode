@@ -16,26 +16,23 @@
  */
 
 import { Action } from 'sprotty-protocol';
-import { TreeDeletePositionConstraint, TreeSetPositionConstraint } from './constraint-types';
+import { TreeSetPositionConstraint } from './constraint-types';
 
 /**
- * Send from client to server to delete an position constraint on a node.
+ * Sent from client to server to set a position to force a node on a specific position.
  */
-export class TreeDeletePositionConstraintAction implements Action {
-    static readonly KIND: string = 'treeDeletePositionConstraint'
-    readonly kind = TreeDeletePositionConstraintAction.KIND
-
-    constructor(public readonly constraint: TreeDeletePositionConstraint) {
-    }
+ export interface TreeSetPositionConstraintAction extends Action {
+    kind: typeof TreeSetPositionConstraintAction.KIND
+    constraint: TreeSetPositionConstraint
 }
 
-/**
- * Send from client to server to set a position to force a node on a specific position.
- */
-export class TreeSetPositionConstraintAction implements Action {
-    static readonly KIND: string = 'treeSetPositionConstraint'
-    readonly kind = TreeSetPositionConstraintAction.KIND
+export namespace TreeSetPositionConstraintAction {
+    export const KIND = 'treeSetPositionConstraint'
 
-    constructor(public readonly constraint: TreeSetPositionConstraint) {
+    export function create(constraint: TreeSetPositionConstraint): TreeSetPositionConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }

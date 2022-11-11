@@ -147,8 +147,8 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
 export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolean, layerNodes: KNode[]): number {
     let localTargetIndex = targetIndex
     if (localTargetIndex > 0) {
-        // Check whether there is an user defined pos constraint on the upper neighbor that is higher
-        // than its position ID
+        // Check whether there is an user defined position constraint on the upper neighbour that is higher
+        // than its position ID.
         const upperIndex = localTargetIndex - 1
         const upperNeighbor = layerNodes[upperIndex]
         const posConsOfUpper = upperNeighbor.properties['org.eclipse.elk.layered.crossingMinimization.positionChoiceConstraint'] as number

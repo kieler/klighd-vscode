@@ -19,7 +19,7 @@ import { Action } from 'sprotty-protocol';
 import { DeleteConstraint } from './layered/constraint-types';
 
 /**
- * A sprotty action to refresh the diagram. Send from client to server.
+ * A sprotty action to refresh the diagram. Sent from client to server.
  */
 export interface RefreshDiagramAction extends Action {
     kind: typeof RefreshDiagramAction.KIND
@@ -36,7 +36,7 @@ export namespace RefreshDiagramAction {
 }
 
 /**
- * A sprotty action to refresh the layout. Send from client to server.
+ * A sprotty action to refresh the layout. Sent from client to server.
  */
  export interface RefreshLayoutAction extends Action {
     kind: typeof RefreshLayoutAction.KIND

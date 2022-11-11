@@ -19,40 +19,8 @@ import { SModelElement } from 'sprotty';
 import { Action } from 'sprotty-protocol';
 import { RefreshLayoutAction } from '../actions';
 import { Direction, KEdge, KNode } from '../constraint-classes';
+import { dotProduct, getDirectionVector } from '../helper-methods';
 import { TreeSetPositionConstraintAction } from './actions';
-
-/**
- * Calculates dot product of two vectors of size 2.
- * This is used for directional vectors.
- * 
- * @param vec1 First vector.
- * @param vec2 Second vector.
- * @returns The dot product.
- */
-export function dotProduct(vector1: [number, number], vector2: [number, number]): number {
-    return vector1[0] * vector2[0] + vector1[1] * vector2[1]
-}
-
-/**
- * Get directional vector for a node.
- * UP is [0, -1], DOWN is [0, 1], RIGHT is [1, 0] and LEFT is [-1, 0].
- * 
- * @param node  The node.
- * @returns The directional vector.
- */
-export function getDirectionVector(node: KNode): [number, number] {
-    const direction = node.direction
-    if (!direction || direction === Direction.DOWN)
-        return [0, 1]
-    else if (direction === Direction.LEFT)
-        return [-1, 0]
-    else if (direction === Direction.RIGHT)
-        return [1, 0]
-    else if (direction === Direction.UP)
-        return [0, -1]
-    else
-        return [0, 1]
-}
 
 /**
  * Get the sources of the graph.
@@ -61,7 +29,7 @@ export function getDirectionVector(node: KNode): [number, number] {
  * @param nodes The nodes of the graph.
  * @returns The list of all sources of the graph.
  */
-export function getRoot(nodes: KNode[]): KNode[] {
+export function getSource(nodes: KNode[]): KNode[] {
     const sources: KNode[] = [];
     nodes.forEach(n => {
         if ((n.incomingEdges as any as KEdge[]).length === 0 || n.position.y === 40) {
@@ -108,7 +76,7 @@ export function getChildren(node: KNode): KNode[] {
  */
 export function getLevels(nodes: KNode[]): KNode[][] {
     // Initialize first level with root nodes.
-    const levels: KNode[][] = [getRoot(nodes)];
+    const levels: KNode[][] = [getSource(nodes)];
     // Add an internal property treeLevel to remember the level of the tree.
     nodes.forEach(node => node.properties.treeLevel = -1);
 
@@ -208,7 +176,7 @@ export function getOriginalNodePositionY(node: KNode): number {
 
 /**
  * Calculates the action that should be executed based on the position the node is moved to.
- * Will return an refresh layout action if the node was not moved to a valid position.
+ * Will return a refresh-layout-action if the node was not moved to a valid position.
  * 
  * @param nodes All nodes of the tree.
  * @param event The mouse event. Currently unused.
@@ -233,7 +201,7 @@ export function setTreeProperties(nodes: KNode[], event: MouseEvent, target: SMo
     const positionOfTarget = siblings.indexOf(targetNode);
     if (targetNode.properties.positionId !== positionOfTarget) {
         // Set the position constraint.
-        return new TreeSetPositionConstraintAction({
+        return TreeSetPositionConstraintAction.create({
             id: targetNode.id,
             position: positionOfTarget,
             positionConstraint: positionOfTarget

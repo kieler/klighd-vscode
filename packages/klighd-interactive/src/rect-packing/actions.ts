@@ -19,7 +19,7 @@ import { Action } from 'sprotty-protocol';
 import { AspectRatio, RectPackDeletePositionConstraint, RectPackSetPositionConstraint } from './constraint-types';
 
 /**
- * Send from client to server to set the aspect ratio.
+ * Sent from client to server to set the aspect ratio.
  */
 export interface SetAspectRatioAction extends Action {
     kind: typeof SetAspectRatioAction.KIND
@@ -38,7 +38,7 @@ export namespace SetAspectRatioAction {
 }
 
 /**
- * Send from client to server to delete an position constraint on a node.
+ * Sent from client to server to delete an position constraint on a node.
  */
 export interface RectPackDeletePositionConstraintAction extends Action {
     kind: typeof RectPackDeletePositionConstraintAction.KIND
@@ -57,7 +57,7 @@ export namespace RectPackDeletePositionConstraintAction {
 }
 
 /**
- * Send from client to server to set a position to force a node on a specific position.
+ * Sent from client to server to set a position to force a node on a specific position.
  */
 export interface RectPackSetPositionConstraintAction extends Action {
     kind: typeof RectPackSetPositionConstraintAction.KIND

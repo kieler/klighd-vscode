@@ -84,11 +84,13 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
     }
 
     /**
-     * Handles mouse down event.
+     * Delete constraint events are handle on mouseDown if the alt modifier is active.
+     * Moreover, it is checked whether the relative constraint mode is activated.
+     * This is the case if the shift-key is pressed during mouseDown.
      * 
      * @param target The target element.
      * @param event The mouse event.
-     * @returns Actions executed on mouse down. THis might be any delete constraint action.
+     * @returns Actions executed on mouse down. This might be any delete constraint action.
      */
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
         let targetNode = target
@@ -107,6 +109,8 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 if (algorithm === undefined || algorithm.endsWith('layered')) {
                     this.data.set('layered', getLayers(this.nodes, this.target.direction))
                 } else if (algorithm.endsWith('rectpacking')) {
+                    // Do nothing
+                } else if (algorithm.endsWith('mrtree')) {
                     // Do nothing
                 }
 
@@ -130,8 +134,6 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                         return [RectPackDeletePositionConstraintAction.create({
                             id: this.target.id
                         })]
-                    } else if (algorithm.endsWith('mrtree')) {
-                        // Init tree dataset, if needed.
                     }
                 }
 

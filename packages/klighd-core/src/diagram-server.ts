@@ -15,27 +15,22 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { saveAs } from 'file-saver';
 import { RefreshDiagramAction, RefreshLayoutAction } from "@kieler/klighd-interactive/lib/actions";
 import {
-    DeleteLayerConstraintAction,
-    DeletePositionConstraintAction,
-    DeleteStaticConstraintAction,
-    SetLayerConstraintAction,
-    SetPositionConstraintAction,
-    SetStaticConstraintAction,
-    SetInLayerPredecessorOfConstraintAction,
-    SetInLayerSuccessorOfConstraintAction,
-    DeleteRelativeConstraintsAction,
     DeleteInLayerPredecessorOfConstraintAction,
-    DeleteInLayerSuccessorOfConstraintAction
+    DeleteInLayerSuccessorOfConstraintAction, DeleteLayerConstraintAction,
+    DeletePositionConstraintAction, DeleteRelativeConstraintsAction, DeleteStaticConstraintAction, SetInLayerPredecessorOfConstraintAction,
+    SetInLayerSuccessorOfConstraintAction, SetLayerConstraintAction,
+    SetPositionConstraintAction,
+    SetStaticConstraintAction
 } from "@kieler/klighd-interactive/lib/layered/actions";
-import { TreeDeletePositionConstraintAction, TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions';
 import {
     RectPackDeletePositionConstraintAction,
     RectPackSetPositionConstraintAction,
-    SetAspectRatioAction,
+    SetAspectRatioAction
 } from "@kieler/klighd-interactive/lib/rect-packing/actions";
+import { TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions';
+import { saveAs } from 'file-saver';
 import { inject, injectable } from "inversify";
 import {
     ActionHandlerRegistry,
@@ -46,7 +41,7 @@ import {
     SetModelCommand,
     SwitchEditModeAction,
     TYPES,
-    ViewportResult,
+    ViewportResult
 } from "sprotty";
 import {
     Action,
@@ -56,7 +51,7 @@ import {
     RequestPopupModelAction,
     SelectAction,
     SetPopupModelAction,
-    UpdateModelAction,
+    UpdateModelAction
 } from "sprotty-protocol";
 import {
     CheckedImagesAction,
@@ -65,7 +60,7 @@ import {
     KlighdFitToScreenAction,
     Pair,
     PerformActionAction,
-    StoreImagesAction,
+    StoreImagesAction
 } from "./actions/actions";
 import { GoToBookmarkAction } from "./bookmarks/bookmark";
 import { BookmarkRegistry } from "./bookmarks/bookmark-registry";
@@ -214,7 +209,6 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(StoreImagesAction.KIND, this);
         registry.register(SwitchEditModeAction.KIND, this);
         registry.register(TreeSetPositionConstraintAction.KIND, this)
-        registry.register(TreeDeletePositionConstraintAction.KIND, this)
         registry.register(SelectAction.KIND, this);
         registry.register(SetDiagramPieceAction.KIND, this);
         registry.register(ViewportResult.KIND, this);
