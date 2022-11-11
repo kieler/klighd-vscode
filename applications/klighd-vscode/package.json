@@ -150,6 +150,7 @@
     "devDependencies": {
         "@types/node": "^12.11.7",
         "@types/vscode": "^1.56.0",
+        "@types/vscode-webview": "^1.56.0",
         "css-loader": "^5.2.4",
         "file-loader": "6.2.0",
         "ovsx": "^0.2.0",
@@ -164,9 +165,9 @@
         "inversify": "^5.0.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",
-        "sprotty": "0.11.1",
-        "sprotty-vscode": "^0.2.0",
-        "sprotty-vscode-webview": "^0.2.0",
+        "sprotty": "0.12.0",
+        "sprotty-vscode": "^0.3.1",
+        "sprotty-vscode-webview": "^0.3.1",
         "vscode-languageclient": "^7.0.0"
     }
 }

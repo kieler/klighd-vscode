@@ -16,16 +16,16 @@
  */
 
 import { injectable, inject } from 'inversify';
-import { MouseListener, SModelElement, TYPES, ContextMenuProviderRegistry, isSelectable, //IContextMenuServiceProvider, //IContextMenuService, 
-         IActionDispatcher, isSelected } from 'sprotty'; 
+import { MouseListener, SModelElement, TYPES, ContextMenuProviderRegistry, isSelectable, IContextMenuService, //IContextMenuServiceProvider, // 
+         IActionDispatcher, isSelected, IContextMenuServiceProvider } from 'sprotty'; 
 import { Action, SelectAction } from "sprotty-protocol";
 
 @injectable()
 export class graphprogrammingMouseListener extends MouseListener {
     @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher;
-
-    constructor(//@inject(TYPES.IContextMenuServiceProvider) protected readonly contextMenuService: IContextMenuServiceProvider,
-                @inject(TYPES.IContextMenuProviderRegistry) protected readonly menuProvider: ContextMenuProviderRegistry){super();}
+    @inject(TYPES.IContextMenuServiceProvider) protected readonly contextMenuService: IContextMenuServiceProvider
+    @inject(TYPES.IContextMenuProviderRegistry) protected readonly menuProvider: ContextMenuProviderRegistry
+    constructor(){super();}
     
     contextMenu(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         this.showContextMenu(target, event);
@@ -33,13 +33,13 @@ export class graphprogrammingMouseListener extends MouseListener {
     }
 
     async showContextMenu(target: SModelElement, ev: MouseEvent){
-        // let menuService: IContextMenuService;
-        // try {
-        //     menuService = await this.contextMenuService();
-        // } catch (rejected) {
-        //     // IContextMenuService is not bound => do nothing
-        //     return;
-        // }
+        let menuService: IContextMenuService;
+        try {
+            menuService = await this.contextMenuService();
+        } catch (rejected) {
+            // IContextMenuService is not bound => do nothing
+            return;
+        }
         const root = target.root;
         const id = target.id;
         const mousePosition = {x:ev.x, y: ev.y};
@@ -51,13 +51,13 @@ export class graphprogrammingMouseListener extends MouseListener {
                 let options = {selectedElementsIDs: [id], deselectedElementsIDs: Array.from(root.index.all().filter(isSelected), (val) => {return val.id})}; 
                 this.actionDispatcher.dispatch(SelectAction.create(options)).then(() => {
                     this.menuProvider.getItems(root, mousePosition).then((items) => {
-                        //menuService.show(items, mousePosition);    
+                        menuService.show(items, mousePosition);    
                     })
                 });
             }else{
                 // all selected nodes will create MenuItems
                 this.menuProvider.getItems(root, mousePosition).then((items) => {
-                    //menuService.show(items,mousePosition);
+                    menuService.show(items,mousePosition);
                 })
             }
         }

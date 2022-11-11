@@ -16,7 +16,7 @@
  */
 
 import { PersistenceStorage } from "@kieler/klighd-core";
-import { vscodeApi } from "sprotty-vscode-webview/lib/vscode-api";
+import { VsCodeApi } from "sprotty-vscode-webview/lib/services";
 import { PersistenceMessage } from "../src/storage/messages";
 
 /**
@@ -26,6 +26,8 @@ import { PersistenceMessage } from "../src/storage/messages";
 export class MessagePersistenceStorage implements PersistenceStorage {
     /** Local cache of reported data to speed up reads. */
     private cache: Record<string, any>;
+
+    vscodeApi: VsCodeApi;
 
     /**
      * The storage has to receive data from the webview first before data can be accessed.
@@ -39,7 +41,8 @@ export class MessagePersistenceStorage implements PersistenceStorage {
     /** Callbacks which will be called when a clear change is reported by the extension */
     private onClearListeners: (() => void)[] = [];
 
-    constructor() {
+    constructor(vscodeApi: VsCodeApi) {
+        this.vscodeApi = vscodeApi
         this.cache = {};
         this.state = "initializing";
 
@@ -94,7 +97,7 @@ export class MessagePersistenceStorage implements PersistenceStorage {
     }
 
     private sendToExtension<T>(msg: PersistenceMessage<T>) {
-        vscodeApi.postMessage(msg);
+        this.vscodeApi.postMessage(msg);
     }
 
     private handleMessageEvent(event: MessageEvent<PersistenceMessage>) {
