@@ -37,6 +37,7 @@
     box-shadow: var(--kdc-sidebar-shadow);
     color: var(--kdc-color-sidebar-font-primary);
     font-size: var(--kdc-font-size-base);
+    font-family: Helvetica, Arial, sans-serif;
 
     transition: transform var(--kdc-transition);
     transform: translateX(100%);
