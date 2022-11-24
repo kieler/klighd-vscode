@@ -77,9 +77,7 @@ export function createVerticalLine(mid: number, top: number, bot: number, direct
  * @param y The y coordinate of the center.
  * @param forbidden If the layer the circle is in is forbidden the colour is red.
  */
-export function renderCircle(fill: boolean, x: number, y: number, forbidden: boolean): VNode {
-    const forbiddenColor = 'indianred'
-    const color = forbidden ? forbiddenColor : 'grey'
+export function renderCircle(fill: boolean, x: number, y: number, color: string): VNode {
     // @ts-ignore
     return  <g> <circle
                     cx={x}

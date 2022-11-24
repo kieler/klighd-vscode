@@ -148,13 +148,13 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
                     y = y1
                 }
 
-                result = <g>{result}{renderCircle(i === highlightedIndex, x, y, false)}</g>;
+                result = <g>{result}{renderCircle(i === highlightedIndex, x, y, color)}</g>;
             }
 
             // Intermediate points
             if (selectedSiblings[i].id !== selectedNode.id &&
                 selectedSiblings[i + 1].id !== selectedNode.id)
-                result = <g>{result}{renderCircle(i === highlightedIndex - 1, middleX, middleY, false)}</g>;
+                result = <g>{result}{renderCircle(i === highlightedIndex - 1, middleX, middleY, color)}</g>;
 
             // End point
             if (i === selectedSiblings.length - 2 && selectedSiblings[i + 1].id !== selectedNode.id) {
@@ -168,7 +168,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
                     y = y2
                 }
 
-                result = <g>{result}{renderCircle(highlightedIndex === -1, x, y, false)}</g>;
+                result = <g>{result}{renderCircle(highlightedIndex === -1, x, y, color)}</g>;
             }
         }
     }

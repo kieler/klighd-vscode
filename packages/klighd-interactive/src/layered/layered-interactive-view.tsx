@@ -39,7 +39,8 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
     if (selectedNode !== undefined) {
         const layers = getLayers(nodes, direction)
         const currentLayer = getLayerOfNode(selectedNode, nodes, layers, direction)
-        const forbidden = isLayerForbidden(selectedNode, currentLayer)
+        const forbidden = isLayerForbidden(selectedNode, currentLayer) 
+        const color = forbidden ? "indianred" : "grey"
 
         // y coordinates of the layers
         const topBorder = layers[0].topBorder
@@ -91,7 +92,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
         // Positions should only be rendered if a position constraint will be set
         if (!onlyLayerConstraint) {
             // @ts-ignore
-            return <g>{result}{renderPositions(existingCurrentLayer, nodes, layers, forbidden, direction, false, newFirstLayer)}</g>
+            return <g>{result}{renderPositions(existingCurrentLayer, nodes, layers, color, direction, false, newFirstLayer)}</g>
         } else {
             // Add available positions
             return result
@@ -110,7 +111,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
  * @param forbidden Determines whether the current layer is forbidden.
  * @returns VNode that adds indicators for available positions to the view.
  */
- export function renderPositions(currentLayer: Layer, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: Direction, relativeConstraintMode: boolean, newFirstLayer: boolean): VNode {
+ export function renderPositions(currentLayer: Layer, nodes: KNode[], layers: Layer[], color: string, direction: Direction, relativeConstraintMode: boolean, newFirstLayer: boolean): VNode {
     let layerNodes: KNode[] = []
     if (currentLayer !== null) {
         layerNodes = getNodesOfLayer(currentLayer.id, nodes)
@@ -193,7 +194,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
                         break;
                     }
                 }
-                result = <g>{result}{renderCircle(fill, x, y, forbidden)}</g>
+                result = <g>{result}{renderCircle(fill, x, y, color)}</g>
             } else {
                 shift = 0
             }
@@ -224,7 +225,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
                     break;
                 }
             }
-            result = <g>{result}{renderCircle(currentPosition === 0, x, y, forbidden)}</g>
+            result = <g>{result}{renderCircle(currentPosition === 0, x, y, color)}</g>
         }
         // Position below the last node is available if the last node is not the selected one.
         const last = layerNodes[layerNodes.length - 1]
@@ -251,7 +252,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
                     break;
                 }
             }
-            result = <g>{result}{renderCircle(currentPosition === layerNodes.length - 1 + shift, x, y, forbidden)}</g>
+            result = <g>{result}{renderCircle(currentPosition === layerNodes.length - 1 + shift, x, y, color)}</g>
         }
         return result
     } else {
@@ -310,7 +311,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
                 }
             }
         }
-        return <g>{renderCircle(true, x, y, forbidden)}</g>
+        return <g>{renderCircle(true, x, y, color)}</g>
     }
 }
 

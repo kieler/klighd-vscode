@@ -139,7 +139,7 @@ export function renderPositionIndicators(nodes: KNode[], selectedNode: KNode): V
         }
     }
     if (existingCurrentLayer !== null) {
-        return renderPositions(existingCurrentLayer, nodes, layers, true, direction, true, false)
+        return renderPositions(existingCurrentLayer, nodes, layers, "#03A9F4", direction, true, false)
     }
     return <g></g>
 }
