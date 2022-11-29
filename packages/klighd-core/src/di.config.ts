@@ -20,7 +20,8 @@ import { graphprogrammingModule } from '@kieler/klighd-graphprogramming/lib/grap
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
-    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry
+    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, 
+    SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry //, contextMenuModule currently the contextMenu by sprotty is somwhat unintuitive the master has a fix (as of 27.11.2022) which is the same as implemented in the graphprogramming module
 } from 'sprotty';
 import actionModule from './actions/actions-module';
 import bookmarkModule from './bookmarks/bookmark-module';
@@ -100,7 +101,7 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, graphprogrammingModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
-        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule)
+        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule)  //contextMenuModule
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,

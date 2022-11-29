@@ -20,6 +20,8 @@ import { MouseListener, SModelElement, TYPES, ContextMenuProviderRegistry, isSel
          IActionDispatcher, isSelected, IContextMenuServiceProvider } from 'sprotty'; 
 import { Action, SelectAction } from "sprotty-protocol";
 
+// basicly the same implementation as in the context menu from sprotty however sprottys doesn't yet suport marking with 
+// rightclicking which seems quite inconvenient push request was made and is going to be resolved
 @injectable()
 export class graphprogrammingMouseListener extends MouseListener {
     @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher;
@@ -29,10 +31,12 @@ export class graphprogrammingMouseListener extends MouseListener {
     
     contextMenu(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         this.showContextMenu(target, event);
+        
         return [];
     }
 
-    async showContextMenu(target: SModelElement, ev: MouseEvent){
+    
+    async showContextMenu(target: SModelElement, ev: MouseEvent): Promise<void>{
         let menuService: IContextMenuService;
         try {
             menuService = await this.contextMenuService();
@@ -48,7 +52,7 @@ export class graphprogrammingMouseListener extends MouseListener {
         if(isSelectable(target)){
             if(!isSelected(target)){
                 // SelectAction will only select the node wich was selected by right click
-                let options = {selectedElementsIDs: [id], deselectedElementsIDs: Array.from(root.index.all().filter(isSelected), (val) => {return val.id})}; 
+                const options = {selectedElementsIDs: [id], deselectedElementsIDs: Array.from(root.index.all().filter(isSelected), (val) => {return val.id})}; 
                 this.actionDispatcher.dispatch(SelectAction.create(options)).then(() => {
                     this.menuProvider.getItems(root, mousePosition).then((items) => {
                         menuService.show(items, mousePosition);    

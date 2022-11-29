@@ -16,10 +16,16 @@
  */
 
 import { ContainerModule } from 'inversify';
-import { TYPES, MouseListener, IContextMenuService } from 'sprotty';
-import { graphprogrammingMouseListener } from './contextmenu/klightd-graphprogMouseListener'; 
-import { DeleteContextMenuItemProvider } from './menuproviders/menuproviders';
+import { TYPES, MouseListener, ContextMenuProviderRegistry, IContextMenuService } from 'sprotty';
+
+import { graphprogrammingMouseListener } from './contextmenu/klightd-graphprogMouseListener';
+
 import { ContextMenueProvider } from './contextmenu/klightd-contextmenuprovider';
+
+import { GetIOContextMenuItemProvider } from './Commands_Providers/input_output';
+import { GetNodesContextMenuItemProvider } from './Commands_Providers/Node';
+import { GetEdgesContextMenuItemProvider } from './Commands_Providers/Edge';
+import { GetRegionContextMenuItemProvider } from './Commands_Providers/Region';
 
 
 /**
@@ -27,7 +33,12 @@ import { ContextMenueProvider } from './contextmenu/klightd-contextmenuprovider'
  */
 export const graphprogrammingModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     // const context = { bind, unbind, isBound, rebind }
-    // TODO: same as the one in sprotty but sprottys throws errors 
+    // basicly redoing what is done in sprottys contextMenuModule due to the unintuitive nature of the contextmenu handeling
+    // the sprotty version would require one to select and then open the context menu
+    // now the context menu will open for the node under the cursor or for all selected Nodes if the node under the cursor is selected
+    // This fix is done in the mouselistener and is already pushed to the master in sprotty (27.11.22) 
+    // once the fix has its own version one could get rid of the code to the ----- and import said module instead.
+
     bind(TYPES.IContextMenuServiceProvider).toProvider<IContextMenuService>(ctx => {
         return () => {
             return new Promise<IContextMenuService>((resolve, reject) => {
@@ -40,15 +51,23 @@ export const graphprogrammingModule = new ContainerModule((bind, unbind, isBound
         };
     });
 
-    bind(graphprogrammingMouseListener).toSelf().inSingletonScope()
-    bind(TYPES.MouseListener).toService(graphprogrammingMouseListener)
-    bind(MouseListener).toService(graphprogrammingMouseListener)
 
-    bind(TYPES.IContextMenuService).to(ContextMenueProvider);  
-    bind(TYPES.IContextMenuProviderRegistry).to(DeleteContextMenuItemProvider);
+    bind(TYPES.IContextMenuProviderRegistry).to(ContextMenuProviderRegistry);
 
-    // bind(EditingPanel).toSelf().inSingletonScope();
-    // bind(DISymbol.SidebarPanel).toService(EditingPanel);
+    bind(graphprogrammingMouseListener).toSelf().inSingletonScope();
+    bind(TYPES.MouseListener).toService(graphprogrammingMouseListener);
+    bind(MouseListener).toService(graphprogrammingMouseListener);
+
+    //------------------------------------------------------
+
+    bind(TYPES.IContextMenuService).to(ContextMenueProvider);
+
+    bind(TYPES.IContextMenuItemProvider).to(GetIOContextMenuItemProvider);
+    bind(TYPES.IContextMenuItemProvider).to(GetNodesContextMenuItemProvider);
+    bind(TYPES.IContextMenuItemProvider).to(GetEdgesContextMenuItemProvider);
+    bind(TYPES.IContextMenuItemProvider).to(GetRegionContextMenuItemProvider);
+    
+
 });
 
 export default graphprogrammingModule;
