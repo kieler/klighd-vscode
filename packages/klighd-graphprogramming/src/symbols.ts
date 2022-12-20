@@ -17,5 +17,6 @@
 
 /** DI Symbols for Services provided by the KLighD DI container. */
 export const DISymbol = {
-    ContextMenu: Symbol("Contextmenu"),
+    KlighdIContextMenuServiceProvider: Symbol("KlighdIContextMenuServiceProvider"),
+    KlighdIContextMenuService: Symbol("KlighdIContextMenuService")
 };

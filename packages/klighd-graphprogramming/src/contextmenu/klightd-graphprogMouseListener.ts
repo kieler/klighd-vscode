@@ -16,8 +16,11 @@
  */
 
 import { injectable, inject } from 'inversify';
-import { MouseListener, SModelElement, TYPES, ContextMenuProviderRegistry, isSelectable, IContextMenuService, //IContextMenuServiceProvider, // 
-         IActionDispatcher, isSelected, IContextMenuServiceProvider } from 'sprotty'; 
+import { MouseListener, SModelElement, TYPES, isSelectable,
+         IActionDispatcher, isSelected } from 'sprotty'; 
+import { KlighdIContextMenuService, KlighdIContextMenuServiceProvider } from './klighd-service';
+import { DISymbol } from "../symbols";
+
 import { Action, SelectAction } from "sprotty-protocol";
 
 // basicly the same implementation as in the context menu from sprotty however sprottys doesn't yet suport marking with 
@@ -25,23 +28,22 @@ import { Action, SelectAction } from "sprotty-protocol";
 @injectable()
 export class graphprogrammingMouseListener extends MouseListener {
     @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher;
-    @inject(TYPES.IContextMenuServiceProvider) protected readonly contextMenuService: IContextMenuServiceProvider
-    @inject(TYPES.IContextMenuProviderRegistry) protected readonly menuProvider: ContextMenuProviderRegistry
+    @inject(DISymbol.KlighdIContextMenuServiceProvider) protected readonly contextMenuService: KlighdIContextMenuServiceProvider
+
     constructor(){super();}
     
     contextMenu(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         this.showContextMenu(target, event);
-        
         return [];
     }
 
     
     async showContextMenu(target: SModelElement, ev: MouseEvent): Promise<void>{
-        let menuService: IContextMenuService;
+        let menuService: KlighdIContextMenuService;
         try {
             menuService = await this.contextMenuService();
         } catch (rejected) {
-            // IContextMenuService is not bound => do nothing
+            // There is no contextmenu service => do nothing
             return;
         }
         const root = target.root;
@@ -54,15 +56,10 @@ export class graphprogrammingMouseListener extends MouseListener {
                 // SelectAction will only select the node wich was selected by right click
                 const options = {selectedElementsIDs: [id], deselectedElementsIDs: Array.from(root.index.all().filter(isSelected), (val) => {return val.id})}; 
                 this.actionDispatcher.dispatch(SelectAction.create(options)).then(() => {
-                    this.menuProvider.getItems(root, mousePosition).then((items) => {
-                        menuService.show(items, mousePosition);    
-                    })
+                    menuService.show( root, mousePosition);
                 });
             }else{
-                // all selected nodes will create MenuItems
-                this.menuProvider.getItems(root, mousePosition).then((items) => {
-                    menuService.show(items,mousePosition);
-                })
+                menuService.show( root, mousePosition);
             }
         }
     }

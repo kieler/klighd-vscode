@@ -1,13 +1,17 @@
 
-import { injectable } from 'inversify';
-import { Anchor, IContextMenuService, LabeledAction, MenuItem } from 'sprotty'; 
+import { inject, injectable } from 'inversify';
+import { Anchor, isSelected,  SModelRoot, TYPES, DiagramServerProxy } from 'sprotty';
+import { Action } from 'sprotty-protocol';
+
+import { KlighdIContextMenuService } from './klighd-service';
 
 // color: var(--kdc-color-sidebar-font-primary);
 
 
 @injectable()
-export class ContextMenueProvider implements IContextMenuService{
-    // might be smart to only use this provider for sccharts thus checking if the model is an scchart model might be nice and simply do nothing otherwise
+export class ContextMenueProvider implements KlighdIContextMenuService{
+    @inject(TYPES.ModelSource) protected serverProxy: DiagramServerProxy; 
+
 
     protected contextmenuID = "contextMenu"; // contextmenu items
     protected mainID = "mainID"; // the main div for the contextmenu
@@ -18,14 +22,8 @@ export class ContextMenueProvider implements IContextMenuService{
     protected activeElement: Element | null;
     protected onHide: any;
 
-    protected nodes: string[] = [];
-    protected io: string[] = [];
-    protected edges: string[] = [];
-    protected regions: string[] = [];
-    
-
-    show(items: MenuItem[], anchor: Anchor, onHide?: (() => void) | undefined): void {
-        
+    show(root: SModelRoot, anchor: Anchor, onHide?: (() => void) | undefined): void {
+        // (root.children[0] as any).properties['klighd.StructuralEditingActions'] // strores the posible actions for every type of SModelElement
         let menu = document.getElementById(this.contextmenuID);
         if(menu  == undefined) {
             // creates the main div in which we can store additional info
@@ -55,210 +53,96 @@ export class ContextMenueProvider implements IContextMenuService{
 
         //Positioning of the context menu
         menu.style.left = anchor.x.toString()+"px";
-        menu.style.top = anchor.y.toString()+"px";      
+        menu.style.top = anchor.y.toString()+"px";  
         
-        this.pushItems(items);
+        const selected = Array.from(root.index.all().filter(isSelected));
 
-        if(this.nodes.length != 0){
-            const new_item = document.createElement("li");
-            this.setipHeaderEntrys(new_item);
-            menu.appendChild(new_item);
-            const a = document.createElement("a");
-            a.innerText = "Nodes";
-            new_item.appendChild(a);
-        }
-        
-        for( const item of this.nodes) this.createNewRightsideMenu(item, "Node");
+        if(selected.length == 1){
+            // add context menu for every entry based on the Actions given by the server
+            const msgs: StructuredEditMsg[] = (selected[0] as any).properties['klighd.StructuralEditingActions'];
 
-        if(this.edges.length != 0){
-            const new_item = document.createElement("li");
-            this.setipHeaderEntrys(new_item);
-            menu.appendChild(new_item);
-            const a = document.createElement("a");
-            a.innerText = "Edges";
-            new_item.appendChild(a);
-        }
-        for( const item of this.edges) this.createNewRightsideMenu(item, "Edge");
-        
-        if(this.regions.length != 0){
-            const new_item = document.createElement("li");
-            this.setipHeaderEntrys(new_item);
-            menu.appendChild(new_item);
-            const a = document.createElement("a");
-            a.innerText = "Regions";
-            new_item.appendChild(a);
-        }
-        for (const item of this.regions ) this.createNewRightsideMenu(item, "Region");
-        
-    }
-    
-    private pushItems(items: MenuItem[]){
+            for( const msg of msgs){
+                // each msg is a action given by the server
+                const new_item = document.createElement("li");
+                this.setupItemEntrys(new_item);
+                new_item.innerText = msg.label;
 
-        this.io, this.edges, this.nodes, this.regions = [];
-        for(const item of items){
-            for(const x of (item as LabeledAction).actions){
-                switch(item.id){
-                    case "getIO":
-                        this.io.push((x as any).elementID);
-                        break;
-                    case "getNodes":
-                        this.nodes.push((x as any).elementID);
-                        break;
-                    case "getEdges":
-                        this.edges.push((x as any).elementID);
-                        break;
-                    case "getRegion":
-                        this.regions.push((x as any).elementID);
-                        break;
+                // simple mouselisteners so the color changes to indicate what is selected
+                new_item.addEventListener('mouseenter', (ev) => {
+                    new_item.style.backgroundColor = "#868585";
+                });
+                new_item.addEventListener('mouseleave', (ev) => {
+                    new_item.style.backgroundColor = "#f7f7f7";
+                });
+
+                // main mouseaction if pressed a msg is send to the server
+                new_item.addEventListener('mousedown', (ev) => {
+                    // TODO: add input field for inputs
+                    const action : NewServerActionMsg = NewServerActionMsg.create(msg.kind);
+                    action.id = selected[0].id;
+
+                    for( const field of msg.inputs){
+                        console.log(field);
+
+                    }
+
+                    this.serverProxy.handle(action);
+                });
+
+                menu.appendChild(new_item);   
+            }
+        }else{
+            // TODO: check if there is a mergable server msg that can be executed on all selected Nodes
+            const msgs: StructuredEditMsg[] = (selected[0] as any).properties['klighd.StructuralEditingActions'];
+            const mergableMsgs = new Map<StructuredEditMsg, number[]>();
+            for( const msg of msgs){
+                if(msg.mergable) mergableMsgs.set(msg, [0]);
+            }
+            for( let i = 1; i < selected.length; i++){
+                const msgs = (selected[i] as any).properties['klighd.StructuralEditingActions'];
+                for( const msg of msgs){
+                    if(msg.mergable){
+                        let added = false
+                        mergableMsgs.forEach((value: number[], key: StructuredEditMsg) => {
+                            if(key.kind === msg.kind){
+                                added = true
+                                mergableMsgs.set(key, value.concat([i]))
+                            }
+                        });
+                        if(!added)mergableMsgs.set(msg, [i])
+                    }
                 }
             }
-        }  
-    }
+            console.log(mergableMsgs)
+            mergableMsgs.forEach((nodes: number[], msg: StructuredEditMsg) => {
 
-    private createNewRightsideMenu(name: string, type: string){
-        const new_item = document.createElement("li");
-        this.setupItemEntrys(new_item);
+                // each msg is a action given by the server
+                const new_item = document.createElement("li");
+                this.setupItemEntrys(new_item);
+                new_item.innerText = msg.label;
 
-        document.getElementById(this.contextmenuID)?.appendChild(new_item);
+                // simple mouselisteners so the color changes to indicate what is selected
+                new_item.addEventListener('mouseenter', (ev) => {
+                    new_item.style.backgroundColor = "#868585";
+                });
+                new_item.addEventListener('mouseleave', (ev) => {
+                    new_item.style.backgroundColor = "#f7f7f7";
+                });
 
+                // main mouseaction if pressed a msg is send to the server
+                new_item.addEventListener('mousedown', (ev) => {
+                    const action : NewServerActionMsg = NewServerActionMsg.create(msg.kind);
 
-        const text = document.createElement("a");
-        new_item.appendChild(text);
+                    let id = selected[nodes[0]].id
+                    for( let i = 1; i< nodes.length; i++) id = id.concat(":", selected[nodes[i]].id)
+                    action.id = id
+                    this.serverProxy.handle(action)
+                })
 
-        const arr = name.split("$");
-        text.innerText = arr[arr.length-1].substring(1);
-        
-        const rightsideMenu = document.createElement("ul");
-        this.setupMenuEntrys(rightsideMenu);
-
-        new_item.appendChild(rightsideMenu);
-
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-            rightsideMenu.style.display = "block";
-            rightsideMenu.style.left = (new_item.getBoundingClientRect().width -1) + "px";
-            rightsideMenu.style.top = "0px";
-
-            switch(type){
-                case "Node":
-                    this.createRenameEntry(name, rightsideMenu);
-                    this.createAddSuccessorEntry(name, rightsideMenu);
-                    this.createAddHirachicalEntry(name, rightsideMenu);
-                    this.createDeleteEntry(name, rightsideMenu);
-                    break;
-                case "Edge":
-                    this.createRenameEntry(name, rightsideMenu);
-                    this.createChangeRootEntry(name, rightsideMenu);
-                    this.createChangeDestinationEntry(name, rightsideMenu);
-                    this.createDeleteEntry(name, rightsideMenu);
-                    break;
-                case "Region":
-                    this.createRenameEntry(name, rightsideMenu);
-                    this.createConcurrentRegionEntry(name,rightsideMenu);
-                    this.createDeleteEntry(name, rightsideMenu);
-                    break;
-            }
-        });
-
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-            rightsideMenu.innerHTML ='';
-            rightsideMenu.style.display = 'none';
-        });
-    }
-
-    createRenameEntry(name: string, rightsideMenu: HTMLElement):void {
-        const new_item = document.createElement("li");
-        this.setupItemEntrys(new_item);
-        new_item.innerText = "Rename";
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-        });
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-        });
-
-        rightsideMenu.appendChild(new_item);
-    }
-
-    createAddSuccessorEntry(name: string, rightsideMenu: HTMLElement): void { 
-        const new_item = document.createElement("li");
-        this.setupItemEntrys(new_item);
-        new_item.innerText = "Add Successor";
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-        });
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-        });
-
-        rightsideMenu.appendChild(new_item);
-    }
-
-    createAddHirachicalEntry(name: string, rightsideMenu: HTMLElement): void {
-        const new_item = document.createElement("li");
-        this.setupItemEntrys(new_item);
-        new_item.innerText = "Add Hirachical Node";
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-        });
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-        });
-        rightsideMenu.appendChild(new_item);
-
-    }
-
-    createDeleteEntry(name: string, rightsideMenu: HTMLElement): void {
-        const new_item = document.createElement("li");
-        this.setupItemEntrys(new_item);
-        new_item.innerText = "Delete";
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-        });
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-        });
-        rightsideMenu.appendChild(new_item);
-    }
-    
-    createChangeRootEntry(name: string, rightsideMenu: HTMLElement): void {
-        const new_item = document.createElement("div");
-        new_item.innerText = "Change Root";
-        this.setupItemEntrys(new_item);
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-        });
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-        });
-        rightsideMenu?.appendChild(new_item);
-    }
-
-    createChangeDestinationEntry(name: string, rightsideMenu: HTMLElement):void {
-        const new_item = document.createElement("div");
-        this.setupItemEntrys(new_item);
-        new_item.innerText = "Change Destination";
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-        });
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-        });
-        rightsideMenu?.appendChild(new_item);
-    }
-
-    createConcurrentRegionEntry(name: string, rightsideMenu: HTMLUListElement):void {
-        const new_item = document.createElement("div");
-        this.setupItemEntrys(new_item);
-        new_item.innerText = "CreateConcurrentRegion";
-        new_item.addEventListener('mouseenter', (ev) => {
-            new_item.style.backgroundColor = "#868585";
-        });
-        new_item.addEventListener('mouseleave', (ev) => {
-            new_item.style.backgroundColor = "#f7f7f7";
-        });
-        rightsideMenu?.appendChild(new_item);
+                menu!.appendChild(new_item);     
+            });
+            
+        }
     }
 
     setipHeaderEntrys(item: HTMLElement):void {
@@ -283,5 +167,30 @@ export class ContextMenueProvider implements IContextMenuService{
         menu.style.padding = "0";
         menu.style.display = 'none';
         menu.style.color = "var(--kdc-color-sidebar-font-primary)";
+    }
+}
+
+interface StructuredEditMsg{
+    label: string;
+    kind: string;
+    mergable: boolean;
+    inputs: string[];
+}
+
+/**
+ * A sprotty action to refresh the diagram. Send from client to server.
+ */
+ export interface NewServerActionMsg extends Action {
+    kind: typeof NewServerActionMsg.KIND;
+    [key: string]: any;
+}
+
+export namespace NewServerActionMsg {
+    export let KIND: string;
+
+    export function create(kind: string): NewServerActionMsg {
+        return {
+            kind: KIND = kind
+        }
     }
 }

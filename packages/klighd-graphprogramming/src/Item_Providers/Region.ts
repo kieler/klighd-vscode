@@ -1,8 +1,7 @@
-import { injectable, inject } from "inversify";
+import { injectable } from "inversify";
 import { Point } from "sprotty-protocol/lib/utils/geometry";
-import { isSelected, SModelRoot, IContextMenuItemProvider, MenuItem, CommandExecutionContext, CommandReturn, TYPES } from "sprotty";
+import { isSelected, SModelRoot, IContextMenuItemProvider, MenuItem } from "sprotty";
 import { Action } from "sprotty-protocol";
-import { Command } from "sprotty";
 
 export interface GetRegionAction extends Action{
     kind: typeof GetRegionAction.KIND
@@ -20,30 +19,13 @@ export namespace GetRegionAction {
     }
 }
 
-@injectable()
-export class GetRegionCommand extends Command {
-    static readonly KIND = GetRegionAction.KIND;
-
-    constructor(@inject(TYPES.Action) protected readonly action: GetRegionAction) {
-        super();
-    }
-
-    execute(context: CommandExecutionContext): CommandReturn {
-        throw new Error("Method not implemented.");
-    }
-    undo(context: CommandExecutionContext): CommandReturn {
-        throw new Error("Method not implemented.");
-    }
-    redo(context: CommandExecutionContext): CommandReturn {
-        throw new Error("Method not implemented.");
-    }
-}
-
 // same as in sprotty but ignores .isdeletable() so all selected items will generate a menu item.
 @injectable()
 export class GetRegionContextMenuItemProvider implements IContextMenuItemProvider {
     getItems(root: Readonly<SModelRoot>, lastMousePosition?: Point): Promise<MenuItem[]> {
         const selectedElements = Array.from(root.index.all().filter(isSelected)).filter(this.isRegion);
+
+        
         //if(selectedElements.length!=1)return Promise.resolve([]);
         return Promise.resolve([
             {
@@ -57,7 +39,21 @@ export class GetRegionContextMenuItemProvider implements IContextMenuItemProvide
         ]);
     }
     isRegion(isRegion: any): boolean {
-        console.log(isRegion.data[0].type);
+        // currently only way of distinguishing nodes from regions
+        const msgs: StructuredEditMsg[] = (isRegion as any).properties['klighd.StructuralEditingActions']
+        
+        for( const x of msgs){
+            console.log(x)
+            for( const k in x.inputs){
+                console.log(x.inputs[k])
+            }
+        }
         return isRegion.data[0].type == "KRectangleImpl";
     }
+}
+
+interface StructuredEditMsg{
+    label: string;
+    kind: string;
+    inputs: string[];
 }

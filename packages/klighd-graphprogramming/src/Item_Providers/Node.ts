@@ -1,8 +1,7 @@
-import { injectable, inject } from "inversify";
+import { injectable } from "inversify";
 import { Point } from "sprotty-protocol/lib/utils/geometry";
-import { isSelected, SModelRoot, IContextMenuItemProvider, MenuItem, CommandExecutionContext, CommandReturn, TYPES } from "sprotty";
+import { isSelected, SModelRoot, IContextMenuItemProvider, MenuItem } from "sprotty";
 import { Action } from "sprotty-protocol";
-import { Command } from "sprotty";
 
 export interface GetNodesAction extends Action{
     kind: typeof GetNodesAction.KIND
@@ -17,25 +16,6 @@ export namespace GetNodesAction {
             kind: KIND,
             elementID
         };
-    }
-}
-
-@injectable()
-export class GetNodesCommand extends Command {
-    static readonly KIND = GetNodesAction.KIND;
-
-    constructor(@inject(TYPES.Action) protected readonly action: GetNodesAction) {
-        super();
-    }
-
-    execute(context: CommandExecutionContext): CommandReturn {
-        throw new Error("Method not implemented.");
-    }
-    undo(context: CommandExecutionContext): CommandReturn {
-        throw new Error("Method not implemented.");
-    }
-    redo(context: CommandExecutionContext): CommandReturn {
-        throw new Error("Method not implemented.");
     }
 }
 
