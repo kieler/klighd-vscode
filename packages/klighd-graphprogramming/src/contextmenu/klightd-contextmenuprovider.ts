@@ -56,12 +56,21 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
         menu.style.top = anchor.y.toString()+"px";  
         
         const selected = Array.from(root.index.all().filter(isSelected));
+        const options: StructuralEditingOptions = (selected[0].root.children[0] as any).properties['klighd.StructuralEditingOptions'];
 
         if(selected.length == 1){
             // add context menu for every entry based on the Actions given by the server
-            const msgs: StructuredEditMsg[] = (selected[0] as any).properties['klighd.StructuralEditingActions'];
+            let type = (selected[0] as any).properties['klighd.NodeType']
 
-            for( const msg of msgs){
+            for(const key in options.options){
+                if(key.includes(type)){
+                    type = key
+                    break
+                }
+            }
+            
+            
+            for( const msg of options.options[type]){
                 // each msg is a action given by the server
                 const new_item = document.createElement("li");
                 this.setupItemEntrys(new_item);
@@ -79,12 +88,17 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                 new_item.addEventListener('mousedown', (ev) => {
                     // TODO: add input field for inputs
                     const action : NewServerActionMsg = NewServerActionMsg.create(msg.kind);
-                    action.id = selected[0].id;
+                    
 
                     for( const field of msg.inputs){
-                        console.log(field);
-
+                        console.log(field.type_of_Input)
+                        switch(field.type_of_Input){
+                            case "String":
+                                action[field.field] = prompt(field.label)
+                                console.log(field.field + " " +action[field.field])
+                        }
                     }
+                    action.id = selected[0].id;
 
                     this.serverProxy.handle(action);
                 });
@@ -93,54 +107,56 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
             }
         }else{
             // TODO: check if there is a mergable server msg that can be executed on all selected Nodes
-            const msgs: StructuredEditMsg[] = (selected[0] as any).properties['klighd.StructuralEditingActions'];
-            const mergableMsgs = new Map<StructuredEditMsg, number[]>();
-            for( const msg of msgs){
-                if(msg.mergable) mergableMsgs.set(msg, [0]);
-            }
-            for( let i = 1; i < selected.length; i++){
-                const msgs = (selected[i] as any).properties['klighd.StructuralEditingActions'];
-                for( const msg of msgs){
-                    if(msg.mergable){
-                        let added = false
-                        mergableMsgs.forEach((value: number[], key: StructuredEditMsg) => {
-                            if(key.kind === msg.kind){
-                                added = true
-                                mergableMsgs.set(key, value.concat([i]))
-                            }
-                        });
-                        if(!added)mergableMsgs.set(msg, [i])
-                    }
-                }
-            }
-            console.log(mergableMsgs)
-            mergableMsgs.forEach((nodes: number[], msg: StructuredEditMsg) => {
+            const msgs: StructuralEditingOptions = (selected[0].root as any).properties['klighd.StructuralEditingOptions'];
 
-                // each msg is a action given by the server
-                const new_item = document.createElement("li");
-                this.setupItemEntrys(new_item);
-                new_item.innerText = msg.label;
+            console.log(msgs)
+            // const mergableMsgs = new Map<StructuredEditMsg, number[]>();
+            // for( const msg of msgs){
+            //     if(msg.mergable) mergableMsgs.set(msg, [0]);
+            // }
+            // for( let i = 1; i < selected.length; i++){
+            //     const msgs = (selected[i].root as any).properties['klighd.StructuralEditingOptions'];
+            //     for( const msg of msgs){
+            //         if(msg.mergable){
+            //             let added = false
+            //             mergableMsgs.forEach((value: number[], key: StructuredEditMsg) => {
+            //                 if(key.kind === msg.kind){
+            //                     added = true
+            //                     mergableMsgs.set(key, value.concat([i]))
+            //                 }
+            //             });
+            //             if(!added)mergableMsgs.set(msg, [i])
+            //         }
+            //     }
+            // }
+            // console.log(mergableMsgs)
+            // mergableMsgs.forEach((nodes: number[], msg: StructuredEditMsg) => {
 
-                // simple mouselisteners so the color changes to indicate what is selected
-                new_item.addEventListener('mouseenter', (ev) => {
-                    new_item.style.backgroundColor = "#868585";
-                });
-                new_item.addEventListener('mouseleave', (ev) => {
-                    new_item.style.backgroundColor = "#f7f7f7";
-                });
+            //     // each msg is a action given by the server
+            //     const new_item = document.createElement("li");
+            //     this.setupItemEntrys(new_item);
+            //     new_item.innerText = msg.label;
 
-                // main mouseaction if pressed a msg is send to the server
-                new_item.addEventListener('mousedown', (ev) => {
-                    const action : NewServerActionMsg = NewServerActionMsg.create(msg.kind);
+            //     // simple mouselisteners so the color changes to indicate what is selected
+            //     new_item.addEventListener('mouseenter', (ev) => {
+            //         new_item.style.backgroundColor = "#868585";
+            //     });
+            //     new_item.addEventListener('mouseleave', (ev) => {
+            //         new_item.style.backgroundColor = "#f7f7f7";
+            //     });
 
-                    let id = selected[nodes[0]].id
-                    for( let i = 1; i< nodes.length; i++) id = id.concat(":", selected[nodes[i]].id)
-                    action.id = id
-                    this.serverProxy.handle(action)
-                })
+            //     // main mouseaction if pressed a msg is send to the server
+            //     new_item.addEventListener('mousedown', (ev) => {
+            //         const action : NewServerActionMsg = NewServerActionMsg.create(msg.kind);
 
-                menu!.appendChild(new_item);     
-            });
+            //         let id = selected[nodes[0]].id
+            //         for( let i = 1; i< nodes.length; i++) id = id.concat(":", selected[nodes[i]].id)
+            //         action.id = id
+            //         this.serverProxy.handle(action)
+            //     })
+
+            //     menu!.appendChild(new_item);     
+            // });
             
         }
     }
@@ -170,17 +186,27 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
     }
 }
 
+interface StructuralEditingOptions{
+    options: Record<string, StructuredEditMsg[]>
+}
+
 interface StructuredEditMsg{
     label: string;
     kind: string;
     mergable: boolean;
-    inputs: string[];
+    inputs: InputType[];
+}
+
+class InputType{
+    field: string;
+    type_of_Input: string;
+    label: string;
 }
 
 /**
  * A sprotty action to refresh the diagram. Send from client to server.
  */
- export interface NewServerActionMsg extends Action {
+export interface NewServerActionMsg extends Action {
     kind: typeof NewServerActionMsg.KIND;
     [key: string]: any;
 }
