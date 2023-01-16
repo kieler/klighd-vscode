@@ -31,7 +31,15 @@ export class graphprogrammingMouseListener extends MouseListener {
     @inject(DISymbol.KlighdIContextMenuServiceProvider) protected readonly contextMenuService: KlighdIContextMenuServiceProvider
 
     constructor(){super();}
-    
+
+    mouseDown(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+        if(event.button === 2){
+            this.showContextMenu(target, event);
+        }
+        return [];
+    }
+
+    //currently vscode doesn't trigger this one but the mousedown version works and only triggers on right click!
     contextMenu(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         this.showContextMenu(target, event);
         return [];

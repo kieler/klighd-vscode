@@ -46,6 +46,10 @@ export class MessageConnection implements Connection {
                 this.notifyHandlers(msg.data);
             }
         });
+        // Contextmenu is not given from vscode for now so we disable the propagation of the event for now
+        window.addEventListener('contextmenu', e => {
+            e.stopImmediatePropagation()
+        }, true);
     }
 
     onReady(): Promise<void> {
