@@ -22,7 +22,10 @@ import { KlighdIContextMenuService } from './contextmenu/klighd-service';
 
 import { graphprogrammingMouseListener } from './contextmenu/klightd-graphprogMouseListener';
 
+
 import { ContextMenueProvider } from './contextmenu/klightd-contextmenuprovider';
+import { graphprogrammingMoveMouseListener } from './contextmenu/klighd-graphprogramming-TargetingMouseListener';
+// import { graphprogrammingMoveMouseListener } from './contextmenu/klighd-graphprogramming-TargetingMouseListener';
 
 
 export const graphprogrammingModule = new ContainerModule((bind, unbind, isBound, rebind) => {
@@ -45,6 +48,10 @@ export const graphprogrammingModule = new ContainerModule((bind, unbind, isBound
     bind(TYPES.MouseListener).toService(graphprogrammingMouseListener);
     bind(MouseListener).toService(graphprogrammingMouseListener);
 
+    bind(graphprogrammingMoveMouseListener).toSelf().inSingletonScope();
+    bind(TYPES.MouseListener).toService(graphprogrammingMoveMouseListener);
+    bind(MouseListener).toService(graphprogrammingMoveMouseListener);
+    
     //------------------------------------------------------
 
     bind(DISymbol.KlighdIContextMenuService).to(ContextMenueProvider);

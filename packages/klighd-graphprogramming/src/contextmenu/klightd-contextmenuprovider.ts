@@ -5,8 +5,6 @@ import { Action } from 'sprotty-protocol';
 
 import { KlighdIContextMenuService } from './klighd-service';
 
-// color: var(--kdc-color-sidebar-font-primary);
-
 
 @injectable()
 export class ContextMenueProvider implements KlighdIContextMenuService{
@@ -22,7 +20,11 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
     protected activeElement: Element | null;
     protected onHide: any;
 
+    enableMouseTargeting: boolean // never gets set
+
     show(root: SModelRoot, anchor: Anchor, onHide?: (() => void) | undefined): void {
+        console.log(this.enableMouseTargeting) // is always undefined no matter if it was set yet
+        this.enableMouseTargeting = false
         // (root.children[0] as any).properties['klighd.StructuralEditingActions'] // strores the posible actions for every type of SModelElement
         let menu = document.getElementById(this.contextmenuID);
         if(menu  == undefined) {
@@ -32,13 +34,22 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
             this.setupMenuEntrys(menu);
             menu.style.marginTop = "-1px";
             menu.style.marginLeft = "-1px";
+            menu.style.backgroundColor = "#f4f5f6";
+            menu.style.border = "2px solid #bfc2c3";
             
             menu.addEventListener("mouseleave", () => {
-                if(menu != undefined) menu.style.display = "none";
+                if(menu != undefined && document.getElementById("button")==null) menu.style.display = "none";
                 if( this.onHide != undefined ) this.onHide();
             });
             menu.addEventListener("wheel", () => {
                 if(menu != undefined) menu.style.display = "none";
+            });
+
+            document.addEventListener("click", ev => {
+                const ctx = document.querySelector("#" +this.contextmenuID)
+                if (ctx !== null && !ev.composedPath().includes(ctx)){
+                    menu!.innerHTML = ""
+                }
             });
 
             let sprotty
@@ -47,14 +58,8 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
             else return;
             
         }
-
-        menu.style.display = "block";
-        this.onHide = onHide;
         menu.innerHTML = "";
-
-        //Positioning of the context menu
-        menu.style.left = anchor.x.toString()+"px";
-        menu.style.top = anchor.y.toString()+"px";  
+        menu.style.backgroundColor = "#f4f5f6";
         
         const selected = Array.from(root.index.all().filter(isSelected));
         const options: StructuralEditingOptions = (selected[0].root.children[0] as any).properties['klighd.StructuralEditingOptions'];
@@ -76,18 +81,24 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                 const new_item = document.createElement("li");
                 this.setupItemEntrys(new_item);
                 new_item.innerText = msg.label;
-
+                new_item.id = msg.kind
                 // simple mouselisteners so the color changes to indicate what is selected
                 new_item.addEventListener('mouseenter', (ev) => {
-                    new_item.style.backgroundColor = "#868585";
+                    new_item.style.backgroundColor = "#bae5dd";
+                    new_item.style.border = "1px solid #40c2a8";
+                    new_item.style.borderRadius = "5px";
                 });
                 new_item.addEventListener('mouseleave', (ev) => {
-                    new_item.style.backgroundColor = "#f7f7f7";
+                    new_item.style.backgroundColor = "#f4f5f6";
+                    new_item.style.border = "";
+                    new_item.style.borderRadius = "";
                 });
 
                 // main mouseaction if pressed a msg is send to the server
                 new_item.addEventListener('mousedown', (ev) => {
-                    // TODO: add input field for inputs
+                    this.enableMouseTargeting = true
+                    console.log(this.enableMouseTargeting)
+
                     const action : NewServerActionMsg = NewServerActionMsg.create(msg.kind);
                     action.id = selected[0].id
 
@@ -97,14 +108,18 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                         return
                     }
 
+                    if(new_item.id.includes("SCChart_EditSemanticDeclarations")){
+                        console.log("goto Syntax")
+                        return;
+                    }
+
                     menu!.innerHTML = ''
 
-                    menu!.style.backgroundColor = "#f7f7f7";
+                    menu!.style.backgroundColor = "#f4f5f6";
 
-                    menu!.style.border = "1px solid #ccc";
+                    menu!.style.border = "1px solid #c4c7c8";
                     
 
-                    let first = true
                     const fieldset = document.createElement("form");
                     fieldset.id = "form"
                     this.setupHeaderEntrys(fieldset)
@@ -120,27 +135,25 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                                 const input_field = document.createElement("input");
                                 input_field.id = field.field
 
-                                if(first){
-                                    input_field.id = "first"
-                                    first = false
-                                }
-
                                 fieldset.appendChild(label)
                                 fieldset.appendChild(document.createElement("br"))
                                 fieldset.appendChild(input_field)
                                 fieldset.appendChild(document.createElement("br"))
 
                                 input_field.addEventListener("keydown", (event) => {
-                                    if (event.isComposing || event.keyCode === 9 ) {
-                                        action[field.field] = input_field.value
-                                    }else if (event.isComposing || event.keyCode === 13 ){
-                                        action[field.field] = input_field.value
-                                        menu!.style.display = "none"
-                                        this.serverProxy.handle(action);
+                                    if ( event.key === "Enter" ){
+                                        document.getElementById("button")!.click()
+                                        event.preventDefault()   
                                     }
                                   });
                                 
-                                
+                                break
+                            }
+                            case "Select":{
+                                console.log("Selecting");
+                                // console.log(this.moveMouseListener)
+                                // this.moveMouseListener.setStart(selected[0], ev)
+
                             }
                         }
                     }
@@ -148,6 +161,7 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                     menu?.appendChild(fieldset)
 
                     const button = document.createElement("button")
+                    button.id = "button";
                     button.innerText = "Submit"
                     button.style.left = "50%"
                     button.style.transform = "translateX(-50%)"
@@ -155,24 +169,25 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                     
                     button.addEventListener('click', (ev) => {
                         const field = document.getElementById("form")!
-                        console.log("button pressed")
+
                         for(const f of Array.prototype.slice.call(field.childNodes)){
                             if(f instanceof HTMLInputElement){
                                 action[f.id] = f.value
                             } 
                         }
-                        menu!.style.display = "none"
                         this.serverProxy.handle(action);
+                        menu!.style.display = "none"
                     }, false);
 
                     menu?.appendChild(button)
+                    
+                    ev.preventDefault()
+                    const id = menu?.children.item(0)!.id
+                    document.getElementById(document.getElementById(id!)!.children.item(2)!.id)?.focus()
 
-                    document.getElementById("first")!.focus()
-                    // action.id = selected[0].id;
-
-                    // this.serverProxy.handle(action);
+                    console.log(this.enableMouseTargeting)
                 });
-
+                
                 menu.appendChild(new_item);   
             }
         }else{
@@ -229,20 +244,34 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
             // });
             
         }
+
+        menu.style.display = "block";
+        this.onHide = onHide;
+
+        //Positioning of the context menu
+        menu.style.left = anchor.x.toString()+"px";
+        menu.style.top = anchor.y.toString()+"px";
+        
+        const window_height = menu.parentElement!.offsetHeight
+        const window_width = menu.parentElement!.offsetWidth
+
+        if(menu.offsetHeight + menu.offsetTop > window_height)menu.style.top = (window_height - menu.offsetHeight).toString() + "px"
+
+        if(menu.offsetWidth + menu.offsetLeft > window_width)menu.style.left = (window_width - menu.offsetWidth).toString() + "px"
     }
 
     setupHeaderEntrys(item: HTMLElement):void {
         item.style.display = "block";
-        item.style.backgroundColor = "#f7f7f7";
+        item.style.backgroundColor = "#f4f5f6";
         item.style.position = "relative";
-        item.style.border = "2px solid #ccc";
+        item.style.border = "2px solid #bfc2c3";
     }
 
     setupItemEntrys(item: HTMLElement):void {
         item.style.display = "block";
-        item.style.backgroundColor = "#f7f7f7";
+        item.style.backgroundColor = "#f4f5f6";
         item.style.position = "relative";
-        item.style.border = "1px solid #ccc";
+        // item.style.border = "1px solid #ccc";#40c2a8
         item.style.padding = "5px";
     }
 
@@ -252,7 +281,7 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
         menu.style.listStyle = "none";
         menu.style.padding = "0";
         menu.style.display = 'none';
-        menu.style.color = "#000000";
+        menu.style.color = "#3e4144"; 
     }
 }
 

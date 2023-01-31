@@ -27,7 +27,7 @@ import { Action, SelectAction } from "sprotty-protocol";
 // rightclicking which seems quite inconvenient push request was made and is going to be resolved
 @injectable()
 export class graphprogrammingMouseListener extends MouseListener {
-    @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher;
+    @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher
     @inject(DISymbol.KlighdIContextMenuServiceProvider) protected readonly contextMenuService: KlighdIContextMenuServiceProvider
 
     constructor(){super();}
@@ -38,13 +38,6 @@ export class graphprogrammingMouseListener extends MouseListener {
         }
         return [];
     }
-
-    //currently vscode doesn't trigger this one but the mousedown version works and only triggers on right click!
-    contextMenu(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
-        this.showContextMenu(target, event);
-        return [];
-    }
-
     
     async showContextMenu(target: SModelElement, ev: MouseEvent): Promise<void>{
         let menuService: KlighdIContextMenuService;
@@ -64,6 +57,7 @@ export class graphprogrammingMouseListener extends MouseListener {
                 // SelectAction will only select the node wich was selected by right click
                 const options = {selectedElementsIDs: [id], deselectedElementsIDs: Array.from(root.index.all().filter(isSelected), (val) => {return val.id})}; 
                 this.actionDispatcher.dispatch(SelectAction.create(options)).then(() => {
+                    console.log("show")
                     menuService.show( root, mousePosition);
                 });
             }else{
