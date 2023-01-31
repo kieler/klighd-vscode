@@ -1,6 +1,5 @@
-
 import { inject, injectable } from 'inversify';
-import { Anchor, isSelected,  SModelRoot, TYPES, DiagramServerProxy } from 'sprotty';
+import { Anchor, isSelected,  SModelRoot, TYPES, DiagramServerProxy, Point } from 'sprotty';
 import { Action } from 'sprotty-protocol';
 
 import { KlighdIContextMenuService } from './klighd-service';
@@ -20,11 +19,12 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
     protected activeElement: Element | null;
     protected onHide: any;
 
-    enableMouseTargeting: boolean // never gets set
+    static enableMouseTargeting: boolean
+    static startPos: Point|undefined
+    static destination: string | undefined;
+    static selected_field_name: string;
 
     show(root: SModelRoot, anchor: Anchor, onHide?: (() => void) | undefined): void {
-        console.log(this.enableMouseTargeting) // is always undefined no matter if it was set yet
-        this.enableMouseTargeting = false
         // (root.children[0] as any).properties['klighd.StructuralEditingActions'] // strores the posible actions for every type of SModelElement
         let menu = document.getElementById(this.contextmenuID);
         if(menu  == undefined) {
@@ -38,16 +38,20 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
             menu.style.border = "2px solid #bfc2c3";
             
             menu.addEventListener("mouseleave", () => {
-                if(menu != undefined && document.getElementById("button")==null) menu.style.display = "none";
+                if(menu != undefined && document.getElementById("button")==null){
+                    ContextMenueProvider.enableMouseTargeting = false
+                    menu.style.display = "none";
+                }
                 if( this.onHide != undefined ) this.onHide();
             });
             menu.addEventListener("wheel", () => {
+                ContextMenueProvider.enableMouseTargeting = false
                 if(menu != undefined) menu.style.display = "none";
             });
 
             document.addEventListener("click", ev => {
                 const ctx = document.querySelector("#" +this.contextmenuID)
-                if (ctx !== null && !ev.composedPath().includes(ctx)){
+                if (ctx !== null && !ev.composedPath().includes(ctx) && !ContextMenueProvider.enableMouseTargeting){
                     menu!.innerHTML = ""
                 }
             });
@@ -96,9 +100,6 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
 
                 // main mouseaction if pressed a msg is send to the server
                 new_item.addEventListener('mousedown', (ev) => {
-                    this.enableMouseTargeting = true
-                    console.log(this.enableMouseTargeting)
-
                     const action : NewServerActionMsg = NewServerActionMsg.create(msg.kind);
                     action.id = selected[0].id
 
@@ -123,6 +124,7 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                     const fieldset = document.createElement("form");
                     fieldset.id = "form"
                     this.setupHeaderEntrys(fieldset)
+                    let hasSelect = false
 
                     for( const field of msg.inputs){
                         switch(field.type_of_Input){
@@ -150,45 +152,32 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                                 break
                             }
                             case "Select":{
-                                console.log("Selecting");
-                                // console.log(this.moveMouseListener)
-                                // this.moveMouseListener.setStart(selected[0], ev)
-
+                                ContextMenueProvider.selected_field_name = field.field
+                                hasSelect = true
+                                ContextMenueProvider.destination = undefined
+                                ContextMenueProvider.enableMouseTargeting = true
+                                ContextMenueProvider.startPos = anchor
                             }
                         }
                     }
 
-                    menu?.appendChild(fieldset)
+                    console.log(hasSelect)
 
-                    const button = document.createElement("button")
-                    button.id = "button";
-                    button.innerText = "Submit"
-                    button.style.left = "50%"
-                    button.style.transform = "translateX(-50%)"
-                    button.style.position = "relative"
-                    
-                    button.addEventListener('click', (ev) => {
-                        const field = document.getElementById("form")!
-
-                        for(const f of Array.prototype.slice.call(field.childNodes)){
-                            if(f instanceof HTMLInputElement){
-                                action[f.id] = f.value
-                            } 
-                        }
-                        this.serverProxy.handle(action);
-                        menu!.style.display = "none"
-                    }, false);
-
-                    menu?.appendChild(button)
-                    
-                    ev.preventDefault()
-                    const id = menu?.children.item(0)!.id
-                    document.getElementById(document.getElementById(id!)!.children.item(2)!.id)?.focus()
-
-                    console.log(this.enableMouseTargeting)
+                    ev.preventDefault();
+                    if(hasSelect){
+                        (async() => {
+                            console.log("waiting for variable");
+                            while(ContextMenueProvider.destination === undefined) // define the condition as you like
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            action[ContextMenueProvider.selected_field_name] = ContextMenueProvider.destination
+                            this.menuDisplayButtonAndSelectedMenu(menu!, fieldset, action)
+                        })();
+                    }else{
+                        this.menuDisplayButtonAndSelectedMenu(menu!, fieldset, action) 
+                    }
                 });
                 
-                menu.appendChild(new_item);   
+                menu.appendChild(new_item);  
             }
         }else{
             // TODO: check if there is a mergable server msg that can be executed on all selected Nodes
@@ -258,6 +247,44 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
         if(menu.offsetHeight + menu.offsetTop > window_height)menu.style.top = (window_height - menu.offsetHeight).toString() + "px"
 
         if(menu.offsetWidth + menu.offsetLeft > window_width)menu.style.left = (window_width - menu.offsetWidth).toString() + "px"
+    }
+
+    menuDisplayButtonAndSelectedMenu(menu: HTMLElement, fieldset: HTMLElement, action: NewServerActionMsg){
+        menu?.appendChild(fieldset)
+        const field = document.getElementById("form")!
+        console.log(field.childNodes.length)
+        if(field.childNodes.length === 0){
+            this.serverProxy.handle(action);
+            menu!.style.display = "none"
+
+            ContextMenueProvider.enableMouseTargeting = false  
+            return
+        }
+
+        const button = document.createElement("button")
+        button.id = "button";
+        button.innerText = "Submit"
+        button.style.left = "50%"
+        button.style.transform = "translateX(-50%)"
+        button.style.position = "relative"
+        
+        button.addEventListener('click', (ev) => {
+
+            for(const f of Array.prototype.slice.call(field.childNodes)){
+                if(f instanceof HTMLInputElement ){
+                    action[f.id] = f.value
+                } 
+            }
+            this.serverProxy.handle(action);
+            menu!.style.display = "none"
+
+            ContextMenueProvider.enableMouseTargeting = false   
+        }, false);
+
+        menu?.appendChild(button)
+        
+        const id = menu?.children.item(0)!.id
+        document.getElementById(document.getElementById(id!)!.children.item(2)!.id)?.focus()
     }
 
     setupHeaderEntrys(item: HTMLElement):void {
