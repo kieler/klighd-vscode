@@ -57,7 +57,6 @@ export class graphprogrammingMouseListener extends MouseListener {
                 // SelectAction will only select the node wich was selected by right click
                 const options = {selectedElementsIDs: [id], deselectedElementsIDs: Array.from(root.index.all().filter(isSelected), (val) => {return val.id})}; 
                 this.actionDispatcher.dispatch(SelectAction.create(options)).then(() => {
-                    console.log("show")
                     menuService.show( root, mousePosition);
                 });
             }else{

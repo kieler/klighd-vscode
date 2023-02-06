@@ -1,14 +1,17 @@
 import { inject, injectable } from 'inversify';
-import { Anchor, isSelected,  SModelRoot, TYPES, DiagramServerProxy, Point } from 'sprotty';
-import { Action } from 'sprotty-protocol';
-
+import { Anchor, isSelected,  SModelRoot, TYPES, DiagramServerProxy, Point, IActionDispatcher } from 'sprotty';
+import { Action } from 'sprotty-protocol'; //
 import { KlighdIContextMenuService } from './klighd-service';
+
+// import { VsCodeApi } from 'sprotty-vscode-webview/src/services';
 
 
 @injectable()
 export class ContextMenueProvider implements KlighdIContextMenuService{
     @inject(TYPES.ModelSource) protected serverProxy: DiagramServerProxy; 
+    @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher;
 
+    // @inject(VsCodeApi) vsCodeApi: VsCodeApi;
 
     protected contextmenuID = "contextMenu"; // contextmenu items
     protected mainID = "mainID"; // the main div for the contextmenu
@@ -25,6 +28,8 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
     static selected_field_name: string;
 
     show(root: SModelRoot, anchor: Anchor, onHide?: (() => void) | undefined): void {
+        // const vscode = acquireVsCodeApi();
+
         // (root.children[0] as any).properties['klighd.StructuralEditingActions'] // strores the posible actions for every type of SModelElement
         let menu = document.getElementById(this.contextmenuID);
         if(menu  == undefined) {
@@ -69,18 +74,15 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
         const options: StructuralEditingOptions = (selected[0].root.children[0] as any).properties['klighd.StructuralEditingOptions'];
 
         if(selected.length == 1){
-            // add context menu for every entry based on the Actions given by the server
-            let type = (selected[0] as any).properties['klighd.NodeType']
+            let structuredEditMesages:StructuredEditMsg[] = [];
 
-            for(const key in options.options){
-                if(key.includes(type)){
-                    type = key
-                    break
-                }
+            for(const prop of (selected[0] as any).properties["de.cau.cs.kieler.klighd.semanticFilter.tags"]){
+                if(options.options[(prop as Property).tag] !== undefined) 
+                    structuredEditMesages = structuredEditMesages.concat(options.options[(prop as Property).tag])
             }
             
-            
-            for( const msg of options.options[type]){
+            for( const msg of structuredEditMesages){
+                console.log(msg)
                 // each msg is a action given by the server
                 const new_item = document.createElement("li");
                 this.setupItemEntrys(new_item);
@@ -107,11 +109,6 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                         menu!.style.display = "none"
                         this.serverProxy.handle(action)
                         return
-                    }
-
-                    if(new_item.id.includes("SCChart_EditSemanticDeclarations")){
-                        console.log("goto Syntax")
-                        return;
                     }
 
                     menu!.innerHTML = ''
@@ -161,12 +158,9 @@ export class ContextMenueProvider implements KlighdIContextMenuService{
                         }
                     }
 
-                    console.log(hasSelect)
-
                     ev.preventDefault();
                     if(hasSelect){
                         (async() => {
-                            console.log("waiting for variable");
                             while(ContextMenueProvider.destination === undefined) // define the condition as you like
                                 await new Promise(resolve => setTimeout(resolve, 1000));
                             action[ContextMenueProvider.selected_field_name] = ContextMenueProvider.destination
@@ -327,6 +321,10 @@ class InputType{
     field: string;
     type_of_Input: string;
     label: string;
+}
+
+class Property{
+    tag: string;
 }
 
 /**

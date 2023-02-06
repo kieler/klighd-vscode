@@ -56,10 +56,10 @@ export class graphprogrammingMoveMouseListener extends MouseListener {
 
     mouseDown(target: SModelElement, event: MouseEvent): Action[] {
         if(ContextMenueProvider.enableMouseTargeting){
-
+            
+            ContextMenueProvider.enableMouseTargeting = false
             const line = document.getElementById(this.LINEID)
             line!.parentElement?.removeChild(line!)
-
             ContextMenueProvider.destination = target.id
         }
         return [];
