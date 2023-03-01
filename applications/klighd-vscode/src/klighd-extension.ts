@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -21,19 +21,20 @@ import {
     RefreshLayoutAction
 } from "@kieler/klighd-core";
 import { Action, CenterAction } from "sprotty-protocol";
-import { serializeUri, SprottyWebview } from "sprotty-vscode";
+import { serializeUri, SprottyWebview, SprottyWebviewOptions } from "sprotty-vscode";
+import { SprottyDiagramIdentifier } from "sprotty-vscode-protocol";
 import { ActionHandler } from "sprotty-vscode/lib/action-handler";
-import { OpenInTextEditorMessage, SprottyDiagramIdentifier, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
+import { OpenInTextEditorMessage, SprottyLspVscodeExtension } from "sprotty-vscode/lib/lsp";
 import * as vscode from 'vscode';
 import { commands, ExtensionContext, Uri } from "vscode";
-import { CommonLanguageClient } from "vscode-languageclient";
+import { LanguageClient } from 'vscode-languageclient/node';
 import { command, diagramType, extensionId } from "./constants";
 import { KLighDWebview } from "./klighd-webview";
 import { StorageService } from "./storage/storage-service";
 
 /** Options required to construct a KLighDExtension */
 interface KLighDExtensionOptions {
-    lsClient: CommonLanguageClient;
+    lsClient: LanguageClient;
     supportedFileEnding: string[];
     storageService: StorageService;
 }
@@ -69,7 +70,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
     // before modifications to the instance. The only possible hack around this
     // problem is a static property.
     // PS. This hack is approved by "als".
-    private static lsClient: CommonLanguageClient;
+    private static lsClient: LanguageClient;
     private supportedFileEndings: string[];
 
     // This service is required here, so it can be hooked into created webviews.
@@ -111,6 +112,8 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
             localResourceRoots: [this.getExtensionFileUri("dist")],
             scriptUri: this.getExtensionFileUri("dist", "webview.js"),
             singleton: true,
+            messenger: undefined as any, // FIXME: what are this?
+            messageParticipant: undefined as any // FIXME: and this?
         });
 
         // Hook up the new webview so it can report data for persistence.
@@ -187,7 +190,7 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
         return this.supportedFileEndings.some((ending) => path.endsWith(ending));
     }
 
-    protected override activateLanguageClient(): CommonLanguageClient {
+    protected override activateLanguageClient(): LanguageClient {
         // This extension does not manage any language clients. It receives it's
         // clients from a host extension. See the "setLanguageClient" command.
         return KLighDExtension.lsClient;

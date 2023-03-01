@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,7 @@
  */
 
 import { Memento } from "vscode";
-import { CommonLanguageClient } from "vscode-languageclient";
+import { LanguageClient } from 'vscode-languageclient/node';
 import { KLighDWebview } from "../klighd-webview";
 import { PersistenceMessage } from "./messages";
 
@@ -31,7 +31,7 @@ export class StorageService {
     private static readonly key = "klighdPersistence";
     private memento: Memento;
 
-    constructor(memento: Memento, client: CommonLanguageClient) {
+    constructor(memento: Memento, client: LanguageClient) {
         this.memento = memento;
 
         const data = this.getData();

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2022 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,7 +18,7 @@ import { nanoid } from "nanoid/non-secure";
 import "reflect-metadata";
 import { Action, isAction } from "sprotty-protocol";
 import * as vscode from "vscode";
-import { CommonLanguageClient } from "vscode-languageclient";
+import { LanguageClient } from 'vscode-languageclient/node';
 import { command } from "./constants";
 import { ActionHandlerCallback, KLighDExtension } from "./klighd-extension";
 import { KlighdWebviewReopener } from "./klighd-webview-reopener";
@@ -152,7 +152,7 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 }
 
-function isLanguageClient(client: unknown): client is CommonLanguageClient {
+function isLanguageClient(client: unknown): client is LanguageClient {
     // Instanceof checks do not work, since the LanguageClient class from the
     // host extension is not the same as this LanguageClient class.
     // Both classes are part of different bundles and thus module system.
