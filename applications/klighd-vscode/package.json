@@ -2,7 +2,7 @@
     "name": "klighd-vscode",
     "displayName": "KLighD Diagrams",
     "description": "KLighD diagram support for Visual Studio Code",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "publisher": "kieler",
     "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
     "icon": "icon.png",
@@ -74,13 +74,11 @@
             {
                 "command": "klighd-vscode.diagram.sync",
                 "title": "Enable Sync With Editor",
-                "icon": "$(sync-ignored)",
                 "enablement": "!klighd-vscode.syncWithEditor"
             },
             {
                 "command": "klighd-vscode.diagram.noSync",
                 "title": "Disable Sync With Editor",
-                "icon": "$(sync)",
                 "enablement": "klighd-vscode.syncWithEditor"
             }
         ],
@@ -126,12 +124,17 @@
                 {
                     "when": "keith-diagram-focused && !klighd-vscode.syncWithEditor",
                     "command": "klighd-vscode.diagram.sync",
-                    "group": "navigation"
+                    "group": "2_diagram-controls@1"
                 },
                 {
                     "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
                     "command": "klighd-vscode.diagram.noSync",
-                    "group": "navigation"
+                    "group": "2_diagram-controls@1"
+                },
+                {
+                    "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
+                    "command": "klighd-vscode.diagram.refresh",
+                    "group": "navigation@1"
                 }
             ]
         }
@@ -150,6 +153,7 @@
     "devDependencies": {
         "@types/node": "^12.11.7",
         "@types/vscode": "^1.56.0",
+        "@types/vscode-webview": "^1.56.0",
         "css-loader": "^5.2.4",
         "file-loader": "6.2.0",
         "ovsx": "^0.2.0",
@@ -160,13 +164,13 @@
         "webpack": "^4.44.1"
     },
     "dependencies": {
-        "@kieler/klighd-core": "^0.4.0",
-        "inversify": "^5.0.1",
+        "@kieler/klighd-core": "^0.4.1",
+        "inversify": "^5.1.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",
-        "sprotty": "0.11.1",
-        "sprotty-vscode": "^0.2.0",
-        "sprotty-vscode-webview": "^0.2.0",
+        "sprotty": "0.12.0",
+        "sprotty-vscode": "^0.3.1",
+        "sprotty-vscode-webview": "^0.3.1",
         "vscode-languageclient": "^7.0.0"
     }
 }

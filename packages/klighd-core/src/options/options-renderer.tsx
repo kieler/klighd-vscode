@@ -162,6 +162,7 @@ export class OptionsRenderer {
                                 stepSize={(option as RangeOptionData).stepSize}
                                 description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
+                                onInput={this.handleSynthesisOptionInput.bind(this, option)}
                             />
                         );
                     case TransformationOptionType.TEXT:
@@ -200,9 +201,17 @@ export class OptionsRenderer {
             });
     }
 
+    /** Handler for synthesis options onChange. */
     private handleSynthesisOptionChange(option: SynthesisOption, newValue: any) {
         this.actionDispatcher.dispatch(
             SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }])
+        );
+    }
+
+    /** Handler for synthesis options onInput, e.g. while a slider is being dragged. */
+    private handleSynthesisOptionInput(option: SynthesisOption, newValue: any) {
+        this.actionDispatcher.dispatch(
+            SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }], false)
         );
     }
 
@@ -222,6 +231,7 @@ export class OptionsRenderer {
                             stepSize={option.type === Type.INT ? 1 : 0.01}
                             description={option.description}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
+                            onInput={this.handleLayoutOptionInput.bind(this, option)}
                         />
                     );
                 case Type.BOOLEAN:
@@ -255,9 +265,17 @@ export class OptionsRenderer {
         });
     }
 
+    /** Handler for layout options onChange. */
     private handleLayoutOptionChange(option: LayoutOptionUIData, newValue: any) {
         this.actionDispatcher.dispatch(
             SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }])
+        );
+    }
+
+    /** Handler for layout options onInput, e.g. while a slider is being dragged. */
+    private handleLayoutOptionInput(option: LayoutOptionUIData, newValue: any) {
+        this.actionDispatcher.dispatch(
+            SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }], false)
         );
     }
 
@@ -293,6 +311,8 @@ export class OptionsRenderer {
                             stepSize={(option as RangeOptionData).stepSize}
                             description={option.description}
                             onChange={this.handleRenderOptionChange.bind(this, option)}
+                            // Same as onChange
+                            onInput={this.handleRenderOptionChange.bind(this, option)}
                         />
                     );
                 case TransformationOptionType.CATEGORY:
@@ -335,6 +355,7 @@ export class OptionsRenderer {
         });
     }
 
+    /** Handler for render options onChange. */
     private handleRenderOptionChange(option: RenderOption, newValue: any) {
         this.actionDispatcher.dispatch(SetRenderOptionAction.create(option.id, newValue));
     }
