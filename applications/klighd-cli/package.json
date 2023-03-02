@@ -20,7 +20,7 @@
     "clean": "rm -rf lib dist bin",
     "lint": "eslint .",
     "build": "run-p --print-label \"build:*\"",
-    "build:app": "webpack --mode production --devtool hidden-source-map",
+    "build:app": "webpack --mode development --devtool hidden-source-map",
     "build:server": "tsc -p ./tsconfig.server.json",
     "watch": "run-p --print-label \"watch:*\"",
     "watch:app": "webpack --watch",
@@ -45,15 +45,16 @@
   },
   "devDependencies": {
     "@types/ws": "^7.4.4",
-    "clean-webpack-plugin": "^4.0.0-alpha.0",
-    "css-loader": "^5.2.4",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^6.7.3",
     "file-loader": "6.2.0",
-    "html-webpack-plugin": "4",
-    "mini-css-extract-plugin": "^1.6.0",
+    "html-webpack-plugin": "5.5.0",
+    "mini-css-extract-plugin": "^2.7.2",
+    "node-polyfill-webpack-plugin": "2.0.1",
     "npm-run-all": "^4.1.5",
-    "pkg": "^5.1.0",
-    "ts-loader": "^8.0.3",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^4.7.2"
+    "pkg": "^5.8.0",
+    "ts-loader": "^9.4.2",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   }
 }

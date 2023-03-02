@@ -1,6 +1,7 @@
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const path = require("path");
 
@@ -20,10 +21,13 @@ module.exports = {
 
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
+        fallback: {
+            "net": false, // FIXME: do we need a real fallback here?
+        },
     },
 
     node: {
-        net: "mock",
+        __dirname: 'mock',
     },
 
     module: {
@@ -63,5 +67,6 @@ module.exports = {
             chunkFilename: "[id].css",
         }),
         new HtmlWebpackPlugin({ template: "index.html", cache: false }),
+        new NodePolyfillPlugin(),
     ],
 };
