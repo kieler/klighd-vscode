@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022 by
+ * Copyright 2022-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,33 +16,6 @@
  */
 
 import { Range, RangeOption, RenderOption, TransformationOptionType } from "../options/option-models";
-
-/**
- * Final options should be:
- * 
- * Enable Proxy-View
- *   true/false
- * Size of Proxies in %
- *   range
- * Decrease Proxy Clutter
- *   Off
- *   Clustering
- *   Opacity + Stacking Order (Transparency by Distance)
- * Enable Edge-Proxies
- *   Off
- *   Straight-Edge-Routing
- *   Along-Border-Routing
- * Enable Segment Proxies
- *   true/false
- * Interactive Proxies ({@link ProxyViewInteractiveProxies})
- *   true/false
- * Scale Proxy Titles
- *   true/false
- * 
- * Filters (...)
- * 
- * Debug
- */
 
 /** The category containing proxy-view options. */
 export class ProxyViewCategory implements RenderOption {
@@ -61,7 +34,7 @@ export class ProxyViewEnabled implements RenderOption {
     static readonly ID: string = "proxy-view-enabled";
     static readonly NAME: string = "Enable Proxy-View";
     static readonly DESCRIPTION: string = "Whether the Proxy-View is enabled.";
-    static readonly DEFAULT: boolean = true;
+    static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewEnabled.ID;
     readonly name: string = ProxyViewEnabled.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
@@ -203,6 +176,21 @@ export class ProxyViewTitleScaling implements RenderOption {
     readonly description: string = ProxyViewTitleScaling.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
     currentValue = ProxyViewTitleScaling.DEFAULT;
+}
+
+/** Whether edge proxies should be drawn above node proxies. */
+export class ProxyViewDrawEdgesAboveNodes implements RenderOption {
+    static readonly ID: string = "proxy-view-draw-edges-above-nodes";
+    static readonly NAME: string = "Draw Edges Over Nodes";
+    static readonly DESCRIPTION: string = "Whether edge proxies should be drawn above node proxies.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewDrawEdgesAboveNodes.ID;
+    readonly name: string = ProxyViewDrawEdgesAboveNodes.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewDrawEdgesAboveNodes.DEFAULT;
+    readonly description: string = ProxyViewDrawEdgesAboveNodes.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewCategory.ID;
+    currentValue = ProxyViewDrawEdgesAboveNodes.DEFAULT;
 }
 
 //////// DEBUG ////////
@@ -423,22 +411,6 @@ export class ProxyViewUseDetailLevel implements RenderOption {
     currentValue = ProxyViewUseDetailLevel.DEFAULT;
 }
 
-/** Whether edge proxies should be drawn above node proxies. */
-export class ProxyViewDrawEdgesAboveNodes implements RenderOption {
-    static readonly ID: string = "proxy-view-draw-edges-above-nodes";
-    static readonly NAME: string = "Draw Edges Over Nodes";
-    static readonly DESCRIPTION: string = "Whether edge proxies should be drawn above node proxies.";
-    static readonly DEFAULT: boolean = false;
-    readonly id: string = ProxyViewDrawEdgesAboveNodes.ID;
-    readonly name: string = ProxyViewDrawEdgesAboveNodes.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewDrawEdgesAboveNodes.DEFAULT;
-    readonly description: string = ProxyViewDrawEdgesAboveNodes.DESCRIPTION;
-    readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
-    currentValue = ProxyViewDrawEdgesAboveNodes.DEFAULT;
-}
-
 /** Whether edge proxies should be drawn when the source or target point is off-screen. */
 export class ProxyViewEdgesToOffScreenPoint implements RenderOption {
     static readonly ID: string = "proxy-view-draw-edges-to-off-screen-point";
@@ -551,18 +523,3 @@ export class ProxyViewClusteringSweepLine implements RenderOption {
     currentValue = ProxyViewClusteringSweepLine.DEFAULT;
 }
 
-/** Whether caches for positions, renderings and distances should be enabled. */
-export class ProxyViewCachesEnabled implements RenderOption {
-    static readonly ID: string = "proxy-view-caches-enabled";
-    static readonly NAME: string = "Enable Caches";
-    static readonly DESCRIPTION: string = "Whether caches for positions, renderings and distances should be enabled.";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewCachesEnabled.ID;
-    readonly name: string = ProxyViewCachesEnabled.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewCachesEnabled.DEFAULT;
-    readonly description: string = ProxyViewCachesEnabled.DESCRIPTION;
-    readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
-    currentValue = ProxyViewCachesEnabled.DEFAULT;
-}

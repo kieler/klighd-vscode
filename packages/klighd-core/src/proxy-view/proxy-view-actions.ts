@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022 by
+ * Copyright 2022-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -24,7 +24,7 @@ import { OptionsRegistry } from "../options/options-registry";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { ProxyView } from "./proxy-view";
-import { ProxyViewInteractiveProxies, ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewEnableSegmentProxies, ProxyViewDebugCategory, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies, ProxyViewCachesEnabled } from "./proxy-view-options";
+import { ProxyViewInteractiveProxies, ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewEnableSegmentProxies, ProxyViewDebugCategory, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies } from "./proxy-view-options";
 
 /**
  * Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
@@ -99,9 +99,10 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             ProxyViewSize,
             ProxyViewDecreaseProxyClutter,
             ProxyViewEnableEdgeProxies,
+            ProxyViewDrawEdgesAboveNodes,
             ProxyViewEnableSegmentProxies,
             ProxyViewInteractiveProxies,
-            ProxyViewTitleScaling
+            ProxyViewTitleScaling,
         );
 
         // Proxy-view debug
@@ -119,7 +120,6 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             ProxyViewStackingOrderByOpacity,
             ProxyViewStackingOrderBySelected,
             ProxyViewUseDetailLevel,
-            ProxyViewDrawEdgesAboveNodes,
             ProxyViewEdgesToOffScreenPoint,
             ProxyViewTransparentEdges,
             ProxyViewOriginalNodeScale,
@@ -127,7 +127,6 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             ProxyViewClusterTransparent,
             ProxyViewClusteringCascading,
             ProxyViewClusteringSweepLine,
-            ProxyViewCachesEnabled
         );
     }
 

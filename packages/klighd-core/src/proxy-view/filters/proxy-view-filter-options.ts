@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022 by
+ * Copyright 2022-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,6 +17,12 @@
 
 import { RenderOption, TransformationOptionType } from "../../options/option-models";
 import { ProxyViewCategory } from "../proxy-view-options";
+
+/**
+ * Whether proxy-view debug filter should be hidden from the sidebar.
+ * `true` hides all debug filter, `false` shows all debug filter.
+ */
+const hideProxyViewDebugFilter = true;
 
 /** The category containing proxy-view filters. */
 export class ProxyViewFilterCategory implements RenderOption {
@@ -73,6 +79,7 @@ export class ProxyViewFilterUnselected implements RenderOption {
     readonly initialValue: boolean = ProxyViewFilterUnselected.DEFAULT;
     readonly description: string = ProxyViewFilterUnselected.DESCRIPTION;
     readonly renderCategory: string = ProxyViewFilterCategory.ID;
+    invisible = hideProxyViewDebugFilter;
     currentValue = ProxyViewFilterUnselected.DEFAULT;
 }
 
@@ -97,5 +104,6 @@ export class ProxyViewFilterDistant implements RenderOption {
     readonly description: string = ProxyViewFilterDistant.DESCRIPTION;
     readonly renderCategory: string = ProxyViewFilterCategory.ID;
     readonly values: string[] = ProxyViewFilterDistant.CHOICES;
+    invisible = hideProxyViewDebugFilter;
     currentValue = ProxyViewFilterDistant.DEFAULT;
 }

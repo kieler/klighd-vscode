@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2022 by
+ * Copyright 2018-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -33,8 +33,8 @@ export interface Option {
 export interface RenderOption extends Option {
     /** The category this RenderOption is part of. */
     renderCategory?: string;
-    /** Per default undefined. */
-    invisible?: boolean
+    /** Whether the option should be shown in the sidebar at all. Default undefined is false (visible). */
+    invisible?: boolean;
 }
 
 /** Type for available quick actions. */
