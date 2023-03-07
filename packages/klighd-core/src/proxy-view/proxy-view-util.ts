@@ -39,17 +39,17 @@ export interface TransformAttributes extends Bounds {
 /** 
  * Contains all canvas-related attributes.
  * @acronym CRF - Canvas Reference Frame.
- * @acronym LRF - Local Reference Frame.
+ * @acronym GRF - Global Reference Frame.
  * @example (x, y, width, height, scroll, zoom)
  */
 export interface Canvas extends Viewport, Bounds {
     /**
-     * Whether the canvas is in LRF, e.g. not in CRF.
+     * Whether the canvas is in GRF, e.g. not in CRF.
      * Usually doesn't need to be set explicitly - handled by translation methods.
      * When the canvas hasn't been translated yet, this should be `undefined` or `false`,
      * as the canvas should be in the CRF.
      */
-    isInLRF?: boolean;
+    isInGRF?: boolean;
 }
 
 export namespace Canvas {
@@ -68,43 +68,43 @@ export namespace Canvas {
     //// Translation ////
 
     /**
-     * Returns the bounds translated from the LRF to the CRF.
+     * Returns the bounds translated from the GRF to the CRF.
      * E.g. calculates its position & width/height according to scroll and zoom.
-     * Inverse to {@link translateToLRF()}.
-     * @param bpd The bounds/point/dimension in the LRF.
+     * Inverse to {@link translateToGRF()}.
+     * @param originalBounds The bounds/point/dimension in the GRF.
      * @param canvas The canvas.
      * @returns The bounds translated to the CRF.
      */
-    export function translateToCRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
-        const b = asBounds(bpd);
+    export function translateToCRF(originalBounds: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+        const bounds = asBounds(originalBounds);
 
-        const s = canvas.scroll;
-        const z = canvas.zoom;
+        const scroll = canvas.scroll;
+        const zoom = canvas.zoom;
         return {
-            x: (b.x - s.x) * z,
-            y: (b.y - s.y) * z,
-            width: b.width * z,
-            height: b.height * z
+            x: (bounds.x - scroll.x) * zoom,
+            y: (bounds.y - scroll.y) * zoom,
+            width: bounds.width * zoom,
+            height: bounds.height * zoom
         };
     }
 
     /**
-     * Returns the bounds translated from the CRF to the LRF.
+     * Returns the bounds translated from the CRF to the GRF.
      * Inverse to {@link translateToCRF()}.
-     * @param bpd The bounds/point/dimension in the CRF.
+     * @param originalBounds The bounds/point/dimension in the CRF.
      * @param canvas The canvas.
-     * @returns The bounds translated to the LRF.
+     * @returns The bounds translated to the GRF.
      */
-    export function translateToLRF(bpd: Bounds | Point | Dimension, canvas: Canvas): Bounds {
-        const b = asBounds(bpd);
+    export function translateToGRF(originalBounds: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+        const bounds = asBounds(originalBounds);
 
-        const s = canvas.scroll;
-        const z = canvas.zoom;
+        const scroll = canvas.scroll;
+        const zoom = canvas.zoom;
         return {
-            x: b.x / z + s.x,
-            y: b.y / z + s.y,
-            width: b.width / z,
-            height: b.height / z
+            x: bounds.x / zoom + scroll.x,
+            y: bounds.y / zoom + scroll.y,
+            width: bounds.width / zoom,
+            height: bounds.height / zoom
         };
     }
 
@@ -121,14 +121,14 @@ export namespace Canvas {
 
     /**
      * Convenience function.
-     * Translates the canvas from the LRF to the CRF, if not already in CRF.
-     * Inverse to {@link translateCanvasToLRF()}.
+     * Translates the canvas from the GRF to the CRF, if not already in CRF.
+     * Inverse to {@link translateCanvasToGRF()}.
      * @param canvas The canvas.
      * @returns The canvas translated to the CRF.
      */
     export function translateCanvasToCRF(canvas: Canvas): Canvas {
-        if (canvas.isInLRF) {
-            return { ...canvas, ...translateToCRF(canvas, canvas), isInLRF: false };
+        if (canvas.isInGRF) {
+            return { ...canvas, ...translateToCRF(canvas, canvas), isInGRF: false };
         } else {
             return canvas;
         }
@@ -136,42 +136,43 @@ export namespace Canvas {
 
     /**
      * Convenience function.
-     * Translates the canvas from the CRF to the LRF, if not already in LRF.
+     * Translates the canvas from the CRF to the GRF, if not already in GRF.
      * Inverse to {@link translateCanvasToCRF()}.
      * @param canvas The canvas.
-     * @returns The canvas translated to the LRF.
+     * @returns The canvas translated to the GRF.
      */
-    export function translateCanvasToLRF(canvas: Canvas): Canvas {
-        if (canvas.isInLRF) {
+    export function translateCanvasToGRF(canvas: Canvas): Canvas {
+        if (canvas.isInGRF) {
             return canvas;
         } else {
-            return { ...canvas, ...translateToLRF(canvas, canvas), isInLRF: true };
+            return { ...canvas, ...translateToGRF(canvas, canvas), isInGRF: true };
         }
     }
 
     //// Functions invariant to Reference Frame ////
 
     /**
-     * Checks if `b` is (partially) on-screen.
-     * Note that `b` and `canvas` need to be in the same Reference Frame.
+     * Checks if `bounds` is (partially) on-screen.
+     * Note that `bounds` and `canvas` need to be in the same Reference Frame.
+     * @param bounds The bounds to check.
      * @returns `true` if `b` is (partially) on-screen.
      */
-    export function isOnScreen(b: Bounds, canvas: Canvas): boolean {
-        return isInBounds(b, canvas);
+    export function isOnScreen(bounds: Bounds, canvas: Canvas): boolean {
+        return isInBounds(bounds, canvas);
     }
 
     /**
      * Returns the distance between the bounds and the canvas.
      * @see {@link distanceBetweenBounds()} for an explanation on how the distance is calculated.
-     * Note that `bp` and `canvas` need to be in the same Reference Frame.
+     * Note that `bounds` and `canvas` need to be in the same Reference Frame.
      * 
-     * @param bp The bounds/point to calculate the distance to the canvas for.
+     * @param bounds The bounds/point to calculate the distance to the canvas for.
      * @param canvas The canvas.
      * @returns The distance between the bounds and the canvas.
      */
-    export function distance(bp: Bounds | Point, canvas: Canvas): number {
-        const dist = distanceBetweenBounds(bp, canvas);
-        return dist * (canvas.isInLRF ? canvas.zoom : 1);
+    export function distance(bounds: Bounds | Point, canvas: Canvas): number {
+        const dist = distanceBetweenBounds(bounds, canvas);
+        return dist * (canvas.isInGRF ? canvas.zoom : 1);
     }
 
     /**
@@ -225,6 +226,7 @@ export namespace Canvas {
                     y = fromBorderRect.bottom;
                 } else {
                     // Should never be the case, would be hovering somewhere
+                    throw new Error('Invalid case in routeAlongBorder reached.');
                 }
             }
         } else if (fromRect.right === fromBorderRect.right) {
@@ -259,6 +261,7 @@ export namespace Canvas {
                     y = fromBorderRect.bottom;
                 } else {
                     // Should never be the case, would be hovering somewhere
+                    throw new Error('Invalid case in routeAlongBorder reached.');
                 }
             }
         } else if (fromRect.top === fromBorderRect.top) {
@@ -293,6 +296,7 @@ export namespace Canvas {
                     x = fromBorderRect.right;
                 } else {
                     // Should never be the case, would be hovering somewhere
+                    throw new Error('Invalid case in routeAlongBorder reached.');
                 }
             }
         } else if (fromRect.bottom === fromBorderRect.bottom) {
@@ -327,6 +331,7 @@ export namespace Canvas {
                     x = fromBorderRect.right;
                 } else {
                     // Should never be the case, would be hovering somewhere
+                    throw new Error('Invalid case in routeAlongBorder reached.');
                 }
             }
         }
@@ -346,11 +351,11 @@ export namespace Canvas {
      * @returns An offset canvas.
      */
     export function offsetCanvas(canvas: Canvas, offset: number | Rect): Canvas {
-        const o = typeof offset === "number" ? { left: offset, right: offset, top: offset, bottom: offset } : offset;
-        const x = canvas.x + o.left;
-        const width = canvas.width - o.right - o.left;
-        const y = canvas.y + o.top;
-        const height = canvas.height - o.bottom - o.top;
+        const rectOffset = typeof offset === "number" ? { left: offset, right: offset, top: offset, bottom: offset } : offset;
+        const x = canvas.x + rectOffset.left;
+        const width = canvas.width - rectOffset.right - rectOffset.left;
+        const y = canvas.y + rectOffset.top;
+        const height = canvas.height - rectOffset.bottom - rectOffset.top;
         return { ...canvas, x, y, width, height };
     }
 
@@ -358,19 +363,19 @@ export namespace Canvas {
 
     /**
      * Returns the given bounds capped to the canvas border w.r.t. the sidebar if enabled.
-     * Note that `bp` and `canvas` need to be in CRF.
-     * Also, `bp` has to contain the absolute position (not relative to parent).
-     * @param bp The bounds/point to cap to the canvas border, absolute.
+     * Note that `bounds` and `canvas` need to be in CRF.
+     * Also, `bounds` has to contain the absolute position (not relative to parent).
+     * @param bounds The bounds/point to cap to the canvas border, absolute.
      * @param canvas The canvas.
      * @param capToSidebar Whether the bounds should also be capped to the sidebar.
      * @returns The given bounds capped to the canvas border w.r.t. the sidebar if enabled.
      */
-    export function capToCanvas(bp: Bounds | Point, canvas: Bounds, capToSidebar = true): Bounds {
-        const bounds = asBounds(bp);
+    export function capToCanvas(bounds: Bounds | Point, canvas: Bounds, capToSidebar = true): Bounds {
+        const originalBounds = asBounds(bounds);
 
         // Cap bounds at canvas border
-        let x = capNumber(bounds.x, canvas.x, canvas.x + canvas.width - bounds.width);
-        const y = capNumber(bounds.y, canvas.y, canvas.y + canvas.height - bounds.height);
+        let x = capNumber(originalBounds.x, canvas.x, canvas.x + canvas.width - originalBounds.width);
+        const y = capNumber(originalBounds.y, canvas.y, canvas.y + canvas.height - originalBounds.height);
 
         if (capToSidebar) {
             // TODO: May be useful to cache the sidebar, since calling document.querySelector()
@@ -381,13 +386,13 @@ export namespace Canvas {
             const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
             const isSidebarOpen = document.querySelector(".sidebar--open");
             if (!isSidebarOpen && rect) {
-                if (y < rect.y + rect.height && x > rect.x - bounds.width) {
-                    x = rect.x - bounds.width;
+                if (y < rect.y + rect.height && x > rect.x - originalBounds.width) {
+                    x = rect.x - originalBounds.width;
                 }
             }
         }
 
-        return { x, y, width: bounds.width, height: bounds.height };
+        return { x, y, width: originalBounds.width, height: originalBounds.height };
     }
 }
 
@@ -404,22 +409,22 @@ export namespace Rect {
     export const EMPTY: Rect = Object.freeze({ left: 0, right: 0, top: 0, bottom: 0 });
 
     /**
-     * Returns `b` as a Rect.
-     * @param bd The Bounds/Dimension to transform into a Rect.
-     * @returns The Rect corresponding to `b`.
+     * Returns `bounds` as a Rect.
+     * @param bounds The Bounds/Dimension to transform into a Rect.
+     * @returns The Rect corresponding to `bounds`.
      */
-    export function fromBounds(bd: Bounds | Dimension): Rect {
-        const b = asBounds(bd);
+    export function fromBounds(bounds: Bounds | Dimension): Rect {
+        const b = asBounds(bounds);
         return { left: b.x, right: b.x + b.width, top: b.y, bottom: b.y + b.height };
     }
 
     /**
-     * Returns `r` as Bounds.
-     * @param r The Rect to transform into Bounds.
-     * @returns The Bounds corresponding to `r`.
+     * Returns `rect` as Bounds.
+     * @param rect The Rect to transform into Bounds.
+     * @returns The Bounds corresponding to `rect`.
      */
-    export function toBounds(r: Rect): Bounds {
-        return { x: r.left, y: r.top, width: r.right - r.left, height: r.bottom - r.top };
+    export function toBounds(rect: Rect): Bounds {
+        return { x: rect.left, y: rect.top, width: rect.right - rect.left, height: rect.bottom - rect.top };
     }
 }
 
@@ -508,13 +513,13 @@ export function capNumber(n: number, min: number, max: number): number {
  * 
  * 4,6: only take x-coordinate into consideration for calculating the distance
  * 
- * @param bp1 The first bounds/point to calculate the distance for.
- * @param bp2 The second bounds/point to calculate the distance for.
+ * @param bounds1 The first bounds/point to calculate the distance for.
+ * @param bounds2 The second bounds/point to calculate the distance for.
  * @returns The distance between the two bounds.
  */
-export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point): number {
-    const b1 = asBounds(bp1);
-    const b2 = asBounds(bp2);
+export function distanceBetweenBounds(bounds1: Bounds | Point, bounds2: Bounds | Point): number {
+    const b1 = asBounds(bounds1);
+    const b2 = asBounds(bounds2);
 
     const b1Left = b1.x;
     const b1Right = b1Left + b1.width;
@@ -567,20 +572,20 @@ export function distanceBetweenBounds(bp1: Bounds | Point, bp2: Bounds | Point):
 }
 
 /**
- * Returns the intersection between the line spanning from `p1` to `p2` and `b`.
+ * Returns the intersection between the line spanning from `p1` to `p2` and `bounds`.
  * @param p1 The start of the line.
  * @param p2 The end of the line.
- * @param b The bounds.
+ * @param bounds The bounds.
  * @returns The intersection between the line and bounds or `undefined` if there is none.
  */
-export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefined {
+export function getIntersection(p1: Point, p2: Point, bounds: Bounds): Point | undefined {
     // Intersection iff one of [p1, p2] in bounds and the other one out of bounds
 
-    if (Bounds.includes(b, p1)) {
+    if (Bounds.includes(bounds, p1)) {
         // Intersection if p2 out of bounds
-        if (p2.x < b.x || p2.x > b.x + b.width) {
+        if (p2.x < bounds.x || p2.x > bounds.x + bounds.width) {
             // Intersection at x, find y
-            const leftOrRight = p2.x < b.x ? b.x : b.x + b.width;
+            const leftOrRight = p2.x < bounds.x ? bounds.x : bounds.x + bounds.width;
 
             // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
             const scalar = capNumber((leftOrRight - p1.x) / (p2.x - p1.x), 0, 1);
@@ -588,9 +593,9 @@ export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefi
             // Intersection point, cap to canvas with offset (and to sidebar aswell)
             const intersectY = p1.y + scalar * (p2.y - p1.y);
             return { x: leftOrRight, y: intersectY };
-        } else if (p2.y < b.y || p2.y > b.y + b.height) {
+        } else if (p2.y < bounds.y || p2.y > bounds.y + bounds.height) {
             // Intersection at y, find x
-            const topOrBottom = p2.y < b.y ? b.y : b.y + b.height;
+            const topOrBottom = p2.y < bounds.y ? bounds.y : bounds.y + bounds.height;
 
             // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
             const scalar = capNumber((topOrBottom - p1.y) / (p2.y - p1.y), 0, 1);
@@ -599,11 +604,11 @@ export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefi
             const intersectX = p1.x + scalar * (p2.x - p1.x);
             return { x: intersectX, y: topOrBottom };
         }
-    } else if (Bounds.includes(b, p2)) {
+    } else if (Bounds.includes(bounds, p2)) {
         // p1 out of bounds and p2 in bounds, definitely an intersection
-        if (p1.x < b.x || p1.x > b.x + b.width) {
+        if (p1.x < bounds.x || p1.x > bounds.x + bounds.width) {
             // Intersection at x, find y
-            const leftOrRight = p1.x < b.x ? b.x : b.x + b.width;
+            const leftOrRight = p1.x < bounds.x ? bounds.x : bounds.x + bounds.width;
 
             // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
             const scalar = capNumber((leftOrRight - p2.x) / (p1.x - p2.x), 0, 1);
@@ -613,7 +618,7 @@ export function getIntersection(p1: Point, p2: Point, b: Bounds): Point | undefi
             return { x: leftOrRight, y: intersectY };
         } else {
             // Intersection at y, find x
-            const topOrBottom = p1.y < b.y ? b.y : b.y + b.height;
+            const topOrBottom = p1.y < bounds.y ? bounds.y : bounds.y + bounds.height;
 
             // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
             const scalar = capNumber((topOrBottom - p2.y) / (p1.y - p2.y), 0, 1);

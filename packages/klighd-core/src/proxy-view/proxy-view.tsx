@@ -240,18 +240,18 @@ export class ProxyView extends AbstractUIExtension {
 
         // Translate canvas to both Reference Frames
         const canvasCRF = Canvas.translateCanvasToCRF(canvas);
-        const canvasLRF = Canvas.translateCanvasToLRF(canvas);
+        const canvasGRF = Canvas.translateCanvasToGRF(canvas);
 
         // Calculate size of proxies
         const size = Math.min(canvasCRF.width, canvasCRF.height) * this.sizePercentage;
         const fromPercent = 0.01;
         const offsetCRF = Math.min(canvasCRF.width, canvasCRF.height) * fromPercent;
-        const offsetLRF = Math.min(canvasLRF.width, canvasLRF.height) * fromPercent;
+        const offsetLRF = Math.min(canvasGRF.width, canvasGRF.height) * fromPercent;
 
         //// Initial nodes ////
         const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
         // Reduce canvas size to show proxies early
-        const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasLRF, this.showProxiesEarlyNumber * offsetLRF) : canvasLRF;
+        const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasGRF, this.showProxiesEarlyNumber * offsetLRF) : canvasGRF;
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, sizedCanvas, depth, ctx);
 
         //// Apply filters ////
@@ -259,17 +259,17 @@ export class ProxyView extends AbstractUIExtension {
             // The nodes to filter
             offScreenNodes,
             // Additional arguments for filters
-            onScreenNodes, canvasCRF, canvasLRF
+            onScreenNodes, canvasCRF, canvasGRF
         );
 
         //// Clone nodes ////
         const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
 
         //// Opacity ////
-        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvasLRF);
+        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvasGRF);
 
         //// Stacking order ////
-        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvasLRF);
+        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvasGRF);
 
         //// Use proxy-rendering as specified by synthesis ////
         const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(orderedOffScreenNodes, ctx);
@@ -287,7 +287,7 @@ export class ProxyView extends AbstractUIExtension {
         const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offsetCRF, ctx);
 
         //// Connect off-screen edges ////
-        const segmentConnectors = this.connectEdgeSegments(root, canvasLRF, offsetLRF, ctx);
+        const segmentConnectors = this.connectEdgeSegments(root, canvasGRF, offsetLRF, ctx);
 
         //// Render the proxies ////
         const proxies = [];
@@ -296,7 +296,7 @@ export class ProxyView extends AbstractUIExtension {
         // Nodes
         for (const { node, transform } of clusteredNodes) {
             // Create a proxy
-            const proxy = this.createProxy(node, transform, canvasLRF, ctx);
+            const proxy = this.createProxy(node, transform, canvasGRF, ctx);
             if (proxy) {
                 proxies.push(proxy);
                 this.currProxies.push({ proxy, transform });
