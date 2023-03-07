@@ -109,7 +109,6 @@ export namespace Canvas {
     }
 
     /**
-     * Convenience function.
      * Adds `p1` and `p2` and translates the result to the CRF.
      * @param p1 The first point.
      * @param p2 The second point.
@@ -120,7 +119,6 @@ export namespace Canvas {
     }
 
     /**
-     * Convenience function.
      * Translates the canvas from the GRF to the CRF, if not already in CRF.
      * Inverse to {@link translateCanvasToGRF()}.
      * @param canvas The canvas.
@@ -135,7 +133,6 @@ export namespace Canvas {
     }
 
     /**
-     * Convenience function.
      * Translates the canvas from the CRF to the GRF, if not already in GRF.
      * Inverse to {@link translateCanvasToCRF()}.
      * @param canvas The canvas.
