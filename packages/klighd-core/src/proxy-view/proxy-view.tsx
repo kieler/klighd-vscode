@@ -1186,7 +1186,7 @@ export class ProxyView extends AbstractUIExtension {
         return Canvas.translateToCRF(absoluteBounds, canvas);
     }
 
-    /** Returns the `node`'s bounds with the absolute position. */
+    /** Returns the `node`'s bounds with the absolute position. Positions are stored in {@link positions}.*/
     private getAbsoluteBounds(node: SKNode): Bounds {
         return { ...node.bounds, ...this.getAbsolutePosition(node) };
     }
@@ -1212,7 +1212,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /**
-     * Returns the distance between the node and the canvas.
+     * Returns the distance between the node and the canvas and stores them in {@link distances}.
      * @see {@link getDistanceToCanvas()}
      */
     private getNodeDistanceToCanvas(node: SKNode, canvas: Canvas): number {
