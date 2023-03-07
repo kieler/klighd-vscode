@@ -477,19 +477,19 @@ export function asBounds(bpd: Bounds | Point | Dimension): Bounds {
 }
 
 /**
- * Returns `n` capped to the range given by `min` and `max` (inclusive), e.g. `n` in `[min, max]`.
+ * Returns `n` capped to the range given by `rangeExtreme1` and `rangeExtreme2` 
+ * (inclusive), e.g. `n` in `[rangeExtreme1, rangeExtreme2]`.
  * @param n The number to cap.
- * @param min The lower bound of the range.
- * @param max The upper bound of the range.
- * @returns `n` capped to the given range. If `min > max`, the two are swapped.
+ * @param rangeExtreme1 The lower bound of the range.
+ * @param rangeExtreme2 The upper bound of the range.
+ * @returns `n` capped to the given range. If `rangeExtreme1 > rangeExtreme2`, 
+ * the two are swapped.
  */
-export function capNumber(n: number, min: number, max: number): number {
-    if (min > max) {
-        const temp = min;
-        min = max;
-        max = temp;
+export function capNumber(n: number, rangeExtreme1: number, rangeExtreme2: number): number {
+    if (rangeExtreme1 > rangeExtreme2) {
+        return capNumber(n, rangeExtreme2, rangeExtreme1);
     }
-    return Math.max(min, Math.min(max, n));
+    return Math.max(rangeExtreme1, Math.min(rangeExtreme2, n));
 }
 
 /**
