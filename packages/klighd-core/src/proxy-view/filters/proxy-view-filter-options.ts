@@ -40,7 +40,7 @@ export class ProxyViewFilterCategory implements RenderOption {
 /** Whether proxies should be filtered by removing unconnected nodes regarding all on-screen nodes. */
 export class ProxyViewFilterUnconnectedToOnScreen implements RenderOption {
     static readonly ID: string = "proxy-view-filter-unconnected";
-    static readonly NAME: string = "Filter Nodes Unconnected to On-Screen";
+    static readonly NAME: string = "Nodes Unconnected to On-Screen";
     static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding all on-screen nodes.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewFilterUnconnectedToOnScreen.ID;
@@ -55,7 +55,7 @@ export class ProxyViewFilterUnconnectedToOnScreen implements RenderOption {
 /** Whether proxies should be filtered by removing unconnected nodes regarding the selected node. */
 export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
     static readonly ID: string = "proxy-view-filter-unconnected-to-selected";
-    static readonly NAME: string = "Filter Nodes Unconnected to Selection";
+    static readonly NAME: string = "Nodes Unconnected to Selection";
     static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding the selected node.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewFilterUnconnectedToSelected.ID;
@@ -70,7 +70,7 @@ export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
 /** Whether proxies of unselected nodes should be filtered. */
 export class ProxyViewFilterUnselected implements RenderOption {
     static readonly ID: string = "proxy-view-filter-unselected";
-    static readonly NAME: string = "Filter Unselected Nodes";
+    static readonly NAME: string = "Unselected Nodes";
     static readonly DESCRIPTION: string = "Whether proxies of unselected nodes should be filtered.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewFilterUnselected.ID;
@@ -86,7 +86,7 @@ export class ProxyViewFilterUnselected implements RenderOption {
 /** Whether proxies should be filtered by removing distant nodes. */
 export class ProxyViewFilterDistant implements RenderOption {
     static readonly ID: string = "proxy-view-filter-distant";
-    static readonly NAME: string = "Filter Distant Nodes";
+    static readonly NAME: string = "Distant Nodes";
     static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing nodes that are far away from the center.";
     static readonly CHOICE_OFF: string = "Off";
     static readonly CHOICE_CLOSE: string = "Close";
