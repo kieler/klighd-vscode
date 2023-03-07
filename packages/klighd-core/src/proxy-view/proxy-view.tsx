@@ -461,7 +461,8 @@ export class ProxyView extends AbstractUIExtension {
             for (const node of res) {
                 // Reduce opacity such that the node is fully transparent when the node's distance is >= DISTANCE_DISTANT
                 const opacityReduction = this.getNodeDistanceToCanvas(node, canvasLRF) / ProxyView.DISTANCE_DISTANT;
-                node.opacity = Math.max(0, node.opacity - opacityReduction);
+                const minOpacity = 0.1;
+                node.opacity = Math.max(minOpacity, node.opacity - opacityReduction);
             }
         }
 
@@ -475,7 +476,7 @@ export class ProxyView extends AbstractUIExtension {
                     // Node not relevant to current selection context, decrease opacity
                     // If opaque, the node should be 50% transparent
                     const opacityReduction = 0.5;
-                    node.opacity = Math.max(0, node.opacity - opacityReduction);
+                    node.opacity = Math.max(0, node.opacity * opacityReduction);
                 }
             }
         }
