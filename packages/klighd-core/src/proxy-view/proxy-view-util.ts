@@ -382,12 +382,18 @@ export namespace Canvas {
             // can cause overhead if this function is called often
 
             // Make sure the proxies aren't rendered behind the sidebar buttons at the top right
-            // Don't reposition proxies with an open sidebar since it closes as soon as the diagram is moved (onMouseDown)
+            // If the sidebar is locked open, the proxies are also capped to its edge
+            // TODO: The logic for checking whether proxies should be displayed at all still doesn't 
+            //       consider the edge of the sidebar but rather the edge of the viewport which can 
+            //       be underneath the sidebar. This should probably be changed in the future.
             const rect = document.querySelector(".sidebar__toggle-container")?.getBoundingClientRect();
+            const sidebarRect = document.querySelector(".sidebar__content")?.getBoundingClientRect();
             const isSidebarOpen = document.querySelector(".sidebar--open");
-            if (!isSidebarOpen && rect) {
+            if (rect) {
                 if (y < rect.y + rect.height && x > rect.x - originalBounds.width) {
                     x = rect.x - originalBounds.width;
+                } else if (sidebarRect && isSidebarOpen && x > sidebarRect.x - originalBounds.width) {
+                    x = sidebarRect.x - originalBounds.width;
                 }
             }
         }
