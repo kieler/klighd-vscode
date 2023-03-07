@@ -34,12 +34,28 @@ import { ProxyFilterAndID, ProxyFilterArgs } from "./proxy-view-filters";
  */
 @injectable()
 export class ProxySemanticFilterHandler implements IActionHandler, IActionHandlerInitializer {
+
+    /** The registry containing the semantic filter options. */
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+
+    @postConstruct()
+    init(): void {
+        // Register to receive updates on registry changes
+        this.renderOptionsRegistry.onChange(() => this.updateFilterOptions(this.renderOptionsRegistry));
+    }
+
     /** The previous semantic filters, only to be used for unregistering. */
     private prevSemanticFilters: ProxyFilterAndID[] = [];
     /** The current semantic filters. */
     private semanticFilters: ProxyFilterAndID[] = [];
     /** The proxy-view. */
     private proxyView: ProxyView;
+
+    //// Sidebar filter options ////
+    /** Each semantic filter's corresponding option. */
+    private semanticFilterOptions: (typeof ProxyViewAbstractSemanticFilter)[] = [];
+    /** Each semantic filter's corresponding option's value. */
+    private semanticFilterOptionValues: boolean[] = [];
 
     //// Get the filters ////
     handle(action: Action): void | Action | ICommand {
@@ -120,26 +136,11 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
         }
     }
 
-    //// Sidebar filter options ////
-    /** Each semantic filter's corresponding option. */
-    private semanticFilterOptions: (typeof ProxyViewAbstractSemanticFilter)[] = [];
-    /** Each semantic filter's corresponding option's value. */
-    private semanticFilterOptionValues: boolean[] = [];
-
     /** Updates the proxy-view semantic filter options specified in the {@link RenderOptionsRegistry}. */
     private updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
         for (const i in this.semanticFilterOptions) {
             this.semanticFilterOptionValues[i] = renderOptionsRegistry.getValue(this.semanticFilterOptions[i]);
         }
-    }
-
-    /** The registry containing the semantic filter options. */
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
-
-    @postConstruct()
-    init(): void {
-        // Register to receive updates on registry changes
-        this.renderOptionsRegistry.onChange(() => this.updateFilterOptions(this.renderOptionsRegistry));
     }
 }
 
