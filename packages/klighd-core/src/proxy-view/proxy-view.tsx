@@ -356,16 +356,16 @@ export class ProxyView extends AbstractUIExtension {
         const onScreenNodes = [];
         for (const node of currRoot.children) {
             if (node instanceof SKNode) {
-                const b = this.getAbsoluteBounds(node);
+                const bounds = this.getAbsoluteBounds(node);
 
                 if (this.showProxiesImmediately) {
                     // Show proxies as soon as a node is not completely on-screen
-                    if ((b.x < canvasLRF.x || b.x + b.width > canvasLRF.x + canvasLRF.width || b.y < canvasLRF.y || b.y + b.height > canvasLRF.y + canvasLRF.height) &&
-                        !((canvasLRF.x >= b.x && canvasLRF.x + canvasLRF.width <= b.x + b.width) || (canvasLRF.y >= b.y && canvasLRF.y + canvasLRF.height <= b.y + b.height))) {
+                    if ((bounds.x < canvasLRF.x || bounds.x + bounds.width > canvasLRF.x + canvasLRF.width || bounds.y < canvasLRF.y || bounds.y + bounds.height > canvasLRF.y + canvasLRF.height) &&
+                        !((canvasLRF.x >= bounds.x && canvasLRF.x + canvasLRF.width <= bounds.x + bounds.width) || (canvasLRF.y >= bounds.y && canvasLRF.y + canvasLRF.height <= bounds.y + bounds.height))) {
                         // Node partially out of bounds and doesn't envelop canvas
                         offScreenNodes.push(node);
 
-                        if (Canvas.isOnScreen(b, canvasLRF)) {
+                        if (Canvas.isOnScreen(bounds, canvasLRF)) {
                             // Just partially out of bounds
                             if (node.children.length > 0) {
                                 const region = ctx.depthMap?.getProvidingRegion(node, ctx.viewport, ctx.renderOptionsRegistry);
@@ -401,7 +401,7 @@ export class ProxyView extends AbstractUIExtension {
                     }
                 } else {
                     // Normal proxy-view behaviour
-                    if (!Canvas.isOnScreen(b, canvasLRF)) {
+                    if (!Canvas.isOnScreen(bounds, canvasLRF)) {
                         // Node out of bounds
                         offScreenNodes.push(node);
 
