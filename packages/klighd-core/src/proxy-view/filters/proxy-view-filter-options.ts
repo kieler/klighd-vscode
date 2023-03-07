@@ -27,7 +27,7 @@ const hideProxyViewDebugFilter = true;
 /** The category containing proxy-view filters. */
 export class ProxyViewFilterCategory implements RenderOption {
     static readonly ID: string = "proxy-view-filter-category";
-    static readonly NAME: string = "Filters";
+    static readonly NAME: string = "Proxy Filters";
     static readonly INSTANCE: ProxyViewFilterCategory = new ProxyViewFilterCategory;
     readonly id: string = ProxyViewFilterCategory.ID;
     readonly name: string = ProxyViewFilterCategory.NAME;
@@ -56,7 +56,7 @@ export class ProxyViewFilterUnconnectedToOnScreen implements RenderOption {
 export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
     static readonly ID: string = "proxy-view-filter-unconnected-to-selected";
     static readonly NAME: string = "Nodes Unconnected to Selection";
-    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding the selected node.";
+    static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding the selected nodes.";
     static readonly DEFAULT: boolean = false;
     readonly id: string = ProxyViewFilterUnconnectedToSelected.ID;
     readonly name: string = ProxyViewFilterUnconnectedToSelected.NAME;
