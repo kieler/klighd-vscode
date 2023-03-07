@@ -39,8 +39,8 @@ export interface ProxyFilterArgs {
     onScreenNodes: SKNode[];
     /** The canvas in CRF. */
     canvasCRF: Canvas;
-    /** The canvas in LRF. */
-    canvasLRF: Canvas;
+    /** The canvas in GRF. */
+    canvasGRF: Canvas;
     /** The distance to the canvas as specified by {@link ../proxy-view-util#getDistanceToCanvas()}. */
     distance: number;
 }
