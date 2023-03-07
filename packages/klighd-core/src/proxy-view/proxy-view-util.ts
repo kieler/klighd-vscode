@@ -799,7 +799,7 @@ export function isSelectedOrConnectedToSelected(node: SKNode): boolean {
 //////// Classes ////////
 
 // TODO: GetSelectionAction
-/** Util class for easyily accessing the currently selected elements. */
+/** Util class for easily accessing the currently selected elements. */
 export class SelectedElementsUtil {
     /** The current root. */
     private static currRoot: SModelRoot;
