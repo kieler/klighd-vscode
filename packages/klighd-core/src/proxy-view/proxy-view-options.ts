@@ -148,21 +148,6 @@ export class ProxyViewEnableSegmentProxies implements RenderOption {
     currentValue = ProxyViewEnableSegmentProxies.DEFAULT;
 }
 
-/** Whether proxies should be interactable. */
-export class ProxyViewInteractiveProxies implements RenderOption {
-    static readonly ID: string = "proxy-view-interactive-proxies";
-    static readonly NAME: string = "Interactive Proxies";
-    static readonly DESCRIPTION: string = "Whether proxies should be interactable. Clicking on a proxy hops to its off-screen counterpart.";
-    static readonly DEFAULT: boolean = true;
-    readonly id: string = ProxyViewInteractiveProxies.ID;
-    readonly name: string = ProxyViewInteractiveProxies.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ProxyViewInteractiveProxies.DEFAULT;
-    readonly description: string = ProxyViewInteractiveProxies.DESCRIPTION;
-    readonly renderCategory: string = ProxyViewCategory.ID;
-    currentValue = ProxyViewInteractiveProxies.DEFAULT;
-}
-
 /** Whether to use title scaling if smart zoom is enabled. */
 export class ProxyViewTitleScaling implements RenderOption {
     static readonly ID: string = "proxy-view-title-scaling";
@@ -212,6 +197,22 @@ export class ProxyViewDebugCategory implements RenderOption {
     readonly initialValue: any;
     readonly invisible: boolean = hideProxyViewDebugOptions;
     currentValue: any;
+}
+
+/** Whether proxies should be interactable. */
+export class ProxyViewInteractiveProxies implements RenderOption {
+    static readonly ID: string = "proxy-view-interactive-proxies";
+    static readonly NAME: string = "Interactive Proxies";
+    static readonly DESCRIPTION: string = "Whether proxies should be interactable. Clicking on a proxy hops to its off-screen counterpart.";
+    static readonly DEFAULT: boolean = true;
+    readonly id: string = ProxyViewInteractiveProxies.ID;
+    readonly name: string = ProxyViewInteractiveProxies.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewInteractiveProxies.DEFAULT;
+    readonly description: string = ProxyViewInteractiveProxies.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewDebugCategory.ID;
+    readonly invisible: boolean = hideProxyViewDebugOptions;
+    currentValue = ProxyViewInteractiveProxies.DEFAULT;
 }
 
 /** Whether to highlight proxies that are connected to the selected node. */
