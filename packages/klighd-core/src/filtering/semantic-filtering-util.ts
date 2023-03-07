@@ -20,7 +20,7 @@ import { SKGraphElement } from "../skgraph-models"
 //// Base constructs ////
 
 /**
- * 
+ * Base interface for numeric intermediate results.
  */
 export interface NumericResult {
     num: number
@@ -473,7 +473,7 @@ export interface Filter {
 export function createFilter(rule: SemanticFilterRule): Filter {
 
     let ruleName;
-    if (rule instanceof SemanticFilterTag) {
+    if (isTag(rule)) {
         ruleName = rule.tag;
     } else {
         ruleName = rule.ruleName;
@@ -490,20 +490,34 @@ export function createFilter(rule: SemanticFilterRule): Filter {
             return evaluateRule(rule, tags);
         }
     }
-
 }
 
+/** Type narrowing function to check whether a semantic filter rule is a tag. */
+function isTag(rule: SemanticFilterTag | SemanticFilterRule): rule is SemanticFilterTag {
+    return (rule as SemanticFilterTag).tag !== undefined;
+}
+
+/** Type assertion function to assert that a semantic filter rule is a connective. */
+function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule is Connective {
+    if (!(rule as Connective).name !== undefined) {
+        throw new Error("Rule is not a Connective.");
+    }
+}
+
+/**
+ * Evaluates a rule that reutrns a numeric result.*/
 function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): number {
     // Rule is a Tag
-    if ((rule as SemanticFilterTag).tag !== undefined) {
-        const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag)
+    if (isTag(rule)) {
+        const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === rule.tag)
         if (nodeTag != undefined) {
             return nodeTag.num;
         } else {
             return 0;
         }
     } else {
-        switch  ((rule as Connective).name) {
+        assertIsConnective(rule);
+        switch  (rule.name) {
             case NumericConstantConnective.NAME:
                 return NumericConstantConnective.evaluate(rule as NumericConstantConnective);
             case NumericAdditionConnective.NAME:
@@ -524,12 +538,13 @@ function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag
 function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): boolean {
     
     // Rule is a Tag
-    if ((rule as SemanticFilterTag).tag !== undefined) {
-        return tags.some((tag: SemanticFilterTag) => tag.tag === (rule as SemanticFilterTag).tag);
+    if (isTag(rule)) {
+        return tags.some((tag: SemanticFilterTag) => tag.tag === rule.tag);
     }
 
     // Rule is a Connective
-    switch ((rule as Connective).name) {
+    assertIsConnective(rule);
+    switch (rule.name) {
         // Logic Connectives
         case TrueConnective.NAME:
             return TrueConnective.evaluate(rule as TrueConnective, tags);
