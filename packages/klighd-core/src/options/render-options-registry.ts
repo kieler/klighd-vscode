@@ -389,6 +389,7 @@ export class RenderOptionsRegistry extends Registry {
         this.notifyListeners();
     }
 
+    /** Registers a single render option. */
     register(Option: RenderOptionType): void {
         this._renderOptions.set(Option.ID, new Option())
     }
@@ -398,6 +399,7 @@ export class RenderOptionsRegistry extends Registry {
         Options.forEach(Option => this.register(Option))
     }
 
+    /** Unregisters a single render option. */
     unregister(Option: RenderOptionType): boolean {
         return this._renderOptions.delete(Option.ID)
     }
@@ -407,6 +409,7 @@ export class RenderOptionsRegistry extends Registry {
         return Options.every(Option => this.unregister(Option))
     }
 
+    /** Handles the render options actions. */
     handle(action: Action): void | Action | ICommand {
         if (SetRenderOptionAction.isThisAction(action)) {
             const option = this._renderOptions.get(action.id);
