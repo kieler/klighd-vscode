@@ -28,7 +28,7 @@ import {
     K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
 import { hasAction } from './skgraph-utils';
-import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints } from './views-common';
+import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints, isRotation, isTranslation, Rotation, Scale, Transformation, transformationToSVGString, Translation } from './views-common';
 import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
@@ -77,7 +77,7 @@ export function renderRectangularShape(
     childOfNodeTitle?: boolean): VNode {
 
     const gAttrs = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
+        ...(boundsAndTransformation.transformation.length !== 0 ? { transform: boundsAndTransformation.transformation.map(transformationToSVGString).join('') } : {})
     }
 
     // Check the invisibility first. If this rendering is supposed to be invisible, do not render it,
@@ -201,46 +201,8 @@ export function renderRectangularShape(
             throw new Error('Rendering is neither an KArc, KEllipse, KImage, nor a KRectangle or KRoundedRectangle!')
         }
     }
-    // Do not draw smart zoom placeholder/magnifying glass
-    // addSmartZoomAreaPlaceholder(element, parent, context)
 
     return element as VNode
-}
-
-/**
- * Renders the default magnifying symbol for smart zoom.
- * 
- * @param element The element to add the symbol to.
- * @param parent The parent graph element.
- * @param context The rendering context.
- */
-export function addSmartZoomAreaPlaceholder(element: VNode | undefined, parent: SKGraphElement, context: SKGraphModelRenderer): void {
-    if (element && context.depthMap) {
-        const region = context.depthMap.getProvidingRegion(parent as KNode, context.viewport, context.renderOptionsRegistry)
-        if (region && region.detail !== DetailLevel.FullDetails && parent.children.length >= 1) {
-            const offsetY = region.regionTitleHeight ?? 0
-            const offsetX = region.regionTitleIndentation ?? 0
-            const bounds = Math.min(region.boundingRectangle.bounds.height - offsetY, region.boundingRectangle.bounds.width - offsetX)
-            const size = 50
-            let scalingFactor = Math.max(bounds, 0) / size
-            // Use zoom for constant size in viewport.
-            if (context.viewport) {
-                scalingFactor = Math.min(1 / context.viewport.zoom, scalingFactor)
-            }
-
-            const y = scalingFactor > 0 ? offsetY / scalingFactor : 0
-            const x = scalingFactor > 0 ? offsetX / scalingFactor : 0
-            // Draw a loupe/magnifying glass.
-            const magnifyingSymbol = <g
-                transform={`scale(${scalingFactor}, ${scalingFactor}) translate(${x}, ${y})`}>
-                <circle cx="11" cy="11" r="8" stroke="#000000" fill="none" />
-                <line x1="21" x2="16.65" y1="21" y2="16.65" stroke="#000000" style={{ 'stroke-linecap': 'round', 'stroke-width': '2' }} />
-                <line x1="11" x2="11" y1="8" y2="14" stroke="#000000" stroke-linecap="round" />
-                <line x1="8" x2="14" y1="11" y2="11" stroke="#000000" stroke-linecap="round" />
-            </g>
-            element.children ? element.children.push(magnifyingSymbol) : element.children = [magnifyingSymbol]
-        }
-    }
 }
 
 /**
@@ -261,7 +223,7 @@ export function renderLine(rendering: KPolyline,
     childOfNodeTitle?: boolean): VNode {
 
     const gAttrs = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
+        ...(boundsAndTransformation.transformation.length !== 0 ? { transform: boundsAndTransformation.transformation.map(transformationToSVGString).join('') } : {})
     }
 
     // Check the invisibility first. If this rendering is supposed to be invisible, do not render it,
@@ -521,7 +483,7 @@ export function renderKText(rendering: KText,
     }
 
     const gAttrs = {
-        ...(boundsAndTransformation.transformation !== undefined ? { transform: boundsAndTransformation.transformation } : {})
+        ...(boundsAndTransformation.transformation.length !== 0 ? { transform: boundsAndTransformation.transformation.map(transformationToSVGString).join('') } : {})
     }
     // build the element from the above defined attributes and children
     return <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
@@ -926,18 +888,32 @@ export function renderKRendering(kRendering: KRendering,
             || kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height) {
             isOverlay = true
 
-            let boundingBox = boundsAndTransformation.bounds
+            const transformations = context.titleStorage.getTransformations()
+            let trueBoundingBoxAndTransformation = boundsAndTransformation
             // For KTexts the x and y coordinates define the origin of the baseline, not the bounding box.
             if (kRendering.type === K_TEXT) {
-                boundingBox = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true)?.bounds ?? boundingBox
+                trueBoundingBoxAndTransformation = findBoundsAndTransformationData(kRendering, styles, parent, context, isEdge, true) ?? trueBoundingBoxAndTransformation
             }
+
+            // Incorporate the parent rendering transformations for correct start placement
+            const renderingOffsets = {x: 0, y: 0}
+            let totalRotation = 0
+            // This does not yet check for alternative rotation mid points or bounds that get out of the bounds of the parent through the rotations.
+            transformations.concat(trueBoundingBoxAndTransformation.transformation).forEach((transformation: Transformation) => {
+                if (isTranslation(transformation)) {
+                    renderingOffsets.x += transformation.x
+                    renderingOffsets.y += transformation.y
+                } else if (isRotation(transformation)) {
+                    totalRotation += transformation.angle
+                }
+            })
 
 
             const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
-            const originalWidth = boundingBox.width
-            const originalHeight = boundingBox.height
-            const originalX = boundingBox.x
-            const originalY = boundingBox.y
+            const originalWidth = trueBoundingBoxAndTransformation.bounds.width
+            const originalHeight = trueBoundingBoxAndTransformation.bounds.height
+            const originalX = renderingOffsets.x
+            const originalY = renderingOffsets.y
 
             const maxScaleX = parentBounds.width / originalWidth
             const maxScaleY = parentBounds.height / originalHeight
@@ -963,14 +939,14 @@ export function renderKRendering(kRendering: KRendering,
             const newY = originalY - spaceT * (newHeight - originalHeight) / (spaceT + spaceB)
 
             // Apply the new bounds and scaling as the element's transformation.
-            const translateAndScale = `translate(${newX},${newY})scale(${scalingFactor})`
-            if (!providingRegion) {
-                // Add the transformations necessary for correct placement
-                const positionOffset = context.positions[context.positions.length - 1]
-                boundsAndTransformation.transformation = positionOffset + translateAndScale
-            } else {
-                boundsAndTransformation.transformation = translateAndScale
+            const translateAndScale: Transformation[] = []
+            translateAndScale.push({kind: 'translate', x: newX, y: newY} as Translation)
+            if (totalRotation !== 0) {
+                translateAndScale.push({kind: 'rotate', angle: totalRotation} as Rotation)
             }
+            translateAndScale.push({kind: 'scale', factor: scalingFactor} as Scale)
+            
+            boundsAndTransformation.transformation = translateAndScale
             // For text renderings, recalculate the required bounds the text needs with the updated data.
             if (kRendering.type === K_TEXT && (kRendering as KText).properties['klighd.calculated.text.bounds'] as Bounds) {
                 const rendering = kRendering as KText
@@ -999,11 +975,6 @@ export function renderKRendering(kRendering: KRendering,
                     height: originalHeight
                 }
             }
-            if (providingRegion) {
-                // Store exact height of title text
-                providingRegion.regionTitleHeight = newHeight
-                providingRegion.regionTitleIndentation = newX
-            }
             // Draw white background for overlaying titles
             if (context.depthMap && kRendering.properties['klighd.isNodeTitle'] as boolean
                 && kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds && (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <= titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height
@@ -1014,12 +985,14 @@ export function renderKRendering(kRendering: KRendering,
         }
     }
     // Add the transformations to be able to positon the title correctly and above other elements
-    context.positions[context.positions.length - 1] += (boundsAndTransformation?.transformation ?? "")
+    context.titleStorage.addTransformations(boundsAndTransformation.transformation)
 
     let svgRendering: VNode
     switch (kRendering.type) {
         case K_CONTAINER_RENDERING: {
             console.error('A rendering can not be a ' + kRendering.type + ' by itself, it needs to be a subclass of it.')
+            // Remove the transformations for the child again.
+            context.titleStorage.removeTransformations(boundsAndTransformation.transformation.length)
             return undefined
         }
         case K_CHILD_AREA: {
@@ -1029,6 +1002,8 @@ export function renderKRendering(kRendering: KRendering,
         case K_CUSTOM_RENDERING: {
             console.error('The rendering for ' + kRendering.type + ' is not implemented yet.')
             // data as KCustomRendering
+            // Remove the transformations for the child again.
+            context.titleStorage.removeTransformations(boundsAndTransformation.transformation.length)
             return undefined
         }
         case K_ARC:
@@ -1052,6 +1027,8 @@ export function renderKRendering(kRendering: KRendering,
         }
         default: {
             console.error('The rendering is of an unknown type:' + kRendering.type)
+            // Remove the transformations for the child again.
+            context.titleStorage.removeTransformations(boundsAndTransformation.transformation.length)
             return undefined
         }
     }
@@ -1059,9 +1036,11 @@ export function renderKRendering(kRendering: KRendering,
     if (overlayRectangle) {
         svgRendering.children?.unshift(overlayRectangle)
     }
+    // Remove the transformations for the child again.
+    context.titleStorage.removeTransformations(boundsAndTransformation.transformation.length)
     if (isOverlay) {
         // Don't render this now if we have an overlay, but remember it to be put on top by the node rendering.
-        context.titles[context.titles.length - 1].push(svgRendering)
+        context.titleStorage.setTitle(svgRendering)
         // If the overlay does not define actions, make it non-interactable to allow clicking through to elements behind.
         if (!hasAction(kRendering, true)) {
             // add pointer-events: none to the style attribute of this overlay.

@@ -22,6 +22,7 @@ import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
 import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
+import { TitleStorage } from './titles/title-storage';
 
 /**
  * Contains additional data and functionality needed for the rendering of SKGraphs.
@@ -32,15 +33,26 @@ export class SKGraphModelRenderer extends ModelRenderer {
         super(viewRegistry, targetKind, postprocessors)
     }
 
-    boundsMap: any
-    decorationMap: any
+    /**
+     * Map for all bounds related to KRenderingRefs, mapped by their rendering ID.
+     */
+    boundsMap: Record<string, unknown>
+    /**
+     * Map for all decoration data (bounds and rotation of decorators) related to KRenderingRefs, mapped by their rendering ID.
+     */
+    decorationMap: Record<string, unknown>
     depthMap?: DepthMap
+    /**
+     * Access to the rendering library, expected to be defined on the root graph element.
+     */
     kRenderingLibrary?: KRenderingLibrary
     mListener: KlighdInteractiveMouseListener
-    positions: string[]
     renderingDefs: Map<string, VNode>
     renderOptionsRegistry: RenderOptionsRegistry
-    titles: VNode[][]
+    /**
+     * Storage for the title renderings
+     */
+    titleStorage: TitleStorage = new TitleStorage()
     viewport: Viewport
     
 

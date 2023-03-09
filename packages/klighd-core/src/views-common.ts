@@ -495,56 +495,121 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
 }
 
 /**
- * Simple container interface to hold bounds and a SVG transformation string.
+ * Simple container interface to hold bounds and transformation data.
  */
 export interface BoundsAndTransformation {
     bounds: Bounds,
-    transformation: string | undefined
+    transformation: Transformation[]
+}
+
+/**
+ * Transformation data to be easily converted to SVG transformation strings. Data contained in sub-hierarchies.
+ */
+export interface Transformation {
+    kind: 'rotate' | 'scale' | 'translate'
+}
+
+/**
+ * A rotation, possibly around a center point. Can be converted to SVG transformation string as `rotate(angle[, x, y])`.
+ */
+export interface Rotation extends Transformation {
+    kind: 'rotate'
+    angle: number
+    x?: number
+    y?: number
+}
+
+export function isRotation(transformation: Transformation): transformation is Rotation {
+    return transformation.kind === 'rotate'
+}
+
+/**
+ * A scale. Can be converted to SVG transformation string as `scale(factor)`.
+ */
+export interface Scale extends Transformation {
+    kind: 'scale'
+    factor: number
+}
+
+export function isScale(transformation: Transformation): transformation is Scale {
+    return transformation.kind === 'scale'
+}
+
+/**
+ * A translation. Can be converted to SVG transformation string as `translate(x, y)`.
+ */
+export interface Translation extends Transformation {
+    kind: 'translate'
+    x: number
+    y: number
+}
+
+export function isTranslation(transformation: Transformation): transformation is Translation {
+    return transformation.kind === 'translate'
+}
+
+/**
+ * Converts the transformation into a String, that can be used for the SVG transformation attribute.
+ * @param transformation The transformation to convert.
+ * @returns An SVG transformation string.
+ */
+export function transformationToSVGString(transformation: Transformation): string {
+    if (isRotation(transformation)) {
+        if (transformation.x === undefined && transformation.y === undefined) {
+            return `${transformation.kind}(${transformation.angle})`
+        } else {
+            return `${transformation.kind}(${transformation.angle}, ${transformation.x}, ${transformation.y})`
+        }
+    } else if (isTranslation(transformation)) {
+        return `${transformation.kind}(${transformation.x}, ${transformation.y})`
+    } else if (isScale(transformation)) {
+        return `${transformation.kind}(${transformation.factor})`
+    } else {
+        console.error('A transformation has to be a rotation, scale, or translation, but is: ' + transformation + '. Error in code detected!')
+        return ''
+    }
 }
 
 /**
  * Calculates the SVG transformation string that has to be applied to the SVG element.
  * @param bounds The bounds of the rendering.
  * @param decoration The decoration of the rendering.
- * @param rotation The KRotation style of the rendering.
+ * @param kRotation The KRotation style of the rendering.
  * @param isEdge If the rendering is for an edge.
  * @param isText If the rendering is a text.
  */
-export function getTransformation(bounds: Bounds, decoration: Decoration, rotation: KRotation | undefined, isEdge?: boolean, isText?: boolean): string | undefined {
+export function getTransformation(bounds: Bounds, decoration: Decoration, kRotation: KRotation | undefined, isEdge?: boolean, isText?: boolean): Transformation[] {
     if (isEdge === undefined) {
         isEdge = false
     }
     if (isText === undefined) {
         isText = false
     }
-    let transform = ''
-    let isTransform = false
+    const transform: Transformation[] = []
     // Do the rotation for the element only if the decoration itself exists and is not 0.
     if (decoration !== undefined && toDegrees(decoration.rotation) !== 0) {
         // The rotation itself
-        transform += `rotate(${toDegrees(decoration.rotation)}`
-        isTransform = true
+        const rotation: Rotation = {kind: 'rotate', angle: toDegrees(decoration.rotation)}
         // If the rotation is around a point other than (0,0), add the additional parameters to the rotation.
         if (decoration.origin.x !== 0 || decoration.origin.y !== 0) {
-            transform += `,${decoration.origin.x},${decoration.origin.y}`
+            rotation.x = decoration.origin.x
+            rotation.y = decoration.origin.y
         }
-        transform += ')'
+        transform.push(rotation)
     }
 
     // Translate if there are bounds and if the transformation is not for an edge or a text. This replicates the behavior of KIELER as edges don't really define bounds.
     if (!isEdge && !isText && bounds !== undefined && (bounds.x !== 0 || bounds.y !== 0)) {
-        isTransform = true
-        transform += `translate(${bounds.x},${bounds.y})`
+        transform.push({kind: 'translate', x: bounds.x, y: bounds.y} as Translation)
     }
 
     // Rotate the element also if a KRotation style has to be applied
-    if (rotation !== undefined && rotation.rotation !== 0) {
+    if (kRotation !== undefined && kRotation.rotation !== 0) {
         // The rotation itself
-        transform += `rotate(${rotation.rotation}`
-        isTransform = true
+        const rotation: Rotation = {kind: 'rotate', angle: kRotation.rotation}
         // Rotate around a defined point other than (0,0) of the object only for non-edges. This replicates the behavior of KIELER as edges don't really define bounds.
         if (!isEdge) {
-            if (rotation.rotationAnchor === undefined) {
+            if (kRotation.rotationAnchor === undefined) {
                 // If the rotation anchor is undefined, rotate around the center by default.
                 const CENTER = {
                     x: {
@@ -558,18 +623,19 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, rotati
                         relative: 0.5
                     }
                 }
-                rotation.rotationAnchor = CENTER
+                kRotation.rotationAnchor = CENTER
             }
-            const rotationAnchor = evaluateKPosition(rotation.rotationAnchor, bounds, true)
+            const rotationAnchor = evaluateKPosition(kRotation.rotationAnchor, bounds, true)
 
             // If the rotation is around a point other than (0,0), add the additional parameters to the rotation.
             if (rotationAnchor.x !== 0 || rotationAnchor.y !== 0) {
-                transform += `,${rotationAnchor.x},${rotationAnchor.y}`
+                rotation.x = rotationAnchor.x
+                rotation.y = rotationAnchor.y
             }
         }
-        transform += ')'
+        transform.push(rotation)
     }
-    return (isTransform ? transform : undefined)
+    return transform
 }
 
 /**
@@ -657,8 +723,8 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
                 const id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
                 for (const rendering of context.kRenderingLibrary.renderings) {
                     if ((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string === id) {
-                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map']
-                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map']
+                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map'] as Record<string, unknown>
+                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map'] as Record<string, unknown>
                         return rendering as KRendering
                     }
                 }
