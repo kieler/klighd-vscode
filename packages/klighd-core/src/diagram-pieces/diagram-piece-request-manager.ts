@@ -151,6 +151,9 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
      * @returns Coordinate pair in the form {x: valueX, y: valueY}.
      */
     getCoords(key: number): Point {
+        if (key > 2147352576 + 32766) {
+            throw new Error("Invalid key");
+        }
         const keyX = (key >> 16)
         const keyY = (key & 0xFFFF)
         return { x: keyX, y: keyY }

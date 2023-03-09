@@ -13,7 +13,7 @@ describe('coordinate-integer-conversion', () => {
 
     it('getKey throws an error if coordinates are larger than 16 bit unsigned integers', () => {
         const manager = new GridDiagramPieceRequestManager();
-        expect(() => manager.getKey({ x: 32768, y: 32768 })).to.throw;
+        expect(() => manager.getKey({ x: 32768, y: 32768 })).to.throw("Invalid x or y coordinates");
     });
 
     it('getCoords decodes a 32 bit integer into two 16 bit coordinates', () => {
@@ -27,6 +27,6 @@ describe('coordinate-integer-conversion', () => {
 
     it('getCoords throws an error if the integer is larger than 32 bit', () => {
         const manager = new GridDiagramPieceRequestManager();
-        expect(manager.getCoords(2147352576 + 32766 + 1)).to.throw;
+        expect(() => manager.getCoords(2147352576 + 32766 + 1)).to.throw("Invalid key");
     });
 });
