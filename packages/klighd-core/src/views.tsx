@@ -97,7 +97,6 @@ export class KNodeView implements IView {
             }
         }
 
-        ctx.titleStorage.decendToChild()
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -174,7 +173,6 @@ export class KNodeView implements IView {
             if (title !== undefined) {
                 result.push(title)
             }
-            ctx.titleStorage.ascendToParent()
             return <g>{...result}</g>
         }
 
@@ -189,7 +187,6 @@ export class KNodeView implements IView {
             if (title !== undefined) {
                 result.push(title)
             }
-            ctx.titleStorage.ascendToParent()
             return <g>
                 {title ?? []}
                 {ctx.renderChildren(node)}
@@ -211,7 +208,6 @@ export class KNodeView implements IView {
         if (title !== undefined) {
             result.push(title)
         }
-        ctx.titleStorage.ascendToParent()
         return <g>{...result}</g>
     }
 }
@@ -236,7 +232,6 @@ export class KPortView implements IView {
             }
         }
 
-        ctx.titleStorage.decendToChild()
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
         const rendering = getRendering(port.data, port, new KStyles, ctx)
@@ -247,7 +242,6 @@ export class KPortView implements IView {
                 {ctx.renderChildren(port)}
             </g>
 
-            ctx.titleStorage.ascendToParent()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
@@ -271,7 +265,6 @@ export class KPortView implements IView {
             </g>
         }
 
-        ctx.titleStorage.ascendToParent()
         return element
     }
 }
@@ -294,7 +287,6 @@ export class KLabelView implements IView {
                 return undefined
             }
         }
-        ctx.titleStorage.decendToChild()
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -312,7 +304,6 @@ export class KLabelView implements IView {
                 {ctx.renderChildren(label)}
             </g>
 
-            ctx.titleStorage.ascendToParent()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
@@ -336,7 +327,6 @@ export class KLabelView implements IView {
             </g>
         }
 
-        ctx.titleStorage.ascendToParent()
         return element
     }
 }

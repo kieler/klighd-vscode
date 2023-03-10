@@ -17,7 +17,7 @@
 
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { VNode } from 'snabbdom';
-import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SParentElement, ViewRegistry } from 'sprotty';
+import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SModelElement, SParentElement, ViewRegistry } from 'sprotty';
 import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
@@ -88,5 +88,13 @@ export class SKGraphModelRenderer extends ModelRenderer {
                 return this.renderElement(child)
             })
             .filter(vnode => vnode !== undefined) as VNode[]
+    }
+
+    /** @inheritdoc */
+    renderElement(element: Readonly<SModelElement>): VNode | undefined {
+        this.titleStorage.decendToChild()
+        const node =  super.renderElement(element)
+        this.titleStorage.ascendToParent()
+        return node
     }
 }
