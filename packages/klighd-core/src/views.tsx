@@ -58,8 +58,7 @@ export class SKGraphView implements IView {
         if (viewport) {
             ctx.viewport = viewport
         }
-        ctx.titles = []
-        ctx.positions = []
+        ctx.titleStorage.clear()
 
         // Add depthMap to context for rendering, when required.
         const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
@@ -105,8 +104,6 @@ export class KNodeView implements IView {
             }
         }
 
-        ctx.titles.push([])
-        ctx.positions.push("")
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -179,8 +176,10 @@ export class KNodeView implements IView {
                 result.push(interactiveNodes)
             }
             result.push(...children)
-            result.push(...(ctx.titles.pop() ?? []))
-            ctx.positions.pop()
+            const title = ctx.titleStorage.getTitle()
+            if (title !== undefined) {
+                result.push(title)
+            }
             return <g>{...result}</g>
         }
 
@@ -191,9 +190,12 @@ export class KNodeView implements IView {
         if (rendering !== undefined) {
             result.push(rendering)
         } else {
-            ctx.positions.pop()
+            const title = ctx.titleStorage.getTitle()
+            if (title !== undefined) {
+                result.push(title)
+            }
             return <g>
-                {ctx.titles.pop() ?? []}
+                {title ?? []}
                 {ctx.renderChildren(node)}
             </g>
         }
@@ -209,8 +211,10 @@ export class KNodeView implements IView {
         } else if (!node.areNonChildAreaChildrenRendered) {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
-        result.push(...(ctx.titles.pop() ?? []))
-        ctx.positions.pop()
+        const title = ctx.titleStorage.getTitle()
+        if (title !== undefined) {
+            result.push(title)
+        }
         return <g>{...result}</g>
     }
 }
@@ -235,19 +239,16 @@ export class KPortView implements IView {
             }
         }
 
-        ctx.titles.push([])
-        ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
         const rendering = getRendering(port.data, port, new KStyles, ctx)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             const element = <g>
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderChildren(port)}
             </g>
 
-            ctx.positions.pop()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
@@ -255,23 +256,22 @@ export class KPortView implements IView {
         if (!port.areChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderChildren(port)}
             </g>
         } else if (!port.areNonChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderNonChildAreaChildren(port)}
             </g>
         } else {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
             </g>
         }
 
-        ctx.positions.pop()
         return element
     }
 }
@@ -294,8 +294,6 @@ export class KLabelView implements IView {
                 return undefined
             }
         }
-        ctx.titles.push([])
-        ctx.positions.push("")
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -309,10 +307,10 @@ export class KLabelView implements IView {
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             const element = <g>
-                {ctx.renderChildren(label).push(...ctx.titles.pop() ?? [])}
+                {ctx.titleStorage.getTitle() ?? []}
+                {ctx.renderChildren(label)}
             </g>
 
-            ctx.positions.pop()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
@@ -320,23 +318,22 @@ export class KLabelView implements IView {
         if (!label.areChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderChildren(label)}
             </g>
         } else if (!label.areNonChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderNonChildAreaChildren(label)}
             </g>
         } else {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
             </g>
         }
 
-        ctx.positions.pop()
         return element
     }
 }

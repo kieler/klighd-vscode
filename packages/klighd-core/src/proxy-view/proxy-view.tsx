@@ -1285,7 +1285,7 @@ export class ProxyView extends AbstractUIExtension {
                 props["klighd.lsp.calculated.decoration"] = { ...props["klighd.lsp.calculated.decoration"], origin: target, rotation: angle };
             } else if (ctx.decorationMap && ctx.decorationMap[id]) {
                 // Arrow head was in rendering refs
-                props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id], origin: target, rotation: angle };
+                props["klighd.lsp.calculated.decoration"] = { ...ctx.decorationMap[id] as any, origin: target, rotation: angle };
             } else {
                 // Better not to show arrow head as it would be floating around somewhere
                 return [];
