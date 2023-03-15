@@ -28,7 +28,7 @@ import {
     K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
 import { hasAction } from './skgraph-utils';
-import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints, isRotation, isTranslation, Rotation, Scale, Transformation, transformationToSVGString, Translation } from './views-common';
+import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints, isRotation, isTranslation, reverseTransformations, Rotation, Scale, Transformation, transformationToSVGString, Translation } from './views-common';
 import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
@@ -43,7 +43,30 @@ import {
  * @param propagatedStyles The styles propagated from parent elements that should be taken into account.
  * @param context The rendering context for this element.
  */
-export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, propagatedStyles: KStyles, context: SKGraphModelRenderer): VNode {
+export function renderChildArea(
+    rendering: KChildArea,
+    parent: SKGraphElement,
+    boundsAndTransformation: BoundsAndTransformation,
+    context: SKGraphModelRenderer): VNode {
+
+    // Sprotty expects the graph elements to always be relative to the parent element, while KLighD usually has the graph elements relative to the child area.
+    // Here we expect the graph elements to behave as Sprotty expects, thus requiring to reverse offset the transformation towards this child area again.
+
+    // First, we need to find the total transformations that were applied to the child area.
+    const totalTansformation = [...context.titleStorage.getTransformations()]
+
+    // Second, we need to find the transformation only applicable to the current child area.
+    const childAreaTransformation = boundsAndTransformation.transformation
+
+    // Finally, we need to reverse the translation that was applied to every element hierarchially above of the child area.
+    // Note that this causes a little difference in what the coordinates are relative to the parent graph element, as entire child area rotations that are possible in KLighD are
+    // not possible in Sprotty.
+    totalTansformation.splice(totalTansformation.length - childAreaTransformation.length, childAreaTransformation.length)
+    const reverseTranslation: Transformation[] = reverseTransformations(totalTansformation.filter(transformation => isTranslation(transformation)))
+
+    const gAttrs = {
+        ...(reverseTranslation.length !== 0 ? { transform: reverseTranslation.map(transformationToSVGString).join('') } : {})
+    }
     if (parent.areChildAreaChildrenRendered) {
         console.error('This element contains multiple child areas, skipping this one.')
         return <g />
@@ -51,7 +74,7 @@ export function renderChildArea(rendering: KChildArea, parent: SKGraphElement, p
     // remember, that this parent's children are now already rendered
     parent.areChildAreaChildrenRendered = true
 
-    const element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string}>
+    const element = <g {...gAttrs} id={rendering.properties['klighd.lsp.rendering.id'] as string}>
         {context.renderChildAreaChildren(parent)}
     </g>
 
@@ -996,7 +1019,7 @@ export function renderKRendering(kRendering: KRendering,
             return undefined
         }
         case K_CHILD_AREA: {
-            svgRendering = renderChildArea(kRendering as KChildArea, parent, propagatedStyles, context)
+            svgRendering = renderChildArea(kRendering as KChildArea, parent, boundsAndTransformation, context)
             break
         }
         case K_CUSTOM_RENDERING: {
