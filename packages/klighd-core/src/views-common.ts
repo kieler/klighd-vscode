@@ -571,6 +571,42 @@ export function transformationToSVGString(transformation: Transformation): strin
 }
 
 /**
+ * Reverses an array of transformations such that applying the transformation and its reverse counterpart will result in the identity transformation.
+ * @param transformations The transformations to reverse.
+ * @returns The reversed transformations.
+ */
+export function reverseTransformations(transformations: Transformation[]): Transformation[] {
+    return transformations.map(transformation => reverseTransformation(transformation)).reverse()
+}
+
+/**
+ * Reverses a transformation such that applying the transformation and its reverse counterpart will result in the identity transformation.
+ * @param transformation The transformation to reverse.
+ * @returns The reversed transformation.
+ */
+export function reverseTransformation(transformation: Transformation): Transformation {
+    if (isTranslation(transformation)) {
+        return {
+            kind: 'translate',
+            x: -transformation.x,
+            y: -transformation.y
+        } as Translation
+    } else if (isRotation(transformation)) {
+        return {
+            kind: 'rotate',
+            angle: -transformation.angle,
+            x: transformation.x,
+            y: transformation.y
+        } as Rotation
+    } else {
+        return {
+            kind: 'scale',
+            factor: 1 / (transformation as Scale).factor
+        } as Scale
+    }
+}
+
+/**
  * Calculates the SVG transformation string that has to be applied to the SVG element.
  * @param bounds The bounds of the rendering.
  * @param decoration The decoration of the rendering.
