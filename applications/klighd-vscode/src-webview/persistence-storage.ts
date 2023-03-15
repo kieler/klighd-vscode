@@ -25,7 +25,8 @@ import { PersistenceMessage } from "../src/storage/messages";
  */
 export class MessagePersistenceStorage implements PersistenceStorage {
 
-    vscodeApi: VsCodeApi;
+    /** The VS Code API to send messages to the extension. */
+    private vscodeApi: VsCodeApi;
 
     /** Local cache of reported data to speed up reads. */
     private cache: Record<string, any>;
