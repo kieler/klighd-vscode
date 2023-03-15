@@ -24,7 +24,7 @@ import { Action, angleOfPoint, Bounds, CenterAction, FitToScreenAction, Point } 
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
+import { isContainerRendering, K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-common";
 import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
@@ -1336,7 +1336,7 @@ export class ProxyView extends AbstractUIExtension {
         styles.push({ color, type: K_FOREGROUND, selection: true });
         styles.push({ color, type: K_BACKGROUND, selection: true });
 
-        if ("children" in clone) {
+        if (isContainerRendering(clone)) {
             // Keep going recursively
             (clone as any).children = this.changeColor((clone as any).children, ctx, color);
         }
