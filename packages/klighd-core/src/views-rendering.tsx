@@ -189,7 +189,7 @@ export function renderRectangularShape(
         // eslint-disable-next-line
         case K_ELLIPSE: {
             element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGEllipse(boundsAndTransformation.bounds, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
+                {...renderSVGEllipse(boundsAndTransformation.bounds, styles.kLineWidth.lineWidth, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
@@ -204,7 +204,7 @@ export function renderRectangularShape(
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
             element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGRect(boundsAndTransformation.bounds, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
+                {...renderSVGRect(boundsAndTransformation.bounds, styles.kLineWidth.lineWidth, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
@@ -590,6 +590,7 @@ export function renderWithShadow<T extends any[]>(
  * Renders a rectangle with all given information.
  * 
  * @param bounds bounds data calculated for this rectangle.
+ * @param lineWidth width of the line to offset the rectangle's position and size by.
  * @param rx rx parameter of SVG rect
  * @param ry ry parameter of SVG rect
  * @param lineStyles style information for lines (stroke etc.)
@@ -598,8 +599,8 @@ export function renderWithShadow<T extends any[]>(
  * @param kShadow general shadow information.
  * @returns An array of SVG <rects> resulting from this. Only multiple <rect>s if a simple shadow effect should be applied.
  */
-export function renderSVGRect(bounds: Bounds, rx: number, ry: number, lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, kShadow: KShadow | undefined): VNode[] {
-    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGRect, bounds, rx, ry, lineStyles, colorStyles)
+export function renderSVGRect(bounds: Bounds, lineWidth: number, rx: number, ry: number, lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, kShadow: KShadow | undefined): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGRect, bounds, rx, ry, lineWidth, lineStyles, colorStyles)
 }
 
 /**
@@ -612,18 +613,27 @@ export function renderSVGRect(bounds: Bounds, rx: number, ry: number, lineStyles
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
  * @param kShadow shadow information. Controls what this method does.
  * @param bounds bounds data calculated for this rectangle.
+ * @param lineWidth width of the line to offset the rectangle's position and size by.
  * @param rx rx parameter of SVG rect
  * @param ry ry parameter of SVG rect
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @returns A single SVG <rect>.
  */
-export function renderSingleSVGRect(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, bounds: Bounds, rx: number, ry: number, lineStyles: LineStyles, colorStyles: ColorStyles): VNode {
+export function renderSingleSVGRect(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, bounds: Bounds, rx: number, ry: number, lineWidth: number, lineStyles: LineStyles, colorStyles: ColorStyles): VNode {
+    // Offset the x/y by the lineWidth.
+    let theX: number | undefined = x ? x : 0
+    theX += lineWidth / 2
+    theX = theX === 0 ? undefined : theX
+    let theY: number | undefined = y ? y : 0
+    theY += lineWidth / 2
+    theY = theY === 0 ? undefined : theY
+
     return <rect
-        width={bounds.width}
-        height={bounds.height}
-        {...(x ? { x: x } : {})}
-        {...(y ? { y: y } : {})}
+        width={bounds.width - lineWidth}
+        height={bounds.height - lineWidth}
+        {...(theX ? { x: theX } : {})}
+        {...(theY ? { y: theY } : {})}
         {...(rx ? { rx: rx } : {})}
         {...(ry ? { ry: ry } : {})}
         style={{
@@ -739,14 +749,15 @@ export function renderSingleSVGArc(x: number | undefined, y: number | undefined,
 /**
  * Renders an ellipse with all given information.
  * 
+ * @param lineWidth width of the line to offset the ellipse's position and size by.
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
  * @param kShadow general shadow information.
  * @returns An array of SVG <ellipse>s resulting from this. Only multiple <ellipse>s if a simple shadow effect should be applied.
  */
-export function renderSVGEllipse(bounds: Bounds, lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, kShadow: KShadow | undefined): VNode[] {
-    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGEllipse, bounds, lineStyles, colorStyles)
+export function renderSVGEllipse(bounds: Bounds, lineWidth: number, lineStyles: LineStyles, colorStyles: ColorStyles, shadowStyles: string | undefined, kShadow: KShadow | undefined): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGEllipse, bounds, lineWidth, lineStyles, colorStyles)
 }
 
 /**
@@ -759,17 +770,18 @@ export function renderSVGEllipse(bounds: Bounds, lineStyles: LineStyles, colorSt
  * @param shadowStyles specific shadow filter ID, if this element should be drawn with a smooth shadow and no simple one.
  * @param kShadow shadow information. Controls what this method does.
  * @param bounds bounds data calculated for this ellipse.
+ * @param lineWidth width of the line to offset the ellipse's position and size by.
  * @param lineStyles style information for lines (stroke etc.)
  * @param colorStyles style information for color
  * @returns A single SVG <ellipse>.
  */
-export function renderSingleSVGEllipse(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, bounds: Bounds, lineStyles: LineStyles, colorStyles: ColorStyles): VNode {
+export function renderSingleSVGEllipse(x: number | undefined, y: number | undefined, shadowStyles: string | undefined, kShadow: KShadow | undefined, bounds: Bounds, lineWidth: number, lineStyles: LineStyles, colorStyles: ColorStyles): VNode {
     return <ellipse
         {...(x && y ? { transform: `translate(${x},${y})` } : {})}
         cx={bounds.width / 2}
         cy={bounds.height / 2}
-        rx={bounds.width / 2}
-        ry={bounds.height / 2}
+        rx={bounds.width / 2 - lineWidth / 2}
+        ry={bounds.height / 2 - lineWidth / 2}
         style={{
             ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
             ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
