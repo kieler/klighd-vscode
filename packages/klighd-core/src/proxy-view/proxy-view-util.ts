@@ -38,13 +38,19 @@ export interface TransformAttributes extends Bounds {
 
 /** 
  * Contains all canvas-related attributes.
- * @acronym CRF - Canvas Reference Frame.
- * @acronym GRF - Global Reference Frame.
+ * CRF - Canvas Reference Frame.
+ * The canvas reference frames is the coordinate system defined by the viewport bounds.
+ * The position (0,0) is in the top left corner of the viewport on the canvas. This means
+ * that scroll and zoom are already accounted for.
+ * GRF - Global Reference Frame.
+ * The global reference frame is the coordinate system defined by the svg bounds. The 
+ * position (0,0) is the top left corner of the svg. All coordinates are absolute
+ * positions in the svg.
  * @example (x, y, width, height, scroll, zoom)
  */
 export interface Canvas extends Viewport, Bounds {
     /**
-     * Whether the canvas is in GRF, e.g. not in CRF.
+     * Whether the canvas is in GRF, i.e. not in CRF.
      * Usually doesn't need to be set explicitly - handled by translation methods.
      * When the canvas hasn't been translated yet, this should be `undefined` or `false`,
      * as the canvas should be in the CRF.
