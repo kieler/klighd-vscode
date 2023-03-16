@@ -34,7 +34,7 @@ import { CheckOption } from "./components/option-inputs";
 import { SynthesisPicker } from "./components/synthesis-picker";
 import { PossibleQuickAction, QuickActionOption } from "./option-models";
 import { OptionsRenderer } from "./options-renderer";
-import { PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "./render-options-registry";
+import { DebugOptions, PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "./render-options-registry";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -164,7 +164,8 @@ export class GeneralPanel extends SidebarPanel {
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Render Options</h5>
                     {this.optionsRenderer.renderRenderOptions(
-                        this.renderOptionsRegistry.allRenderOptions
+                        this.renderOptionsRegistry.allRenderOptions,
+                        this.renderOptionsRegistry.getValue(DebugOptions) as boolean
                     )}
                 </div>
                 <div class-options__section="true">

@@ -18,12 +18,6 @@
 import { RenderOption, TransformationOptionType } from "../../options/option-models";
 import { ProxyViewCategory } from "../proxy-view-options";
 
-/**
- * Whether proxy-view debug filter should be hidden from the sidebar.
- * `true` hides all debug filter, `false` shows all debug filter.
- */
-const hideProxyViewDebugFilter = true;
-
 /** The category containing proxy-view filters. */
 export class ProxyViewFilterCategory implements RenderOption {
     static readonly ID: string = "proxy-view-filter-category";
@@ -79,7 +73,7 @@ export class ProxyViewFilterUnselected implements RenderOption {
     readonly initialValue: boolean = ProxyViewFilterUnselected.DEFAULT;
     readonly description: string = ProxyViewFilterUnselected.DESCRIPTION;
     readonly renderCategory: string = ProxyViewFilterCategory.ID;
-    invisible = hideProxyViewDebugFilter;
+    readonly debug: boolean = true;
     currentValue = ProxyViewFilterUnselected.DEFAULT;
 }
 
@@ -104,6 +98,6 @@ export class ProxyViewFilterDistant implements RenderOption {
     readonly description: string = ProxyViewFilterDistant.DESCRIPTION;
     readonly renderCategory: string = ProxyViewFilterCategory.ID;
     readonly values: string[] = ProxyViewFilterDistant.CHOICES;
-    invisible = hideProxyViewDebugFilter;
+    readonly debug: boolean = true;
     currentValue = ProxyViewFilterDistant.DEFAULT;
 }

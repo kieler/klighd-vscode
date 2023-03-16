@@ -14,8 +14,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { nanoid } from "nanoid/non-secure";
+// reflect-metadata needs to be imported before anything else to make any code requiring inversify.js to work.
+// See https://stackoverflow.com/questions/37534890/inversify-js-reflect-hasownmetadata-is-not-a-function
 import "reflect-metadata";
+// The other imports.
+import { DebugOptions, SetRenderOptionAction } from '@kieler/klighd-core';
+import { nanoid } from "nanoid/non-secure";
 import { Action, isAction } from "sprotty-protocol";
 import * as vscode from "vscode";
 import { CommonLanguageClient } from "vscode-languageclient";
@@ -150,6 +154,17 @@ export function activate(context: vscode.ExtensionContext): void {
             extension.webviews.forEach((webview) => webview.dispatch(action));
         })
     );
+
+    // Command to show debug options.
+    context.subscriptions.push(
+        vscode.commands.registerCommand(command.debugOptions, () => {
+            // All registered extensions should show the debug options.
+            for (const id of extensionMap.keys()) {
+                vscode.commands.executeCommand(command.dispatchAction, id, SetRenderOptionAction.create(DebugOptions.ID, true))
+            }
+        })
+    );
+
 }
 
 function isLanguageClient(client: unknown): client is CommonLanguageClient {

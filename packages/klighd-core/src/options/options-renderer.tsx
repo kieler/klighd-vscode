@@ -280,11 +280,11 @@ export class OptionsRenderer {
     }
 
     /** Renders render options that are stored in the client. An example would be "show constraints" */
-    renderRenderOptions(renderOptions: RenderOption[], renderCategory?: RenderOption): (VNode | "")[] | "" {
+    renderRenderOptions(renderOptions: RenderOption[], debug: boolean, renderCategory?: RenderOption): (VNode | "")[] | "" {
         if (renderOptions.length === 0) return "";
 
         return renderOptions
-            .filter(option => !option.invisible)
+            .filter(option => debug || !option.debug)
             .filter(option => option.renderCategory === renderCategory?.id)
             .map((option) => {
             switch (option.type) {
@@ -328,7 +328,7 @@ export class OptionsRenderer {
                             {/* Skip rendering the children if the category is closed */}
                             {!option.currentValue
                                 ? ""
-                                : this.renderRenderOptions(renderOptions, option)}
+                                : this.renderRenderOptions(renderOptions, debug, option)}
                         </CategoryOption>
                     );
                 case TransformationOptionType.CHOICE:

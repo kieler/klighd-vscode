@@ -124,7 +124,6 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
                 readonly initialValue: boolean = ProxyViewSemanticFilter.DEFAULT;
                 readonly renderCategory: string = ProxyViewSemanticFilterCategory.ID;
                 currentValue: boolean = ProxyViewSemanticFilter.DEFAULT;
-                invisible = false;
             }
         ));
         // To ensure correct indexing, also initialize the values
@@ -169,5 +168,5 @@ export class ProxyViewAbstractSemanticFilter implements RenderOption {
     type: TransformationOptionType;
     initialValue: any;
     currentValue: any;
-    invisible = true;
+    readonly debug: boolean = true;
 }
