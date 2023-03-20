@@ -779,8 +779,6 @@ export class ProxyView extends AbstractUIExtension {
         nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvasCRF: Canvas, onePercentOffsetGRF: number, ctx: SKGraphModelRenderer)
         : { edge: SKEdge, transform: TransformAttributes } | undefined {
         // TODO: on spline renderings, always bundle the bend points together in pairs/3s, such that the edge remains smooth.
-        //TODO: The edge start/end decorators should be shown, regardless of the rendering type. This may be difficult to differentiate between head/tail decorators and other decorators such as bend points, though.
-        // Plan: head decorators are those with relative position = 1, tail decorators are those with relative position = 0 and should be repositioned if necessary, all other relative positions between 0 and 1 should be kept as is.
         // Connected to node, just calculate absolute coordinates + basic translation
         const parentPos = this.getAbsolutePosition(node.parent as SKNode);
 
@@ -906,8 +904,13 @@ export class ProxyView extends AbstractUIExtension {
             }
 
             //// Finally, add source at its correct spot
-            routingPoints.unshift(source);
-            routingPoints.push(target);
+            // Avoid duplicate source/target points.
+            if (routingPoints[0] !== source) {
+                routingPoints.unshift(source);
+            }
+            if (routingPoints[routingPoints.length - 1] !== target) {
+                routingPoints.push(target);
+            }
         } else {
             // Should never be the case, must be called with a routing strategy enabled
             return undefined;
@@ -1273,6 +1276,12 @@ export class ProxyView extends AbstractUIExtension {
         }
         return res;
     }
+
+    // TODO: The edge start/end decorators should be shown, regardless of the rendering type. This needs to differentiate between head/tail decorators and other decorators such as bend points.
+    // Plan: head decorators are those with relative position = 1, tail decorators are those with relative position = 0 and should be repositioned if necessary, all other relative positions between 0 and 1 should be kept as is.
+    // To do this, this really should incorporate the decoration / placement data of the decorators, which is currently not sent to the client or handled here.
+    // For now I'll leave this as this hacky solution, which just takes the first polygon rendering and places it at the end of the edge.
+    // When we have micro layout on the client, this should be done properly.
 
     /** Returns a copy of `edgeData` with the decorators placed at `target`, angled from `prev` to `target`. */
     private placeDecorator(edgeData: KGraphData[], ctx: SKGraphModelRenderer, prev: Point, target: Point): KGraphData[] {
