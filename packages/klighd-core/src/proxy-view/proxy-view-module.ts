@@ -25,6 +25,11 @@ import { ProxyViewActionHandler } from "./proxy-view-actions";
 import { SelectedElementsUtilActionHandler } from "./proxy-view-util";
 
 export const proxyViewModule = new ContainerModule((bind) => {
+    // Make sure the selection handler is registered before the proxy view,
+    // as that one depends on it.
+    bind(SelectedElementsUtilActionHandler).toSelf().inSingletonScope();
+    bind(TYPES.IActionHandlerInitializer).toService(SelectedElementsUtilActionHandler);
+
     // The class needs to be bound to itself and
     // we have to let Sprotty know our service is a UIExtension
     // Using a symbol for binding helps mitigate other problems
@@ -34,9 +39,6 @@ export const proxyViewModule = new ContainerModule((bind) => {
     bind(ProxyViewActionHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler);
     bind(TYPES.MouseListener).toService(ProxyViewActionHandler);
-
-    bind(SelectedElementsUtilActionHandler).toSelf().inSingletonScope();
-    bind(TYPES.IActionHandlerInitializer).toService(SelectedElementsUtilActionHandler);
 
     bind(ProxyFilterHandler).toSelf().inSingletonScope();
     bind(TYPES.IActionHandlerInitializer).toService(ProxyFilterHandler);
