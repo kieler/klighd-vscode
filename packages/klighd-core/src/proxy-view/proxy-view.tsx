@@ -851,7 +851,7 @@ export class ProxyView extends AbstractUIExtension {
                 width: proxyGRFRelToParent.width + 2 * proxyEdgePadding,
                 height: proxyGRFRelToParent.height + 2 * proxyEdgePadding
             }
-            const insideProxy = (p: Point) => Bounds.includes(proxyGRFRelToParentWithPadding, p);
+            const outsideProxy = (p: Point) => !Bounds.includes(proxyGRFRelToParentWithPadding, p);
 
             if (this.simpleAlongBorderRouting) {
                 // Just cap each routing point to the canvas, can cause strange artifacts if an edge e.g. oscillates
@@ -859,7 +859,7 @@ export class ProxyView extends AbstractUIExtension {
                     // Cap to canvas
                     .map(cap)
                     // Don't add points that are inside the proxy
-                    .filter(insideProxy)
+                    .filter(outsideProxy)
                     // Cap to canvas and add to routingPoints
                     .forEach(add);
             } else {
@@ -875,7 +875,7 @@ export class ProxyView extends AbstractUIExtension {
                     if (intersection) {
                         // Found an intersection
                         canvasEdgeIntersection = intersection;
-                        if (!insideProxy(canvasEdgeIntersection)) {
+                        if (outsideProxy(canvasEdgeIntersection)) {
                             // Don't add a point inside of the proxy
                             addCap(canvasEdgeIntersection);
                         }
@@ -883,7 +883,7 @@ export class ProxyView extends AbstractUIExtension {
 
                     // Add p to keep routing points consistent
                     prevPoint = p;
-                    if (Bounds.includes(canvasGRFRelToParent, p) && !insideProxy(p)) {
+                    if (Bounds.includes(canvasGRFRelToParent, p) && outsideProxy(p)) {
                         // Don't add a point that is off-screen or inside the proxy
                         add(p);
                     }
@@ -900,7 +900,7 @@ export class ProxyView extends AbstractUIExtension {
                 const preferTop = proxyConnectorGRF.y < (canvasOffTop + canvasOffBottom) / 2;
                 const borderPoints = Canvas.routeAlongBorder(canvasEdgeIntersection, canvasOffset, transform, canvasGRFRelToParent, preferLeft, preferTop);
                 // Remove points inside of proxy and add remaining
-                borderPoints.filter(p => !insideProxy(p)).forEach(addCap);
+                borderPoints.filter(outsideProxy).forEach(addCap);
             }
 
             //// Finally, add source at its correct spot
