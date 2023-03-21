@@ -14,7 +14,7 @@
     "directory": "packages/klighd-core"
   },
   "scripts": {
-    "clean": "rm -rf lib",
+    "clean": "rimraf lib",
     "lint": "eslint .",
     "build": "tsc",
     "watch": "tsc -w",
@@ -24,6 +24,7 @@
     "sprotty": "0.11.1"
   },
   "devDependencies": {
+    "rimraf": "^4.4.0",
     "semver": "^7.3.5"
   },
   "files": [
