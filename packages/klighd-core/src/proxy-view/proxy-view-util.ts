@@ -595,7 +595,7 @@ export function getIntersection(p1: Point, p2: Point, bounds: Bounds): Point | u
             // Intersection at x, find y
             const leftOrRight = p2.x < bounds.x ? bounds.x : bounds.x + bounds.width;
 
-            // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
+            // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be +-inf
             const scalar = capNumber((leftOrRight - p1.x) / (p2.x - p1.x), 0, 1);
 
             // Intersection point, cap to canvas with offset (and to sidebar aswell)
@@ -605,7 +605,7 @@ export function getIntersection(p1: Point, p2: Point, bounds: Bounds): Point | u
             // Intersection at y, find x
             const topOrBottom = p2.y < bounds.y ? bounds.y : bounds.y + bounds.height;
 
-            // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be ±inf
+            // Scalar of line equation, must be in [0,1] as to not be before p1 or after p2, could be +-inf
             const scalar = capNumber((topOrBottom - p1.y) / (p2.y - p1.y), 0, 1);
 
             // Intersection point
@@ -618,7 +618,7 @@ export function getIntersection(p1: Point, p2: Point, bounds: Bounds): Point | u
             // Intersection at x, find y
             const leftOrRight = p1.x < bounds.x ? bounds.x : bounds.x + bounds.width;
 
-            // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
+            // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be +-inf
             const scalar = capNumber((leftOrRight - p2.x) / (p1.x - p2.x), 0, 1);
 
             // Intersection point, cap to canvas with offset (and to sidebar aswell)
@@ -628,7 +628,7 @@ export function getIntersection(p1: Point, p2: Point, bounds: Bounds): Point | u
             // Intersection at y, find x
             const topOrBottom = p1.y < bounds.y ? bounds.y : bounds.y + bounds.height;
 
-            // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be ±inf
+            // Scalar of line equation, must be in [0,1] as to not be before p2 or after p1, could be +-inf
             const scalar = capNumber((topOrBottom - p2.y) / (p1.y - p2.y), 0, 1);
 
             // Intersection point
