@@ -24,7 +24,7 @@ import { Action, angleOfPoint, Bounds, CenterAction, FitToScreenAction, Point } 
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { isContainerRendering, K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
+import { isContainerRendering, isPolyline, K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { getKRendering } from "../views-common";
 import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
@@ -1374,7 +1374,7 @@ export class ProxyView extends AbstractUIExtension {
             (clone as any).children = this.changeColor((clone as any).children, ctx, color);
         }
 
-        if ("junctionPointRendering" in clone) {
+        if (isPolyline(clone) && clone.junctionPointRendering !== undefined) {
             // Keep going recursively
             (clone as any).junctionPointRendering = this.changeColor([(clone as any).junctionPointRendering], ctx, color)[0];
         }
