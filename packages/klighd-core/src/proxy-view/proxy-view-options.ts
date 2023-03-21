@@ -180,12 +180,6 @@ export class ProxyViewDrawEdgesAboveNodes implements RenderOption {
 
 //////// DEBUG ////////
 
-/**
- * Whether proxy-view debug options should be hidden from the sidebar.
- * `true` hides all debug options, `false` shows all debug options.
- */
-const hideProxyViewDebugOptions = true;
-
 /** The category containing debug proxy-view options. */
 export class ProxyViewDebugCategory implements RenderOption {
     static readonly ID: string = "proxy-view-debug-category";
@@ -195,7 +189,7 @@ export class ProxyViewDebugCategory implements RenderOption {
     readonly name: string = ProxyViewDebugCategory.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CATEGORY;
     readonly initialValue: any;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue: any;
 }
 
@@ -211,7 +205,7 @@ export class ProxyViewInteractiveProxies implements RenderOption {
     readonly initialValue: boolean = ProxyViewInteractiveProxies.DEFAULT;
     readonly description: string = ProxyViewInteractiveProxies.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewInteractiveProxies.DEFAULT;
 }
 
@@ -227,7 +221,7 @@ export class ProxyViewHighlightSelected implements RenderOption {
     readonly initialValue: boolean = ProxyViewHighlightSelected.DEFAULT;
     readonly description: string = ProxyViewHighlightSelected.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewHighlightSelected.DEFAULT;
 }
 
@@ -243,7 +237,7 @@ export class ProxyViewOpacityBySelected implements RenderOption {
     readonly initialValue: boolean = ProxyViewOpacityBySelected.DEFAULT;
     readonly description: string = ProxyViewOpacityBySelected.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewOpacityBySelected.DEFAULT;
 }
 
@@ -259,7 +253,7 @@ export class ProxyViewUseSynthesisProxyRendering implements RenderOption {
     readonly initialValue: boolean = ProxyViewUseSynthesisProxyRendering.DEFAULT;
     readonly description: string = ProxyViewUseSynthesisProxyRendering.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewUseSynthesisProxyRendering.DEFAULT;
 }
 
@@ -275,7 +269,7 @@ export class ProxyViewSimpleAlongBorderRouting implements RenderOption {
     readonly initialValue: boolean = ProxyViewSimpleAlongBorderRouting.DEFAULT;
     readonly description: string = ProxyViewSimpleAlongBorderRouting.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewSimpleAlongBorderRouting.DEFAULT;
 }
 
@@ -291,7 +285,7 @@ export class ProxyViewCapProxyToParent implements RenderOption {
     readonly initialValue: boolean = ProxyViewCapProxyToParent.DEFAULT;
     readonly description: string = ProxyViewCapProxyToParent.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewCapProxyToParent.DEFAULT;
 }
 
@@ -307,7 +301,7 @@ export class ProxyViewShowProxiesImmediately implements RenderOption {
     readonly initialValue: boolean = ProxyViewShowProxiesImmediately.DEFAULT;
     readonly description: string = ProxyViewShowProxiesImmediately.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewShowProxiesImmediately.DEFAULT;
 }
 
@@ -323,7 +317,7 @@ export class ProxyViewShowProxiesEarly implements RenderOption {
     readonly initialValue: boolean = ProxyViewShowProxiesEarly.DEFAULT;
     readonly description: string = ProxyViewShowProxiesEarly.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewShowProxiesEarly.DEFAULT;
 }
 
@@ -344,7 +338,7 @@ export class ProxyViewShowProxiesEarlyNumber implements RangeOption {
     readonly range: Range = ProxyViewShowProxiesEarlyNumber.RANGE;
     readonly stepSize: number = ProxyViewShowProxiesEarlyNumber.STEPSIZE;
     readonly values: any[] = [];
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewShowProxiesEarlyNumber.DEFAULT;
 }
 
@@ -360,7 +354,7 @@ export class ProxyViewStackingOrderByDistance implements RenderOption {
     readonly initialValue: boolean = ProxyViewStackingOrderByDistance.DEFAULT;
     readonly description: string = ProxyViewStackingOrderByDistance.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewStackingOrderByDistance.DEFAULT;
 }
 
@@ -376,7 +370,7 @@ export class ProxyViewStackingOrderByOpacity implements RenderOption {
     readonly initialValue: boolean = ProxyViewStackingOrderByOpacity.DEFAULT;
     readonly description: string = ProxyViewStackingOrderByOpacity.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewStackingOrderByOpacity.DEFAULT;
 }
 
@@ -392,7 +386,7 @@ export class ProxyViewStackingOrderBySelected implements RenderOption {
     readonly initialValue: boolean = ProxyViewStackingOrderBySelected.DEFAULT;
     readonly description: string = ProxyViewStackingOrderBySelected.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewStackingOrderBySelected.DEFAULT;
 }
 
@@ -408,7 +402,7 @@ export class ProxyViewUseDetailLevel implements RenderOption {
     readonly initialValue: boolean = ProxyViewUseDetailLevel.DEFAULT;
     readonly description: string = ProxyViewUseDetailLevel.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewUseDetailLevel.DEFAULT;
 }
 
@@ -424,7 +418,7 @@ export class ProxyViewEdgesToOffScreenPoint implements RenderOption {
     readonly initialValue: boolean = ProxyViewEdgesToOffScreenPoint.DEFAULT;
     readonly description: string = ProxyViewEdgesToOffScreenPoint.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewEdgesToOffScreenPoint.DEFAULT;
 }
 
@@ -440,7 +434,7 @@ export class ProxyViewTransparentEdges implements RenderOption {
     readonly initialValue: boolean = ProxyViewTransparentEdges.DEFAULT;
     readonly description: string = ProxyViewTransparentEdges.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewTransparentEdges.DEFAULT;
 }
 
@@ -456,7 +450,7 @@ export class ProxyViewOriginalNodeScale implements RenderOption {
     readonly initialValue: boolean = ProxyViewOriginalNodeScale.DEFAULT;
     readonly description: string = ProxyViewOriginalNodeScale.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewOriginalNodeScale.DEFAULT;
 }
 
@@ -472,7 +466,7 @@ export class ProxyViewCapScaleToOne implements RenderOption {
     readonly initialValue: boolean = ProxyViewCapScaleToOne.DEFAULT;
     readonly description: string = ProxyViewCapScaleToOne.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewCapScaleToOne.DEFAULT;
 }
 
@@ -488,7 +482,7 @@ export class ProxyViewClusterTransparent implements RenderOption {
     readonly initialValue: boolean = ProxyViewClusterTransparent.DEFAULT;
     readonly description: string = ProxyViewClusterTransparent.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewClusterTransparent.DEFAULT;
 }
 
@@ -504,7 +498,7 @@ export class ProxyViewClusteringCascading implements RenderOption {
     readonly initialValue: boolean = ProxyViewClusteringCascading.DEFAULT;
     readonly description: string = ProxyViewClusteringCascading.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewClusteringCascading.DEFAULT;
 }
 
@@ -520,7 +514,7 @@ export class ProxyViewClusteringSweepLine implements RenderOption {
     readonly initialValue: boolean = ProxyViewClusteringSweepLine.DEFAULT;
     readonly description: string = ProxyViewClusteringSweepLine.DESCRIPTION;
     readonly renderCategory: string = ProxyViewDebugCategory.ID;
-    readonly invisible: boolean = hideProxyViewDebugOptions;
+    readonly debug: boolean = true;
     currentValue = ProxyViewClusteringSweepLine.DEFAULT;
 }
 

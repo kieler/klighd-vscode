@@ -33,8 +33,8 @@ export interface Option {
 export interface RenderOption extends Option {
     /** The category this RenderOption is part of. */
     renderCategory?: string;
-    /** Whether the option should be shown in the sidebar at all. Default undefined is false (visible). */
-    invisible?: boolean;
+    /** Whether the option should be shown in the sidebar when debug options are enabled. Default undefined is false. */
+    debug?: boolean;
 }
 
 /** Type for available quick actions. */

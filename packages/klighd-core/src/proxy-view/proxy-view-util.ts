@@ -18,11 +18,10 @@
 import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { injectable } from "inversify";
 import { VNode } from "snabbdom";
-import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, SModelRoot } from "sprotty";
-import { Action, Bounds, isBounds, Dimension, Point, SelectAction, SelectAllAction, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
+import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, isSelectable, ModelIndexImpl, SModelRoot } from "sprotty";
+import { Action, Bounds, isBounds, Dimension, Point, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
-import { SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from "../skgraph-models";
-import { getElementByID } from "../skgraph-utils";
+import { isSKGraphElement, SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from "../skgraph-models";
 
 //////// Interfaces ////////
 
@@ -801,11 +800,10 @@ export function isSelectedOrConnectedToSelected(node: SKNode): boolean {
 
 //////// Classes ////////
 
-// TODO: GetSelectionAction
 /** Util class for easily accessing the currently selected elements. */
 export class SelectedElementsUtil {
-    /** The current root. */
-    private static currRoot: SModelRoot;
+    /** The model index for looking up elements. */
+    private static index?: ModelIndexImpl;
     /** The currently selected elements. */
     private static selectedElements: SKGraphElement[];
     /** Cache of {@link selectedElements} containing only selected nodes. */
@@ -818,91 +816,48 @@ export class SelectedElementsUtil {
     private static portCache?: SKPort[];
 
     /**
-     * Clears all caches if the lengths of `nextSelectedElements` and {@link selectedElements} are not equal.
-     * `nextSelectedElements` should equal {@link selectedElements} with some elements possibly either removed or added, not both.
-     * Therefore this should always be called before changing {@link selectedElements}.
+     * Clears all caches for stored element types.
      */
-    private static clearCaches(nextSelectedElements: SKGraphElement[]): void {
-        if (this.selectedElements && nextSelectedElements.length !== this.selectedElements.length) {
-            this.nodeCache = undefined;
-            this.edgeCache = undefined;
-            this.labelCache = undefined;
-            this.portCache = undefined;
-        }
+    private static clearCaches(): void {
+        this.nodeCache = undefined;
+        this.edgeCache = undefined;
+        this.labelCache = undefined;
+        this.portCache = undefined;
+
     }
 
-    //// Set methods ////
+    /**
+     * Recalculates the selected elements.
+     */
+    static recalculateSelection(): void {
+        this.clearCaches()
+        this.selectedElements = [];
+        this.index?.all().forEach(element => {
+            if (isSelectable(element) && element.selected && isSKGraphElement(element)) {
+                this.selectedElements.push(element)
+            }
+        })
+    }
 
-    /** Resets the selected elements. */
-    static resetSelection(): void {
-        this.clearCaches([]);
+    /** Checks if the current index is reset. */
+    static isReset(): boolean {
+        return this.index === undefined;
+    }
+
+    /** Resets the current index elements. */
+    static resetModel(): void {
+        this.index = undefined;
         this.selectedElements = [];
     }
 
     /** Sets the current root. */
     static setRoot(root: SModelRoot): void {
-        this.currRoot = root;
-    }
+        // this.currRoot = root;
+        this.index = new ModelIndexImpl()
+        this.index.add(root)
 
-    /** Filters the currently selected elements by checking if they can be reached from the current root. */
-    static filterSelectionByRoot(): void {
-        if (!this.currRoot || !this.selectedElements) {
-            // Hasn't been initialized yet
-            return;
-        }
-
-        // Using filter() is insufficient as the nodes may have changed though the ids didn't
-        // Also, selectedElementsIDs may have ids that correspond to non-existing nodes under currRoot
-        // which is not a problem as these just won't be added
-        const selectedElementsIDs = this.selectedElements.map(node => node.id);
-        this.resetSelection();
-        this.setSelection(selectedElementsIDs, []);
-    }
-
-    /** Uses the selected and deselected elements' IDs to set the currently selected elements. */
-    static setSelection(selectedElementsIDs: string[], deselectedElementsIDs: string[]): void {
-        if (!this.currRoot || !this.selectedElements) {
-            // Hasn't been initialized yet
-            return;
-        } else if (selectedElementsIDs.length <= 0 && deselectedElementsIDs.length <= 0) {
-            // Nothing to do
-            return;
-        }
-
-        // Remove deselected
-        const deselectedRemoved = this.selectedElements.filter(node => !deselectedElementsIDs.includes(node.id));
-        this.clearCaches(deselectedRemoved);
-        this.selectedElements = deselectedRemoved;
-
-        // selectedElementsIDs may have ids of already selected elements, don't select twice
-        selectedElementsIDs = selectedElementsIDs.filter(id => !this.selectedElements.some(node => node.id === id));
-
-        // Add selected
-        const selectedAdded = this.selectedElements.concat(selectedElementsIDs
-            .map(id => getElementByID(this.currRoot, id, true))
-            .filter((node): node is SKGraphElement => !!node)); // Type guard since getNodeByID() can return undefined
-        this.clearCaches(selectedAdded);
-        this.selectedElements = selectedAdded;
-    }
-
-    /** Sets all elements as currently selected. */
-    static setSelectAll(): void {
-        if (!this.currRoot || !this.selectedElements) {
-            // Hasn't been initialized yet
-            return;
-        }
-
-        // BFS to select all
-        const queue: SKGraphElement[] = [this.currRoot as unknown as SKGraphElement];
-        const allSelectedElements = [];
-        let next = queue.pop();
-        while (next) {
-            allSelectedElements.push(next);
-            queue.push(...(next.children as unknown as SKGraphElement[]));
-            next = queue.pop();
-        }
-        this.clearCaches(allSelectedElements);
-        this.selectedElements = allSelectedElements;
+        // calculate the selected elements.
+        this.recalculateSelection()
     }
 
     //// Util methods ////
@@ -965,40 +920,17 @@ export class SelectedElementsUtil {
 /** Handles all actions regarding the {@link SelectedElementsUtil}. */
 @injectable()
 export class SelectedElementsUtilActionHandler implements IActionHandler, IActionHandlerInitializer {
-    /**
-     * Whether the selection should be filtered to only include elements of the current root
-     * once the next {@link SendModelContextAction} is received.
-     */
-    private filterSelectionByRoot: boolean;
 
     handle(action: Action): void | Action | ICommand {
-        if (action.kind === SetModelAction.KIND) {
+        if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
             // Reset
-            SelectedElementsUtil.resetSelection();
-        } else if (action.kind === UpdateModelAction.KIND) {
-            // Set new root + filter previously selected nodes that aren't part of newRoot
-            const updateModelAction = action as UpdateModelAction;
-            this.filterSelectionByRoot ||= !!updateModelAction.newRoot;
+            SelectedElementsUtil.resetModel();
         } else if (action.kind === SendModelContextAction.KIND) {
-            // Set new root
-            const sMCAction = action as SendModelContextAction;
-            SelectedElementsUtil.setRoot(sMCAction.model.root);
-            if (this.filterSelectionByRoot) {
-                SelectedElementsUtil.filterSelectionByRoot();
-                this.filterSelectionByRoot = false;
-            }
-        } else if (action.kind === SelectAction.KIND) {
-            // Set selection
-            const selectAction = action as SelectAction;
-            SelectedElementsUtil.setSelection(selectAction.selectedElementsIDs, selectAction.deselectedElementsIDs);
-        } else if (action.kind === SelectAllAction.KIND) {
-            const selectAllAction = action as SelectAllAction;
-            if (selectAllAction.select) {
-                // Selected all
-                SelectedElementsUtil.setSelectAll();
-            } else {
-                // Deselected all
-                SelectedElementsUtil.resetSelection();
+            SelectedElementsUtil.recalculateSelection();
+            if (SelectedElementsUtil.isReset()) {
+                // Set new root
+                const sMCAction = action as SendModelContextAction;
+                SelectedElementsUtil.setRoot(sMCAction.model.root);
             }
         }
     }
@@ -1008,8 +940,5 @@ export class SelectedElementsUtilActionHandler implements IActionHandler, IActio
         registry.register(SetModelAction.KIND, this);
         registry.register(UpdateModelAction.KIND, this);
         registry.register(SendModelContextAction.KIND, this);
-        // Selected elements
-        registry.register(SelectAction.KIND, this);
-        registry.register(SelectAllAction.KIND, this);
     }
 }

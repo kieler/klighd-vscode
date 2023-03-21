@@ -35,7 +35,7 @@ export class PinSidebarOption implements RenderOption {
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
     readonly initialValue: boolean = PinSidebarOption.DEFAULT;
     currentValue = PinSidebarOption.DEFAULT;
-    invisible = true
+    debug = true
 }
 
 /**
@@ -54,7 +54,7 @@ export class ResizeToFit implements RenderOption {
     readonly initialValue: boolean = ResizeToFit.DEFAULT;
     readonly description = 'Always resize to fit after diagram refresh.'
     currentValue = ResizeToFit.DEFAULT;
-    invisible = true
+    debug = true
 }
 
 /**
@@ -318,6 +318,21 @@ export class AnimateGoToBookmark implements RenderOption {
     currentValue = true;
 }
 
+/**
+ * Boolean option to toggle debug options.
+ */
+export class DebugOptions implements RenderOption {
+    static readonly ID: string = 'debug-options'
+    static readonly NAME: string = 'Debug Options'
+    readonly id: string = DebugOptions.ID
+    readonly name: string = DebugOptions.NAME
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+    readonly initialValue: boolean = false
+    readonly description = "Whether debug options should be shown."
+    currentValue = false
+    debug = true
+}
+
 export interface RenderOptionType {
     readonly ID: string,
     readonly NAME: string,
@@ -339,7 +354,8 @@ export class RenderOptionsRegistry extends Registry {
         super();
         // Add available render options to this registry
 
-        // Invisible
+        // Debug
+        this.register(DebugOptions);
         this.register(ResizeToFit);
         this.register(PinSidebarOption);
 

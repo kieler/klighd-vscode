@@ -244,14 +244,15 @@ export class ProxyView extends AbstractUIExtension {
 
         // Calculate size of proxies
         const size = Math.min(canvasCRF.width, canvasCRF.height) * this.sizePercentage;
+
         const fromPercent = 0.01;
-        const offsetCRF = Math.min(canvasCRF.width, canvasCRF.height) * fromPercent;
-        const offsetGRF = Math.min(canvasGRF.width, canvasGRF.height) * fromPercent;
+        // The amount of pixels to offset the GRF canvas size by 1%.
+        const onePercentOffsetGRF = Math.min(canvasGRF.width, canvasGRF.height) * fromPercent;
 
         //// Initial nodes ////
         const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
         // Reduce canvas size to show proxies early
-        const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasGRF, this.showProxiesEarlyNumber * offsetGRF) : canvasGRF;
+        const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasGRF, this.showProxiesEarlyNumber * onePercentOffsetGRF) : canvasGRF;
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, sizedCanvas, depth, ctx);
 
         //// Apply filters ////
@@ -284,10 +285,10 @@ export class ProxyView extends AbstractUIExtension {
         const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasCRF);
 
         //// Route edges to proxies ////
-        const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, offsetCRF, ctx);
+        const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, onePercentOffsetGRF, ctx);
 
         //// Connect off-screen edges ////
-        const segmentConnectors = this.connectEdgeSegments(root, canvasGRF, offsetGRF, ctx);
+        const segmentConnectors = this.connectEdgeSegments(root, canvasGRF, onePercentOffsetGRF, ctx);
 
         //// Render the proxies ////
         const proxies = [];
@@ -709,7 +710,7 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Routes edges from `onScreenNodes` to the corresponding proxies of `nodes`. */
     private routeEdges(nodes: { node: SKNode | VNode, transform: TransformAttributes }[],
-        onScreenNodes: SKNode[], canvasCRF: Canvas, offsetCRF: number, ctx: SKGraphModelRenderer): {
+        onScreenNodes: SKNode[], canvasCRF: Canvas, onePercentOffsetGRF: number, ctx: SKGraphModelRenderer): {
             proxyEdges: { edge: SKEdge, transform: TransformAttributes }[],
             overlayEdges: { edge: SKEdge, transform: TransformAttributes }[]
         } {
@@ -734,7 +735,7 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyConnector = edge.routingPoints[edge.routingPoints.length - 1];
                         const nodeConnector = edge.routingPoints[0];
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, false,
-                            canvasCRF, offsetCRF, ctx);
+                            canvasCRF, onePercentOffsetGRF, ctx);
                         if (proxyEdge) {
                             // Can't use transform for proxyEdge since it's already translated
                             proxyEdges.push(proxyEdge);
@@ -751,7 +752,7 @@ export class ProxyView extends AbstractUIExtension {
                         const proxyConnector = edge.routingPoints[0];
                         const nodeConnector = edge.routingPoints[edge.routingPoints.length - 1];
                         const proxyEdge = this.rerouteEdge(node, transform, edge, modifiedEdges, nodeConnector, proxyConnector, true,
-                            canvasCRF, offsetCRF, ctx);
+                            canvasCRF, onePercentOffsetGRF, ctx);
                         if (proxyEdge) {
                             // Can't use transform for proxyEdge since it's already translated
                             proxyEdges.push(proxyEdge);
@@ -775,13 +776,15 @@ export class ProxyView extends AbstractUIExtension {
      * @param `outgoing` Whether the edge is outgoing from the proxy.
      */
     private rerouteEdge(node: SKNode, transform: TransformAttributes, edge: SKEdge, modifiedEdges: Map<string, [SKEdge, number]>,
-        nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvasCRF: Canvas, offsetCRF: number, ctx: SKGraphModelRenderer)
+        nodeConnector: Point, proxyConnector: Point, outgoing: boolean, canvasCRF: Canvas, onePercentOffsetGRF: number, ctx: SKGraphModelRenderer)
         : { edge: SKEdge, transform: TransformAttributes } | undefined {
+        // TODO: on spline renderings, always bundle the bend points together in pairs/3s, such that the edge remains smooth.
         // Connected to node, just calculate absolute coordinates + basic translation
         const parentPos = this.getAbsolutePosition(node.parent as SKNode);
-        const nodeTranslated = Canvas.translateToCRFAdd(parentPos, nodeConnector, canvasCRF);
 
-        if (!this.edgesToOffScreenPoint && !Bounds.includes(canvasCRF, nodeTranslated)) {
+        const parentTranslated = Canvas.translateToCRF(this.getAbsolutePosition(edge.parent as SKNode), canvasCRF);
+
+        if (!this.edgesToOffScreenPoint && !Bounds.includes(canvasCRF, nodeConnector)) {
             // Would be connected to an off-screen point, don't show the edge
             return undefined;
         }
@@ -790,11 +793,22 @@ export class ProxyView extends AbstractUIExtension {
         const proxyPointRelative = node.parentToLocal(proxyConnector);
         const proxyRatioX = proxyPointRelative.x / node.bounds.width;
         const proxyRatioY = proxyPointRelative.y / node.bounds.height;
-        const proxyTranslated = { x: transform.x + transform.width * proxyRatioX, y: transform.y + transform.height * proxyRatioY };
+        const proxyTranslatedRelative = { x: transform.x + transform.width * proxyRatioX, y: transform.y + transform.height * proxyRatioY };
+        // The GRF point where the proxy edge is connected to the proxy.
+        const proxyConnectorGRF = Point.subtract(Canvas.translateToGRF(proxyTranslatedRelative, canvasCRF), parentPos)
+        // The GRF bounds of the proxy.
+        let proxyGRFRelToParent = Canvas.translateToGRF(transform, canvasCRF)
+        proxyGRFRelToParent = {
+            x: proxyGRFRelToParent.x - parentPos.x,
+            y: proxyGRFRelToParent.y - parentPos.y,
+            width: proxyGRFRelToParent.width,
+            height: proxyGRFRelToParent.height
+        }
+
 
         // Keep direction of edge
-        const source = outgoing ? proxyTranslated : nodeTranslated;
-        const target = outgoing ? nodeTranslated : proxyTranslated;
+        const source = outgoing ? proxyConnectorGRF : nodeConnector;
+        const target = outgoing ? nodeConnector : proxyConnectorGRF;
 
         // Calculate all routing points
         const routingPoints: Point[] = [];
@@ -803,57 +817,65 @@ export class ProxyView extends AbstractUIExtension {
             routingPoints.push(source, target);
         } else if (this.alongBorderRoutingEnabled) {
             // Potentially need more points than just source and target
+            const canvasGRFRelToParent = Canvas.offsetCanvas(Canvas.translateCanvasToGRF(canvasCRF), { left: -parentPos.x, right: parentPos.x, top: -parentPos.y, bottom: parentPos.y });
 
-            // A bias could be added to some sides (even in relation to proxy width/height), not useful for now
-            const leftOffset = offsetCRF;
-            const rightOffset = offsetCRF;
-            const topOffset = offsetCRF;
-            const bottomOffset = offsetCRF;
+            const leftOffset = onePercentOffsetGRF;
+            const rightOffset = onePercentOffsetGRF;
+            const topOffset = onePercentOffsetGRF;
+            const bottomOffset = onePercentOffsetGRF;
             const offsetRect = { left: leftOffset, right: rightOffset, top: topOffset, bottom: bottomOffset };
 
             // Canvas dimensions with offset, so as to keep the edge on the canvas
-            const canvasOffLeft = canvasCRF.x + leftOffset;
-            const canvasOffRight = canvasCRF.x + canvasCRF.width - rightOffset;
-            const canvasOffTop = canvasCRF.y + topOffset;
-            const canvasOffBottom = canvasCRF.y + canvasCRF.height - bottomOffset;
-            const canvasOffset = Canvas.offsetCanvas(canvasCRF, offsetRect);
+            const canvasOffLeft = canvasGRFRelToParent.x + leftOffset;
+            const canvasOffRight = canvasGRFRelToParent.x + canvasGRFRelToParent.width - rightOffset;
+            const canvasOffTop = canvasGRFRelToParent.y + topOffset;
+            const canvasOffBottom = canvasGRFRelToParent.y + canvasGRFRelToParent.height - bottomOffset;
+            const canvasOffset = Canvas.offsetCanvas(canvasGRFRelToParent, offsetRect);
 
-            // Appends or prepends the point to routingPoints accordingly using outgoing
-            const add = (p: Point) => outgoing ? routingPoints.unshift(p) : routingPoints.push(p);
+            // Appends the point to routingPoints
+            const add = (p: Point) => routingPoints.push(p);
             // Caps the point to the canvas
-            const cap = (p: Point) => Canvas.capToCanvas(p, canvasOffset);
+            const cap = (p: Point) => {
+                // TODO: a GRF-compatible cap function would be nice here.
+                return Canvas.translateToGRF(Canvas.capToCanvas(Canvas.translateToCRF(p, canvasCRF), Canvas.translateCanvasToCRF(canvasOffset)), canvasCRF);
+            }
             // Composition add o cap
             const addCap = (p: Point) => add(cap(p));
+
+            // Returns true if the point is inside the proxy
+            // Add a little padding (just one pixel) to the proxy bounds, so that rounding errors do not cause additional/flickering routing points.
+            const proxyEdgePadding = 1
+            const proxyGRFRelToParentWithPadding = {
+                x: proxyGRFRelToParent.x - proxyEdgePadding,
+                y: proxyGRFRelToParent.y - proxyEdgePadding,
+                width: proxyGRFRelToParent.width + 2 * proxyEdgePadding,
+                height: proxyGRFRelToParent.height + 2 * proxyEdgePadding
+            }
+            const insideProxy = (p: Point) => Bounds.includes(proxyGRFRelToParentWithPadding, p);
 
             if (this.simpleAlongBorderRouting) {
                 // Just cap each routing point to the canvas, can cause strange artifacts if an edge e.g. oscillates
                 edge.routingPoints
-                    // Translate
-                    .map(p => cap(Canvas.translateToCRFAdd(parentPos, p, canvasCRF)))
+                    // Cap to canvas
+                    .map(cap)
                     // Don't add points that are inside the proxy
-                    .filter(p => !Bounds.includes(transform, p))
+                    .filter(insideProxy)
                     // Cap to canvas and add to routingPoints
-                    .forEach(p => routingPoints.push(p));
-                // Remove source/target accordingly
-                if (outgoing) {
-                    routingPoints.pop();
-                } else {
-                    routingPoints.shift();
-                }
+                    .forEach(add);
             } else {
                 //// Calculate point where edge leaves canvas
-                let prevPoint = nodeTranslated;
-                let canvasEdgeIntersection;
-                for (let i = 1; i < edge.routingPoints.length; i++) {
+                let prevPoint: Point = source;
+                let canvasEdgeIntersection: Point | undefined = undefined;
+                for (let i = 0; i < edge.routingPoints.length; i++) {
                     // Check if p is off-screen to find intersection between (prevPoint to p) and canvas
                     // Traverse routingPoints from the end for outgoing edges to match with prevPoint
-                    const p = Canvas.translateToCRFAdd(parentPos, edge.routingPoints[outgoing ? edge.routingPoints.length - i - 1 : i], canvasCRF);
+                    const p = edge.routingPoints[i];
 
-                    const intersection = getIntersection(prevPoint, p, canvasOffset);
+                    const intersection = getIntersection(prevPoint, p, canvasGRFRelToParent);
                     if (intersection) {
                         // Found an intersection
                         canvasEdgeIntersection = intersection;
-                        if (!Bounds.includes(transform, canvasEdgeIntersection)) {
+                        if (!insideProxy(canvasEdgeIntersection)) {
                             // Don't add a point inside of the proxy
                             addCap(canvasEdgeIntersection);
                         }
@@ -861,7 +883,7 @@ export class ProxyView extends AbstractUIExtension {
 
                     // Add p to keep routing points consistent
                     prevPoint = p;
-                    if (Bounds.includes(canvasOffset, p) && !Bounds.includes(transform, p)) {
+                    if (Bounds.includes(canvasGRFRelToParent, p) && !insideProxy(p)) {
                         // Don't add a point that is off-screen or inside the proxy
                         add(p);
                     }
@@ -874,16 +896,21 @@ export class ProxyView extends AbstractUIExtension {
                 }
 
                 //// Calculate points on path to proxy near canvas
-                const preferLeft = proxyTranslated.x < (canvasOffLeft + canvasOffRight) / 2;
-                const preferTop = proxyTranslated.y < (canvasOffTop + canvasOffBottom) / 2;
-                const borderPoints = Canvas.routeAlongBorder(canvasEdgeIntersection, canvasOffset, transform, canvasCRF, preferLeft, preferTop);
+                const preferLeft = proxyConnectorGRF.x < (canvasOffLeft + canvasOffRight) / 2;
+                const preferTop = proxyConnectorGRF.y < (canvasOffTop + canvasOffBottom) / 2;
+                const borderPoints = Canvas.routeAlongBorder(canvasEdgeIntersection, canvasOffset, transform, canvasGRFRelToParent, preferLeft, preferTop);
                 // Remove points inside of proxy and add remaining
-                borderPoints.filter(p => !Bounds.includes(transform, p)).forEach(p => addCap(p));
+                borderPoints.filter(p => !insideProxy(p)).forEach(addCap);
             }
 
             //// Finally, add source at its correct spot
-            routingPoints.unshift(source);
-            routingPoints.push(target);
+            // Avoid duplicate source/target points.
+            if (routingPoints[0] !== source) {
+                routingPoints.unshift(source);
+            }
+            if (routingPoints[routingPoints.length - 1] !== target) {
+                routingPoints.push(target);
+            }
         } else {
             // Should never be the case, must be called with a routing strategy enabled
             return undefined;
@@ -905,7 +932,7 @@ export class ProxyView extends AbstractUIExtension {
             edge.opacity = 0;
         }
 
-        return { edge: clone, transform: Bounds.EMPTY };
+        return { edge: clone, transform: { ...parentTranslated, scale: canvasCRF.zoom } };
     }
 
     /** Returns an edge that can be overlayed over the given `edge` to simulate a fade-out effect. */
@@ -923,7 +950,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Connects off-screen edges. */
-    private connectEdgeSegments(root: SKNode, canvasGRF: Canvas, offsetGRF: number, ctx: SKGraphModelRenderer): {
+    private connectEdgeSegments(root: SKNode, canvasGRF: Canvas, onePercentOffsetGRF: number, ctx: SKGraphModelRenderer): {
         proxyEdges: { edge: SKEdge, transform: TransformAttributes }[],
         overlayEdges: { edge: SKEdge, transform: TransformAttributes }[]
     } {
@@ -931,7 +958,7 @@ export class ProxyView extends AbstractUIExtension {
             return { proxyEdges: [], overlayEdges: [] };
         }
 
-        const offsetRect = { left: offsetGRF, right: offsetGRF, top: offsetGRF, bottom: offsetGRF };
+        const offsetRect = { left: onePercentOffsetGRF, right: onePercentOffsetGRF, top: onePercentOffsetGRF, bottom: onePercentOffsetGRF };
         const canvasOffset = Canvas.offsetCanvas(canvasGRF, offsetRect);
         const proxyEdges = [];
         const overlayEdges = [];
@@ -1249,6 +1276,12 @@ export class ProxyView extends AbstractUIExtension {
         }
         return res;
     }
+
+    // TODO: The edge start/end decorators should be shown, regardless of the rendering type. This needs to differentiate between head/tail decorators and other decorators such as bend points.
+    // Plan: head decorators are those with relative position = 1, tail decorators are those with relative position = 0 and should be repositioned if necessary, all other relative positions between 0 and 1 should be kept as is.
+    // To do this, this really should incorporate the decoration / placement data of the decorators, which is currently not sent to the client or handled here.
+    // For now I'll leave this as this hacky solution, which just takes the first polygon rendering and places it at the end of the edge.
+    // When we have micro layout on the client, this should be done properly.
 
     /** Returns a copy of `edgeData` with the decorators placed at `target`, angled from `prev` to `target`. */
     private placeDecorator(edgeData: KGraphData[], ctx: SKGraphModelRenderer, prev: Point, target: Point): KGraphData[] {
