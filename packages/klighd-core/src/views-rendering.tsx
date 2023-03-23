@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -30,7 +30,7 @@ import {
 import { hasAction } from './skgraph-utils';
 import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints, isRotation, isTranslation, reverseTransformations, Rotation, Scale, Transformation, transformationToSVGString, Translation } from './views-common';
 import {
-    ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
+    ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, DEFAULT_LINE_WIDTH, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
 
@@ -121,6 +121,7 @@ export function renderRectangularShape(
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
 
     const lineStyles = getSvgLineStyles(styles, parent, context)
+    const lineWidth = (styles.kLineWidth?.lineWidth ?? DEFAULT_LINE_WIDTH)
 
     // Create the svg element for this rendering.
     let element: VNode | undefined = undefined
@@ -139,12 +140,12 @@ export function renderRectangularShape(
             if (angle < 360) {
                 // Calculation to get the start and endpoint of the arc from the angles given.
                 // Reduce the width and height by half the linewidth on both sides, so the ellipse really stays within the given bounds.
-                const width = boundsAndTransformation.bounds.width - styles.kLineWidth.lineWidth
-                const height = boundsAndTransformation.bounds.height - styles.kLineWidth.lineWidth
+                const width = boundsAndTransformation.bounds.width - lineWidth
+                const height = boundsAndTransformation.bounds.height - lineWidth
                 const rX = width / 2
                 const rY = height / 2
-                const midX = rX + styles.kLineWidth.lineWidth / 2
-                const midY = rY + styles.kLineWidth.lineWidth / 2
+                const midX = rX + lineWidth / 2
+                const midY = rY + lineWidth / 2
                 const startX = midX + rX * Math.cos(kArcRendering.startAngle * Math.PI / 180)
                 const startY = midY - rY * Math.sin(kArcRendering.startAngle * Math.PI / 180)
                 const endAngle = kArcRendering.startAngle + kArcRendering.arcAngle
@@ -189,7 +190,7 @@ export function renderRectangularShape(
         // eslint-disable-next-line
         case K_ELLIPSE: {
             element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGEllipse(boundsAndTransformation.bounds, styles.kLineWidth.lineWidth, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
+                {...renderSVGEllipse(boundsAndTransformation.bounds, lineWidth, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
@@ -204,7 +205,7 @@ export function renderRectangularShape(
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
             element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGRect(boundsAndTransformation.bounds, styles.kLineWidth.lineWidth, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
+                {...renderSVGRect(boundsAndTransformation.bounds, lineWidth, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
@@ -888,7 +889,7 @@ export function renderKRendering(kRendering: KRendering,
     childOfNodeTitle?: boolean): VNode | undefined { // TODO: not all of these are implemented yet
 
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
-    const stylesToPropagate = new KStyles
+    const stylesToPropagate = new KStyles(false)
     // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(parent, kRendering, propagatedStyles, context, stylesToPropagate)
 

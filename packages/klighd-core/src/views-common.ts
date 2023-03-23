@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -24,7 +24,7 @@ import {
     KTextUnderline, KVerticalAlignment, K_RENDERING_REF, K_TEXT, LineCap, LineJoin, LineStyle,
     SKEdge, SKGraphElement, SKLabel, SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
-import { KStyles, ColorStyle } from './views-styles';
+import { KStyles, ColorStyle, DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT } from './views-styles';
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -429,8 +429,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
 
         if (rendering.properties['klighd.lsp.calculated.bounds'] as Bounds !== undefined) {
             const foundBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
-            bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
-            bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
+            bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
+            bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
             bounds.width = textWidth
             bounds.height = textHeight
         }
@@ -438,8 +438,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         if (bounds.x === undefined && context.boundsMap !== undefined) {
             const foundBounds = findById(context.boundsMap, rendering.properties['klighd.lsp.rendering.id'] as string)
             if (bounds !== undefined) {
-                bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment, textWidth)
-                bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment, lines)
+                bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
+                bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
                 bounds.width = textWidth
                 bounds.height = textHeight
             }
@@ -447,8 +447,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
         if (rendering.properties['klighd.lsp.calculated.decoration'] as Decoration !== undefined) {
             decoration = rendering.properties['klighd.lsp.calculated.decoration'] as Decoration
-            bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment, textWidth)
-            bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment, lines)
+            bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
+            bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
             bounds.width = decoration.bounds.width
             bounds.height = decoration.bounds.height
         }
@@ -456,8 +456,8 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         if (decoration === undefined && context.decorationMap !== undefined) {
             decoration = findById(context.decorationMap, rendering.properties['klighd.lsp.rendering.id'] as string)
             if (decoration !== undefined) {
-                bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment, textWidth)
-                bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment, lines)
+                bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
+                bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
                 bounds.width = decoration.bounds.width
                 bounds.height = decoration.bounds.height
             }
