@@ -23,14 +23,14 @@ import { DetailLevel } from './depth-map';
 import { ShadowOption, Shadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
-    Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
+    Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
     KRoundedRectangle, KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
     K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
 import { hasAction } from './skgraph-utils';
 import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints, isRotation, isTranslation, reverseTransformations, Rotation, Scale, Transformation, transformationToSVGString, Translation } from './views-common';
 import {
-    ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, DEFAULT_LINE_WIDTH, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
+    ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, DEFAULT_LINE_WIDTH, getKStyles, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
 
@@ -408,7 +408,20 @@ export function renderKText(rendering: KText,
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
+
+    // Calculate the background, if needed, as a rectangle to be placed behind the text.
+    let background: VNode | undefined = undefined
+    if (colorStyles.background.color !== 'none') {
+        const boundingBoxAndTransformation = findBoundsAndTransformationData(rendering, styles, parent, context, false, true)
+        background = <rect 
+            x={boundingBoxAndTransformation?.bounds?.x ?? 0}
+            y={boundingBoxAndTransformation?.bounds?.y ?? 0}
+            width={boundingBoxAndTransformation?.bounds?.width ?? 0}
+            height={boundingBoxAndTransformation?.bounds?.height ?? 0}
+            fill={colorStyles.background.color}
+        />
+    }
 
     const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
@@ -423,19 +436,19 @@ export function renderKText(rendering: KText,
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.properties['klighd.calculated.text.bounds'] as Bounds
             && (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height * context.viewport.zoom <= simplificationThreshold) {
-            const replacements: VNode[] = []
+            const replacements: VNode[] = background ? [background] : []
             lines.forEach((line, index) => {
-                const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
-                const yPos = boundsAndTransformation && boundsAndTransformation.bounds.y && rendering.properties['klighd.calculated.text.line.heights'] as number[] && boundsAndTransformation.bounds.height ?
+                const xPos = boundsAndTransformation?.bounds?.x ?? 0
+                const yPos = boundsAndTransformation?.bounds?.y && rendering.properties['klighd.calculated.text.line.heights'] as number[] && boundsAndTransformation?.bounds?.height ?
                     boundsAndTransformation.bounds.y - boundsAndTransformation.bounds.height / 2 + (rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] / 2 * proportionalHeight : 0
                 const width = rendering.properties['klighd.calculated.text.line.widths'] as number[] ? (rendering.properties['klighd.calculated.text.line.widths'] as number[])[index] : 0
                 const height = rendering.properties['klighd.calculated.text.line.heights'] as number[] ? (rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] * proportionalHeight : 0
                 // Generate rectangle for each line with color style.
-                const curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
-                    : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
+                const curLine = colorStyles.foreground ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyles.foreground.color} opacity="0.5" />
+                    : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" opacity="0.5" />
                 replacements.push(curLine)
             });
-            return <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...{}}>
+            return <g id={rendering.properties['klighd.lsp.rendering.id'] as string}>
                 {...replacements}
             </g>
         }
@@ -453,19 +466,19 @@ export function renderKText(rendering: KText,
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
         ...{ 'text-decoration-style': textStyles.textDecorationStyle },
         ...{ 'opacity': opacity },
-        ...(colorStyle ? { 'fill-opacity': colorStyle.opacity } : {})
+        ...(colorStyles.foreground ? { 'fill-opacity': colorStyles.foreground.opacity } : {})
     }
 
     // The attributes to be contained in the returned text node.
     const attrs = {
         x: boundsAndTransformation.bounds.x,
         style: style,
-        ...(colorStyle ? { fill: colorStyle.color } : {}),
+        ...(colorStyles.foreground ? { fill: colorStyles.foreground.color } : {}),
         ...(shadowStyles ? { filter: shadowStyles } : {}),
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size adjustment include any trailing white spaces.
     } as any
 
-    let elements: VNode[]
+    const elements: VNode[] = background ? [background] : []
     if (lines.length === 1) {
         // If the text has only one line, just put the text in the text node directly.
         attrs.y = boundsAndTransformation.bounds.y;
@@ -477,22 +490,21 @@ export function renderKText(rendering: KText,
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
-        elements = [
+        elements.push(
             <text {...attrs}>
                 {...lines}
             </text>
-        ]
+        )
     } else {
         // Otherwise, put each line of text in a separate <text> element.
         const calculatedTextLineWidths = rendering.properties['klighd.calculated.text.line.widths'] as number[]
         const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
-        let currentY = boundsAndTransformation.bounds.y ? boundsAndTransformation.bounds.y : 0
+        let currentY = boundsAndTransformation.bounds.y ?? 0
 
         if (rendering.calculatedTextLineWidths) {
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
-        elements = []
         lines.forEach((line, index) => {
             const currentElement = <text
                 {...attrs}
