@@ -196,7 +196,7 @@ export function getKStyles(parent: SKGraphElement, styleHolder: KStyleHolder & K
     if (stylesToPropagate !== undefined) {
         copyStyles(propagatedStyles, stylesToPropagate)
     }
-    const styleList = styleHolder.styles
+    let styleList = styleHolder.styles
 
     if (styleList === undefined) {
         return styles
@@ -207,10 +207,10 @@ export function getKStyles(parent: SKGraphElement, styleHolder: KStyleHolder & K
         if (styleList.filter(style => style.selection === true).length === 0) {
             // ...if no selection styles are available, apply default ones.
             if (isKText(styleHolder)) {
-                styleList.concat(getDefaultTextSelectionStyles())
+                styleList = styleList.concat(getDefaultTextSelectionStyles())
             } else if (styleHolder === getKRendering(parent.data, context)) {
                 // For non-text renderings this only applies to the root rendering
-                styleList.concat(getDefaultNonTextSelectionStyles())
+                styleList = styleList.concat(getDefaultNonTextSelectionStyles())
             }
         }
     }
