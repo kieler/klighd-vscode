@@ -19,19 +19,13 @@ import { ContainerModule } from 'inversify';
 import { MouseListener, TYPES } from 'sprotty';
 import { DISymbol } from './symbols';
 import { KlighdIContextMenuService } from './contextmenu/klighd-service';
-
 import { graphprogrammingMouseListener } from './contextmenu/klightd-graphprogMouseListener';
-
-
 import { ContextMenueProvider } from './contextmenu/klightd-contextmenuprovider';
 import { graphprogrammingMoveMouseListener } from './contextmenu/klighd-graphprogramming-TargetingMouseListener';
-// import { graphprogrammingMoveMouseListener } from './contextmenu/klighd-graphprogramming-TargetingMouseListener';
-
 
 export const graphprogrammingModule = new ContainerModule((bind, unbind, isBound, rebind) => {
-    // const context = { bind, unbind, isBound, rebind }
     
-
+    //similar to sprottys version
     bind(DISymbol.KlighdIContextMenuServiceProvider).toProvider<KlighdIContextMenuService>(ctx => {
         return () => {
             return new Promise<KlighdIContextMenuService>((resolve, reject) => {
@@ -44,6 +38,7 @@ export const graphprogrammingModule = new ContainerModule((bind, unbind, isBound
         };
     });
 
+
     bind(graphprogrammingMouseListener).toSelf().inSingletonScope();
     bind(TYPES.MouseListener).toService(graphprogrammingMouseListener);
     bind(MouseListener).toService(graphprogrammingMouseListener);
@@ -51,8 +46,6 @@ export const graphprogrammingModule = new ContainerModule((bind, unbind, isBound
     bind(graphprogrammingMoveMouseListener).toSelf().inSingletonScope();
     bind(TYPES.MouseListener).toService(graphprogrammingMoveMouseListener);
     bind(MouseListener).toService(graphprogrammingMoveMouseListener);
-    
-    //------------------------------------------------------
 
     bind(DISymbol.KlighdIContextMenuService).to(ContextMenueProvider);
 

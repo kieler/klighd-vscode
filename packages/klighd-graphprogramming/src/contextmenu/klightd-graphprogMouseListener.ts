@@ -24,7 +24,7 @@ import { DISymbol } from "../symbols";
 import { Action, SelectAction } from "sprotty-protocol";
 
 // basicly the same implementation as in the context menu from sprotty however sprottys doesn't yet suport marking with 
-// rightclicking which seems quite inconvenient push request was made and is going to be resolved
+// rightclicking which seems quite inconvenient push request was made
 @injectable()
 export class graphprogrammingMouseListener extends MouseListener {
     @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher
@@ -54,7 +54,7 @@ export class graphprogrammingMouseListener extends MouseListener {
         //if it is selected maybe mult. nodes are selected for edeting
         if(isSelectable(target)){
             if(!isSelected(target)){
-                // SelectAction will only select the node wich was selected by right click
+                // SelectAction will only select the node wich was not yet selected by triggering the select action prior to showing the menu
                 const options = {selectedElementsIDs: [id], deselectedElementsIDs: Array.from(root.index.all().filter(isSelected), (val) => {return val.id})}; 
                 this.actionDispatcher.dispatch(SelectAction.create(options)).then(() => {
                     menuService.show( root, mousePosition);

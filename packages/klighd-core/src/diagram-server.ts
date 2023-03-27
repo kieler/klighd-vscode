@@ -75,9 +75,6 @@ import { Connection, SessionStorage } from "./services";
 import { SetSynthesisAction } from "./syntheses/actions";
 import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
 
-import { GraphDeleteAction, GraphAddHirachicalNodeAction, GraphAddRegionAction, 
-    GraphAddSuccessorAction, GraphChangeDestinationAction, GraphChangeRootAction, 
-    GraphRenameAction } from "@kieler/klighd-graphprogramming/lib/ServerMsg";
 
 /**
  * This class extends {@link DiagramServer} to handle different `klighd-core` specific
@@ -210,16 +207,6 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(SelectAction.KIND, this);
         registry.register(SetDiagramPieceAction.KIND, this);
         registry.register(ViewportResult.KIND, this);
-
-        // Graphprogramming Actions Need to do this either for every string thats programmed in the server or 
-        // register actions during runtime!
-        registry.register(GraphRenameAction.KIND, this);
-        registry.register(GraphAddSuccessorAction.KIND, this);
-        registry.register(GraphAddHirachicalNodeAction.KIND, this);
-        registry.register(GraphDeleteAction.KIND, this);
-        registry.register(GraphChangeRootAction.KIND, this);
-        registry.register(GraphChangeDestinationAction.KIND, this);
-        registry.register(GraphAddRegionAction.KIND, this);
 
     }
 
