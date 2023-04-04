@@ -160,8 +160,16 @@ export class Sidebar extends AbstractUIExtension {
     private addMouseLeaveListener(containerElement: HTMLElement): void {
         containerElement.addEventListener("mouseleave", (e) => {
             const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
-            if (currentPanelID && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
-                this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+            // Check if the mouse really left the bounding box of the container element.
+            // This is necessary because the mouseleave event is also triggered when the mouse
+            // "leaves" the sidebar to enter a tooltip. Take a small margin into account to
+            // avoid an issue where the mouseleave event is triggered it is still inside the
+            // container element.
+            const rect = containerElement.getBoundingClientRect();
+            if (e.x <= rect.left + 2 || e.x >= rect.right - 2 || e.y <= rect.top + 2 || e.y >= rect.bottom - 2) {
+                if (currentPanelID && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
+                    this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+                }
             }
 
         });
