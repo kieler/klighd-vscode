@@ -45,6 +45,7 @@ export class PopupModelProvider implements IPopupModelProvider {
         ) {
             const tooltip = this.findTooltip(request.parent, request.element.id);
             if (tooltip) {
+                const escapedTooltip = this.escapeHtml(tooltip);
                 return <HtmlRootSchema>{
                     type: "html",
                     id: "popup",
@@ -52,7 +53,7 @@ export class PopupModelProvider implements IPopupModelProvider {
                         <PreRenderedElementSchema>{
                             type: "pre-rendered",
                             id: "popup-body",
-                            code: `<div>${tooltip}</div>`,
+                            code: `<div class="klighd-popup">${escapedTooltip}</div>`,
                         },
                     ],
                     canvasBounds: request.bounds,
@@ -74,5 +75,20 @@ export class PopupModelProvider implements IPopupModelProvider {
         if (rendering) {
             return rendering.properties['klighd.tooltip'] as string;
         }
+    }
+
+    /**
+     * Escapes the given string to prevent XSS attacks and to let it appear correctly in HTML.
+     * @param unsafe The string to escape.
+     * @returns The escaped string.
+     */
+    private escapeHtml(unsafe: string): string {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;")
+            .replace(/\n/g, "<br/>");
     }
 }
