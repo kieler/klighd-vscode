@@ -16,7 +16,7 @@
  */
 /** @jsx svg */
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { VNode } from 'snabbdom';
+import { VNode, VNodeStyle } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol';
 import { DetailLevel } from './depth-map';
@@ -99,7 +99,10 @@ export function renderRectangularShape(
     context: SKGraphModelRenderer,
     childOfNodeTitle?: boolean): VNode {
 
-    const gAttrs = {
+    const gAttrs: {
+        transform?: string | undefined
+        style?: VNodeStyle | undefined
+    } = {
         ...(boundsAndTransformation.transformation.length !== 0 ? { transform: boundsAndTransformation.transformation.map(transformationToSVGString).join('') } : {})
     }
 
@@ -211,12 +214,34 @@ export function renderRectangularShape(
             break
         }
         case K_IMAGE: {
-            // TODO: clipShape is not used yet.
-            const id = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
-            const extension = id.slice(id.lastIndexOf('.') + 1)
-            const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(id)
-            element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
+            const clipShape = (rendering as KImage).clipShape
+            const fullImagePath = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
+            const id = rendering.properties['klighd.lsp.rendering.id'] as string
+            const clipId = `${id}$clip`
+            const extension = fullImagePath.slice(fullImagePath.lastIndexOf('.') + 1)
+            const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(fullImagePath)
+            let clipPath: VNode | undefined = undefined
+
+            // Render the clip shape within an SVG clipPath element to be used as a clipping mask for the image.
+            if (clipShape !== undefined) {
+                clipShape.isClipRendering = true
+                const outerClipShape = renderKRendering(clipShape, parent, stylesToPropagate, context, childOfNodeTitle)
+                // renderings start with an outermost <g> element. If that is the case, remove that element and use its child instead.
+                if (outerClipShape?.sel === 'g' && outerClipShape?.children !== undefined) {
+                    clipPath = <clipPath
+                        id={clipId}> 
+                            {outerClipShape?.children[0]}
+                    </clipPath>
+                }
+                gAttrs.style = {
+                    clipPath: `url(#${clipId})`
+                }
+            }
+            // Render the image.
+            element = <g id={id}
+                {...gAttrs}>
+                    {...clipPath ? [clipPath] : []}
+                    {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
             </g>
             break
         }
@@ -537,8 +562,8 @@ export function renderKText(rendering: KText,
  */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, childOfNodeTitle?: boolean): (VNode | undefined)[] {
-    // children only should be rendered if the parentElement is not a shadow
-    if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
+    // children only should be rendered if the parentElement is not a shadow or the rendering is not a clip rendering.
+    if (!(parentElement instanceof SKNode) || (!parentElement.shadow && !parentRendering.isClipRendering)) {
         const renderings: (VNode | undefined)[] = []
         for (const childRendering of parentRendering.children) {
             const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, childOfNodeTitle)
