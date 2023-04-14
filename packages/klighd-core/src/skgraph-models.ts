@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -104,6 +104,9 @@ export interface KRendering extends KGraphData, KStyleHolder {
     // and similar methods on client side for every rendering
 
     properties: Record<string, unknown>
+
+    /** If this rendering is used as a clip rendering. Will not be set in the model and is to be used during rendering only. */
+    isClipRendering?: boolean
 }
 
 /**
