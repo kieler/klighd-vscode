@@ -23,8 +23,8 @@ import { DetailLevel } from './depth-map';
 import { ShadowOption, Shadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
-    Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
-    KRoundedRectangle, KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
+    HorizontalAlignment, KChildArea, KContainerRendering, KHorizontalAlignment, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
+    KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
     K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
 import { hasAction } from './skgraph-utils';
@@ -33,6 +33,7 @@ import {
     ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, DEFAULT_LINE_WIDTH, getKStyles, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
+import { renderKArc, renderKEllipse, renderKImage, renderKRoundedRectangle } from './view-render-rectangular-shape';
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
 
@@ -130,119 +131,25 @@ export function renderRectangularShape(
     let element: VNode | undefined = undefined
     switch (rendering.type) {
         case K_ARC: {
-            const kArcRendering = rendering as KArc
-
-            let sweepFlag = 0
-            let angle = kArcRendering.arcAngle
-            // For a negative angle, rotate the other way around.
-            if (angle < 0) {
-                angle = -angle
-                sweepFlag = 1
-            }
-            // If the angle is bigger than or equal to 360 degrees, use the same rendering as a KEllipse via fallthrough to that rendering instead.
-            if (angle < 360) {
-                // Calculation to get the start and endpoint of the arc from the angles given.
-                // Reduce the width and height by half the linewidth on both sides, so the ellipse really stays within the given bounds.
-                const width = boundsAndTransformation.bounds.width - lineWidth
-                const height = boundsAndTransformation.bounds.height - lineWidth
-                const rX = width / 2
-                const rY = height / 2
-                const midX = rX + lineWidth / 2
-                const midY = rY + lineWidth / 2
-                const startX = midX + rX * Math.cos(kArcRendering.startAngle * Math.PI / 180)
-                const startY = midY - rY * Math.sin(kArcRendering.startAngle * Math.PI / 180)
-                const endAngle = kArcRendering.startAngle + kArcRendering.arcAngle
-                const endX = midX + rX * Math.cos(endAngle * Math.PI / 180)
-                const endY = midY - rY * Math.sin(endAngle * Math.PI / 180)
-
-
-                // If the angle is bigger or equal 180 degrees, use the large arc as of the w3c path specification
-                // https://www.w3.org/TR/SVG/paths.html#PathDataEllipticalArcCommands
-                const largeArcFlag = angle >= 180 ? 1 : 0
-                // Rotation is not handled via KArcs but via KRotations, so leave this value as 0.
-                const rotate = 0
-
-                // The main arc.
-                let d = `M${startX},${startY}A${rX},${rY},${rotate},${largeArcFlag},${sweepFlag},${endX},${endY}`
-                switch (kArcRendering.arcType) {
-                    case Arc.OPEN: {
-                        // Open chords do not have any additional lines.
-                        break
-                    }
-                    case Arc.CHORD: {
-                        // Add a straight line from the end to the beginning point.
-                        d += `L${startX},${startY}`
-                        break
-                    }
-                    case Arc.PIE: {
-                        // Add a straight line from the end to the center and then back to the beginning point.
-                        d += `L${midX},${midY}L${startX},${startY}`
-                        break
-                    }
-                }
-
-                element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                    {...renderSVGArc(lineStyles, colorStyles, shadowStyles, d, styles.kShadow)}
-                    {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
-                </g>
-                break
-            } else {
-                // Fallthrough to KEllipse case.
-            }
+            element = renderKArc(rendering, parent, boundsAndTransformation, styles, stylesToPropagate,
+                context, colorStyles, lineStyles, shadowStyles, lineWidth, gAttrs, childOfNodeTitle)
+            break
         }
         // eslint-disable-next-line
         case K_ELLIPSE: {
-            element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGEllipse(boundsAndTransformation.bounds, lineWidth, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
-            </g>
+            element = renderKEllipse(rendering, parent, boundsAndTransformation, styles, stylesToPropagate,
+                context, colorStyles, lineStyles, shadowStyles, lineWidth, gAttrs, childOfNodeTitle)
             break
         }
         case K_RECTANGLE:
         case K_ROUNDED_RECTANGLE: {
-            // like this the rx and ry will be undefined during the rendering of a roundedRectangle and therefore those fields will be left out.
-            // Rounded rectangles work in svg just like regular rectangles just with those two added variables, so this call will result in a regular rectangle.
-
-            // Rendering-specific attributes
-            const rx = (rendering as KRoundedRectangle).cornerWidth
-            const ry = (rendering as KRoundedRectangle).cornerHeight
-
-            element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGRect(boundsAndTransformation.bounds, lineWidth, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
-                {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
-            </g>
+            element = renderKRoundedRectangle(rendering, parent, boundsAndTransformation, styles, stylesToPropagate,
+                context, colorStyles, lineStyles, shadowStyles, lineWidth, gAttrs, childOfNodeTitle)
             break
         }
         case K_IMAGE: {
-            const clipShape = (rendering as KImage).clipShape
-            const fullImagePath = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
-            const id = rendering.properties['klighd.lsp.rendering.id'] as string
-            const clipId = `${id}$clip`
-            const extension = fullImagePath.slice(fullImagePath.lastIndexOf('.') + 1)
-            const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(fullImagePath)
-            let clipPath: VNode | undefined = undefined
-
-            // Render the clip shape within an SVG clipPath element to be used as a clipping mask for the image.
-            if (clipShape !== undefined) {
-                clipShape.isClipRendering = true
-                const outerClipShape = renderKRendering(clipShape, parent, stylesToPropagate, context, childOfNodeTitle)
-                // renderings start with an outermost <g> element. If that is the case, remove that element and use its child instead.
-                if (outerClipShape?.sel === 'g' && outerClipShape?.children !== undefined) {
-                    clipPath = <clipPath
-                        id={clipId}> 
-                            {outerClipShape?.children[0]}
-                    </clipPath>
-                }
-                gAttrs.style = {
-                    clipPath: `url(#${clipId})`
-                }
-            }
-            // Render the image.
-            element = <g id={id}
-                {...gAttrs}>
-                    {...clipPath ? [clipPath] : []}
-                    {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
-            </g>
+            element = renderKImage(rendering, parent, boundsAndTransformation, styles,
+                stylesToPropagate, context, shadowStyles, gAttrs, childOfNodeTitle)
             break
         }
         default: {
