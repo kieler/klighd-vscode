@@ -445,6 +445,7 @@ export function renderKText(rendering: KText,
             width={boundingBoxAndTransformation?.bounds?.width ?? 0}
             height={boundingBoxAndTransformation?.bounds?.height ?? 0}
             fill={colorStyles.background.color}
+            style={{'opacity': colorStyles.background.opacity ?? '1'}}
         />
     }
 
