@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -64,16 +64,50 @@ const URL_END = ')'
 
 // Default values for most Styles, that are used if no style is given Default values taken from PNodeController.java
 export const DEFAULT_FONT_BOLD = false
+export const DEFAULT_K_FONT_BOLD = {
+    bold: DEFAULT_FONT_BOLD
+} as KFontBold
 export const DEFAULT_FONT_ITALIC = false
+export const DEFAULT_K_FONT_ITALIC = {
+    italic: DEFAULT_FONT_ITALIC
+} as KFontItalic
 export const DEFAULT_FONT_NAME = 'Overpass, sans-serif'
+export const DEFAULT_K_FONT_NAME = {
+    name: DEFAULT_FONT_NAME
+} as KFontName
 export const DEFAULT_FONT_SIZE = 10
+export const DEFAULT_K_FONT_SIZE = {
+    size: DEFAULT_FONT_SIZE,
+    scaleWithZoom: false // TODO: implement this
+} as KFontSize
 export const DEFAULT_HORIZONTAL_ALIGNMENT = HorizontalAlignment.CENTER
+export const DEFAULT_K_HORIZONTAL_ALIGNMENT = {
+    horizontalAlignment: DEFAULT_HORIZONTAL_ALIGNMENT
+} as KHorizontalAlignment
 export const DEFAULT_INVISIBILITY = false
+export const DEFAULT_K_INVISIBILITY = {
+    invisible: DEFAULT_INVISIBILITY
+} as KInvisibility
 export const DEFAULT_LINE_CAP = LineCap.CAP_FLAT
+export const DEFAULT_K_LINE_CAP = {
+    lineCap: DEFAULT_LINE_CAP
+} as KLineCap
 export const DEFAULT_LINE_JOIN = LineJoin.JOIN_MITER
 export const DEFAULT_MITER_LIMIT = 10
+export const DEFAULT_K_LINE_JOIN = {
+    lineJoin: DEFAULT_LINE_JOIN,
+    miterLimit: DEFAULT_MITER_LIMIT
+} as KLineJoin
 export const DEFAULT_LINE_STYLE = LineStyle.SOLID
+export const DEFAULT_K_LINE_STYLE = {
+    lineStyle: DEFAULT_LINE_STYLE,
+    dashOffset: 0,
+    dashPattern: [0]
+} as KLineStyle
 export const DEFAULT_LINE_WIDTH = 1
+export const DEFAULT_K_LINE_WIDTH = {
+    lineWidth: DEFAULT_LINE_WIDTH
+} as KLineWidth
 export const DEFAULT_FILL = {
     color: 'none'
 } as ColorStyle
@@ -85,6 +119,9 @@ export const DEFAULT_FOREGROUND = {
     color: 'black'
 } as ColorStyle
 export const DEFAULT_VERTICAL_ALIGNMENT = VerticalAlignment.CENTER
+export const DEFAULT_K_VERTICAL_ALIGNMENT = {
+    verticalAlignment: DEFAULT_VERTICAL_ALIGNMENT
+} as KVerticalAlignment
 export const DEFAULT_SHADOW = undefined
 export const DEFAULT_SHADOW_DEF = undefined
 export const DEFAULT_CORNER_WIDTH = 0
@@ -98,68 +135,42 @@ export const DEFAULT_MITER_LIMIT_SVG = '4'
 export class KStyles {
     kBackground: KBackground | undefined
     kForeground: KForeground | undefined
-    kFontBold: KFontBold
-    kFontItalic: KFontItalic
-    kFontName: KFontName
-    kFontSize: KFontSize
-    kHorizontalAlignment: KHorizontalAlignment
+    kFontBold: KFontBold | undefined
+    kFontItalic: KFontItalic | undefined
+    kFontName: KFontName | undefined
+    kFontSize: KFontSize | undefined
+    kHorizontalAlignment: KHorizontalAlignment | undefined
     kInvisibility: KInvisibility | undefined
-    kLineCap: KLineCap
-    kLineJoin: KLineJoin
-    kLineStyle: KLineStyle
-    kLineWidth: KLineWidth
+    kLineCap: KLineCap | undefined
+    kLineJoin: KLineJoin | undefined
+    kLineStyle: KLineStyle | undefined
+    kLineWidth: KLineWidth | undefined
     kRotation: KRotation | undefined
     kShadow: KShadow | undefined
     kStyleRef: KStyleRef | undefined
     kTextStrikeout: KTextStrikeout | undefined
     kTextUnderline: KTextUnderline | undefined
-    kVerticalAlignment: KVerticalAlignment
+    kVerticalAlignment: KVerticalAlignment | undefined
     constructor(initialize?: boolean) {
         if (initialize !== false) {
             this.kBackground = undefined
             this.kForeground = undefined
-            this.kFontBold = {
-                bold: DEFAULT_FONT_BOLD
-            } as KFontBold
-            this.kFontItalic = {
-                italic: DEFAULT_FONT_ITALIC
-            } as KFontItalic
-            this.kFontName = {
-                name: DEFAULT_FONT_NAME
-            } as KFontName
-            this.kFontSize = {
-                size: DEFAULT_FONT_SIZE,
-                scaleWithZoom: false // TODO: implement this
-            } as KFontSize
-            this.kHorizontalAlignment = {
-                horizontalAlignment: DEFAULT_HORIZONTAL_ALIGNMENT
-            } as KHorizontalAlignment
-            this.kInvisibility = {
-                invisible: DEFAULT_INVISIBILITY
-            } as KInvisibility
-            this.kLineCap = {
-                lineCap: DEFAULT_LINE_CAP
-            } as KLineCap
-            this.kLineJoin = {
-                lineJoin: DEFAULT_LINE_JOIN,
-                miterLimit: DEFAULT_MITER_LIMIT
-            } as KLineJoin
-            this.kLineStyle = {
-                lineStyle: DEFAULT_LINE_STYLE,
-                dashOffset: 0,
-                dashPattern: [0]
-            } as KLineStyle
-            this.kLineWidth = {
-                lineWidth: DEFAULT_LINE_WIDTH
-            } as KLineWidth
+            this.kFontBold = DEFAULT_K_FONT_BOLD
+            this.kFontItalic = DEFAULT_K_FONT_ITALIC
+            this.kFontName = DEFAULT_K_FONT_NAME
+            this.kFontSize = DEFAULT_K_FONT_SIZE
+            this.kHorizontalAlignment = DEFAULT_K_HORIZONTAL_ALIGNMENT
+            this.kInvisibility = DEFAULT_K_INVISIBILITY
+            this.kLineCap = DEFAULT_K_LINE_CAP
+            this.kLineJoin = DEFAULT_K_LINE_JOIN
+            this.kLineStyle = DEFAULT_K_LINE_STYLE
+            this.kLineWidth = DEFAULT_K_LINE_WIDTH
             this.kRotation = undefined
             this.kShadow = DEFAULT_SHADOW
             this.kStyleRef = undefined
             this.kTextStrikeout = undefined
             this.kTextUnderline = undefined
-            this.kVerticalAlignment = {
-                verticalAlignment: DEFAULT_VERTICAL_ALIGNMENT
-            } as KVerticalAlignment
+            this.kVerticalAlignment = DEFAULT_K_VERTICAL_ALIGNMENT
         }
     }
 }
@@ -172,45 +183,47 @@ export class KStyles {
  */
 export function getKStyles(parent: SKGraphElement, styleHolder: KStyleHolder & KGraphData, propagatedStyles: KStyles, context: SKGraphModelRenderer, stylesToPropagate?: KStyles): KStyles {
     // TODO: not all of these are implemented yet
-    const styles = new KStyles(false)
-    // Include all propagated styles.
-    copyStyles(propagatedStyles, styles)
+
+    // Style Priority in KLighD:
+    // 1. Styles propagated from immedeate parent renderings
+    // 2. Styles propagated from recursive parent rendering (deeper down in the hierarchy first)
+    // 3. Styles explicitly given to the rendering
+    // 4. Default styles
+    // Caution: Styles that are propagated do NOT apply to the rendering itself, if there are parent propagated styles. Only the children will have this propagated style as their first priority.
+
+    // The styles to propagate start as the current propagated styles to be overwritten by new styles.
+    const styles = new KStyles
     if (stylesToPropagate !== undefined) {
         copyStyles(propagatedStyles, stylesToPropagate)
     }
-    const styleList = styleHolder.styles
+    let styleList = styleHolder.styles
 
     if (styleList === undefined) {
         return styles
     }
+    // First, check if we need to incorporate default selection styles.
+    // That is the case if the parend is selected and no selection styles are available.
+    if (isSelectable(parent) && parent.selected) {
+        if (styleList.filter(style => style.selection === true).length === 0) {
+            // ...if no selection styles are available, apply default ones.
+            if (isKText(styleHolder)) {
+                styleList = styleList.concat(getDefaultTextSelectionStyles())
+            } else if (styleHolder === getKRendering(parent.data, context)) {
+                // For non-text renderings this only applies to the root rendering
+                styleList = styleList.concat(getDefaultNonTextSelectionStyles())
+            }
+        }
+    }
 
-    // First, apply all non-selection styles.
+    // Then, apply all styles in order of appereance in the style list.
     for (const style of styleList) {
-        if (style.selection === false) {
+        // Only apply selection styles if the parent is selected.
+        if (style.selection === false || isSelectable(parent) && parent.selected) {
             applyKStyle(style, styles, stylesToPropagate)
         }
     }
-    // Then, override with selection styles, if any are available.
-    if (isSelectable(parent) && parent.selected) {
-        const selectionStyles = styleList.filter(style => style.selection === true)
-        if (selectionStyles.length !== 0) {
-            for (const style of selectionStyles) {
-                applyKStyle(style, styles, stylesToPropagate)
-            }
-        } else {
-            // ...if no selection styles are available, apply default ones.
-            if (isKText(styleHolder)) {
-                for (const style of getDefaultTextSelectionStyles()) {
-                    applyKStyle(style, styles, stylesToPropagate)
-                }
-            } else if (styleHolder === getKRendering(parent.data, context)) {
-                // For non-text renderings this only applies to the root rendering
-                for (const style of getDefaultNonTextSelectionStyles()) {
-                    applyKStyle(style, styles, stylesToPropagate)
-                }
-            }
-        }
-    }
+    // Finally, override with propagated styles.
+    copyStyles(propagatedStyles, styles)
     return styles
 }
 
@@ -420,24 +433,24 @@ export function applyKStyle(style: KStyle, styles: KStyles, stylesToPropagage?: 
  * @param to The KStyles to copy to.
  */
 export function copyStyles(from: KStyles, to: KStyles): void {
-    to.kBackground = from.kBackground
-    to.kForeground = from.kForeground
-    to.kFontBold = from.kFontBold
-    to.kFontItalic = from.kFontItalic
-    to.kFontName = from.kFontName
-    to.kFontSize = from.kFontSize
-    to.kHorizontalAlignment = from.kHorizontalAlignment
-    to.kInvisibility = from.kInvisibility
-    to.kLineCap = from.kLineCap
-    to.kLineJoin = from.kLineJoin
-    to.kLineStyle = from.kLineStyle
-    to.kLineWidth = from.kLineWidth
-    to.kRotation = from.kRotation
-    to.kShadow = from.kShadow
-    to.kStyleRef = from.kStyleRef
-    to.kTextStrikeout = from.kTextStrikeout
-    to.kTextUnderline = from.kTextUnderline
-    to.kVerticalAlignment = from.kVerticalAlignment
+    to.kBackground = from.kBackground ?? to.kBackground
+    to.kForeground = from.kForeground ?? to.kForeground
+    to.kFontBold = from.kFontBold ?? to.kFontBold
+    to.kFontItalic = from.kFontItalic ?? to.kFontItalic
+    to.kFontName = from.kFontName ?? to.kFontName
+    to.kFontSize = from.kFontSize ?? to.kFontSize
+    to.kHorizontalAlignment = from.kHorizontalAlignment ?? to.kHorizontalAlignment
+    to.kInvisibility = from.kInvisibility ?? to.kInvisibility
+    to.kLineCap = from.kLineCap ?? to.kLineCap
+    to.kLineJoin = from.kLineJoin ?? to.kLineJoin
+    to.kLineStyle = from.kLineStyle ?? to.kLineStyle
+    to.kLineWidth = from.kLineWidth ?? to.kLineWidth
+    to.kRotation = from.kRotation ?? to.kRotation
+    to.kShadow = from.kShadow ?? to.kShadow
+    to.kStyleRef = from.kStyleRef ?? to.kStyleRef
+    to.kTextStrikeout = from.kTextStrikeout ?? to.kTextStrikeout
+    to.kTextUnderline = from.kTextUnderline ?? to.kTextUnderline
+    to.kVerticalAlignment = from.kVerticalAlignment ?? to.kVerticalAlignment
 }
 
 // ----------------------------- Functions for rendering different KStyles as VNodes in svg --------------------------------------------
@@ -762,16 +775,14 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         const minimumLineWidth = context.renderOptionsRegistry.getValueOrDefault(MinimumLineWidth)
         // The line width the requested one would have when rendered in the current zoom level.
         const realLineWidth = lineWidth * getZoom(target)
-        if (styles.kLineWidth.lineWidth == 0) {
-            lineWidth = 0
-        } else if (realLineWidth < minimumLineWidth) {
+        if (realLineWidth !== 0 && realLineWidth < minimumLineWidth) {
             // scale the used line width up to appear as big as the minimum line width requested.
             lineWidth = lineWidth * (minimumLineWidth / realLineWidth)
         }
     }
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)
     const lineJoin = styles.kLineJoin === undefined ? undefined : lineJoinText(styles.kLineJoin)
-    const miterLimit = styles.kLineJoin.miterLimit === undefined ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
+    const miterLimit = styles.kLineJoin?.miterLimit === undefined ? DEFAULT_MITER_LIMIT : styles.kLineJoin.miterLimit
     return {
         lineWidth: lineWidth === DEFAULT_LINE_WIDTH ? undefined : lineWidth + 'px',
         lineCap: lineCap === DEFAULT_LINE_CAP_SVG ? undefined : lineCap,
@@ -798,13 +809,13 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
  */
 export function getSvgTextStyles(styles: KStyles): TextStyles {
     return {
-        dominantBaseline: verticalAlignmentText(styles.kVerticalAlignment.verticalAlignment === undefined ?
+        dominantBaseline: verticalAlignmentText(styles.kVerticalAlignment?.verticalAlignment === undefined ?
             DEFAULT_VERTICAL_ALIGNMENT : styles.kVerticalAlignment.verticalAlignment),
         fontFamily: styles.kFontName === undefined ? undefined : camelToKebab(styles.kFontName.name),
         // Convert pt to px here with a default value of 96 dpi(px/in) and 72pt/in, making this a conversion from in to px.
         fontSize: styles.kFontSize === undefined ? undefined : styles.kFontSize.size * 96 / 72 + 'px',
-        fontStyle: styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
-        fontWeight: styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
+        fontStyle: styles.kFontItalic === undefined || styles.kFontItalic.italic === DEFAULT_FONT_ITALIC ? undefined : 'italic',
+        fontWeight: styles.kFontBold === undefined || styles.kFontBold.bold === DEFAULT_FONT_BOLD ? undefined : 'bold',
         textDecorationLine: styles.kTextUnderline === undefined || styles.kTextUnderline.underline === Underline.NONE ? undefined : 'underline',
         textDecorationStyle: styles.kTextUnderline === undefined ? undefined : textDecorationStyleText(styles.kTextUnderline as KTextUnderline)
         // textDecorationColor: styles.kTextUnderline === undefined ? undefined : textDecorationColor(styles.kTextUnderline as KTextUnderline),

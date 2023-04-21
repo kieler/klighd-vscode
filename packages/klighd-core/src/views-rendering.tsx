@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,21 +16,21 @@
  */
 /** @jsx svg */
 import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { VNode } from 'snabbdom';
+import { VNode, VNodeStyle } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol';
 import { DetailLevel } from './depth-map';
 import { ShadowOption, Shadows, SimplifySmallText, TextSimplificationThreshold, TitleScalingFactor } from './options/render-options-registry';
 import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
-    Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KForeground, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
+    Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
     KRoundedRectangle, KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
     K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
 import { hasAction } from './skgraph-utils';
 import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints, isRotation, isTranslation, reverseTransformations, Rotation, Scale, Transformation, transformationToSVGString, Translation } from './views-common';
 import {
-    ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, getKStyles, getSvgColorStyle, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
+    ColorStyles, DEFAULT_CLICKABLE_FILL, DEFAULT_FILL, DEFAULT_LINE_WIDTH, getKStyles, getSvgColorStyles, getSvgLineStyles, getSvgShadowStyles, getSvgTextStyles, isInvisible,
     KStyles, LineStyles
 } from './views-styles';
 
@@ -99,7 +99,10 @@ export function renderRectangularShape(
     context: SKGraphModelRenderer,
     childOfNodeTitle?: boolean): VNode {
 
-    const gAttrs = {
+    const gAttrs: {
+        transform?: string | undefined
+        style?: VNodeStyle | undefined
+    } = {
         ...(boundsAndTransformation.transformation.length !== 0 ? { transform: boundsAndTransformation.transformation.map(transformationToSVGString).join('') } : {})
     }
 
@@ -121,6 +124,7 @@ export function renderRectangularShape(
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
 
     const lineStyles = getSvgLineStyles(styles, parent, context)
+    const lineWidth = (styles.kLineWidth?.lineWidth ?? DEFAULT_LINE_WIDTH)
 
     // Create the svg element for this rendering.
     let element: VNode | undefined = undefined
@@ -139,12 +143,12 @@ export function renderRectangularShape(
             if (angle < 360) {
                 // Calculation to get the start and endpoint of the arc from the angles given.
                 // Reduce the width and height by half the linewidth on both sides, so the ellipse really stays within the given bounds.
-                const width = boundsAndTransformation.bounds.width - styles.kLineWidth.lineWidth
-                const height = boundsAndTransformation.bounds.height - styles.kLineWidth.lineWidth
+                const width = boundsAndTransformation.bounds.width - lineWidth
+                const height = boundsAndTransformation.bounds.height - lineWidth
                 const rX = width / 2
                 const rY = height / 2
-                const midX = rX + styles.kLineWidth.lineWidth / 2
-                const midY = rY + styles.kLineWidth.lineWidth / 2
+                const midX = rX + lineWidth / 2
+                const midY = rY + lineWidth / 2
                 const startX = midX + rX * Math.cos(kArcRendering.startAngle * Math.PI / 180)
                 const startY = midY - rY * Math.sin(kArcRendering.startAngle * Math.PI / 180)
                 const endAngle = kArcRendering.startAngle + kArcRendering.arcAngle
@@ -189,7 +193,7 @@ export function renderRectangularShape(
         // eslint-disable-next-line
         case K_ELLIPSE: {
             element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGEllipse(boundsAndTransformation.bounds, styles.kLineWidth.lineWidth, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
+                {...renderSVGEllipse(boundsAndTransformation.bounds, lineWidth, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
@@ -204,18 +208,40 @@ export function renderRectangularShape(
             const ry = (rendering as KRoundedRectangle).cornerHeight
 
             element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGRect(boundsAndTransformation.bounds, styles.kLineWidth.lineWidth, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
+                {...renderSVGRect(boundsAndTransformation.bounds, lineWidth, rx, ry, lineStyles, colorStyles, shadowStyles, styles.kShadow)}
                 {renderChildRenderings(rendering, parent, stylesToPropagate, context, childOfNodeTitle)}
             </g>
             break
         }
         case K_IMAGE: {
-            // TODO: clipShape is not used yet.
-            const id = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
-            const extension = id.slice(id.lastIndexOf('.') + 1)
-            const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(id)
-            element = <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...gAttrs}>
-                {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
+            const clipShape = (rendering as KImage).clipShape
+            const fullImagePath = (rendering as KImage).bundleName + ':' + (rendering as KImage).imagePath
+            const id = rendering.properties['klighd.lsp.rendering.id'] as string
+            const clipId = `${id}$clip`
+            const extension = fullImagePath.slice(fullImagePath.lastIndexOf('.') + 1)
+            const image = 'data:image/' + extension + ';base64,' + sessionStorage.getItem(fullImagePath)
+            let clipPath: VNode | undefined = undefined
+
+            // Render the clip shape within an SVG clipPath element to be used as a clipping mask for the image.
+            if (clipShape !== undefined) {
+                clipShape.isClipRendering = true
+                const outerClipShape = renderKRendering(clipShape, parent, stylesToPropagate, context, childOfNodeTitle)
+                // renderings start with an outermost <g> element. If that is the case, remove that element and use its child instead.
+                if (outerClipShape?.sel === 'g' && outerClipShape?.children !== undefined) {
+                    clipPath = <clipPath
+                        id={clipId}> 
+                            {outerClipShape?.children[0]}
+                    </clipPath>
+                }
+                gAttrs.style = {
+                    clipPath: `url(#${clipId})`
+                }
+            }
+            // Render the image.
+            element = <g id={id}
+                {...gAttrs}>
+                    {...clipPath ? [clipPath] : []}
+                    {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
             </g>
             break
         }
@@ -407,7 +433,21 @@ export function renderKText(rendering: KText,
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyle = getSvgColorStyle(styles.kForeground as KForeground, context)
+    const colorStyles = getSvgColorStyles(styles, context, parent)
+
+    // Calculate the background, if needed, as a rectangle to be placed behind the text.
+    let background: VNode | undefined = undefined
+    if (colorStyles.background.color !== 'none') {
+        const boundingBoxAndTransformation = findBoundsAndTransformationData(rendering, styles, parent, context, false, true)
+        background = <rect 
+            x={boundingBoxAndTransformation?.bounds?.x ?? 0}
+            y={boundingBoxAndTransformation?.bounds?.y ?? 0}
+            width={boundingBoxAndTransformation?.bounds?.width ?? 0}
+            height={boundingBoxAndTransformation?.bounds?.height ?? 0}
+            fill={colorStyles.background.color}
+            style={{'opacity': colorStyles.background.opacity ?? '1'}}
+        />
+    }
 
     const paperShadows: boolean = context.renderOptionsRegistry.getValueOrDefault(Shadows) === ShadowOption.PAPER_MODE
     const shadowStyles = paperShadows ? getSvgShadowStyles(styles, context) : undefined
@@ -422,19 +462,19 @@ export function renderKText(rendering: KText,
         const proportionalHeight = 0.5 // height of replacement compared to full text height
         if (context.viewport && rendering.properties['klighd.calculated.text.bounds'] as Bounds
             && (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height * context.viewport.zoom <= simplificationThreshold) {
-            const replacements: VNode[] = []
+            const replacements: VNode[] = background ? [background] : []
             lines.forEach((line, index) => {
-                const xPos = boundsAndTransformation && boundsAndTransformation.bounds.x ? boundsAndTransformation.bounds.x : 0
-                const yPos = boundsAndTransformation && boundsAndTransformation.bounds.y && rendering.properties['klighd.calculated.text.line.heights'] as number[] && boundsAndTransformation.bounds.height ?
+                const xPos = boundsAndTransformation?.bounds?.x ?? 0
+                const yPos = boundsAndTransformation?.bounds?.y && rendering.properties['klighd.calculated.text.line.heights'] as number[] && boundsAndTransformation?.bounds?.height ?
                     boundsAndTransformation.bounds.y - boundsAndTransformation.bounds.height / 2 + (rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] / 2 * proportionalHeight : 0
                 const width = rendering.properties['klighd.calculated.text.line.widths'] as number[] ? (rendering.properties['klighd.calculated.text.line.widths'] as number[])[index] : 0
                 const height = rendering.properties['klighd.calculated.text.line.heights'] as number[] ? (rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] * proportionalHeight : 0
                 // Generate rectangle for each line with color style.
-                const curLine = colorStyle ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyle.color} />
-                    : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" />
+                const curLine = colorStyles.foreground ? <rect x={xPos} y={yPos} width={width} height={height} fill={colorStyles.foreground.color} opacity="0.5" />
+                    : <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" opacity="0.5" />
                 replacements.push(curLine)
             });
-            return <g id={rendering.properties['klighd.lsp.rendering.id'] as string} {...{}}>
+            return <g id={rendering.properties['klighd.lsp.rendering.id'] as string}>
                 {...replacements}
             </g>
         }
@@ -452,19 +492,19 @@ export function renderKText(rendering: KText,
         ...{ 'text-decoration-line': textStyles.textDecorationLine },
         ...{ 'text-decoration-style': textStyles.textDecorationStyle },
         ...{ 'opacity': opacity },
-        ...(colorStyle ? { 'fill-opacity': colorStyle.opacity } : {})
+        ...(colorStyles.foreground ? { 'fill-opacity': colorStyles.foreground.opacity } : {})
     }
 
     // The attributes to be contained in the returned text node.
     const attrs = {
         x: boundsAndTransformation.bounds.x,
         style: style,
-        ...(colorStyle ? { fill: colorStyle.color } : {}),
+        ...(colorStyles.foreground ? { fill: colorStyles.foreground.color } : {}),
         ...(shadowStyles ? { filter: shadowStyles } : {}),
         ...{ 'xml:space': 'preserve' } // This attribute makes the text size adjustment include any trailing white spaces.
     } as any
 
-    let elements: VNode[]
+    const elements: VNode[] = background ? [background] : []
     if (lines.length === 1) {
         // If the text has only one line, just put the text in the text node directly.
         attrs.y = boundsAndTransformation.bounds.y;
@@ -476,22 +516,21 @@ export function renderKText(rendering: KText,
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
-        elements = [
+        elements.push(
             <text {...attrs}>
                 {...lines}
             </text>
-        ]
+        )
     } else {
         // Otherwise, put each line of text in a separate <text> element.
         const calculatedTextLineWidths = rendering.properties['klighd.calculated.text.line.widths'] as number[]
         const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
-        let currentY = boundsAndTransformation.bounds.y ? boundsAndTransformation.bounds.y : 0
+        let currentY = boundsAndTransformation.bounds.y ?? 0
 
         if (rendering.calculatedTextLineWidths) {
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
-        elements = []
         lines.forEach((line, index) => {
             const currentElement = <text
                 {...attrs}
@@ -524,8 +563,8 @@ export function renderKText(rendering: KText,
  */
 export function renderChildRenderings(parentRendering: KContainerRendering, parentElement: SKGraphElement, propagatedStyles: KStyles,
     context: SKGraphModelRenderer, childOfNodeTitle?: boolean): (VNode | undefined)[] {
-    // children only should be rendered if the parentElement is not a shadow
-    if (!(parentElement instanceof SKNode) || !parentElement.shadow) {
+    // children only should be rendered if the parentElement is not a shadow or the rendering is not a clip rendering.
+    if (!(parentElement instanceof SKNode) || (!parentElement.shadow && !parentRendering.isClipRendering)) {
         const renderings: (VNode | undefined)[] = []
         for (const childRendering of parentRendering.children) {
             const rendering = getRendering([childRendering], parentElement, propagatedStyles, context, childOfNodeTitle)
@@ -888,7 +927,7 @@ export function renderKRendering(kRendering: KRendering,
     childOfNodeTitle?: boolean): VNode | undefined { // TODO: not all of these are implemented yet
 
     // The styles that should be propagated to the children of this rendering. Will be modified in the getKStyles call.
-    const stylesToPropagate = new KStyles
+    const stylesToPropagate = new KStyles(false)
     // Extract the styles of the rendering into a more presentable object.
     const styles = getKStyles(parent, kRendering, propagatedStyles, context, stylesToPropagate)
 

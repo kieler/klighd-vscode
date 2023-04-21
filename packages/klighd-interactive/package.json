@@ -1,6 +1,6 @@
 {
   "name": "@kieler/klighd-interactive",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A module for klighd-core to interactively apply constraints to the diagram",
   "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
   "license": "EPL-2.0",
@@ -14,7 +14,7 @@
     "directory": "packages/klighd-core"
   },
   "scripts": {
-    "clean": "rm -rf lib",
+    "clean": "rimraf lib",
     "lint": "eslint .",
     "build": "tsc",
     "watch": "tsc -w",
@@ -24,6 +24,7 @@
     "sprotty": "0.12.0"
   },
   "devDependencies": {
+    "rimraf": "^4.4.0",
     "semver": "^7.3.5"
   },
   "files": [
