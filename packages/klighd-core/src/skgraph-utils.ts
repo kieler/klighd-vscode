@@ -14,8 +14,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0
 */
+import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { SModelRoot } from 'sprotty'
-import { isContainerRendering, isPolyline, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from './skgraph-models'
+import { isProxyRendering } from './proxy-view/proxy-view-util'
+import { isContainerRendering, isPolyline, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
 
 /**
  * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
@@ -34,7 +36,7 @@ export function getSemanticElement(target: SKGraphElement, element: EventTarget 
         // Check if the rendering has an action.
         let renderingHasAction = true
         if (currentElement.id !== '' && actionable) {
-            const rendering = findRendering(target, currentElement.id)
+            const rendering = findRendering(target, currentElement)
             if (!rendering) {
                 // If no rendering for this ID exists, we have gone too far up to the next graph element. Skip from here.
                 return undefined
@@ -83,15 +85,27 @@ export function getSemanticElement(target: SKGraphElement, element: EventTarget 
 
 /**
  * Finds the KRendering in the data of the SKGraphElement that matches the given ID.
- * @param element The element to look in.
- * @param id The ID to search for.
+ * @param graphElement The graph element to look in.
+ * @param svgElement The SVG element that represents the rendering.
  */
-export function findRendering(element: SKGraphElement, id: string): KRendering | undefined {
+export function findRendering(graphElement: SKGraphElement, svgElement: SVGElement): KRendering | undefined {
+    const isProxy = isProxyRendering(svgElement, graphElement.id)
+    const renderingId = svgElement.id
+
     // The first rendering has to be extracted from the SKGraphElement. It is the first data object that is a KRendering.
-    let currentElement: KRendering = element.data.find(possibleRendering => {
+    let data: KGraphData[] | undefined
+    if (isProxy) {
+        // For a proxy, the rendering may be in the graph element's properties.
+        data = graphElement.properties['de.cau.cs.kieler.klighd.proxyView.proxyRendering'] as KGraphData[]
+    }
+    if (data == undefined) {
+        // Non-proxies and proxies without an explicit proxy rendering just use the graph element's data.
+        data = graphElement.data
+    }
+    let currentElement: KRendering = data.find(possibleRendering => {
         return isRendering(possibleRendering)
     }) as KRendering
-    const idPath = id.split('$')
+    const idPath = renderingId.split('$')
     if (currentElement.type === K_RENDERING_REF) {
         // KRenderingRefs' ids always start with the identifying name of the reference and may continue with $<something> to refer to renderings within that reference.
         // Start with index 1 since the currentElement already contains the rendering with the identifying name.
@@ -107,12 +121,12 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
             if (isContainerRendering(currentElement)) {
                 // First, look for the ID in the child renderings.
                 nextElement = currentElement.children.find(childRendering => {
-                    return id.startsWith(childRendering.properties['klighd.lsp.rendering.id'] as string)
+                    return renderingId.startsWith(childRendering.properties['klighd.lsp.rendering.id'] as string)
                 }) as KRendering
             }
             if (nextElement === undefined && currentElement.type === K_POLYLINE) {
                 // If the rendering was not found yet, take the junction point rendering.
-                if (id.startsWith((currentElement as KPolyline).junctionPointRendering.properties['klighd.lsp.rendering.id'] as string)) {
+                if (renderingId.startsWith((currentElement as KPolyline).junctionPointRendering.properties['klighd.lsp.rendering.id'] as string)) {
                     nextElement = (currentElement as KPolyline).junctionPointRendering
                 }
             } if (nextElement === undefined) {
@@ -123,8 +137,8 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         }
     }
     // Now the currentElement should be the element searched for by the id.
-    if (currentElement.properties['klighd.lsp.rendering.id'] as string !== id) {
-        console.error('The found element does not match the searched id! id: ' + id + ', found element: ' + currentElement)
+    if (currentElement.properties['klighd.lsp.rendering.id'] as string !== renderingId) {
+        console.error('The found rendering does not match the searched id! id: ' + renderingId + ', found element: ' + currentElement)
         return
     }
     return currentElement

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,10 +14,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { injectable } from 'inversify';
 import { HoverMouseListener, SModelElement } from 'sprotty';
 import { Action, Bounds, generateRequestId, RequestPopupModelAction } from "sprotty-protocol";
-import { SKGraphElement } from '../skgraph-models';
 import { getSemanticElement } from '../skgraph-utils';
 
 /**
@@ -26,7 +26,9 @@ import { getSemanticElement } from '../skgraph-utils';
  * The response is a SetPopupModelAction.
  */
 export interface RequestKlighdPopupModelAction extends RequestPopupModelAction {
+    /** The SVG element of the rendering (i.e. the KRendering) to request the popup for. */
     element: SVGElement
+    /** The underlying graph element for this popup request. */
     parent: SModelElement
 }
 

@@ -24,7 +24,7 @@ import { Point } from 'sprotty-protocol';
  * data instances.
  * Represents its java counterpart in KLighD.
  */
-export interface KGraphElement extends SParentElement {
+export interface SKGraphElement extends SParentElement {
     /**
      * May contain a trace that points back to the server instance where this element was created.
      */
@@ -41,12 +41,17 @@ export interface KGraphElement extends SParentElement {
      */
     areNonChildAreaChildrenRendered: boolean
     opacity: number
+
+    /**
+     * The properties of this element.
+     */
+    properties: Record<string, unknown>
 }
 
 /**
  * Represents its java counterpart in KLighD.
  */
-export class KNode extends RectangularNode implements KGraphElement {
+export class KNode extends RectangularNode implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     areChildAreaChildrenRendered = false
@@ -84,7 +89,7 @@ export interface KGraphData {
 /**
  * Represents its java counterpart in KLighD.
  */
-export class KEdge extends SEdge implements KGraphElement {
+export class KEdge extends SEdge implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     junctionPoints: Point[]
@@ -93,6 +98,8 @@ export class KEdge extends SEdge implements KGraphElement {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
     }
+
+    properties: Record<string, unknown>
 
     moved: boolean
 }

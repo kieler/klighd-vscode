@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022 by
+ * Copyright 2022-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,13 +15,17 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { KGraphData, SKGraphElement } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { injectable } from "inversify";
 import { VNode } from "snabbdom";
 import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, isSelectable, ModelIndexImpl, SModelRoot } from "sprotty";
 import { Action, Bounds, isBounds, Dimension, Point, SetModelAction, UpdateModelAction, Viewport } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
-import { isSKGraphElement, SKEdge, SKGraphElement, SKLabel, SKNode, SKPort } from "../skgraph-models";
+import { isSKGraphElement, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
+
+
+/** Suffix of a proxy's ID. */
+export const PROXY_SUFFIX = '$proxy'
 
 //////// Interfaces ////////
 
@@ -440,6 +444,8 @@ export namespace Rect {
 export interface ProxyVNode extends VNode {
     /** Whether this vnode is selected. */
     selected?: boolean;
+    /** Indicates that this vnode is for a proxy. */
+    proxy?: boolean
 }
 
 /** KGraphData containing some additional information to be used only by the {@link ProxyView}. */
@@ -451,6 +457,42 @@ export interface ProxyKGraphData extends KGraphData {
 }
 
 //////// Functions ////////
+
+/**
+ * Checks if this vnode is for a proxy.
+ * @param vnode The vnode to check this property for.
+ * @returns If the vnode is for a proxy.
+ */
+export function isProxy(vnode: VNode): vnode is ProxyVNode {
+    return 'proxy' in vnode;
+}
+
+/**
+ * Determines if the SVG element is a proxy rendering for the given node ID.
+ * @param element The SVG element to check.
+ * @param nodeId The ID of the node to check.
+ * @returns if the SVG element is a proxy rendering for the given node ID.
+ */
+export function isProxyRendering(element: SVGElement, nodeId: string): boolean {
+    let currentElement: Element | null = element
+    while (currentElement instanceof SVGElement) {
+        if (currentElement.id.endsWith(nodeId + PROXY_SUFFIX)) {
+            return true
+        }
+        currentElement = currentElement.parentElement
+    }
+    return false
+}
+
+/** Appends {@link PROXY_SUFFIX} to the given id if the given id isn't already a proxy's id. */
+export function getProxyId(id: string): string {
+    return id.endsWith(PROXY_SUFFIX) ? id : id + PROXY_SUFFIX;
+}
+
+/** Removes {@link PROXY_SUFFIX} from the given id if the given id is a proxy's id. */
+export function getNodeId(id: string): string {
+    return id.endsWith(PROXY_SUFFIX) ? id.substring(0, id.length - PROXY_SUFFIX.length) : id;
+}
 
 /**
  * Checks if `b1` is (partially) in `b2`.

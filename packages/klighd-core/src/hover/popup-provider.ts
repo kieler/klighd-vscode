@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { injectable } from "inversify";
 import {
     IPopupModelProvider,
@@ -26,7 +27,7 @@ import {
     SModelElement as SModelElementSchema,
     SModelRoot as SModelRootSchema,
 } from "sprotty-protocol";
-import { isSKGraphElement, SKGraphElement } from "../skgraph-models";
+import { isSKGraphElement } from "../skgraph-models";
 import { findRendering } from "../skgraph-utils";
 import { RequestKlighdPopupModelAction } from "./hover";
 
@@ -43,7 +44,7 @@ export class PopupModelProvider implements IPopupModelProvider {
             isSKGraphElement(request.parent) &&
             request.element !== undefined
         ) {
-            const tooltip = this.findTooltip(request.parent, request.element.id);
+            const tooltip = this.findTooltip(request.parent, request.element);
             if (tooltip) {
                 const escapedTooltip = this.escapeHtml(tooltip);
                 return <HtmlRootSchema>{
@@ -65,13 +66,13 @@ export class PopupModelProvider implements IPopupModelProvider {
     /**
      * Finds the tooltip defined in the SKGraphElement in its rendering with the given ID.
      * @param element The SKGraphElement to look in.
-     * @param id The ID of the KRendering within that SKGraphElement.
+     * @param svgElement The SVG element representing the KRendering.
      */
-    protected findTooltip(element: SKGraphElement, id: string): string | undefined {
+    protected findTooltip(element: SKGraphElement, svgElement: SVGElement): string | undefined {
         if (element.properties['klighd.tooltip'] as string) {
             return element.properties['klighd.tooltip'] as string;
         }
-        const rendering = findRendering(element, id);
+        const rendering = findRendering(element, svgElement);
         if (rendering) {
             return rendering.properties['klighd.tooltip'] as string;
         }

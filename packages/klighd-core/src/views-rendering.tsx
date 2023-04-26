@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
+import { KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { VNode, VNodeStyle } from 'snabbdom';
 import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol';
@@ -25,7 +25,7 @@ import { SKGraphModelRenderer } from './skgraph-model-renderer';
 import {
     Arc, HorizontalAlignment, KArc, KChildArea, KContainerRendering, KHorizontalAlignment, KImage, KPolyline, KRendering, KRenderingLibrary, KRoundedBendsPolyline,
     KRoundedRectangle, KShadow, KText, KVerticalAlignment, K_ARC, K_CHILD_AREA, K_CONTAINER_RENDERING, K_CUSTOM_RENDERING, K_ELLIPSE, K_IMAGE, K_POLYGON, K_POLYLINE, K_RECTANGLE, K_RENDERING_LIBRARY,
-    K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKGraphElement, SKLabel, SKNode, VerticalAlignment
+    K_ROUNDED_BENDS_POLYLINE, K_ROUNDED_RECTANGLE, K_SPLINE, K_TEXT, SKEdge, SKLabel, SKNode, VerticalAlignment
 } from './skgraph-models';
 import { hasAction } from './skgraph-utils';
 import { BoundsAndTransformation, calculateX, findBoundsAndTransformationData, getKRendering, getPoints, isRotation, isTranslation, reverseTransformations, Rotation, Scale, Transformation, transformationToSVGString, Translation } from './views-common';

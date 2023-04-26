@@ -19,7 +19,7 @@ import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-mo
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
     configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
-    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry
+    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, MouseTool, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty';
 import actionModule from './actions/actions-module';
 import bookmarkModule from './bookmarks/bookmark-module';
@@ -28,6 +28,7 @@ import diagramPieceModule from './diagram-pieces/diagram-pieces-module';
 import { KlighdDiagramServer } from './diagram-server';
 import { KlighdHoverMouseListener } from './hover/hover';
 import { PopupModelProvider } from './hover/popup-provider';
+import { KlighdMouseTool } from './klighd-mouse-tool';
 import { KlighdSvgExporter } from './klighd-svg-exporter';
 import { KlighdModelViewer } from './model-viewer';
 import { ResetPreferencesAction, SetPreferencesAction } from './options/actions';
@@ -55,6 +56,10 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
         defaultDuration: 500,
         undoHistoryLimit: 50
     })
+    rebind(MouseTool).to(KlighdMouseTool)
+    bind(KlighdMouseTool).toSelf().inSingletonScope()
+    // This is not necessary, as the default MouseTool binding will get the KlighdMouseTool already.
+    // bind(TYPES.IVNodePostprocessor).toService(KlighdMouseTool)
     bind(TYPES.MouseListener).to(KlighdHoverMouseListener)
     bind(TYPES.IPopupModelProvider).to(PopupModelProvider)
     rebind<HoverState>(TYPES.HoverState).toDynamicValue(() => ({

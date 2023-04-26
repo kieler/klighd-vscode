@@ -19,8 +19,8 @@
 import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
-import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SGraph, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Action, angleOfPoint, Bounds, CenterAction, FitToScreenAction, Point } from "sprotty-protocol";
+import { AbstractUIExtension, html, IActionDispatcher, isThunk, MouseTool, Patcher, PatcherProvider, SGraph, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { angleOfPoint, Bounds, Point } from "sprotty-protocol";
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
@@ -30,8 +30,8 @@ import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewInteractiveProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewUseSynthesisProxyRendering, ProxyViewUseDetailLevel, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableSegmentProxies, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies } from "./proxy-view-options";
-import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusterTransparent, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewDecreaseProxyClutter, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableEdgeProxies, ProxyViewEnableSegmentProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewInteractiveProxies, ProxyViewOpacityBySelected, ProxyViewOriginalNodeScale, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewShowProxiesImmediately, ProxyViewSimpleAlongBorderRouting, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, getProxyId, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -59,8 +59,6 @@ export class ProxyView extends AbstractUIExtension {
     static readonly DISTANCE_CLOSE = 300;
     /** Number indicating at what distance a node is distant. */
     static readonly DISTANCE_DISTANT = 700;
-    /** Suffix of a proxy's ID. */
-    static readonly PROXY_SUFFIX = "-proxy";
     /** ActionDispatcher mainly needed for init(). */
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
     /** Provides the utensil to replace HTML elements. */
@@ -69,6 +67,10 @@ export class ProxyView extends AbstractUIExtension {
     private patcher: Patcher;
     /** VNode of the current HTML root element. Used by the {@link patcher}. */
     private currHTMLRoot: VNode;
+
+    /** The mouse tool to decorate the proxy nodes with. */
+    @inject(MouseTool) mouseTool: MouseTool
+
     /** The registered filters. */
     private filters: Map<string, ProxyFilter>;
     /** The currently rendered proxies. */
@@ -224,8 +226,6 @@ export class ProxyView extends AbstractUIExtension {
                 {
                     // Set size to whole canvas
                     width: `${canvasWidth}`, height: `${canvasHeight}`,
-                    // Make click-through
-                    pointerEvents: "none"
                 }
             }>
                 {...this.createAllProxies(root, ctx, canvas)}
@@ -927,7 +927,7 @@ export class ProxyView extends AbstractUIExtension {
 
         if (this.transparentEdges) {
             // Fade out the original edge and store its previous opacity
-            const id = this.getProxyId(edge.id);
+            const id = getProxyId(edge.id);
             modifiedEdges.set(id, [edge, edge.opacity]);
             edge.opacity = 0;
         }
@@ -1083,7 +1083,7 @@ export class ProxyView extends AbstractUIExtension {
         const opacity = node.opacity;
 
         // Get VNode
-        const id = this.getProxyId(node.id);
+        const id = getProxyId(node.id);
         let vnode = this.renderings.get(id);
         if (!vnode || vnode.selected !== highlight) {
             // Node hasn't been rendered yet (cache empty for this node) or the attributes don't match
@@ -1105,6 +1105,9 @@ export class ProxyView extends AbstractUIExtension {
             if (vnode) {
                 // New rendering, set ProxyVNode attributes
                 vnode.selected = highlight;
+                (vnode as ProxyVNode).proxy = true;
+                // Add usual mouse interaction
+                this.addMouseInteraction(vnode, node);
             }
         }
 
@@ -1117,11 +1120,17 @@ export class ProxyView extends AbstractUIExtension {
             updateOpacity(vnode, opacity);
             // Update whether it should be click-through
             updateClickThrough(vnode, !this.interactiveProxiesEnabled || this.clickThrough);
-            // Add actions
-            this.addEventActions(vnode, node, canvasGRF);
         }
 
         return vnode;
+    }
+
+    /** Let the mouseTool decorate this proxy rendering to activate all KLighD- and Proxy-specific mouse interactions. */
+    addMouseInteraction(vnode: ProxyVNode, element: SKNode): VNode {
+        if (isThunk(vnode)) {
+            return vnode
+        }
+        return this.mouseTool.decorate(vnode, element)
     }
 
     /** Returns the proxy rendering for an edge. */
@@ -1139,7 +1148,7 @@ export class ProxyView extends AbstractUIExtension {
         - "TypeError: Cannot read property 'sel' of undefined"
         can occur
         */
-        edge.id = this.getProxyId(edge.id);
+        edge.id = getProxyId(edge.id);
         // Clear children to remove label decorators,
         // use assign() since children is readonly for SKEdges (but not for SKNodes)
         Object.assign(edge, { children: [] });
@@ -1154,16 +1163,6 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     //////// General helper methods ////////
-
-    /** Appends {@link PROXY_SUFFIX} to the given id if the given id isn't already a proxy's id. */
-    private getProxyId(id: string): string {
-        return id.endsWith(ProxyView.PROXY_SUFFIX) ? id : id + ProxyView.PROXY_SUFFIX;
-    }
-
-    /** Removes {@link PROXY_SUFFIX} from the given id if the given id is a proxy's id. */
-    private getNodeId(id: string): string {
-        return id.endsWith(ProxyView.PROXY_SUFFIX) ? id.substring(0, id.length - ProxyView.PROXY_SUFFIX.length) : id;
-    }
 
     /** Returns whether the given `node` is valid for rendering. */
     private canRenderNode(node: SKNode): boolean {
@@ -1225,7 +1224,7 @@ export class ProxyView extends AbstractUIExtension {
         }
 
         // This node might not be a proxy, make sure to store the right id
-        const id = this.getProxyId(node.id);
+        const id = getProxyId(node.id);
         let point = this.positions.get(id);
         if (!point) {
             // Point hasn't been stored yet, get parent position
@@ -1243,7 +1242,7 @@ export class ProxyView extends AbstractUIExtension {
      * @see {@link getDistanceToCanvas()}
      */
     private getNodeDistanceToCanvas(node: SKNode, canvas: Canvas): number {
-        const id = this.getProxyId(node.id);
+        const id = getProxyId(node.id);
         let dist = this.distances.get(id);
         if (dist) {
             // Cached
@@ -1299,7 +1298,7 @@ export class ProxyView extends AbstractUIExtension {
         clone.properties = props;
 
         const id = props["klighd.lsp.rendering.id"];
-        const proxyId = this.getProxyId(id);
+        const proxyId = getProxyId(id);
         if (ctx.decorationMap) {
             if (props["klighd.lsp.calculated.decoration"]) {
                 props["klighd.lsp.rendering.id"] = proxyId;
@@ -1354,7 +1353,7 @@ export class ProxyView extends AbstractUIExtension {
         const id = props["klighd.lsp.rendering.id"];
         if (ctx.decorationMap && ctx.decorationMap[id]) {
             // Dereference calculated decoration
-            props["klighd.lsp.rendering.id"] = this.getProxyId(id);
+            props["klighd.lsp.rendering.id"] = getProxyId(id);
             props['klighd.lsp.calculated.decoration'] = ctx.decorationMap[id];
         }
 
@@ -1393,35 +1392,6 @@ export class ProxyView extends AbstractUIExtension {
         }
     }
 
-    /** Adds actions on events to the vnode. */
-    private addEventActions(vnode: VNode, node: SKNode, canvas: Canvas): void {
-        if (!this.interactiveProxiesEnabled) {
-            return;
-        }
-
-        if (vnode.data) {
-            if (!vnode.data.on) {
-                vnode.data.on = {};
-            }
-
-            // Center on node when proxy is clicked
-            let action: Action;
-            if (node.bounds.width > canvas.width || node.bounds.height > canvas.height) {
-                // Node is larger than canvas, zoom out so the node is fully on-screen
-                action = FitToScreenAction.create([this.getNodeId(node.id)], { animate: true, padding: 10 });
-            } else {
-                // Retain the zoom, e.g. don't zoom in
-                action = CenterAction.create([this.getNodeId(node.id)], { animate: true, retainZoom: true });
-            }
-            vnode.data.on.click = () => this.actionDispatcher.dispatch(action);
-
-            // TODO: if implementing a double click action, either make on click wait a bit before panning:
-            // vnode.data.on.click = async () => {await new Promise(f => setTimeout(f, 150)); this.actionDispatcher.dispatch(action);};
-            // or swap double click and click actions (pan on double click)
-            // vnode.data.on.dblclick = () => console.log("Test");
-        }
-    }
-
     //////// Misc public methods ////////
 
     /** Called on mouse down, used for making proxies click-through. */
@@ -1431,7 +1401,7 @@ export class ProxyView extends AbstractUIExtension {
     }
 
     /** Called on mouse up, used for making proxies click-through. */
-    setMouseUp(event: MouseEvent): void {
+    setMouseUp(): void {
         // Upon release, proxies shouldn't be click-through
         this.clickThrough = false;
         this.currProxies.forEach(({ proxy }) => updateClickThrough(proxy, !this.interactiveProxiesEnabled));

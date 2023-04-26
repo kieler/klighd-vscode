@@ -15,10 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KGraphElement, KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { KNode, SKGraphElement } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { SChildElement, SModelRoot } from "sprotty";
 import { Point, Viewport } from "sprotty-protocol";
-import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
+import { FullDetailRelativeThreshold, FullDetailScaleThreshold, RenderOptionsRegistry } from "./options/render-options-registry";
 import { isContainerRendering, isRendering, KRendering } from "./skgraph-models";
 
 /**
@@ -159,7 +159,7 @@ export class DepthMap {
      * 
      * @param element The KGraphElement to initialize for DepthMap usage
      */
-    public initKGraphElement(element: SChildElement & KGraphElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
+    public initKGraphElement(element: SChildElement & SKGraphElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
 
         let entry = this.regionIndexMap.get(element.id)
         if (entry) {
@@ -230,7 +230,7 @@ export class DepthMap {
      * @param element The graph element to look up the rendering for.
      * @returns The KRendering.
      */
-    findRendering(element: KGraphElement): KRendering | undefined {
+    findRendering(element: SKGraphElement): KRendering | undefined {
         for (const data of element.data) {
             if (data === null)
                 continue
@@ -241,7 +241,7 @@ export class DepthMap {
         return undefined
     }
 
-    public getContainingRegion(element: SChildElement & KGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+    public getContainingRegion(element: SChildElement & SKGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
         // initKGraphELement already checks if it is already initialized and if it is returns the existing value
         return this.initKGraphElement(element, viewport, renderOptions).containingRegion
     }

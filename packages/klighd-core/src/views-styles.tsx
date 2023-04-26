@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
+import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { VNode } from 'snabbdom';
 import { getZoom, isSelectable, RGBColor, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry';
@@ -24,7 +24,7 @@ import {
     HorizontalAlignment, isKText, KBackground, KColoring, KFontBold, KFontItalic, KFontName, KFontSize, KForeground,
     KHorizontalAlignment, KInvisibility, KLineCap, KLineJoin, KLineStyle, KLineWidth, KRotation, KShadow, KStyle,
     KStyleHolder, KStyleRef, KTextStrikeout, KTextUnderline, KVerticalAlignment, LineCap, LineJoin, LineStyle, SKEdge,
-    SKGraphElement, SKNode, Underline, VerticalAlignment
+    SKNode, Underline, VerticalAlignment
 } from './skgraph-models';
 import {
     camelToKebab, fillSingleColor, getKRendering, isSingleColor, lineCapText, lineJoinText, lineStyleText,

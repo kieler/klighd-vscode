@@ -15,13 +15,14 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { VNode } from 'snabbdom';
 import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SModelElement, SParentElement, ViewRegistry } from 'sprotty';
 import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
-import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
+import { EDGE_TYPE, KRenderingLibrary, LABEL_TYPE, NODE_TYPE, PORT_TYPE } from './skgraph-models';
 import { TitleStorage } from './titles/title-storage';
 
 /**

@@ -15,16 +15,18 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { inject, injectable, postConstruct } from "inversify";
-import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, MouseListener, SetUIExtensionVisibilityAction, SModelElement } from "sprotty";
-import { Action, SetModelAction, UpdateModelAction } from "sprotty-protocol";
+import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, MouseListener, SModelElement, SetUIExtensionVisibilityAction } from "sprotty";
+import { Action, CenterAction, SetModelAction, UpdateModelAction } from "sprotty-protocol";
 import { SendModelContextAction } from "../actions/actions";
 import { DISymbol } from "../di.symbols";
 import { OptionsRegistry } from "../options/options-registry";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { ProxyView } from "./proxy-view";
-import { ProxyViewInteractiveProxies, ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewClusterTransparent, ProxyViewEnableSegmentProxies, ProxyViewDebugCategory, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewOpacityBySelected, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering, ProxyViewSimpleAlongBorderRouting, ProxyViewOriginalNodeScale, ProxyViewShowProxiesImmediately, ProxyViewDecreaseProxyClutter, ProxyViewEnableEdgeProxies } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusterTransparent, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewDecreaseProxyClutter, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableEdgeProxies, ProxyViewEnableSegmentProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewInteractiveProxies, ProxyViewOpacityBySelected, ProxyViewOriginalNodeScale, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewShowProxiesImmediately, ProxyViewSimpleAlongBorderRouting, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { getNodeId, isProxyRendering } from "./proxy-view-util";
 
 /**
  * Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
@@ -70,21 +72,44 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
     /** Whether the proxy-view was registered in the registries' onchange() method. Prevents registering multiple times. */
     private onChangeRegistered: boolean;
+    mouseMoved = false
 
     //// Mouse events ////
 
-    mouseDown(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseDown(_target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+        this.mouseMoved = false
         if (this.proxyView) {
             this.proxyView.setMouseDown(event);
         }
-        return super.mouseDown(target, event);
+        return []
+    }
+
+    mouseMove(): (Action | Promise<Action>)[] {
+        this.mouseMoved = true
+        return []
     }
 
     mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
-        if (this.proxyView) {
-            this.proxyView.setMouseUp(event);
+        let action: Action | undefined
+        if (!this.mouseMoved &&
+            target instanceof KNode &&
+            event.target instanceof SVGElement &&
+            isProxyRendering(event.target, target.id)) {
+            // TODO: Use the FitToScreenAction if the node is larger than the canvas.
+            // Center on node when proxy is clicked
+            // if (target.bounds.width > canvas.width || target.bounds.height > canvas.height) {
+            //     // Node is larger than canvas, zoom out so the node is fully on-screen
+                // action = FitToScreenAction.create([getNodeId(target.id)], { animate: true, padding: 10 })
+            // } else {
+            //     // Retain the zoom, e.g. don't zoom in
+                action = CenterAction.create([getNodeId(target.id)], { animate: true, retainZoom: true })
+            // }
         }
-        return super.mouseUp(target, event);
+
+        if (this.proxyView) {
+            this.proxyView.setMouseUp();
+        }
+        return action ? [action] : []
     }
 
     //// Actions ////

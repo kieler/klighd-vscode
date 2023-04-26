@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2022 by
+ * Copyright 2018-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,9 +14,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes';
 import { MouseListener, SModelElement } from 'sprotty';
 import { Action } from "sprotty-protocol";
-import { KAction, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
+import { KAction, ModifierState, Trigger, isSKGraphElement } from '../skgraph-models';
 import { findRendering, getSemanticElement } from '../skgraph-utils';
 import { PerformActionAction } from './actions';
 
@@ -29,7 +30,7 @@ export class ActionListener extends MouseListener {
     doubleClick(target: SModelElement, event: WheelEvent): (Action | Promise<Action>)[] {
         // Ignore the event if the top level graph element is clicked, as that is not a SKGraphElement.
         if (target.type !== 'graph') {
-            return this.actions(target as SKGraphElement, event, event.type)
+            return ActionListener.actions(target as SKGraphElement, event, event.type)
         }
         return [];
     }
@@ -46,8 +47,8 @@ export class ActionListener extends MouseListener {
 
     mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
         // counts as a click if the mouse has not moved since the last mouseDown event.
-        if (!this.mouseMoved && target.type !== 'graph' && target.type !== 'NONE') {
-            return this.actions(target as SKGraphElement, event, 'click')
+        if (!this.mouseMoved && isSKGraphElement(target)) {
+            return ActionListener.actions(target, event, 'click')
         }
         return [];
     }
@@ -58,17 +59,16 @@ export class ActionListener extends MouseListener {
      * @param event The MouseEvent that triggered this listener.
      * @param eventType The event type of the event (e.g. 'dblclk', 'clk', etc.).
      */
-    protected actions(target: SKGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
+    static actions(target: SKGraphElement, event: MouseEvent, eventType: string): (Action | Promise<Action>)[] {
         const actions: Action[] = []
         // Look up the ID of the semantic element that was clicked.
         const semanticElement = getSemanticElement(target, event.target, true)
         if (semanticElement === undefined) {
             return actions
         }
-        const semanticElementId = semanticElement.id
 
         // Search the actions in the target element.
-        const kActions = this.findActions(target, semanticElementId)
+        const kActions = this.findActions(target, semanticElement)
 
         if (kActions === undefined) {
             return actions
@@ -79,7 +79,7 @@ export class ActionListener extends MouseListener {
                 && this.modifierStateMatches(action.ctrlCmdPressed, event.ctrlKey)
                 && this.modifierStateMatches(action.shiftPressed, event.shiftKey)
                 && this.eventsMatch(event, eventType, action.trigger)) {
-                actions.push(PerformActionAction.create(action.actionId, target.id, semanticElementId, target.root.revision))
+                actions.push(PerformActionAction.create(action.actionId, target.id, semanticElement.id, target.root.revision))
             }
         })
         return actions
@@ -88,10 +88,10 @@ export class ActionListener extends MouseListener {
     /**
      * Finds the actions defined in the SKGraphElement in its rendering with the given ID.
      * @param element The SKGraphElement to look in.
-     * @param id The ID of the KRendering within that SKGraphElement.
+     * @param svgElement The SVG rendering representation with a rendering ID to match the actions against.
      */
-    protected findActions(element: SKGraphElement, id: string): KAction[] {
-        const rendering = findRendering(element, id)
+    static findActions(element: SKGraphElement, svgElement: SVGElement): KAction[] {
+        const rendering = findRendering(element, svgElement)
         if (rendering) {
             return rendering.actions
         } else {
@@ -104,7 +104,7 @@ export class ActionListener extends MouseListener {
      * @param state The modifier state to match against.
      * @param pressed The actual key pressed value.
      */
-    private modifierStateMatches(state: ModifierState, pressed: boolean) {
+    static modifierStateMatches(state: ModifierState, pressed: boolean): boolean {
         switch (state) {
             case ModifierState.DONT_CARE: {
                 return true
@@ -124,7 +124,7 @@ export class ActionListener extends MouseListener {
      * @param eventType The eventType of that MouseEvent
      * @param trigger The trigger to check against.
      */
-    protected eventsMatch(event: MouseEvent, eventType: string, trigger: Trigger): boolean {
+    static eventsMatch(event: MouseEvent, eventType: string, trigger: Trigger): boolean {
         switch (trigger) {
             case Trigger.SINGLECLICK: {
                 return eventType === 'click' && event.button === 0
