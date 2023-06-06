@@ -1,6 +1,6 @@
 {
   "name": "@kieler/klighd-cli",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Standalone web view for klighd-core diagrams",
   "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
   "license": "EPL-2.0",
@@ -31,7 +31,7 @@
     "socket": "node ./lib/main.js --ls_port=5007"
   },
   "dependencies": {
-    "@kieler/klighd-core": "^0.4.0",
+    "@kieler/klighd-core": "^0.4.1",
     "commander": "^8.1.0",
     "fastify": "^3.15.0",
     "fastify-static": "^4.0.1",
