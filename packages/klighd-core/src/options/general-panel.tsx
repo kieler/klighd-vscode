@@ -16,25 +16,19 @@
  */
 
 /** @jsx html */
-import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
-import { html, IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { CenterAction } from "sprotty-protocol";
-import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
-import { CreateBookmarkAction } from "../bookmarks/bookmark";
+import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
 import { SidebarPanel } from "../sidebar";
 import { SetSynthesisAction } from "../syntheses/actions";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { SetPreferencesAction, SetRenderOptionAction } from "./actions";
+import { SetPreferencesAction } from "./actions";
 import { CheckOption } from "./components/option-inputs";
 import { SynthesisPicker } from "./components/synthesis-picker";
-import { PossibleQuickAction, QuickActionOption } from "./option-models";
 import { OptionsRenderer } from "./options-renderer";
-import { PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "./render-options-registry";
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -42,16 +36,12 @@ import { PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "./render-o
  */
 @injectable()
 export class GeneralPanel extends SidebarPanel {
-    // This panel should always have the first trigger in the sidebar
-    readonly position = -10;
-
-    /** Quick actions reference for this panel */
-    private quickActions: QuickActionOption[];
-
-    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
+    // Sets this panel at the second position
+    // hirarchy is: first = -10; middle = 0; last = 10;
+    readonly position = 0; // --> middle position
+                                                    
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
     @postConstruct()
@@ -61,7 +51,7 @@ export class GeneralPanel extends SidebarPanel {
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
 
-        this.assignQuickActions()
+        this.assignQuickActions();
     }
 
     get id(): string {
@@ -72,62 +62,9 @@ export class GeneralPanel extends SidebarPanel {
         return "General";
     }
 
-    private assignQuickActions() {
-        this.quickActions = [
-            {
-                key: "center",
-                title: "Center diagram",
-                iconId: "maximize",
-                action: CenterAction.create([], { animate: true }),
-            },
-            {
-                key: "fit",
-                title: "Fit to screen",
-                iconId: "maximize-2",
-                action: this.renderOptionsRegistry.getValue(ResizeToFit) ? undefined : KlighdFitToScreenAction.create(true),
-                state: this.renderOptionsRegistry.getValue(ResizeToFit),
-                effect: () => {
-                        this.actionDispatcher.dispatch(SetRenderOptionAction.create(ResizeToFit.ID, !this.renderOptionsRegistry.getValue(ResizeToFit)));
-                        this.update()
-                }
-            },
-            {
-                key: "layout",
-                title: "Layout diagram",
-                iconId: "layout",
-                action: RefreshLayoutAction.create(),
-            },
-            {
-                key: "refresh",
-                title: "Refresh diagram",
-                iconId: "rotate-cw",
-                action: RefreshDiagramAction.create(),
-            },
-            {
-                key: "export",
-                title: "Export as SVG",
-                iconId: "save",
-                action: RequestExportSvgAction.create(),
-            },
-            {
-                key: "create-bookmark",
-                title: "Bookmark",
-                iconId: "bookmark",
-                action: CreateBookmarkAction.create()
-            },
-            {
-                key: "pin-sidebar",
-                title: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "Unpin Sidebar" : "Pin Sidebar",
-                iconId: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "lock" : "unlock",
-                action: SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)),
-                state: this.renderOptionsRegistry.getValue(PinSidebarOption)
-            },
-        ];
-    }
-
     update(): void {
-        this.assignQuickActions()
-        super.update()
+        super.assignQuickActions();
+        super.update();
     }
 
     render(): VNode {
@@ -136,7 +73,7 @@ export class GeneralPanel extends SidebarPanel {
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Quick Actions</h5>
                     <div class-options__button-group="true">
-                        {this.quickActions.map((action) => (
+                        {this.getQuickAction().map((action) => (
                             <button
                                 title={action.title}
                                 class-options__icon-button="true"
@@ -198,14 +135,6 @@ export class GeneralPanel extends SidebarPanel {
 
     private handlePreferenceChange(key: string, newValue: any) {
         this.actionDispatcher.dispatch(SetPreferencesAction.create([{id:key, value:newValue}]));
-    }
-
-    private handleQuickActionClick(type: PossibleQuickAction) {
-        const action = this.quickActions.find((a) => a.key === type)?.action;
-
-        if (!action) return;
-
-        this.actionDispatcher.dispatch(action);
     }
 
     get icon(): VNode {

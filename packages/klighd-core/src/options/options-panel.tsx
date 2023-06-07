@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -28,12 +28,20 @@ import { SidebarPanel } from "../sidebar";
 /** Sidebar panel that displays server provided KLighD options.  */
 @injectable()
 export class OptionsPanel extends SidebarPanel {
+    // sets this panel at the top position
+    // hirarchy is: first = -10; middle = 0; last = 10;
+    readonly position = -10;  // --> first position                                                            
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
-
+    
     @postConstruct()
     init(): void {
         this.optionsRegistry.onChange(() => this.update());
+        this.assignQuickActions();
+    }
+    update(): void {
+        super.assignQuickActions();
+        super.update();
     }
 
     get id(): string {
@@ -46,11 +54,33 @@ export class OptionsPanel extends SidebarPanel {
 
     render(): VNode {
         return this.optionsRegistry.hasOptions() ? (
-            this.optionsRenderer.renderServerOptions({
-                actions: this.optionsRegistry.displayedActions,
-                layoutOptions: this.optionsRegistry.layoutOptions,
-                synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
-            })
+            <div> 
+                <div class-options__section="true">
+                    <h5 class-options__heading="true">Quick Actions</h5>
+                    <div class-options__button-group="true">
+                        {this.getQuickAction().map((action) => (
+                            <button
+                                title={action.title}
+                                class-options__icon-button="true"
+                                class-sidebar__enabled-button={!!action.state}
+                                on-click={() => {
+                                    if (action.effect) {
+                                        action.effect.apply(this)
+                                    }
+                                    this.handleQuickActionClick(action.key)
+                                }}
+                            >
+                                <FeatherIcon iconId={action.iconId}/>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                {this.optionsRenderer.renderServerOptions({
+                    actions: this.optionsRegistry.displayedActions,
+                    layoutOptions: this.optionsRegistry.layoutOptions,
+                    synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
+                })}
+            </div>
         ) : (
             <span>No options provided by the diagram server.</span>
         );
