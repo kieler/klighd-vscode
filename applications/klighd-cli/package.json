@@ -2,7 +2,7 @@
   "name": "@kieler/klighd-cli",
   "version": "0.4.2",
   "description": "Standalone web view for klighd-core diagrams",
-  "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
+  "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
   "license": "EPL-2.0",
   "keywords": [
     "sprotty",
