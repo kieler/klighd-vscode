@@ -101,7 +101,7 @@ export abstract class SidebarPanel implements ISidebarPanel {
     abstract render(): VNode;
 
     /**
-     * this method inits the quickactions, if you wanna use it for a panel
+     * This method inits the quickactions, if you wanna use it for a panel.
      */
     protected assignQuickActions():void {
         this.quickActions = [
@@ -157,15 +157,25 @@ export abstract class SidebarPanel implements ISidebarPanel {
         
 
     }
-    public getQuickActions() :QuickActionOption[]{
-        return this.quickActions;
+
+    /**
+     * This method gets the quickactionsbar so tab panels can inherit it.
+     * @returns Quickactionsbar attribute so other classes can inherit it.
+     */
+    public getQuickActions(): QuickActionOption[] {
+        return this.quickActions
     }
+
+    /**
+     * This method handels if you click on one quickaction element as the name already tells.
+     * @param type Represents all quickaction-elements.
+     */
     protected handleQuickActionClick(type: PossibleQuickAction): void {
-        const action = this.getQuickActions().find((a) => a.key === type)?.action;
+        const action = this.getQuickActions().find((a) => a.key === type)?.action
 
-        if (!action) return;
+        if (!action) return
 
-        this.actionDispatcher.dispatch(action);
+        this.actionDispatcher.dispatch(action)
     }
 }
 
