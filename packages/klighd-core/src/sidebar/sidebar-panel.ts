@@ -90,7 +90,7 @@ export abstract class SidebarPanel implements ISidebarPanel {
     onUpdate(callback: () => void): void {
         this._updateCallbacks.push(callback);
     }
-    
+
     /** Call this method if you want to trigger a re-render and update the UI. */
     update(): void {
         for (const callback of this._updateCallbacks) {
@@ -155,20 +155,19 @@ export abstract class SidebarPanel implements ISidebarPanel {
             },
         ];
         
-
     }
 
     /**
-     * This method gets the quickactionsbar so tab panels can inherit it.
-     * @returns Quickactionsbar attribute so other classes can inherit it.
+     * Gets all available quick actions so tab panels can inherit it.
+     * @returns The available quick actions so other classes can inherit it.
      */
     public getQuickActions(): QuickActionOption[] {
         return this.quickActions
     }
 
     /**
-     * This method handels if you click on one quickaction element as the name already tells.
-     * @param type Represents all quickaction-elements.
+     * Handles the click on one quickaction element.
+     * @param type The quickaction to handle.
      */
     protected handleQuickActionClick(type: PossibleQuickAction): void {
         const action = this.getQuickActions().find((a) => a.key === type)?.action
@@ -178,4 +177,3 @@ export abstract class SidebarPanel implements ISidebarPanel {
         this.actionDispatcher.dispatch(action)
     }
 }
-
