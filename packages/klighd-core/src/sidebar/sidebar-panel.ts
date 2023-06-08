@@ -15,19 +15,17 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable } from "inversify";
 import { VNode } from "snabbdom";
-
-//rik imports
-import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
+import { IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
 import { CenterAction } from "sprotty-protocol";
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
 import { CreateBookmarkAction } from "../bookmarks/bookmark";
-import { PossibleQuickAction, QuickActionOption } from "../options/option-models";
-import { SetRenderOptionAction } from "../options/actions";
-import { PinSidebarOption,RenderOptionsRegistry, ResizeToFit } from "../options/render-options-registry";
-import { IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
 import { DISymbol } from "../di.symbols";
+import { SetRenderOptionAction } from "../options/actions";
+import { PossibleQuickAction, QuickActionOption } from "../options/option-models";
+import { PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "../options/render-options-registry";
 
 
 /**
@@ -102,7 +100,10 @@ export abstract class SidebarPanel implements ISidebarPanel {
 
     abstract render(): VNode;
 
-    public assignQuickActions():void {
+    /**
+     * this method inits the quickactions, if you wanna use it for a panel
+     */
+    protected assignQuickActions():void {
         this.quickActions = [
             {
                 key: "center",
@@ -156,17 +157,15 @@ export abstract class SidebarPanel implements ISidebarPanel {
         
 
     }
-    public getQuickAction() :QuickActionOption[]{
+    public getQuickActions() :QuickActionOption[]{
         return this.quickActions;
     }
     protected handleQuickActionClick(type: PossibleQuickAction): void {
-        const action = this.getQuickAction().find((a) => a.key === type)?.action;
+        const action = this.getQuickActions().find((a) => a.key === type)?.action;
 
         if (!action) return;
 
         this.actionDispatcher.dispatch(action);
     }
-
-
 }
 

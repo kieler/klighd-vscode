@@ -37,8 +37,8 @@ import { OptionsRenderer } from "./options-renderer";
 @injectable()
 export class GeneralPanel extends SidebarPanel {
     // Sets this panel at the second position
-    // hirarchy is: first = -10; middle = 0; last = 10;
-    readonly position = 0; // --> middle position
+    // hierarchy is: first elem has the lowest number. so the last one got the highest
+    readonly position = 0; // --> middle position (at the moment)
                                                     
     @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
@@ -63,8 +63,8 @@ export class GeneralPanel extends SidebarPanel {
     }
 
     update(): void {
-        super.assignQuickActions();
-        super.update();
+        super.assignQuickActions()
+        super.update()
     }
 
     render(): VNode {
@@ -73,7 +73,7 @@ export class GeneralPanel extends SidebarPanel {
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Quick Actions</h5>
                     <div class-options__button-group="true">
-                        {this.getQuickAction().map((action) => (
+                        {this.getQuickActions().map((action) => (
                             <button
                                 title={action.title}
                                 class-options__icon-button="true"

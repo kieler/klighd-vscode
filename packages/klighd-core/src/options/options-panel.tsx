@@ -29,16 +29,17 @@ import { SidebarPanel } from "../sidebar";
 @injectable()
 export class OptionsPanel extends SidebarPanel {
     // sets this panel at the top position
-    // hirarchy is: first = -10; middle = 0; last = 10;
-    readonly position = -10;  // --> first position                                                            
+    // hierarchy is: first elem has the lowest number. so the last one got the highest
+    readonly position = -10;  // --> first position (at the moment)                                                           
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
-    
+
     @postConstruct()
     init(): void {
         this.optionsRegistry.onChange(() => this.update());
         this.assignQuickActions();
     }
+
     update(): void {
         super.assignQuickActions();
         super.update();
@@ -58,7 +59,7 @@ export class OptionsPanel extends SidebarPanel {
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Quick Actions</h5>
                     <div class-options__button-group="true">
-                        {this.getQuickAction().map((action) => (
+                        {this.getQuickActions().map((action) => (
                             <button
                                 title={action.title}
                                 class-options__icon-button="true"

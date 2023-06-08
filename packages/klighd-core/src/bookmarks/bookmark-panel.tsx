@@ -31,8 +31,8 @@ import { Bookmark, GoToBookmarkAction, CreateBookmarkAction, DeleteBookmarkActio
 @injectable()
 export class BookmarkPanel extends SidebarPanel {
     // sets the bookmarkpanel at the bottom
-    // hirarchy is: first = -10; middle = 0; last = 10;
-    readonly position = 10; // --> last position
+    // hierarchy is: first elem has the lowest number. so the last one got the highest
+    readonly position = 10; // --> last position (at the moment)
     
     @inject(DISymbol.BookmarkRegistry) private bookmarkRegistry: BookmarkRegistry
 
