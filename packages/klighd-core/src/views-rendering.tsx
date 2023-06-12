@@ -1137,11 +1137,18 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
     }
 
     const renderings: VNode[] = []
+
+    let topdownScaleFactor = 1;
+    if ((edge.parent as any).properties == undefined || (edge.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
+        topdownScaleFactor = (edge.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
+    }
+
     edge.junctionPoints.forEach(junctionPoint => {
         const junctionPointVNode = <g transform={`translate(${junctionPoint.x},${junctionPoint.y})`}>
             {vNode}
         </g>
-        renderings.push(junctionPointVNode)
+        renderings.push(<g transform={`scale (${topdownScaleFactor})`}>${junctionPointVNode}</g>)
+
     })
     return renderings
 }
