@@ -16,7 +16,7 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
+import { boundsFeature, layoutContainerFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
 import { Bounds, Point } from 'sprotty-protocol'
 
 /**
@@ -40,8 +40,11 @@ export const LABEL_TYPE = 'label'
 export class SKNode extends KNode {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
+            || feature === boundsFeature
+            || feature === layoutContainerFeature
             || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
             || feature === popupFeature
+            // check other potentially necessary features, such as layoutableChildFeature, alignFeature
     }
 }
 
@@ -54,7 +57,7 @@ export class SKPort extends RectangularPort implements SKGraphElement {
     areChildAreaChildrenRendered = false
     areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || feature === popupFeature
+        return feature === selectFeature || feature === boundsFeature|| feature === popupFeature
     }
     properties: Record<string, unknown>
 }
@@ -68,8 +71,6 @@ export class SKLabel extends SLabel implements SKGraphElement {
     areChildAreaChildrenRendered = false
     areNonChildAreaChildrenRendered = false
     hasFeature(feature: symbol): boolean {
-        // The boundsFeature here is additionally needed because bounds of labels need to be
-        // estimated during the estimateTextBounds action.
         return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
     properties: Record<string, unknown>
@@ -80,7 +81,7 @@ export class SKLabel extends SLabel implements SKGraphElement {
  */
 export class SKEdge extends KEdge {
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || feature === popupFeature
+        return feature === selectFeature || feature === boundsFeature|| feature === popupFeature
     }
     properties: Record<string, unknown>
 }

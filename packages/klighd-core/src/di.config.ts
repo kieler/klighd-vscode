@@ -16,11 +16,15 @@
  */
 
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
+// import ElkConstructor from 'elkjs/lib/elk-api' // alternative webworker variant (where is the difference?)
+import ElkConstructor from 'elkjs/lib/elk.bundled'
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
-    configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
-    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry
+    boundsModule, configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot,
+    HtmlRootView, IVNodePostprocessor, LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement,
+    PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty';
+import { ElkFactory, ElkLayoutEngine, elkLayoutModule } from 'sprotty-elk'
 import actionModule from './actions/actions-module';
 import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols';
@@ -49,6 +53,14 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
     rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
+
+    // required binding for elkjs to work
+    bind(TYPES.IModelLayoutEngine).toService(ElkLayoutEngine)
+    // You can import `ElkConstructor` from `'elkjs/lib/elk.bundled'` for the bundled variant or
+    // `'elkjs/lib/elk-api'` for the webworker variant.
+    const elkFactory: ElkFactory = () => new ElkConstructor({ algorithms: ['layered'] }) // See elkjs documentation
+    bind(ElkFactory).toConstantValue(elkFactory);
+
     rebind(TYPES.CommandStackOptions).toConstantValue({
         // Override the default animation speed to be 500 ms, as the default value is too quick.
         defaultDuration: 500,
@@ -97,12 +109,12 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
  */
 export default function createContainer(widgetId: string): Container {
     const container = new Container()
-    container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
+    container.load(defaultModule, boundsModule, elkLayoutModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
         actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule)
     overrideViewerOptions(container, {
-        needsClientLayout: false,
-        needsServerLayout: true,
+        needsClientLayout: true, // client layout = micro layout (Sprotty/Sprotty+KLighD)
+        needsServerLayout: false, // server layout = macro layout (ELK/elkjs). false here to not forward it to the Java server (the model source), but keep and handle it directly on the diagram server proxy manually
         baseDiv: widgetId,
         hiddenDiv: widgetId + '_hidden'
     })

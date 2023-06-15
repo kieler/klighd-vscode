@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,6 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { saveAs } from 'file-saver';
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import {
     DeleteLayerConstraintAction,
@@ -30,7 +29,8 @@ import {
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
 } from "@kieler/klighd-interactive/lib/rect-packing/actions";
-import { inject, injectable } from "inversify";
+import { saveAs } from 'file-saver';
+import { inject, injectable, optional } from "inversify";
 import {
     ActionHandlerRegistry,
     BringToFrontAction,
@@ -45,11 +45,16 @@ import {
 import {
     Action,
     ActionMessage,
+    ComputedBoundsAction,
     findElement,
     generateRequestId,
+    IModelLayoutEngine,
+    RequestModelAction,
     RequestPopupModelAction,
     SelectAction,
+    SetModelAction,
     SetPopupModelAction,
+    SModelRoot,
     UpdateModelAction,
 } from "sprotty-protocol";
 import {
@@ -92,6 +97,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
     @inject(DISymbol.BookmarkRegistry) private bookmarkRegistry: BookmarkRegistry;
+    @inject(TYPES.IModelLayoutEngine)@optional() protected layoutEngine?: IModelLayoutEngine;
 
 
     constructor(@inject(Connection) connection: Connection) {
@@ -295,5 +301,35 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         this.childrenToRequestQueue.setViewport(action)
         const child = this.childrenToRequestQueue.dequeue()!
         this.actionDispatcher.dispatch(RequestDiagramPieceAction.create(generateRequestId(), child.id))
+    }
+
+    // Behavior adapted from the super class and modified to the behavior of the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    handleComputedBounds(action: ComputedBoundsAction): boolean {
+        if (this.viewerOptions.needsServerLayout) {
+            return false
+        } else {
+            const root = this.currentRoot
+            this.computedBoundsApplicator.apply(root, action)
+            this.doSubmitModel(root, root.type === this.lastSubmittedModelType, action)
+            return false;
+        }
+    }
+
+    // Behavior taken from the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    private async doSubmitModel(newRoot: SModelRoot, update: boolean, cause?: Action): Promise<void> {
+        if (this.layoutEngine) {
+            newRoot = await this.layoutEngine.layout(newRoot)
+        }
+        const modelType = newRoot.type
+        if (cause && cause.kind === RequestModelAction.KIND) {
+            const requestId = (cause as RequestModelAction).requestId
+            const response = SetModelAction.create(newRoot, requestId)
+            this.actionDispatcher.dispatch(response)
+        } else if (update && modelType === this.lastSubmittedModelType) {
+            this.actionDispatcher.dispatch(UpdateModelAction.create(newRoot))
+        } else {
+            this.actionDispatcher.dispatch(SetModelAction.create(newRoot))
+        }
+        this.lastSubmittedModelType = modelType
     }
 }

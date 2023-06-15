@@ -3806,6 +3806,11 @@ ee-first@1.1.1:
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
+elkjs@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/elkjs/-/elkjs-0.7.1.tgz#4751c5e918a4988139baf7f214e010aea22de969"
+  integrity sha512-lD86RWdh480/UuRoHhRcnv2IMkIcK6yMDEuT8TPBIbO3db4HfnVF+1lgYdQi99Ck0yb+lg5Eb46JCHI5uOsmAw==
+
 elliptic@^6.5.3:
   version "6.5.4"
   resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.4.tgz#da37cebd31e79a1367e941b592ed1fbebd58abbb"
@@ -8733,6 +8738,16 @@ sprintf-js@~1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
+
+sprotty-elk@0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/sprotty-elk/-/sprotty-elk-0.11.0.tgz#d26c41348aad9894c7be27ddc488f3a67b03dc22"
+  integrity sha512-bodKN+9L/kW24b31QPh3Y50Vn84C2nriO06Bs5+xaoAEA9WWmHxEQ8UMFaecdCXrjE7lWnYmvmS8iH57Ike//A==
+  dependencies:
+    elkjs "^0.7.1"
+    sprotty-protocol "~0.11.0"
+  optionalDependencies:
+    inversify "^5.0.1"
 
 sprotty-protocol@~0.11.0:
   version "0.11.0"
