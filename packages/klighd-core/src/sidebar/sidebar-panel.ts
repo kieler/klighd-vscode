@@ -151,7 +151,11 @@ export abstract class SidebarPanel implements ISidebarPanel {
                 title: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "Unpin Sidebar" : "Pin Sidebar",
                 iconId: this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption) ? "lock" : "unlock",
                 action: SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)),
-                state: this.renderOptionsRegistry.getValue(PinSidebarOption)
+                state: this.renderOptionsRegistry.getValue(PinSidebarOption),
+                effect: () => {
+                    this.actionDispatcher.dispatch(SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValue(PinSidebarOption)));
+                    this.update()
+            }
             },
         ];
         

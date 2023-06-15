@@ -37,6 +37,7 @@ export class OptionsPanel extends SidebarPanel {
     @postConstruct()
     init(): void {
         this.optionsRegistry.onChange(() => this.update());
+        this.renderOptionsRegistry.onChange(() => this.update());
         this.assignQuickActions();
     }
 
