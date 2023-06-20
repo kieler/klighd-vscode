@@ -15,14 +15,17 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+/** @jsx html */
 import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
 import { inject, injectable } from "inversify";
 import { VNode } from "snabbdom";
+import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { IActionDispatcher, RequestExportSvgAction, TYPES } from "sprotty";
 import { CenterAction } from "sprotty-protocol";
 import { KlighdFitToScreenAction, RefreshLayoutAction } from "../actions/actions";
 import { CreateBookmarkAction } from "../bookmarks/bookmark";
 import { DISymbol } from "../di.symbols";
+import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SetRenderOptionAction } from "../options/actions";
 import { PossibleQuickAction, QuickActionOption } from "../options/option-models";
 import { PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "../options/render-options-registry";
@@ -102,6 +105,12 @@ export abstract class SidebarPanel implements ISidebarPanel {
 
     /**
      * This method inits the quickactions, if you wanna use it for a panel.
+     * To use these quckactions you have to use the getQuickActions() method to get the quickactions.
+     * Furthermore you have to call this assign method in update() and init().
+     * Also make sure you add the renderOptionsRegistry to the constructor init(), otherwise
+     * it won't update correctly.
+     * Please also add the html create method for the quickactions at the right place (createQuickActionsHTML() )
+     * (also add the right imports)
      */
     protected assignQuickActions():void {
         this.quickActions = [
@@ -179,5 +188,33 @@ export abstract class SidebarPanel implements ISidebarPanel {
         if (!action) return
 
         this.actionDispatcher.dispatch(action)
+    }
+
+    /**
+     * This method creates the quickactionsbar via html
+     */
+    protected createQuickActionsHTML(): void{
+        const quickactionsHTML=
+        <div class-options__section="true">
+            <h5 class-options__heading="true">Quick Actions</h5>
+            <div class-options__button-group="true">
+                {this.getQuickActions().map((action) => (
+                    <button
+                        title={action.title}
+                        class-options__icon-button="true"
+                        class-sidebar__enabled-button={!!action.state}
+                        on-click={() => {
+                            if (action.effect) {
+                                action.effect.apply(this)
+                            }
+                            this.handleQuickActionClick(action.key)
+                        }}
+                    >
+                        <FeatherIcon iconId={action.iconId}/>
+                    </button>
+                ))}
+            </div>
+        </div>
+        return quickactionsHTML
     }
 }

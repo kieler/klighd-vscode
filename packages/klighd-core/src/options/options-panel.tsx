@@ -38,12 +38,12 @@ export class OptionsPanel extends SidebarPanel {
     init(): void {
         this.optionsRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
-        this.assignQuickActions();
+        this.assignQuickActions()
     }
 
     update(): void {
-        super.assignQuickActions();
-        super.update();
+        super.assignQuickActions()
+        super.update()
     }
 
     get id(): string {
@@ -57,26 +57,7 @@ export class OptionsPanel extends SidebarPanel {
     render(): VNode {
         return this.optionsRegistry.hasOptions() ? (
             <div> 
-                <div class-options__section="true">
-                    <h5 class-options__heading="true">Quick Actions</h5>
-                    <div class-options__button-group="true">
-                        {this.getQuickActions().map((action) => (
-                            <button
-                                title={action.title}
-                                class-options__icon-button="true"
-                                class-sidebar__enabled-button={!!action.state}
-                                on-click={() => {
-                                    if (action.effect) {
-                                        action.effect.apply(this)
-                                    }
-                                    this.handleQuickActionClick(action.key)
-                                }}
-                            >
-                                <FeatherIcon iconId={action.iconId}/>
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                {this.createQuickActionsHTML()}
                 {this.optionsRenderer.renderServerOptions({
                     actions: this.optionsRegistry.displayedActions,
                     layoutOptions: this.optionsRegistry.layoutOptions,

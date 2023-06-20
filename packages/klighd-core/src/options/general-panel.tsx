@@ -51,7 +51,7 @@ export class GeneralPanel extends SidebarPanel {
         this.preferencesRegistry.onChange(() => this.update());
         this.renderOptionsRegistry.onChange(() => this.update());
 
-        this.assignQuickActions();
+        this.assignQuickActions()
     }
 
     get id(): string {
@@ -70,26 +70,7 @@ export class GeneralPanel extends SidebarPanel {
     render(): VNode {
         return (
             <div>
-                <div class-options__section="true">
-                    <h5 class-options__heading="true">Quick Actions</h5>
-                    <div class-options__button-group="true">
-                        {this.getQuickActions().map((action) => (
-                            <button
-                                title={action.title}
-                                class-options__icon-button="true"
-                                class-sidebar__enabled-button={!!action.state}
-                                on-click={() => {
-                                    if (action.effect) {
-                                        action.effect.apply(this)
-                                    }
-                                    this.handleQuickActionClick(action.key)
-                                }}
-                            >
-                                <FeatherIcon iconId={action.iconId}/>
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                {this.createQuickActionsHTML()}
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Synthesis</h5>
                     <SynthesisPicker
