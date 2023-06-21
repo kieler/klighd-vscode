@@ -29,6 +29,7 @@ import { SetPreferencesAction } from "./actions";
 import { CheckOption } from "./components/option-inputs";
 import { SynthesisPicker } from "./components/synthesis-picker";
 import { OptionsRenderer } from "./options-renderer";
+import { QuickActionsBar } from '../sidebar/sidebar-panel';
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -70,7 +71,11 @@ export class GeneralPanel extends SidebarPanel {
     render(): VNode {
         return (
             <div>
-                {this.createQuickActionsHTML()}
+                <QuickActionsBar
+                    quickActions={this.getQuickActions()}
+                    onChange={this.handleQuickActionClick.bind(this)}
+                    thisSidebarPanel={this}
+                />
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Synthesis</h5>
                     <SynthesisPicker

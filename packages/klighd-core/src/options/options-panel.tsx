@@ -24,6 +24,7 @@ import { OptionsRenderer } from "./options-renderer";
 import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SidebarPanel } from "../sidebar";
+import { QuickActionsBar } from '../sidebar/sidebar-panel';
 
 /** Sidebar panel that displays server provided KLighD options.  */
 @injectable()
@@ -57,7 +58,11 @@ export class OptionsPanel extends SidebarPanel {
     render(): VNode {
         return this.optionsRegistry.hasOptions() ? (
             <div> 
-                {this.createQuickActionsHTML()}
+                <QuickActionsBar
+                    quickActions={this.getQuickActions()}
+                    onChange={this.handleQuickActionClick.bind(this)}
+                    thisSidebarPanel={this}
+                />
                 {this.optionsRenderer.renderServerOptions({
                     actions: this.optionsRegistry.displayedActions,
                     layoutOptions: this.optionsRegistry.layoutOptions,
