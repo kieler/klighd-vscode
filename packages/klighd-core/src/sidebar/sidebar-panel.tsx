@@ -165,7 +165,7 @@ export abstract class SidebarPanel implements ISidebarPanel {
                 effect: () => {
                     this.actionDispatcher.dispatch(SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValue(PinSidebarOption)));
                     this.update()
-            }
+                }
             },
         ];
         
