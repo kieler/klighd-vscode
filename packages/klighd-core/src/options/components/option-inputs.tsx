@@ -72,13 +72,13 @@ function getCurrentValue(e: Event, props: ChoiceOptionProps) {
 export function ChoiceOption(props: ChoiceOptionProps): VNode {
     // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
     props = (props as any as {props: ChoiceOptionProps}).props
-    return ( 
+    return (
         <div class-options__input-container="true">
-            <legend>{props.description ?? props.name} :</legend>                                  
+            <legend>{props.description ?? props.name} :</legend>                                
                 <select onchange={(e: Event) => getCurrentValue(e, props)}> {props.name}
                   {props.availableValues.map((value, i) => (
                     <option selected={props.value === value}>
-                        {props.availableValuesLabels?.[i] ?? value} 
+                        {props.availableValuesLabels?.[i] ?? value}
                     </option>
                     ))}
                 </select>
