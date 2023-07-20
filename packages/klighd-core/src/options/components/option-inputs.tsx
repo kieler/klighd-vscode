@@ -59,7 +59,7 @@ interface ChoiceOptionProps extends BaseProps<string> {
 /** This Function calls the onChange method, so that a click cause an active change */
 function getCurrentValue(e: Event, props: ChoiceOptionProps) {
     if (e.target == null) {
-        return 
+        return
     }
     if (!(e.target instanceof HTMLSelectElement)) {
         return
@@ -74,7 +74,7 @@ export function ChoiceOption(props: ChoiceOptionProps): VNode {
     props = (props as any as {props: ChoiceOptionProps}).props
     return (
         <div class-options__input-container="true">
-            <legend>{props.description ?? props.name} :</legend>                                
+            <legend>{props.description ?? props.name} :</legend>                         
                 <select onchange={(e: Event) => getCurrentValue(e, props)}> {props.name}
                   {props.availableValues.map((value, i) => (
                     <option selected={props.value === value}>
@@ -82,7 +82,7 @@ export function ChoiceOption(props: ChoiceOptionProps): VNode {
                     </option>
                     ))}
                 </select>
-        </div> 
+        </div>
     );
 }
 
