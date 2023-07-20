@@ -74,6 +74,13 @@ export interface ISidebarPanel {
  * Abstract SidebarPanel that should be used as the base for a custom {@link ISidebarPanel}.
  *
  * This class simplifies the implementation around handling render updates.
+ * 
+ * 
+ * To use these quick actions you have to use the getQuickActions() method to get the quick actions.
+ * Furthermore you have to call the `assignQuickActions` method in update() and init().
+ * Also make sure you add the renderOptionsRegistry to the constructor init() via
+ * `this.renderOptionsRegistry.onChange(() => this.update())`
+ * Furthermore, add the html create method in the `render()` method via `<QuickActionsBar/>`
  */
 @injectable()
 export abstract class SidebarPanel implements ISidebarPanel {
@@ -104,15 +111,9 @@ export abstract class SidebarPanel implements ISidebarPanel {
     abstract render(): VNode;
 
     /**
-     * This method inits the quickactions, if you wanna use it for a panel.
-     * To use these quckactions you have to use the getQuickActions() method to get the quickactions.
-     * Furthermore you have to call this assign method in update() and init().
-     * Also make sure you add the renderOptionsRegistry to the constructor init(), otherwise
-     * it won't update correctly.
-     * Please also add the html create method for the quickactions at the right place (createQuickActionsHTML() )
-     * (also add the right imports)
+     * This method inits the quick actions, if you want to use them for a panel.
      */
-    protected assignQuickActions():void {
+    protected assignQuickActions(): void {
         this.quickActions = [
             {
                 key: "center",
@@ -164,7 +165,7 @@ export abstract class SidebarPanel implements ISidebarPanel {
                 effect: () => {
                     this.actionDispatcher.dispatch(SetRenderOptionAction.create(PinSidebarOption.ID, !this.renderOptionsRegistry.getValue(PinSidebarOption)));
                     this.update()
-            }
+                }
             },
         ];
         
@@ -190,31 +191,48 @@ export abstract class SidebarPanel implements ISidebarPanel {
         this.actionDispatcher.dispatch(action)
     }
 
+
+}
+
+/**
+ * The properties needed to create the quick actions bar.
+ */
+interface QuickActionsBarProps {
+    /** The quick actions this bar should show */
+    quickActions: QuickActionOption[]
     /**
-     * This method creates the quickactionsbar via html
+     * callback method for when a quick action is clicked.
+     * @param key The key of the quick action that was clicked.
      */
-    protected createQuickActionsHTML(): void{
-        const quickactionsHTML=
-        <div class-options__section="true">
-            <h5 class-options__heading="true">Quick Actions</h5>
-            <div class-options__button-group="true">
-                {this.getQuickActions().map((action) => (
-                    <button
-                        title={action.title}
-                        class-options__icon-button="true"
-                        class-sidebar__enabled-button={!!action.state}
-                        on-click={() => {
-                            if (action.effect) {
-                                action.effect.apply(this)
-                            }
-                            this.handleQuickActionClick(action.key)
-                        }}
-                    >
-                        <FeatherIcon iconId={action.iconId}/>
-                    </button>
-                ))}
-            </div>
+    onChange: (key: PossibleQuickAction) => void
+    /** The sidebar panel this quick actions bar is part of. */
+    thisSidebarPanel: SidebarPanel
+}
+
+/**
+ * This method creates the quick actions bar as a resuable component.
+ */
+export function QuickActionsBar(props: QuickActionsBarProps): VNode {
+    // The Sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
+    props = (props as any as {props: QuickActionsBarProps}).props
+    return <div class-options__section="true">
+        <h5 class-options__heading="true">Quick Actions</h5>
+        <div class-options__button-group="true">
+            {props.quickActions.map((action) => (
+                <button
+                    title={action.title}
+                    class-options__icon-button="true"
+                    class-sidebar__enabled-button={!!action.state}
+                    on-click={() => {
+                        if (action.effect) {
+                            action.effect.apply(props.thisSidebarPanel)
+                        }
+                        props.onChange(action.key)
+                    }}
+                >
+                    <FeatherIcon iconId={action.iconId}/>
+                </button>
+            ))}
         </div>
-        return quickactionsHTML
-    }
+    </div>
 }
