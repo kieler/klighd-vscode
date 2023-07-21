@@ -168,7 +168,7 @@
 
 .options__selection {
     padding: 4px 6px;
-
+    width: 200px;
     border: 2px solid var(--kdc-color-sidebar-trigger-background-hover);
     border-radius: var(--kdc-border-radius-default);
     background: var(--kdc-color-sidebar-trigger-background-active);
