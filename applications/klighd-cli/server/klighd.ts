@@ -32,9 +32,9 @@ variable. If both a path and a port for a language server is provided, the webse
 will use the port to connect to the listening language server.
 
 Example calls:
-  $ ${process.title} --ls_port 5007 ./ABRO.sctx
-  $ ${process.title} --ls_path ../language-server.jar ./example.elkt
-  $ ${process.title} serve -p 8000
+  $ ${process.execPath.split('\\').pop()?.split('/').pop()} --ls_port 5007 ./ABRO.sctx
+  $ ${process.execPath.split('\\').pop()?.split('/').pop()} --ls_path ../language-server.jar ./example.elkt
+  $ ${process.execPath.split('\\').pop()?.split('/').pop()} serve -p 8000
 `;
 
 const program = new Command(process.title);
