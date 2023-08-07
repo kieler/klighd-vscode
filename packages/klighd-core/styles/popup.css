@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,6 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-// THE CONTENT OF THIS FILE IS A PLACEHOLDER FOR TYPESCRIPT. IT WILL BE REPLACED
-// WITH THE ACTUAL PACKAGE VERSION WHEN THE CLI IS PACKAGED.
-
-export const VERSION = "@VERSION@";
+.klighd-popup {
+    color: black;
+}

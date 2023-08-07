@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "types": ["mocha", "chai"],
+        "lib": [
+            "es6",
+            "dom"
+          ]
+    }
+}

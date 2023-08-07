@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -51,10 +51,7 @@ export class SKGraphView implements IView {
         if (viewport) {
             ctx.viewport = viewport
         }
-        ctx.titles = []
-        ctx.positions = []
-
-
+        ctx.titleStorage.clear()
 
         // Add depthMap to context for rendering, when required.
         const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
@@ -100,8 +97,6 @@ export class KNodeView implements IView {
             }
         }
 
-        ctx.titles.push([])
-        ctx.positions.push("")
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -115,7 +110,7 @@ export class KNodeView implements IView {
 
         if (isShadow) {
             // Render shadow of the node
-            shadow = getRendering(node.data, node, new KStyles, ctx)
+            shadow = getRendering(node.data, node, new KStyles(false), ctx)
         }
         if (isChildSelected(node as SKNode)) {
             if (((node as SKNode).properties['org.eclipse.elk.interactiveLayout']) && ctx.mListener.hasDragged) {
@@ -129,7 +124,7 @@ export class KNodeView implements IView {
         let rendering = undefined
         if (!ctx.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
-            rendering = getRendering(node.data, node, new KStyles, ctx)
+            rendering = getRendering(node.data, node, new KStyles(false), ctx)
 
             if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties['org.eclipse.elk.interactiveLayout']) {
                 // render icon visualizing the set Constraints
@@ -156,7 +151,7 @@ export class KNodeView implements IView {
             // }
         } else {
             node.opacity = 0.1
-            rendering = getRendering(node.data, node, new KStyles, ctx)
+            rendering = getRendering(node.data, node, new KStyles(false), ctx)
         }
         node.shadow = isShadow
 
@@ -174,8 +169,10 @@ export class KNodeView implements IView {
                 result.push(interactiveNodes)
             }
             result.push(...children)
-            result.push(...(ctx.titles.pop() ?? []))
-            ctx.positions.pop()
+            const title = ctx.titleStorage.getTitle()
+            if (title !== undefined) {
+                result.push(title)
+            }
             return <g>{...result}</g>
         }
 
@@ -186,9 +183,12 @@ export class KNodeView implements IView {
         if (rendering !== undefined) {
             result.push(rendering)
         } else {
-            ctx.positions.pop()
+            const title = ctx.titleStorage.getTitle()
+            if (title !== undefined) {
+                result.push(title)
+            }
             return <g>
-                {ctx.titles.pop() ?? []}
+                {title ?? []}
                 {ctx.renderChildren(node)}
             </g>
         }
@@ -204,8 +204,10 @@ export class KNodeView implements IView {
         } else if (!node.areNonChildAreaChildrenRendered) {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
-        result.push(...(ctx.titles.pop() ?? []))
-        ctx.positions.pop()
+        const title = ctx.titleStorage.getTitle()
+        if (title !== undefined) {
+            result.push(title)
+        }
         return <g>{...result}</g>
     }
 }
@@ -230,19 +232,16 @@ export class KPortView implements IView {
             }
         }
 
-        ctx.titles.push([])
-        ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
-        const rendering = getRendering(port.data, port, new KStyles, ctx)
+        const rendering = getRendering(port.data, port, new KStyles(false), ctx)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             const element = <g>
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderChildren(port)}
             </g>
 
-            ctx.positions.pop()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
@@ -250,23 +249,22 @@ export class KPortView implements IView {
         if (!port.areChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderChildren(port)}
             </g>
         } else if (!port.areNonChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderNonChildAreaChildren(port)}
             </g>
         } else {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
             </g>
         }
 
-        ctx.positions.pop()
         return element
     }
 }
@@ -289,8 +287,6 @@ export class KLabelView implements IView {
                 return undefined
             }
         }
-        ctx.titles.push([])
-        ctx.positions.push("")
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -299,15 +295,15 @@ export class KLabelView implements IView {
             // Nodes that are not on the same hierarchy are less visible.
             label.opacity = 0.1
         }
-        const rendering = getRendering(label.data, label, new KStyles, ctx)
+        const rendering = getRendering(label.data, label, new KStyles(false), ctx)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
             const element = <g>
-                {ctx.renderChildren(label).push(...ctx.titles.pop() ?? [])}
+                {ctx.titleStorage.getTitle() ?? []}
+                {ctx.renderChildren(label)}
             </g>
 
-            ctx.positions.pop()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
@@ -315,23 +311,22 @@ export class KLabelView implements IView {
         if (!label.areChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderChildren(label)}
             </g>
         } else if (!label.areNonChildAreaChildrenRendered) {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
                 {ctx.renderNonChildAreaChildren(label)}
             </g>
         } else {
             element = <g>
                 {rendering}
-                {ctx.titles.pop() ?? []}
+                {ctx.titleStorage.getTitle() ?? []}
             </g>
         }
 
-        ctx.positions.pop()
         return element
     }
 }
@@ -373,7 +368,7 @@ export class KEdgeView implements IView {
         if (!ctx.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {
             // edge should only be visible if it is in the same hierarchical level as
             // the moved node or no node is moved at all
-            rendering = getRendering(edge.data, edge, new KStyles, ctx)
+            rendering = getRendering(edge.data, edge, new KStyles(false), ctx)
         }
         edge.moved = false
 

@@ -1,8 +1,8 @@
 {
     "name": "@kieler/klighd-core",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "description": "Core KLighD diagram visualization with Sprotty",
-    "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
+    "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "license": "EPL-2.0",
     "keywords": [
         "klighd",
@@ -16,14 +16,14 @@
         "directory": "packages/klighd-core"
     },
     "scripts": {
-        "clean": "rm -rf lib",
+        "clean": "rimraf lib",
         "lint": "eslint .",
         "build": "tsc",
         "watch": "tsc -w",
         "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next --no-git-tag-version"
     },
     "dependencies": {
-        "@kieler/klighd-interactive": "^0.4.1",
+        "@kieler/klighd-interactive": "^0.4.2",
         "@types/file-saver": "^2.0.5",
         "feather-icons": "^4.28.0",
         "inversify": "^5.1.1",
@@ -31,6 +31,7 @@
     },
     "devDependencies": {
         "@types/feather-icons": "^4.7.0",
+        "rimraf": "^4.4.0",
         "semver": "^7.3.5"
     },
     "files": [
