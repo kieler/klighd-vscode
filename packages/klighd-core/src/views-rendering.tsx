@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *

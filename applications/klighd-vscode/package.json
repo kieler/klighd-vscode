@@ -161,16 +161,37 @@
         "ts-loader": "^8.0.14",
         "typescript": "^4.3.0",
         "vsce": "^1.95.1",
-        "webpack": "^4.44.1"
+        "webpack": "^5.39.1",
+        "source-map-loader": "^3.0.0",
+
+
+        "@typescript-eslint/eslint-plugin": "^5.5.0",
+        "@typescript-eslint/parser": "^5.5.0",
+        "clean-webpack-plugin": "^4.0.0-alpha.0",
+        "eslint": "^8.4.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-import-resolver-typescript": "^2.5.0",
+        "eslint-plugin-import": "^2.25.3",
+        "eslint-plugin-prettier": "^4.0.0",
+        "mini-css-extract-plugin": "^1.6.0",
+        "prettier": "2.5.1",
+        "webpack-cli": "^4.7.2"
     },
     "dependencies": {
         "@kieler/klighd-core": "^0.4.2",
+        "@kieler/table-webview": "^0.0.3",
         "inversify": "^5.0.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",
+        "snabbdom-to-html": "^7.0.0",
         "sprotty": "0.11.1",
         "sprotty-vscode": "^0.2.0",
         "sprotty-vscode-webview": "^0.2.0",
-        "vscode-languageclient": "^7.0.0"
+        "vscode-languageclient": "^7.0.0",
+
+        "es6-shim": "^0.35.6",
+        "react": "^17.0.2",
+        "vscode-uri": "^3.0.2"
     }
 }

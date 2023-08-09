@@ -19,7 +19,7 @@
         "lint": "lerna run lint --parallel",
         "prebuild": "yarn clean",
         "build": "lerna run build",
-        "watch": "lerna run watch --parallel",
+        "watch": "lerna run --scope @kieler/klighd-core --scope klighd-vscode watch --parallel",
         "package": "lerna run build && lerna run package --parallel",
         "distribute": "lerna run build && lerna run distribute --parallel",
         "test": "mocha --require ts-node/register --recursive \"packages/**/test/**/*.{ts,tsx}\""

@@ -64,7 +64,9 @@ const extensionConfig = {
             },
         ],
     },
-    plugins: [new webpack.WatchIgnorePlugin([/\.d\.ts$/])],
+    plugins: [new webpack.WatchIgnorePlugin({
+        paths: [/\.*\.d\.ts$/]
+      })],
 };
 
 /**
@@ -116,7 +118,45 @@ const webviewConfig = {
             },
         ],
     },
-    plugins: [new webpack.WatchIgnorePlugin([/\.d\.ts$/])],
+    plugins: [new webpack.WatchIgnorePlugin({
+        paths: [new RegExp(/\.d\.ts$/)]
+      })],
 };
 
-module.exports = [extensionConfig, webviewConfig];
+/**@type {import('webpack').Configuration}*/
+const graphPropertiesWebview = {
+    target: 'web',
+    mode: "none", // Leave source code as close as possible. Only set to production during distribution.
+
+
+    entry: path.resolve(__dirname, 'src-graph-properties-view/graph-properties.ts'), //** ehem. TODO */
+    output: {
+		filename: 'graph-properties-webview.js',
+        path: path.resolve(__dirname, "dist"),
+    },
+    devtool: "nosources-source-map",
+
+    resolve: {
+        extensions: ['.ts', '.tsx', '.js']
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: ['ts-loader']
+            },
+            {
+                test: /\.js$/,
+                use: ['source-map-loader'],
+                enforce: 'pre'
+            },
+            {
+                test: /\.css$/,
+                exclude: /\.useable\.css$/,
+                use: ['style-loader', 'css-loader']
+            },
+        ]
+    }
+};
+
+module.exports = [extensionConfig, webviewConfig, graphPropertiesWebview];

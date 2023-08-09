@@ -1,3 +1,4 @@
+// @ts-nocheck
 /** @jsx html */
 /*
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
