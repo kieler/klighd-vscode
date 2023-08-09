@@ -32,6 +32,7 @@ import { showPopup } from "./popup";
 import { LSPConnection } from "./services/connection";
 import { LocalStorage } from "./services/persistence";
 import { showSpinner, hideSpinner } from "./spinner";
+import "setimmediate"; // polyfill for webpack >=5
 
 // IIFE booting the application
 (async function main() {

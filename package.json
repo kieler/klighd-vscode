@@ -11,7 +11,7 @@
         "yarn": "1.x"
     },
     "workspaces": [
-        "applications/klighd-vscode",
+        "applications/*",
         "packages/*"
     ],
     "scripts": {
