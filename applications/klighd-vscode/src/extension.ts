@@ -26,6 +26,9 @@ import { LspHandler } from "./lsp-handler";
 import { ReportChangeMessage } from "./storage/messages";
 import { StorageService } from "./storage/storage-service";
 
+import { GraphPropertiesDataProvider } from '../src-graph-properties-view/graph-properties-data-provider';
+import { LanguageClient } from 'vscode-languageclient/lib/main';
+
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
 export { command };
@@ -34,6 +37,7 @@ export { command };
 export const klighdExtensionCreatedEmitter = new vscode.EventEmitter<KLighDExtension | undefined>()
 export const klighdExtensionCreated: vscode.Event<KLighDExtension | undefined> = klighdExtensionCreatedEmitter.event
 
+let lsClient: LanguageClient
 
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext): void {
@@ -42,6 +46,13 @@ export function activate(context: vscode.ExtensionContext): void {
     // This extension should persist data in workspace state, so it is different for
     // each project a user opens. To change this, assign another Memento to this constant.
     const mementoForPersistence = context.workspaceState;
+
+    // Register and start graph properties view
+    // const graphPropertiesDataProvider: vscode.WebviewViewProvider = new GraphPropertiesDataProvider(lsClient, context)
+    // vscode.window.registerWebviewViewProvider('kieler-graph-properties', graphPropertiesDataProvider)
+    // eslint-disable-next-line no-console
+    // console.debug('Starting Language Server...')
+    // lsClient.start()
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
@@ -75,6 +86,14 @@ export function activate(context: vscode.ExtensionContext): void {
                     // Uses nanoid (non-secure) to quickly generate a random id with low collision probability
                     const id = nanoid(16);
                     extensionMap.set(id, extension);
+
+                    // Register and start graph properties view
+                    const graphPropertiesDataProvider: vscode.WebviewViewProvider = new GraphPropertiesDataProvider(lsClient, context)
+                    vscode.window.registerWebviewViewProvider('kieler-graph-properties', graphPropertiesDataProvider)
+
+                    // eslint-disable-next-line no-console
+                    //  console.debug('Starting Language Server...')
+                    //  lsClient.start()
 
                     return id;
                 } catch (e) {
