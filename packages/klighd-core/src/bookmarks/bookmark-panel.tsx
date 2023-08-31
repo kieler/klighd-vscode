@@ -4,7 +4,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  * 
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,7 +18,7 @@
 
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
-import { html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SidebarPanel } from "../sidebar";
@@ -30,8 +30,10 @@ import { Bookmark, GoToBookmarkAction, CreateBookmarkAction, DeleteBookmarkActio
  */
 @injectable()
 export class BookmarkPanel extends SidebarPanel {
-
-    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
+    // sets the bookmarkpanel at the bottom
+    // hierarchy is: first elem has the lowest number. so the last one got the highest
+    readonly position = 10; // --> last position (at the moment)
+    
     @inject(DISymbol.BookmarkRegistry) private bookmarkRegistry: BookmarkRegistry
 
     @postConstruct()
