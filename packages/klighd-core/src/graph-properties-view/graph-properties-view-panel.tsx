@@ -1,3 +1,4 @@
+//@ts-nocheck
 /*
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
@@ -22,19 +23,7 @@ import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unu
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SidebarPanel } from "../sidebar";
 import { QuickActionsBar } from '../sidebar/sidebar-panel';
-
-import { IActionHandler, ICommand } from "../../../../node_modules/sprotty/src/base/actions/action-handler.ts";
-import {
-    Action,
-    ActionMessage,
-    findElement,
-    generateRequestId,
-    RequestPopupModelAction,
-    SelectAction,
-    SetPopupModelAction,
-    UpdateModelAction,
-} from "sprotty-protocol";
-import { GraphPropertiesViewRegistry } from "./graph-properties-view-registry.ts"
+import { /*GraphPropertiesViewRegistry,*/ SelectedElementsUtil } from "./graph-properties-view-registry.ts"
 //TODO: sort and cleanup imports
 
 
@@ -44,9 +33,8 @@ import { GraphPropertiesViewRegistry } from "./graph-properties-view-registry.ts
  */
 @injectable()
 export class GraphPropertiesViewPanel extends SidebarPanel{
-    // Sets this panel at the second position
     // hierarchy is: first elem has the lowest number. so the last one got the highest
-    readonly position = 2; // --> very last position (at the moment)
+    readonly position = 2;
                                                     
     @postConstruct()
     async init(): Promise<void> {
@@ -68,7 +56,7 @@ export class GraphPropertiesViewPanel extends SidebarPanel{
         super.update()
     }
 
-    // getCurrentValue()
+    const ele = SelectedElementsUtil.getSelectedElements()
 
     render(): VNode {
         return (
@@ -84,8 +72,19 @@ export class GraphPropertiesViewPanel extends SidebarPanel{
                             <td>Property</td>
                             <td>Value</td>
                         </tr>
+                        {
+                        this.ele.map((i: number) => (
                         <tr>
-                            <td>{}</td>
+                            <td /*onChange = {(e: any) => e.handle()}*/ > {this.ele[i].properties[0]} </td>
+                            <td>
+                                <select onChange = {(e: any) => e.handleUpdate() /* TODO*/}>
+                                    {/*anfang map für available propertyvalues */}
+                                    <option selected={this.ele[i].properties[1]}>
+                                        {this.ele[i].properties[1] /*TODO possible values */}
+                                    </option>
+                                    {/*ende map für available propertyvalues */}
+                                </select>
+                            </td>
                             {/* <td>
                                 {<select onchange={(e: Event) => getCurrentValue(e, props)} class-options__selection title={props.description ?? props.name}> {props.name}
                                 {props.availableValues.map((value, i) => (
@@ -96,6 +95,8 @@ export class GraphPropertiesViewPanel extends SidebarPanel{
                                 </select>}
                                 </td> */}
                         </tr>
+                            ))
+                        }
                     </table> 
                 </div>
                 

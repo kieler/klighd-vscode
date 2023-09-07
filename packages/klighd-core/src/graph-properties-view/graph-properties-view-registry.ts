@@ -5,7 +5,7 @@ import { IActionHandler, ICommand } from "../../../../node_modules/sprotty/src/b
 import { Action, UpdateModelAction } from "sprotty-protocol";
 import { ActionHandlerRegistry, SModelRoot } from "sprotty"
 import { SendModelContextAction } from "../actions/actions";
-import { SKGraphElement } from "@kieler/klighd-interactive/lib/constraint-classes";
+import { SKGraphElement } from "../skgraph-models.ts";
 import { injectable } from "inversify";
 import { ActionHandlerRegistry, IActionHandler, ICommand, isSelectable, ModelIndexImpl, SModelRoot } from "sprotty";
 import { Action, SetModelAction, UpdateModelAction } from "sprotty-protocol";
@@ -70,7 +70,7 @@ export class SelectedElementsUtil {
     private static portCache?: SKPort[];
 
     public getSelectedElements(): SKGraphElement[] {
-        return this.selectedElements
+        return SelectedElementsUtil.selectedElements
     }
     /**
      * Clears all caches for stored element types.
