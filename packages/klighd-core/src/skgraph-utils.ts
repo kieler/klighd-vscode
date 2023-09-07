@@ -3,7 +3,7 @@
 *
 * http://rtsys.informatik.uni-kiel.de/kieler
 *
-* Copyright 2019-2022 by
+* Copyright 2019-2023 by
 * + Kiel University
 *   + Department of Computer Science
 *     + Real-Time and Embedded Systems Group
@@ -90,15 +90,18 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
     let currentElement: KRendering = element.data.find(possibleRendering => {
         return isRendering(possibleRendering)
     }) as KRendering
-    const idPath = id.split('$')
+    // The real rendering ID starts after the graph element ID prefix, delimited by a $$$.
+    const renderingId = id.split('$$$')[1]
+    if (renderingId === undefined) {
+        return undefined
+    }
+    const idPath = renderingId.split('$')
     if (currentElement.type === K_RENDERING_REF) {
         // KRenderingRefs' ids always start with the identifying name of the reference and may continue with $<something> to refer to renderings within that reference.
         // Start with index 1 since the currentElement already contains the rendering with the identifying name.
         // for (let i = 1; i < idPath.length; i++) {
-        if (idPath.length > 1) {
-            console.error('looking up renderings in rendering references is not supported yet.')
-            return
-        }
+        // TODO:looking up renderings in rendering references is not supported yet.
+        return
     } else {
         // The rendering id is build hierarchically and the first rendering is already found, so start with index 1 as a $ sign can be skipped.
         for (let i = 1; i < idPath.length; i++) {
