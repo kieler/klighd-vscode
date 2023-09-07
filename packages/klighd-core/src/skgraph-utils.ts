@@ -91,7 +91,7 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         return isRendering(possibleRendering)
     }) as KRendering
     // The real rendering ID starts after the graph element ID prefix, delimited by a $$$.
-    const renderingId = id.split('$$$')[1]
+    const renderingId = id.split('$$$')[1] ?? id
     if (renderingId === undefined) {
         return undefined
     }
