@@ -56,16 +56,16 @@ interface ChoiceOptionProps extends BaseProps<string> {
     availableValuesLabels?: string[];
 }
 
-/** This Function calls the onChange method, so that a click cause an active change */
-function getCurrentValue(e: Event, props: ChoiceOptionProps) {
+/** This Function calls the onChange method with the current value to an event,
+  * so if a change has happened we need to handle this */
+function handleChoiceEvent(e: Event, props: ChoiceOptionProps): void {
     if (e.target == null) {
         return
     }
     if (!(e.target instanceof HTMLSelectElement)) {
         return
     }
-    const val = e.target.value
-    return props.onChange(val)
+    return props.onChange(e.target.value)
   }
 
 /** Render a labeled group of radio inputs. */
@@ -75,7 +75,7 @@ export function ChoiceOption(props: ChoiceOptionProps): VNode {
     return (
         <div class-options__input-container="true">  
             <legend>{props.name}</legend>                 
-                <select onchange={(e: Event) => getCurrentValue(e, props)} class-options__selection title={props.description ?? props.name}> {props.name}
+                <select onchange={(e: Event) => handleChoiceEvent(e, props)} class-options__selection title={props.description ?? props.name}> {props.name}
                   {props.availableValues.map((value, i) => (
                     <option selected={props.value === value}>
                         {props.availableValuesLabels?.[i] ?? value}
