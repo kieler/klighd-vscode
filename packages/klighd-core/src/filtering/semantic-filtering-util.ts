@@ -422,7 +422,7 @@ export namespace NumericMultiplicationConnective {
 
 /**
  * A Numeric Division Connective takes two numeric operands and evaluates
- * to their product.
+ * to their quotient.
  */
  export class NumericDivisionConnective implements BinaryConnective {
     static NAME = "NUMERICDIVISION"
