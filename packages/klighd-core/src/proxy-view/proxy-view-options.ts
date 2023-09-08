@@ -20,7 +20,7 @@ import { Range, RangeOption, RenderOption, TransformationOptionType } from "../o
 /** The category containing proxy-view options. */
 export class ProxyViewCategory implements RenderOption {
     static readonly ID: string = "proxy-view-category";
-    static readonly NAME: string = "Proxy-View Options";
+    static readonly NAME: string = "Proxy-View";
     static readonly INSTANCE: ProxyViewCategory = new ProxyViewCategory;
     readonly id: string = ProxyViewCategory.ID;
     readonly name: string = ProxyViewCategory.NAME;
