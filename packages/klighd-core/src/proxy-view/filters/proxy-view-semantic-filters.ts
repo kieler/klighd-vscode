@@ -168,5 +168,5 @@ export class ProxyViewAbstractSemanticFilter implements RenderOption {
     type: TransformationOptionType;
     initialValue: any;
     currentValue: any;
-    readonly debug: boolean = true;
+    readonly debug: boolean = false;
 }

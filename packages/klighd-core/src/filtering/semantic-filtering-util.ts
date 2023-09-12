@@ -499,7 +499,7 @@ function isTag(rule: SemanticFilterTag | SemanticFilterRule): rule is SemanticFi
 
 /** Type assertion function to assert that a semantic filter rule is a connective. */
 function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule is Connective {
-    if (!(rule as Connective).name !== undefined) {
+    if ((rule as Connective).name == undefined) {
         throw new Error("Rule is not a Connective.");
     }
 }
