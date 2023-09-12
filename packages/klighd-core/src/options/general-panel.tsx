@@ -29,7 +29,7 @@ import { SetPreferencesAction } from "./actions";
 import { CheckOption } from "./components/option-inputs";
 import { SynthesisPicker } from "./components/synthesis-picker";
 import { OptionsRenderer } from "./options-renderer";
-import { DebugOptions, PinSidebarOption, RenderOptionsRegistry, ResizeToFit } from "./render-options-registry";
+import { DebugOptions } from "./render-options-registry";
 import { QuickActionsBar } from '../sidebar/sidebar-panel';
 
 /**
