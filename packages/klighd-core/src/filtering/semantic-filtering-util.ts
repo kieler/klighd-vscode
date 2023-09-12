@@ -249,8 +249,8 @@ export class IfThenElseConnective implements TernaryConnective {
 export namespace IfThenElseConnective {
     export function evaluate(conn: IfThenElseConnective, tags: Array<SemanticFilterTag>): boolean {
         return evaluateRule(conn.firstOperand, tags)
-                ? evaluateRule(conn.secondOperand, tags)
-                : evaluateRule(conn.thirdOperand, tags);
+            ? evaluateRule(conn.secondOperand, tags)
+            : evaluateRule(conn.thirdOperand, tags);
     }
 }
 
@@ -336,7 +336,7 @@ export namespace GreaterEqualsConnective {
  * iff
  * R1 <= R2
  */
- export class LessEqualsConnective implements BinaryConnective {
+export class LessEqualsConnective implements BinaryConnective {
     static NAME = "LESSEQUALS"
     name = GreaterEqualsConnective.NAME
     leftOperand: SemanticFilterTag
@@ -355,7 +355,7 @@ export namespace LessEqualsConnective {
  * iff
  * R1 != R2
  */
- export class NumericNotEqualConnective implements BinaryConnective {
+export class NumericNotEqualConnective implements BinaryConnective {
     static NAME = "NUMERICNOTEQUAL"
     name = GreaterEqualsConnective.NAME
     leftOperand: SemanticFilterTag
@@ -407,7 +407,7 @@ export namespace NumericSubtractionConnective {
  * A Numeric Multiplication Connective takes two numeric operands and evaluates
  * to their product.
  */
- export class NumericMultiplicationConnective implements BinaryConnective {
+export class NumericMultiplicationConnective implements BinaryConnective {
     static NAME = "NUMERICMULTIPLICATION"
     name = NumericMultiplicationConnective.NAME
     leftOperand: SemanticFilterRule
@@ -424,7 +424,7 @@ export namespace NumericMultiplicationConnective {
  * A Numeric Division Connective takes two numeric operands and evaluates
  * to their quotient.
  */
- export class NumericDivisionConnective implements BinaryConnective {
+export class NumericDivisionConnective implements BinaryConnective {
     static NAME = "NUMERICDIVISION"
     name = NumericDivisionConnective.NAME
     leftOperand: SemanticFilterRule
@@ -517,7 +517,7 @@ function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag
         }
     } else {
         assertIsConnective(rule);
-        switch  (rule.name) {
+        switch (rule.name) {
             case NumericConstantConnective.NAME:
                 return NumericConstantConnective.evaluate(rule as NumericConstantConnective);
             case NumericAdditionConnective.NAME:
@@ -536,7 +536,7 @@ function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag
 
 /** Evaluates `rule` using `tags`. See Connectives for further explanation on evaluation. */
 function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): boolean {
-    
+
     // Rule is a Tag
     if (isTag(rule)) {
         return tags.some((tag: SemanticFilterTag) => tag.tag === rule.tag);
@@ -583,7 +583,7 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
         case LessEqualsConnective.NAME:
             return LessEqualsConnective.evaluate(rule as LessEqualsConnective, tags);
         case NumericNotEqualConnective.NAME:
-            return NumericNotEqualConnective.evaluate(rule as NumericNotEqualConnective, tags);    
+            return NumericNotEqualConnective.evaluate(rule as NumericNotEqualConnective, tags);
         default:
             return true;
     }
