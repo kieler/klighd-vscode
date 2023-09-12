@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -24,16 +24,27 @@ import { OptionsRenderer } from "./options-renderer";
 import { DISymbol } from "../di.symbols";
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SidebarPanel } from "../sidebar";
+import { QuickActionsBar } from '../sidebar/sidebar-panel';
 
 /** Sidebar panel that displays server provided KLighD options.  */
 @injectable()
 export class OptionsPanel extends SidebarPanel {
+    // sets this panel at the top position
+    // hierarchy is: first elem has the lowest number. so the last one got the highest
+    readonly position = -10;  // --> first position (at the moment)                                                           
     @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
     @postConstruct()
     init(): void {
         this.optionsRegistry.onChange(() => this.update());
+        this.renderOptionsRegistry.onChange(() => this.update());
+        this.assignQuickActions()
+    }
+
+    update(): void {
+        super.assignQuickActions()
+        super.update()
     }
 
     get id(): string {
@@ -46,11 +57,18 @@ export class OptionsPanel extends SidebarPanel {
 
     render(): VNode {
         return this.optionsRegistry.hasOptions() ? (
-            this.optionsRenderer.renderServerOptions({
-                actions: this.optionsRegistry.displayedActions,
-                layoutOptions: this.optionsRegistry.layoutOptions,
-                synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
-            })
+            <div> 
+                <QuickActionsBar
+                    quickActions={this.getQuickActions()}
+                    onChange={this.handleQuickActionClick.bind(this)}
+                    thisSidebarPanel={this}
+                />
+                {this.optionsRenderer.renderServerOptions({
+                    actions: this.optionsRegistry.displayedActions,
+                    layoutOptions: this.optionsRegistry.layoutOptions,
+                    synthesisOptions: this.optionsRegistry.valuedSynthesisOptions,
+                })}
+            </div>
         ) : (
             <span>No options provided by the diagram server.</span>
         );

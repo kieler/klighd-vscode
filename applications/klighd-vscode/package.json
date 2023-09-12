@@ -4,7 +4,7 @@
     "description": "KLighD diagram support for Visual Studio Code",
     "version": "0.4.2",
     "publisher": "kieler",
-    "author": "Kiel University <rt-kieler-devel@informatik.uni-kiel.de>",
+    "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "icon": "icon.png",
     "license": "EPL-2.0",
     "repository": {
