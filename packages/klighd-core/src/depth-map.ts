@@ -172,18 +172,7 @@ export class DepthMap {
 
         if (element.parent === element.root && element instanceof KNode) {
             const providedRegion = new Region(element)
-
-            let topdownScaleFactor = 1
-            if ((element.parent as any).properties == undefined || (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
-                topdownScaleFactor = 1
-            } else {
-                topdownScaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor']
-            }
-
-            providedRegion.absolutePosition = {
-                x:  element.bounds.x * topdownScaleFactor,
-                y:  element.bounds.y * topdownScaleFactor
-            }
+            providedRegion.absolutePosition = element.bounds
 
             entry = { providingRegion: providedRegion, containingRegion: undefined }
 
@@ -223,15 +212,9 @@ export class DepthMap {
                 offsetX += currentEntry?.providingRegion?.absolutePosition?.x ?? 0
                 offsetY += currentEntry?.providingRegion?.absolutePosition?.y ?? 0
 
-                let topdownScaleFactor = 1
-                if ((element.parent as any).properties == undefined || (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
-                    topdownScaleFactor = 1
-                } else {
-                    topdownScaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor']
-                }
                 entry.providingRegion.absolutePosition = {
-                    x: offsetX + element.bounds.x * topdownScaleFactor,
-                    y: offsetY + element.bounds.y * topdownScaleFactor
+                    x: offsetX + element.bounds.x,
+                    y: offsetY + element.bounds.y
                 }
             }
 
@@ -386,7 +369,6 @@ export class DepthMap {
      */
     computeDetailLevel(region: Region, viewport: Viewport, relativeThreshold: number, scaleThreshold: number): DetailLevel {
         if (!this.isInBounds(region, viewport)) {
-            console.log(region.boundingRectangle.id + " out of bounds")
             return DetailLevel.OutOfBounds
         } else if (!region.parent) {
             // Regions without parents should always be full detail if they are visible
@@ -414,17 +396,9 @@ export class DepthMap {
         if (region.absolutePosition) {
             const canvasBounds = this.rootElement.canvasBounds
 
-            let topdownScaleFactor = 1
-            if ((region.boundingRectangle.parent as any).properties == undefined || (region.boundingRectangle.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
-                topdownScaleFactor = 1
-            } else {
-                topdownScaleFactor = (region.boundingRectangle.parent as any).properties['org.eclipse.elk.topdown.scaleFactor']
-            }
-            
-            console.log(region.absolutePosition.x + region.boundingRectangle.bounds.width * topdownScaleFactor - viewport.scroll.x)
-            return region.absolutePosition.x + region.boundingRectangle.bounds.width * topdownScaleFactor - viewport.scroll.x >= 0
+            return region.absolutePosition.x + region.boundingRectangle.bounds.width - viewport.scroll.x >= 0
                 && region.absolutePosition.x - viewport.scroll.x <= (canvasBounds.width / viewport.zoom)
-                && region.absolutePosition.y + region.boundingRectangle.bounds.height * topdownScaleFactor - viewport.scroll.y >= 0
+                && region.absolutePosition.y + region.boundingRectangle.bounds.height - viewport.scroll.y >= 0
                 && region.absolutePosition.y - viewport.scroll.y <= (canvasBounds.height / viewport.zoom)
         } else {
             // Better to assume it is visible, if information are not sufficient
@@ -440,15 +414,8 @@ export class DepthMap {
      * @returns the relative size of the KNodes shortest dimension
      */
     sizeInViewport(node: KNode, viewport: Viewport): number {
-        let topdownScaleFactor = 1
-        if ((node.parent as any).properties == undefined || (node.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
-            topdownScaleFactor = 1
-        } else {
-            topdownScaleFactor = (node.parent as any).properties['org.eclipse.elk.topdown.scaleFactor']
-        }
-
-        const horizontal = node.bounds.width * topdownScaleFactor / (node.root.canvasBounds.width / viewport.zoom)
-        const vertical = node.bounds.height * topdownScaleFactor / (node.root.canvasBounds.height / viewport.zoom)
+        const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
+        const vertical = node.bounds.height / (node.root.canvasBounds.height / viewport.zoom)
         return horizontal < vertical ? horizontal : vertical
     }
 }
