@@ -120,9 +120,10 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
 
     //// Get filter option values ////
     /** Updates the proxy-view filter options specified in the {@link RenderOptionsRegistry}. */
+    // the values are inverted so that the user enable showing the elements described by the filter explicitly
     private updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
-        ProxyFilterHandler.filterUnconnectedToOnScreen = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToOnScreen);
-        ProxyFilterHandler.filterUnconnectedToSelected = renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
+        ProxyFilterHandler.filterUnconnectedToOnScreen = !renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToOnScreen);
+        ProxyFilterHandler.filterUnconnectedToSelected = !renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
         ProxyFilterHandler.filterUnselected = renderOptionsRegistry.getValue(ProxyViewFilterUnselected);
         ProxyFilterHandler.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
     }

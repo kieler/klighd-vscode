@@ -34,7 +34,7 @@ export class ProxyViewFilterCategory implements RenderOption {
 /** Whether proxies should be filtered by removing unconnected nodes regarding all on-screen nodes. */
 export class ProxyViewFilterUnconnectedToOnScreen implements RenderOption {
     static readonly ID: string = "proxy-view-filter-unconnected";
-    static readonly NAME: string = "Hide Unconnected to On-Screen";
+    static readonly NAME: string = "Unconnected to On-Screen Nodes";
     static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding all on-screen nodes.";
     static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewFilterUnconnectedToOnScreen.ID;
@@ -49,9 +49,9 @@ export class ProxyViewFilterUnconnectedToOnScreen implements RenderOption {
 /** Whether proxies should be filtered by removing unconnected nodes regarding the selected node. */
 export class ProxyViewFilterUnconnectedToSelected implements RenderOption {
     static readonly ID: string = "proxy-view-filter-unconnected-to-selected";
-    static readonly NAME: string = "Hide Unconnected to Selection";
+    static readonly NAME: string = "Unconnected to Selected Node";
     static readonly DESCRIPTION: string = "Whether proxies should be filtered by removing unconnected nodes regarding the selected nodes.";
-    static readonly DEFAULT: boolean = false;
+    static readonly DEFAULT: boolean = true;
     readonly id: string = ProxyViewFilterUnconnectedToSelected.ID;
     readonly name: string = ProxyViewFilterUnconnectedToSelected.NAME;
     readonly type: TransformationOptionType = TransformationOptionType.CHECK;
