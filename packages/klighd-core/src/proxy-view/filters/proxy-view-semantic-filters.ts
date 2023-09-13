@@ -109,7 +109,7 @@ export class ProxySemanticFilterHandler implements IActionHandler, IActionHandle
         this.semanticFilters = filters.map((filter, i) => (
             ProxyFilterAndID.from(
                 ProxySemanticFilterHandler,
-                ({ node }: ProxyFilterArgs) => !this.semanticFilterOptionValues[i] || filter.filterFun(node),
+                ({ node }: ProxyFilterArgs) => this.semanticFilterOptionValues[i] || filter.filterFun(node),
                 `${filter.name ?? "unknown"}-${i}`)
         ));
         // Also map to RenderOption
