@@ -79,7 +79,7 @@ export class ProxyViewDecreaseProxyClutter implements RenderOption {
     static readonly CHOICE_OFF: string = "Off";
     static readonly CHOICE_CLUSTERING: string = "Clustering";
     static readonly CHOICE_OPACITY: string = "Opacity by Distance";
-    static readonly DEFAULT: string = ProxyViewDecreaseProxyClutter.CHOICE_OPACITY;
+    static readonly DEFAULT: string = ProxyViewDecreaseProxyClutter.CHOICE_OFF;
     static readonly CHOICES: string[] = [
         ProxyViewDecreaseProxyClutter.CHOICE_OFF,
         ProxyViewDecreaseProxyClutter.CHOICE_CLUSTERING,
@@ -92,6 +92,7 @@ export class ProxyViewDecreaseProxyClutter implements RenderOption {
     readonly description: string = ProxyViewDecreaseProxyClutter.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
     readonly values: string[] = ProxyViewDecreaseProxyClutter.CHOICES;
+    readonly debug: boolean = true;
     currentValue = ProxyViewDecreaseProxyClutter.DEFAULT;
 }
 
@@ -125,6 +126,7 @@ export class ProxyViewEnableEdgeProxies implements RenderOption {
     readonly description: string = ProxyViewEnableEdgeProxies.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
     readonly values: string[] = ProxyViewEnableEdgeProxies.CHOICES;
+    readonly debug: boolean = true;
     currentValue = ProxyViewEnableEdgeProxies.DEFAULT;
 }
 
@@ -145,6 +147,7 @@ export class ProxyViewEnableSegmentProxies implements RenderOption {
     readonly initialValue: boolean = ProxyViewEnableSegmentProxies.DEFAULT;
     readonly description: string = ProxyViewEnableSegmentProxies.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
+    readonly debug: boolean = true;
     currentValue = ProxyViewEnableSegmentProxies.DEFAULT;
 }
 
@@ -160,6 +163,7 @@ export class ProxyViewTitleScaling implements RenderOption {
     readonly initialValue: boolean = ProxyViewTitleScaling.DEFAULT;
     readonly description: string = ProxyViewTitleScaling.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
+    readonly debug: boolean = true;
     currentValue = ProxyViewTitleScaling.DEFAULT;
 }
 
@@ -175,6 +179,7 @@ export class ProxyViewDrawEdgesAboveNodes implements RenderOption {
     readonly initialValue: boolean = ProxyViewDrawEdgesAboveNodes.DEFAULT;
     readonly description: string = ProxyViewDrawEdgesAboveNodes.DESCRIPTION;
     readonly renderCategory: string = ProxyViewCategory.ID;
+    readonly debug: boolean = true;
     currentValue = ProxyViewDrawEdgesAboveNodes.DEFAULT;
 }
 
