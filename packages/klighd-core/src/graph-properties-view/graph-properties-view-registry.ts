@@ -1,36 +1,14 @@
 import { injectable } from "inversify";
-import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+// import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Registry } from "../base/registry";
-import { IActionHandler, ICommand } from "../../../../node_modules/sprotty/src/base/actions/action-handler.ts";
-import { Action, UpdateModelAction } from "sprotty-protocol";
-import { ActionHandlerRegistry, SModelRoot } from "sprotty"
-import { SendModelContextAction } from "../actions/actions";
-import { SKGraphElement } from "../skgraph-models.ts";
-import { injectable } from "inversify";
+// import { SendModelContextAction } from "../actions/actions";
 import { ActionHandlerRegistry, IActionHandler, ICommand, isSelectable, ModelIndexImpl, SModelRoot } from "sprotty";
-import { Action, SetModelAction, UpdateModelAction } from "sprotty-protocol";
+import { Action, SetModelAction, UpdateModelAction/* , SelectAction */ } from "sprotty-protocol";
+import { isSKGraphElement, SKGraphElement, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
 import { SendModelContextAction } from "../actions/actions";
-import { isSKGraphElement, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
-//TODO sort imports
 
 @injectable()
 export class GraphPropertiesViewRegistry extends Registry implements IActionHandler {
- 
-    
-    // handle(action: Action): ICommand | Action | void {
-    //     if (action.kind === SelectAction.KIND) {
-    //         this.handleUpdateSelectAction(action);
-    //     }
-    // }
-
-    // handleUpdateSelectAction(action: SelectAction): ICommand | Action | void {
-    //     ids = action.selectedElementsIDs
-    // }
-    //diagramm holen, objekte finden anhand ids
-
-    // getSelectedElemets(a: any) {
-    //     return a
-    // }
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {

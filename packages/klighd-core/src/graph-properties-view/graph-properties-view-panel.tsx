@@ -1,4 +1,3 @@
-//@ts-nocheck
 /*
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
@@ -23,7 +22,7 @@ import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unu
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
 import { SidebarPanel } from "../sidebar";
 import { QuickActionsBar } from '../sidebar/sidebar-panel';
-import { /*GraphPropertiesViewRegistry,*/ SelectedElementsUtil } from "./graph-properties-view-registry.ts"
+import { GraphPropertiesViewRegistry, SelectedElementsUtil } from "./graph-properties-view-registry"
 //TODO: sort and cleanup imports
 
 
@@ -35,15 +34,16 @@ import { /*GraphPropertiesViewRegistry,*/ SelectedElementsUtil } from "./graph-p
 export class GraphPropertiesViewPanel extends SidebarPanel{
     // hierarchy is: first elem has the lowest number. so the last one got the highest
     readonly position = 2;
+    private index = 0
+
+    
                                                     
     @postConstruct()
     async init(): Promise<void> {
-
         this.assignQuickActions()
-    
+    }
 
-
-
+    get id(): string {
         return "graph-properties-view-panel";
     }
 
@@ -56,9 +56,27 @@ export class GraphPropertiesViewPanel extends SidebarPanel{
         super.update()
     }
 
-    const ele = SelectedElementsUtil.getSelectedElements()
+    setIndex(i: number): number {
+        this.index = i
+        return this.index
+    }
+
 
     render(): VNode {
+        const selectedElements = SelectedElementsUtil.getSelectedElements()
+        const prop = SelectedElementsUtil.getSelectedElements()[this.index].properties
+        const propKey: string[] = []
+        const propValue: any[] = []
+
+        let i = 0
+        for(const key in prop) {
+            propKey[i]= key
+            propValue[i]= prop[key]
+
+            i++
+        }
+
+        
         return (
             <div>
                 <QuickActionsBar
@@ -72,33 +90,14 @@ export class GraphPropertiesViewPanel extends SidebarPanel{
                             <td>Property</td>
                             <td>Value</td>
                         </tr>
-                        {
-                        this.ele.map((i: number) => (
+                        {propKey.map((element) => (
                         <tr>
-                            <td /*onChange = {(e: any) => e.handle()}*/ > {this.ele[i].properties[0]} </td>
-                            <td>
-                                <select onChange = {(e: any) => e.handleUpdate() /* TODO*/}>
-                                    {/*anfang map für available propertyvalues */}
-                                    <option selected={this.ele[i].properties[1]}>
-                                        {this.ele[i].properties[1] /*TODO possible values */}
-                                    </option>
-                                    {/*ende map für available propertyvalues */}
-                                </select>
-                            </td>
-                            {/* <td>
-                                {<select onchange={(e: Event) => getCurrentValue(e, props)} class-options__selection title={props.description ?? props.name}> {props.name}
-                                {props.availableValues.map((value, i) => (
-                                    <option selected={props.value === value}>
-                                        {props.availableValuesLabels?.[i] ?? value}
-                                    </option>
-                                    ))}
-                                </select>}
-                                </td> */}
+                            <td> {element} </td>
+                            <td> {prop[element]} </td>
                         </tr>
-                            ))
-                        }
+                        ))}
                     </table> 
-                </div>
+                    </div> 
                 
             </div>
         );

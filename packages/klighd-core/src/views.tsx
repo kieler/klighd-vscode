@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
@@ -21,7 +20,8 @@ import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-inter
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { inject, injectable } from 'inversify';
 import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { findParentByFeature, IActionDispatcher, isViewport, IView, RenderingContext, SGraph, svg, TYPES } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { SendModelContextAction } from './actions/actions';
 import { DepthMap, DetailLevel } from './depth-map';
 import { DISymbol } from './di.symbols';
 import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
@@ -40,9 +40,11 @@ export class SKGraphView implements IView {
 
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
     @inject(DISymbol.RenderOptionsRegistry) renderOptionsRegistry: RenderOptionsRegistry
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
 
     render(model: Readonly<SGraph>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
+        this.actionDispatcher.dispatch(SendModelContextAction.create(model, ctx))
         ctx.renderingDefs = new Map
         ctx.renderingDefs.set("font", fontDefinition())
         ctx.mListener = this.mListener
