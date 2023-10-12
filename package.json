@@ -22,7 +22,7 @@
         "watch": "lerna run watch --parallel",
         "package": "lerna run build && lerna run package --parallel",
         "distribute": "lerna run build && lerna run distribute --parallel",
-        "test": "mocha --require ts-node/register --require ignore-styles --recursive \"packages/**/test/**/*.{ts,tsx}\""
+        "test": "mocha --require ts-node/register --require ignore-styles -u bdd --recursive \"packages/**/test/**/*.{ts,tsx}\""
     },
     "devDependencies": {
         "@types/chai": "^4.3.4",
