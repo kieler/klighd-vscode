@@ -255,6 +255,9 @@ export class ProxyView extends AbstractUIExtension {
         const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasGRF, this.showProxiesEarlyNumber * onePercentOffsetGRF) : canvasGRF;
         const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, sizedCanvas, depth, ctx);
 
+        //// Edges ////
+        const onScreenEdges = this.getOnScreenEdges(root, canvasGRF, ctx);
+
         //// Apply filters ////
         const filteredOffScreenNodes = this.applyFilters(
             // The nodes to filter
@@ -344,6 +347,28 @@ export class ProxyView extends AbstractUIExtension {
         this.clearDistances();
 
         return proxies;
+    }
+
+    /**
+     * Returns a list of edges whose bounding boxes intersect with the canvas. 
+     */
+    private getOnScreenEdges(rootNode: SKNode, canvasGRF: Canvas, ctx: SKGraphModelRenderer): SKEdge[] {
+        // Iterate over all edges in the graph and if it's bounding box intersects with the canvas, add it to the list.
+        const onScreenEdges: SKEdge[] = [];
+
+        for (const child of rootNode.children) {
+            if (child instanceof SKEdge) {
+                const bounds = this.getAbsoluteEdgeBounds(child);
+                if (Canvas.isOnScreen(bounds, canvasGRF)) {
+                    onScreenEdges.push(child);
+                }
+            }
+            if (child instanceof SKNode) {
+                onScreenEdges.push(...this.getOnScreenEdges(child, canvasGRF, ctx));
+            }
+        }
+
+        return onScreenEdges
     }
 
     /**
@@ -1212,24 +1237,49 @@ export class ProxyView extends AbstractUIExtension {
         return Canvas.translateToCRF(absoluteBounds, canvas);
     }
 
+    /** Returns the `edge`'s bounds with the absolution position. Positions are stored in {@link positions}. */
+    private getAbsoluteEdgeBounds(edge: SKEdge): Bounds {
+        // Get start, end and any bend points and compute the bounding box around these points.
+        const absolutePosition = this.getAbsolutePosition(edge);
+        let minX = Number.MAX_VALUE;
+        let minY = Number.MAX_VALUE;
+        let maxX = Number.MIN_VALUE;
+        let maxY = Number.MIN_VALUE;
+        for (const point of edge.routingPoints) {
+            if (point.x < minX) {
+                minX = point.x;
+            }
+            if (point.x > maxX) {
+                maxX = point.x;
+            }
+            if (point.y < minY) {
+                minY = point.y;
+            }
+            if (point.y > maxY) {
+                maxY = point.y;
+            }
+        }
+        return {x: absolutePosition.x, y: absolutePosition.y, width: maxX - minX, height: maxY - minY};
+    }
+
     /** Returns the `node`'s bounds with the absolute position. Positions are stored in {@link positions}.*/
     private getAbsoluteBounds(node: SKNode): Bounds {
         return { ...node.bounds, ...this.getAbsolutePosition(node) };
     }
 
     /** Recursively calculates the positions of this node and all of its predecessors and stores them in {@link positions}. */
-    private getAbsolutePosition(node: SKNode | SKEdge | SKPort | SKLabel): Point {
-        if (!node) {
+    private getAbsolutePosition(graphElement: SKNode | SKEdge | SKPort | SKLabel): Point {
+        if (!graphElement) {
             return { x: 0, y: 0 };
         }
 
         // This node might not be a proxy, make sure to store the right id
-        const id = getProxyId(node.id);
+        const id = getProxyId(graphElement.id);
         let point = this.positions.get(id);
         if (!point) {
             // Point hasn't been stored yet, get parent position
-            point = this.getAbsolutePosition(node.parent as SKNode | SKEdge | SKPort | SKLabel);
-            point = Point.add(point, node.bounds);
+            point = this.getAbsolutePosition(graphElement.parent as SKNode | SKEdge | SKPort | SKLabel);
+            point = Point.add(point, graphElement.bounds);
 
             // Also store this point
             this.positions.set(id, point);
