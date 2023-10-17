@@ -19,19 +19,19 @@
 import { KGraphData } from "@kieler/klighd-interactive/lib/constraint-classes";
 import { inject, injectable, postConstruct } from "inversify";
 import { VNode } from "snabbdom";
-import { AbstractUIExtension, html, IActionDispatcher, isThunk, MouseTool, Patcher, PatcherProvider, SGraph, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { angleOfPoint, Bounds, Point } from "sprotty-protocol";
+import { AbstractUIExtension, IActionDispatcher, MouseTool, Patcher, PatcherProvider, SGraph, TYPES, html, isThunk } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Bounds, Point, angleOfPoint } from "sprotty-protocol";
 import { isDetailWithChildren } from "../depth-map";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { isContainerRendering, isPolyline, K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from "../skgraph-models";
+import { K_POLYGON, SKEdge, SKLabel, SKNode, SKPort, isContainerRendering, isPolyline } from "../skgraph-models";
 import { getKRendering } from "../views-common";
 import { K_BACKGROUND, K_FOREGROUND } from "../views-styles";
 import { ProxyFilter, ProxyFilterAndID } from "./filters/proxy-view-filters";
 import { SendProxyViewAction, ShowProxyViewAction } from "./proxy-view-actions";
 import { getClusterRendering } from "./proxy-view-cluster";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusterTransparent, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewDecreaseProxyClutter, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableEdgeProxies, ProxyViewEnableSegmentProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewInteractiveProxies, ProxyViewOpacityBySelected, ProxyViewOriginalNodeScale, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewShowProxiesImmediately, ProxyViewSimpleAlongBorderRouting, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
-import { anyContains, Canvas, capNumber, checkOverlap, getIntersection, isSelectedOrConnectedToSelected, joinTransitiveGroups, getProxyId, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewClusterTransparent, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewDecreaseProxyClutter, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableEdgeProxies, ProxyViewEnableSegmentProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewInteractiveProxies, ProxyViewOpacityBySelected, ProxyViewOriginalNodeScale, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewShowProxiesImmediately, ProxyViewSimpleAlongBorderRouting, ProxyViewSignpostMode, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { Canvas, ProxyKGraphData, ProxyVNode, SelectedElementsUtil, TransformAttributes, anyContains, capNumber, checkOverlap, getIntersection, getProxyId, isSelectedOrConnectedToSelected, joinTransitiveGroups, updateClickThrough, updateOpacity, updateTransform } from "./proxy-view-util";
 
 /** A UIExtension which adds a proxy-view to the Sprotty container. */
 @injectable()
@@ -103,6 +103,7 @@ export class ProxyView extends AbstractUIExtension {
     //// Sidebar options ////
     /** @see {@link ProxyViewEnabled} */
     private proxyViewEnabled: boolean;
+    private signpostMode: boolean;
     /** Whether the proxy view was previously enabled. Used to avoid excessive patching. */
     private prevProxyViewEnabled: boolean;
     /** @see {@link ProxyViewSize} */
@@ -249,104 +250,116 @@ export class ProxyView extends AbstractUIExtension {
         // The amount of pixels to offset the GRF canvas size by 1%.
         const onePercentOffsetGRF = Math.min(canvasGRF.width, canvasGRF.height) * fromPercent;
 
-        //// Initial nodes ////
-        const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
-        // Reduce canvas size to show proxies early
-        const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasGRF, this.showProxiesEarlyNumber * onePercentOffsetGRF) : canvasGRF;
-        const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, sizedCanvas, depth, ctx);
+        if (this.signpostMode) {
+            /**
+             * In signpost mode proxies are created as signs on an edge showing the way to the off-screen nodes.
+             * For each on-screen edge two proxies are created and projected onto the intersection between the edge 
+             * and the viewport border.
+             */
+            //// Edges ////
+            const onScreenEdges = this.getOnScreenEdges(root, canvasGRF, ctx);
+            console.log(onScreenEdges);
 
-        //// Edges ////
-        const onScreenEdges = this.getOnScreenEdges(root, canvasGRF, ctx);
+            return [];
 
-        //// Apply filters ////
-        const filteredOffScreenNodes = this.applyFilters(
-            // The nodes to filter
-            offScreenNodes,
-            // Additional arguments for filters
-            onScreenNodes, canvasCRF, canvasGRF
-        );
-
-        //// Clone nodes ////
-        const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
-
-        //// Opacity ////
-        const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvasGRF);
-
-        //// Stacking order ////
-        const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvasGRF);
-
-        //// Use proxy-rendering as specified by synthesis ////
-        const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(orderedOffScreenNodes, ctx);
-
-        //// Calculate transformations ////
-        const transformedOffScreenNodes = synthesisRenderedOffScreenNodes.map(({ node, proxyBounds }) => ({
-            node,
-            transform: this.getTransform(node, size, proxyBounds, canvasCRF)
-        }));
-
-        //// Apply clustering ////
-        const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasCRF);
-
-        //// Route edges to proxies ////
-        const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, onePercentOffsetGRF, ctx);
-
-        //// Connect off-screen edges ////
-        const segmentConnectors = this.connectEdgeSegments(root, canvasGRF, onePercentOffsetGRF, ctx);
-
-        //// Render the proxies ////
-        const proxies = [];
-        this.currProxies = [];
-
-        // Nodes
-        for (const { node, transform } of clusteredNodes) {
-            // Create a proxy
-            const proxy = this.createProxy(node, transform, canvasGRF, ctx);
-            if (proxy) {
-                proxies.push(proxy);
-                this.currProxies.push({ proxy, transform });
-            }
-        }
-
-        // Edges that can be rendered above/below proxies
-        const edgeProxies = [];
-        for (const { edge, transform } of routedEdges.proxyEdges) {
-            // Create an edge proxy
-            const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
-            if (edgeProxy) {
-                edgeProxies.push(edgeProxy);
-            }
-        }
-        if (this.edgesAboveNodes) {
-            // Insert at end to be rendered above nodes
-            proxies.push(...edgeProxies);
         } else {
-            // Insert at start to be rendered below nodes
-            proxies.unshift(...edgeProxies);
-        }
 
-        // Edges that should always be rendered below proxies
-        const backEdgeProxies = [];
-        const backEdges = ([] as { edge: SKEdge, transform: TransformAttributes }[]).concat(
-            // Start with overlays to not have overlays over proxy edges
-            segmentConnectors.overlayEdges,
-            segmentConnectors.proxyEdges,
-            // But routing overlays should still be over segment connectors
-            routedEdges.overlayEdges
-        );
-        for (const { edge, transform } of backEdges) {
-            // Create an edge proxy
-            const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
-            if (edgeProxy) {
-                backEdgeProxies.push(edgeProxy);
+            //// Initial nodes ////
+            const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
+            // Reduce canvas size to show proxies early
+            const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasGRF, this.showProxiesEarlyNumber * onePercentOffsetGRF) : canvasGRF;
+            const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, sizedCanvas, depth, ctx);
+
+            //// Apply filters ////
+            const filteredOffScreenNodes = this.applyFilters(
+                // The nodes to filter
+                offScreenNodes,
+                // Additional arguments for filters
+                onScreenNodes, canvasCRF, canvasGRF
+            );
+
+            //// Clone nodes ////
+            const clonedNodes = this.cloneNodes(filteredOffScreenNodes);
+
+            //// Opacity ////
+            const opacityOffScreenNodes = this.calculateOpacity(clonedNodes, canvasGRF);
+
+            //// Stacking order ////
+            const orderedOffScreenNodes = this.orderNodes(opacityOffScreenNodes, canvasGRF);
+
+            //// Use proxy-rendering as specified by synthesis ////
+            const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(orderedOffScreenNodes, ctx);
+
+            //// Calculate transformations ////
+            const transformedOffScreenNodes = synthesisRenderedOffScreenNodes.map(({ node, proxyBounds }) => ({
+                node,
+                transform: this.getTransform(node, size, proxyBounds, canvasCRF)
+            }));
+
+            //// Apply clustering ////
+            const clusteredNodes = this.applyClustering(transformedOffScreenNodes, size, canvasCRF);
+
+            //// Route edges to proxies ////
+            const routedEdges = this.routeEdges(clusteredNodes, onScreenNodes, canvasCRF, onePercentOffsetGRF, ctx);
+
+            //// Connect off-screen edges ////
+            const segmentConnectors = this.connectEdgeSegments(root, canvasGRF, onePercentOffsetGRF, ctx);
+
+            //// Render the proxies ////
+            const proxies = [];
+            this.currProxies = [];
+
+            // Nodes
+            for (const { node, transform } of clusteredNodes) {
+                // Create a proxy
+                const proxy = this.createProxy(node, transform, canvasGRF, ctx);
+                if (proxy) {
+                    proxies.push(proxy);
+                    this.currProxies.push({ proxy, transform });
+                }
             }
+
+            // Edges that can be rendered above/below proxies
+            const edgeProxies = [];
+            for (const { edge, transform } of routedEdges.proxyEdges) {
+                // Create an edge proxy
+                const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
+                if (edgeProxy) {
+                    edgeProxies.push(edgeProxy);
+                }
+            }
+            if (this.edgesAboveNodes) {
+                // Insert at end to be rendered above nodes
+                proxies.push(...edgeProxies);
+            } else {
+                // Insert at start to be rendered below nodes
+                proxies.unshift(...edgeProxies);
+            }
+
+            // Edges that should always be rendered below proxies
+            const backEdgeProxies = [];
+            const backEdges = ([] as { edge: SKEdge, transform: TransformAttributes }[]).concat(
+                // Start with overlays to not have overlays over proxy edges
+                segmentConnectors.overlayEdges,
+                segmentConnectors.proxyEdges,
+                // But routing overlays should still be over segment connectors
+                routedEdges.overlayEdges
+            );
+            for (const { edge, transform } of backEdges) {
+                // Create an edge proxy
+                const edgeProxy = this.createEdgeProxy(edge, transform, ctx);
+                if (edgeProxy) {
+                    backEdgeProxies.push(edgeProxy);
+                }
+            }
+            proxies.unshift(...backEdgeProxies);
+
+            // Clear caches for the next model
+            this.clearPositions();
+            this.clearDistances();
+
+            return proxies;
         }
-        proxies.unshift(...backEdgeProxies);
-
-        // Clear caches for the next model
-        this.clearPositions();
-        this.clearDistances();
-
-        return proxies;
     }
 
     /**
@@ -1461,6 +1474,7 @@ export class ProxyView extends AbstractUIExtension {
     updateOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
         this.prevProxyViewEnabled = this.proxyViewEnabled;
         this.proxyViewEnabled = renderOptionsRegistry.getValue(ProxyViewEnabled);
+        this.signpostMode = renderOptionsRegistry.getValue(ProxyViewSignpostMode);
 
         const fromPercent = 0.01;
         this.sizePercentage = renderOptionsRegistry.getValue(ProxyViewSize) * fromPercent;

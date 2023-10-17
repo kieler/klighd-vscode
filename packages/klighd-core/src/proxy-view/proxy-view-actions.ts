@@ -25,7 +25,7 @@ import { OptionsRegistry } from "../options/options-registry";
 import { RenderOptionsRegistry } from "../options/render-options-registry";
 import { SynthesesRegistry } from "../syntheses/syntheses-registry";
 import { ProxyView } from "./proxy-view";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusterTransparent, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewDecreaseProxyClutter, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableEdgeProxies, ProxyViewEnableSegmentProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewInteractiveProxies, ProxyViewOpacityBySelected, ProxyViewOriginalNodeScale, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewShowProxiesImmediately, ProxyViewSimpleAlongBorderRouting, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
+import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusterTransparent, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewDecreaseProxyClutter, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableEdgeProxies, ProxyViewEnableSegmentProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewInteractiveProxies, ProxyViewOpacityBySelected, ProxyViewOriginalNodeScale, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewShowProxiesImmediately, ProxyViewSignpostMode, ProxyViewSimpleAlongBorderRouting, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
 import { getNodeId, isProxyRendering } from "./proxy-view-util";
 
 /**
@@ -121,6 +121,7 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
         this.renderOptionsRegistry.registerAll(
             ProxyViewCategory,
             ProxyViewEnabled,
+            ProxyViewSignpostMode,
             ProxyViewSize,
             ProxyViewDecreaseProxyClutter,
             ProxyViewEnableEdgeProxies,

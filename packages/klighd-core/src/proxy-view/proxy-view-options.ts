@@ -44,6 +44,21 @@ export class ProxyViewEnabled implements RenderOption {
     currentValue = ProxyViewEnabled.DEFAULT;
 }
 
+/** Whether the proxy-view is in signpost mode. */
+export class ProxyViewSignpostMode implements RenderOption {
+    static readonly ID: string = "proxy-view-signpost-mode";
+    static readonly NAME: string = "Signpost Mode";
+    static readonly DESCRIPTION: string = "Whether the Proxy-View is in signpost mode.";
+    static readonly DEFAULT: boolean = false;
+    readonly id: string = ProxyViewSignpostMode.ID;
+    readonly name: string = ProxyViewSignpostMode.NAME;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
+    readonly initialValue: boolean = ProxyViewSignpostMode.DEFAULT;
+    readonly description: string = ProxyViewSignpostMode.DESCRIPTION;
+    readonly renderCategory: string = ProxyViewCategory.ID;
+    currentValue = ProxyViewSignpostMode.DEFAULT;
+}
+
 /** Part of calculating the proxies' size. */
 export class ProxyViewSize implements RangeOption {
     static readonly ID: string = "proxy-view-size";
