@@ -91,6 +91,53 @@ export namespace CheckedImagesAction {
 }
 
 /**
+ * Sent internally to notify KLighD that the color theme has changed. Will trigger a subsequent 
+ * ClientColorPreferencesAction to be triggered and sent.
+ */
+export interface ChangeColorThemeAction extends Action {
+    kind: typeof ChangeColorThemeAction.KIND
+}
+
+export namespace ChangeColorThemeAction {
+    export const KIND = 'changeColorTheme'
+
+    export function create(): ChangeColorThemeAction {
+        return {
+            kind: KIND,
+        }
+    }
+}
+
+/**
+ * Action to notify the server about current color preferences.
+ */
+export interface ClientColorPreferencesAction extends Action {
+    kind: typeof ClientColorPreferencesAction.KIND
+
+    clientColorPreferences: ColorPreferences
+}
+
+export namespace ClientColorPreferencesAction {
+    export const KIND = 'changeClientColorPreferences'
+
+    export function create(clientColorPreferences: ColorPreferences): ClientColorPreferencesAction {
+        return {
+            kind: KIND,
+            clientColorPreferences,
+        }
+    }
+}
+
+/**
+ * The color preferences data class, indicating diagram colors to be used by syntheses.
+ */
+export interface ColorPreferences {
+    foreground: string,
+    background: string,
+    highlight: string,
+}
+
+/**
  * Sent from the client to the diagram server to perform a klighd action on the model.
  * Causes the server to update the diagram accordingly to the action.
  */

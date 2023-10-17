@@ -161,6 +161,17 @@ export class LSPConnection implements Connection {
     async sendInitialize(persistedData: Record<string, any>): Promise<void> {
         if (!this.connection) return;
 
+        // notify the server about the preferred colors, depending on if the OS prefers light (default) or dark theme.
+        let foreground = "#000000"
+        let background = "#ffffff"
+        let highlight = "#000000"
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // dark mode
+            foreground = "#cccccc"
+            background = "#1f1f1f"
+            highlight = "#cccccc"
+        }
+
         const method = lsp.InitializeRequest.type.method;
         // The standalone view does not really has any LSP capabilities
         const initParams: lsp.InitializeParams = {
@@ -171,7 +182,12 @@ export class LSPConnection implements Connection {
             capabilities: {},
             initializationOptions: {
                 clientDiagramOptions: persistedData,
-            }
+                clientColorPreferences: {
+                    foreground,
+                    background,
+                    highlight,
+                }
+            },
         };
 
         console.time("lsp-init");
