@@ -103,6 +103,7 @@ export class ProxyView extends AbstractUIExtension {
     //// Sidebar options ////
     /** @see {@link ProxyViewEnabled} */
     private proxyViewEnabled: boolean;
+    /** @see {@link ProxyViewSignpostMode} */
     private signpostMode: boolean;
     /** Whether the proxy view was previously enabled. Used to avoid excessive patching. */
     private prevProxyViewEnabled: boolean;
@@ -256,10 +257,43 @@ export class ProxyView extends AbstractUIExtension {
              * For each on-screen edge two proxies are created and projected onto the intersection between the edge 
              * and the viewport border.
              */
-            //// Edges ////
+            
+            //// EDGES ////
             const onScreenEdges = this.getOnScreenEdges(root, canvasGRF, ctx);
-            console.log(onScreenEdges);
 
+            //// Initial nodes ////
+            const depth = root.properties[ProxyView.HIERARCHICAL_OFF_SCREEN_DEPTH] as number ?? 0;
+            // Reduce canvas size to show proxies early
+            const sizedCanvas = this.showProxiesEarly ? Canvas.offsetCanvas(canvasGRF, this.showProxiesEarlyNumber * onePercentOffsetGRF) : canvasGRF;
+            const { offScreenNodes, onScreenNodes } = this.getOffAndOnScreenNodes(root, sizedCanvas, depth, ctx);
+
+            //// Apply filters ////
+            const filteredOffScreenNodes = this.applyFilters(
+                // The nodes to filter
+                offScreenNodes,
+                // Additional arguments for filters
+                onScreenNodes, canvasCRF, canvasGRF
+            );
+
+            // create map of node ids to index in filteredOffScreenNodes
+            const filteredOffScreenNodesMap = new Map<string, number>();
+            for (let i = 0; i < filteredOffScreenNodes.length; i++) {
+                filteredOffScreenNodesMap.set(filteredOffScreenNodes[i].id, i);
+            }
+
+            // Create proxy clones for each node that remains after filtering and who have an on-screen incident edge
+            const proxiesToBeCreated: SKNode[] = [];
+            for (const edge of onScreenEdges) {
+                let sourceNodeIndex = filteredOffScreenNodesMap.get(edge.sourceId);
+                let targetNodeIndex = filteredOffScreenNodesMap.get(edge.targetId);
+                if (sourceNodeIndex !== undefined) {
+                    proxiesToBeCreated.push(filteredOffScreenNodes[sourceNodeIndex]);
+                }
+                if (targetNodeIndex !== undefined) {
+                    proxiesToBeCreated.push(filteredOffScreenNodes[targetNodeIndex]);
+                }
+            }
+            console.log(proxiesToBeCreated);
             return [];
 
         } else {
