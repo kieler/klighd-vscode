@@ -293,8 +293,40 @@ export class ProxyView extends AbstractUIExtension {
                     proxiesToBeCreated.push(filteredOffScreenNodes[targetNodeIndex]);
                 }
             }
-            console.log(proxiesToBeCreated);
-            return [];
+
+            // Clone nodes
+            const clonedNodes = this.cloneNodes(proxiesToBeCreated);
+
+            //// Use proxy-rendering as specified by synthesis ////
+            const synthesisRenderedOffScreenNodes = this.getSynthesisProxyRendering(clonedNodes, ctx);
+
+            // TODO: These transformations are probably the wrong projection
+            //// Calculate transformations ////
+            const transformedOffScreenNodes = synthesisRenderedOffScreenNodes.map(({ node, proxyBounds }) => ({
+                node,
+                transform: this.getTransform(node, size, proxyBounds, canvasCRF)
+            }));
+
+            //// Render the proxies ////
+            const proxies = [];
+            this.currProxies = [];
+
+            // Nodes
+            for (const { node, transform } of transformedOffScreenNodes) {
+                // Create a proxy
+                const proxy = this.createProxy(node, transform, canvasGRF, ctx);
+                if (proxy) {
+                    proxies.push(proxy);
+                    this.currProxies.push({ proxy, transform });
+                }
+            }
+
+            // Clear caches for the next model
+            this.clearPositions();
+            this.clearDistances();
+
+            // console.log(JSON.stringify(proxies));
+            return proxies;
 
         } else {
 
@@ -1161,7 +1193,8 @@ export class ProxyView extends AbstractUIExtension {
             // Node hasn't been rendered yet (cache empty for this node) or the attributes don't match
 
             // Change its id to differ from the original node
-            node.id = id;
+            const random = Math.floor(Math.random() * 1000000);
+            node.id = id + "$" + random;
             // Clear children, proxies don't show nested nodes (but keep labels)
             node.children = node.children.filter(node => node instanceof SKLabel);
             const scale = transform.scale ?? 1;
