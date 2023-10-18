@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import {
+    ChangeColorThemeAction,
     KlighdFitToScreenAction,
     KlighdRequestExportSvgAction,
     RefreshDiagramAction,
@@ -201,6 +202,23 @@ export class KLighDExtension extends SprottyLspVscodeExtension {
      * to overwrite commands and would throw an error._
      */
     protected override registerCommands(): void {
+        vscode.window.onDidChangeActiveColorTheme(() => {
+            // Hook into VS Code's theme change and notify the webview to check the current colors and send them to the server.
+            // Look for any active KLighD webview, regardless of if it is currently selected.
+            let webview = this.singleton
+            if (!webview) {
+                for (const possibleWebview of this.webviewMap.values()) {
+                    if (possibleWebview.diagramPanel.active) {
+                        webview = possibleWebview;
+                    }
+                }
+            }
+
+            if (webview) {
+                webview.dispatch(ChangeColorThemeAction.create());
+            }
+        })
+
         this.context.subscriptions.push(
             commands.registerCommand(command.diagramOpen, async (...commandArgs: any[]) => {
                 const identifier = await this.createDiagramIdentifier(commandArgs);
