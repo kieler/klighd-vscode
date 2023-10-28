@@ -56,26 +56,32 @@ interface ChoiceOptionProps extends BaseProps<string> {
     availableValuesLabels?: string[];
 }
 
+/** This Function calls the onChange method with the current value to an event,
+  * so if a change has happened we need to handle this */
+function handleChoiceEvent(e: Event, props: ChoiceOptionProps): void {
+    if (e.target == null) {
+        return
+    }
+    if (!(e.target instanceof HTMLSelectElement)) {
+        return
+    }
+    return props.onChange(e.target.value)
+  }
+
 /** Render a labeled group of radio inputs. */
 export function ChoiceOption(props: ChoiceOptionProps): VNode {
     // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
     props = (props as any as {props: ChoiceOptionProps}).props
     return (
-        <div class-options__input-container="true">
-            <legend>{props.name}</legend>
-            {props.availableValues.map((value, i) => (
-                <label key={value} htmlFor={props.availableValuesLabels?.[i] ?? value} title={props.description ?? props.name}>
-                    <input
-                        class-options__input="true"
-                        type="radio"
-                        title={props.description ?? props.name}
-                        id={props.availableValuesLabels?.[i] ?? value}
-                        checked={props.value === value}
-                        on-change={() => props.onChange(value)}
-                    />
-                    {props.availableValuesLabels?.[i] ?? value}
-                </label>
-            ))}
+        <div class-options__input-container="true">  
+            <legend>{props.name}</legend>                 
+                <select onchange={(e: Event) => handleChoiceEvent(e, props)} class-options__selection title={props.description ?? props.name}> {props.name}
+                  {props.availableValues.map((value, i) => (
+                    <option selected={props.value === value}>
+                        {props.availableValuesLabels?.[i] ?? value}
+                    </option>
+                    ))}
+                </select>
         </div>
     );
 }
