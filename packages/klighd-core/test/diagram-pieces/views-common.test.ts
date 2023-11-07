@@ -2,17 +2,14 @@ import "reflect-metadata";
 import { expect } from 'chai';
 import { BoundsAndTransformation, Rotation, Scale, Transformation, Translation, calculateX, calculateY, evaluateKPosition,
         findBoundsAndTransformationData, findById, findTextBoundsAndTransformationData, getKRendering, getPoints, getTransformation, isRotation, isScale, isTranslation, reverseTransformation, transformationToSVGString } from '../../src/views-common';
-import { Action, Bounds, Point, toDegrees } from 'sprotty-protocol';
+import { Bounds, Point, toDegrees } from 'sprotty-protocol';
 import { HorizontalAlignment, KHorizontalAlignment, KVerticalAlignment,
-        KText, VerticalAlignment, KXPosition, KPosition, KRendering,
-        KAction, SKGraphElement, Trigger, ModifierState, Decoration, K_TEXT, KRotation, KPolyline, isRendering, KRenderingRef } from '../../src/skgraph-models';
-import { DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT, KStyles, K_BACKGROUND } from "../../src/views-styles";
+        KText, VerticalAlignment, KPosition, KRendering, SKGraphElement, Trigger, ModifierState, Decoration, K_TEXT, KRotation, KPolyline, isRendering, KRenderingRef } from '../../src/skgraph-models';
+import { DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT, KStyles } from "../../src/views-styles";
 import { SKGraphModelRenderer } from "../../src/skgraph-model-renderer";
 import { KGraphData} from '@kieler/klighd-interactive/lib/constraint-classes'
-import { IViewArgs, SChildElement, SGraph, SGraphIndex, SModelElement, SModelRoot, SParentElement } from "sprotty";
+import { SParentElement } from "sprotty";
 import { SKNode } from "../../src/skgraph-models";
-import { VNode } from "snabbdom";
-
 
 describe('calculation of X', () => {
     const hCENTER: KHorizontalAlignment = {
@@ -101,12 +98,6 @@ describe('calculation of X', () => {
     }); 
 });
 
-
-
-
-
-
-
 describe('calculate of Y', () => {
     const vCENTER: KVerticalAlignment = {
         verticalAlignment: VerticalAlignment.CENTER,
@@ -130,8 +121,6 @@ describe('calculate of Y', () => {
     let y = 10
     let height = 20
     let numberOL = 10
-
-
 
     it('division by zero', () => {
         const result1 = calculateY(10, 20, vBOTTOM, 0)
@@ -397,8 +386,6 @@ describe('find bounds and transformation data', () => {
     (parent as any).position = {x: 12, y: 12};
     parent.id = '$root$NABRO'
     parent.type = 'node'
-
-    
 
     const parProp: Record<string, unknown> =  {}
     const parentNode = new SKNode as SKGraphElement
@@ -928,7 +915,6 @@ describe('testing get transformation', () => {
     const isEdge = false
     const isText = false
 
-    
     it('everything defined but isEdge && isText', () => {
 
         const result = getTransformation(bound, decoration, kRotation)
