@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,8 @@
  */
 
 import { PersistenceStorage } from "@kieler/klighd-core";
-import { VsCodeApi } from "sprotty-vscode-webview/lib/services";
+import { HOST_EXTENSION } from 'vscode-messenger-common';
+import { Messenger } from 'vscode-messenger-webview';
 import { PersistenceMessage } from "../src/storage/messages";
 
 /**
@@ -25,7 +26,7 @@ import { PersistenceMessage } from "../src/storage/messages";
  */
 export class MessagePersistenceStorage implements PersistenceStorage {
 
-    vscodeApi: VsCodeApi;
+    messenger: Messenger
 
     /** Local cache of reported data to speed up reads. */
     private cache: Record<string, any>;
@@ -42,12 +43,12 @@ export class MessagePersistenceStorage implements PersistenceStorage {
     /** Callbacks which will be called when a clear change is reported by the extension */
     private onClearListeners: (() => void)[] = [];
 
-    constructor(vscodeApi: VsCodeApi) {
-        this.vscodeApi = vscodeApi
+    constructor(messenger: Messenger) {
+        this.messenger = messenger
         this.cache = {};
         this.state = "initializing";
 
-        window.addEventListener("message", this.handleMessageEvent.bind(this));
+        messenger.onNotification({ method: "klighd/persistence" }, this.handleMessageEvent.bind(this))
         this.sendToExtension({ type: "persistence/getItems" });
     }
 
@@ -98,20 +99,20 @@ export class MessagePersistenceStorage implements PersistenceStorage {
     }
 
     private sendToExtension<T>(msg: PersistenceMessage<T>) {
-        this.vscodeApi.postMessage(msg);
+        this.messenger.sendNotification({ method: "klighd/persistence" }, HOST_EXTENSION, msg);
     }
 
-    private handleMessageEvent(event: MessageEvent<PersistenceMessage>) {
-        if (!("type" in event.data)) return;
+    private handleMessageEvent(data: PersistenceMessage) {
+        if (!("type" in data)) return;
 
-        if (event.data.type === "persistence/reportItems") {
+        if (data.type === "persistence/reportItems") {
             if (this.state !== "ready") {
-                this.setReady(event.data.payload.items);
+                this.setReady(data.payload.items);
             } else {
-                this.cache = event.data.payload.items;
+                this.cache = data.payload.items;
             }
-        } else if (event.data.type === "persistence/reportChange") {
-            if (event.data.payload.type === "clear") this.onClearListeners.forEach((cb) => cb());
+        } else if (data.type === "persistence/reportChange") {
+            if (data.payload.type === "clear") this.onClearListeners.forEach((cb) => cb());
         }
     }
 }

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022 by
+ * Copyright 2022-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -28,7 +28,7 @@ export class KlighdWebviewReopener {
         this.storage = storage
     }
 
-    onExtensionCreated(): void {
+    reopenDiagram(): void {
         const diagramWasOpen = this.storage.getItem('diagramOpen')
         if (diagramWasOpen === undefined || diagramWasOpen) {
             const activeTextEditor = window.activeTextEditor

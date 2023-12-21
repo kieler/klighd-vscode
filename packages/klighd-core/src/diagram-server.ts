@@ -76,7 +76,7 @@ import { SetSynthesisAction } from "./syntheses/actions";
 import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
 
 /**
- * This class extends {@link DiagramServer} to handle different `klighd-core` specific
+ * This class extends {@link DiagramServerProxy} to handle different `klighd-core` specific
  * actions and forward them to the server is required.
  */
 @injectable()

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,9 +18,13 @@
 import { Connection, NotificationType } from "@kieler/klighd-core";
 import { inject, injectable } from "inversify";
 import { ServerStatusAction } from "sprotty";
-import { ActionMessage, isActionMessage } from "sprotty-protocol";
+import { ActionMessage, } from "sprotty-protocol";
+import { ActionNotification } from 'sprotty-vscode-protocol';
+import { LspNotification, LspRequest } from 'sprotty-vscode-protocol/lib/lsp';
 import { VscodeDiagramWidgetFactory } from "sprotty-vscode-webview";
-import { VsCodeApi } from "sprotty-vscode-webview/lib/services";
+import { NotificationMessage, RequestMessage } from 'vscode-languageclient';
+import { HOST_EXTENSION } from 'vscode-messenger-common';
+import { Messenger } from 'vscode-messenger-webview';
 
 /**
  * Message based {@link Connection} to the VS Code extension. `sprotty-vscode` is used in
@@ -31,21 +35,17 @@ import { VsCodeApi } from "sprotty-vscode-webview/lib/services";
 export class MessageConnection implements Connection {
     private messageHandlers: ((message: ActionMessage) => void)[] = [];
 
-    vscodeApi: VsCodeApi
-
     @inject(VscodeDiagramWidgetFactory)
     private diagramWidgetFactory!: VscodeDiagramWidgetFactory;
+    messenger: Messenger;
 
-    constructor(vscodeApi: VsCodeApi) {
-        this.vscodeApi = vscodeApi
+    constructor(messenger: Messenger) {
         this.messageHandlers.push(this.statusMessageHandler);
         this.messageHandlers.push(this.logHandler);
-
-        // Messages from a VS Code extension arrive as a message event on the window object
-        window.addEventListener("message", (msg) => {
-            if ("data" in msg && isActionMessage(msg.data)) {
-                this.notifyHandlers(msg.data);
-            }
+        this.messenger = messenger
+        // Messages from a VS Code extension arrive as a message event on the messenger
+        this.messenger.onNotification(ActionNotification, (msg) => {
+            this.notifyHandlers(msg)
         });
     }
 
@@ -62,11 +62,22 @@ export class MessageConnection implements Connection {
         }
     }
 
-    sendMessage(message: ActionMessage): void {
+    async sendMessage<R>(message: ActionMessage): Promise<R> {
         console.groupCollapsed(`MessageConnection sends ${message.action.kind} action:`);
         console.log(message);
         console.groupEnd();
-        this.vscodeApi.postMessage(message);
+
+        const theMessage: RequestMessage = {
+            jsonrpc: '2.0',
+            method: "diagram/accept",
+            id: message.clientId,
+            params: message
+        };
+        const response = await this.messenger.sendRequest(LspRequest, HOST_EXTENSION, theMessage);
+        if (response.error) {
+            throw new Error(String(response.error));
+        }
+        return response.result as unknown as R;
     }
 
     sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void {
@@ -74,10 +85,12 @@ export class MessageConnection implements Connection {
         console.log(payload);
         console.groupEnd();
 
-        // SprottyLSPWebview sends a message with the language client, if it
-        // has a method property and passes a params property as the second argument
-        // to languageClient.sendNotification.
-        this.vscodeApi.postMessage({ method: type, params: payload });
+        const message: NotificationMessage = {
+            jsonrpc: '2.0',
+            method: type,
+            params: payload as any
+        };
+        this.messenger.sendNotification(LspNotification, HOST_EXTENSION, message);
     }
 
     onMessageReceived(handler: (message: ActionMessage) => void): void {

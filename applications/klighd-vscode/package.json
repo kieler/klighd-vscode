@@ -74,12 +74,14 @@
             {
                 "command": "klighd-vscode.diagram.sync",
                 "title": "Enable Sync With Editor",
-                "enablement": "!klighd-vscode.syncWithEditor"
+                "enablement": "!klighd-vscode.syncWithEditor",
+                "category": "KLighD Diagram"
             },
             {
                 "command": "klighd-vscode.diagram.noSync",
                 "title": "Disable Sync With Editor",
-                "enablement": "klighd-vscode.syncWithEditor"
+                "enablement": "klighd-vscode.syncWithEditor",
+                "category": "KLighD Diagram"
             }
         ],
         "menus": {
@@ -171,9 +173,9 @@
         "inversify": "^5.1.1",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.1.13",
-        "sprotty": "0.12.0",
-        "sprotty-vscode": "^0.3.1",
-        "sprotty-vscode-webview": "^0.3.1",
-        "vscode-languageclient": "^7.0.0"
+        "sprotty": "0.13.0",
+        "sprotty-vscode": "^0.5.0",
+        "sprotty-vscode-webview": "^0.5.0",
+        "vscode-languageclient": "^8.0.2"
     }
 }

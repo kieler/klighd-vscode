@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -32,7 +32,7 @@ import {
     VscodeDiagramWidgetFactory
 } from "sprotty-vscode-webview";
 import { DisabledKeyTool } from "sprotty-vscode-webview/lib/disabled-keytool";
-import { VsCodeApi } from "sprotty-vscode-webview/lib/services";
+import { VsCodeApi, VsCodeMessenger } from "sprotty-vscode-webview/lib/services";
 import { KlighdDiagramWidget } from "./klighd-widget";
 import { MessageConnection } from "./message-connection";
 import { MessagePersistenceStorage } from "./persistence-storage";
@@ -72,8 +72,8 @@ export class KLighDSprottyStarter extends SprottyStarter {
     }
 
     protected override createContainer(diagramIdentifier: SprottyDiagramIdentifier): Container {
-        const connection = new MessageConnection(this.vscodeApi);
-        const persistenceStorage = new MessagePersistenceStorage(this.vscodeApi);
+        const connection = new MessageConnection(this.messenger);
+        const persistenceStorage = new MessagePersistenceStorage(this.messenger);
         const container = createKlighdDiagramContainer(diagramIdentifier.clientId);
         bindServices(container, { connection, sessionStorage, persistenceStorage });
 
@@ -92,6 +92,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
         diagramIdentifier: SprottyDiagramIdentifier
     ): void {
         container.bind(VsCodeApi).toConstantValue(this.vscodeApi)
+        container.bind(VsCodeMessenger).toConstantValue(this.messenger)
 
         container.bind(VscodeDiagramWidget).toSelf().inSingletonScope();
         container.bind(VscodeDiagramWidgetFactory).toFactory((context) => {
@@ -109,4 +110,4 @@ export class KLighDSprottyStarter extends SprottyStarter {
 }
 
 // Instantiate Starter if this file is used in a webview
-new KLighDSprottyStarter();
+new KLighDSprottyStarter().start();

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,8 +16,9 @@
  */
 
 import { Memento } from "vscode";
-import { CommonLanguageClient } from "vscode-languageclient";
-import { KLighDWebview } from "../klighd-webview";
+import { LanguageClient } from "vscode-languageclient/node";
+import { Messenger } from 'vscode-messenger';
+import { diagramType } from '../constants';
 import { PersistenceMessage } from "./messages";
 
 /** Sends a {@link PersistenceMessage}. */
@@ -30,9 +31,11 @@ type Send = (msg: PersistenceMessage) => void;
 export class StorageService {
     private static readonly key = "klighdPersistence";
     private memento: Memento;
+    private messenger: Messenger | undefined;
 
-    constructor(memento: Memento, client: CommonLanguageClient) {
+    constructor(memento: Memento, client: LanguageClient) {
         this.memento = memento;
+        this.messenger = undefined
 
         const data = this.getData();
         console.log("Persisted data:", data);
@@ -44,12 +47,9 @@ export class StorageService {
         };
     }
 
-    /**
-     * Registers a message listener on the given webview.
-     * Used to send and receive messages from the webview.
-     */
-    addWebview(webview: KLighDWebview): void {
-        webview.onMessage(this.handleMessage.bind(this, webview));
+    setMessenger(messenger: Messenger): void {
+        this.messenger = messenger
+        messenger.onRequest({ method: 'klighd/persistence' }, this.handleMessage.bind(this))
     }
 
     /** Removes all persisted data. Useful to nuke persisted data to a fresh state. */
@@ -61,6 +61,7 @@ export class StorageService {
         return this.memento.get<Record<string, any>>(StorageService.key) ?? {};
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     setItem(key: string, value: any): void {
         const data = this.getData();
         data[key] = value;
@@ -102,10 +103,10 @@ export class StorageService {
         send({ type: "persistence/reportChange", payload: { type } });
     }
 
-    private handleMessage(origin: KLighDWebview, msg: PersistenceMessage): void {
-        if (!("type" in msg)) return;
+    private handleMessage( msg: PersistenceMessage): void {
+        if (!("type" in msg) || this.messenger === undefined) return;
 
-        const send = origin.sendMessage.bind(origin);
+        const send = (msg: PersistenceMessage) => { this.messenger?.sendNotification({ method: "klighd/persistence" }, { type: 'webview', webviewType: diagramType } , msg) }
 
         switch (msg.type) {
             case "persistence/getItems": {
