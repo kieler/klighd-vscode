@@ -173,7 +173,7 @@
         "inversify": "^6.0.2",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.2.1",
-        "sprotty": "^1.0.0",
+        "sprotty": "^1.1.0",
         "sprotty-vscode": "^1.0.0",
         "sprotty-vscode-webview": "^1.0.0",
         "vscode-languageclient": "^9.0.1"

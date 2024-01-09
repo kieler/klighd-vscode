@@ -5067,7 +5067,7 @@ invariant@^2.2.2:
   dependencies:
     loose-envify "^1.0.0"
 
-inversify@^6.0.2:
+inversify@^6.0.2, inversify@~6.0.2:
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/inversify/-/inversify-6.0.2.tgz#dc7fa0348213d789d35ffb719dea9685570989c7"
   integrity sha512-i9m8j/7YIv4mDuYXUAcrpKPSaju/CIly9AHK5jvCBeoiM/2KEsuCQTTP+rzSWWpLYWRukdXFSl6ZTk2/uumbiA==
@@ -8245,10 +8245,10 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
 
-sprotty-protocol@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/sprotty-protocol/-/sprotty-protocol-1.0.0.tgz#b22e2da7e10b168debdc17feb61c4b832f01f614"
-  integrity sha512-p1H+ihcOmj0LEk2atcwOnYQPm0WByaOB1yX7fd869ONfQ5R+7x0X20YPdVLeCWmnhsszC/Rf91ojwaQiNIiHNA==
+sprotty-protocol@^1.0.0, sprotty-protocol@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/sprotty-protocol/-/sprotty-protocol-1.1.0.tgz#02f30331d234c71a58646083c59b3a7b13c7861d"
+  integrity sha512-WrnCY6GpnBJa0pXdQsN1xb6b+dW9v3zHSpf063UD+E9LQfuQ2qnPzOYCz+ChmbK1wSgXzl7GYDRNfvGydD5BhA==
 
 sprotty-vscode-protocol@^1.0.0:
   version "1.0.0"
@@ -8279,15 +8279,16 @@ sprotty-vscode@^1.0.0:
     vscode-languageclient "^9.0.1"
     vscode-messenger "^0.4.5"
 
-sprotty@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/sprotty/-/sprotty-1.0.0.tgz#f575a97064ec90f08c468aa3f98a8b0df6887230"
-  integrity sha512-PaGVT1Qc19Mjl1X29UtMm1TNqz9k4AT1QgaXc04njSBKDsSfskS0OupV+oV5m/igbf+juOcHwcbcZdhAxF7RjQ==
+sprotty@^1.0.0, sprotty@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/sprotty/-/sprotty-1.1.0.tgz#05cbae635656fc5be48fd4931ce1017dc9fcda94"
+  integrity sha512-KcM8N7flqYEIAMacmpoUh/XDnnnxPlrxMrd3WzFfhJGo306Ll6vShWba+Xfa2GwYOLEe2Uomp4dlYwbk/cNg+w==
   dependencies:
     autocompleter "^9.1.0"
     file-saver "^2.0.5"
+    inversify "~6.0.2"
     snabbdom "^3.5.1"
-    sprotty-protocol "^1.0.0"
+    sprotty-protocol "^1.1.0"
     tinyqueue "^2.0.3"
 
 sshpk@^1.7.0:
