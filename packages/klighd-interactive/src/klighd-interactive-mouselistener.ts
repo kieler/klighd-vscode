@@ -16,7 +16,7 @@
  */
 
 import { injectable } from 'inversify';
-import { MoveMouseListener, SEdge, SLabel, SModelElement, SNode } from 'sprotty';
+import { MoveMouseListener, SEdgeImpl, SLabelImpl, SModelElementImpl, SNodeImpl } from 'sprotty';
 import { Action, isAction } from "sprotty-protocol"
 import { RefreshDiagramAction } from './actions';
 import { KNode } from './constraint-classes';
@@ -49,9 +49,9 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
      * @param target target node
      * @param event target event
      */
-    mouseMove(target: SModelElement, event: MouseEvent): Action[] {
+    mouseMove(target: SModelElementImpl, event: MouseEvent): Action[] {
         if (!event.altKey && this.target) {
-            if (target instanceof SLabel && target.parent instanceof SNode) {
+            if (target instanceof SLabelImpl && target.parent instanceof SNodeImpl) {
                 // nodes should be movable when the user clicks on the label
                 target = target.parent
             }
@@ -66,7 +66,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                     result.push(moveAction);
             }
             // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
-            if (target instanceof SEdge) {
+            if (target instanceof SEdgeImpl) {
                 this.hasDragged = false
             }
             return result
@@ -74,13 +74,13 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
         return []
     }
 
-    override mouseDown(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    override mouseDown(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         let targetNode = target
-        if (target instanceof SLabel && target.parent instanceof SNode) {
+        if (target instanceof SLabelImpl && target.parent instanceof SNodeImpl) {
             // nodes should be movable when the user clicks on the label
             targetNode = target.parent
         }
-        if (targetNode && targetNode instanceof SNode) {
+        if (targetNode && targetNode instanceof SNodeImpl) {
             if (((targetNode as KNode).parent as KNode).properties['org.eclipse.elk.interactiveLayout']) {
                 this.target = targetNode as KNode
                 // Set layer bounds
@@ -110,10 +110,10 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                         })]
                     }
                 }
-                return super.mouseDown(this.target as SModelElement, event)
+                return super.mouseDown(this.target as SModelElementImpl, event)
             }
         }
-        return super.mouseDown(target as SModelElement, event)
+        return super.mouseDown(target as SModelElementImpl, event)
     }
 
     /**
@@ -125,7 +125,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
         return [];
     }
 
-    mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseUp(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         if (this.hasDragged && this.target) {
             // if a node is moved set properties
             this.target.shadow = false

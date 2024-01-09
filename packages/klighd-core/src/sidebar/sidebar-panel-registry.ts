@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -47,7 +47,7 @@ export class SidebarPanelRegistry extends Registry {
     }
 
     @postConstruct()
-    async init(): Promise<void> {
+    init(): void {
         // Reopen general panel if a panel was pinned.
         // Record has to be retrieved manually since the renderOptionsRegistry is not yet initialized and
         // cannot be changed to distribute a ready signal.

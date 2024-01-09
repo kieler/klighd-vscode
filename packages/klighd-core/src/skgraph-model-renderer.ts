@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020-2022 by
+ * Copyright 2020-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,7 +17,7 @@
 
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
 import { VNode } from 'snabbdom';
-import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SModelElement, SParentElement, ViewRegistry } from 'sprotty';
+import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SModelElementImpl, SParentElementImpl, ViewRegistry } from 'sprotty';
 import { Viewport } from 'sprotty-protocol';
 import { DepthMap } from './depth-map';
 import { RenderOptionsRegistry } from './options/render-options-registry';
@@ -61,7 +61,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
      *
      * @param element The element to render the children from.
      */
-    renderChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement): VNode[] {
+    renderChildAreaChildren(element: Readonly<SParentElementImpl> & SKGraphElement): VNode[] {
         element.areChildAreaChildrenRendered = true
         return element.children
             .filter(child =>
@@ -78,7 +78,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
      *
      * @param element The element to render the children from.
      */
-    renderNonChildAreaChildren(element: Readonly<SParentElement> & SKGraphElement): VNode[] {
+    renderNonChildAreaChildren(element: Readonly<SParentElementImpl> & SKGraphElement): VNode[] {
         element.areNonChildAreaChildrenRendered = true
         return element.children
             .filter(child =>
@@ -91,7 +91,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
     }
 
     /** @inheritdoc */
-    renderElement(element: Readonly<SModelElement>): VNode | undefined {
+    renderElement(element: Readonly<SModelElementImpl>): VNode | undefined {
         this.titleStorage.decendToChild()
         const node =  super.renderElement(element)
         this.titleStorage.ascendToParent()

@@ -21,11 +21,11 @@
     "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next --no-git-tag-version"
   },
   "dependencies": {
-    "sprotty": "0.13.0"
+    "sprotty": "^1.0.0"
   },
   "devDependencies": {
     "rimraf": "^4.4.0",
-    "semver": "^7.3.5"
+    "semver": "^7.5.4"
   },
   "files": [
     "lib",

@@ -16,7 +16,7 @@
  */
 
 import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabel, SModelElement } from 'sprotty';
+import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabelImpl, SModelElementImpl } from 'sprotty';
 import { Bounds, Point } from 'sprotty-protocol'
 
 /**
@@ -62,7 +62,7 @@ export class SKPort extends RectangularPort implements SKGraphElement {
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKLabel extends SLabel implements SKGraphElement {
+export class SKLabel extends SLabelImpl implements SKGraphElement {
     trace?: string
     data: KGraphData[]
     areChildAreaChildrenRendered = false
@@ -724,7 +724,7 @@ export function isKText(test: KGraphData): test is KText {
  * @param test The potential SKGraphElement.
  */
 export function isSKGraphElement(test: unknown): test is SKGraphElement {
-    return test instanceof SModelElement
+    return test instanceof SModelElementImpl
         && (test as any)['areChildAreaChildrenRendered'] !== undefined
         && (test as any)['areNonChildAreaChildrenRendered'] !== undefined
         && (test as any)['opacity'] !== undefined

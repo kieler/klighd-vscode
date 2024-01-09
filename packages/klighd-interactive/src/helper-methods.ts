@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020 by
+ * Copyright 2020-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SNode } from "sprotty"
+import { SNodeImpl } from "sprotty"
 import { KNode } from "./constraint-classes"
 
 /**
@@ -25,7 +25,7 @@ import { KNode } from "./constraint-classes"
 export function filterKNodes(graphElements: any): KNode[] { // eslint-disable-line
     const nodes: KNode[] = []
     for (const elem of graphElements) {
-        if (elem instanceof SNode) {
+        if (elem instanceof SNodeImpl) {
             nodes[nodes.length] = elem as KNode
         }
     }
@@ -54,7 +54,7 @@ export function isChildSelected(root: KNode): boolean {
     const nodes = root.children
     if (nodes !== undefined) {
         for (const node of nodes) {
-            if (node instanceof SNode && node.selected) {
+            if (node instanceof SNodeImpl && node.selected) {
                 return true
             }
         }

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  * 
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,7 @@
  */
 
 import { KGraphElement, KNode } from "@kieler/klighd-interactive/lib/constraint-classes";
-import { SChildElement, SModelRoot } from "sprotty";
+import { SChildElementImpl, SModelRootImpl } from "sprotty";
 import { Point, Viewport } from "sprotty-protocol";
 import { RenderOptionsRegistry, FullDetailRelativeThreshold, FullDetailScaleThreshold } from "./options/render-options-registry";
 import { isContainerRendering, isRendering, KRendering } from "./skgraph-models";
@@ -67,7 +67,7 @@ export class DepthMap {
     /** 
      * The model for which the DepthMap is generated 
      */
-    rootElement: SModelRoot;
+    rootElement: SModelRootImpl;
 
     /**
      * Maps a given node id to the containing/providing Region
@@ -98,14 +98,14 @@ export class DepthMap {
     /** 
      * @param rootElement The root element of the model. 
      */
-    private constructor(rootElement: SModelRoot) {
+    private constructor(rootElement: SModelRootImpl) {
         this.rootElement = rootElement
         this.rootRegions = []
         this.criticalRegions = new Set()
         this.regionIndexMap = new Map()
     }
 
-    protected reset(model_root: SModelRoot): void {
+    protected reset(model_root: SModelRootImpl): void {
         this.rootElement = model_root
         // rootRegions are reset below as we also want to remove the edges from the graph spanned by the regions
         this.criticalRegions.clear()
@@ -143,7 +143,7 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static init(rootElement: SModelRoot): void {
+    public static init(rootElement: SModelRootImpl): void {
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement)
@@ -158,7 +158,7 @@ export class DepthMap {
      * 
      * @param element The KGraphElement to initialize for DepthMap usage
      */
-    public initKGraphElement(element: SChildElement & KGraphElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
+    public initKGraphElement(element: SChildElementImpl & KGraphElement, viewport: Viewport, renderingOptions: RenderOptionsRegistry): RegionIndexEntry {
 
         let entry = this.regionIndexMap.get(element.id)
         if (entry) {
@@ -240,12 +240,12 @@ export class DepthMap {
         return undefined
     }
 
-    public getContainingRegion(element: SChildElement & KGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+    public getContainingRegion(element: SChildElementImpl & KGraphElement, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
         // initKGraphELement already checks if it is already initialized and if it is returns the existing value
         return this.initKGraphElement(element, viewport, renderOptions).containingRegion
     }
 
-    public getProvidingRegion(node: SChildElement & KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
+    public getProvidingRegion(node: SChildElementImpl & KNode, viewport: Viewport, renderOptions: RenderOptionsRegistry): Region | undefined {
         // initKGraphElement already checks if it is already initialized and if it is returns the existing value
         return this.initKGraphElement(node, viewport, renderOptions).providingRegion
     }

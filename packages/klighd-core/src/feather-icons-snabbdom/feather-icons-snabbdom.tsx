@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,7 @@
  */
 /** @jsx html */
 
-import { icons } from "feather-icons";
+import { FeatherIconNames, icons } from "feather-icons";
 import { VNode } from "snabbdom";
 import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -26,10 +26,10 @@ import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unu
  * @param paramProps properties containing the ID of the feather icon.
  * @returns The SVG VNode resulting from this feather icon ID.
  */
-export function FeatherIcon(paramProps: { iconId: string }): VNode {
+export function FeatherIcon(paramProps: { iconId: FeatherIconNames }): VNode {
   // Something goes wrong with snabbdom functional components as that the props are nested in an
   // addional props property, which is removed here.
-  const props = (paramProps as any).props as { iconId: string }
+  const props = (paramProps as any).props as { iconId: FeatherIconNames }
   // Imitates what feather would usually do, all attributes are put in the styles (if possible) and
   // the classes are written in as well. Missing are the xmlns and viewBox, but they do not seem to
   // be necessary anyways.

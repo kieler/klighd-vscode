@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { moveFeature, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty';
+import { moveFeature, RectangularNode, SEdgeImpl, selectFeature, SParentElementImpl } from 'sprotty';
 import { Point } from 'sprotty-protocol';
 
 /**
@@ -24,7 +24,7 @@ import { Point } from 'sprotty-protocol';
  * data instances.
  * Represents its java counterpart in KLighD.
  */
-export interface KGraphElement extends SParentElement {
+export interface KGraphElement extends SParentElementImpl {
     /**
      * May contain a trace that points back to the server instance where this element was created.
      */
@@ -84,7 +84,7 @@ export interface KGraphData {
 /**
  * Represents its java counterpart in KLighD.
  */
-export class KEdge extends SEdge implements KGraphElement {
+export class KEdge extends SEdgeImpl implements KGraphElement {
     trace?: string
     data: KGraphData[]
     junctionPoints: Point[]

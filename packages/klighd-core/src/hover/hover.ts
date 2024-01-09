@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import { injectable } from 'inversify';
-import { HoverMouseListener, SModelElement } from 'sprotty';
+import { HoverMouseListener, SModelElementImpl } from 'sprotty';
 import { Action, Bounds, generateRequestId, RequestPopupModelAction } from "sprotty-protocol";
 import { SKGraphElement } from '../skgraph-models';
 import { getSemanticElement } from '../skgraph-utils';
@@ -27,13 +27,13 @@ import { getSemanticElement } from '../skgraph-utils';
  */
 export interface RequestKlighdPopupModelAction extends RequestPopupModelAction {
     element: SVGElement
-    parent: SModelElement
+    parent: SModelElementImpl
 }
 
 export namespace RequestKlighdPopupModelAction {
     export function create(
         element: SVGElement,
-        parent: SModelElement,
+        parent: SModelElementImpl,
         bounds: Bounds): RequestKlighdPopupModelAction {
         return {
             kind: RequestPopupModelAction.KIND,
@@ -53,7 +53,7 @@ export namespace RequestKlighdPopupModelAction {
 
 @injectable()
 export class KlighdHoverMouseListener extends HoverMouseListener {
-    protected startMouseOverTimer(target: SModelElement, event: MouseEvent): Promise<Action> {
+    protected startMouseOverTimer(target: SModelElementImpl, event: MouseEvent): Promise<Action> {
         this.stopMouseOverTimer();
         return new Promise((resolve) => {
             this.state.mouseOverTimer = window.setTimeout(() => {

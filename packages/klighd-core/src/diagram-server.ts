@@ -30,27 +30,27 @@ import {
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
 } from "@kieler/klighd-interactive/lib/rect-packing/actions";
-import { inject, injectable } from "inversify";
+import { inject, injectable, optional } from "inversify";
 import {
     ActionHandlerRegistry,
-    BringToFrontAction,
     DiagramServerProxy,
-    GetViewportAction,
     ICommand,
     SetModelCommand,
     SwitchEditModeAction,
     TYPES,
-    ViewportResult,
 } from "sprotty";
 import {
     Action,
     ActionMessage,
+    BringToFrontAction,
     findElement,
     generateRequestId,
+    GetViewportAction,
     RequestPopupModelAction,
     SelectAction,
     SetPopupModelAction,
     UpdateModelAction,
+    ViewportResult,
 } from "sprotty-protocol";
 import {
     CheckedImagesAction,
@@ -90,8 +90,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     @inject(SessionStorage) private sessionStorage: SessionStorage;
     @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider;
     @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
-    @inject(DISymbol.BookmarkRegistry) private bookmarkRegistry: BookmarkRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) @optional() private renderOptionsRegistry: RenderOptionsRegistry;
+    @inject(DISymbol.BookmarkRegistry) @optional() private bookmarkRegistry: BookmarkRegistry;
 
 
     constructor(@inject(Connection) connection: Connection) {
@@ -123,9 +123,9 @@ export class KlighdDiagramServer extends DiagramServerProxy {
                 this.childrenToRequestQueue.reset()
                 this.actionDispatcher.dispatch(RequestDiagramPieceAction.create(generateRequestId(), '$root'))
             }
-            if (this.bookmarkRegistry.initialBookmark) {
+            if (this.bookmarkRegistry && this.bookmarkRegistry.initialBookmark) {
                 this.actionDispatcher.dispatch(GoToBookmarkAction.create(this.bookmarkRegistry.initialBookmark))
-            } else if (this.renderOptionsRegistry.getValue(ResizeToFit)) {
+            } else if (this.renderOptionsRegistry && this.renderOptionsRegistry.getValue(ResizeToFit)) {
                 this.actionDispatcher.dispatch(KlighdFitToScreenAction.create(true));
             }
         } else if (message.action.kind === SetDiagramPieceAction.KIND) {

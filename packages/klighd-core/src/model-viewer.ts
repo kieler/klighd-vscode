@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,8 +15,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable, inject, postConstruct } from "inversify";
-import { InitializeCanvasBoundsAction, ModelViewer } from "sprotty";
+import { inject, injectable, postConstruct } from "inversify";
+import { VNode } from 'snabbdom';
+import { ModelViewer } from "sprotty";
 import { KlighdFitToScreenAction } from "./actions/actions";
 import { DISymbol } from "./di.symbols";
 import { ForceLightBackground, RenderOptionsRegistry, ResizeToFit } from "./options/render-options-registry";
@@ -52,19 +53,14 @@ export class KlighdModelViewer extends ModelViewer {
         });
     }
 
-    protected override onWindowResize = (): void => {
-        // This should do a super.onWindowResize call to not repeat the logic from the
-        // base class. However, the method is defined as an arrow function, which
-        // technically is a function assigned to property and not a method.
-        // Therefore, the call throws a TS2340 error.
+    protected override onWindowResize(vdom: VNode): void {
         const baseDiv = document.getElementById(this.options.baseDiv);
         if (baseDiv !== null) {
-            const newBounds = this.getBoundsInPage(baseDiv as Element);
-            this.actiondispatcher.dispatch(InitializeCanvasBoundsAction.create(newBounds));
+            super.onWindowResize(vdom)
 
             // Fit the diagram to the new window size, if the user enabled this behavior
             if (this.renderOptionsRegistry.getValue(ResizeToFit))
                 this.actiondispatcher.dispatch(KlighdFitToScreenAction.create(false));
         }
-    };
+    }
 }

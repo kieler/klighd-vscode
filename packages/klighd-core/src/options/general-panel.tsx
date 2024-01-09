@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -46,7 +46,7 @@ export class GeneralPanel extends SidebarPanel {
     @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
 
     @postConstruct()
-    async init(): Promise<void> {
+    init(): void {
         // Subscribe to different registry changes to make this panel reactive
         this.synthesesRegistry.onChange(() => this.update());
         this.preferencesRegistry.onChange(() => this.update());
