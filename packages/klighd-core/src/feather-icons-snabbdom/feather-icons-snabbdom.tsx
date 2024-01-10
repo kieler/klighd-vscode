@@ -33,13 +33,14 @@ export function FeatherIcon(paramProps: { iconId: FeatherIconNames }): VNode {
   // Imitates what feather would usually do, all attributes are put in the styles (if possible) and
   // the classes are written in as well. Missing are the xmlns and viewBox, but they do not seem to
   // be necessary anyways.
-  const classes: Record<string, boolean> = {"feather": true}
+  const classes: Record<string, boolean> = {"feather": true, "sidebar-icon-size": true}
   classes[`feather-${props.iconId}`] = true
 
   return <svg 
     style={{
-      width: '24',
-      height: '24',
+      // FIXME This actual size of the svg is now captured by the sidebar-icon-size class.
+      // width: '24', 
+      // height: '24',
       fill: 'none',
       stroke: 'currentColor',
       strokeWidth: '2',
