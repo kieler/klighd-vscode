@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,7 +11,7 @@
  * This code is provided under the terms of the Eclipse Public License 2.0 (EPL-2.0).
  */
 
-import { SChildElement, SModelElement, SModelRoot, SParentElement } from "sprotty";
+import { SChildElementImpl, SModelElementImpl, SModelRootImpl, SParentElementImpl } from "sprotty";
 
 /**
  * Utility function to insert an SModelElement into an existing model.
@@ -20,12 +20,12 @@ import { SChildElement, SModelElement, SModelRoot, SParentElement } from "sprott
  * @param modelRoot 
  * @param modelElement 
  */
-export function insertSModelElementIntoModel(modelRoot: SModelRoot, modelElement: SModelElement): void {
+export function insertSModelElementIntoModel(modelRoot: SModelRootImpl, modelElement: SModelElementImpl): void {
     // traverse model and search for insertion point
     replaceNodeById(modelRoot, modelElement);
 }
 
-function replaceNodeById(root: SParentElement, modelElement: SModelElement) {
+function replaceNodeById(root: SParentElementImpl, modelElement: SModelElementImpl) {
     const id = modelElement.id
     if (root.children === undefined) {
         return;
@@ -39,7 +39,7 @@ function replaceNodeById(root: SParentElement, modelElement: SModelElement) {
         // replace if it exists
         // root.children[index] = modelElement
         root.remove(root.children[index])
-        root.add(modelElement as SChildElement, index)
+        root.add(modelElement as SChildElementImpl, index)
 
     } else {
         // recurse further down otherwise

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,7 @@
  */
 
 import { injectable } from "inversify";
-import { SModelRoot, SvgExporter } from "sprotty";
+import { SModelRootImpl, SvgExporter } from "sprotty";
 import { RequestAction } from "sprotty-protocol";
 import { KlighdExportSvgAction } from "./actions/actions";
 
@@ -25,7 +25,7 @@ import { KlighdExportSvgAction } from "./actions/actions";
 @injectable()
 export class KlighdSvgExporter extends SvgExporter {
 
-    export(root: SModelRoot, request?: RequestAction<KlighdExportSvgAction>): void {
+    export(root: SModelRootImpl, request?: RequestAction<KlighdExportSvgAction>): void {
         if (typeof document !== 'undefined') {
             const div = document.getElementById(this.options.hiddenDiv);
             if (div !== null && div.firstElementChild && div.firstElementChild.tagName === 'svg') {
@@ -36,7 +36,7 @@ export class KlighdSvgExporter extends SvgExporter {
         }
     }
 
-    protected createSvg(svgElementOrig: SVGSVGElement, root: SModelRoot): string {
+    protected createSvg(svgElementOrig: SVGSVGElement, root: SModelRootImpl): string {
         const serializer = new XMLSerializer();
         const svgCopy = serializer.serializeToString(svgElementOrig);
         const iframe: HTMLIFrameElement = document.createElement('iframe');

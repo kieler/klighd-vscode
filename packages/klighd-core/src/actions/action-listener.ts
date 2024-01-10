@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2018-2022 by
+ * Copyright 2018-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,7 +14,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { MouseListener, SModelElement } from 'sprotty';
+import { MouseListener, SModelElementImpl } from 'sprotty';
 import { Action } from "sprotty-protocol";
 import { KAction, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
 import { findRendering, getSemanticElement } from '../skgraph-utils';
@@ -26,7 +26,7 @@ import { PerformActionAction } from './actions';
 export class ActionListener extends MouseListener {
     mouseMoved = false
 
-    doubleClick(target: SModelElement, event: WheelEvent): (Action | Promise<Action>)[] {
+    doubleClick(target: SModelElementImpl, event: WheelEvent): (Action | Promise<Action>)[] {
         // Ignore the event if the top level graph element is clicked, as that is not a SKGraphElement.
         if (target.type !== 'graph') {
             return this.actions(target as SKGraphElement, event, event.type)
@@ -44,7 +44,7 @@ export class ActionListener extends MouseListener {
         return [];
     }
 
-    mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseUp(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         // counts as a click if the mouse has not moved since the last mouseDown event.
         if (!this.mouseMoved && target.type !== 'graph' && target.type !== 'NONE') {
             return this.actions(target as SKGraphElement, event, 'click')

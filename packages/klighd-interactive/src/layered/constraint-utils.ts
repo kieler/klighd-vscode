@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SModelElement } from 'sprotty';
+import { SModelElementImpl } from 'sprotty';
 import { Action } from 'sprotty-protocol';
 import { RefreshDiagramAction } from '../actions';
 import { Direction, KEdge, KNode } from '../constraint-classes';
@@ -358,7 +358,7 @@ export function shouldOnlyLCBeSet(node: KNode, layers: Layer[], direction: Direc
  * Sets properties of the target accordingly to the position the target is moved to
  * @param target SModelElement that is moved
  */
-export function setProperty(nodes: KNode[], layers: Layer[], target: SModelElement): Action {
+export function setProperty(nodes: KNode[], layers: Layer[], target: SModelElementImpl): Action {
     const targetNode: KNode = target as KNode
     const direction = targetNode.direction
     // calculate layer and position the target has in the graph at the new position

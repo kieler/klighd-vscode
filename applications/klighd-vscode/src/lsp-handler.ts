@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,19 +15,22 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import { window, TextEdit, workspace, Uri, WorkspaceEdit } from "vscode";
-import { CommonLanguageClient, Range as LspRange } from "vscode-languageclient";
+import { Range as LspRange } from "vscode-languageclient";
+import { LanguageClient, State } from 'vscode-languageclient/node';
 
 /** Handles KLighD specific LSP extensions. */
 export class LspHandler {
     private lastEditSuccessful: boolean;
 
-    constructor(private lsClient: CommonLanguageClient) {
-        lsClient.onReady().then(() => {
-            lsClient.onNotification("general/sendMessage", this.handleGeneralMessage.bind(this));
-            lsClient.onNotification(
-                "general/replaceContentInFile",
-                this.handleReplaceContentInFile.bind(this)
-            );
+    constructor(private lsClient: LanguageClient) {
+        lsClient.onDidChangeState(e => {
+            if (e.newState == State.Running) {
+                lsClient.onNotification("general/sendMessage", this.handleGeneralMessage.bind(this));
+                lsClient.onNotification(
+                    "general/replaceContentInFile",
+                    this.handleReplaceContentInFile.bind(this)
+                );
+            }
         });
 
         this.lastEditSuccessful = true;

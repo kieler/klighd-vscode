@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022 by
+ * Copyright 2022-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,7 +17,7 @@
 import { inject, injectable } from 'inversify';
 import {
      CommandExecutionContext, CommandResult,
-    ResetCommand, SModelRoot, TYPES,
+    ResetCommand, SModelRootImpl, TYPES,
 } from 'sprotty';
 import {
     RequestAction, ResponseAction, SModelElement
@@ -71,7 +71,7 @@ export namespace SetDiagramPieceAction {
 export class SetDiagramPieceCommand extends ResetCommand {
     static readonly KIND: string = 'setDiagramPiece'
 
-    root: SModelRoot
+    root: SModelRootImpl
 
     constructor(@inject(TYPES.Action) protected action: SetDiagramPieceAction) {
         super()
@@ -89,11 +89,11 @@ export class SetDiagramPieceCommand extends ResetCommand {
         }
     }
 
-    undo(_context: CommandExecutionContext): SModelRoot {
+    undo(_context: CommandExecutionContext): SModelRootImpl {
         return this.root
     }
 
-    redo(_context: CommandExecutionContext): SModelRoot {
+    redo(_context: CommandExecutionContext): SModelRootImpl {
         return this.root
     }
 }

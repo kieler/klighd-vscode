@@ -13,7 +13,7 @@
     },
     "homepage": "https://rtsys.informatik.uni-kiel.de/kieler",
     "engines": {
-        "vscode": "^1.56.0"
+        "vscode": "^1.85.0"
     },
     "categories": [
         "Visualization",
@@ -74,12 +74,14 @@
             {
                 "command": "klighd-vscode.diagram.sync",
                 "title": "Enable Sync With Editor",
-                "enablement": "!klighd-vscode.syncWithEditor"
+                "enablement": "!klighd-vscode.syncWithEditor",
+                "category": "KLighD Diagram"
             },
             {
                 "command": "klighd-vscode.diagram.noSync",
                 "title": "Disable Sync With Editor",
-                "enablement": "klighd-vscode.syncWithEditor"
+                "enablement": "klighd-vscode.syncWithEditor",
+                "category": "KLighD Diagram"
             }
         ],
         "menus": {
@@ -151,27 +153,29 @@
         "distribute:ovsx": "ovsx publish --yarn klighd-vscode.vsix"
     },
     "devDependencies": {
-        "@types/node": "^12.11.7",
-        "@types/vscode": "^1.56.0",
-        "@types/vscode-webview": "^1.56.0",
-        "css-loader": "^5.2.4",
+        "@types/node": "^16.11.7",
+        "@types/vscode": "^1.85.0",
+        "@types/vscode-webview": "^1.57.4",
+        "css-loader": "^6.8.1",
         "file-loader": "6.2.0",
         "ovsx": "^0.2.0",
         "rimraf": "^4.4.0",
-        "style-loader": "2.0.0",
-        "ts-loader": "^8.0.14",
-        "typescript": "^4.3.0",
+        "style-loader": "3.3.3",
+        "ts-loader": "^9.5.1",
+        "typescript": "^5.3.3",
         "vsce": "^1.95.1",
-        "webpack": "^4.44.1"
+        "webpack": "^5.89.0",
+        "webpack-cli": "^5.1.4",
+        "source-map-loader": "^3.0.0"
     },
     "dependencies": {
         "@kieler/klighd-core": "^0.4.2",
-        "inversify": "^5.1.1",
+        "inversify": "^6.0.2",
         "nanoid": "^3.1.23",
-        "reflect-metadata": "^0.1.13",
-        "sprotty": "0.12.0",
-        "sprotty-vscode": "^0.3.1",
-        "sprotty-vscode-webview": "^0.3.1",
-        "vscode-languageclient": "^7.0.0"
+        "reflect-metadata": "^0.2.1",
+        "sprotty": "^1.1.0",
+        "sprotty-vscode": "^1.0.0",
+        "sprotty-vscode-webview": "^1.0.0",
+        "vscode-languageclient": "^9.0.1"
     }
 }

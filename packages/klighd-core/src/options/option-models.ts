@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { FeatherIconNames } from 'feather-icons';
 import { Action } from "sprotty-protocol";
 
 /** Base option.*/
@@ -44,7 +45,7 @@ export interface QuickActionOption {
     key: PossibleQuickAction
     title: string
     /** Icon id of a feather icon. */
-    iconId: string
+    iconId: FeatherIconNames
     /** Action to be executed on click. */
     action: Action | undefined
     /** If the quick action button should be marked as clicked. */

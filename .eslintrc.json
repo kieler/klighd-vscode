@@ -10,7 +10,16 @@
     "rules": {
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/ban-ts-comment": "off",
-        "@typescript-eslint/no-namespace": "off"
+        "@typescript-eslint/no-namespace": "off",
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_",
+                "caughtErrorsIgnorePattern": "^_"
+            }
+        ]
     },
-    "ignorePatterns": ["**/*.d.ts", "lib", "dist", "webpack.config.js"]
+    "ignorePatterns": ["**/*.d.ts", "lib", "dist", "pack", "webpack.config.js"]
 }

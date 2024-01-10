@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019 by
+ * Copyright 2019-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,11 +18,11 @@
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module';
 import { Container, ContainerModule, interfaces } from 'inversify';
 import {
-    configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRoot, HtmlRootView, IVNodePostprocessor,
-    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElement, PreRenderedView, RenderingTargetKind, selectModule, SGraph, SGraphFactory, TYPES, updateModule, viewportModule, ViewRegistry
+    configureActionHandler, configureModelElement, ConsoleLogger, defaultModule, exportModule, hoverModule, HoverState, HtmlRootImpl, HtmlRootView, IVNodePostprocessor,
+    LogLevel, ModelRendererFactory, modelSourceModule, ModelViewer, overrideViewerOptions, PreRenderedElementImpl, PreRenderedView, RenderingTargetKind, selectModule, SGraphImpl, TYPES, updateModule, viewportModule, ViewRegistry
 } from 'sprotty';
 import actionModule from './actions/actions-module';
-import bookmarkModule from './bookmarks/bookmark-module';
+// import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols';
 import diagramPieceModule from './diagram-pieces/diagram-pieces-module';
 import { KlighdDiagramServer } from './diagram-server';
@@ -48,7 +48,6 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
     bind(TYPES.ModelSource).to(KlighdDiagramServer).inSingletonScope();
     rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
     rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
-    rebind(TYPES.IModelFactory).to(SGraphFactory).inSingletonScope()
     rebind(TYPES.CommandStackOptions).toConstantValue({
         // Override the default animation speed to be 500 ms, as the default value is too quick.
         defaultDuration: 500,
@@ -73,9 +72,9 @@ const kGraphDiagramModule = new ContainerModule((bind: interfaces.Bind, unbind: 
 
 
     const context = { bind, unbind, isBound, rebind }
-    configureModelElement(context, 'html', HtmlRoot, HtmlRootView)
-    configureModelElement(context, 'pre-rendered', PreRenderedElement, PreRenderedView)
-    configureModelElement(context, 'graph', SGraph, SKGraphView);
+    configureModelElement(context, 'html', HtmlRootImpl, HtmlRootView)
+    configureModelElement(context, 'pre-rendered', PreRenderedElementImpl, PreRenderedView)
+    configureModelElement(context, 'graph', SGraphImpl, SKGraphView);
     configureModelElement(context, NODE_TYPE, SKNode, KNodeView)
     configureModelElement(context, EDGE_TYPE, SKEdge, KEdgeView)
     configureModelElement(context, PORT_TYPE, SKPort, KPortView)
@@ -99,7 +98,8 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(defaultModule, selectModule, interactiveModule, viewportModule, exportModule, modelSourceModule, updateModule, hoverModule,
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
-        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, bookmarkModule, diagramPieceModule)
+        actionModule, optionsModule, sidebarModule, kGraphDiagramModule, updateDepthMapModule, /* bookmarkModule, */ diagramPieceModule)
+        // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {
         needsClientLayout: false,
         needsServerLayout: true,
