@@ -15,31 +15,31 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { FeatherIconNames } from 'feather-icons';
-import { Action } from "sprotty-protocol";
+import { FeatherIconNames } from 'feather-icons'
+import { Action } from 'sprotty-protocol'
 
-/** Base option.*/
+/** Base option. */
 export interface Option {
-    id: string;
-    name: string;
-    type: TransformationOptionType;
-    initialValue: any;
-    currentValue: any;
-    description?: string;
+    id: string
+    name: string
+    type: TransformationOptionType
+    initialValue: any
+    currentValue: any
+    description?: string
     /** The values this RenderOption has, if it's type is {@link TransformationOptionType.CHOICE}. */
-    values?: any[];
+    values?: any[]
 }
 
-/** Option that is rendered as a UI input.*/
+/** Option that is rendered as a UI input. */
 export interface RenderOption extends Option {
     /** The category this RenderOption is part of. */
-    renderCategory?: string;
+    renderCategory?: string
     /** Per default undefined. */
     invisible?: boolean
 }
 
 /** Type for available quick actions. */
-export type PossibleQuickAction = "center" | "fit" | "layout" | "refresh" | "export" | "create-bookmark" | "pin-sidebar";
+export type PossibleQuickAction = 'center' | 'fit' | 'layout' | 'refresh' | 'export' | 'create-bookmark' | 'pin-sidebar'
 
 export interface QuickActionOption {
     key: PossibleQuickAction
@@ -196,7 +196,7 @@ export enum Type {
     /** enumeration set type. */
     ENUMSET,
     /** {@link IDataObject} type. */
-    OBJECT
+    OBJECT,
 }
 
 /**

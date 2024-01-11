@@ -15,8 +15,17 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { boundsFeature, moveFeature, popupFeature, RectangularPort, RGBColor, selectFeature, SLabelImpl, SModelElementImpl } from 'sprotty';
+import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes'
+import {
+    boundsFeature,
+    moveFeature,
+    popupFeature,
+    RectangularPort,
+    RGBColor,
+    selectFeature,
+    SLabelImpl,
+    SModelElementImpl,
+} from 'sprotty'
 import { Bounds, Point } from 'sprotty-protocol'
 
 /**
@@ -39,9 +48,13 @@ export const LABEL_TYPE = 'label'
  */
 export class SKNode extends KNode {
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
-            || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
-            || feature === popupFeature
+        return (
+            feature === selectFeature ||
+            (feature === moveFeature &&
+                (this.parent as SKNode).properties &&
+                ((this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)) ||
+            feature === popupFeature
+        )
     }
 }
 
@@ -50,12 +63,17 @@ export class SKNode extends KNode {
  */
 export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+
     properties: Record<string, unknown>
 }
 
@@ -64,14 +82,19 @@ export class SKPort extends RectangularPort implements SKGraphElement {
  */
 export class SKLabel extends SLabelImpl implements SKGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
         // The boundsFeature here is additionally needed because bounds of labels need to be
         // estimated during the estimateTextBounds action.
         return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
+
     properties: Record<string, unknown>
 }
 
@@ -82,6 +105,7 @@ export class SKEdge extends KEdge {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+
     properties: Record<string, unknown>
 }
 
@@ -270,7 +294,7 @@ export interface KAction {
 export enum ModifierState {
     DONT_CARE = 0,
     PRESSED = 1,
-    NOT_PRESSED = 2
+    NOT_PRESSED = 2,
 }
 
 /**
@@ -290,7 +314,7 @@ export enum Arc {
     /**
      * Arc with a straight closing line connection from end to beginning.
      */
-    PIE = 2
+    PIE = 2,
 }
 
 /*
@@ -363,7 +387,7 @@ export type KBottomPosition = KYPosition
 export enum HorizontalAlignment {
     LEFT = 0,
     CENTER = 1,
-    RIGHT = 2
+    RIGHT = 2,
 }
 
 /**
@@ -372,7 +396,7 @@ export enum HorizontalAlignment {
 export enum VerticalAlignment {
     TOP = 0,
     CENTER = 1,
-    BOTTOM = 2
+    BOTTOM = 2,
 }
 
 /**
@@ -408,7 +432,7 @@ export enum Trigger {
     /**
      * Fires on middle button's first click regardless if more clicks follow within the system wide double click period.
      */
-    MIDDLE_SINGLE_OR_MULTICLICK = 5
+    MIDDLE_SINGLE_OR_MULTICLICK = 5,
 }
 
 /**
@@ -590,7 +614,7 @@ export interface KVerticalAlignment extends KStyle {
 export enum LineCap {
     CAP_FLAT = 0,
     CAP_ROUND = 1,
-    CAP_SQUARE = 2
+    CAP_SQUARE = 2,
 }
 
 /**
@@ -599,7 +623,7 @@ export enum LineCap {
 export enum LineJoin {
     JOIN_MITER = 0,
     JOIN_ROUND = 1,
-    JOIN_BEVEL = 2
+    JOIN_BEVEL = 2,
 }
 
 /**
@@ -612,7 +636,7 @@ export enum LineStyle {
     DOT = 2,
     DASHDOT = 3,
     DASHDOTDOT = 4,
-    CUSTOM = 5
+    CUSTOM = 5,
 }
 
 /**
@@ -625,7 +649,7 @@ export enum Underline {
     DOUBLE = 2,
     ERROR = 3,
     SQUIGGLE = 4,
-    LINK = 5
+    LINK = 5,
 }
 
 /**
@@ -637,7 +661,6 @@ export interface Decoration {
     bounds: Bounds
     rotation: number
 }
-
 
 // ----------- Rendering Class names ----------- //
 export const K_RENDERING_REF = 'KRenderingRefImpl'
@@ -662,21 +685,23 @@ export const K_TEXT = 'KTextImpl'
  * @param test The potential KRendering.
  */
 export function isRendering(test: KGraphData): test is KRendering {
-    const type = test.type
-    return type === K_RENDERING_REF
-        || type === K_CHILD_AREA
-        || type === K_CONTAINER_RENDERING
-        || type === K_ARC
-        || type === K_CUSTOM_RENDERING
-        || type === K_ELLIPSE
-        || type === K_IMAGE
-        || type === K_POLYLINE
-        || type === K_POLYGON
-        || type === K_ROUNDED_BENDS_POLYLINE
-        || type === K_SPLINE
-        || type === K_RECTANGLE
-        || type === K_ROUNDED_RECTANGLE
-        || type === K_TEXT
+    const { type } = test
+    return (
+        type === K_RENDERING_REF ||
+        type === K_CHILD_AREA ||
+        type === K_CONTAINER_RENDERING ||
+        type === K_ARC ||
+        type === K_CUSTOM_RENDERING ||
+        type === K_ELLIPSE ||
+        type === K_IMAGE ||
+        type === K_POLYLINE ||
+        type === K_POLYGON ||
+        type === K_ROUNDED_BENDS_POLYLINE ||
+        type === K_SPLINE ||
+        type === K_RECTANGLE ||
+        type === K_ROUNDED_RECTANGLE ||
+        type === K_TEXT
+    )
 }
 
 /**
@@ -684,18 +709,20 @@ export function isRendering(test: KGraphData): test is KRendering {
  * @param test The potential KContainerRendering.
  */
 export function isContainerRendering(test: KGraphData): test is KContainerRendering {
-    const type = test.type
-    return type === K_CONTAINER_RENDERING
-        || type === K_ARC
-        || type === K_CUSTOM_RENDERING
-        || type === K_ELLIPSE
-        || type === K_IMAGE
-        || type === K_POLYLINE
-        || type === K_POLYGON
-        || type === K_ROUNDED_BENDS_POLYLINE
-        || type === K_SPLINE
-        || type === K_RECTANGLE
-        || type === K_ROUNDED_RECTANGLE
+    const { type } = test
+    return (
+        type === K_CONTAINER_RENDERING ||
+        type === K_ARC ||
+        type === K_CUSTOM_RENDERING ||
+        type === K_ELLIPSE ||
+        type === K_IMAGE ||
+        type === K_POLYLINE ||
+        type === K_POLYGON ||
+        type === K_ROUNDED_BENDS_POLYLINE ||
+        type === K_SPLINE ||
+        type === K_RECTANGLE ||
+        type === K_ROUNDED_RECTANGLE
+    )
 }
 
 /**
@@ -703,11 +730,8 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
  * @param test The potential KPolyline.
  */
 export function isPolyline(test: KGraphData): test is KPolyline {
-    const type = test.type
-    return  type === K_POLYLINE
-        || type === K_POLYGON
-        || type === K_ROUNDED_BENDS_POLYLINE
-        || type === K_SPLINE
+    const { type } = test
+    return type === K_POLYLINE || type === K_POLYGON || type === K_ROUNDED_BENDS_POLYLINE || type === K_SPLINE
 }
 
 /**
@@ -715,7 +739,7 @@ export function isPolyline(test: KGraphData): test is KPolyline {
  * @param test The potential KText
  */
 export function isKText(test: KGraphData): test is KText {
-    const type = test.type
+    const { type } = test
     return type === K_TEXT
 }
 
@@ -724,9 +748,11 @@ export function isKText(test: KGraphData): test is KText {
  * @param test The potential SKGraphElement.
  */
 export function isSKGraphElement(test: unknown): test is SKGraphElement {
-    return test instanceof SModelElementImpl
-        && (test as any)['areChildAreaChildrenRendered'] !== undefined
-        && (test as any)['areNonChildAreaChildrenRendered'] !== undefined
-        && (test as any)['opacity'] !== undefined
-        && (test as any)['data'] !== undefined
+    return (
+        test instanceof SModelElementImpl &&
+        (test as any).areChildAreaChildrenRendered !== undefined &&
+        (test as any).areNonChildAreaChildrenRendered !== undefined &&
+        (test as any).opacity !== undefined &&
+        (test as any).data !== undefined
+    )
 }

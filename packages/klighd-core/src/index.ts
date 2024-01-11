@@ -17,16 +17,16 @@
 
 // Main package entry point. Exports the public API
 
-export { default as createKlighdDiagramContainer } from "./di.config";
-export * from "./services";
-export { diagramType, getActionDispatcher, requestModel, getBookmarkViewport } from "./base/external-helpers";
+export { default as createKlighdDiagramContainer } from './di.config'
+export * from './services'
+export { diagramType, getActionDispatcher, requestModel, getBookmarkViewport } from './base/external-helpers'
 
 // Export actions
-export * from "./actions/actions";
-export * from "./options/actions";
-export { ToggleSidebarPanelAction } from "./sidebar/actions";
-export { SetSynthesesAction, SetSynthesisAction } from "./syntheses/actions";
-export { SetPreferencesAction } from "./options/actions";
-export { SetInitialBookmarkAction, Bookmark } from "./bookmarks/bookmark"
-export { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
-export { ActionMessage } from "sprotty-protocol";
+export * from './actions/actions'
+export * from './options/actions'
+export { ToggleSidebarPanelAction } from './sidebar/actions'
+export { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions'
+export { SetPreferencesAction } from './options/actions'
+export { SetInitialBookmarkAction, Bookmark } from './bookmarks/bookmark'
+export { RefreshDiagramAction } from '@kieler/klighd-interactive/lib/actions'
+export { ActionMessage } from 'sprotty-protocol'

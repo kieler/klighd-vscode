@@ -14,15 +14,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { ContainerModule } from 'inversify';
-import { TYPES } from 'sprotty';
-import { ActionListener } from './action-listener';
+import { ContainerModule } from 'inversify'
+import { TYPES } from 'sprotty'
+import { ActionListener } from './action-listener'
 
 /**
  * Dependency injection module that adds functionality for triggering KLighD actions.
  */
-const actionModule = new ContainerModule(bind => {
+const actionModule = new ContainerModule((bind) => {
     bind(TYPES.MouseListener).to(ActionListener)
-});
+})
 
 export default actionModule

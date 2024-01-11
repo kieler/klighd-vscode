@@ -14,13 +14,17 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { KlighdFitToScreenAction, KlighdRequestExportSvgAction, RefreshDiagramAction, RefreshLayoutAction } from '@kieler/klighd-core';
-import "reflect-metadata";
-import { CenterAction } from "sprotty-protocol";
-import * as vscode from "vscode";
-import { command } from "./constants";
-import { KLighDWebviewPanelManager } from './webview-panel-manager';
-
+import {
+    KlighdFitToScreenAction,
+    KlighdRequestExportSvgAction,
+    RefreshDiagramAction,
+    RefreshLayoutAction,
+} from '@kieler/klighd-core'
+import 'reflect-metadata'
+import { CenterAction } from 'sprotty-protocol'
+import * as vscode from 'vscode'
+import { command } from './constants'
+import { KLighDWebviewPanelManager } from './webview-panel-manager'
 
 /**
  * Overwrite register from sprotty-vscode's default contributions commands to
@@ -32,78 +36,78 @@ import { KLighDWebviewPanelManager } from './webview-panel-manager';
 export function registerCommands(manager: KLighDWebviewPanelManager, context: vscode.ExtensionContext): void {
     function getURI(commandArgs: any[]): vscode.Uri | undefined {
         if (commandArgs.length > 0 && commandArgs[0] instanceof vscode.Uri) {
-            return commandArgs[0];
+            return commandArgs[0]
         }
         if (vscode.window.activeTextEditor) {
-            return vscode.window.activeTextEditor.document.uri;
+            return vscode.window.activeTextEditor.document.uri
         }
-        return undefined;
+        return undefined
     }
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramOpen, async (...commandArgs: any[]) => {
-            const uri = getURI(commandArgs);
+            const uri = getURI(commandArgs)
             if (uri) {
                 manager.storageService.setItem('diagramOpen', true)
-                manager.openDiagram(uri, { reveal: true });
+                manager.openDiagram(uri, { reveal: true })
             }
         })
-    );
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramCenter, () => {
-            const activeWebview = manager.findActiveWebview();
+            const activeWebview = manager.findActiveWebview()
             if (activeWebview) {
-                activeWebview.sendAction(CenterAction.create([], { animate: true }));
+                activeWebview.sendAction(CenterAction.create([], { animate: true }))
             }
         })
-    );
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramFit, () => {
-            const activeWebview = manager.findActiveWebview();
+            const activeWebview = manager.findActiveWebview()
             if (activeWebview) {
-                activeWebview.sendAction(KlighdFitToScreenAction.create(true));
+                activeWebview.sendAction(KlighdFitToScreenAction.create(true))
             }
         })
-    );
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramLayout, () => {
-            const activeWebview = manager.findActiveWebview();
+            const activeWebview = manager.findActiveWebview()
             if (activeWebview) {
-                activeWebview.sendAction(RefreshLayoutAction.create());
+                activeWebview.sendAction(RefreshLayoutAction.create())
             }
         })
-    );
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramRefresh, () => {
-            const activeWebview = manager.findActiveWebview();
+            const activeWebview = manager.findActiveWebview()
             if (activeWebview) {
-                activeWebview.sendAction(RefreshDiagramAction.create());
+                activeWebview.sendAction(RefreshDiagramAction.create())
             }
         })
-    );
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramExport, () => {
-            const activeWebview = manager.findActiveWebview();
+            const activeWebview = manager.findActiveWebview()
             if (activeWebview) {
                 // TODO: check if this is fixed in a newer Sprotty release.
-                activeWebview.sendAction(KlighdRequestExportSvgAction.create());
+                activeWebview.sendAction(KlighdRequestExportSvgAction.create())
             }
         })
-    );
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramSync, () => {
             manager.setSyncWithEditor(true)
-            const activeTextEditor = vscode.window.activeTextEditor
+            const { activeTextEditor } = vscode.window
             if (activeTextEditor) {
                 const uri = activeTextEditor.document.fileName
                 vscode.commands.executeCommand(command.diagramOpen, vscode.Uri.file(uri))
             }
         })
-    );
+    )
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramNoSync, () => {
             manager.setSyncWithEditor(false)
         })
-    );
+    )
 }
 
 /**
@@ -113,13 +117,15 @@ export function registerCommands(manager: KLighDWebviewPanelManager, context: vs
  */
 export function registerTextEditorSync(manager: KLighDWebviewPanelManager, context: vscode.ExtensionContext): void {
     context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(async editor => {
+        vscode.window.onDidChangeActiveTextEditor(async (editor) => {
             const activeWebview = manager.findActiveWebview()
-            const alreadyOpen = editor?.document.uri.scheme + "://" + editor?.document.uri.path === activeWebview?.diagramIdentifier?.uri
+            const alreadyOpen =
+                `${editor?.document.uri.scheme}://${editor?.document.uri.path}` ===
+                activeWebview?.diagramIdentifier?.uri
             const shouldOpen = manager.storageService.getItem('diagramOpen')
             if (editor && manager.getSyncWithEdior() && !alreadyOpen && shouldOpen) {
-                manager.openDiagram(editor.document.uri);
+                manager.openDiagram(editor.document.uri)
             }
         })
-    );
+    )
 }

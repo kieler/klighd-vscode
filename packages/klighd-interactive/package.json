@@ -1,35 +1,38 @@
 {
-  "name": "@kieler/klighd-interactive",
-  "version": "0.4.2",
-  "description": "A module for klighd-core to interactively apply constraints to the diagram",
-  "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
-  "license": "EPL-2.0",
-  "keywords": [
-    "klighd",
-    "interactive"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/kieler/klighd-vscode",
-    "directory": "packages/klighd-core"
-  },
-  "scripts": {
-    "clean": "rimraf lib",
-    "lint": "eslint .",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next --no-git-tag-version"
-  },
-  "dependencies": {
-    "sprotty": "^1.1.0"
-  },
-  "devDependencies": {
-    "rimraf": "^4.4.0",
-    "semver": "^7.5.4"
-  },
-  "files": [
-    "lib",
-    "src",
-    "build"
-  ]
+    "name": "@kieler/klighd-interactive",
+    "version": "0.4.2",
+    "description": "A module for klighd-core to interactively apply constraints to the diagram",
+    "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
+    "license": "EPL-2.0",
+    "keywords": [
+        "klighd",
+        "interactive"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kieler/klighd-vscode",
+        "directory": "packages/klighd-core"
+    },
+    "scripts": {
+        "clean": "rimraf lib",
+        "lint": "eslint .",
+        "build": "tsc",
+        "watch": "tsc -w",
+        "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next --no-git-tag-version"
+    },
+    "dependencies": {
+        "inversify": "^6.0.2",
+        "snabbdom": "^3.5.1",
+        "sprotty": "^1.1.0",
+        "sprotty-protocol": "^1.1.0"
+    },
+    "devDependencies": {
+        "rimraf": "^4.4.0",
+        "semver": "^7.5.4"
+    },
+    "files": [
+        "lib",
+        "src",
+        "build"
+    ]
 }

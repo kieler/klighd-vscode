@@ -26,11 +26,18 @@
         "@kieler/klighd-interactive": "^0.4.2",
         "@types/file-saver": "^2.0.7",
         "feather-icons": "^4.29.1",
+        "file-saver": "^2.0.5",
         "inversify": "^6.0.2",
-        "sprotty": "^1.1.0"
+        "snabbdom": "^3.5.1",
+        "sprotty": "^1.1.0",
+        "sprotty-protocol": "^1.1.0"
     },
     "devDependencies": {
+        "@types/chai": "^4.3.11",
         "@types/feather-icons": "^4.29.4",
+        "@types/mocha": "^10.0.6",
+        "chai": "^4.3.10",
+        "mocha": "^10.2.0",
         "rimraf": "^4.4.0",
         "semver": "^7.5.4"
     },

@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { moveFeature, RectangularNode, SEdgeImpl, selectFeature, SParentElementImpl } from 'sprotty';
-import { Point } from 'sprotty-protocol';
+import { moveFeature, RectangularNode, SEdgeImpl, selectFeature, SParentElementImpl } from 'sprotty'
+import { Point } from 'sprotty-protocol'
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -48,11 +48,19 @@ export interface KGraphElement extends SParentElementImpl {
  */
 export class KNode extends RectangularNode implements KGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
+        return (
+            feature === selectFeature ||
+            (feature === moveFeature &&
+                ((this.parent as KNode).properties['org.eclipse.elk.interactiveLayout'] as boolean))
+        )
     }
 
     properties: Record<string, unknown>
@@ -60,7 +68,9 @@ export class KNode extends RectangularNode implements KGraphElement {
     direction: Direction
 
     shadow: boolean
+
     shadowX: number
+
     shadowY: number
 }
 
@@ -69,7 +79,7 @@ export enum Direction {
     RIGHT,
     LEFT,
     DOWN,
-    UP
+    UP,
 }
 
 /**
@@ -86,10 +96,15 @@ export interface KGraphData {
  */
 export class KEdge extends SEdgeImpl implements KGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     junctionPoints: Point[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
     }

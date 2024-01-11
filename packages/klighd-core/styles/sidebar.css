@@ -16,7 +16,7 @@
  */
 
 :root {
-    --sidebar-width: "fit-content";
+    --sidebar-width: 'fit-content';
 }
 
 .sidebar {

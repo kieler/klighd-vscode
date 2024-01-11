@@ -15,21 +15,31 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
-import { VNode } from 'snabbdom';
-import { IVNodePostprocessor, ModelRenderer, RenderingTargetKind, SModelElementImpl, SParentElementImpl, ViewRegistry } from 'sprotty';
-import { Viewport } from 'sprotty-protocol';
-import { DepthMap } from './depth-map';
-import { RenderOptionsRegistry } from './options/render-options-registry';
-import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models';
-import { TitleStorage } from './titles/title-storage';
+import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
+import { VNode } from 'snabbdom'
+import {
+    IVNodePostprocessor,
+    ModelRenderer,
+    RenderingTargetKind,
+    SModelElementImpl,
+    SParentElementImpl,
+    ViewRegistry,
+} from 'sprotty'
+import { Viewport } from 'sprotty-protocol'
+import { DepthMap } from './depth-map'
+import { RenderOptionsRegistry } from './options/render-options-registry'
+import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models'
+import { TitleStorage } from './titles/title-storage'
 
 /**
  * Contains additional data and functionality needed for the rendering of SKGraphs.
  */
 export class SKGraphModelRenderer extends ModelRenderer {
-
-    constructor(readonly viewRegistry: ViewRegistry, readonly targetKind: RenderingTargetKind, postprocessors: IVNodePostprocessor[]) {
+    constructor(
+        readonly viewRegistry: ViewRegistry,
+        readonly targetKind: RenderingTargetKind,
+        postprocessors: IVNodePostprocessor[]
+    ) {
         super(viewRegistry, targetKind, postprocessors)
     }
 
@@ -37,24 +47,31 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * Map for all bounds related to KRenderingRefs, mapped by their rendering ID.
      */
     boundsMap: Record<string, unknown>
+
     /**
      * Map for all decoration data (bounds and rotation of decorators) related to KRenderingRefs, mapped by their rendering ID.
      */
     decorationMap: Record<string, unknown>
+
     depthMap?: DepthMap
+
     /**
      * Access to the rendering library, expected to be defined on the root graph element.
      */
     kRenderingLibrary?: KRenderingLibrary
+
     mListener: KlighdInteractiveMouseListener
+
     renderingDefs: Map<string, VNode>
+
     renderOptionsRegistry: RenderOptionsRegistry
+
     /**
      * Storage for the title renderings
      */
     titleStorage: TitleStorage = new TitleStorage()
+
     viewport: Viewport
-    
 
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.
@@ -64,13 +81,9 @@ export class SKGraphModelRenderer extends ModelRenderer {
     renderChildAreaChildren(element: Readonly<SParentElementImpl> & SKGraphElement): VNode[] {
         element.areChildAreaChildrenRendered = true
         return element.children
-            .filter(child =>
-                child.type === NODE_TYPE ||
-                child.type === EDGE_TYPE)
-            .map((child): VNode | undefined => {
-                return this.renderElement(child)
-            })
-            .filter(vnode => vnode !== undefined) as VNode[]
+            .filter((child) => child.type === NODE_TYPE || child.type === EDGE_TYPE)
+            .map((child): VNode | undefined => this.renderElement(child))
+            .filter((vnode) => vnode !== undefined) as VNode[]
     }
 
     /**
@@ -81,19 +94,15 @@ export class SKGraphModelRenderer extends ModelRenderer {
     renderNonChildAreaChildren(element: Readonly<SParentElementImpl> & SKGraphElement): VNode[] {
         element.areNonChildAreaChildrenRendered = true
         return element.children
-            .filter(child =>
-                child.type === PORT_TYPE ||
-                child.type === LABEL_TYPE)
-            .map((child): VNode | undefined => {
-                return this.renderElement(child)
-            })
-            .filter(vnode => vnode !== undefined) as VNode[]
+            .filter((child) => child.type === PORT_TYPE || child.type === LABEL_TYPE)
+            .map((child): VNode | undefined => this.renderElement(child))
+            .filter((vnode) => vnode !== undefined) as VNode[]
     }
 
     /** @inheritdoc */
     renderElement(element: Readonly<SModelElementImpl>): VNode | undefined {
         this.titleStorage.decendToChild()
-        const node =  super.renderElement(element)
+        const node = super.renderElement(element)
         this.titleStorage.ascendToParent()
         return node
     }

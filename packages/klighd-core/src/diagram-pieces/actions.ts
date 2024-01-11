@@ -14,20 +14,17 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { inject, injectable } from 'inversify';
-import {
-     CommandExecutionContext, CommandResult,
-    ResetCommand, SModelRootImpl, TYPES,
-} from 'sprotty';
-import {
-    RequestAction, ResponseAction, SModelElement
-} from "sprotty-protocol";
-import { insertSModelElementIntoModel } from '../diagram-pieces/smodel-util';
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
+import { inject, injectable } from 'inversify'
+import { CommandExecutionContext, CommandResult, ResetCommand, SModelRootImpl, TYPES } from 'sprotty'
+import { RequestAction, ResponseAction, SModelElement } from 'sprotty-protocol'
+import { insertSModelElementIntoModel } from './smodel-util'
 
 /**
  * Sent from client to request a certain piece of the diagram.
  */
- export interface RequestDiagramPieceAction extends RequestAction<SetDiagramPieceAction> {
+export interface RequestDiagramPieceAction extends RequestAction<SetDiagramPieceAction> {
     kind: typeof RequestDiagramPieceAction.KIND
     modelElementId: string
 }
@@ -35,7 +32,7 @@ import { insertSModelElementIntoModel } from '../diagram-pieces/smodel-util';
 export namespace RequestDiagramPieceAction {
     export const KIND = 'requestDiagramPiece'
 
-    export function create(requestId = '', modelElementId: string): RequestDiagramPieceAction {
+    export function create(requestId: string, modelElementId: string): RequestDiagramPieceAction {
         return {
             kind: KIND,
             requestId,
@@ -55,7 +52,7 @@ export interface SetDiagramPieceAction extends ResponseAction {
 export namespace SetDiagramPieceAction {
     export const KIND = 'setDiagramPiece'
 
-    export function create(responseId = "", diagramPiece: SModelElement): SetDiagramPieceAction {
+    export function create(responseId: string, diagramPiece: SModelElement): SetDiagramPieceAction {
         return {
             kind: KIND,
             responseId,
@@ -79,13 +76,11 @@ export class SetDiagramPieceCommand extends ResetCommand {
 
     execute(context: CommandExecutionContext): CommandResult {
         this.root = context.root
-        insertSModelElementIntoModel(
-            this.root, 
-            context.modelFactory.createElement(this.action.diagramPiece))
+        insertSModelElementIntoModel(this.root, context.modelFactory.createElement(this.action.diagramPiece))
         return {
             model: this.root,
             modelChanged: true,
-            cause: this.action
+            cause: this.action,
         }
     }
 

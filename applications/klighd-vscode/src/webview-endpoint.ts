@@ -14,28 +14,28 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import "reflect-metadata";
-import { Action, ActionMessage, isActionMessage } from "sprotty-protocol";
-import { WebviewEndpoint } from 'sprotty-vscode';
-import { LspNotification, LspRequest } from 'sprotty-vscode-protocol/lib/lsp';
-import { LspWebviewEndpointOptions, acceptMessageType } from 'sprotty-vscode/lib/lsp';
-import { ResponseMessage } from 'vscode-jsonrpc/lib/common/messages';
-import { LanguageClient } from "vscode-languageclient/node";
+import 'reflect-metadata'
+import { Action, ActionMessage, isActionMessage } from 'sprotty-protocol'
+import { WebviewEndpoint } from 'sprotty-vscode'
+import { LspNotification, LspRequest } from 'sprotty-vscode-protocol/lib/lsp'
+import { LspWebviewEndpointOptions, acceptMessageType } from 'sprotty-vscode/lib/lsp'
+import { ResponseMessage } from 'vscode-jsonrpc/lib/common/messages'
+import { LanguageClient } from 'vscode-languageclient/node'
 
-type ActionHandler = (action: Action) => void | Promise<void>;
+type ActionHandler = (action: Action) => void | Promise<void>
 
 /**
  * Mostly the LspWebviewEndpoint implementation, with the change that we can also intercept
  * LspRequests that will request a diagram/accept action.
  */
 export class KlighDWebviewEndpoint extends WebviewEndpoint {
+    readonly languageClient: LanguageClient
 
-    readonly languageClient: LanguageClient;
-    protected readonly klighdActionHandlers: Map<string, ActionHandler[]> = new Map();
+    protected readonly klighdActionHandlers: Map<string, ActionHandler[]> = new Map()
 
     constructor(options: LspWebviewEndpointOptions) {
-        super(options);
-        this.languageClient = options.languageClient;
+        super(options)
+        this.languageClient = options.languageClient
     }
 
     /**
@@ -44,7 +44,7 @@ export class KlighDWebviewEndpoint extends WebviewEndpoint {
      * @param actionHandler the action handler to be called for this action.
      */
     addKlighdActionHandler(kind: string, actionHandler: ActionHandler): void {
-        const handlers = this.klighdActionHandlers.get(kind);
+        const handlers = this.klighdActionHandlers.get(kind)
         if (handlers) {
             handlers.push(actionHandler)
         } else {
@@ -53,40 +53,42 @@ export class KlighDWebviewEndpoint extends WebviewEndpoint {
     }
 
     protected override connect(): void {
-        super.connect();
-        this.messenger.onRequest(LspRequest,
-            async request => {
+        super.connect()
+        this.messenger.onRequest(
+            LspRequest,
+            async (request) => {
                 // Catch any diagram/accept action and call the registered action handlers.
-                if (request.method === "diagram/accept"
-                    && isActionMessage(request.params)) {
-                    const action: Action = request.params.action
+                if (request.method === 'diagram/accept' && isActionMessage(request.params)) {
+                    const { action } = request.params
                     const handlers = this.klighdActionHandlers.get(request.params.action.kind)
                     if (handlers) {
-                        handlers.forEach(handler => handler(action))
+                        handlers.forEach((handler) => handler(action))
                     }
                 }
-                const result: any = request.params === undefined
-                    ? await this.languageClient.sendRequest(request.method)
-                    : await this.languageClient.sendRequest(request.method, request.params);
+                const result: any =
+                    request.params === undefined
+                        ? await this.languageClient.sendRequest(request.method)
+                        : await this.languageClient.sendRequest(request.method, request.params)
                 const response: ResponseMessage = {
                     jsonrpc: '2.0',
                     id: request.id,
-                    result
-                };
-                return response;
+                    result,
+                }
+                return response
             },
             { sender: this.messageParticipant }
-        );
-        this.messenger.onNotification(LspNotification,
-            notification => {
-                this.languageClient.sendNotification(notification.method, notification.params);
+        )
+        this.messenger.onNotification(
+            LspNotification,
+            (notification) => {
+                this.languageClient.sendNotification(notification.method, notification.params)
             },
             { sender: this.messageParticipant }
-        );
+        )
     }
 
     override async receiveAction(message: ActionMessage): Promise<void> {
-        await super.receiveAction(message);
-        await this.languageClient.sendNotification(acceptMessageType, message);
+        await super.receiveAction(message)
+        await this.languageClient.sendNotification(acceptMessageType, message)
     }
 }
