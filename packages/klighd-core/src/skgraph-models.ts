@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2023 by
+ * Copyright 2019-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -124,8 +124,6 @@ export interface KStyleHolder {
  */
 export interface KRendering extends KGraphData, KStyleHolder {
     actions: KAction[]
-    // not in the original java model, but is included in messages to remove the need to call '[Grid]?PlacementUtil.evaluate[Grid|Area|Point]Placement'
-    // and similar methods on client side for every rendering
 
     properties: Record<string, unknown>
 
@@ -234,9 +232,6 @@ export interface KRoundedRectangle extends KContainerRendering {
  */
 export interface KRenderingRef extends KRendering {
     rendering: KRendering
-    // not in the original java model, but is included in messages to remove the need to call 'PlacementUtil.estimateSize' on client side
-    calculatedBoundsMap: Map<string, Bounds>
-    calculatedDecorationMap: Map<string, number>
 }
 
 /**
@@ -248,21 +243,6 @@ export interface KText extends KRendering {
     text: string
     cursorSelectable: boolean
     editable: boolean
-    // Not in the original model, but here to store the precalculated bounds this text alone takes.
-    /**
-     * The server pre-calculated bounds for this text.
-     */
-    calculatedTextBounds?: Bounds
-
-    /**
-     * The server pre-calculated line widths for each individual line.
-     */
-    calculatedTextLineWidths?: number[]
-
-    /**
-     * The server pre-calculated line heights for each individual line.
-     */
-    calculatedTextLineHeights?: number[]
 }
 
 /**
