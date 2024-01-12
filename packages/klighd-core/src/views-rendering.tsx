@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2023 by
+ * Copyright 2019-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -668,7 +668,7 @@ export function renderKText(
         const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
         let currentY = boundsAndTransformation.bounds.y ?? 0
 
-        if (rendering.calculatedTextLineWidths) {
+        if (calculatedTextLineWidths) {
             attrs.lengthAdjust = 'spacingAndGlyphs'
         }
 
