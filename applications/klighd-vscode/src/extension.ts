@@ -15,115 +15,121 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 // reflect-metadata needs to be the first import. Don't sort this elsewhere!
-import "reflect-metadata";
-import { diagramType } from '@kieler/klighd-core/lib/base/external-helpers';
-import { Action, isAction } from "sprotty-protocol";
-import { registerLspEditCommands } from 'sprotty-vscode';
-import * as vscode from "vscode";
-import { LanguageClient, State } from "vscode-languageclient/node";
-import { Messenger } from 'vscode-messenger';
-import { registerCommands, registerTextEditorSync } from './commandContributions';
-import { command } from "./constants";
-import { KlighdWebviewReopener } from "./klighd-webview-reopener";
-import { LspHandler } from "./lsp-handler";
-import { ReportChangeMessage } from "./storage/messages";
-import { StorageService } from "./storage/storage-service";
-import { ActionHandlerCallback, KLighDWebviewPanelManager } from './webview-panel-manager';
+import 'reflect-metadata'
+import { diagramType } from '@kieler/klighd-core/lib/base/external-helpers'
+import { Action, isAction } from 'sprotty-protocol'
+import { registerLspEditCommands } from 'sprotty-vscode'
+import * as vscode from 'vscode'
+import { LanguageClient, State } from 'vscode-languageclient/node'
+import { Messenger } from 'vscode-messenger'
+import { registerCommands, registerTextEditorSync } from './commandContributions'
+import { command } from './constants'
+import { KlighdWebviewReopener } from './klighd-webview-reopener'
+import { LspHandler } from './lsp-handler'
+import { ReportChangeMessage } from './storage/messages'
+import { StorageService } from './storage/storage-service'
+import { ActionHandlerCallback, KLighDWebviewPanelManager } from './webview-panel-manager'
 
 // potential exports for other extensions to improve their dev experience
 // Currently, this only includes our command string. Requires this extension to be published as a package.
-export { command };
+export { command }
 
-let languageClient: LanguageClient;
+let languageClient: LanguageClient
 
 let messenger: Messenger
 
-const actionHandlers: {kind: string, actionHandler: ActionHandlerCallback}[] = []
+const actionHandlers: { kind: string; actionHandler: ActionHandlerCallback }[] = []
 
 // this method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext): void {
     // This extension should persist data in workspace state, so it is different for
     // each project a user opens. To change this, assign another Memento to this constant.
-    const mementoForPersistence = context.workspaceState;
+    const mementoForPersistence = context.workspaceState
 
     // Command provided for other extensions to register the LS used to generate diagrams with KLighD.
     context.subscriptions.push(
-        vscode.commands.registerCommand(
-            command.setLanguageClient,
-            (client: unknown, fileEndings: unknown) => {
-                if (!isLanguageClient(client) || !isFileEndingsArray(fileEndings)) {
-                    vscode.window.showErrorMessage(
-                        `${command.setLanguageClient} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
-                    );
-                    return;
-                }
-                const storageService = new StorageService(mementoForPersistence, client);
-                client.onDidChangeState((stateChangedEvent => {
-                    if (stateChangedEvent.newState == State.Running) {
-                        try {
-                            languageClient = client
-                            const webviewPanelManager = new KLighDWebviewPanelManager({
+        vscode.commands.registerCommand(command.setLanguageClient, (client: unknown, fileEndings: unknown) => {
+            if (!isLanguageClient(client) || !isFileEndingsArray(fileEndings)) {
+                vscode.window.showErrorMessage(
+                    `${command.setLanguageClient} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
+                )
+                return
+            }
+            const storageService = new StorageService(mementoForPersistence, client)
+            client.onDidChangeState((stateChangedEvent) => {
+                if (stateChangedEvent.newState === State.Running) {
+                    try {
+                        languageClient = client
+                        const webviewPanelManager = new KLighDWebviewPanelManager(
+                            {
                                 extensionUri: context.extensionUri,
                                 defaultDiagramType: diagramType,
                                 languageClient,
-                                supportedFileExtensions: fileEndings.map(ending => '.' + ending),
+                                supportedFileExtensions: fileEndings.map((ending) => `.${ending}`),
                                 singleton: true,
-                            }, storageService, actionHandlers);
-                            messenger = webviewPanelManager.messenger
-                            registerCommands(webviewPanelManager, context)
-                            registerLspEditCommands(webviewPanelManager, context, { extensionPrefix: 'klighd-vscode' });
-                            registerTextEditorSync(webviewPanelManager, context);
-        
-                            // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
-                            new LspHandler(client);
+                            },
+                            storageService,
+                            actionHandlers
+                        )
+                        messenger = webviewPanelManager.messenger
+                        registerCommands(webviewPanelManager, context)
+                        registerLspEditCommands(webviewPanelManager, context, { extensionPrefix: 'klighd-vscode' })
+                        registerTextEditorSync(webviewPanelManager, context)
 
-                            storageService.setMessenger(messenger);
-        
-                            new KlighdWebviewReopener(storageService).reopenDiagram()
-                        } catch (e) {
-                            vscode.window.showErrorMessage("something went wrong while setting the language client for the KLighD extension.");
-                            throw e;
-                        }
+                        // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
+                        LspHandler.init(client)
+
+                        storageService.setMessenger(messenger)
+
+                        new KlighdWebviewReopener(storageService).reopenDiagram()
+                    } catch (e) {
+                        vscode.window.showErrorMessage(
+                            'something went wrong while setting the language client for the KLighD extension.'
+                        )
+                        throw e
                     }
-                    return undefined
-                }))
-            }
-        )
-    );
+                }
+                return undefined
+            })
+        })
+    )
 
     // Command for the user to remove all data stored by this extension. Allows
     // the user to reset changed synthesis options etc.
     context.subscriptions.push(
         vscode.commands.registerCommand(command.clearData, () => {
-            StorageService.clearAll(mementoForPersistence);
-            messenger.sendNotification({ method: "klighd/persistence" }, { type: 'webview', webviewType: diagramType }, {
-                type: "persistence/reportChange",
-                payload: { type: "clear" },
-            } as ReportChangeMessage );
+            StorageService.clearAll(mementoForPersistence)
+            messenger.sendNotification(
+                { method: 'klighd/persistence' },
+                { type: 'webview', webviewType: diagramType },
+                {
+                    type: 'persistence/reportChange',
+                    payload: { type: 'clear' },
+                } as ReportChangeMessage
+            )
 
-            vscode.window.showInformationMessage("Stored data has been deleted.");
+            vscode.window.showInformationMessage('Stored data has been deleted.')
         })
-    );
+    )
 
     // Command provided for other extensions to add an action handler to their created diagram extension instance.
     context.subscriptions.push(
         vscode.commands.registerCommand(
             command.addActionHandler,
             (kind: string, actionHandler: ActionHandlerCallback) => {
-
-                if (typeof kind !== "string" || typeof actionHandler !== "function") {
+                if (typeof kind !== 'string' || typeof actionHandler !== 'function') {
                     vscode.window.showErrorMessage(
                         `${command.addActionHandler} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
-                    );
-                    return;
+                    )
+                    return
                 }
                 actionHandlers.push({
-                    kind: kind,
-                    actionHandler: actionHandler
+                    kind,
+                    actionHandler,
                 })
             }
         )
-    );
+    )
 
     // Command provided for other extensions to dispatch an action if a webview is open
     context.subscriptions.push(
@@ -131,18 +137,22 @@ export function activate(context: vscode.ExtensionContext): void {
             if (!isAction(action)) {
                 vscode.window.showErrorMessage(
                     `${command.addActionHandler} command called with invalid arguments. Please refer to the documentation for reference about the correct usage.`
-                );
-                return;
+                )
+                return
             }
             // TODO: this has not been tested yet if the messenging change works like this.
-            messenger.sendNotification({ method: "diagram/accept" }, { type: 'webview', webviewType: diagramType }, action);
+            messenger.sendNotification(
+                { method: 'diagram/accept' },
+                { type: 'webview', webviewType: diagramType },
+                action
+            )
         })
-    );
+    )
 }
 
 export async function deactivate(): Promise<void> {
     if (languageClient) {
-        await languageClient.stop();
+        await languageClient.stop()
     }
 }
 
@@ -155,22 +165,16 @@ function isLanguageClient(client: unknown): client is LanguageClient {
     // To work around this, we ensure that it is an object and check the object
     // for the existence of a few methods.
 
-    const wantedMethod = [
-        "onReady",
-        "sendNotification",
-        "onNotification",
-        "sendRequest",
-        "onRequest",
-    ];
+    const wantedMethod = ['onReady', 'sendNotification', 'onNotification', 'sendRequest', 'onRequest']
 
-    const isObject = typeof client === "object" && client !== null;
+    const isObject = typeof client === 'object' && client !== null
     const hasWantedMethods = wantedMethod.every(
-        (method) => typeof (client as Record<string, any>)[method] === "function"
-    );
+        (method) => typeof (client as Record<string, any>)[method] === 'function'
+    )
 
-    return isObject && hasWantedMethods;
+    return isObject && hasWantedMethods
 }
 
 function isFileEndingsArray(array: unknown): array is string[] {
-    return Array.isArray(array) && array.every((val) => typeof val === "string");
+    return Array.isArray(array) && array.every((val) => typeof val === 'string')
 }

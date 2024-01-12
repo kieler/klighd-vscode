@@ -14,11 +14,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { MouseListener, SModelElementImpl } from 'sprotty';
-import { Action } from "sprotty-protocol";
-import { KAction, ModifierState, SKGraphElement, Trigger } from '../skgraph-models';
-import { findRendering, getSemanticElement } from '../skgraph-utils';
-import { PerformActionAction } from './actions';
+import { MouseListener, SModelElementImpl } from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { KAction, ModifierState, SKGraphElement, Trigger } from '../skgraph-models'
+import { findRendering, getSemanticElement } from '../skgraph-utils'
+import { PerformActionAction } from './actions'
+/* global MouseEvent, WheelEvent */
 
 /**
  * Mouse listener handling KLighD actions that can be defined on SKGraphElements in the model.
@@ -31,17 +32,17 @@ export class ActionListener extends MouseListener {
         if (target.type !== 'graph') {
             return this.actions(target as SKGraphElement, event, event.type)
         }
-        return [];
+        return []
     }
 
     mouseDown(): (Action | Promise<Action>)[] {
         this.mouseMoved = false
-        return [];
+        return []
     }
 
     mouseMove(): (Action | Promise<Action>)[] {
         this.mouseMoved = true
-        return [];
+        return []
     }
 
     mouseUp(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
@@ -49,7 +50,7 @@ export class ActionListener extends MouseListener {
         if (!this.mouseMoved && target.type !== 'graph' && target.type !== 'NONE') {
             return this.actions(target as SKGraphElement, event, 'click')
         }
-        return [];
+        return []
     }
 
     /**
@@ -74,12 +75,16 @@ export class ActionListener extends MouseListener {
             return actions
         }
         // For each kAction, return an ActionAction if the event matches the event in the kAction.
-        kActions.forEach(action => {
-            if (this.modifierStateMatches(action.altPressed, event.altKey)
-                && this.modifierStateMatches(action.ctrlCmdPressed, event.ctrlKey)
-                && this.modifierStateMatches(action.shiftPressed, event.shiftKey)
-                && this.eventsMatch(event, eventType, action.trigger)) {
-                actions.push(PerformActionAction.create(action.actionId, target.id, semanticElementId, target.root.revision))
+        kActions.forEach((action) => {
+            if (
+                this.modifierStateMatches(action.altPressed, event.altKey) &&
+                this.modifierStateMatches(action.ctrlCmdPressed, event.ctrlKey) &&
+                this.modifierStateMatches(action.shiftPressed, event.shiftKey) &&
+                this.eventsMatch(event, eventType, action.trigger)
+            ) {
+                actions.push(
+                    PerformActionAction.create(action.actionId, target.id, semanticElementId, target.root.revision)
+                )
             }
         })
         return actions
@@ -94,9 +99,8 @@ export class ActionListener extends MouseListener {
         const rendering = findRendering(element, id)
         if (rendering) {
             return rendering.actions
-        } else {
-            return []
         }
+        return []
     }
 
     /**
@@ -114,6 +118,10 @@ export class ActionListener extends MouseListener {
             }
             case ModifierState.PRESSED: {
                 return pressed
+            }
+            default: {
+                console.error('error in action-listener.ts, unexpected ModifierState in switch')
+                return false
             }
         }
     }
@@ -143,6 +151,10 @@ export class ActionListener extends MouseListener {
             }
             case Trigger.MIDDLE_SINGLE_OR_MULTICLICK: {
                 return (eventType === 'click' || eventType === 'dblclick') && event.button === 1
+            }
+            default: {
+                console.error('error in action-listener.ts, unexpected Trigger in switch')
+                return false
             }
         }
     }

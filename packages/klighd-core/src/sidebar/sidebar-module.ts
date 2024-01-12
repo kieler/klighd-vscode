@@ -15,20 +15,20 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { ContainerModule } from "inversify";
-import { configureActionHandler, TYPES } from "sprotty";
-import { DISymbol } from "../di.symbols";
-import { ToggleSidebarPanelAction } from "./actions";
-import { Sidebar } from "./sidebar";
-import { SidebarPanelRegistry } from "./sidebar-panel-registry";
+import { ContainerModule } from 'inversify'
+import { configureActionHandler, TYPES } from 'sprotty'
+import { DISymbol } from '../di.symbols'
+import { ToggleSidebarPanelAction } from './actions'
+import { Sidebar } from './sidebar'
+import { SidebarPanelRegistry } from './sidebar-panel-registry'
 
 /** DI module that adds support for sidebars. */
 export const sidebarModule = new ContainerModule((bind, _, isBound) => {
-    bind(DISymbol.Sidebar).to(Sidebar).inSingletonScope();
-    bind(TYPES.IUIExtension).toService(DISymbol.Sidebar);
+    bind(DISymbol.Sidebar).to(Sidebar).inSingletonScope()
+    bind(TYPES.IUIExtension).toService(DISymbol.Sidebar)
 
-    bind(DISymbol.SidebarPanelRegistry).to(SidebarPanelRegistry).inSingletonScope();
+    bind(DISymbol.SidebarPanelRegistry).to(SidebarPanelRegistry).inSingletonScope()
 
-    const ctx = { bind, isBound };
-    configureActionHandler(ctx, ToggleSidebarPanelAction.KIND, DISymbol.SidebarPanelRegistry);
-});
+    const ctx = { bind, isBound }
+    configureActionHandler(ctx, ToggleSidebarPanelAction.KIND, DISymbol.SidebarPanelRegistry)
+})

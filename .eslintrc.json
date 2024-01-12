@@ -2,12 +2,29 @@
     "root": true,
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": 12,
+        "ecmaVersion": 13,
         "sourceType": "module"
     },
-    "plugins": ["@typescript-eslint"],
-    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+    "plugins": ["@typescript-eslint", "prettier", "import"],
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "airbnb-base", "prettier" ],
     "rules": {
+        "prettier/prettier": 2, // Means error
+        "import/extensions": [0, "never"],
+        "no-plusplus": 0,
+        "import/no-unresolved": [2, { "ignore": ["vscode"] }],
+        "import/prefer-default-export": 0,
+        "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.[jt]s", "**/*.test.[jt]sx", "**/*.spec.[jt]s"]}],
+        "no-useless-constructor": 0,
+        "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
+        "max-classes-per-file": 0,
+        "no-use-before-define": 0,
+        "no-underscore-dangle": 0,
+        "no-restricted-globals": 0,
+        "no-nested-ternary": 0,
+        "no-param-reassign": 0,
+        "no-shadow": 0,
+        "@typescript-eslint/no-shadow": 2,
+        "class-methods-use-this": 0,
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/no-namespace": "off",
@@ -21,5 +38,12 @@
             }
         ]
     },
-    "ignorePatterns": ["**/*.d.ts", "lib", "dist", "pack", "webpack.config.js"]
+    "ignorePatterns": ["**/*.d.ts", "lib", "dist", "pack", "webpack.config.js"],
+    "settings": {
+        "import/resolver": {
+          "node": {
+            "extensions": [".js", ".jsx", ".ts", ".tsx"]
+          }
+        }
+      }
 }

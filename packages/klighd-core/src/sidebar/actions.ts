@@ -14,16 +14,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { SetUIExtensionVisibilityAction } from "sprotty";
-import { Action } from "sprotty-protocol";
-import { Sidebar } from "./sidebar";
+import { SetUIExtensionVisibilityAction } from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { Sidebar } from './sidebar'
 
 /** Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the sidebar. */
 export type ShowSidebarAction = SetUIExtensionVisibilityAction
 
 export namespace ShowSidebarAction {
-    export function create():  ShowSidebarAction {
+    export function create(): ShowSidebarAction {
         return SetUIExtensionVisibilityAction.create({
             extensionId: Sidebar.ID,
             visible: true,
@@ -40,11 +42,11 @@ export namespace ShowSidebarAction {
 export interface ToggleSidebarPanelAction extends Action {
     kind: typeof ToggleSidebarPanelAction.KIND
     id: string
-    state?: "show" | "hide"
+    state?: 'show' | 'hide'
 }
 
 export namespace ToggleSidebarPanelAction {
-    export const KIND = "toggleSidebarPanel";
+    export const KIND = 'toggleSidebarPanel'
 
     /**
      * Creates a new {@link ToggleSidebarPanelAction}.
@@ -52,16 +54,16 @@ export namespace ToggleSidebarPanelAction {
      * @param state Explicitly sets the new state for the panel. If this parameter is
      * absent, the current state is toggled.
      */
-    export function create(id: string, state?: "show" | "hide"): ToggleSidebarPanelAction {
+    export function create(id: string, state?: 'show' | 'hide'): ToggleSidebarPanelAction {
         return {
             kind: KIND,
-            id: id,
-            state: state
+            id,
+            state,
         }
     }
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is ToggleSidebarPanelAction {
-        return action.kind === ToggleSidebarPanelAction.KIND;
+        return action.kind === ToggleSidebarPanelAction.KIND
     }
 }

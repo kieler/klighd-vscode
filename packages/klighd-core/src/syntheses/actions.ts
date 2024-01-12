@@ -14,15 +14,17 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { Action } from "sprotty-protocol";
+import { Action } from 'sprotty-protocol'
 
 /** Data sent to the client for setting the available syntheses. */
 export interface SetSynthesesActionData {
     /** The ID of the synthesis */
-    id: string;
+    id: string
     /** The displayable name of the synthesis. */
-    displayName: string;
+    displayName: string
 }
 
 /** Sent from the server to the client to send a list of all available syntheses for the current model. */
@@ -32,7 +34,7 @@ export interface SetSynthesesAction extends Action {
 }
 
 export namespace SetSynthesesAction {
-    export const KIND = "setSyntheses"
+    export const KIND = 'setSyntheses'
 
     export function create(syntheses: SetSynthesesActionData[]): SetSynthesesAction {
         return {
@@ -42,7 +44,7 @@ export namespace SetSynthesesAction {
     }
 
     export function isThisAction(action: Action): action is SetSynthesesAction {
-        return action.kind === SetSynthesesAction.KIND;
+        return action.kind === SetSynthesesAction.KIND
     }
 }
 
@@ -53,7 +55,7 @@ export interface SetSynthesisAction extends Action {
 }
 
 export namespace SetSynthesisAction {
-    export const KIND = "setSynthesis"
+    export const KIND = 'setSynthesis'
 
     export function create(id: string): SetSynthesisAction {
         return {
@@ -63,6 +65,6 @@ export namespace SetSynthesisAction {
     }
 
     export function isThisAction(action: Action): action is SetSynthesisAction {
-        return action.kind === SetSynthesisAction.KIND;
+        return action.kind === SetSynthesisAction.KIND
     }
 }

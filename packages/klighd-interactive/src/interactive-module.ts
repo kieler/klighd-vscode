@@ -15,9 +15,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { ContainerModule } from 'inversify';
-import { TYPES, configureCommand, MoveCommand, LocationPostprocessor, MoveMouseListener } from 'sprotty';
-import { KlighdInteractiveMouseListener } from './klighd-interactive-mouselistener';
+import { ContainerModule } from 'inversify'
+import { TYPES, configureCommand, MoveCommand, LocationPostprocessor, MoveMouseListener } from 'sprotty'
+import { KlighdInteractiveMouseListener } from './klighd-interactive-mouselistener'
 
 /**
  * Bindings for the interactive mouse listener.
@@ -26,9 +26,9 @@ export const interactiveModule = new ContainerModule((bind, _unbind, isBound) =>
     bind(KlighdInteractiveMouseListener).toSelf().inSingletonScope()
     bind(TYPES.MouseListener).toService(KlighdInteractiveMouseListener)
     bind(MoveMouseListener).toService(KlighdInteractiveMouseListener)
-    configureCommand({ bind, isBound }, MoveCommand);
-    bind(TYPES.IVNodePostprocessor).to(LocationPostprocessor);
-    bind(TYPES.HiddenVNodePostprocessor).to(LocationPostprocessor);
-});
+    configureCommand({ bind, isBound }, MoveCommand)
+    bind(TYPES.IVNodePostprocessor).to(LocationPostprocessor)
+    bind(TYPES.HiddenVNodePostprocessor).to(LocationPostprocessor)
+})
 
-export default interactiveModule;
+export default interactiveModule

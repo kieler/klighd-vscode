@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { VNode } from 'snabbdom';
-import { Transformation } from '../views-common';
+import { VNode } from 'snabbdom'
+import { Transformation } from '../views-common'
 
 /**
  * Storage of data related to title renderings with the 'klighd.isNodeTitle' property.
@@ -24,7 +24,6 @@ import { Transformation } from '../views-common';
  * after finishing that and returning to the parent handling.
  */
 export class TitleStorage {
-
     /**
      * The offset transformations required to reach the usual title position within a graph element. Outer array is
      * used as a stack for each graph element the rendering is going through, inner array are the current
@@ -32,6 +31,7 @@ export class TitleStorage {
      * element.
      */
     private transformations: Transformation[][] = []
+
     /**
      * The rendering of any graph element that is to be placed on top of this graph element's rendering. Array is
      * used as a stack for each graph element the rendering is going through.
@@ -68,7 +68,7 @@ export class TitleStorage {
     getTransformations(): Transformation[] {
         return this.transformations[this.transformations.length - 1]
     }
-    
+
     /**
      * Adds the transformations for the current rendering, remembering the offset of any possible title rendering within.
      * @param transformations The new transformation(s) of the current rendering.
@@ -82,7 +82,10 @@ export class TitleStorage {
      * @param amount The amount of transformations added for the current rendering that now need to be removed again.
      */
     removeTransformations(amount: number): void {
-        this.transformations[this.transformations.length - 1].splice(this.transformations[this.transformations.length - 1].length - amount, amount)
+        this.transformations[this.transformations.length - 1].splice(
+            this.transformations[this.transformations.length - 1].length - amount,
+            amount
+        )
     }
 
     /**
@@ -100,5 +103,4 @@ export class TitleStorage {
         this.transformations.pop()
         this.titles.pop()
     }
-
 }

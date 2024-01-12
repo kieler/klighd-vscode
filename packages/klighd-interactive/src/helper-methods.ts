@@ -15,14 +15,15 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SNodeImpl } from "sprotty"
-import { KNode } from "./constraint-classes"
+import { SNodeImpl } from 'sprotty'
+import { KNode } from './constraint-classes'
 
 /**
  * Filters the KNodes out of graphElements.
  * @param graphElements Elements which should be filtered.
  */
-export function filterKNodes(graphElements: any): KNode[] { // eslint-disable-line
+export function filterKNodes(graphElements: any): KNode[] {
+    // eslint-disable-line
     const nodes: KNode[] = []
     for (const elem of graphElements) {
         if (elem instanceof SNodeImpl) {
@@ -47,9 +48,9 @@ export function getSelectedNode(nodes: KNode[]): KNode | undefined {
 }
 
 /**
-* Determines whether one of the children is selected.
-* @param root Node which children should be checked.
-*/
+ * Determines whether one of the children is selected.
+ * @param root Node which children should be checked.
+ */
 export function isChildSelected(root: KNode): boolean {
     const nodes = root.children
     if (nodes !== undefined) {

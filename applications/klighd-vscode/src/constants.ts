@@ -15,10 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { diagramType as originalDiagramType } from "@kieler/klighd-core";
+import { diagramType as originalDiagramType } from '@kieler/klighd-core'
 
 /** Extension ID corresponding to the name property in the package.json */
-export const extensionId = "klighd-vscode";
+export const extensionId = 'klighd-vscode'
 
 /**
  * Diagram type that KLighD uses to communicate Sprotty diagrams with the LS.
@@ -34,27 +34,27 @@ export const extensionId = "klighd-vscode";
  * _PS. This value is reexported here to not loose the extra documentation about sprotty-vscode
  * specific diagramType usage and behavior._
  */
-export const diagramType = originalDiagramType;
+export const diagramType = originalDiagramType
 
-const withPrefix = (name: string) => `${extensionId}.${name}`;
+const withPrefix = (name: string) => `${extensionId}.${name}`
 
-/** Commands that are registered by this extension or `sprotty-vscode`.*/
+/** Commands that are registered by this extension or `sprotty-vscode`. */
 export const command = {
-    setLanguageClient: withPrefix("setLanguageClient"),
-    addActionHandler: withPrefix("addActionHandler"),
-    dispatchAction: withPrefix("dispatchAction"),
-    clearData: withPrefix("data.clear"),
+    setLanguageClient: withPrefix('setLanguageClient'),
+    addActionHandler: withPrefix('addActionHandler'),
+    dispatchAction: withPrefix('dispatchAction'),
+    clearData: withPrefix('data.clear'),
     // The following commands are registered by `sprotty-vscode`
-    diagramOpen: withPrefix("diagram.open"),
-    diagramExport: withPrefix("diagram.export"),
-    diagramCenter: withPrefix("diagram.center"),
-    diagramFit: withPrefix("diagram.fit"),
-    diagramLayout: withPrefix("diagram.layout"),
-    diagramRefresh: withPrefix("diagram.refresh"),
-    diagramSync: withPrefix("diagram.sync"),
-    diagramNoSync: withPrefix("diagram.noSync"),
-};
+    diagramOpen: withPrefix('diagram.open'),
+    diagramExport: withPrefix('diagram.export'),
+    diagramCenter: withPrefix('diagram.center'),
+    diagramFit: withPrefix('diagram.fit'),
+    diagramLayout: withPrefix('diagram.layout'),
+    diagramRefresh: withPrefix('diagram.refresh'),
+    diagramSync: withPrefix('diagram.sync'),
+    diagramNoSync: withPrefix('diagram.noSync'),
+}
 
 export const contextKeys = {
-    syncWithEditor: withPrefix("syncWithEditor"),
-};
+    syncWithEditor: withPrefix('syncWithEditor'),
+}

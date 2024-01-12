@@ -15,12 +15,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable, postConstruct } from "inversify";
-import { VNode } from 'snabbdom';
-import { ModelViewer } from "sprotty";
-import { KlighdFitToScreenAction } from "./actions/actions";
-import { DISymbol } from "./di.symbols";
-import { ForceLightBackground, RenderOptionsRegistry, ResizeToFit } from "./options/render-options-registry";
+import { inject, injectable, postConstruct } from 'inversify'
+import { VNode } from 'snabbdom'
+import { ModelViewer } from 'sprotty'
+import { KlighdFitToScreenAction } from './actions/actions'
+import { DISymbol } from './di.symbols'
+import { ForceLightBackground, RenderOptionsRegistry, ResizeToFit } from './options/render-options-registry'
+/* global document */
 
 /**
  * Extend the {@link ModelViewer} to also dispatch a FitToScreenAction when the
@@ -33,9 +34,9 @@ export class KlighdModelViewer extends ModelViewer {
     // Resolve UIExtensions that should be shown together with the model.
     // Such UIExtensions should implement a @postConstruct to show them self.
     // @ts-ignore
-    @inject(DISymbol.Sidebar) private sidebar: unknown;
+    @inject(DISymbol.Sidebar) private sidebar: unknown
 
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry
 
     @postConstruct()
     init(): void {
@@ -43,24 +44,24 @@ export class KlighdModelViewer extends ModelViewer {
         // a diagram is hard to read, the user can force a light background.
         // This toggles such background if the user selects it.
         this.renderOptionsRegistry.onChange(() => {
-            const baseDiv = document.querySelector(`#${this.options.baseDiv}`);
+            const baseDiv = document.querySelector(`#${this.options.baseDiv}`)
 
             if (this.renderOptionsRegistry.getValue(ForceLightBackground)) {
-                baseDiv?.classList.add("light-bg");
+                baseDiv?.classList.add('light-bg')
             } else {
-                baseDiv?.classList.remove("light-bg");
+                baseDiv?.classList.remove('light-bg')
             }
-        });
+        })
     }
 
     protected override onWindowResize(vdom: VNode): void {
-        const baseDiv = document.getElementById(this.options.baseDiv);
+        const baseDiv = document.getElementById(this.options.baseDiv)
         if (baseDiv !== null) {
             super.onWindowResize(vdom)
 
             // Fit the diagram to the new window size, if the user enabled this behavior
             if (this.renderOptionsRegistry.getValue(ResizeToFit))
-                this.actiondispatcher.dispatch(KlighdFitToScreenAction.create(false));
+                this.actiondispatcher.dispatch(KlighdFitToScreenAction.create(false))
         }
     }
 }
