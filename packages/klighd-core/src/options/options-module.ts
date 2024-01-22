@@ -15,35 +15,35 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { ContainerModule } from "inversify";
-import { configureActionHandler, TYPES } from "sprotty";
-import { DISymbol } from "../di.symbols";
-import { SetRenderOptionAction, ResetRenderOptionsAction } from "./actions";
-import { OptionsPanel } from "./options-panel";
-import { OptionsRegistry } from "./options-registry";
-import { OptionsRenderer } from "./options-renderer";
-import { GeneralPanel } from "./general-panel";
-import { RenderOptionsRegistry } from "./render-options-registry";
-import { OptionsPersistence } from "./options-persistence";
+import { ContainerModule } from 'inversify'
+import { configureActionHandler, TYPES } from 'sprotty'
+import { DISymbol } from '../di.symbols'
+import { SetRenderOptionAction, ResetRenderOptionsAction } from './actions'
+import { OptionsPanel } from './options-panel'
+import { OptionsRegistry } from './options-registry'
+import { OptionsRenderer } from './options-renderer'
+import { GeneralPanel } from './general-panel'
+import { RenderOptionsRegistry } from './render-options-registry'
+import { OptionsPersistence } from './options-persistence'
 
 /** Module that configures option related panels and registries. */
 export const optionsModule = new ContainerModule((bind, _, isBound) => {
-    bind(OptionsPanel).toSelf().inSingletonScope();
-    bind(DISymbol.SidebarPanel).toService(OptionsPanel);
+    bind(OptionsPanel).toSelf().inSingletonScope()
+    bind(DISymbol.SidebarPanel).toService(OptionsPanel)
 
-    bind(GeneralPanel).toSelf().inSingletonScope();
-    bind(DISymbol.SidebarPanel).toService(GeneralPanel);
+    bind(GeneralPanel).toSelf().inSingletonScope()
+    bind(DISymbol.SidebarPanel).toService(GeneralPanel)
 
-    bind(DISymbol.OptionsRenderer).to(OptionsRenderer);
-    bind(DISymbol.OptionsRegistry).to(OptionsRegistry).inSingletonScope();
-    bind(TYPES.IActionHandlerInitializer).toService(DISymbol.OptionsRegistry);
+    bind(DISymbol.OptionsRenderer).to(OptionsRenderer)
+    bind(DISymbol.OptionsRegistry).to(OptionsRegistry).inSingletonScope()
+    bind(TYPES.IActionHandlerInitializer).toService(DISymbol.OptionsRegistry)
 
-    bind(DISymbol.RenderOptionsRegistry).to(RenderOptionsRegistry).inSingletonScope();
+    bind(DISymbol.RenderOptionsRegistry).to(RenderOptionsRegistry).inSingletonScope()
 
-    bind(OptionsPersistence).toSelf().inSingletonScope();
-    bind(TYPES.IActionHandlerInitializer).toService(OptionsPersistence);
+    bind(OptionsPersistence).toSelf().inSingletonScope()
+    bind(TYPES.IActionHandlerInitializer).toService(OptionsPersistence)
 
-    const ctx = { bind, isBound };
-    configureActionHandler(ctx, SetRenderOptionAction.KIND, DISymbol.RenderOptionsRegistry);
-    configureActionHandler(ctx, ResetRenderOptionsAction.KIND, DISymbol.RenderOptionsRegistry);
-});
+    const ctx = { bind, isBound }
+    configureActionHandler(ctx, SetRenderOptionAction.KIND, DISymbol.RenderOptionsRegistry)
+    configureActionHandler(ctx, ResetRenderOptionsAction.KIND, DISymbol.RenderOptionsRegistry)
+})

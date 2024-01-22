@@ -64,7 +64,9 @@ const extensionConfig = {
             },
         ],
     },
-    plugins: [new webpack.WatchIgnorePlugin([/\.d\.ts$/])],
+    plugins: [new webpack.WatchIgnorePlugin({
+        paths: [/\.d\.ts$/]
+    })],
 };
 
 /**
@@ -82,7 +84,7 @@ const webviewConfig = {
 
     output: {
         filename: "webview.js",
-        path: path.resolve(__dirname, "dist"),
+        path: path.resolve(__dirname, "pack"),
     },
     devtool: "nosources-source-map",
 
@@ -116,7 +118,9 @@ const webviewConfig = {
             },
         ],
     },
-    plugins: [new webpack.WatchIgnorePlugin([/\.d\.ts$/])],
+    plugins: [new webpack.WatchIgnorePlugin({
+        paths: [/\.d\.ts$/]
+    })],
 };
 
 module.exports = [extensionConfig, webviewConfig];

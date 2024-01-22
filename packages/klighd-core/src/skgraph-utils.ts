@@ -1,20 +1,30 @@
 /*
-* KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
-*
-* http://rtsys.informatik.uni-kiel.de/kieler
-*
-* Copyright 2019-2022 by
-* + Kiel University
-*   + Department of Computer Science
-*     + Real-Time and Embedded Systems Group
-*
-* This program and the accompanying materials are made available under the
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2019-2022 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0.
  *
  * SPDX-License-Identifier: EPL-2.0
-*/
-import { isContainerRendering, isPolyline, isRendering, KPolyline, KRendering, K_POLYLINE, K_RENDERING_REF, SKGraphElement } from './skgraph-models'
+ */
+import {
+    isContainerRendering,
+    isPolyline,
+    isRendering,
+    KPolyline,
+    KRendering,
+    K_POLYLINE,
+    K_RENDERING_REF,
+    SKGraphElement,
+} from './skgraph-models'
+/* global Element, SVGElement */
 
 /**
  * Returns the SVG element in the DOM that represents the topmost KRendering in the hierarchy.
@@ -23,12 +33,16 @@ import { isContainerRendering, isPolyline, isRendering, KPolyline, KRendering, K
  * @param element The topmost SVG element clicked.
  * @param actionable Optional parameter to search for actionable renderings only. Defaults to false.
  */
-export function getSemanticElement(target: SKGraphElement, element: EventTarget | null, actionable = false): SVGElement | undefined {
+export function getSemanticElement(
+    target: SKGraphElement,
+    element: EventTarget | null,
+    actionable = false
+): SVGElement | undefined {
     if (!(element instanceof SVGElement)) {
         return undefined
     }
     let currentElement: Element | null = element
-    let semanticElement = undefined
+    let semanticElement
     while (semanticElement === undefined && currentElement instanceof SVGElement) {
         // Check if the rendering has an action.
         let renderingHasAction = true
@@ -55,13 +69,13 @@ export function getSemanticElement(target: SKGraphElement, element: EventTarget 
 
 /**
  * Returns if there is a KLighD action defined on the given rendering that needs to be handled.
- * 
+ *
  * @param rendering the rendering that may define an action to be executed.
  * @param includeChildren if this should also search for actions in any of the rendering's children.
  *   Defaults to false.
  * @returns if there is at least one action for this rendering.
  */
- export function hasAction(rendering: KRendering, includeChildren = false): boolean {
+export function hasAction(rendering: KRendering, includeChildren = false): boolean {
     if (rendering.actions && rendering.actions.length !== 0) {
         return true
     }
@@ -87,9 +101,9 @@ export function getSemanticElement(target: SKGraphElement, element: EventTarget 
  */
 export function findRendering(element: SKGraphElement, id: string): KRendering | undefined {
     // The first rendering has to be extracted from the SKGraphElement. It is the first data object that is a KRendering.
-    let currentElement: KRendering = element.data.find(possibleRendering => {
-        return isRendering(possibleRendering)
-    }) as KRendering
+    let currentElement: KRendering = element.data.find((possibleRendering) =>
+        isRendering(possibleRendering)
+    ) as KRendering
     const idPath = id.split('$')
     if (currentElement.type === K_RENDERING_REF) {
         // KRenderingRefs' ids always start with the identifying name of the reference and may continue with $<something> to refer to renderings within that reference.
@@ -97,7 +111,7 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         // for (let i = 1; i < idPath.length; i++) {
         if (idPath.length > 1) {
             console.error('looking up renderings in rendering references is not supported yet.')
-            return
+            return undefined
         }
     } else {
         // The rendering id is build hierarchically and the first rendering is already found, so start with index 1 as a $ sign can be skipped.
@@ -105,16 +119,23 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
             let nextElement
             if (isContainerRendering(currentElement)) {
                 // First, look for the ID in the child renderings.
-                nextElement = currentElement.children.find(childRendering => {
-                    return id.startsWith(childRendering.properties['klighd.lsp.rendering.id'] as string)
-                }) as KRendering
+                nextElement = currentElement.children.find((childRendering) =>
+                    id.startsWith(childRendering.properties['klighd.lsp.rendering.id'] as string)
+                ) as KRendering
             }
             if (nextElement === undefined && currentElement.type === K_POLYLINE) {
                 // If the rendering was not found yet, take the junction point rendering.
-                if (id.startsWith((currentElement as KPolyline).junctionPointRendering.properties['klighd.lsp.rendering.id'] as string)) {
+                if (
+                    id.startsWith(
+                        (currentElement as KPolyline).junctionPointRendering.properties[
+                            'klighd.lsp.rendering.id'
+                        ] as string
+                    )
+                ) {
                     nextElement = (currentElement as KPolyline).junctionPointRendering
                 }
-            } if (nextElement === undefined) {
+            }
+            if (nextElement === undefined) {
                 // This ID does not exist in the renderings, therefore does not belong to them.
                 return undefined
             }
@@ -122,9 +143,9 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         }
     }
     // Now the currentElement should be the element searched for by the id.
-    if (currentElement.properties['klighd.lsp.rendering.id'] as string !== id) {
-        console.error('The found element does not match the searched id! id: ' + id + ', found element: ' + currentElement)
-        return
+    if ((currentElement.properties['klighd.lsp.rendering.id'] as string) !== id) {
+        console.error(`The found element does not match the searched id! id: ${id}, found element: ${currentElement}`)
+        return undefined
     }
     return currentElement
 }

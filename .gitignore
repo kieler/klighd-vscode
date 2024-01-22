@@ -3,6 +3,7 @@ dist
 lerna-debug.log
 lib
 node_modules
+pack
 plugins
 src-gen
 workspace

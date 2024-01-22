@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,15 +15,15 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable, multiInject, optional, postConstruct } from "inversify";
-import { ICommand } from "sprotty";
-import { Action } from "sprotty-protocol";
-import { Registry } from "../base/registry";
-import { DISymbol } from "../di.symbols";
-import { PinSidebarOption } from "../options/render-options-registry";
-import { PersistenceStorage } from "../services";
-import { ToggleSidebarPanelAction } from "./actions";
-import { ISidebarPanel } from "./sidebar-panel";
+import { inject, injectable, multiInject, optional, postConstruct } from 'inversify'
+import { ICommand } from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { Registry } from '../base/registry'
+import { DISymbol } from '../di.symbols'
+import { PinSidebarOption } from '../options/render-options-registry'
+import { PersistenceStorage, ServiceTypes } from '../services'
+import { ToggleSidebarPanelAction } from './actions'
+import { ISidebarPanel } from './sidebar-panel'
 
 /**
  * {@link Registry} that stores all sidebar panels which are resolved by the DI container.
@@ -32,28 +32,30 @@ import { ISidebarPanel } from "./sidebar-panel";
  */
 @injectable()
 export class SidebarPanelRegistry extends Registry {
-    private _panels: Map<string, ISidebarPanel>;
-    private _currentPanelID: string | null;
-    @inject(PersistenceStorage) private storage: PersistenceStorage;
+    private _panels: Map<string, ISidebarPanel>
+
+    private _currentPanelID: string | null
+
+    @inject(ServiceTypes.PersistenceStorage) private storage: PersistenceStorage
 
     constructor(@multiInject(DISymbol.SidebarPanel) @optional() panels: ISidebarPanel[] = []) {
-        super();
-        this._panels = new Map();
-        this._currentPanelID = null;
+        super()
+        this._panels = new Map()
+        this._currentPanelID = null
 
         for (const panel of panels) {
-            this._panels.set(panel.id, panel);
+            this._panels.set(panel.id, panel)
         }
     }
 
     @postConstruct()
-    async init(): Promise<void> {
+    init(): void {
         // Reopen general panel if a panel was pinned.
         // Record has to be retrieved manually since the renderOptionsRegistry is not yet initialized and
         // cannot be changed to distribute a ready signal.
         this.storage.getItem<Record<string, unknown>>('render').then((data: Record<string, unknown>) => {
             for (const entry of Object.entries(data)) {
-                if (entry[0] == PinSidebarOption.ID && entry[1] && this.allPanels.length > 0) {
+                if (entry[0] === PinSidebarOption.ID && entry[1] && this.allPanels.length > 0) {
                     this._currentPanelID = this.allPanels[0].id
                 }
             }
@@ -63,17 +65,17 @@ export class SidebarPanelRegistry extends Registry {
     handle(action: Action): void | Action | ICommand {
         if (ToggleSidebarPanelAction.isThisAction(action)) {
             // Nothing to do if the panel should be shown/hidden and is already active/inactive.
-            if (this._currentPanelID === action.id && action.state === "show") return;
-            if (this._currentPanelID !== action.id && action.state === "hide") return;
+            if (this._currentPanelID === action.id && action.state === 'show') return
+            if (this._currentPanelID !== action.id && action.state === 'hide') return
 
             if (this._currentPanelID === action.id) {
                 // Panel is active so it should either be hidden explicitly or toggled to be hidden
-                this._currentPanelID = null;
-                this.notifyListeners();
+                this._currentPanelID = null
+                this.notifyListeners()
             } else if (this._panels.has(action.id)) {
                 // Panel is inactive and the given id exists so it should either be shown explicitly or toggled to be shown
-                this._currentPanelID = action.id;
-                this.notifyListeners();
+                this._currentPanelID = action.id
+                this.notifyListeners()
             }
         }
     }
@@ -83,16 +85,14 @@ export class SidebarPanelRegistry extends Registry {
         // amount of panels that could cause performance concerns. If sorting becomes
         // an issue, it could be moved to the constructor to only be applied once. This
         // would only work as long as it is not possible to add panels dynamically.
-        return Array.from(this._panels.values()).sort((p1, p2) => p1.position - p2.position);
+        return Array.from(this._panels.values()).sort((p1, p2) => p1.position - p2.position)
     }
 
     get currentPanel(): ISidebarPanel | null {
-        return this._currentPanelID === null
-            ? null
-            : this._panels.get(this._currentPanelID) ?? null;
+        return this._currentPanelID === null ? null : this._panels.get(this._currentPanelID) ?? null
     }
 
     get currentPanelID(): string | null {
-        return this._currentPanelID;
+        return this._currentPanelID
     }
 }

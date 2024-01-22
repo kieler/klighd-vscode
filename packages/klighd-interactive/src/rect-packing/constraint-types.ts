@@ -15,11 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
- /**
-  * An aspect ratio constraint data class.
-  */
+/**
+ * An aspect ratio constraint data class.
+ */
 export class AspectRatio {
     id: string
+
     aspectRatio: number
 }
 
@@ -35,5 +36,6 @@ export class RectPackDeletePositionConstraint {
  */
 export class RectPackSetPositionConstraint {
     id: string
+
     order: number
 }

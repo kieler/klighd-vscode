@@ -25,21 +25,28 @@
 // the constant is used as a DI symbol and the interface as a type automatically.
 // https://gitter.im/inversify/InversifyJS?at=5e4ed3645fd3f22ede92d911
 
-import { Container } from "inversify";
-import { ActionMessage } from "sprotty-protocol";
+import { Container } from 'inversify'
+import { ActionMessage } from 'sprotty-protocol'
+/* global Storage */
 
 /** All services that are required by the `klighd-core` package and have to be provided externally. */
 interface Services {
-    connection: Connection;
-    sessionStorage: SessionStorage;
-    persistenceStorage: PersistenceStorage;
+    connection: Connection
+    sessionStorage: SessionStorage
+    persistenceStorage: PersistenceStorage
+}
+
+export const ServiceTypes = {
+    Connection: Symbol('Connection'),
+    PersistenceStorage: Symbol('PersistenceStorage'),
+    SessionStorage: Symbol('SessionStorage'),
 }
 
 /** Helper function to bind all required services to the given DI Container. */
 export function bindServices(container: Container, services: Services): void {
-    container.bind(Connection).toConstantValue(services.connection);
-    container.bind(SessionStorage).toConstantValue(services.sessionStorage);
-    container.bind(PersistenceStorage).toConstantValue(services.persistenceStorage);
+    container.bind(ServiceTypes.Connection).toConstantValue(services.connection)
+    container.bind(ServiceTypes.SessionStorage).toConstantValue(services.sessionStorage)
+    container.bind(ServiceTypes.PersistenceStorage).toConstantValue(services.persistenceStorage)
 }
 
 /**
@@ -51,39 +58,37 @@ export function bindServices(container: Container, services: Services): void {
  */
 export const enum NotificationType {
     /** The default notification type that is used by Sprotty and thus most of the communication. */
-    Accept = "diagram/accept",
+    Accept = 'diagram/accept',
     /** Notifies the server about an updated synthesis option. */
-    SetSynthesisOption = "keith/diagramOptions/setSynthesisOptions",
+    SetSynthesisOption = 'keith/diagramOptions/setSynthesisOptions',
     /** Notifies the server about an updated layout option. */
-    SetLayoutOption = "keith/diagramOptions/setLayoutOptions",
+    SetLayoutOption = 'keith/diagramOptions/setLayoutOptions',
     /** Perform an actionOption. Do not confuse this with the PerformActionAction with is send with the Accept type! */
-    PerformAction = "keith/diagramOptions/performAction",
+    PerformAction = 'keith/diagramOptions/performAction',
     /** Notifies the server about the current user preferences. */
-    SetPreferences = "keith/preferences/setPreferences",
+    SetPreferences = 'keith/preferences/setPreferences',
 }
 
 /** An abstract connection to a server. */
 export interface Connection {
     /** Sends a {@link ActionMessage} to the server. ActionMessages should use the notification type "diagram/accept". This is the common scenario. */
-    sendMessage(message: ActionMessage): void;
+    sendMessage(message: ActionMessage): void
 
     /** Sends a generic notification message to the server with any payload. */
-    sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void;
+    sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void
 
     /** Registers a callback that is executed when a {@link ActionMessage} is received from the server. */
-    onMessageReceived(handler: (message: ActionMessage) => void): void;
+    onMessageReceived(handler: (message: ActionMessage) => void): void
 
     /** Returns a promise that resolves when the connection is able to send and receive messages. */
-    onReady(): Promise<void>;
+    onReady(): Promise<void>
 }
-export const Connection = Symbol("Connection");
 
 /**
  * Key/Value Storage that should be used for short term persistence, lasting only the users
  * session. Uses the same interface as the web {@link Storage} API.
  */
-export type SessionStorage = Storage;
-export const SessionStorage = Symbol("SessionStorage");
+export type SessionStorage = Storage
 
 /**
  * Key/Value Storage for items that should be persisted long term.
@@ -99,18 +104,17 @@ export interface PersistenceStorage {
      * based on the previous value, which is often desired.
      * This saves an additional read that would otherwise be required for an update.
      */
-    setItem<T>(key: string, setter: (prev?: T) => T): void;
+    setItem<T>(key: string, setter: (prev?: T) => T): void
 
     /** Returns an item for the given key. Resolves to `undefined` if the key does not exist. */
-    getItem<T>(key: string): Promise<T | undefined>;
+    getItem<T>(key: string): Promise<T | undefined>
 
     /** Removes an item for a given key. */
-    removeItem(key: string): void;
+    removeItem(key: string): void
 
     /** Clears the storage. Removes all stored items. */
-    clear(): void;
+    clear(): void
 
     /** Attaches a listener that is notified when the storage gets cleared. */
-    onClear(cb: () => void): void;
+    onClear(cb: () => void): void
 }
-export const PersistenceStorage = Symbol("PersistenceStorage");

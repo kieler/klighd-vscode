@@ -109,20 +109,19 @@ To intercept an action, your extension has to provide an action handler with the
 signature:
 
 ```typescript
-// Return `true` if the action should be forwarded to the language server. `false` otherwise.
-type ActionHandler = (action: { kind: string }) => Promise<boolean>;
+type ActionHandler = (action: { kind: string }) => Promise<void>;
 ```
 
 To register your action handler with the `klighd-vscode` extension call the following command:
 
 ```typescript
-// - refId: your registration id returned from the setLanguageClient command
 // - kind: the action kind that should be intercepted by the handler
 // - handler: the action handler that is called for the provided action type.
-vscode.commands.executeCommand("klighd-vscode.addActionHandler", refId: string, kind: string, handler: ActionHandler);
+vscode.commands.executeCommand("klighd-vscode.addActionHandler", kind: string, handler: ActionHandler);
 ```
 
 ### Dispatching Actions
+*This feature is currently not supported*
 
 The KLighD diagram extension provides the ability to send an action to all open diagram views that
 belong to the host extension. The action will be handled by the diagram core and potentially sent to
