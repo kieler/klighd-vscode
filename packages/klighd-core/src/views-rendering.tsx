@@ -151,7 +151,7 @@ export function renderChildArea(
 
 
     // get scale factor and apply to child area
-    if ((parent as any).properties == undefined || (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
+    if ((parent as any).properties === undefined || (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] === undefined) {
         return element
     }
     const topdownScaleFactor = (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
@@ -1533,7 +1533,7 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
     const renderings: VNode[] = []
 
     let topdownScaleFactor = 1;
-    if ((edge.parent as any).properties == undefined || (edge.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] == undefined) {
+    if ((edge.parent as any).properties === undefined || (edge.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] === undefined) {
         topdownScaleFactor = (edge.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
     }
 
