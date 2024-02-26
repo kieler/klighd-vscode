@@ -875,7 +875,9 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
     for (const data of datas) {
         if (data !== null && data.type === K_RENDERING_REF) {
             if (context.kRenderingLibrary) {
-                const id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
+                let id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
+                // trim the ID to remove the leading parent graph element ID that is prefixed in rendering refs
+                id = id.substring(id.indexOf('$$lib$$$'))
                 for (const rendering of context.kRenderingLibrary.renderings) {
                     if (((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string) === id) {
                         context.boundsMap = (data as KRenderingRef).properties[
