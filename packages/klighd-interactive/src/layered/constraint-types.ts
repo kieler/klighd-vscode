@@ -15,15 +15,18 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Direction } from "../constraint-classes"
+import { Direction } from '../constraint-classes'
 
 /**
  * A layer visualization data class for the interactive layered approach.
  */
 export class Layer {
     begin: number
+
     end: number
+
     mid: number
+
     /**
      * Where up is, is determined by the direction
      */
@@ -33,6 +36,7 @@ export class Layer {
      * Where low is, is determined by the direction
      */
     bottomBorder: number
+
     /**
      * 0: UNDEFINED, 1: RIGHT, 2: LEFT, 3: DOWN, 4: UP
      */
@@ -44,7 +48,6 @@ export class Layer {
         this.mid = mid
         this.direction = direction
     }
-
 }
 
 /**
@@ -59,7 +62,9 @@ export class DeleteConstraint {
  */
 export class LayerConstraint {
     id: string
+
     layer: number
+
     layerCons: number
 }
 
@@ -68,7 +73,9 @@ export class LayerConstraint {
  */
 export class PositionConstraint {
     id: string
+
     position: number
+
     posCons: number
 }
 
@@ -77,8 +84,12 @@ export class PositionConstraint {
  */
 export class StaticConstraint {
     id: string
+
     layer: number
+
     position: number
+
     posCons: number
+
     layerCons: number
 }

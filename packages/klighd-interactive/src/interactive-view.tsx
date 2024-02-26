@@ -15,12 +15,18 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { VNode } from "snabbdom";
-import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { KNode } from './constraint-classes';
-import { filterKNodes } from './helper-methods';
-import { renderHierarchyLevel as renderHierarchyLevelLayered, renderLayeredConstraint } from './layered/layered-interactive-view';
-import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
+import { VNode } from 'snabbdom'
+import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { KNode } from './constraint-classes'
+import { filterKNodes } from './helper-methods'
+import {
+    renderHierarchyLevel as renderHierarchyLevelLayered,
+    renderLayeredConstraint,
+} from './layered/layered-interactive-view'
+import {
+    renderHierarchyLevel as renderHierarchyLevelRectPacking,
+    renderRectPackConstraint,
+} from './rect-packing/rect-packing-interactive-view'
 
 /**
  * Visualize the layers and available positions in the graph
@@ -29,18 +35,18 @@ import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPack
 export function renderInteractiveLayout(root: KNode): VNode {
     // Filter KNodes
     const nodes = filterKNodes(root.children)
-    let result = undefined
-    if (root.properties['org.eclipse.elk.algorithm'] === undefined || (root.properties['org.eclipse.elk.algorithm'] as string).endsWith('layered')) {
+    let result
+    if (
+        root.properties['org.eclipse.elk.algorithm'] === undefined ||
+        (root.properties['org.eclipse.elk.algorithm'] as string).endsWith('layered')
+    ) {
         result = renderHierarchyLevelLayered(nodes)
     } else if ((root.properties['org.eclipse.elk.algorithm'] as string).endsWith('rectpacking')) {
         result = renderHierarchyLevelRectPacking(nodes)
     } else {
         // Not supported
     }
-    // @ts-ignore
-    return <g>
-        {result}
-    </g>
+    return <g>{result}</g>
 }
 
 /**
@@ -59,6 +65,5 @@ export function renderConstraints(node: KNode): VNode {
     } else {
         // Not supported
     }
-    // @ts-ignore
     return result
 }

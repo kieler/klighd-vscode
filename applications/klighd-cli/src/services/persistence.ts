@@ -15,48 +15,49 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { PersistenceStorage } from "@kieler/klighd-core";
-import { showPopup } from "../popup";
+import { PersistenceStorage } from '@kieler/klighd-core'
+import { showPopup } from '../popup'
+/* global localStorage */
 
 /** {@link PersistenceStorage} that uses the `localStorage` API to save and retrieve persisted data. */
 export class LocalStorage implements PersistenceStorage {
-    private static readonly key = "klighdPersistence";
+    private static readonly key = 'klighdPersistence'
 
     /** Local cache to speed up reads. */
-    private cache: Record<string, any>;
+    private cache: Record<string, any>
 
     constructor() {
-        this.cache = JSON.parse(localStorage.getItem(LocalStorage.key) ?? "{}");
+        this.cache = JSON.parse(localStorage.getItem(LocalStorage.key) ?? '{}')
     }
 
     private save() {
         try {
-            localStorage.setItem(LocalStorage.key, JSON.stringify(this.cache));
+            localStorage.setItem(LocalStorage.key, JSON.stringify(this.cache))
         } catch (error) {
-            console.error(error);
-            showPopup("error", "Persistence Error", "Unable to persist data to local storage.");
+            console.error(error)
+            showPopup('error', 'Persistence Error', 'Unable to persist data to local storage.')
         }
     }
 
     setItem<T>(key: string, setter: (prev?: T) => T): void {
-        const value = setter(this.cache[key]);
-        this.cache[key] = value;
+        const value = setter(this.cache[key])
+        this.cache[key] = value
 
-        this.save();
+        this.save()
     }
 
     async getItem<T>(key: string): Promise<T | undefined> {
-        return this.cache[key];
+        return this.cache[key]
     }
 
     removeItem(key: string): void {
-        delete this.cache[key];
-        this.save();
+        delete this.cache[key]
+        this.save()
     }
 
     clear(): void {
-        this.cache = {};
-        localStorage.removeItem(LocalStorage.key);
+        this.cache = {}
+        localStorage.removeItem(LocalStorage.key)
     }
 
     onClear(): void {
@@ -66,6 +67,6 @@ export class LocalStorage implements PersistenceStorage {
     }
 
     getAllData(): Record<string, any> {
-        return this.cache;
+        return this.cache
     }
 }

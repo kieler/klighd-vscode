@@ -14,8 +14,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { Action } from "sprotty-protocol";
+import { Action } from 'sprotty-protocol'
 import {
     DisplayedActionData,
     LayoutOptionUIData,
@@ -23,7 +25,7 @@ import {
     PreferenceValue,
     SynthesisOption,
     ValuedSynthesisOption,
-} from "./option-models";
+} from './option-models'
 
 /** Request message from the server to update the diagram options widget on the client. */
 export interface UpdateOptionsAction extends Action {
@@ -35,25 +37,25 @@ export interface UpdateOptionsAction extends Action {
 }
 
 export namespace UpdateOptionsAction {
-    export const KIND = "updateOptions"
+    export const KIND = 'updateOptions'
 
     export function create(
         valuedSynthesisOptions: ValuedSynthesisOption[],
         layoutOptions: LayoutOptionUIData[],
         actions: DisplayedActionData[],
-        modelUri: string,
+        modelUri: string
     ): UpdateOptionsAction {
         return {
             kind: KIND,
             valuedSynthesisOptions,
-            layoutOptions, 
+            layoutOptions,
             actions,
             modelUri,
         }
     }
 
     export function isThisAction(action: Action): action is UpdateOptionsAction {
-        return action.kind === UpdateOptionsAction.KIND;
+        return action.kind === UpdateOptionsAction.KIND
     }
 }
 
@@ -67,7 +69,7 @@ export interface PerformOptionsActionAction extends Action {
 }
 
 export namespace PerformOptionsActionAction {
-    export const KIND = "performOptionsAction"
+    export const KIND = 'performOptionsAction'
 
     export function create(actionId: string): PerformOptionsActionAction {
         return {
@@ -77,7 +79,7 @@ export namespace PerformOptionsActionAction {
     }
 
     export function isThisAction(action: Action): action is PerformOptionsActionAction {
-        return action.kind === PerformOptionsActionAction.KIND;
+        return action.kind === PerformOptionsActionAction.KIND
     }
 }
 
@@ -88,7 +90,7 @@ export interface SetPreferencesAction extends Action {
 }
 
 export namespace SetPreferencesAction {
-    export const KIND = "setPreferences"
+    export const KIND = 'setPreferences'
 
     export function create(options: PreferenceValue[]): SetPreferencesAction {
         return {
@@ -98,7 +100,7 @@ export namespace SetPreferencesAction {
     }
 
     export function isThisAction(action: Action): action is SetPreferencesAction {
-        return action.kind === SetPreferencesAction.KIND;
+        return action.kind === SetPreferencesAction.KIND
     }
 }
 
@@ -108,7 +110,7 @@ export interface ResetPreferencesAction extends Action {
 }
 
 export namespace ResetPreferencesAction {
-    export const KIND = "resetPreferences"
+    export const KIND = 'resetPreferences'
 
     export function create(): ResetPreferencesAction {
         return {
@@ -117,7 +119,7 @@ export namespace ResetPreferencesAction {
     }
 
     export function isThisAction(action: Action): action is ResetPreferencesAction {
-        return action.kind === ResetPreferencesAction.KIND;
+        return action.kind === ResetPreferencesAction.KIND
     }
 }
 
@@ -126,11 +128,11 @@ export interface SetSynthesisOptionsAction extends Action {
     kind: typeof SetSynthesisOptionsAction.KIND
     options: SynthesisOption[]
     /** Boolean indicating whether the options should be sent to the server. */
-    sendToServer: boolean;
+    sendToServer: boolean
 }
 
 export namespace SetSynthesisOptionsAction {
-    export const KIND = "setSynthesisOptions"
+    export const KIND = 'setSynthesisOptions'
 
     export function create(options: SynthesisOption[], sendToServer = true): SetSynthesisOptionsAction {
         return {
@@ -141,7 +143,7 @@ export namespace SetSynthesisOptionsAction {
     }
 
     export function isThisAction(action: Action): action is SetSynthesisOptionsAction {
-        return action.kind === SetSynthesisOptionsAction.KIND;
+        return action.kind === SetSynthesisOptionsAction.KIND
     }
 }
 
@@ -149,21 +151,21 @@ export namespace SetSynthesisOptionsAction {
 export interface ResetSynthesisOptionsAction extends Action {
     kind: typeof ResetSynthesisOptionsAction.KIND
     /** Boolean indicating whether the options should be sent to the server. */
-    sendToServer: boolean;
+    sendToServer: boolean
 }
 
 export namespace ResetSynthesisOptionsAction {
-    export const KIND = "resetSynthesisOptions"
+    export const KIND = 'resetSynthesisOptions'
 
     export function create(sendToServer = true): ResetSynthesisOptionsAction {
         return {
             kind: KIND,
-            sendToServer
+            sendToServer,
         }
     }
 
     export function isThisAction(action: Action): action is ResetSynthesisOptionsAction {
-        return action.kind === ResetSynthesisOptionsAction.KIND;
+        return action.kind === ResetSynthesisOptionsAction.KIND
     }
 }
 
@@ -172,7 +174,7 @@ export interface SetLayoutOptionsAction extends Action {
     kind: typeof SetLayoutOptionsAction.KIND
     options: LayoutOptionValue[]
     /** Boolean indicating whether the options should be sent to the server. */
-    sendToServer: boolean;
+    sendToServer: boolean
 }
 
 export namespace SetLayoutOptionsAction {
@@ -182,12 +184,12 @@ export namespace SetLayoutOptionsAction {
         return {
             kind: KIND,
             sendToServer,
-            options
+            options,
         }
     }
 
     export function isThisAction(action: Action): action is SetLayoutOptionsAction {
-        return action.kind === SetLayoutOptionsAction.KIND;
+        return action.kind === SetLayoutOptionsAction.KIND
     }
 }
 
@@ -195,21 +197,21 @@ export namespace SetLayoutOptionsAction {
 export interface ResetLayoutOptionsAction extends Action {
     kind: typeof ResetLayoutOptionsAction.KIND
     /** Boolean indicating whether the options should be sent to the server. */
-    sendToServer: boolean;
+    sendToServer: boolean
 }
 
 export namespace ResetLayoutOptionsAction {
-    export const KIND = "resetLayoutOptions"
+    export const KIND = 'resetLayoutOptions'
 
     export function create(sendToServer = true): ResetLayoutOptionsAction {
         return {
             kind: KIND,
-            sendToServer
+            sendToServer,
         }
     }
 
     export function isThisAction(action: Action): action is ResetLayoutOptionsAction {
-        return action.kind === ResetLayoutOptionsAction.KIND;
+        return action.kind === ResetLayoutOptionsAction.KIND
     }
 }
 
@@ -221,18 +223,18 @@ export interface SetRenderOptionAction extends Action {
 }
 
 export namespace SetRenderOptionAction {
-    export const KIND = "setRenderOption"
+    export const KIND = 'setRenderOption'
 
     export function create(id: string, value: unknown): SetRenderOptionAction {
         return {
             kind: KIND,
             id,
-            value
+            value,
         }
     }
 
     export function isThisAction(action: Action): action is SetRenderOptionAction {
-        return action.kind === SetRenderOptionAction.KIND;
+        return action.kind === SetRenderOptionAction.KIND
     }
 }
 
@@ -242,7 +244,7 @@ export interface ResetRenderOptionsAction extends Action {
 }
 
 export namespace ResetRenderOptionsAction {
-    export const KIND = "resetRenderOptions"
+    export const KIND = 'resetRenderOptions'
 
     export function create(): ResetRenderOptionsAction {
         return {
@@ -251,6 +253,6 @@ export namespace ResetRenderOptionsAction {
     }
 
     export function isThisAction(action: Action): action is ResetRenderOptionsAction {
-        return action.kind === ResetRenderOptionsAction.KIND;
+        return action.kind === ResetRenderOptionsAction.KIND
     }
 }

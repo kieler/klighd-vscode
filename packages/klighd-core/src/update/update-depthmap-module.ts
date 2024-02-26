@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -15,15 +15,15 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { ContainerModule } from "inversify";
-import { configureCommand } from "sprotty";
-import { UpdateDepthMapModelCommand } from './update-depthmap-model';
+import { ContainerModule } from 'inversify'
+import { configureCommand } from 'sprotty'
+import { UpdateDepthMapModelCommand } from './update-depthmap-model'
 
 /**
  * Module for updating the DepthMap whenever needed.
  */
 const updateDepthMapModule = new ContainerModule((bind, _unbind, isBound) => {
-    configureCommand({ bind, isBound }, UpdateDepthMapModelCommand);
-});
+    configureCommand({ bind, isBound }, UpdateDepthMapModelCommand)
+})
 
-export default updateDepthMapModule;
+export default updateDepthMapModule

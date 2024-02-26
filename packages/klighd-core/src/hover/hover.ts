@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,11 +14,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { injectable } from 'inversify';
-import { HoverMouseListener, SModelElement } from 'sprotty';
-import { Action, Bounds, generateRequestId, RequestPopupModelAction } from "sprotty-protocol";
-import { SKGraphElement } from '../skgraph-models';
-import { getSemanticElement } from '../skgraph-utils';
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
+import { injectable } from 'inversify'
+import { HoverMouseListener, SModelElementImpl } from 'sprotty'
+import { Action, Bounds, generateRequestId, RequestPopupModelAction } from 'sprotty-protocol'
+import { SKGraphElement } from '../skgraph-models'
+import { getSemanticElement } from '../skgraph-utils'
+/* global MouseEvent, SVGElement, window */
 
 /**
  * Triggered when the user hovers the mouse pointer over an element to get a popup with details on
@@ -27,14 +30,15 @@ import { getSemanticElement } from '../skgraph-utils';
  */
 export interface RequestKlighdPopupModelAction extends RequestPopupModelAction {
     element: SVGElement
-    parent: SModelElement
+    parent: SModelElementImpl
 }
 
 export namespace RequestKlighdPopupModelAction {
     export function create(
         element: SVGElement,
-        parent: SModelElement,
-        bounds: Bounds): RequestKlighdPopupModelAction {
+        parent: SModelElementImpl,
+        bounds: Bounds
+    ): RequestKlighdPopupModelAction {
         return {
             kind: RequestPopupModelAction.KIND,
             parent,
@@ -42,31 +46,31 @@ export namespace RequestKlighdPopupModelAction {
             elementId: parent.id,
             bounds,
             requestId: generateRequestId(),
-        };
+        }
     }
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is RequestKlighdPopupModelAction {
-        return action.kind === RequestPopupModelAction.KIND && 'parent' in action && 'element' in action;
+        return action.kind === RequestPopupModelAction.KIND && 'parent' in action && 'element' in action
     }
 }
 
 @injectable()
 export class KlighdHoverMouseListener extends HoverMouseListener {
-    protected startMouseOverTimer(target: SModelElement, event: MouseEvent): Promise<Action> {
-        this.stopMouseOverTimer();
+    protected startMouseOverTimer(target: SModelElementImpl, event: MouseEvent): Promise<Action> {
+        this.stopMouseOverTimer()
         return new Promise((resolve) => {
             this.state.mouseOverTimer = window.setTimeout(() => {
-                const popupBounds = this.computePopupBounds(target, {x: event.pageX, y: event.pageY})
+                const popupBounds = this.computePopupBounds(target, { x: event.pageX, y: event.pageY })
                 const semanticElement = getSemanticElement(target as SKGraphElement, event.target)
 
                 if (semanticElement) {
                     resolve(RequestKlighdPopupModelAction.create(semanticElement, target, popupBounds))
 
-                    this.state.popupOpen = true;
-                    this.state.previousPopupElement = target;
+                    this.state.popupOpen = true
+                    this.state.previousPopupElement = target
                 }
-            }, this.options.popupOpenDelay);
+            }, this.options.popupOpenDelay)
         })
     }
 }

@@ -35,27 +35,30 @@
     line-height: 1.5;
 
     background: white;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
+    box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.15),
+        0 3px 6px rgba(0, 0, 0, 0.1);
     border-top: 4px solid white;
     border-radius: 4px;
 }
 
 .popup--info {
-  border-color: var(--color-accent-blue);
+    border-color: var(--color-accent-blue);
 }
 .popup--warn {
-  border-color: var(--color-accent-yellow);
+    border-color: var(--color-accent-yellow);
 }
 .popup--error {
-  border-color: var(--color-accent-red);
+    border-color: var(--color-accent-red);
 }
 
-.popup__title, .popup__message {
-  margin: 0;
+.popup__title,
+.popup__message {
+    margin: 0;
 }
 
 .popup__message {
-  max-width: 400px;
-  max-height: 300px;
-  overflow: auto;
+    max-width: 400px;
+    max-height: 300px;
+    overflow: auto;
 }

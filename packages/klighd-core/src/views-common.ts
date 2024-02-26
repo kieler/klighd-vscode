@@ -15,16 +15,39 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { Bounds, Point, toDegrees } from 'sprotty-protocol';
-import { SKGraphModelRenderer } from './skgraph-model-renderer';
+import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { Bounds, Point, toDegrees } from 'sprotty-protocol'
+import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import {
-    Decoration, HorizontalAlignment, isRendering, KColoring, KHorizontalAlignment, KLineCap,
-    KLineJoin, KLineStyle, KPolyline, KPosition, KRendering, KRenderingRef, KRotation, KText,
-    KTextUnderline, KVerticalAlignment, K_RENDERING_REF, K_TEXT, LineCap, LineJoin, LineStyle,
-    SKEdge, SKGraphElement, SKLabel, SKNode, Underline, VerticalAlignment
-} from './skgraph-models';
-import { KStyles, ColorStyle, DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT } from './views-styles';
+    Decoration,
+    HorizontalAlignment,
+    isRendering,
+    KColoring,
+    KHorizontalAlignment,
+    KLineCap,
+    KLineJoin,
+    KLineStyle,
+    KPolyline,
+    KPosition,
+    KRendering,
+    KRenderingRef,
+    KRotation,
+    KText,
+    KTextUnderline,
+    KVerticalAlignment,
+    K_RENDERING_REF,
+    K_TEXT,
+    LineCap,
+    LineJoin,
+    LineStyle,
+    SKEdge,
+    SKGraphElement,
+    SKLabel,
+    SKNode,
+    Underline,
+    VerticalAlignment,
+} from './skgraph-models'
+import { KStyles, ColorStyle, DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT } from './views-styles'
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -42,7 +65,8 @@ const RGB_END = ')'
  */
 export function lineCapText(lineCap: KLineCap): 'butt' | 'round' | 'square' {
     switch (lineCap.lineCap) {
-        case LineCap.CAP_FLAT: { // the flat LineCap option is actually called 'butt' in svg and most other usages.
+        case LineCap.CAP_FLAT: {
+            // the flat LineCap option is actually called 'butt' in svg and most other usages.
             return 'butt'
         }
         case LineCap.CAP_ROUND: {
@@ -50,6 +74,10 @@ export function lineCapText(lineCap: KLineCap): 'butt' | 'round' | 'square' {
         }
         case LineCap.CAP_SQUARE: {
             return 'square'
+        }
+        default: {
+            console.error('error in views.common.ts, unexpected LineCap in switch')
+            return 'butt'
         }
     }
 }
@@ -69,6 +97,10 @@ export function lineJoinText(lineJoin: KLineJoin): 'bevel' | 'miter' | 'round' {
         case LineJoin.JOIN_ROUND: {
             return 'round'
         }
+        default: {
+            console.error('error in views.common.ts, unexpected LineJoin in switch')
+            return 'miter'
+        }
     }
 }
 
@@ -78,7 +110,8 @@ export function lineJoinText(lineJoin: KLineJoin): 'bevel' | 'miter' | 'round' {
  * @param lineStyle The KLineStyle
  * @param lineWidth The width of the drawn line
  */
-export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string | undefined { // TODO: implement dashOffset
+export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string | undefined {
+    // TODO: implement dashOffset
     const one: string = (1 * lineWidth).toString()
     const three: string = (3 * lineWidth).toString()
     switch (lineStyle.lineStyle) {
@@ -104,6 +137,10 @@ export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string 
         case LineStyle.SOLID: {
             return undefined
         }
+        default: {
+            console.error('error in views.common.ts, unexpected LineStyle in switch')
+            return undefined
+        }
     }
 }
 
@@ -120,6 +157,10 @@ export function verticalAlignmentText(verticalAlignment: VerticalAlignment): 'mi
             return 'baseline'
         }
         case VerticalAlignment.TOP: {
+            return 'hanging'
+        }
+        default: {
+            console.error('error in views.common.ts, unexpected VerticalAlignment in switch')
             return 'hanging'
         }
     }
@@ -149,6 +190,10 @@ export function textDecorationStyleText(underline: KTextUnderline): 'solid' | 'd
         case Underline.LINK: {
             return 'solid'
         }
+        default: {
+            console.error('error in views.common.ts, unexpected Underline in switch')
+            return undefined
+        }
     }
 }
 
@@ -164,7 +209,12 @@ export function textDecorationColor(underline: KTextUnderline): string | undefin
  * @param horizontalAlignment The KHorizontalAlignment.
  * @param textWidth The real width the rendered text needs.
  */
-export function calculateX(x: number, width: number, horizontalAlignment: KHorizontalAlignment, textWidth?: number): number {
+export function calculateX(
+    x: number,
+    width: number,
+    horizontalAlignment: KHorizontalAlignment,
+    textWidth?: number
+): number {
     if (textWidth === undefined) {
         switch (horizontalAlignment.horizontalAlignment) {
             case HorizontalAlignment.CENTER: {
@@ -175,6 +225,10 @@ export function calculateX(x: number, width: number, horizontalAlignment: KHoriz
             }
             case HorizontalAlignment.RIGHT: {
                 return x + width
+            }
+            default: {
+                console.error('error in views.common.ts, unexpected HorizontalAlignment in switch')
+                return x
             }
         }
     } else {
@@ -188,10 +242,12 @@ export function calculateX(x: number, width: number, horizontalAlignment: KHoriz
             case HorizontalAlignment.RIGHT: {
                 return x + width - textWidth
             }
+            default: {
+                console.error('error in views.common.ts, unexpected HorizontalAlignment in switch')
+                return x
+            }
         }
     }
-    console.error('horizontalAlignment is not defined.')
-    return 0
 }
 
 /**
@@ -201,7 +257,12 @@ export function calculateX(x: number, width: number, horizontalAlignment: KHoriz
  * @param verticalAlignment The KVerticalAlignment.
  * @param numberOfLines The number of lines in the given text.
  */
-export function calculateY(y: number, height: number, verticalAlignment: KVerticalAlignment, numberOfLines: number): number {
+export function calculateY(
+    y: number,
+    height: number,
+    verticalAlignment: KVerticalAlignment,
+    numberOfLines: number
+): number {
     let lineHeight = height / numberOfLines
     if (numberOfLines === 0) {
         lineHeight = height
@@ -216,6 +277,10 @@ export function calculateY(y: number, height: number, verticalAlignment: KVertic
         case VerticalAlignment.TOP: {
             return y
         }
+        default: {
+            console.error('error in views.common.ts, unexpected VerticalAlignment in switch')
+            return y
+        }
     }
 }
 
@@ -227,8 +292,7 @@ export function calculateY(y: number, height: number, verticalAlignment: KVertic
  * @returns The evaluated position.
  */
 export function evaluateKPosition(position: KPosition, parentBounds: Bounds, topLeft: boolean): Point {
-    const width = parentBounds.width
-    const height = parentBounds.height
+    const { width, height } = parentBounds
     const point = { x: 0, y: 0 }
 
     let xPos = position.x
@@ -238,14 +302,14 @@ export function evaluateKPosition(position: KPosition, parentBounds: Bounds, top
         xPos = {
             absolute: 0,
             relative: 0,
-            type: topLeft ? K_LEFT_POSITION : K_RIGHT_POSITION
+            type: topLeft ? K_LEFT_POSITION : K_RIGHT_POSITION,
         }
     }
     if (yPos === undefined) {
         yPos = {
             absolute: 0,
             relative: 0,
-            type: topLeft ? K_TOP_POSITION : K_BOTTOM_POSITION
+            type: topLeft ? K_TOP_POSITION : K_BOTTOM_POSITION,
         }
     }
 
@@ -270,7 +334,7 @@ export function evaluateKPosition(position: KPosition, parentBounds: Bounds, top
  */
 export function findById(map: Record<string, unknown>, idString: string): any {
     if (map === undefined) {
-        return
+        return undefined
     }
     return map[idString]
 }
@@ -289,11 +353,8 @@ export function isSingleColor(coloring: KColoring): boolean {
  */
 export function fillSingleColor(coloring: KColoring): ColorStyle {
     return {
-        color: RGB_START + coloring.color.red + ','
-            + coloring.color.green + ','
-            + coloring.color.blue
-            + RGB_END,
-        opacity: coloring.alpha === undefined || coloring.alpha === 255 ? undefined : (coloring.alpha / 255).toString()
+        color: `${RGB_START}${coloring.color.red},${coloring.color.green},${coloring.color.blue}${RGB_END}`,
+        opacity: coloring.alpha === undefined || coloring.alpha === 255 ? undefined : (coloring.alpha / 255).toString(),
     }
 }
 
@@ -302,7 +363,7 @@ export function fillSingleColor(coloring: KColoring): ColorStyle {
  * @param string The string to transform.
  */
 export function camelToKebab(string: string): string {
-    return string.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+    return string.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
 }
 
 /**
@@ -315,9 +376,14 @@ export function camelToKebab(string: string): string {
  *  box coordinates instead. Required to find the true bounding box of text renderings.
  * @param isEdge If the rendering is for an edge.
  */
-export function findBoundsAndTransformationData(rendering: KRendering, styles: KStyles, parent: SKGraphElement,
-    context: SKGraphModelRenderer, isEdge?: boolean, boundingBox?: boolean): BoundsAndTransformation | undefined {
-
+export function findBoundsAndTransformationData(
+    rendering: KRendering,
+    styles: KStyles,
+    parent: SKGraphElement,
+    context: SKGraphModelRenderer,
+    isEdge?: boolean,
+    boundingBox?: boolean
+): BoundsAndTransformation | undefined {
     if (rendering.type === K_TEXT && !boundingBox) {
         return findTextBoundsAndTransformationData(rendering as KText, styles, parent, context)
     }
@@ -325,7 +391,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
     let bounds
     let decoration
 
-    if (rendering.properties['klighd.lsp.calculated.bounds'] as Bounds !== undefined) {
+    if ((rendering.properties['klighd.lsp.calculated.bounds'] as Bounds) !== undefined) {
         // Bounds are in the calculatedBounds of the rendering.
         bounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
     }
@@ -334,13 +400,13 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
         bounds = findById(context.boundsMap, rendering.properties['klighd.lsp.rendering.id'] as string)
     }
     // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
-    if (rendering.properties['klighd.lsp.calculated.decoration'] as Decoration !== undefined) {
+    if ((rendering.properties['klighd.lsp.calculated.decoration'] as Decoration) !== undefined) {
         decoration = rendering.properties['klighd.lsp.calculated.decoration'] as Decoration
         bounds = {
             x: decoration.bounds.x + decoration.origin.x,
             y: decoration.bounds.y + decoration.origin.y,
             width: decoration.bounds.width,
-            height: decoration.bounds.height
+            height: decoration.bounds.height,
         }
     }
     // Same as above, if the decoration has not been found yet, it should be in the decorationMap.
@@ -351,7 +417,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
                 x: decoration.bounds.x + decoration.origin.x,
                 y: decoration.bounds.y + decoration.origin.y,
                 width: decoration.bounds.width,
-                height: decoration.bounds.height
+                height: decoration.bounds.height,
             }
         }
     }
@@ -362,10 +428,10 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
             x: (parent as any).position.x,
             y: (parent as any).position.y,
             width: (parent as any).size.width,
-            height: (parent as any).size.height
+            height: (parent as any).size.height,
         }
     } else if (decoration === undefined && bounds === undefined) {
-        return
+        return undefined
     }
 
     if (parent instanceof SKNode && parent.shadow) {
@@ -374,7 +440,7 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
             x: parent.shadowX - parent.position.x,
             y: parent.shadowY - parent.position.y,
             width: parent.size.width,
-            height: parent.size.height
+            height: parent.size.height,
         }
     }
 
@@ -382,8 +448,8 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
     const transformation = getTransformation(bounds, decoration, styles.kRotation, isEdge)
 
     return {
-        bounds: bounds,
-        transformation: transformation
+        bounds,
+        transformation,
     }
 }
 
@@ -394,43 +460,59 @@ export function findBoundsAndTransformationData(rendering: KRendering, styles: K
  * @param parent The parent SKGraphElement this rendering is contained in.
  * @param context The rendering context used to render this element.
  */
-export function findTextBoundsAndTransformationData(rendering: KText, styles: KStyles, parent: SKGraphElement | SKLabel, context: SKGraphModelRenderer): BoundsAndTransformation | undefined {
+export function findTextBoundsAndTransformationData(
+    rendering: KText,
+    styles: KStyles,
+    parent: SKGraphElement | SKLabel,
+    context: SKGraphModelRenderer
+): BoundsAndTransformation | undefined {
     let bounds: {
-        x: number | undefined,
-        y: number | undefined,
-        height: number | undefined,
+        x: number | undefined
+        y: number | undefined
+        height: number | undefined
         width: number | undefined
     } = {
         x: undefined,
         y: undefined,
         width: undefined,
-        height: undefined
+        height: undefined,
     }
     let decoration
 
     // Find the text to write first.
-    let text = undefined
+    let text
     // KText elements as renderings of labels have their text in the KLabel, not the KText
-    if ('text' in parent) { // if parent is KLabel
+    if ('text' in parent) {
+        // if parent is KLabel
         text = parent.text
     } else {
         text = rendering.text
     }
-    if (parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] !== undefined) {
-        text = parent.properties["de.cau.cs.kieler.klighd.labels.textOverride"] as string
+    if (parent.properties['de.cau.cs.kieler.klighd.labels.textOverride'] !== undefined) {
+        text = parent.properties['de.cau.cs.kieler.klighd.labels.textOverride'] as string
     }
 
     // The text split into an array for each individual line
     const lines = text?.split('\n')?.length ?? 1
 
-    if (rendering.properties['klighd.calculated.text.bounds'] as Bounds !== undefined) {
+    if ((rendering.properties['klighd.calculated.text.bounds'] as Bounds) !== undefined) {
         const textWidth = (rendering.properties['klighd.calculated.text.bounds'] as Bounds).width
         const textHeight = (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height
 
-        if (rendering.properties['klighd.lsp.calculated.bounds'] as Bounds !== undefined) {
+        if ((rendering.properties['klighd.lsp.calculated.bounds'] as Bounds) !== undefined) {
             const foundBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
-            bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
-            bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
+            bounds.x = calculateX(
+                foundBounds.x,
+                foundBounds.width,
+                styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT,
+                textWidth
+            )
+            bounds.y = calculateY(
+                foundBounds.y,
+                foundBounds.height,
+                styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
+                lines
+            )
             bounds.width = textWidth
             bounds.height = textHeight
         }
@@ -438,17 +520,37 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         if (bounds.x === undefined && context.boundsMap !== undefined) {
             const foundBounds = findById(context.boundsMap, rendering.properties['klighd.lsp.rendering.id'] as string)
             if (bounds !== undefined) {
-                bounds.x = calculateX(foundBounds.x, foundBounds.width, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
-                bounds.y = calculateY(foundBounds.y, foundBounds.height, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
+                bounds.x = calculateX(
+                    foundBounds.x,
+                    foundBounds.width,
+                    styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT,
+                    textWidth
+                )
+                bounds.y = calculateY(
+                    foundBounds.y,
+                    foundBounds.height,
+                    styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
+                    lines
+                )
                 bounds.width = textWidth
                 bounds.height = textHeight
             }
         }
         // If there is a decoration, calculate the bounds and decoration (containing a possible rotation) from that.
-        if (rendering.properties['klighd.lsp.calculated.decoration'] as Decoration !== undefined) {
+        if ((rendering.properties['klighd.lsp.calculated.decoration'] as Decoration) !== undefined) {
             decoration = rendering.properties['klighd.lsp.calculated.decoration'] as Decoration
-            bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
-            bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
+            bounds.x = calculateX(
+                decoration.bounds.x + decoration.origin.x,
+                textWidth,
+                styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT,
+                textWidth
+            )
+            bounds.y = calculateY(
+                decoration.bounds.y + decoration.origin.y,
+                textHeight,
+                styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
+                lines
+            )
             bounds.width = decoration.bounds.width
             bounds.height = decoration.bounds.height
         }
@@ -456,8 +558,18 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
         if (decoration === undefined && context.decorationMap !== undefined) {
             decoration = findById(context.decorationMap, rendering.properties['klighd.lsp.rendering.id'] as string)
             if (decoration !== undefined) {
-                bounds.x = calculateX(decoration.bounds.x + decoration.origin.x, textWidth, styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT, textWidth)
-                bounds.y = calculateY(decoration.bounds.y + decoration.origin.y, textHeight, styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT, lines)
+                bounds.x = calculateX(
+                    decoration.bounds.x + decoration.origin.x,
+                    textWidth,
+                    styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT,
+                    textWidth
+                )
+                bounds.y = calculateY(
+                    decoration.bounds.y + decoration.origin.y,
+                    textHeight,
+                    styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
+                    lines
+                )
                 bounds.width = decoration.bounds.width
                 bounds.height = decoration.bounds.height
             }
@@ -470,10 +582,9 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             bounds.width = (parent as any).size.width
             bounds.height = (parent as any).size.height
         } else if (decoration === undefined && bounds.x === undefined) {
-            return
+            return undefined
         }
     }
-
 
     // If still no bounds are found, set all by default to 0.
     if (bounds.x === undefined) {
@@ -481,7 +592,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
             x: 0,
             y: 0,
             width: 0,
-            height: 0
+            height: 0,
         }
         // Do not apply any rotation style in that case either, as the bounds estimation may get confused then.
         styles.kRotation = undefined
@@ -490,7 +601,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
     const transformation = getTransformation(bounds as Bounds, decoration, styles.kRotation, false, true)
     return {
         bounds: bounds as Bounds,
-        transformation: transformation
+        transformation,
     }
 }
 
@@ -498,7 +609,7 @@ export function findTextBoundsAndTransformationData(rendering: KText, styles: KS
  * Simple container interface to hold bounds and transformation data.
  */
 export interface BoundsAndTransformation {
-    bounds: Bounds,
+    bounds: Bounds
     transformation: Transformation[]
 }
 
@@ -557,17 +668,19 @@ export function transformationToSVGString(transformation: Transformation): strin
     if (isRotation(transformation)) {
         if (transformation.x === undefined && transformation.y === undefined) {
             return `${transformation.kind}(${transformation.angle})`
-        } else {
-            return `${transformation.kind}(${transformation.angle}, ${transformation.x}, ${transformation.y})`
         }
-    } else if (isTranslation(transformation)) {
-        return `${transformation.kind}(${transformation.x}, ${transformation.y})`
-    } else if (isScale(transformation)) {
-        return `${transformation.kind}(${transformation.factor})`
-    } else {
-        console.error('A transformation has to be a rotation, scale, or translation, but is: ' + transformation + '. Error in code detected!')
-        return ''
+        return `${transformation.kind}(${transformation.angle}, ${transformation.x}, ${transformation.y})`
     }
+    if (isTranslation(transformation)) {
+        return `${transformation.kind}(${transformation.x}, ${transformation.y})`
+    }
+    if (isScale(transformation)) {
+        return `${transformation.kind}(${transformation.factor})`
+    }
+    console.error(
+        `A transformation has to be a rotation, scale, or translation, but is: ${transformation}. Error in code detected!`
+    )
+    return ''
 }
 
 /**
@@ -576,7 +689,7 @@ export function transformationToSVGString(transformation: Transformation): strin
  * @returns The reversed transformations.
  */
 export function reverseTransformations(transformations: Transformation[]): Transformation[] {
-    return transformations.map(transformation => reverseTransformation(transformation)).reverse()
+    return transformations.map((transformation) => reverseTransformation(transformation)).reverse()
 }
 
 /**
@@ -589,21 +702,21 @@ export function reverseTransformation(transformation: Transformation): Transform
         return {
             kind: 'translate',
             x: -transformation.x,
-            y: -transformation.y
+            y: -transformation.y,
         } as Translation
-    } else if (isRotation(transformation)) {
+    }
+    if (isRotation(transformation)) {
         return {
             kind: 'rotate',
             angle: -transformation.angle,
             x: transformation.x,
-            y: transformation.y
+            y: transformation.y,
         } as Rotation
-    } else {
-        return {
-            kind: 'scale',
-            factor: 1 / (transformation as Scale).factor
-        } as Scale
     }
+    return {
+        kind: 'scale',
+        factor: 1 / (transformation as Scale).factor,
+    } as Scale
 }
 
 /**
@@ -614,7 +727,13 @@ export function reverseTransformation(transformation: Transformation): Transform
  * @param isEdge If the rendering is for an edge.
  * @param isText If the rendering is a text.
  */
-export function getTransformation(bounds: Bounds, decoration: Decoration, kRotation: KRotation | undefined, isEdge?: boolean, isText?: boolean): Transformation[] {
+export function getTransformation(
+    bounds: Bounds,
+    decoration: Decoration,
+    kRotation: KRotation | undefined,
+    isEdge?: boolean,
+    isText?: boolean
+): Transformation[] {
     if (isEdge === undefined) {
         isEdge = false
     }
@@ -625,7 +744,7 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, kRotat
     // Do the rotation for the element only if the decoration itself exists and is not 0.
     if (decoration !== undefined && toDegrees(decoration.rotation) !== 0) {
         // The rotation itself
-        const rotation: Rotation = {kind: 'rotate', angle: toDegrees(decoration.rotation)}
+        const rotation: Rotation = { kind: 'rotate', angle: toDegrees(decoration.rotation) }
         // If the rotation is around a point other than (0,0), add the additional parameters to the rotation.
         if (decoration.origin.x !== 0 || decoration.origin.y !== 0) {
             rotation.x = decoration.origin.x
@@ -636,13 +755,13 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, kRotat
 
     // Translate if there are bounds and if the transformation is not for an edge or a text. This replicates the behavior of KIELER as edges don't really define bounds.
     if (!isEdge && !isText && bounds !== undefined && (bounds.x !== 0 || bounds.y !== 0)) {
-        transform.push({kind: 'translate', x: bounds.x, y: bounds.y} as Translation)
+        transform.push({ kind: 'translate', x: bounds.x, y: bounds.y } as Translation)
     }
 
     // Rotate the element also if a KRotation style has to be applied
     if (kRotation !== undefined && kRotation.rotation !== 0) {
         // The rotation itself
-        const rotation: Rotation = {kind: 'rotate', angle: kRotation.rotation}
+        const rotation: Rotation = { kind: 'rotate', angle: kRotation.rotation }
         // Rotate around a defined point other than (0,0) of the object only for non-edges. This replicates the behavior of KIELER as edges don't really define bounds.
         if (!isEdge) {
             if (kRotation.rotationAnchor === undefined) {
@@ -651,13 +770,13 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, kRotat
                     x: {
                         type: K_LEFT_POSITION,
                         absolute: 0,
-                        relative: 0.5
+                        relative: 0.5,
                     },
                     y: {
                         type: K_TOP_POSITION,
                         absolute: 0,
-                        relative: 0.5
-                    }
+                        relative: 0.5,
+                    },
                 }
                 kRotation.rotationAnchor = CENTER
             }
@@ -680,18 +799,22 @@ export function getTransformation(bounds: Bounds, decoration: Decoration, kRotat
  * @param rendering The polyline rendering.
  * @param boundsAndTransformation The bounds and transformation data calculated by findBoundsAndTransformation(...).
  */
-export function getPoints(parent: SKGraphElement | SKEdge, rendering: KPolyline, boundsAndTransformation: BoundsAndTransformation): Point[] {
+export function getPoints(
+    parent: SKGraphElement | SKEdge,
+    rendering: KPolyline,
+    boundsAndTransformation: BoundsAndTransformation
+): Point[] {
     let points: Point[] = []
     // If the rendering has points defined, use them for the rendering.
     if ('points' in rendering) {
         const kPositions = rendering.points
-        kPositions.forEach(kPosition => {
+        kPositions.forEach((kPosition) => {
             const pos = evaluateKPosition(kPosition, boundsAndTransformation.bounds, true)
             points.push({
                 x: pos.x + boundsAndTransformation.bounds.x,
-                y: pos.y + boundsAndTransformation.bounds.y
+                y: pos.y + boundsAndTransformation.bounds.y,
             })
-        });
+        })
     } else if ('routingPoints' in parent) {
         // If no points for the rendering are specified, the parent has to be and edge and have routing points.
         points = parent.routingPoints
@@ -704,12 +827,10 @@ export function getPoints(parent: SKGraphElement | SKEdge, rendering: KPolyline,
         return points
     }
     const firstPoint = points[0]
-    let minX, maxX, minY, maxY: number
-
-    minX = firstPoint.x
-    maxX = firstPoint.x
-    minY = firstPoint.y
-    maxY = firstPoint.y
+    let minX = firstPoint.x
+    let maxX = firstPoint.x
+    let minY = firstPoint.y
+    let maxY = firstPoint.y
     for (let i = 1; i < points.length - 1; i++) {
         const p = points[i]
         if (p.x < minX) {
@@ -752,25 +873,27 @@ export function getPoints(parent: SKGraphElement | SKEdge, rendering: KPolyline,
  */
 export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer): KRendering | undefined {
     for (const data of datas) {
-        if (data === null)
-            continue
-        if (data.type === K_RENDERING_REF) {
+        if (data !== null && data.type === K_RENDERING_REF) {
             if (context.kRenderingLibrary) {
                 let id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
                 // trim the ID to remove the leading parent graph element ID that is prefixed in rendering refs
                 id = id.substring(id.indexOf('$$lib$$$'))
                 for (const rendering of context.kRenderingLibrary.renderings) {
-                    if ((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string === id) {
-                        context.boundsMap = (data as KRenderingRef).properties['klighd.lsp.calculated.bounds.map'] as Record<string, unknown>
-                        context.decorationMap = (data as KRenderingRef).properties['klighd.lsp.calculated.decoration.map'] as Record<string, unknown>
+                    if (((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string) === id) {
+                        context.boundsMap = (data as KRenderingRef).properties[
+                            'klighd.lsp.calculated.bounds.map'
+                        ] as Record<string, unknown>
+                        context.decorationMap = (data as KRenderingRef).properties[
+                            'klighd.lsp.calculated.decoration.map'
+                        ] as Record<string, unknown>
                         return rendering as KRendering
                     }
                 }
             } else {
-                console.log("No KRenderingLibrary for KRenderingRef in context");
+                console.log('No KRenderingLibrary for KRenderingRef in context')
             }
         }
-        if (isRendering(data)) {
+        if (data !== null && isRendering(data)) {
             return data
         }
     }

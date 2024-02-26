@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,20 +16,25 @@
  */
 
 /** @jsx html */
-import { inject, injectable, postConstruct } from "inversify";
-import { VNode } from "snabbdom";
-import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { DISymbol } from "../di.symbols";
-import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom';
-import { IncrementalDiagramGeneratorOption, PreferencesRegistry, ShouldSelectDiagramOption, ShouldSelectTextOption } from "../preferences-registry";
-import { SidebarPanel } from "../sidebar";
-import { SetSynthesisAction } from "../syntheses/actions";
-import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { SetPreferencesAction } from "./actions";
-import { CheckOption } from "./components/option-inputs";
-import { SynthesisPicker } from "./components/synthesis-picker";
-import { OptionsRenderer } from "./options-renderer";
-import { QuickActionsBar } from '../sidebar/sidebar-panel';
+import { inject, injectable, postConstruct } from 'inversify'
+import { VNode } from 'snabbdom'
+import { html } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { DISymbol } from '../di.symbols'
+import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom'
+import {
+    IncrementalDiagramGeneratorOption,
+    PreferencesRegistry,
+    ShouldSelectDiagramOption,
+    ShouldSelectTextOption,
+} from '../preferences-registry'
+import { SidebarPanel } from '../sidebar'
+import { SetSynthesisAction } from '../syntheses/actions'
+import { SynthesesRegistry } from '../syntheses/syntheses-registry'
+import { SetPreferencesAction } from './actions'
+import { CheckOption } from './components/option-inputs'
+import { SynthesisPicker } from './components/synthesis-picker'
+import { OptionsRenderer } from './options-renderer'
+import { QuickActionsBar } from '../sidebar/sidebar-panel'
 
 /**
  * Sidebar panel that displays general diagram configurations,
@@ -39,28 +44,30 @@ import { QuickActionsBar } from '../sidebar/sidebar-panel';
 export class GeneralPanel extends SidebarPanel {
     // Sets this panel at the second position
     // hierarchy is: first elem has the lowest number. so the last one got the highest
-    readonly position = 0; // --> middle position (at the moment)
-                                                    
-    @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
-    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
-    @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer;
+    readonly position = 0 // --> middle position (at the moment)
+
+    @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry
+
+    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry
+
+    @inject(DISymbol.OptionsRenderer) private optionsRenderer: OptionsRenderer
 
     @postConstruct()
-    async init(): Promise<void> {
+    init(): void {
         // Subscribe to different registry changes to make this panel reactive
-        this.synthesesRegistry.onChange(() => this.update());
-        this.preferencesRegistry.onChange(() => this.update());
-        this.renderOptionsRegistry.onChange(() => this.update());
+        this.synthesesRegistry.onChange(() => this.update())
+        this.preferencesRegistry.onChange(() => this.update())
+        this.renderOptionsRegistry.onChange(() => this.update())
 
         this.assignQuickActions()
     }
 
     get id(): string {
-        return "general-panel";
+        return 'general-panel'
     }
 
     get title(): string {
-        return "General";
+        return 'General'
     }
 
     update(): void {
@@ -86,9 +93,7 @@ export class GeneralPanel extends SidebarPanel {
                 </div>
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Render Options</h5>
-                    {this.optionsRenderer.renderRenderOptions(
-                        this.renderOptionsRegistry.allRenderOptions
-                    )}
+                    {this.optionsRenderer.renderRenderOptions(this.renderOptionsRegistry.allRenderOptions)}
                 </div>
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Preferences</h5>
@@ -112,18 +117,18 @@ export class GeneralPanel extends SidebarPanel {
                     />
                 </div>
             </div>
-        );
+        )
     }
 
     private handleSynthesisPickerChange(newId: string) {
-        this.actionDispatcher.dispatch(SetSynthesisAction.create(newId));
+        this.actionDispatcher.dispatch(SetSynthesisAction.create(newId))
     }
 
     private handlePreferenceChange(key: string, newValue: any) {
-        this.actionDispatcher.dispatch(SetPreferencesAction.create([{id:key, value:newValue}]));
+        this.actionDispatcher.dispatch(SetPreferencesAction.create([{ id: key, value: newValue }]))
     }
 
     get icon(): VNode {
-        return <FeatherIcon iconId={"settings"}/>;
+        return <FeatherIcon iconId={'settings'} />
     }
 }
