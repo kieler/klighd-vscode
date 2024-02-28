@@ -142,6 +142,12 @@ export default function createContainer(widgetId: string): Container {
         needsServerLayout: true,
         baseDiv: widgetId,
         hiddenDiv: `${widgetId}_hidden`,
+        // TODO: We should be able to completely deactivate Sprotty's zoom limits to not limit top down layout.
+        // This is a workaround to allow quite deep zoom to work for most cases already.
+        zoomLimits: {
+            min: 0.00000000000001,
+            max: 1000000000000000,
+        },
     })
     return container
 }
