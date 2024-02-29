@@ -16,7 +16,7 @@
  */
 
 :root {
-    --sidebar-width: "fit-content";
+    --sidebar-width: 'fit-content';
 }
 
 .sidebar {
@@ -110,4 +110,9 @@
 
 .sidebar__enabled-button {
     --background: var(--kdc-color-sidebar-trigger-background-active);
+}
+
+.sidebar-icon-size {
+    width: 24px;
+    height: 24px;
 }

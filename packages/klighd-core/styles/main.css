@@ -15,12 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-@import "./theme.css";
-@import "./options.css";
-@import "./popup.css";
-@import "./sidebar.css";
-@import "./proxy-view.css";
-@import "sprotty/css/sprotty.css";
+@import './theme.css';
+@import './options.css';
+@import './popup.css';
+@import './sidebar.css';
+@import './proxy-view.css';
+@import 'sprotty/css/sprotty.css';
 
 .sprotty {
     /* Disable text selection in diagrams and sidebar panels. */

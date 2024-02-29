@@ -15,11 +15,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable } from "inversify";
-import { IActionHandler, ICommand } from "sprotty";
-import { Action } from "sprotty-protocol";
+import { injectable } from 'inversify'
+import { IActionHandler, ICommand } from 'sprotty'
+import { Action } from 'sprotty-protocol'
 
-type Handler = () => void;
+type Handler = () => void
 
 /**
  * Abstract registry which should be used as a base for registries in the container.
@@ -40,17 +40,17 @@ type Handler = () => void;
  */
 @injectable()
 export abstract class Registry implements IActionHandler {
-    private _listeners: (() => void)[] = [];
+    private _listeners: (() => void)[] = []
 
-    abstract handle(action: Action): void | Action | ICommand;
+    abstract handle(action: Action): void | Action | ICommand
 
     onChange(handler: Handler): void {
-        this._listeners.push(handler);
+        this._listeners.push(handler)
     }
 
     protected notifyListeners(): void {
         for (const listener of this._listeners) {
-            listener();
+            listener()
         }
     }
 }

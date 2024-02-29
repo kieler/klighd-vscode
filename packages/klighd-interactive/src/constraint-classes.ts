@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,8 +15,8 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { moveFeature, RectangularNode, SEdge, selectFeature, SParentElement } from 'sprotty';
-import { Point } from 'sprotty-protocol';
+import { moveFeature, RectangularNode, SEdgeImpl, selectFeature, SParentElementImpl } from 'sprotty'
+import { Point } from 'sprotty-protocol'
 
 /**
  * This is the superclass of all elements of a graph such as nodes, edges, ports,
@@ -24,7 +24,7 @@ import { Point } from 'sprotty-protocol';
  * data instances.
  * Represents its java counterpart in KLighD.
  */
-export interface SKGraphElement extends SParentElement {
+export interface SKGraphElement extends SParentElementImpl {
     /**
      * May contain a trace that points back to the server instance where this element was created.
      */
@@ -53,11 +53,19 @@ export interface SKGraphElement extends SParentElement {
  */
 export class KNode extends RectangularNode implements SKGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || (feature === moveFeature && (this.parent as KNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
+        return (
+            feature === selectFeature ||
+            (feature === moveFeature &&
+                ((this.parent as KNode).properties['org.eclipse.elk.interactiveLayout'] as boolean))
+        )
     }
 
     properties: Record<string, unknown>
@@ -65,7 +73,9 @@ export class KNode extends RectangularNode implements SKGraphElement {
     direction: Direction
 
     shadow: boolean
+
     shadowX: number
+
     shadowY: number
 }
 
@@ -74,7 +84,7 @@ export enum Direction {
     RIGHT,
     LEFT,
     DOWN,
-    UP
+    UP,
 }
 
 /**
@@ -89,12 +99,17 @@ export interface KGraphData {
 /**
  * Represents its java counterpart in KLighD.
  */
-export class KEdge extends SEdge implements SKGraphElement {
+export class KEdge extends SEdgeImpl implements SKGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     junctionPoints: Point[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature
     }

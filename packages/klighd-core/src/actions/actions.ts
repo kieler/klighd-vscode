@@ -14,12 +14,12 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { ExportSvgAction, RequestExportSvgAction, SGraph } from "sprotty";
-import {
-    Action, FitToScreenAction, generateRequestId, RequestAction, ResponseAction
-} from "sprotty-protocol";
-import { SKGraphModelRenderer } from "../skgraph-model-renderer";
-import { KImage } from '../skgraph-models';
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
+import { ExportSvgAction, RequestExportSvgAction, SGraphImpl } from 'sprotty'
+import { Action, FitToScreenAction, generateRequestId, RequestAction, ResponseAction } from 'sprotty-protocol'
+import { SKGraphModelRenderer } from '../skgraph-model-renderer'
+import { KImage } from '../skgraph-models'
 
 /**
  * Sent from the server to the client to store images in base64 format needed for rendering on the client.
@@ -106,7 +106,12 @@ export interface PerformActionAction extends Action {
 export namespace PerformActionAction {
     export const KIND = 'performAction'
 
-    export function create(actionId: string, kGraphElementId: string, kRenderingId: string, revision?: number): PerformActionAction {
+    export function create(
+        actionId: string,
+        kGraphElementId: string,
+        kRenderingId: string,
+        revision?: number
+    ): PerformActionAction {
         return {
             kind: KIND,
             actionId,
@@ -134,19 +139,19 @@ export namespace RefreshLayoutAction {
     }
 }
 
-/** 
+/**
  * Extended {@link FitToScreenAction} that always fits the root element with a padding
  * of 10px. Most of the time this is the wanted behavior in the `klighd-core`.
  */
 export type KlighdFitToScreenAction = FitToScreenAction
 
 export namespace KlighdFitToScreenAction {
-    export function create( animate?: boolean): FitToScreenAction {
+    export function create(animate?: boolean): FitToScreenAction {
         return {
             kind: FitToScreenAction.KIND,
-            elementIds: ["$root"],
+            elementIds: ['$root'],
             padding: 10,
-            animate: animate ?? true
+            animate: animate ?? true,
         }
     }
 }
@@ -154,23 +159,23 @@ export namespace KlighdFitToScreenAction {
 /** Contains the model and RenderingContext to be sent from the view to where it's needed. */
 export interface SendModelContextAction extends Action {
     kind: typeof SendModelContextAction.KIND
-    model: SGraph
+    model: SGraphImpl
     context: SKGraphModelRenderer
 }
 
 export namespace SendModelContextAction {
     export const KIND = 'sendModelContextAction'
 
-    export function create(model: SGraph, context: SKGraphModelRenderer): SendModelContextAction {
+    export function create(model: SGraphImpl, context: SKGraphModelRenderer): SendModelContextAction {
         return {
             kind: KIND,
             model,
-            context
+            context,
         }
     }
 }
 
-/** 
+/**
  * Extended {@link RequestExportSvgAction} to create a request action of a {@link KlighdExportSvgAction}.
  */
 export type KlighdRequestExportSvgAction = RequestExportSvgAction
@@ -179,26 +184,26 @@ export namespace KlighdRequestExportSvgAction {
     export function create(): RequestAction<KlighdExportSvgAction> {
         return {
             kind: RequestExportSvgAction.KIND,
-            requestId: generateRequestId()
+            requestId: generateRequestId(),
         }
     }
 }
 
-/** 
+/**
  * Extended {@link ExportSvgAction} by a uri for a better name of the saved diagram.
  */
 export interface KlighdExportSvgAction extends ExportSvgAction {
     uri: string
 }
 export namespace KlighdExportSvgAction {
-    export const KIND = 'exportSvg';
+    export const KIND = 'exportSvg'
 
     export function create(svg: string, requestId: string, uri: string): KlighdExportSvgAction {
         return {
             kind: KIND,
             svg,
             responseId: requestId,
-            uri
-        };
+            uri,
+        }
     }
 }

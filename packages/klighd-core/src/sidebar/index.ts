@@ -19,6 +19,6 @@
 // Modules outside of "sidebar" should only import from this index file!
 // Learn more: https://basarat.gitbook.io/typescript/main-1/barrel
 
-export { ToggleSidebarPanelAction } from "./actions";
-export { sidebarModule } from "./sidebar-module";
-export { SidebarPanel, ISidebarPanel } from "./sidebar-panel";
+export { ToggleSidebarPanelAction } from './actions'
+export { sidebarModule } from './sidebar-module'
+export { SidebarPanel, ISidebarPanel } from './sidebar-panel'

@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -14,12 +14,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { inject, injectable } from 'inversify';
-import { Command, TYPES } from 'sprotty'
-import { CommandExecutionContext, CommandReturn } from 'sprotty';
-import { Action } from 'sprotty-protocol';
-import { DepthMap } from '../depth-map';
+import { inject, injectable } from 'inversify'
+import { Command, TYPES, CommandExecutionContext, CommandReturn } from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { DepthMap } from '../depth-map'
 
 /**
  * Simple UpdateDepthMapAction fires the UpdateDepthMapModelCommand
@@ -44,10 +45,11 @@ export namespace UpdateDepthMapModelAction {
  */
 @injectable()
 export class UpdateDepthMapModelCommand extends Command {
-    static readonly KIND = UpdateDepthMapModelAction.KIND;
+    static readonly KIND = UpdateDepthMapModelAction.KIND
 
-    constructor(@inject(TYPES.Action) protected readonly action: UpdateDepthMapModelAction) { super() }
-
+    constructor(@inject(TYPES.Action) protected readonly action: UpdateDepthMapModelAction) {
+        super()
+    }
 
     execute(context: CommandExecutionContext): CommandReturn {
         DepthMap.init(context.root)
@@ -60,6 +62,7 @@ export class UpdateDepthMapModelCommand extends Command {
     undo(context: CommandExecutionContext): CommandReturn {
         return context.root
     }
+
     redo(context: CommandExecutionContext): CommandReturn {
         return context.root
     }

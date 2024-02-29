@@ -14,9 +14,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { Action } from 'sprotty-protocol';
-import { DeleteConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types';
+import { Action } from 'sprotty-protocol'
+import { DeleteConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types'
 
 /**
  * Sent from client to server to set a position and layer constraint.

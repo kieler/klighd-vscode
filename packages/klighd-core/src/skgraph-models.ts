@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2023 by
+ * Copyright 2019-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,9 +15,18 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { RGBColor, RectangularPort, SLabel, SModelElement, boundsFeature, moveFeature, popupFeature, selectFeature } from 'sprotty';
-import { Bounds, Point } from 'sprotty-protocol';
+import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import {
+    boundsFeature,
+    moveFeature,
+    popupFeature,
+    RectangularPort,
+    RGBColor,
+    selectFeature,
+    SLabelImpl,
+    SModelElementImpl,
+} from 'sprotty'
+import { Bounds, Point } from 'sprotty-protocol'
 
 export const NODE_TYPE = 'node'
 export const EDGE_TYPE = 'edge'
@@ -29,9 +38,13 @@ export const LABEL_TYPE = 'label'
  */
 export class SKNode extends KNode {
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature
-            || (feature === moveFeature && (this.parent as SKNode).properties && (this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)
-            || feature === popupFeature
+        return (
+            feature === selectFeature ||
+            (feature === moveFeature &&
+                (this.parent as SKNode).properties &&
+                ((this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)) ||
+            feature === popupFeature
+        )
     }
 }
 
@@ -40,28 +53,38 @@ export class SKNode extends KNode {
  */
 export class SKPort extends RectangularPort implements SKGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+
     properties: Record<string, unknown>
 }
 
 /**
  * Represents the Sprotty version of its java counterpart in KLighD.
  */
-export class SKLabel extends SLabel implements SKGraphElement {
+export class SKLabel extends SLabelImpl implements SKGraphElement {
     trace?: string
+
     data: KGraphData[]
+
     areChildAreaChildrenRendered = false
+
     areNonChildAreaChildrenRendered = false
+
     hasFeature(feature: symbol): boolean {
         // The boundsFeature here is additionally needed because bounds of labels need to be
         // estimated during the estimateTextBounds action.
         return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
+
     properties: Record<string, unknown>
 }
 
@@ -72,6 +95,7 @@ export class SKEdge extends KEdge {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
+
     properties: Record<string, unknown>
 }
 
@@ -90,8 +114,6 @@ export interface KStyleHolder {
  */
 export interface KRendering extends KGraphData, KStyleHolder {
     actions: KAction[]
-    // not in the original java model, but is included in messages to remove the need to call '[Grid]?PlacementUtil.evaluate[Grid|Area|Point]Placement'
-    // and similar methods on client side for every rendering
 
     properties: Record<string, unknown>
 
@@ -200,9 +222,6 @@ export interface KRoundedRectangle extends KContainerRendering {
  */
 export interface KRenderingRef extends KRendering {
     rendering: KRendering
-    // not in the original java model, but is included in messages to remove the need to call 'PlacementUtil.estimateSize' on client side
-    calculatedBoundsMap: Map<string, Bounds>
-    calculatedDecorationMap: Map<string, number>
 }
 
 /**
@@ -214,21 +233,6 @@ export interface KText extends KRendering {
     text: string
     cursorSelectable: boolean
     editable: boolean
-    // Not in the original model, but here to store the precalculated bounds this text alone takes.
-    /**
-     * The server pre-calculated bounds for this text.
-     */
-    calculatedTextBounds?: Bounds
-
-    /**
-     * The server pre-calculated line widths for each individual line.
-     */
-    calculatedTextLineWidths?: number[]
-
-    /**
-     * The server pre-calculated line heights for each individual line.
-     */
-    calculatedTextLineHeights?: number[]
 }
 
 /**
@@ -260,7 +264,7 @@ export interface KAction {
 export enum ModifierState {
     DONT_CARE = 0,
     PRESSED = 1,
-    NOT_PRESSED = 2
+    NOT_PRESSED = 2,
 }
 
 /**
@@ -280,7 +284,7 @@ export enum Arc {
     /**
      * Arc with a straight closing line connection from end to beginning.
      */
-    PIE = 2
+    PIE = 2,
 }
 
 /*
@@ -353,7 +357,7 @@ export type KBottomPosition = KYPosition
 export enum HorizontalAlignment {
     LEFT = 0,
     CENTER = 1,
-    RIGHT = 2
+    RIGHT = 2,
 }
 
 /**
@@ -362,7 +366,7 @@ export enum HorizontalAlignment {
 export enum VerticalAlignment {
     TOP = 0,
     CENTER = 1,
-    BOTTOM = 2
+    BOTTOM = 2,
 }
 
 /**
@@ -398,7 +402,7 @@ export enum Trigger {
     /**
      * Fires on middle button's first click regardless if more clicks follow within the system wide double click period.
      */
-    MIDDLE_SINGLE_OR_MULTICLICK = 5
+    MIDDLE_SINGLE_OR_MULTICLICK = 5,
 }
 
 /**
@@ -580,7 +584,7 @@ export interface KVerticalAlignment extends KStyle {
 export enum LineCap {
     CAP_FLAT = 0,
     CAP_ROUND = 1,
-    CAP_SQUARE = 2
+    CAP_SQUARE = 2,
 }
 
 /**
@@ -589,7 +593,7 @@ export enum LineCap {
 export enum LineJoin {
     JOIN_MITER = 0,
     JOIN_ROUND = 1,
-    JOIN_BEVEL = 2
+    JOIN_BEVEL = 2,
 }
 
 /**
@@ -602,7 +606,7 @@ export enum LineStyle {
     DOT = 2,
     DASHDOT = 3,
     DASHDOTDOT = 4,
-    CUSTOM = 5
+    CUSTOM = 5,
 }
 
 /**
@@ -615,7 +619,7 @@ export enum Underline {
     DOUBLE = 2,
     ERROR = 3,
     SQUIGGLE = 4,
-    LINK = 5
+    LINK = 5,
 }
 
 /**
@@ -627,7 +631,6 @@ export interface Decoration {
     bounds: Bounds
     rotation: number
 }
-
 
 // ----------- Rendering Class names ----------- //
 export const K_RENDERING_REF = 'KRenderingRefImpl'
@@ -652,21 +655,23 @@ export const K_TEXT = 'KTextImpl'
  * @param test The potential KRendering.
  */
 export function isRendering(test: KGraphData): test is KRendering {
-    const type = test.type
-    return type === K_RENDERING_REF
-        || type === K_CHILD_AREA
-        || type === K_CONTAINER_RENDERING
-        || type === K_ARC
-        || type === K_CUSTOM_RENDERING
-        || type === K_ELLIPSE
-        || type === K_IMAGE
-        || type === K_POLYLINE
-        || type === K_POLYGON
-        || type === K_ROUNDED_BENDS_POLYLINE
-        || type === K_SPLINE
-        || type === K_RECTANGLE
-        || type === K_ROUNDED_RECTANGLE
-        || type === K_TEXT
+    const { type } = test
+    return (
+        type === K_RENDERING_REF ||
+        type === K_CHILD_AREA ||
+        type === K_CONTAINER_RENDERING ||
+        type === K_ARC ||
+        type === K_CUSTOM_RENDERING ||
+        type === K_ELLIPSE ||
+        type === K_IMAGE ||
+        type === K_POLYLINE ||
+        type === K_POLYGON ||
+        type === K_ROUNDED_BENDS_POLYLINE ||
+        type === K_SPLINE ||
+        type === K_RECTANGLE ||
+        type === K_ROUNDED_RECTANGLE ||
+        type === K_TEXT
+    )
 }
 
 /**
@@ -674,18 +679,20 @@ export function isRendering(test: KGraphData): test is KRendering {
  * @param test The potential KContainerRendering.
  */
 export function isContainerRendering(test: KGraphData): test is KContainerRendering {
-    const type = test.type
-    return type === K_CONTAINER_RENDERING
-        || type === K_ARC
-        || type === K_CUSTOM_RENDERING
-        || type === K_ELLIPSE
-        || type === K_IMAGE
-        || type === K_POLYLINE
-        || type === K_POLYGON
-        || type === K_ROUNDED_BENDS_POLYLINE
-        || type === K_SPLINE
-        || type === K_RECTANGLE
-        || type === K_ROUNDED_RECTANGLE
+    const { type } = test
+    return (
+        type === K_CONTAINER_RENDERING ||
+        type === K_ARC ||
+        type === K_CUSTOM_RENDERING ||
+        type === K_ELLIPSE ||
+        type === K_IMAGE ||
+        type === K_POLYLINE ||
+        type === K_POLYGON ||
+        type === K_ROUNDED_BENDS_POLYLINE ||
+        type === K_SPLINE ||
+        type === K_RECTANGLE ||
+        type === K_ROUNDED_RECTANGLE
+    )
 }
 
 /**
@@ -693,11 +700,8 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
  * @param test The potential KPolyline.
  */
 export function isPolyline(test: KGraphData): test is KPolyline {
-    const type = test.type
-    return  type === K_POLYLINE
-        || type === K_POLYGON
-        || type === K_ROUNDED_BENDS_POLYLINE
-        || type === K_SPLINE
+    const { type } = test
+    return type === K_POLYLINE || type === K_POLYGON || type === K_ROUNDED_BENDS_POLYLINE || type === K_SPLINE
 }
 
 /**
@@ -705,7 +709,7 @@ export function isPolyline(test: KGraphData): test is KPolyline {
  * @param test The potential KText
  */
 export function isKText(test: KGraphData): test is KText {
-    const type = test.type
+    const { type } = test
     return type === K_TEXT
 }
 
@@ -714,9 +718,11 @@ export function isKText(test: KGraphData): test is KText {
  * @param test The potential SKGraphElement.
  */
 export function isSKGraphElement(test: unknown): test is SKGraphElement {
-    return test instanceof SModelElement
-        && (test as any)['areChildAreaChildrenRendered'] !== undefined
-        && (test as any)['areNonChildAreaChildrenRendered'] !== undefined
-        && (test as any)['opacity'] !== undefined
-        && (test as any)['data'] !== undefined
+    return (
+        test instanceof SModelElementImpl &&
+        (test as any).areChildAreaChildrenRendered !== undefined &&
+        (test as any).areNonChildAreaChildrenRendered !== undefined &&
+        (test as any).opacity !== undefined &&
+        (test as any).data !== undefined
+    )
 }

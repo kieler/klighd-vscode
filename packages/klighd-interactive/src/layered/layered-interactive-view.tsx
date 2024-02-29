@@ -15,14 +15,20 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { VNode } from "snabbdom";
-import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Direction, KNode } from '../constraint-classes';
-import { getSelectedNode } from '../helper-methods';
-import { createRect, createVerticalLine, renderArrow, renderCircle, renderLock } from '../interactive-view-objects';
-import { Layer } from './constraint-types';
-import { getLayerOfNode, getLayers, getNodesOfLayer, getPositionInLayer, isLayerForbidden, shouldOnlyLCBeSet } from './constraint-utils';
-
+import { VNode } from 'snabbdom'
+import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Direction, KNode } from '../constraint-classes'
+import { getSelectedNode } from '../helper-methods'
+import { createRect, createVerticalLine, renderArrow, renderCircle, renderLock } from '../interactive-view-objects'
+import { Layer } from './constraint-types'
+import {
+    getLayerOfNode,
+    getLayers,
+    getNodesOfLayer,
+    getPositionInLayer,
+    isLayerForbidden,
+    shouldOnlyLCBeSet,
+} from './constraint-utils'
 
 /**
  * Visualize the layer the selected node is in as a rectangle and all other layers as a vertical line.
@@ -31,7 +37,7 @@ import { getLayerOfNode, getLayers, getNodesOfLayer, getPositionInLayer, isLayer
  * @param root Root of the hierarchical level.
  */
 export function renderHierarchyLevel(nodes: KNode[]): VNode {
-    const direction = nodes[0].direction
+    const { direction } = nodes[0]
     const selNode = getSelectedNode(nodes)
     if (selNode !== undefined) {
         const layers = getLayers(nodes, direction)
@@ -39,24 +45,34 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
         const forbidden = isLayerForbidden(selNode, currentLayer)
 
         // y coordinates of the layers
-        const topBorder = layers[0].topBorder
-        const bottomBorder = layers[0].bottomBorder
+        const { topBorder } = layers[0]
+        const { bottomBorder } = layers[0]
 
         // let globalEndCoordinate = layers[layers.length - 1].end
 
         // determines whether only the layer constraint will be set when the node is released
-        const onlyLC = shouldOnlyLCBeSet(selNode, layers, direction) && selNode.properties['org.eclipse.elk.layered.layering.layerId'] !== currentLayer
+        const onlyLC =
+            shouldOnlyLCBeSet(selNode, layers, direction) &&
+            selNode.properties['org.eclipse.elk.layered.layering.layerId'] !== currentLayer
 
         // create layers
         let result = <g></g>
         for (let i = 0; i < layers.length; i++) {
             const layer = layers[i]
             if (i === currentLayer) {
-                result = <g>{result}{createRect(layer.begin, layer.end, topBorder, bottomBorder, forbidden, onlyLC, direction)}</g>
-            } else {
-                if (!isLayerForbidden(selNode, i)) {
-                    result = <g>{result}{createVerticalLine(layer.mid, topBorder, bottomBorder, direction)}</g>
-                }
+                result = (
+                    <g>
+                        {result}
+                        {createRect(layer.begin, layer.end, topBorder, bottomBorder, forbidden, onlyLC, direction)}
+                    </g>
+                )
+            } else if (!isLayerForbidden(selNode, i)) {
+                result = (
+                    <g>
+                        {result}
+                        {createVerticalLine(layer.mid, topBorder, bottomBorder, direction)}
+                    </g>
+                )
             }
         }
 
@@ -67,23 +83,47 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
             // Only show the layer if the moved node is not (the only node) in the last layer
             // globalEndCoordinate = lastLayer.end + lastLayer.end - lastLayer.begin
             if (currentLayer === layers.length) {
-                result = <g>{result}{createRect(lastLayer.end, lastLayer.end + (lastLayer.end - lastLayer.begin), topBorder, bottomBorder, forbidden, onlyLC, direction)}</g>
+                result = (
+                    <g>
+                        {result}
+                        {createRect(
+                            lastLayer.end,
+                            lastLayer.end + (lastLayer.end - lastLayer.begin),
+                            topBorder,
+                            bottomBorder,
+                            forbidden,
+                            onlyLC,
+                            direction
+                        )}
+                    </g>
+                )
             } else {
-                result = <g>{result}{createVerticalLine(lastLayer.mid + (lastLayer.end - lastLayer.begin), topBorder, bottomBorder, direction)}</g>
+                result = (
+                    <g>
+                        {result}
+                        {createVerticalLine(
+                            lastLayer.mid + (lastLayer.end - lastLayer.begin),
+                            topBorder,
+                            bottomBorder,
+                            direction
+                        )}
+                    </g>
+                )
             }
         }
 
         // Positions should only be rendered if a position constraint will be set
         if (!onlyLC) {
-            // @ts-ignore
-            return <g>{result}{renderPositions(currentLayer, nodes, layers, forbidden, direction)}</g>
-        } else {
-            // Add available positions
-            // @ts-ignore
-            return result
+            return (
+                <g>
+                    {result}
+                    {renderPositions(currentLayer, nodes, layers, forbidden, direction)}
+                </g>
+            )
         }
+        // Add available positions
+        return result
     }
-    // @ts-ignore
     return <g></g>
 }
 
@@ -95,7 +135,13 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
  * @param layers All layers in the graph at the hierarchical level.
  * @param forbidden Determines whether the current layer is forbidden.
  */
-export function renderPositions(current: number, nodes: KNode[], layers: Layer[], forbidden: boolean, direction: Direction): VNode {
+export function renderPositions(
+    current: number,
+    nodes: KNode[],
+    layers: Layer[],
+    forbidden: boolean,
+    direction: Direction
+): VNode {
     const layerNodes: KNode[] = getNodesOfLayer(current, nodes)
 
     // get the selected node
@@ -108,13 +154,18 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
     // position of selected node
     const curPos = getPositionInLayer(layerNodes, target)
 
-    layerNodes.sort((a, b) => (a.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] as number) - (b.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] as number))
+    layerNodes.sort(
+        (a, b) =>
+            (a.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] as number) -
+            (b.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] as number)
+    )
     if (layerNodes.length > 0) {
         let result = <g></g>
         // mid of the current layer
 
         let shift = 1
-        let x = 0, y = 0;
+        let x = 0
+        let y = 0
         // calculate positions between nodes
         for (let i = 0; i < layerNodes.length - 1; i++) {
             const node = layerNodes[i]
@@ -122,36 +173,45 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
             if (!node.selected && !layerNodes[i + 1].selected) {
                 // calculate y coordinate of the mid between the two nodes
                 switch (direction) {
-                    case Direction.UNDEFINED: case Direction.RIGHT: {
+                    case Direction.UNDEFINED:
+                    case Direction.RIGHT: {
                         x = layers[current].mid
                         const topY = node.position.y + node.size.height
                         const botY = layerNodes[i + 1].position.y
                         y = topY + (botY - topY) / 2
-                        break;
+                        break
                     }
                     case Direction.LEFT: {
                         x = layers[current].mid
                         const topY = node.position.y + node.size.height
                         const botY = layerNodes[i + 1].position.y
                         y = topY + (botY - topY) / 2
-                        break;
+                        break
                     }
                     case Direction.DOWN: {
                         y = layers[current].mid
                         const topX = node.position.x + node.size.width
                         const botX = layerNodes[i + 1].position.x
                         x = topX + (botX - topX) / 2
-                        break;
+                        break
                     }
                     case Direction.UP: {
                         y = layers[current].mid
                         const topX = node.position.x + node.size.width
                         const botX = layerNodes[i + 1].position.x
                         x = topX + (botX - topX) / 2
-                        break;
+                        break
+                    }
+                    default: {
+                        console.error('error in layered-interactive.view.tsx, unexpected direction in switch')
                     }
                 }
-                result = <g>{result}{renderCircle(curPos === i + shift, x, y, forbidden)}</g>
+                result = (
+                    <g>
+                        {result}
+                        {renderCircle(curPos === i + shift, x, y, forbidden)}
+                    </g>
+                )
             } else {
                 shift = 0
             }
@@ -161,92 +221,120 @@ export function renderPositions(current: number, nodes: KNode[], layers: Layer[]
         const first = layerNodes[0]
         if (!first.selected) {
             switch (direction) {
-                case Direction.UNDEFINED: case Direction.RIGHT: {
+                case Direction.UNDEFINED:
+                case Direction.RIGHT: {
                     x = layers[current].mid
                     y = layers[current].topBorder + (first.position.y - layers[current].topBorder) / 2
-                    break;
+                    break
                 }
                 case Direction.LEFT: {
                     x = layers[current].mid
                     y = layers[current].topBorder + (first.position.y - layers[current].topBorder) / 2
-                    break;
+                    break
                 }
                 case Direction.DOWN: {
                     y = layers[current].mid
                     x = layers[current].topBorder + (first.position.x - layers[current].topBorder) / 2
-                    break;
+                    break
                 }
                 case Direction.UP: {
                     y = layers[current].mid
                     x = layers[current].topBorder + (first.position.x - layers[current].topBorder) / 2
-                    break;
+                    break
+                }
+                default: {
+                    console.error('error in layered.interactive-view.tsx, unexpected direction in switch')
                 }
             }
-            result = <g>{result}{renderCircle(curPos === 0, x, y, forbidden)}</g>
+            result = (
+                <g>
+                    {result}
+                    {renderCircle(curPos === 0, x, y, forbidden)}
+                </g>
+            )
         }
         // position below the last node is available if the last node is not the selected one
         const last = layerNodes[layerNodes.length - 1]
         if (!last.selected) {
             switch (direction) {
-                case Direction.UNDEFINED: case Direction.RIGHT: {
+                case Direction.UNDEFINED:
+                case Direction.RIGHT: {
                     x = layers[current].mid
-                    y = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
-                    break;
+                    y =
+                        layers[current].bottomBorder -
+                        (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
+                    break
                 }
                 case Direction.LEFT: {
                     x = layers[current].mid
-                    y = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
-                    break;
+                    y =
+                        layers[current].bottomBorder -
+                        (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
+                    break
                 }
                 case Direction.DOWN: {
                     y = layers[current].mid
-                    x = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
-                    break;
+                    x =
+                        layers[current].bottomBorder -
+                        (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
+                    break
                 }
                 case Direction.UP: {
                     y = layers[current].mid
-                    x = layers[current].bottomBorder - (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
-                    break;
+                    x =
+                        layers[current].bottomBorder -
+                        (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
+                    break
+                }
+                default: {
+                    console.error('error in layered.interactive-view.tsx, unexpected direction in switch')
                 }
             }
-            result = <g>{result}{renderCircle(curPos === layerNodes.length - 1 + shift, x, y, forbidden)}</g>
+            result = (
+                <g>
+                    {result}
+                    {renderCircle(curPos === layerNodes.length - 1 + shift, x, y, forbidden)}
+                </g>
+            )
         }
 
-        // @ts-ignore
         return result
-    } else {
-        // there are no nodes in the layer
-        // show a circle in the middle of the layer
-        let x = 0, y = 0
-        switch (direction) {
-            case Direction.UNDEFINED: case Direction.RIGHT: {
-                const lastLayer = layers[layers.length - 1]
-                x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
-            }
-            case Direction.LEFT: {
-                const lastLayer = layers[layers.length - 1]
-                x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
-            }
-            case Direction.DOWN: {
-                const lastLayer = layers[layers.length - 1]
-                y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
-            }
-            case Direction.UP: {
-                const lastLayer = layers[layers.length - 1]
-                y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-                x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-                break;
-            }
-        }
-        // @ts-ignore
-        return <g>{renderCircle(true, x, y, forbidden)}</g>
     }
+    // there are no nodes in the layer
+    // show a circle in the middle of the layer
+    let x = 0
+    let y = 0
+    switch (direction) {
+        case Direction.UNDEFINED:
+        case Direction.RIGHT: {
+            const lastLayer = layers[layers.length - 1]
+            x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+            y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+            break
+        }
+        case Direction.LEFT: {
+            const lastLayer = layers[layers.length - 1]
+            x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+            y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+            break
+        }
+        case Direction.DOWN: {
+            const lastLayer = layers[layers.length - 1]
+            y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+            x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+            break
+        }
+        case Direction.UP: {
+            const lastLayer = layers[layers.length - 1]
+            y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+            x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+            break
+        }
+        default: {
+            console.error('error in layered.interactive-view.tsx, unexpected direction in switch')
+        }
+    }
+    return <g>{renderCircle(true, x, y, forbidden)}</g>
 }
 
 /**
@@ -258,9 +346,16 @@ export function renderLayeredConstraint(node: KNode): VNode {
     const x = node.size.width
     const y = 0
     const constraintOffset = 2
-    const positionConstraint = node.properties['org.eclipse.elk.layered.crossingMinimization.positionChoiceConstraint'] as number
+    const positionConstraint = node.properties[
+        'org.eclipse.elk.layered.crossingMinimization.positionChoiceConstraint'
+    ] as number
     const layerConstraint = node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint']
-    if (layerConstraint !== -1 && positionConstraint !== -1 && layerConstraint !== undefined && positionConstraint !== undefined) {
+    if (
+        layerConstraint !== -1 &&
+        positionConstraint !== -1 &&
+        layerConstraint !== undefined &&
+        positionConstraint !== undefined
+    ) {
         // layer and position Constraint are set
         result = <g>{renderLock(x, y)}</g>
     } else if (layerConstraint !== -1 && layerConstraint !== undefined) {
@@ -270,7 +365,6 @@ export function renderLayeredConstraint(node: KNode): VNode {
         // only position Constraint is set
         result = <g>{renderPositionConstraint(x + constraintOffset, y - constraintOffset, node.direction)}</g>
     }
-    // @ts-ignore
     return result
 }
 
@@ -285,13 +379,20 @@ const horizontalArrowYOffset = -0.7
  * @param y
  */
 function renderLayerConstraint(x: number, y: number, direction: Direction): VNode {
-    const vertical = !(direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
+    const vertical = !(
+        direction === Direction.UNDEFINED ||
+        direction === Direction.RIGHT ||
+        direction === Direction.LEFT
+    )
     const xOffset = vertical ? verticalArrowXOffset : horizontalArrowXOffset
     const yOffset = vertical ? verticalArrowYOffset : horizontalArrowYOffset
-    // @ts-ignore
-    return <g> {renderLock(x, y)}
-        {renderArrow(x + xOffset, y + yOffset, vertical)}
-    </g>
+    return (
+        <g>
+            {' '}
+            {renderLock(x, y)}
+            {renderArrow(x + xOffset, y + yOffset, vertical)}
+        </g>
+    )
 }
 
 /**
@@ -300,11 +401,14 @@ function renderLayerConstraint(x: number, y: number, direction: Direction): VNod
  * @param y
  */
 function renderPositionConstraint(x: number, y: number, direction: Direction): VNode {
-    const vertical = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
+    const vertical = direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT
     const xOffset = vertical ? verticalArrowXOffset : horizontalArrowXOffset
     const yOffset = vertical ? verticalArrowYOffset : horizontalArrowYOffset
-    // @ts-ignore
-    return <g> {renderLock(x, y)}
-        {renderArrow(x + xOffset, y + yOffset, vertical)}
-    </g>
+    return (
+        <g>
+            {' '}
+            {renderLock(x, y)}
+            {renderArrow(x + xOffset, y + yOffset, vertical)}
+        </g>
+    )
 }

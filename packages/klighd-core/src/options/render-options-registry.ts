@@ -15,26 +15,34 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable, postConstruct } from "inversify";
-import { ICommand } from "sprotty";
-import { Action, UpdateModelAction } from "sprotty-protocol";
-import { Registry } from "../base/registry";
-import { PersistenceStorage } from "../services";
-import { ResetRenderOptionsAction, SetRenderOptionAction } from "./actions";
-import { RangeOption, RenderOption, TransformationOptionType } from "./option-models";
+import { inject, injectable, postConstruct } from 'inversify'
+import { ICommand } from 'sprotty'
+import { Action, UpdateModelAction } from 'sprotty-protocol'
+import { Registry } from '../base/registry'
+import { PersistenceStorage, ServiceTypes } from '../services'
+import { ResetRenderOptionsAction, SetRenderOptionAction } from './actions'
+import { RangeOption, RenderOption, TransformationOptionType } from './option-models'
 
 /**
- * Whether the sidebar panel is pinned or not. 
+ * Whether the sidebar panel is pinned or not.
  */
 export class PinSidebarOption implements RenderOption {
-    static readonly ID: string = 'pin-sidebar';
-    static readonly NAME: string = 'Pin Sidebar';
+    static readonly ID: string = 'pin-sidebar'
+
+    static readonly NAME: string = 'Pin Sidebar'
+
     static readonly DEFAULT: boolean = true
-    readonly id: string = PinSidebarOption.ID;
-    readonly name: string = PinSidebarOption.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = PinSidebarOption.DEFAULT;
-    currentValue = PinSidebarOption.DEFAULT;
+
+    readonly id: string = PinSidebarOption.ID
+
+    readonly name: string = PinSidebarOption.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = PinSidebarOption.DEFAULT
+
+    currentValue = PinSidebarOption.DEFAULT
+
     debug = true
 }
 
@@ -44,16 +52,25 @@ export class PinSidebarOption implements RenderOption {
  * This has to have the same id as the corresponding FitToScreenAction.
  */
 export class ResizeToFit implements RenderOption {
-    static readonly ID: string = 'fit';
-    static readonly NAME: string = 'Resize To Fit on Refresh';
+    static readonly ID: string = 'fit'
+
+    static readonly NAME: string = 'Resize To Fit on Refresh'
+
     static readonly DEFAULT: boolean = true
-    readonly id: string = ResizeToFit.ID;
-    readonly name: string = ResizeToFit.NAME;
+
+    readonly id: string = ResizeToFit.ID
+
+    readonly name: string = ResizeToFit.NAME
+
     // readonly tooltip: string = ResizeToFit.TOOLTIP;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ResizeToFit.DEFAULT;
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = ResizeToFit.DEFAULT
+
     readonly description = 'Always resize to fit after diagram refresh.'
-    currentValue = ResizeToFit.DEFAULT;
+
+    currentValue = ResizeToFit.DEFAULT
+
     debug = true
 }
 
@@ -61,38 +78,62 @@ export class ResizeToFit implements RenderOption {
  * Uses a light background instead of an applied theme.
  */
 export class ForceLightBackground implements RenderOption {
-    static readonly ID: string = 'force-light-background';
-    static readonly NAME: string = 'Use Light Background';
+    static readonly ID: string = 'force-light-background'
+
+    static readonly NAME: string = 'Use Light Background'
+
     static readonly DEFAULT: boolean = false
-    readonly id: string = ForceLightBackground.ID;
-    readonly name: string = ForceLightBackground.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = ForceLightBackground.DEFAULT;
+
+    readonly id: string = ForceLightBackground.ID
+
+    readonly name: string = ForceLightBackground.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = ForceLightBackground.DEFAULT
+
     readonly renderCategory: string = Appearance.ID
+
     readonly description = 'Use light background regardless of the color scheme.'
-    currentValue = ForceLightBackground.DEFAULT;
+
+    currentValue = ForceLightBackground.DEFAULT
 }
 
 export class ShowConstraintOption implements RenderOption {
-    static readonly ID: string = 'show-constraints';
-    static readonly NAME: string = 'Show Constraint';
-    readonly id: string = ShowConstraintOption.ID;
-    readonly name: string = ShowConstraintOption.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = false;
+    static readonly ID: string = 'show-constraints'
+
+    static readonly NAME: string = 'Show Constraint'
+
+    readonly id: string = ShowConstraintOption.ID
+
+    readonly name: string = ShowConstraintOption.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = false
+
     readonly renderCategory: string = Appearance.ID
+
     readonly description = 'Show marker for nodes that have interactive layout constraints set.'
-    currentValue = false;
+
+    currentValue = false
 }
 
 export class Appearance implements RenderOption {
     static readonly ID: string = 'appearance'
+
     static readonly NAME: string = 'Appearance'
+
     readonly id: string = Appearance.ID
+
     readonly name: string = Appearance.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.CATEGORY
+
     readonly initialValue: boolean = true
+
     readonly description = 'Appearance Category'
+
     currentValue = true
 }
 
@@ -101,13 +142,21 @@ export class Appearance implements RenderOption {
  */
 export class SmartZoom implements RenderOption {
     static readonly ID: string = 'smart-zoom'
+
     static readonly NAME: string = 'Smart Zoom'
+
     readonly id: string = SmartZoom.ID
+
     readonly name: string = SmartZoom.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.CATEGORY
+
     readonly initialValue: boolean = true
+
     readonly renderCategory: string = Appearance.ID
+
     readonly description = 'Smart Zoom Category'
+
     currentValue = true
 }
 
@@ -118,13 +167,21 @@ export class SmartZoom implements RenderOption {
  */
 export class UseSmartZoom implements RenderOption {
     static readonly ID: string = 'use-smart-zoom'
+
     static readonly NAME: string = 'Smart Zoom'
+
     readonly id: string = UseSmartZoom.ID
+
     readonly name: string = UseSmartZoom.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
     readonly initialValue: boolean = true
+
     readonly renderCategory: string = SmartZoom.ID
+
     readonly description = 'Enables Smart Zoom'
+
     currentValue = true
 }
 
@@ -134,21 +191,34 @@ export class UseSmartZoom implements RenderOption {
  */
 export class FullDetailRelativeThreshold implements RangeOption {
     static readonly ID: string = 'full-detail-relative-threshold'
+
     static readonly NAME: string = 'Full Detail Relative Threshold'
+
     static readonly DEFAULT: number = 0.15
+
     readonly id: string = FullDetailRelativeThreshold.ID
+
     readonly name: string = FullDetailRelativeThreshold.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
+
     readonly values: any[] = []
+
     readonly range = {
         first: 0.01,
-        second: 1
+        second: 1,
     }
+
     readonly stepSize = 0.01
+
     readonly initialValue: number = FullDetailRelativeThreshold.DEFAULT
+
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = 'Shows all children of an element that uses at least the amount of the canvas.'
-        + 'A value of 0.2 means an element is shown if its parent has at least 0.2 the size (minimum of width and height) of the canvas.'
+
+    readonly description =
+        'Shows all children of an element that uses at least the amount of the canvas.' +
+        'A value of 0.2 means an element is shown if its parent has at least 0.2 the size (minimum of width and height) of the canvas.'
+
     currentValue = 0.2
 }
 
@@ -158,37 +228,57 @@ export class FullDetailRelativeThreshold implements RangeOption {
  */
 export class FullDetailScaleThreshold implements RangeOption {
     static readonly ID: string = 'full-detail-scale-threshold'
+
     static readonly NAME: string = 'Full Detail Scale Threshold'
+
     static readonly DEFAULT: number = 0.25
+
     readonly id: string = FullDetailScaleThreshold.ID
+
     readonly name: string = FullDetailScaleThreshold.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
+
     readonly values: any[] = []
+
     readonly range = {
         first: 0.01,
-        second: 1
+        second: 1,
     }
+
     readonly stepSize = 0.01
+
     readonly initialValue: number = FullDetailScaleThreshold.DEFAULT
+
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = 'Show an element if it can be rendered in at least the given amount of it original size.'
-        + 'A value of 0.25 means an element is shown if it can be drawn in a fourth of its original height or width.'
+
+    readonly description =
+        'Show an element if it can be rendered in at least the given amount of it original size.' +
+        'A value of 0.25 means an element is shown if it can be drawn in a fourth of its original height or width.'
+
     currentValue = 0.25
 }
-
 
 /**
  * Boolean option toggling the use of text element replacement with rectangles.
  */
 export class SimplifySmallText implements RenderOption {
     static readonly ID: string = 'simplify-small-text'
+
     static readonly NAME: string = 'Simplify Small Text'
+
     readonly id: string = SimplifySmallText.ID
+
     readonly name: string = SimplifySmallText.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
     readonly initialValue: boolean = true
+
     readonly renderCategory: string = SmartZoom.ID
+
     readonly description = 'Whether illegible text is simplified to colored rectangles.'
+
     currentValue = true
 }
 
@@ -197,20 +287,33 @@ export class SimplifySmallText implements RenderOption {
  */
 export class TextSimplificationThreshold implements RangeOption {
     static readonly ID: string = 'text-simplification-threshold'
+
     static readonly NAME: string = 'Text Simplification Threshold'
+
     static readonly DEFAULT: number = 3
+
     readonly id: string = TextSimplificationThreshold.ID
+
     readonly name: string = TextSimplificationThreshold.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
+
     readonly values: any[] = []
+
     readonly range = {
         first: 1,
-        second: 10
+        second: 10,
     }
+
     readonly stepSize = 0.1
+
     readonly initialValue: number = TextSimplificationThreshold.DEFAULT
+
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = 'The threshold font size to simplify text.\nIf set to 3 a text which is 3 or less pixel high is simplified.'
+
+    readonly description =
+        'The threshold font size to simplify text.\nIf set to 3 a text which is 3 or less pixel high is simplified.'
+
     currentValue = 3
 }
 
@@ -220,22 +323,35 @@ export class TextSimplificationThreshold implements RangeOption {
  */
 export class TitleScalingFactor implements RangeOption {
     static readonly ID: string = 'title-scaling-factor'
+
     static readonly NAME: string = 'Title Scaling Factor'
+
     static readonly DEFAULT: number = 1
+
     readonly id: string = TitleScalingFactor.ID
+
     readonly name: string = TitleScalingFactor.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
+
     readonly values: any[] = []
+
     readonly range = {
         first: 0.5,
-        second: 3
+        second: 3,
     }
+
     readonly stepSize = 0.01
+
     readonly initialValue: number = TitleScalingFactor.DEFAULT
+
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = 'Factor to scale region titles compared to their original size.'
-        + 'If set to 1 a region title be its original size (if the space permits) regardless of the zoom level.'
-        + 'If it was 10 pixel high before it will always be 10 pixel high if the label can fit the region.'
+
+    readonly description =
+        'Factor to scale region titles compared to their original size.' +
+        'If set to 1 a region title be its original size (if the space permits) regardless of the zoom level.' +
+        'If it was 10 pixel high before it will always be 10 pixel high if the label can fit the region.'
+
     currentValue = 1
 }
 
@@ -244,13 +360,22 @@ export class TitleScalingFactor implements RangeOption {
  */
 export class UseMinimumLineWidth implements RenderOption {
     static readonly ID: string = 'use-minimum-line-width'
+
     static readonly NAME: string = 'Minimum Line Width'
+
     readonly id: string = UseMinimumLineWidth.ID
+
     readonly name: string = UseMinimumLineWidth.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
     readonly initialValue: boolean = true
+
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = "Whether all borders and lines are at least as wide as set by the corresponding 'Minimum Line Width' option."
+
+    readonly description =
+        "Whether all borders and lines are at least as wide as set by the corresponding 'Minimum Line Width' option."
+
     currentValue = true
 }
 
@@ -259,20 +384,33 @@ export class UseMinimumLineWidth implements RenderOption {
  */
 export class MinimumLineWidth implements RangeOption {
     static readonly ID: string = 'minimum-line-width'
+
     static readonly NAME: string = 'Minimum Line Width'
+
     static readonly DEFAULT: number = 1
+
     readonly id: string = MinimumLineWidth.ID
+
     readonly name: string = MinimumLineWidth.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
+
     readonly values: any[] = []
+
     readonly range = {
         first: 0.1,
-        second: 3
+        second: 3,
     }
+
     readonly stepSize = 0.01
+
     readonly initialValue: number = 0.5
+
     readonly renderCategory: string = SmartZoom.ID
-    readonly description = "The minium border or line width.\nIf set to 0.5 each edge or border is at least 0.5 pixel wide."
+
+    readonly description =
+        'The minium border or line width.\nIf set to 0.5 each edge or border is at least 0.5 pixel wide.'
+
     currentValue = 0.5
 }
 
@@ -280,7 +418,7 @@ export enum ShadowOption {
     /** A real svg shadow. */
     PAPER_MODE = 'Paper Mode',
     /** The shape of the node drawn with different opacity multiple times behind the node. */
-    KIELER_STYLE = 'KIELER Style'
+    KIELER_STYLE = 'KIELER Style',
 }
 
 /**
@@ -289,18 +427,29 @@ export enum ShadowOption {
  */
 export class Shadows implements RenderOption {
     static readonly ID: string = 'paper-shadows'
+
     static readonly NAME: string = 'Shadow Mode'
+
     static readonly DEFAULT: ShadowOption = ShadowOption.KIELER_STYLE
+
     readonly id: string = Shadows.ID
+
     readonly name: string = Shadows.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.CHOICE
+
     readonly initialValue: ShadowOption = Shadows.DEFAULT
+
     readonly renderCategory: string = Appearance.ID
+
     readonly values? = [ShadowOption.PAPER_MODE, ShadowOption.KIELER_STYLE]
-    readonly description = 'The style shadows should be drawn in, either the paper mode shadows (nice, but slow in performance)'
-     + 'or in default KIELER Style (fast, not as nice looking).'
-     + 'KIELER Style draws multiple shapes in form of the node behind the node.'
-     + 'Paper Mode uses SVG shadows.'
+
+    readonly description =
+        'The style shadows should be drawn in, either the paper mode shadows (nice, but slow in performance)' +
+        'or in default KIELER Style (fast, not as nice looking).' +
+        'KIELER Style draws multiple shapes in form of the node behind the node.' +
+        'Paper Mode uses SVG shadows.'
+
     currentValue = Shadows.DEFAULT
 }
 
@@ -308,14 +457,21 @@ export class Shadows implements RenderOption {
  * Whether going to a Bookmark should be animated
  */
 export class AnimateGoToBookmark implements RenderOption {
-    static readonly ID: string = 'animate-go-to-bookmark';
-    static readonly NAME: string = 'Animate Go To Bookmark';
+    static readonly ID: string = 'animate-go-to-bookmark'
+
+    static readonly NAME: string = 'Animate Go To Bookmark'
+
     static readonly DEFAULT: boolean = true
-    readonly id: string = AnimateGoToBookmark.ID;
-    readonly name: string = AnimateGoToBookmark.NAME;
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK;
-    readonly initialValue: boolean = AnimateGoToBookmark.DEFAULT;
-    currentValue = true;
+
+    readonly id: string = AnimateGoToBookmark.ID
+
+    readonly name: string = AnimateGoToBookmark.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = AnimateGoToBookmark.DEFAULT
+
+    currentValue = true
 }
 
 /**
@@ -323,72 +479,79 @@ export class AnimateGoToBookmark implements RenderOption {
  */
 export class DebugOptions implements RenderOption {
     static readonly ID: string = 'debug-options'
+
     static readonly NAME: string = 'Debug Options'
+
     readonly id: string = DebugOptions.ID
+
     readonly name: string = DebugOptions.NAME
+
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
     readonly initialValue: boolean = false
-    readonly description = "Whether debug options should be shown."
+
+    readonly description = 'Whether debug options should be shown.'
+
     currentValue = false
+
     debug = true
 }
 
 export interface RenderOptionType {
-    readonly ID: string,
-    readonly NAME: string,
-    new(): RenderOption,
+    readonly ID: string
+    readonly NAME: string
+    new (): RenderOption
 }
 
 export interface RenderOptionDefault extends RenderOptionType {
-    readonly DEFAULT: any,
+    readonly DEFAULT: any
 }
 
 /** {@link Registry} that stores and updates different render options. */
 @injectable()
 export class RenderOptionsRegistry extends Registry {
-    private _renderOptions: Map<string, RenderOption> = new Map();
+    private _renderOptions: Map<string, RenderOption> = new Map()
 
-    @inject(PersistenceStorage) private storage: PersistenceStorage;
+    @inject(ServiceTypes.PersistenceStorage) private storage: PersistenceStorage
 
     constructor() {
-        super();
+        super()
         // Add available render options to this registry
-
         // Debug
-        this.register(DebugOptions);
-        this.register(ResizeToFit);
-        this.register(PinSidebarOption);
+        this.register(DebugOptions)
+        this.register(ResizeToFit)
+        this.register(PinSidebarOption)
 
-        this.register(AnimateGoToBookmark);
+        this.register(AnimateGoToBookmark)
 
         // Appearance
         this.register(Appearance)
 
-        this.register(ForceLightBackground);
-        this.register(ShowConstraintOption);
+        this.register(ForceLightBackground)
+        this.register(ShowConstraintOption)
         this.register(Shadows)
 
         // Smart Zoom
         this.register(SmartZoom)
-        
-        this.register(UseSmartZoom);
+
+        this.register(UseSmartZoom)
         this.register(FullDetailRelativeThreshold)
         this.register(FullDetailScaleThreshold)
 
-        this.register(SimplifySmallText);
-        this.register(TextSimplificationThreshold);
+        this.register(SimplifySmallText)
+        this.register(TextSimplificationThreshold)
 
-        this.register(TitleScalingFactor);
+        this.register(TitleScalingFactor)
 
-        this.register(UseMinimumLineWidth);
-        this.register(MinimumLineWidth);
+        this.register(UseMinimumLineWidth)
+        this.register(MinimumLineWidth)
     }
 
     @postConstruct()
     init(): void {
         this.storage.getItem<Record<string, unknown>>('render').then((data) => {
-            if (data) this.loadPersistedData(data);
-        });
+            if (data) this.loadPersistedData(data)
+        })
     }
 
     /**
@@ -397,12 +560,13 @@ export class RenderOptionsRegistry extends Registry {
      */
     private loadPersistedData(data: Record<string, unknown>) {
         for (const entry of Object.entries(data)) {
-            const option = this._renderOptions.get(entry[0]);
-            if (!option) continue;
-
-            option.currentValue = entry[1];
+            const option = this._renderOptions.get(entry[0])
+            if (option) {
+                // eslint-disable-next-line prefer-destructuring
+                option.currentValue = entry[1]
+            }
         }
-        this.notifyListeners();
+        this.notifyListeners()
     }
 
     /** Registers a single render option. */
@@ -412,7 +576,7 @@ export class RenderOptionsRegistry extends Registry {
 
     /** Convenience method to register all given options in order. */
     registerAll(...Options: RenderOptionType[]): void {
-        Options.forEach(Option => this.register(Option))
+        Options.forEach((Option) => this.register(Option))
     }
 
     /** Unregisters a single render option. */
@@ -422,34 +586,34 @@ export class RenderOptionsRegistry extends Registry {
 
     /** Convenience method to unregister all given options in order. */
     unregisterAll(...Options: RenderOptionType[]): boolean {
-        return Options.every(Option => this.unregister(Option))
+        return Options.every((Option) => this.unregister(Option))
     }
 
     /** Handles the render options actions. */
+    // eslint-disable-next-line consistent-return
     handle(action: Action): void | Action | ICommand {
         if (SetRenderOptionAction.isThisAction(action)) {
-            const option = this._renderOptions.get(action.id);
-            if (!option) return;
-
-            option.currentValue = action.value;
-            this.notifyListeners();
-
+            const option = this._renderOptions.get(action.id)
+            if (option) {
+                option.currentValue = action.value
+                this.notifyListeners()
+            }
         } else if (ResetRenderOptionsAction.isThisAction(action)) {
             this._renderOptions.forEach((option) => {
-                option.currentValue = option.initialValue;
-            });
-            this.notifyListeners();
-
+                option.currentValue = option.initialValue
+            })
+            this.notifyListeners()
+        } else {
+            return UpdateModelAction.create([], { animate: false, cause: action })
         }
-        return UpdateModelAction.create([], { animate: false, cause: action })
     }
 
     get allRenderOptions(): RenderOption[] {
-        return Array.from(this._renderOptions.values());
+        return Array.from(this._renderOptions.values())
     }
 
     getValue(Option: RenderOptionType): any | undefined {
-        return this._renderOptions.get(Option.ID)?.currentValue;
+        return this._renderOptions.get(Option.ID)?.currentValue
     }
 
     getValueOrDefault(Option: RenderOptionDefault): any {

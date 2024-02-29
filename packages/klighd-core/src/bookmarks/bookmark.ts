@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -14,10 +14,20 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { inject, injectable } from "inversify";
-import { ActionDispatcher, Command, CommandExecutionContext, CommandReturn, isViewport, SetViewportCommand, TYPES } from "sprotty";
-import { Action, SetViewportAction, Viewport } from "sprotty-protocol";
+import { inject, injectable } from 'inversify'
+import {
+    ActionDispatcher,
+    Command,
+    CommandExecutionContext,
+    CommandReturn,
+    isViewport,
+    SetViewportCommand,
+    TYPES,
+} from 'sprotty'
+import { Action, SetViewportAction, Viewport } from 'sprotty-protocol'
 
 /**
  * A Bookmark
@@ -26,30 +36,31 @@ export class Bookmark {
     /**
      * Optional a user defined display name for the bookmark
      */
-    name?: string;
+    name?: string
 
     /**
      * The Viewport which the Bookmark marks
      */
-    place: Viewport;
+    place: Viewport
 
     /**
      * Bookmark Index
      * Assigned by BookmarkRegistry
      */
-    bookmarkIndex?: number;
+    bookmarkIndex?: number
 
     constructor(place: Viewport, name?: string) {
-        this.place = place;
-        this.name = name;
+        this.place = place
+        this.name = name
     }
 
     public static isBookmark(value: any): value is Bookmark {
-
-        if ('zoom' in value.place
-            && 'scroll' in value.place
-            && 'x' in value.place.scroll
-            && 'y' in value.place.scroll) {
+        if (
+            'zoom' in value.place &&
+            'scroll' in value.place &&
+            'x' in value.place.scroll &&
+            'y' in value.place.scroll
+        ) {
             return true
         }
         return false
@@ -58,17 +69,17 @@ export class Bookmark {
     public clone(): Bookmark {
         const place = {
             zoom: this.place.zoom,
-            scroll: { x: this.place.scroll.x, y: this.place.scroll.y }
+            scroll: { x: this.place.scroll.x, y: this.place.scroll.y },
         }
-        return new Bookmark(place, this.name);
+        return new Bookmark(place, this.name)
     }
 
     public get saveId(): string {
-        return "bookmark-save-" + this.bookmarkIndex
+        return `bookmark-save-${this.bookmarkIndex}`
     }
 
     public get editId(): string {
-        return "bookmark-edit-" + this.bookmarkIndex
+        return `bookmark-edit-${this.bookmarkIndex}`
     }
 }
 
@@ -90,7 +101,7 @@ export namespace CreateBookmarkAction {
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is CreateBookmarkAction {
-        return action.kind === CreateBookmarkAction.KIND;
+        return action.kind === CreateBookmarkAction.KIND
     }
 }
 
@@ -100,17 +111,17 @@ export namespace CreateBookmarkAction {
  */
 @injectable()
 export class CreateBookmarkCommand extends Command {
-    static readonly KIND = CreateBookmarkAction.KIND;
+    static readonly KIND = CreateBookmarkAction.KIND
 
-    @inject(TYPES.IActionDispatcher) private actionDispatcher: ActionDispatcher;
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: ActionDispatcher
 
     // the created bookmark for us to be able to perform the undo/redo
     // undo relies on the fact that this is the same object that is stored in the registry
     // and we are able to observe the assigned id through this reference
-    private bookmark?: Bookmark;
+    private bookmark?: Bookmark
 
     constructor(@inject(TYPES.Action) protected action: CreateBookmarkAction) {
-        super();
+        super()
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
@@ -118,24 +129,24 @@ export class CreateBookmarkCommand extends Command {
 
         if (isViewport(model)) {
             // copy the viewport as we do want the Bookmark to stay where we are now
-            this.bookmark = new Bookmark({ scroll: model.scroll, zoom: model.zoom });
+            this.bookmark = new Bookmark({ scroll: model.scroll, zoom: model.zoom })
             this.actionDispatcher.dispatch(AddBookmarkAction.create(this.bookmark))
         }
-        return model;
+        return model
     }
 
     undo(context: CommandExecutionContext): CommandReturn {
         if (this.bookmark?.bookmarkIndex) {
             this.actionDispatcher.dispatch(DeleteBookmarkAction.create(this.bookmark.bookmarkIndex))
         }
-        return context.root;
+        return context.root
     }
 
     redo(context: CommandExecutionContext): CommandReturn {
         if (this.bookmark) {
             this.actionDispatcher.dispatch(AddBookmarkAction.create(this.bookmark))
         }
-        return context.root;
+        return context.root
     }
 }
 
@@ -159,7 +170,7 @@ export namespace AddBookmarkAction {
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is AddBookmarkAction {
-        return action.kind === AddBookmarkAction.KIND;
+        return action.kind === AddBookmarkAction.KIND
     }
 }
 
@@ -168,45 +179,45 @@ export namespace AddBookmarkAction {
  */
 export interface DeleteBookmarkAction extends Action {
     kind: typeof DeleteBookmarkAction.KIND
-    bookmark_index: number
+    bookmarkIndex: number
 }
 
 export namespace DeleteBookmarkAction {
     export const KIND = 'delete-bookmark'
 
-    export function create(bookmark_index: number): DeleteBookmarkAction {
+    export function create(bookmarkIndex: number): DeleteBookmarkAction {
         return {
             kind: KIND,
-            bookmark_index,
+            bookmarkIndex,
         }
     }
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is DeleteBookmarkAction {
-        return action.kind === DeleteBookmarkAction.KIND;
+        return action.kind === DeleteBookmarkAction.KIND
     }
 }
 
 export interface RenameBookmarkAction extends Action {
     kind: typeof RenameBookmarkAction.KIND
-    bookmark_index: number
-    new_name: string
+    bookmarkIndex: number
+    newName: string
 }
 
 export namespace RenameBookmarkAction {
     export const KIND = 'rename-bookmark'
 
-    export function create(bookmark_index: number, new_name: string): RenameBookmarkAction {
+    export function create(bookmarkIndex: number, newName: string): RenameBookmarkAction {
         return {
             kind: KIND,
-            bookmark_index,
-            new_name,
+            bookmarkIndex,
+            newName,
         }
     }
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is RenameBookmarkAction {
-        return action.kind === RenameBookmarkAction.KIND;
+        return action.kind === RenameBookmarkAction.KIND
     }
 }
 
@@ -230,15 +241,17 @@ export namespace GoToBookmarkAction {
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is GoToBookmarkAction {
-        return action.kind === GoToBookmarkAction.KIND;
+        return action.kind === GoToBookmarkAction.KIND
     }
 }
 
 export class GoToBookmarkCommand implements Command {
-    static readonly KIND = GoToBookmarkAction.KIND;
+    static readonly KIND = GoToBookmarkAction.KIND
 
     action: GoToBookmarkAction
+
     animate: boolean
+
     setCommand: SetViewportCommand
 
     constructor(action: GoToBookmarkAction, animate: boolean) {
@@ -247,18 +260,21 @@ export class GoToBookmarkCommand implements Command {
     }
 
     execute(context: CommandExecutionContext): CommandReturn {
-        const viewAction = SetViewportAction.create(context.root.id, this.action.bookmark.place, { animate: this.animate })
+        const viewAction = SetViewportAction.create(context.root.id, this.action.bookmark.place, {
+            animate: this.animate,
+        })
         this.setCommand = new SetViewportCommand(viewAction)
 
         return this.setCommand.execute(context)
     }
+
     undo(context: CommandExecutionContext): CommandReturn {
         return this.setCommand.undo(context)
     }
+
     redo(context: CommandExecutionContext): CommandReturn {
         return this.setCommand.redo(context)
     }
-
 }
 
 export interface SetInitialBookmarkAction extends Action {
@@ -278,6 +294,6 @@ export namespace SetInitialBookmarkAction {
 
     /** Type predicate to narrow an action to this action. */
     export function isThisAction(action: Action): action is SetInitialBookmarkAction {
-        return action.kind === SetInitialBookmarkAction.KIND;
+        return action.kind === SetInitialBookmarkAction.KIND
     }
 }

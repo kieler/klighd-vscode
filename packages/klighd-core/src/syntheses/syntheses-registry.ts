@@ -14,11 +14,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { injectable } from "inversify";
-import { ICommand } from "sprotty";
-import { Action } from "sprotty-protocol";
-import { Registry } from "../base/registry";
-import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "./actions";
+import { injectable } from 'inversify'
+import { ICommand } from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { Registry } from '../base/registry'
+import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from './actions'
 
 /**
  * A simple {@link Registry} that holds a list of all available syntheses
@@ -29,26 +29,27 @@ import { SetSynthesesAction, SetSynthesesActionData, SetSynthesisAction } from "
  */
 @injectable()
 export class SynthesesRegistry extends Registry {
-    private _currentSynthesisID = "";
-    private _syntheses: SetSynthesesActionData[] = [];
+    private _currentSynthesisID = ''
+
+    private _syntheses: SetSynthesesActionData[] = []
 
     handle(action: Action): void | Action | ICommand {
         if (SetSynthesesAction.isThisAction(action)) {
-            this._syntheses = action.syntheses;
-            this._currentSynthesisID = action.syntheses[0]?.id ?? "";
+            this._syntheses = action.syntheses
+            this._currentSynthesisID = action.syntheses[0]?.id ?? ''
 
-            this.notifyListeners();
+            this.notifyListeners()
         } else if (SetSynthesisAction.isThisAction(action)) {
-            this._currentSynthesisID = action.id;
-            this.notifyListeners();
+            this._currentSynthesisID = action.id
+            this.notifyListeners()
         }
     }
 
     get syntheses(): SetSynthesesActionData[] {
-        return this._syntheses;
+        return this._syntheses
     }
 
     get currentSynthesisID(): string {
-        return this._currentSynthesisID;
+        return this._currentSynthesisID
     }
 }
