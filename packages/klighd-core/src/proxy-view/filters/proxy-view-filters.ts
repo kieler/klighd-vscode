@@ -15,34 +15,42 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable, postConstruct } from "inversify";
-import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand } from "sprotty";
-import { Action } from "sprotty-protocol";
-import { DISymbol } from "../../di.symbols";
-import { RenderOptionsRegistry } from "../../options/render-options-registry";
-import { SKNode } from "../../skgraph-models";
-import { ProxyView } from "../proxy-view";
-import { SendProxyViewAction } from "../proxy-view-actions";
-import { Canvas, isConnectedToAny, isSelectedOrConnectedToSelected } from "../proxy-view-util";
-import { ProxyViewFilterCategory, ProxyViewFilterDistant, ProxyViewFilterUnconnectedToOnScreen, ProxyViewFilterUnconnectedToSelected, ProxyViewFilterUnselected } from "./proxy-view-filter-options";
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
+import { inject, injectable, postConstruct } from 'inversify'
+import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand } from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { DISymbol } from '../../di.symbols'
+import { RenderOptionsRegistry } from '../../options/render-options-registry'
+import { SKNode } from '../../skgraph-models'
+import { ProxyView } from '../proxy-view'
+import { SendProxyViewAction } from '../proxy-view-actions'
+import { Canvas, isConnectedToAny, isSelectedOrConnectedToSelected } from '../proxy-view-util'
+import {
+    ProxyViewFilterCategory,
+    ProxyViewFilterDistant,
+    ProxyViewFilterUnconnectedToOnScreen,
+    ProxyViewFilterUnconnectedToSelected,
+    ProxyViewFilterUnselected,
+} from './proxy-view-filter-options'
 
-//////// Types ////////
+/// ///// Types ////////
 
 /** The arguments that can be used by {@link ProxyFilter}s. */
 export interface ProxyFilterArgs {
     /** The node to show a proxy for - which the filter is applied to. */
-    node: SKNode;
+    node: SKNode
 
     /** List of all off-screen nodes. */
-    offScreenNodes: SKNode[];
+    offScreenNodes: SKNode[]
     /** List of all on-screen nodes. */
-    onScreenNodes: SKNode[];
+    onScreenNodes: SKNode[]
     /** The canvas in CRF. */
-    canvasCRF: Canvas;
+    canvasCRF: Canvas
     /** The canvas in GRF. */
-    canvasGRF: Canvas;
+    canvasGRF: Canvas
     /** The distance to the canvas as specified by {@link ../proxy-view-util#getDistanceToCanvas()}. */
-    distance: number;
+    distance: number
 }
 
 /**
@@ -51,10 +59,10 @@ export interface ProxyFilterArgs {
  * @param args The arguments that can be used by the filter.
  * @returns `true` if the proxy should be shown.
  */
-export type ProxyFilter = (args: ProxyFilterArgs) => boolean;
+export type ProxyFilter = (args: ProxyFilterArgs) => boolean
 
 /** Convenience type, needed for registering {@link ProxyFilter}s. */
-export type ProxyFilterAndID = { id: string, filter: ProxyFilter };
+export type ProxyFilterAndID = { id: string; filter: ProxyFilter }
 
 export namespace ProxyFilterAndID {
     /**
@@ -64,43 +72,52 @@ export namespace ProxyFilterAndID {
      * @param filter The filter.
      * @param filterName Optionally, a filter name can be self defined.
      */
-    export function from(registeringClass: (new () => unknown), filter: ProxyFilter, filterName = filter.name): ProxyFilterAndID {
-        return { id: `${registeringClass.name}-${filterName}`, filter };
+    export function from(
+        registeringClass: new () => unknown,
+        filter: ProxyFilter,
+        filterName = filter.name
+    ): ProxyFilterAndID {
+        return { id: `${registeringClass.name}-${filterName}`, filter }
     }
 }
 
-//////// Filters ////////
+/// ///// Filters ////////
 
 /** @see {@link ProxyViewFilterUnconnectedToOnScreen} */
 export function filterUnconnectedToOnScreen({ node, onScreenNodes }: ProxyFilterArgs): boolean {
-    return !ProxyFilterHandler.filterUnconnectedToOnScreen || isConnectedToAny(node, onScreenNodes);
+    return !ProxyFilterHandler.filterUnconnectedToOnScreen || isConnectedToAny(node, onScreenNodes)
 }
 
 /** @see {@link ProxyViewFilterUnconnectedToSelected} */
 export function filterUnconnectedToSelected({ node }: ProxyFilterArgs): boolean {
-    return !ProxyFilterHandler.filterUnconnectedToSelected || isSelectedOrConnectedToSelected(node);
+    return !ProxyFilterHandler.filterUnconnectedToSelected || isSelectedOrConnectedToSelected(node)
 }
 
 /** @see {@link ProxyViewFilterUnselected} */
 export function filterUnselected({ node }: ProxyFilterArgs): boolean {
-    return !ProxyFilterHandler.filterUnselected || node.selected;
+    return !ProxyFilterHandler.filterUnselected || node.selected
 }
 
 /** @see {@link ProxyViewFilterDistant} */
 export function filterDistant({ distance }: ProxyFilterArgs): boolean {
-    let range = -1;
+    let range = -1
     switch (ProxyFilterHandler.filterDistant) {
         case ProxyViewFilterDistant.CHOICE_CLOSE:
-            range = ProxyView.DISTANCE_CLOSE;
-            break;
+            range = ProxyView.DISTANCE_CLOSE
+            break
         case ProxyViewFilterDistant.CHOICE_DISTANT:
-            range = ProxyView.DISTANCE_DISTANT;
-            break;
+            range = ProxyView.DISTANCE_DISTANT
+            break
+        case ProxyViewFilterDistant.CHOICE_OFF:
+            // Do nothing.
+            break
+        default:
+            console.error('unexpected case in switch for ProxyViewFilterDistant in proxy-view-filters.')
     }
-    return range <= 0 || distance <= range;
+    return range <= 0 || distance <= range
 }
 
-//////// Registering filters ////////
+/// ///// Registering filters ////////
 
 /**
  * Registers {@link ProxyFilter}s at the {@link ProxyView} and holds the current
@@ -108,52 +125,59 @@ export function filterDistant({ distance }: ProxyFilterArgs): boolean {
  */
 @injectable()
 export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitializer {
-    //// Sidebar filter options ////
+    /// / Sidebar filter options ////
     /** @see {@link ProxyViewFilterUnconnectedToOnScreen} */
-    static filterUnconnectedToOnScreen: boolean;
-    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
-    static filterUnconnectedToSelected: boolean;
-    /** @see {@link ProxyViewFilterUnselected} */
-    static filterUnselected: boolean;
-    /** @see {@link ProxyViewFilterDistant} */
-    static filterDistant: string;
+    static filterUnconnectedToOnScreen: boolean
 
-    //// Get filter option values ////
+    /** @see {@link ProxyViewFilterUnconnectedToSelected} */
+    static filterUnconnectedToSelected: boolean
+
+    /** @see {@link ProxyViewFilterUnselected} */
+    static filterUnselected: boolean
+
+    /** @see {@link ProxyViewFilterDistant} */
+    static filterDistant: string
+
+    /// / Get filter option values ////
     /** Updates the proxy-view filter options specified in the {@link RenderOptionsRegistry}. */
     // the values are inverted so that the user enable showing the elements described by the filter explicitly
     private updateFilterOptions(renderOptionsRegistry: RenderOptionsRegistry): void {
-        ProxyFilterHandler.filterUnconnectedToOnScreen = !renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToOnScreen);
-        ProxyFilterHandler.filterUnconnectedToSelected = !renderOptionsRegistry.getValue(ProxyViewFilterUnconnectedToSelected);
-        ProxyFilterHandler.filterUnselected = renderOptionsRegistry.getValue(ProxyViewFilterUnselected);
-        ProxyFilterHandler.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant);
+        ProxyFilterHandler.filterUnconnectedToOnScreen = !renderOptionsRegistry.getValue(
+            ProxyViewFilterUnconnectedToOnScreen
+        )
+        ProxyFilterHandler.filterUnconnectedToSelected = !renderOptionsRegistry.getValue(
+            ProxyViewFilterUnconnectedToSelected
+        )
+        ProxyFilterHandler.filterUnselected = renderOptionsRegistry.getValue(ProxyViewFilterUnselected)
+        ProxyFilterHandler.filterDistant = renderOptionsRegistry.getValue(ProxyViewFilterDistant)
     }
 
-    //// Register the filters ////
+    /// / Register the filters ////
     handle(action: Action): void | Action | ICommand {
         /** Filters can be registered here, keep the documentation of {@link ProxyView.registerFilters()} in mind */
         const filters: ProxyFilter[] = [
             filterUnselected,
             filterUnconnectedToSelected,
             filterUnconnectedToOnScreen,
-            filterDistant
-        ];
+            filterDistant,
+        ]
 
         if (action.kind === SendProxyViewAction.KIND) {
-            const proxyView = (action as SendProxyViewAction).proxyView;
+            const { proxyView } = action as SendProxyViewAction
             proxyView.registerFilters(
                 // Ensure unique ids
-                ...filters.map(filter => ProxyFilterAndID.from(ProxyFilterHandler, filter))
-            );
+                ...filters.map((filter) => ProxyFilterAndID.from(ProxyFilterHandler, filter))
+            )
         }
     }
 
     initialize(registry: ActionHandlerRegistry): void {
         // Register to receive SendProxyViewActions
-        registry.register(SendProxyViewAction.KIND, this);
+        registry.register(SendProxyViewAction.KIND, this)
     }
 
     /** The registry containing the filter options. */
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry
 
     @postConstruct()
     init(): void {
@@ -164,8 +188,8 @@ export class ProxyFilterHandler implements IActionHandler, IActionHandlerInitial
             ProxyViewFilterUnconnectedToSelected,
             ProxyViewFilterUnselected,
             ProxyViewFilterDistant
-        );
+        )
         // Register to receive updates on registry changes
-        this.renderOptionsRegistry.onChange(() => this.updateFilterOptions(this.renderOptionsRegistry));
+        this.renderOptionsRegistry.onChange(() => this.updateFilterOptions(this.renderOptionsRegistry))
     }
 }

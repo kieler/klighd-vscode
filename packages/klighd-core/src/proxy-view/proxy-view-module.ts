@@ -15,34 +15,33 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { ContainerModule } from "inversify";
-import { TYPES } from "sprotty";
-import { DISymbol } from "../di.symbols";
-import { ProxyFilterHandler } from "./filters/proxy-view-filters";
-import { ProxySemanticFilterHandler } from "./filters/proxy-view-semantic-filters";
-import { ProxyView } from "./proxy-view";
-import { ProxyViewActionHandler } from "./proxy-view-actions";
-import { SelectedElementsUtilActionHandler } from "./proxy-view-util";
+import { ContainerModule } from 'inversify'
+import { TYPES } from 'sprotty'
+import { DISymbol } from '../di.symbols'
+import { ProxyFilterHandler } from './filters/proxy-view-filters'
+import { ProxySemanticFilterHandler } from './filters/proxy-view-semantic-filters'
+import { ProxyView } from './proxy-view'
+import { ProxyViewActionHandler } from './proxy-view-actions'
+import { SelectedElementsUtilActionHandler } from './proxy-view-util'
 
 export const proxyViewModule = new ContainerModule((bind) => {
     // Make sure the selection handler is registered before the proxy view,
     // as that one depends on it.
-    bind(SelectedElementsUtilActionHandler).toSelf().inSingletonScope();
-    bind(TYPES.IActionHandlerInitializer).toService(SelectedElementsUtilActionHandler);
+    bind(SelectedElementsUtilActionHandler).toSelf().inSingletonScope()
+    bind(TYPES.IActionHandlerInitializer).toService(SelectedElementsUtilActionHandler)
 
     // The class needs to be bound to itself and
     // we have to let Sprotty know our service is a UIExtension
     // Using a symbol for binding helps mitigate other problems
-    bind(DISymbol.ProxyView).to(ProxyView).inSingletonScope();
-    bind(TYPES.IUIExtension).toService(DISymbol.ProxyView);
+    bind(DISymbol.ProxyView).to(ProxyView).inSingletonScope()
+    bind(TYPES.IUIExtension).toService(DISymbol.ProxyView)
 
-    bind(ProxyViewActionHandler).toSelf().inSingletonScope();
-    bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler);
-    bind(TYPES.MouseListener).toService(ProxyViewActionHandler);
+    bind(ProxyViewActionHandler).toSelf().inSingletonScope()
+    bind(TYPES.IActionHandlerInitializer).toService(ProxyViewActionHandler)
+    bind(TYPES.MouseListener).toService(ProxyViewActionHandler)
 
-    bind(ProxyFilterHandler).toSelf().inSingletonScope();
-    bind(TYPES.IActionHandlerInitializer).toService(ProxyFilterHandler);
-    bind(ProxySemanticFilterHandler).toSelf().inSingletonScope();
-    bind(TYPES.IActionHandlerInitializer).toService(ProxySemanticFilterHandler);
-});
-
+    bind(ProxyFilterHandler).toSelf().inSingletonScope()
+    bind(TYPES.IActionHandlerInitializer).toService(ProxyFilterHandler)
+    bind(ProxySemanticFilterHandler).toSelf().inSingletonScope()
+    bind(TYPES.IActionHandlerInitializer).toService(ProxySemanticFilterHandler)
+})

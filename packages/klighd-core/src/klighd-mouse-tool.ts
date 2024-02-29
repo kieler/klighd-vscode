@@ -15,10 +15,11 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable } from 'inversify';
-import { VNode } from 'snabbdom';
-import { MouseListener, MouseTool, SModelElement, SModelRoot, on } from 'sprotty';
-import { PROXY_SUFFIX, isProxy } from './proxy-view/proxy-view-util';
+import { injectable } from 'inversify'
+import { VNode } from 'snabbdom'
+import { MouseListener, MouseTool, SModelElementImpl, SModelRootImpl, on } from 'sprotty'
+import { PROXY_SUFFIX, isProxy } from './proxy-view/proxy-view-util'
+/* global Element, MouseEvent */
 
 @injectable()
 /**
@@ -26,9 +27,8 @@ import { PROXY_SUFFIX, isProxy } from './proxy-view/proxy-view-util';
  * decorate method changed to also add mouse listeners to proxy nodes.
  */
 export class KlighdMouseTool extends MouseTool {
-
-    decorate(vnode: VNode, element: SModelElement): VNode {
-        if (element instanceof SModelRoot || isProxy(vnode)) {
+    decorate(vnode: VNode, element: SModelElementImpl): VNode {
+        if (element instanceof SModelRootImpl || isProxy(vnode)) {
             on(vnode, 'mouseover', this.mouseOver.bind(this, element))
             on(vnode, 'mouseout', this.mouseOut.bind(this, element))
             on(vnode, 'mouseenter', this.mouseEnter.bind(this, element))
@@ -40,15 +40,13 @@ export class KlighdMouseTool extends MouseTool {
             on(vnode, 'contextmenu', this.contextMenu.bind(this, element))
             on(vnode, 'dblclick', this.doubleClick.bind(this, element))
         }
-        vnode = this.mouseListeners.reduce(
-            (n: VNode, listener: MouseListener) => listener.decorate(n, element),
-            vnode)
+        vnode = this.mouseListeners.reduce((n: VNode, listener: MouseListener) => listener.decorate(n, element), vnode)
         return vnode
     }
 
-    getTargetElement(model: SModelRoot, event: MouseEvent): SModelElement | undefined {
+    getTargetElement(model: SModelRootImpl, event: MouseEvent): SModelElementImpl | undefined {
         let target = event.target as Element
-        const index = model.index
+        const { index } = model
         while (target) {
             if (target.id) {
                 let nodeId = this.domHelper.findSModelIdByDOMElement(target)
@@ -58,12 +56,10 @@ export class KlighdMouseTool extends MouseTool {
                     nodeId = this.domHelper.findSModelIdByDOMElement(target)
                 }
                 const element = index.getById(nodeId)
-                if (element !== undefined)
-                    return element
+                if (element !== undefined) return element
             }
             target = target.parentNode as Element
         }
-        return undefined;
+        return undefined
     }
-
 }

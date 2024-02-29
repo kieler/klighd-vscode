@@ -15,24 +15,65 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KNode } from '@kieler/klighd-interactive/lib/constraint-classes';
-import { inject, injectable, postConstruct } from "inversify";
-import { ActionHandlerRegistry, IActionHandler, IActionHandlerInitializer, ICommand, MouseListener, SModelElement, SetUIExtensionVisibilityAction } from "sprotty";
-import { Action, CenterAction, SetModelAction, UpdateModelAction } from "sprotty-protocol";
-import { SendModelContextAction } from "../actions/actions";
-import { DISymbol } from "../di.symbols";
-import { OptionsRegistry } from "../options/options-registry";
-import { RenderOptionsRegistry } from "../options/render-options-registry";
-import { SynthesesRegistry } from "../syntheses/syntheses-registry";
-import { ProxyView } from "./proxy-view";
-import { ProxyViewCapProxyToParent, ProxyViewCapScaleToOne, ProxyViewCategory, ProxyViewClusterTransparent, ProxyViewClusteringCascading, ProxyViewClusteringSweepLine, ProxyViewDebugCategory, ProxyViewDecreaseProxyClutter, ProxyViewDrawEdgesAboveNodes, ProxyViewEdgesToOffScreenPoint, ProxyViewEnableEdgeProxies, ProxyViewEnableSegmentProxies, ProxyViewEnabled, ProxyViewHighlightSelected, ProxyViewInteractiveProxies, ProxyViewOpacityBySelected, ProxyViewOriginalNodeScale, ProxyViewShowProxiesEarly, ProxyViewShowProxiesEarlyNumber, ProxyViewShowProxiesImmediately, ProxyViewSimpleAlongBorderRouting, ProxyViewSize, ProxyViewStackingOrderByDistance, ProxyViewStackingOrderByOpacity, ProxyViewStackingOrderBySelected, ProxyViewTitleScaling, ProxyViewTransparentEdges, ProxyViewUseDetailLevel, ProxyViewUseSynthesisProxyRendering } from "./proxy-view-options";
-import { getNodeId, isProxyRendering } from "./proxy-view-util";
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
+import { KNode } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { inject, injectable, postConstruct } from 'inversify'
+import {
+    ActionHandlerRegistry,
+    IActionHandler,
+    IActionHandlerInitializer,
+    ICommand,
+    MouseListener,
+    SModelElementImpl,
+    SetUIExtensionVisibilityAction,
+} from 'sprotty'
+import { Action, CenterAction, SetModelAction, UpdateModelAction } from 'sprotty-protocol'
+import { SendModelContextAction } from '../actions/actions'
+import { DISymbol } from '../di.symbols'
+import { OptionsRegistry } from '../options/options-registry'
+import { RenderOptionsRegistry } from '../options/render-options-registry'
+import { SynthesesRegistry } from '../syntheses/syntheses-registry'
+import { ProxyView } from './proxy-view'
+import {
+    ProxyViewCapProxyToParent,
+    ProxyViewCapScaleToOne,
+    ProxyViewCategory,
+    ProxyViewClusterTransparent,
+    ProxyViewClusteringCascading,
+    ProxyViewClusteringSweepLine,
+    ProxyViewDebugCategory,
+    ProxyViewDecreaseProxyClutter,
+    ProxyViewDrawEdgesAboveNodes,
+    ProxyViewEdgesToOffScreenPoint,
+    ProxyViewEnableEdgeProxies,
+    ProxyViewEnableSegmentProxies,
+    ProxyViewEnabled,
+    ProxyViewHighlightSelected,
+    ProxyViewInteractiveProxies,
+    ProxyViewOpacityBySelected,
+    ProxyViewOriginalNodeScale,
+    ProxyViewShowProxiesEarly,
+    ProxyViewShowProxiesEarlyNumber,
+    ProxyViewShowProxiesImmediately,
+    ProxyViewSimpleAlongBorderRouting,
+    ProxyViewSize,
+    ProxyViewStackingOrderByDistance,
+    ProxyViewStackingOrderByOpacity,
+    ProxyViewStackingOrderBySelected,
+    ProxyViewTitleScaling,
+    ProxyViewTransparentEdges,
+    ProxyViewUseDetailLevel,
+    ProxyViewUseSynthesisProxyRendering,
+} from './proxy-view-options'
+import { getNodeId, isProxyRendering } from './proxy-view-util'
+/* global MouseEvent, SVGElement */
 
 /**
  * Wrapper action around {@link SetUIExtensionVisibilityAction} which shows the proxy.
  * Otherwise the proxy-view would be invisible.
  */
-export type ShowProxyViewAction = SetUIExtensionVisibilityAction;
+export type ShowProxyViewAction = SetUIExtensionVisibilityAction
 
 export namespace ShowProxyViewAction {
     export function create(): ShowProxyViewAction {
@@ -46,17 +87,17 @@ export namespace ShowProxyViewAction {
 /** An action containing the {@link ProxyView}. */
 // Sent from the proxy-view to the action handler to avoid stackoverflows
 export interface SendProxyViewAction extends Action {
-    kind: typeof SendProxyViewAction.KIND;
-    proxyView: ProxyView;
+    kind: typeof SendProxyViewAction.KIND
+    proxyView: ProxyView
 }
 
 export namespace SendProxyViewAction {
-    export const KIND = "sendProxyViewAction";
+    export const KIND = 'sendProxyViewAction'
 
     export function create(proxyView: ProxyView): SendProxyViewAction {
         return {
             kind: KIND,
-            proxyView
+            proxyView,
         }
     }
 }
@@ -65,21 +106,26 @@ export namespace SendProxyViewAction {
 @injectable()
 export class ProxyViewActionHandler extends MouseListener implements IActionHandler, IActionHandlerInitializer {
     /** The proxy-view. */
-    private proxyView: ProxyView;
+    private proxyView: ProxyView
+
     // Sidebar registries
-    @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry;
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
-    @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry;
+    @inject(DISymbol.SynthesesRegistry) private synthesesRegistry: SynthesesRegistry
+
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry
+
+    @inject(DISymbol.OptionsRegistry) private optionsRegistry: OptionsRegistry
+
     /** Whether the proxy-view was registered in the registries' onchange() method. Prevents registering multiple times. */
-    private onChangeRegistered: boolean;
+    private onChangeRegistered: boolean
+
     mouseMoved = false
 
-    //// Mouse events ////
+    /// / Mouse events ////
 
-    mouseDown(_target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseDown(_target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         this.mouseMoved = false
         if (this.proxyView) {
-            this.proxyView.setMouseDown(event);
+            this.proxyView.setMouseDown(event)
         }
         return []
     }
@@ -89,34 +135,36 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
         return []
     }
 
-    mouseUp(target: SModelElement, event: MouseEvent): (Action | Promise<Action>)[] {
+    mouseUp(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         let action: Action | undefined
-        if (!this.mouseMoved &&
+        if (
+            !this.mouseMoved &&
             target instanceof KNode &&
             event.target instanceof SVGElement &&
-            isProxyRendering(event.target, target.id)) {
+            isProxyRendering(event.target, target.id)
+        ) {
             // TODO: Use the FitToScreenAction if the node is larger than the canvas.
             // Center on node when proxy is clicked
             // if (target.bounds.width > canvas.width || target.bounds.height > canvas.height) {
             //     // Node is larger than canvas, zoom out so the node is fully on-screen
-                // action = FitToScreenAction.create([getNodeId(target.id)], { animate: true, padding: 10 })
+            // action = FitToScreenAction.create([getNodeId(target.id)], { animate: true, padding: 10 })
             // } else {
             //     // Retain the zoom, e.g. don't zoom in
-                action = CenterAction.create([getNodeId(target.id)], { animate: true, retainZoom: true })
+            action = CenterAction.create([getNodeId(target.id)], { animate: true, retainZoom: true })
             // }
         }
 
         if (this.proxyView) {
-            this.proxyView.setMouseUp();
+            this.proxyView.setMouseUp()
         }
         return action ? [action] : []
     }
 
-    //// Actions ////
+    /// / Actions ////
 
     @postConstruct()
     init(): void {
-        //// Register options
+        // Register options
         // Proxy-view
         this.renderOptionsRegistry.registerAll(
             ProxyViewCategory,
@@ -127,8 +175,8 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             ProxyViewDrawEdgesAboveNodes,
             ProxyViewEnableSegmentProxies,
             ProxyViewInteractiveProxies,
-            ProxyViewTitleScaling,
-        );
+            ProxyViewTitleScaling
+        )
 
         // Proxy-view debug
         this.renderOptionsRegistry.registerAll(
@@ -151,44 +199,44 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
             ProxyViewCapScaleToOne,
             ProxyViewClusterTransparent,
             ProxyViewClusteringCascading,
-            ProxyViewClusteringSweepLine,
-        );
+            ProxyViewClusteringSweepLine
+        )
     }
 
     handle(action: Action): void | Action | ICommand {
         if (action.kind === SendProxyViewAction.KIND) {
             // Save the proxy-view instance
-            const sPVAction = action as SendProxyViewAction;
-            this.proxyView = sPVAction.proxyView;
+            const sPVAction = action as SendProxyViewAction
+            this.proxyView = sPVAction.proxyView
 
             // Register to receive updates on registry changes
             // Do this here instead of in init() to ensure proxyView isn't undefined
             if (!this.onChangeRegistered) {
                 // Make sure the rendering cache is cleared when the renderings change
-                this.synthesesRegistry.onChange(() => this.proxyView.reset());
-                this.optionsRegistry.onChange(() => this.proxyView.clearRenderings());
+                this.synthesesRegistry.onChange(() => this.proxyView.reset())
+                this.optionsRegistry.onChange(() => this.proxyView.clearRenderings())
                 // Make sure to be notified when rendering options are changed
-                this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry));
-                this.onChangeRegistered = true;
+                this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry))
+                this.onChangeRegistered = true
             }
         } else if (this.proxyView) {
             if (action.kind === SendModelContextAction.KIND) {
                 // Redirect the content to the proxy-view
-                const { model, context } = action as SendModelContextAction;
-                this.proxyView.update(model, context);
+                const { model, context } = action as SendModelContextAction
+                this.proxyView.update(model, context)
             } else if ([SetModelAction.KIND, UpdateModelAction.KIND].includes(action.kind)) {
                 // Layout has changed, new model
-                this.proxyView.reset();
+                this.proxyView.reset()
             }
         }
     }
 
     initialize(registry: ActionHandlerRegistry): void {
         // Register as a handler to receive the actions
-        registry.register(SendModelContextAction.KIND, this);
-        registry.register(SendProxyViewAction.KIND, this);
+        registry.register(SendModelContextAction.KIND, this)
+        registry.register(SendProxyViewAction.KIND, this)
         // Layout changes
-        registry.register(SetModelAction.KIND, this);
-        registry.register(UpdateModelAction.KIND, this);
+        registry.register(SetModelAction.KIND, this)
+        registry.register(UpdateModelAction.KIND, this)
     }
 }
