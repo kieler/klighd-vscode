@@ -25,6 +25,7 @@ import { PersistenceMessage } from '../src/storage/messages'
  * so they can be stored in workspace storage.
  */
 export class MessagePersistenceStorage implements PersistenceStorage {
+    /** The VS Code messenger to send messages to the extension. */
     messenger: Messenger
 
     /** Local cache of reported data to speed up reads. */

@@ -34,6 +34,7 @@ import { SetPreferencesAction } from './actions'
 import { CheckOption } from './components/option-inputs'
 import { SynthesisPicker } from './components/synthesis-picker'
 import { OptionsRenderer } from './options-renderer'
+import { DebugOptions } from './render-options-registry'
 import { QuickActionsBar } from '../sidebar/sidebar-panel'
 
 /**
@@ -93,7 +94,10 @@ export class GeneralPanel extends SidebarPanel {
                 </div>
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Render Options</h5>
-                    {this.optionsRenderer.renderRenderOptions(this.renderOptionsRegistry.allRenderOptions)}
+                    {this.optionsRenderer.renderRenderOptions(
+                        this.renderOptionsRegistry.allRenderOptions,
+                        this.renderOptionsRegistry.getValue(DebugOptions) as boolean
+                    )}
                 </div>
                 <div class-options__section="true">
                     <h5 class-options__heading="true">Preferences</h5>
@@ -109,12 +113,16 @@ export class GeneralPanel extends SidebarPanel {
                         value={this.preferencesRegistry.getValue(ShouldSelectTextOption)}
                         onChange={this.handlePreferenceChange.bind(this, ShouldSelectTextOption.ID)}
                     />
-                    <CheckOption
-                        id={IncrementalDiagramGeneratorOption.ID}
-                        name={IncrementalDiagramGeneratorOption.NAME}
-                        value={this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)}
-                        onChange={this.handlePreferenceChange.bind(this, IncrementalDiagramGeneratorOption.ID)}
-                    />
+                    {(this.renderOptionsRegistry.getValue(DebugOptions) as boolean) ? (
+                        <CheckOption
+                            id={IncrementalDiagramGeneratorOption.ID}
+                            name={IncrementalDiagramGeneratorOption.NAME}
+                            value={this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)}
+                            onChange={this.handlePreferenceChange.bind(this, IncrementalDiagramGeneratorOption.ID)}
+                        />
+                    ) : (
+                        ''
+                    )}
                 </div>
             </div>
         )

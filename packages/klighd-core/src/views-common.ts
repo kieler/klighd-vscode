@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { Bounds, Point, toDegrees } from 'sprotty-protocol'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import {
@@ -41,13 +41,12 @@ import {
     LineJoin,
     LineStyle,
     SKEdge,
-    SKGraphElement,
     SKLabel,
     SKNode,
     Underline,
     VerticalAlignment,
 } from './skgraph-models'
-import { KStyles, ColorStyle, DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT } from './views-styles'
+import { ColorStyle, DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT, KStyles } from './views-styles'
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'

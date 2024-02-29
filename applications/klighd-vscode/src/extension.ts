@@ -14,10 +14,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-// reflect-metadata needs to be the first import. Don't sort this elsewhere!
+// reflect-metadata needs to be imported before anything else to make any code requiring inversify.js to work.
+// See https://stackoverflow.com/questions/37534890/inversify-js-reflect-hasownmetadata-is-not-a-function
 import 'reflect-metadata'
+// The other imports.
+import { DebugOptions, SetRenderOptionAction } from '@kieler/klighd-core'
 import { diagramType } from '@kieler/klighd-core/lib/base/external-helpers'
-import { Action, isAction } from 'sprotty-protocol'
+import { Action, ActionMessage, isAction } from 'sprotty-protocol'
 import { registerLspEditCommands } from 'sprotty-vscode'
 import * as vscode from 'vscode'
 import { LanguageClient, State } from 'vscode-languageclient/node'
@@ -140,12 +143,17 @@ export function activate(context: vscode.ExtensionContext): void {
                 )
                 return
             }
-            // TODO: this has not been tested yet if the messenging change works like this.
-            messenger.sendNotification(
-                { method: 'diagram/accept' },
-                { type: 'webview', webviewType: diagramType },
-                action
-            )
+            messenger.sendNotification({ method: 'ActionMessage' }, { type: 'webview', webviewType: diagramType }, {
+                clientId: `${diagramType}_sprotty`,
+                action,
+            } as ActionMessage)
+        })
+    )
+
+    // Command to show debug options.
+    context.subscriptions.push(
+        vscode.commands.registerCommand(command.debugOptions, () => {
+            vscode.commands.executeCommand(command.dispatchAction, SetRenderOptionAction.create(DebugOptions.ID, true))
         })
     )
 }

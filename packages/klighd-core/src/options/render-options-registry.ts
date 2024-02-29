@@ -43,7 +43,7 @@ export class PinSidebarOption implements RenderOption {
 
     currentValue = PinSidebarOption.DEFAULT
 
-    invisible = true
+    debug = true
 }
 
 /**
@@ -71,7 +71,7 @@ export class ResizeToFit implements RenderOption {
 
     currentValue = ResizeToFit.DEFAULT
 
-    invisible = true
+    debug = true
 }
 
 /**
@@ -158,6 +158,8 @@ export class SmartZoom implements RenderOption {
     readonly description = 'Smart Zoom Category'
 
     currentValue = true
+
+    debug = true
 }
 
 /**
@@ -178,7 +180,7 @@ export class UseSmartZoom implements RenderOption {
 
     readonly initialValue: boolean = true
 
-    readonly renderCategory: string = SmartZoom.ID
+    readonly renderCategory: string = Appearance.ID
 
     readonly description = 'Enables Smart Zoom'
 
@@ -220,6 +222,8 @@ export class FullDetailRelativeThreshold implements RangeOption {
         'A value of 0.2 means an element is shown if its parent has at least 0.2 the size (minimum of width and height) of the canvas.'
 
     currentValue = 0.2
+
+    debug = true
 }
 
 /**
@@ -257,6 +261,8 @@ export class FullDetailScaleThreshold implements RangeOption {
         'A value of 0.25 means an element is shown if it can be drawn in a fourth of its original height or width.'
 
     currentValue = 0.25
+
+    debug = true
 }
 
 /**
@@ -280,6 +286,8 @@ export class SimplifySmallText implements RenderOption {
     readonly description = 'Whether illegible text is simplified to colored rectangles.'
 
     currentValue = true
+
+    debug = true
 }
 
 /**
@@ -315,6 +323,8 @@ export class TextSimplificationThreshold implements RangeOption {
         'The threshold font size to simplify text.\nIf set to 3 a text which is 3 or less pixel high is simplified.'
 
     currentValue = 3
+
+    debug = true
 }
 
 /**
@@ -353,6 +363,8 @@ export class TitleScalingFactor implements RangeOption {
         'If it was 10 pixel high before it will always be 10 pixel high if the label can fit the region.'
 
     currentValue = 1
+
+    debug = true
 }
 
 /**
@@ -377,6 +389,8 @@ export class UseMinimumLineWidth implements RenderOption {
         "Whether all borders and lines are at least as wide as set by the corresponding 'Minimum Line Width' option."
 
     currentValue = true
+
+    debug = true
 }
 
 /**
@@ -412,6 +426,8 @@ export class MinimumLineWidth implements RangeOption {
         'The minium border or line width.\nIf set to 0.5 each edge or border is at least 0.5 pixel wide.'
 
     currentValue = 0.5
+
+    debug = true
 }
 
 export enum ShadowOption {
@@ -474,6 +490,29 @@ export class AnimateGoToBookmark implements RenderOption {
     currentValue = true
 }
 
+/**
+ * Boolean option to toggle debug options.
+ */
+export class DebugOptions implements RenderOption {
+    static readonly ID: string = 'debug-options'
+
+    static readonly NAME: string = 'Debug Options'
+
+    readonly id: string = DebugOptions.ID
+
+    readonly name: string = DebugOptions.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = false
+
+    readonly description = 'Whether debug options should be shown.'
+
+    currentValue = false
+
+    debug = true
+}
+
 export interface RenderOptionType {
     readonly ID: string
     readonly NAME: string
@@ -494,7 +533,8 @@ export class RenderOptionsRegistry extends Registry {
     constructor() {
         super()
         // Add available render options to this registry
-        // Invisible
+        // Debug
+        this.register(DebugOptions)
         this.register(ResizeToFit)
         this.register(PinSidebarOption)
 
@@ -545,10 +585,27 @@ export class RenderOptionsRegistry extends Registry {
         this.notifyListeners()
     }
 
+    /** Registers a single render option. */
     register(Option: RenderOptionType): void {
         this._renderOptions.set(Option.ID, new Option())
     }
 
+    /** Convenience method to register all given options in order. */
+    registerAll(...Options: RenderOptionType[]): void {
+        Options.forEach((Option) => this.register(Option))
+    }
+
+    /** Unregisters a single render option. */
+    unregister(Option: RenderOptionType): boolean {
+        return this._renderOptions.delete(Option.ID)
+    }
+
+    /** Convenience method to unregister all given options in order. */
+    unregisterAll(...Options: RenderOptionType[]): boolean {
+        return Options.every((Option) => this.unregister(Option))
+    }
+
+    /** Handles the render options actions. */
     // eslint-disable-next-line consistent-return
     handle(action: Action): void | Action | ICommand {
         if (SetRenderOptionAction.isThisAction(action)) {

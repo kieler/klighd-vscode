@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { KGraphData, KNode } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { VNode, VNodeStyle } from 'snabbdom'
 import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol'
@@ -59,7 +59,6 @@ import {
     K_SPLINE,
     K_TEXT,
     SKEdge,
-    SKGraphElement,
     SKLabel,
     SKNode,
     VerticalAlignment,
@@ -586,7 +585,12 @@ export function renderKText(
     // Replace text with rectangle, if the text is too small.
     const simplifySmallTextOption = context.renderOptionsRegistry.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (simplifySmallText && (!rendering.properties['klighd.isNodeTitle'] as boolean) && !childOfNodeTitle) {
+    if (
+        !context.forceRendering &&
+        simplifySmallText &&
+        (!rendering.properties['klighd.isNodeTitle'] as boolean) &&
+        !childOfNodeTitle
+    ) {
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         const proportionalHeight = 0.5 // height of replacement compared to full text height
@@ -1263,14 +1267,22 @@ export function renderKRendering(
         // Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
         let maxScale = titleScalingFactorOption
-        if (context.viewport) {
+
+        // Whether the kRendering belongs to a proxy
+        const isProxy = 'proxyScale' in kRendering
+        // Whether the proxy's title should be scaled
+        const scaleProxy = isProxy && (kRendering as any).useTitleScaling && (kRendering as any).proxyScale < 1
+        if (scaleProxy) {
+            // maxScale independant of zoom, use scale of proxy instead
+            maxScale = titleScalingFactorOption / (kRendering as any).proxyScale
+        } else if (context.viewport) {
             maxScale /= context.viewport.zoom
         }
         if (
-            (providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1) ||
-            ((kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds) &&
-                (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <=
-                    titleScalingFactorOption * (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height)
+            (((providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1) ||
+                context.viewport.zoom <= titleScalingFactorOption) &&
+                !isProxy) ||
+            scaleProxy
         ) {
             isOverlay = true
 
@@ -1371,10 +1383,9 @@ export function renderKRendering(
             if (
                 context.depthMap &&
                 (kRendering.properties['klighd.isNodeTitle'] as boolean) &&
-                (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds) &&
-                (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height * context.viewport.zoom <=
-                    titleScalingFactorOption *
-                        (kRendering.properties['klighd.lsp.calculated.bounds'] as Bounds).height &&
+                (((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && !isProxy) ||
+                    scaleProxy) &&
+                ((context.viewport.zoom <= titleScalingFactorOption && !isProxy) || scaleProxy) &&
                 // Don't draw if the rendering is an empty KText
                 (kRendering.type !== K_TEXT || (kRendering as KText).text !== '')
             ) {

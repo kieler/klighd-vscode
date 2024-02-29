@@ -16,10 +16,10 @@
  */
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { injectable } from 'inversify'
 import { HoverMouseListener, SModelElementImpl } from 'sprotty'
 import { Action, Bounds, generateRequestId, RequestPopupModelAction } from 'sprotty-protocol'
-import { SKGraphElement } from '../skgraph-models'
 import { getSemanticElement } from '../skgraph-utils'
 /* global MouseEvent, SVGElement, window */
 
@@ -29,7 +29,9 @@ import { getSemanticElement } from '../skgraph-utils'
  * The response is a SetPopupModelAction.
  */
 export interface RequestKlighdPopupModelAction extends RequestPopupModelAction {
+    /** The SVG element of the rendering (i.e. the KRendering) to request the popup for. */
     element: SVGElement
+    /** The underlying graph element for this popup request. */
     parent: SModelElementImpl
 }
 

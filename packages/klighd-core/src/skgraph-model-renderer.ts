@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
 import { VNode } from 'snabbdom'
 import {
@@ -28,7 +29,7 @@ import {
 import { Viewport } from 'sprotty-protocol'
 import { DepthMap } from './depth-map'
 import { RenderOptionsRegistry } from './options/render-options-registry'
-import { KRenderingLibrary, EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKGraphElement } from './skgraph-models'
+import { EDGE_TYPE, KRenderingLibrary, LABEL_TYPE, NODE_TYPE, PORT_TYPE } from './skgraph-models'
 import { TitleStorage } from './titles/title-storage'
 
 /**
@@ -73,6 +74,9 @@ export class SKGraphModelRenderer extends ModelRenderer {
 
     viewport: Viewport
 
+    /** Used to force rendering independant of the depthMap. Needed by the proxy-view. */
+    forceRendering = false
+
     /**
      * Renders all children of the SKGraph that should be rendered within the child area of the element.
      *
@@ -97,6 +101,15 @@ export class SKGraphModelRenderer extends ModelRenderer {
             .filter((child) => child.type === PORT_TYPE || child.type === LABEL_TYPE)
             .map((child): VNode | undefined => this.renderElement(child))
             .filter((vnode) => vnode !== undefined) as VNode[]
+    }
+
+    /** Renders an element forcefully, i.e. independant of the depthMap. */
+    forceRenderElement(element: SKGraphElement): VNode | undefined {
+        const prevForceRendering = this.forceRendering
+        this.forceRendering = true
+        const vnode = this.renderElement(element)
+        this.forceRendering = prevForceRendering
+        return vnode
     }
 
     /** @inheritdoc */

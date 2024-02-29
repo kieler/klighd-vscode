@@ -24,8 +24,7 @@ while the KLighD extension handles everything related to diagrams.
 ### Disclaimer
 
 Developing a language server for your extension that uses [KLighD](https://github.com/kieler/KLighD)
-to fulfill all requirements to be usable with this extension is no easy task. Until the distribution
-of [KLighD](https://github.com/kieler/KLighD) and documentation about building your own language
+to fulfill all requirements to be usable with this extension is no easy task. Until the documentation about building your own language
 server is improved, feel free to seek advice from a member of the KIELER working group.
 
 An example for a simple language server with KLighD synthesis support can be found
@@ -51,22 +50,16 @@ The VS Code extension for this language server can be found
 export async function activate(context: vscode.ExtensionContext) {
     // ... configuring the language client options
 
-    const lsClient = new LanguageClient("Language Server", serverOptions, clientOptions);
+    const lsClient = new LanguageClient('Language Server', serverOptions, clientOptions)
 
     // Inform the KLighD extension about the LS client.
     // The first argument is your language client.
     // The second argument is an array of language file endings
     // that are supported by your LS client.
-    // Returns an ID that is used to identify this extension when future
-    // commands are sent to klighd-vscode.
-    const refId = await vscode.commands.executeCommand(
-        "klighd-vscode.setLanguageClient",
-        lsClient,
-        ["sctx"]
-    );
+    await vscode.commands.executeCommand('klighd-vscode.setLanguageClient', lsClient, ['sctx'])
 
-    console.debug("Starting Language Server...");
-    lsClient.start();
+    console.debug('Starting Language Server...')
+    lsClient.start()
 }
 ```
 
@@ -109,7 +102,7 @@ To intercept an action, your extension has to provide an action handler with the
 signature:
 
 ```typescript
-type ActionHandler = (action: { kind: string }) => Promise<void>;
+type ActionHandler = (action: { kind: string }) => Promise<void>
 ```
 
 To register your action handler with the `klighd-vscode` extension call the following command:
@@ -121,18 +114,16 @@ vscode.commands.executeCommand("klighd-vscode.addActionHandler", kind: string, h
 ```
 
 ### Dispatching Actions
-*This feature is currently not supported*
 
-The KLighD diagram extension provides the ability to send an action to all open diagram views that
-belong to the host extension. The action will be handled by the diagram core and potentially sent to
+The KLighD diagram extension provides the ability to send an action to the open diagram view that
+belongs to the host extension. The action will be handled by the diagram core and potentially sent to
 the language server if it is handled that way.
 
 To send an action to a `klighd-vscode` webview, execute the following command:
 
 ```typescript
-// - refId: your registration id returned from the setLanguageClient command
 // - action: a valid Sprotty action that is sent to open diagram views.
-vscode.commands.executeCommand("klighd-vscode.dispatchAction", refId: string, action: Action);
+vscode.commands.executeCommand("klighd-vscode.dispatchAction", action: Action)
 ```
 
 ## Known Issues
@@ -141,5 +132,4 @@ vscode.commands.executeCommand("klighd-vscode.dispatchAction", refId: string, ac
     the same time. This causes problems if a workspace opens multiple files that are handled by
     different KLighD dependent extensions. This issue is tracked
     [here](https://github.com/kieler/klighd-vscode/issues/6).
--   Exported SVG are currently not displayed properly. This issue is tracked
-    [here](https://github.com/eclipse/sprotty/issues/149).
+-   See [here](https://github.com/kieler/klighd-vscode/issues) for further issues.

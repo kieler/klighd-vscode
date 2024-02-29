@@ -44,6 +44,7 @@ export const command = {
     addActionHandler: withPrefix('addActionHandler'),
     dispatchAction: withPrefix('dispatchAction'),
     clearData: withPrefix('data.clear'),
+    debugOptions: withPrefix('debugOptions'),
     // The following commands are registered by `sprotty-vscode`
     diagramOpen: withPrefix('diagram.open'),
     diagramExport: withPrefix('diagram.export'),

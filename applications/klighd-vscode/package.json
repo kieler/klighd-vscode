@@ -36,6 +36,11 @@
                 "category": "KLighD Diagram"
             },
             {
+                "command": "klighd-vscode.debugOptions",
+                "title": "Activate Debug Options",
+                "category": "KLighD Diagram"
+            },
+            {
                 "command": "klighd-vscode.diagram.open",
                 "title": "Open in Diagram",
                 "icon": "$(symbol-structure)",
@@ -88,6 +93,9 @@
             "commandPalette": [
                 {
                     "command": "klighd-vscode.data.clear"
+                },
+                {
+                    "command": "klighd-vscode.debugOptions"
                 },
                 {
                     "when": "false",

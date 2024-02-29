@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KEdge, KGraphData, KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import {
     boundsFeature,
     moveFeature,
@@ -27,16 +27,6 @@ import {
     SModelElementImpl,
 } from 'sprotty'
 import { Bounds, Point } from 'sprotty-protocol'
-
-/**
- * This is the superclass of all elements of a graph such as nodes, edges, ports,
- * and labels. A graph element may contain an arbitrary number of additional
- * data instances.
- * Represents the Sprotty version of its java counterpart in KLighD.
- */
-export interface SKGraphElement extends KGraphElement {
-    properties: Record<string, unknown>
-}
 
 export const NODE_TYPE = 'node'
 export const EDGE_TYPE = 'edge'

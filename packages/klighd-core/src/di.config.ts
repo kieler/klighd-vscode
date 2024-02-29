@@ -32,6 +32,7 @@ import {
     ModelRendererFactory,
     modelSourceModule,
     ModelViewer,
+    MouseTool,
     overrideViewerOptions,
     PreRenderedElementImpl,
     PreRenderedView,
@@ -50,11 +51,13 @@ import diagramPieceModule from './diagram-pieces/diagram-pieces-module'
 import { KlighdDiagramServer } from './diagram-server'
 import { KlighdHoverMouseListener } from './hover/hover'
 import { PopupModelProvider } from './hover/popup-provider'
+import { KlighdMouseTool } from './klighd-mouse-tool'
 import { KlighdSvgExporter } from './klighd-svg-exporter'
 import { KlighdModelViewer } from './model-viewer'
 import { ResetPreferencesAction, SetPreferencesAction } from './options/actions'
 import { optionsModule } from './options/options-module'
 import { PreferencesRegistry } from './preferences-registry'
+import { proxyViewModule } from './proxy-view/proxy-view-module'
 import { sidebarModule } from './sidebar'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
@@ -76,6 +79,8 @@ const kGraphDiagramModule = new ContainerModule(
             defaultDuration: 500,
             undoHistoryLimit: 50,
         })
+        rebind(MouseTool).to(KlighdMouseTool)
+        bind(KlighdMouseTool).toSelf().inSingletonScope()
         bind(TYPES.MouseListener).to(KlighdHoverMouseListener)
         bind(TYPES.IPopupModelProvider).to(PopupModelProvider)
         rebind<HoverState>(TYPES.HoverState).toDynamicValue(() => ({
@@ -134,7 +139,8 @@ export default function createContainer(widgetId: string): Container {
         sidebarModule,
         kGraphDiagramModule,
         updateDepthMapModule,
-        /* bookmarkModule, */ diagramPieceModule
+        /* bookmarkModule, */ diagramPieceModule,
+        proxyViewModule
     )
     // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {

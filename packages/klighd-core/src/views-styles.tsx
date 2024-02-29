@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { KGraphData } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { VNode } from 'snabbdom'
 import { getZoom, isSelectable, RGBColor, svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry'
@@ -48,7 +48,6 @@ import {
     LineJoin,
     LineStyle,
     SKEdge,
-    SKGraphElement,
     SKNode,
     Underline,
     VerticalAlignment,
@@ -841,7 +840,7 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
     const useLineWidthOption = context.renderOptionsRegistry.getValue(UseMinimumLineWidth)
     // Only enable, if option is found.
     const useMinimumLineWidth = useLineWidthOption ?? false
-    if (useMinimumLineWidth) {
+    if (!context.forceRendering && useMinimumLineWidth) {
         // The line witdh in px that the drawn line should not be less than.
         const minimumLineWidth = context.renderOptionsRegistry.getValueOrDefault(MinimumLineWidth)
         // The line width the requested one would have when rendered in the current zoom level.

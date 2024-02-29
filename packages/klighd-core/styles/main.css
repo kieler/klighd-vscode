@@ -19,6 +19,7 @@
 @import './options.css';
 @import './popup.css';
 @import './sidebar.css';
+@import './proxy-view.css';
 @import 'sprotty/css/sprotty.css';
 
 .sprotty {

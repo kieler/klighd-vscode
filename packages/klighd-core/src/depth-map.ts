@@ -15,13 +15,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { KGraphElement, KNode } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { SChildElementImpl, SModelRootImpl } from 'sprotty'
 import { Point, Viewport } from 'sprotty-protocol'
 import {
-    RenderOptionsRegistry,
     FullDetailRelativeThreshold,
     FullDetailScaleThreshold,
+    RenderOptionsRegistry,
 } from './options/render-options-registry'
 import { isContainerRendering, isRendering, KRendering } from './skgraph-models'
 
@@ -42,7 +42,7 @@ type DetailWithChildren = DetailLevel.FullDetails
 /**
  * Type predicate to determine whether a DetailLevel is a DetailWithChildren level
  */
-function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
+export function isDetailWithChildren(detail: DetailLevel): detail is DetailWithChildren {
     return detail === DetailLevel.FullDetails
 }
 
@@ -146,7 +146,7 @@ export class DepthMap {
      * Returns the current DepthMap instance or returns a new one.
      * @param rootElement The model root element.
      */
-    public static init(rootElement: SModelRootImpl): void {
+    public static init(rootElement: SModelRootImpl): DepthMap {
         if (!DepthMap.instance) {
             // Create new DepthMap, when there is none
             DepthMap.instance = new DepthMap(rootElement)
@@ -154,6 +154,7 @@ export class DepthMap {
             // Reset and reinitialize if the model changed
             DepthMap.instance.reset(rootElement)
         }
+        return DepthMap.instance
     }
 
     /**
@@ -162,7 +163,7 @@ export class DepthMap {
      * @param element The KGraphElement to initialize for DepthMap usage
      */
     public initKGraphElement(
-        element: SChildElementImpl & KGraphElement,
+        element: SChildElementImpl & SKGraphElement,
         viewport: Viewport,
         renderingOptions: RenderOptionsRegistry
     ): RegionIndexEntry {
@@ -244,7 +245,7 @@ export class DepthMap {
      * @param element The graph element to look up the rendering for.
      * @returns The KRendering.
      */
-    findRendering(element: KGraphElement): KRendering | undefined {
+    findRendering(element: SKGraphElement): KRendering | undefined {
         for (const data of element.data) {
             if (data !== null && isRendering(data)) {
                 return data
@@ -254,7 +255,7 @@ export class DepthMap {
     }
 
     public getContainingRegion(
-        element: SChildElementImpl & KGraphElement,
+        element: SChildElementImpl & SKGraphElement,
         viewport: Viewport,
         renderOptions: RenderOptionsRegistry
     ): Region | undefined {

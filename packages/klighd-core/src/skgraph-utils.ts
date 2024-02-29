@@ -14,6 +14,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { SModelRootImpl } from 'sprotty'
+import { isProxyRendering } from './proxy-view/proxy-view-util'
 import {
     isContainerRendering,
     isPolyline,
@@ -22,7 +25,10 @@ import {
     KRendering,
     K_POLYLINE,
     K_RENDERING_REF,
-    SKGraphElement,
+    SKEdge,
+    SKLabel,
+    SKNode,
+    SKPort,
 } from './skgraph-models'
 /* global Element, SVGElement */
 
@@ -47,7 +53,7 @@ export function getSemanticElement(
         // Check if the rendering has an action.
         let renderingHasAction = true
         if (currentElement.id !== '' && actionable) {
-            const rendering = findRendering(target, currentElement.id)
+            const rendering = findRendering(target, currentElement)
             if (!rendering) {
                 // If no rendering for this ID exists, we have gone too far up to the next graph element. Skip from here.
                 return undefined
@@ -96,16 +102,26 @@ export function hasAction(rendering: KRendering, includeChildren = false): boole
 
 /**
  * Finds the KRendering in the data of the SKGraphElement that matches the given ID.
- * @param element The element to look in.
- * @param id The ID to search for.
+ * @param graphElement The graph element to look in.
+ * @param svgElement The SVG element that represents the rendering.
  */
-export function findRendering(element: SKGraphElement, id: string): KRendering | undefined {
+export function findRendering(graphElement: SKGraphElement, svgElement: SVGElement): KRendering | undefined {
+    const isProxy = isProxyRendering(svgElement, graphElement.id)
+    const svgId = svgElement.id
+
     // The first rendering has to be extracted from the SKGraphElement. It is the first data object that is a KRendering.
-    let currentElement: KRendering = element.data.find((possibleRendering) =>
-        isRendering(possibleRendering)
-    ) as KRendering
+    let data: KGraphData[] | undefined
+    if (isProxy) {
+        // For a proxy, the rendering may be in the graph element's properties.
+        data = graphElement.properties['de.cau.cs.kieler.klighd.proxyView.proxyRendering'] as KGraphData[]
+    }
+    if (data === undefined) {
+        // Non-proxies and proxies without an explicit proxy rendering just use the graph element's data.
+        data = graphElement.data
+    }
+    let currentElement: KRendering = data.find((possibleRendering) => isRendering(possibleRendering)) as KRendering
     // The real rendering ID starts after the graph element ID prefix, delimited by a $$$.
-    const renderingId = id.split('$$$')[1] ?? id
+    const renderingId = svgId.split('$$$')[1] ?? svgId
     if (renderingId === undefined) {
         return undefined
     }
@@ -123,13 +139,13 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
         if (isContainerRendering(currentElement)) {
             // First, look for the ID in the child renderings.
             nextElement = currentElement.children.find((childRendering) =>
-                id.startsWith(childRendering.properties['klighd.lsp.rendering.id'] as string)
+                svgId.startsWith(childRendering.properties['klighd.lsp.rendering.id'] as string)
             ) as KRendering
         }
         if (nextElement === undefined && currentElement.type === K_POLYLINE) {
             // If the rendering was not found yet, take the junction point rendering.
             if (
-                id.startsWith(
+                svgId.startsWith(
                     (currentElement as KPolyline).junctionPointRendering.properties['klighd.lsp.rendering.id'] as string
                 )
             ) {
@@ -144,9 +160,54 @@ export function findRendering(element: SKGraphElement, id: string): KRendering |
     }
 
     // Now the currentElement should be the element searched for by the id.
-    if ((currentElement.properties['klighd.lsp.rendering.id'] as string) !== id) {
-        console.error(`The found element does not match the searched id! id: ${id}, found element: ${currentElement}`)
+    if ((currentElement.properties['klighd.lsp.rendering.id'] as string) !== svgId) {
+        console.error(
+            `The found element does not match the searched id! id: ${svgId}, found element: ${currentElement}`
+        )
         return undefined
     }
     return currentElement
+}
+
+/**
+ * Finds the SKGraphElement that matches the given ID.
+ * @param root The root.
+ * @param id The ID to search for.
+ * @returns The element matching the given id or `undefined` if there is none.
+ */
+export function getElementByID(root: SModelRootImpl, id: string, suppressErrors = false): SKGraphElement | undefined {
+    let curr = root as unknown as SKGraphElement
+    const idPath = id.split('$')
+    // The node id is build hierarchically and the root is already given, so start with i=1 ($root)
+    for (let i = 1; i < idPath.length && curr; i++) {
+        // $$ in id (e.g. comments in sccharts)
+        if (idPath[i].length > 0) {
+            const nextType = idPath[i].charAt(0)
+            if (nextType === 'E') {
+                // Edge
+                curr = ((curr as SKNode | SKPort).outgoingEdges as SKEdge[]).find((edge) =>
+                    id.startsWith(edge.id)
+                ) as SKEdge
+            } else if (['N', 'L', 'P'].includes(nextType) || idPath[i] === 'root') {
+                // Node, label or port
+                curr = curr.children.find((node) => id.startsWith(node.id)) as SKNode | SKLabel | SKPort
+            }
+        }
+    }
+
+    // Now currNode should be the node searched for by the id
+    if (!curr) {
+        if (!suppressErrors) {
+            console.error('No node found matching the id:', id)
+        }
+        return undefined
+    }
+    if (curr.id !== id) {
+        if (!suppressErrors) {
+            console.error('The found node does not match the searched id! id:', id, ', found node:', curr)
+        }
+        return undefined
+    }
+
+    return curr
 }

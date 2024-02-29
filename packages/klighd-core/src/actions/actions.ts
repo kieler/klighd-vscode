@@ -16,8 +16,9 @@
  */
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
-import { ExportSvgAction, RequestExportSvgAction } from 'sprotty'
+import { ExportSvgAction, RequestExportSvgAction, SGraphImpl } from 'sprotty'
 import { Action, FitToScreenAction, generateRequestId, RequestAction, ResponseAction } from 'sprotty-protocol'
+import { SKGraphModelRenderer } from '../skgraph-model-renderer'
 import { KImage } from '../skgraph-models'
 
 /**
@@ -151,6 +152,25 @@ export namespace KlighdFitToScreenAction {
             elementIds: ['$root'],
             padding: 10,
             animate: animate ?? true,
+        }
+    }
+}
+
+/** Contains the model and RenderingContext to be sent from the view to where it's needed. */
+export interface SendModelContextAction extends Action {
+    kind: typeof SendModelContextAction.KIND
+    model: SGraphImpl
+    context: SKGraphModelRenderer
+}
+
+export namespace SendModelContextAction {
+    export const KIND = 'sendModelContextAction'
+
+    export function create(model: SGraphImpl, context: SKGraphModelRenderer): SendModelContextAction {
+        return {
+            kind: KIND,
+            model,
+            context,
         }
     }
 }
