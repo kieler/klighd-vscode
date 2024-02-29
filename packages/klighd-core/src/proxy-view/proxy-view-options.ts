@@ -40,9 +40,9 @@ export class ProxyViewCategory implements RenderOption {
 export class ProxyViewEnabled implements RenderOption {
     static readonly ID: string = 'proxy-view-enabled'
 
-    static readonly NAME: string = 'Enable Proxy-View'
+    static readonly NAME: string = 'Proxy View'
 
-    static readonly DESCRIPTION: string = 'Whether the Proxy-View is enabled.'
+    static readonly DESCRIPTION: string = 'Enables proxies for off-screen elements.'
 
     static readonly DEFAULT: boolean = false
 
@@ -95,6 +95,8 @@ export class ProxyViewSize implements RangeOption {
     readonly values: any[] = []
 
     currentValue = ProxyViewSize.DEFAULT
+
+    debug = true
 }
 
 /**

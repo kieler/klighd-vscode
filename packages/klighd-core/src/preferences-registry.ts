@@ -83,6 +83,8 @@ export class IncrementalDiagramGeneratorOption implements Preference {
     currentValue = false
 
     notifyServer = true
+
+    debug = true
 }
 
 export interface PreferenceType {

@@ -113,12 +113,16 @@ export class GeneralPanel extends SidebarPanel {
                         value={this.preferencesRegistry.getValue(ShouldSelectTextOption)}
                         onChange={this.handlePreferenceChange.bind(this, ShouldSelectTextOption.ID)}
                     />
-                    <CheckOption
-                        id={IncrementalDiagramGeneratorOption.ID}
-                        name={IncrementalDiagramGeneratorOption.NAME}
-                        value={this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)}
-                        onChange={this.handlePreferenceChange.bind(this, IncrementalDiagramGeneratorOption.ID)}
-                    />
+                    {(this.renderOptionsRegistry.getValue(DebugOptions) as boolean) ? (
+                        <CheckOption
+                            id={IncrementalDiagramGeneratorOption.ID}
+                            name={IncrementalDiagramGeneratorOption.NAME}
+                            value={this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)}
+                            onChange={this.handlePreferenceChange.bind(this, IncrementalDiagramGeneratorOption.ID)}
+                        />
+                    ) : (
+                        ''
+                    )}
                 </div>
             </div>
         )
