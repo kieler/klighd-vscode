@@ -20,7 +20,7 @@ import 'reflect-metadata'
 // The other imports.
 import { DebugOptions, SetRenderOptionAction } from '@kieler/klighd-core'
 import { diagramType } from '@kieler/klighd-core/lib/base/external-helpers'
-import { Action, isAction } from 'sprotty-protocol'
+import { Action, ActionMessage, isAction } from 'sprotty-protocol'
 import { registerLspEditCommands } from 'sprotty-vscode'
 import * as vscode from 'vscode'
 import { LanguageClient, State } from 'vscode-languageclient/node'
@@ -143,12 +143,10 @@ export function activate(context: vscode.ExtensionContext): void {
                 )
                 return
             }
-            // TODO: this has not been tested yet if the messenging change works like this.
-            messenger.sendNotification(
-                { method: 'diagram/accept' },
-                { type: 'webview', webviewType: diagramType },
-                action
-            )
+            messenger.sendNotification({ method: 'ActionMessage' }, { type: 'webview', webviewType: diagramType }, {
+                clientId: `${diagramType}_sprotty`,
+                action,
+            } as ActionMessage)
         })
     )
 
