@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2023 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -20,9 +20,9 @@ import { inject, injectable } from 'inversify'
 import { ServerStatusAction } from 'sprotty'
 import { ActionMessage } from 'sprotty-protocol'
 import { ActionNotification } from 'sprotty-vscode-protocol'
-import { LspNotification, LspRequest } from 'sprotty-vscode-protocol/lib/lsp'
+import { LspNotification } from 'sprotty-vscode-protocol/lib/lsp'
 import { VscodeDiagramWidgetFactory } from 'sprotty-vscode-webview'
-import { NotificationMessage, RequestMessage } from 'vscode-languageclient'
+import { NotificationMessage } from 'vscode-languageclient'
 import { HOST_EXTENSION } from 'vscode-messenger-common'
 import { Messenger } from 'vscode-messenger-webview'
 
@@ -65,22 +65,17 @@ export class MessageConnection implements Connection {
         }
     }
 
-    async sendMessage<R>(message: ActionMessage): Promise<R> {
+    sendMessage(message: ActionMessage): void {
         console.groupCollapsed(`MessageConnection sends ${message.action.kind} action:`)
         console.log(message)
         console.groupEnd()
 
-        const theMessage: RequestMessage = {
+        const theMessage: NotificationMessage = {
             jsonrpc: '2.0',
             method: 'diagram/accept',
-            id: message.clientId,
             params: message,
         }
-        const response = await this.messenger.sendRequest(LspRequest, HOST_EXTENSION, theMessage)
-        if (response.error) {
-            throw new Error(String(response.error))
-        }
-        return response.result as unknown as R
+        this.messenger.sendNotification(LspNotification, HOST_EXTENSION, theMessage)
     }
 
     sendNotification<T extends Record<string, unknown>>(type: NotificationType, payload: T): void {
