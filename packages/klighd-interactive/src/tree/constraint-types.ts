@@ -15,15 +15,18 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Direction } from "../constraint-classes"
+import { Direction } from '../constraint-classes'
 
- /**
+/**
  * A tree level visualization data class for the interactive tree approach.
  */
 export class Level {
     begin: number
+
     end: number
+
     mid: number
+
     /**
      * Where up is, is determined by the direction
      */
@@ -33,6 +36,7 @@ export class Level {
      * Where low is, is determined by the direction
      */
     bottomBorder: number
+
     /**
      * 0: UNDEFINED, 1: RIGHT, 2: LEFT, 3: DOWN, 4: UP
      */
@@ -44,7 +48,6 @@ export class Level {
         this.mid = mid
         this.direction = direction
     }
-
 }
 
 /**
@@ -52,6 +55,8 @@ export class Level {
  */
 export class TreeSetPositionConstraint {
     id: string
+
     position: number
+
     positionConstraint: number
 }

@@ -26,20 +26,16 @@ import {
 import {
     renderPositionIndicators,
     renderSetRelativeConstraint,
-    setForbiddenOnNodes
+    setForbiddenOnNodes,
 } from './layered/layered-relative-constraint-view'
 import {
     renderHierarchyLevel as renderHierarchyLevelRectPacking,
     renderRectPackConstraint,
 } from './rect-packing/rect-packing-interactive-view'
-import {
-    renderHierarchyLevel as renderHierarchyLevelTree,
-    renderTreeConstraint
-} from './tree/tree-interactive-view'
+import { renderHierarchyLevel as renderHierarchyLevelTree, renderTreeConstraint } from './tree/tree-interactive-view'
 
 /**
  * Visualize the layers and available positions in the graph
- * 
  * @param root Root of the hierarchical level for which the layers and positions should be visualized.
  * @param relativeConstraint Whether a relative constraint should be rendered.
  * @returns The VNode that represents the view overlay for interactive layout.
@@ -73,7 +69,6 @@ export function renderInteractiveLayout(root: KNode, relativeConstraint: boolean
 
 /**
  * Generates an icon to visualize the set constraints of the node.
- * 
  * @param node KNode which Constraints should be rendered.
  * @returns The VNode that includes the node icons that indicate their constraint.
  */
@@ -81,9 +76,17 @@ export function renderConstraints(node: KNode): VNode {
     let result = <g></g>
     const algorithm = (node.parent as KNode).properties['org.eclipse.elk.algorithm'] as string
     if (algorithm === undefined || algorithm.endsWith('layered')) {
-        result = <g>{renderLayeredConstraint(node)}{renderSetRelativeConstraint(node)}</g>
+        result = (
+            <g>
+                {renderLayeredConstraint(node)}
+                {renderSetRelativeConstraint(node)}
+            </g>
+        )
     } else if (algorithm.endsWith('rectpacking')) {
-        if (node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined && node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1) {
+        if (
+            node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined &&
+            node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1
+        ) {
             result = renderRectPackConstraint(node)
         }
     } else if (algorithm.endsWith('mrtree')) {

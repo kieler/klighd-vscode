@@ -74,7 +74,7 @@ export function createRectangle(
                 fill={forbidden ? forbiddenColor : backgroundColor}
                 stroke={forbidden ? forbiddenColor : 'grey'}
                 style={{ 'stroke-dasharray': '4' }}
-                opacity='0.5'
+                opacity="0.5"
             ></rect>
         </g>
     )
@@ -181,34 +181,44 @@ export function renderArrow(xTranslate: number, yTranslate: number, vertical: bo
  * @param direction Determines the direction of the arrow.
  * @param color Determines the color of the arrow.
  */
-export function renderArrowInDirection(xTranslate: number, yTranslate: number, direction: Direction, color: string): VNode {
+export function renderArrowInDirection(
+    xTranslate: number,
+    yTranslate: number,
+    direction: Direction,
+    color: string
+): VNode {
     let s = `translate(${xTranslate},${yTranslate})`
     s += ` scale(${iconScale}, ${iconScale})`
     switch (direction) {
         case Direction.UP:
             // @ts-ignore
-            return <g transform={s}
-                fill={color} stroke="none">
-                <path d={arrowUp}/>
-            </g>
+            return (
+                <g transform={s} fill={color} stroke="none">
+                    {' '}
+                    <path d={arrowUp} />
+                </g>
+            )
         case Direction.DOWN:
             // @ts-ignore
-            return <g transform={s}
-                fill={color} stroke="none">
-                <path d={arrowDown}/>
-            </g>
+            return (
+                <g transform={s} fill={color} stroke="none">
+                    <path d={arrowDown} />
+                </g>
+            )
         case Direction.LEFT:
             // @ts-ignore
-            return <g transform={s}
-                fill={color} stroke="none">
-                <path d={arrowLeft}/>
-            </g>
+            return (
+                <g transform={s} fill={color} stroke="none">
+                    <path d={arrowLeft} />
+                </g>
+            )
         case Direction.RIGHT:
             // @ts-ignore
-            return <g transform={s}
-                fill={color} stroke="none">
-                <path d={arrowRight}/>
-            </g>
+            return (
+                <g transform={s} fill={color} stroke="none">
+                    <path d={arrowRight} />
+                </g>
+            )
         default:
             // @ts-ignore
             return <g></g>

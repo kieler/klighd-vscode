@@ -50,13 +50,17 @@ export function setGenerateRectPackAction(
             const highY = boundsInWindow.y + boundsInWindow.height
             if (event.pageX > lowX && event.pageX < highX && event.pageY > lowY && event.pageY < highY) {
                 let actualPosition = node.properties['org.eclipse.elk.rectpacking.currentPosition'] as number
-                if (node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined &&
-                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1) {
+                if (
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined &&
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1
+                ) {
                     actualPosition = node.properties['org.eclipse.elk.rectpacking.desiredPosition'] as number
                 }
                 let actualTargetPosition = target.properties['org.eclipse.elk.rectpacking.currentPosition'] as number
-                if (node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined &&
-                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1) {
+                if (
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined &&
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1
+                ) {
                     actualTargetPosition = target.properties['org.eclipse.elk.rectpacking.desiredPosition'] as number
                 }
                 if (actualPosition !== actualTargetPosition && actualPosition !== -1) {

@@ -14,14 +14,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+/* eslint-disable no-redeclare */
 
-import { Action } from 'sprotty-protocol';
-import { TreeSetPositionConstraint } from './constraint-types';
+import { Action } from 'sprotty-protocol'
+import { TreeSetPositionConstraint } from './constraint-types'
 
 /**
  * Sent from client to server to set a position to force a node on a specific position.
  */
- export interface TreeSetPositionConstraintAction extends Action {
+export interface TreeSetPositionConstraintAction extends Action {
     kind: typeof TreeSetPositionConstraintAction.KIND
     constraint: TreeSetPositionConstraint
 }

@@ -56,7 +56,6 @@ export const HORIZONTAL_ARROW_Y_OFFSET = -0.7
 
 /**
  * Calculates the layer the node is in.
- * 
  * @param node Node which layer should be calculated.
  * @param nodes All nodes in the same hierarchical level as the node which layer should be calculated.
  * @param layers All layers at the hierarchical level.
@@ -70,40 +69,48 @@ export function getLayerOfNode(node: KNode, nodes: KNode[], layers: Layer[], dir
 
     // Check for all layers if the node is in the layer
     for (const layer of layers) {
-        if (coordinateInLayoutDirection < layer.end &&
-            coordinateInLayoutDirection > layer.begin &&
-            (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) ||
-            coordinateInLayoutDirection > layer.end &&
-            coordinateInLayoutDirection < layer.begin &&
-            (direction === Direction.LEFT || direction === Direction.UP)) {
+        if (
+            (coordinateInLayoutDirection < layer.end &&
+                coordinateInLayoutDirection > layer.begin &&
+                (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN)) ||
+            (coordinateInLayoutDirection > layer.end &&
+                coordinateInLayoutDirection < layer.begin &&
+                (direction === Direction.LEFT || direction === Direction.UP))
+        ) {
             return layer.id
         }
     }
-            
+
     const firstLayerBegin = layers[0].begin
     const lastLayerEnd = layers[layers.length - 1].end
     // If the node is the only one in the last layer it can not be in a new last layer
     const lastLNodes = getNodesOfLayer(layers[layers.length - 1].id, nodes)
-    if (lastLNodes.length === 1 && lastLNodes[0].selected &&
-        (((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) && coordinateInLayoutDirection > lastLayerEnd)
-            || (( direction === Direction.LEFT || direction === Direction.UP) && coordinateInLayoutDirection < lastLayerEnd))) {
+    if (
+        lastLNodes.length === 1 &&
+        lastLNodes[0].selected &&
+        (((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) &&
+            coordinateInLayoutDirection > lastLayerEnd) ||
+            ((direction === Direction.LEFT || direction === Direction.UP) &&
+                coordinateInLayoutDirection < lastLayerEnd))
+    ) {
         // node is in last layer
         return layers[layers.length - 1].id
     }
 
     // Node is in a new last layer
-    if (((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) && coordinateInLayoutDirection < firstLayerBegin)
-        || (( direction === Direction.LEFT || direction === Direction.UP) && coordinateInLayoutDirection > firstLayerBegin)) {
-        return -1;
-    } else {
-        // The node is added in a new last layer.
-        return layers[layers.length - 1].id + 1
+    if (
+        ((direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN) &&
+            coordinateInLayoutDirection < firstLayerBegin) ||
+        ((direction === Direction.LEFT || direction === Direction.UP) && coordinateInLayoutDirection > firstLayerBegin)
+    ) {
+        return -1
     }
+    // The node is added in a new last layer.
+    return layers[layers.length - 1].id + 1
 }
 
 /**
  * Adjusts the layer constraint value for a node in case that the target layer's id was boosted by an user defined constraint.
- * 
  * @param node The node that was moved
  * @param nodes All nodes
  * @param layerCandidate The current candidate value for the new layer constraint
@@ -147,7 +154,6 @@ export function getActualLayer(node: KNode, nodes: KNode[], layerCandidate: numb
 
 /**
  * Adjusts the target index of a node in the case that the node above it has a position constraint > count of nodes in the layer.
- * 
  * @param targetIndex The current candidate target index
  * @param alreadyInLayer Signals whether the node already was in the layer before it was moved.
  * @param layerNodes All nodes of the target layer
@@ -179,7 +185,6 @@ export function getActualTargetIndex(targetIndex: number, alreadyInLayer: boolea
 
 /**
  * Calculates the layers in a graph based on the layer IDs and positions of the nodes.
- * 
  * @param nodes All nodes of the graph which layers should be calculated.
  * @param direction The layout direction.
  * @returns The calculated layers of the given nodes based on the layout direction, the layer ids, and the node coordinates.
@@ -217,11 +222,11 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
                 direction
             )
             beginCoordinate =
-                (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN)
+                direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN
                     ? Number.MAX_VALUE
                     : Number.MIN_VALUE
             endCoordinate =
-                (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN)
+                direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN
                     ? Number.MIN_VALUE
                     : Number.MAX_VALUE
             layer = node.properties['org.eclipse.elk.layered.layering.layerId'] as number
@@ -268,12 +273,14 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
         }
 
         // Update coordinates of the current layer
-        beginCoordinate = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN)
-            ? Math.min(currentBegin, beginCoordinate)
-            : Math.max(currentBegin, beginCoordinate)
-        endCoordinate = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN)
-            ? Math.max(currentEnd, endCoordinate)
-            : Math.min(currentEnd, endCoordinate)
+        beginCoordinate =
+            direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN
+                ? Math.min(currentBegin, beginCoordinate)
+                : Math.max(currentBegin, beginCoordinate)
+        endCoordinate =
+            direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.DOWN
+                ? Math.max(currentEnd, endCoordinate)
+                : Math.min(currentEnd, endCoordinate)
         topBorder = Math.min(currentTopBorder, topBorder)
         bottomBorder = Math.max(currentBottomBorder, bottomBorder)
     }
@@ -282,12 +289,12 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
         layer,
         beginCoordinate,
         endCoordinate,
-        beginCoordinate + ((endCoordinate - beginCoordinate) / 2),
+        beginCoordinate + (endCoordinate - beginCoordinate) / 2,
         direction
     )
     // Offset above & below the layers
-    topBorder = topBorder - PLACEMENT_TOP_BOTTOM_OFFSET
-    bottomBorder = bottomBorder + PLACEMENT_TOP_BOTTOM_OFFSET
+    topBorder -= PLACEMENT_TOP_BOTTOM_OFFSET
+    bottomBorder += PLACEMENT_TOP_BOTTOM_OFFSET
     // Update left and right bounds of the layers and set y bounds
     for (let i = 0; i < layers.length - 1; i++) {
         // Calculate the mid between two layers
@@ -362,7 +369,6 @@ export function getLayers(nodes: KNode[], direction: Direction): Layer[] {
 
 /**
  * Calculates the nodes that are in the given layer based on the layer IDs of the nodes.
- * 
  * @param layer The layer which containing nodes should be calculated.
  * @param nodes All nodes the graph contains.
  * @returns The KNodes in the layer given by its number and the nodes layerId
@@ -379,24 +385,26 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
 
 /**
  * Calculates the position of the target node in relation to the nodes in the layer based on their y coordinates.
- * 
  * @param nodes Nodes of the layer the target is in.
  * @param target Node which position should be calculated.
  * @returns The position of a node in a layer given by their coordinates.
  */
- export function getPositionInLayer(nodes: KNode[], target: KNode, direction: Direction): number {
+export function getPositionInLayer(nodes: KNode[], target: KNode, direction: Direction): number {
     // Sort the layer array by coordinates of the nodes.
     switch (direction) {
         case Direction.UNDEFINED:
         case Direction.LEFT:
         case Direction.RIGHT: {
             nodes.sort((a, b) => a.position.y - b.position.y)
-            break;
+            break
         }
         case Direction.UP:
         case Direction.DOWN: {
             nodes.sort((a, b) => a.position.x - b.position.x)
-            break;
+            break
+        }
+        default: {
+            console.error('error in constraint-utils.ts, unexpected direction in switch')
         }
     }
 
@@ -415,7 +423,7 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
                     return i
                 }
             }
-            break;
+            break
         }
         case Direction.UP:
         case Direction.DOWN: {
@@ -424,7 +432,10 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
                     return i
                 }
             }
-            break;
+            break
+        }
+        default: {
+            console.error('error in constraint-utils.ts, unexpected direction in switch')
         }
     }
 
@@ -435,13 +446,15 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
  * Determines whether the layer is forbidden for the given node.
  * The layer is forbidden if another node is in the layer that
  * is connected to the given node by an edge and has a layer constraint.
- * 
  * @param node The KNode.
  * @param layer The number indicating the layer.
  * @returns Returns true if is is not allowed to set a layer constraint for the given node and layer.
  */
- export function isLayerForbidden(node: KNode, layer: number): boolean {
-    const layerNodes = getNodesOfLayer(node.properties['org.eclipse.elk.layered.layering.layerId'] as number, filterKNodes(node.parent.children as KNode []))
+export function isLayerForbidden(node: KNode, layer: number): boolean {
+    const layerNodes = getNodesOfLayer(
+        node.properties['org.eclipse.elk.layered.layering.layerId'] as number,
+        filterKNodes(node.parent.children as KNode[])
+    )
     const chainNodes = getChain(node, layerNodes)
     // Collect the connected nodes
     const connectedNodes: KNode[] = []
@@ -457,10 +470,11 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
     }
 
     // Check the connected nodes for layer constraints.
-    for (const node of connectedNodes) {
-        if (node.properties['org.eclipse.elk.layered.layering.layerId'] === layer &&
-            node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] !== -1 &&
-            node.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] !== undefined
+    for (const connectedNode of connectedNodes) {
+        if (
+            connectedNode.properties['org.eclipse.elk.layered.layering.layerId'] === layer &&
+            connectedNode.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] !== -1 &&
+            connectedNode.properties['org.eclipse.elk.layered.layering.layerChoiceConstraint'] !== undefined
         ) {
             // layer is forbidden for the given node
             return true
@@ -474,15 +488,16 @@ export function getNodesOfLayer(layer: number, nodes: KNode[]): KNode[] {
 /**
  * Determines whether only the layer constraint should be set.
  * For RIGHT layout, this is the case if the node is above or below the layers.
- * 
+ *
  * @param node The node that is moved.
  * @param layers The layers in the graph.
  * @returns Returns true if only a layer constraint should be set based on the coordinates of the layers and the node.
  */
 export function isOnlyLayerConstraintSet(node: KNode, layers: Layer[], direction: Direction): boolean {
-    const coordinateToCheck = (direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT)
-        ? node.position.y
-        : node.position.x
+    const coordinateToCheck =
+        direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT
+            ? node.position.y
+            : node.position.x
     if (layers.length !== 0) {
         const layerTop = layers[0].topBorder
         const layerBot = layers[0].bottomBorder
@@ -494,7 +509,6 @@ export function isOnlyLayerConstraintSet(node: KNode, layers: Layer[], direction
 
 /**
  * Sets properties of the target accordingly to the position the target is moved to
- * 
  * @param nodes The nodes of the graph.
  * @param layers The layers of the graph.
  * @param target SModelElement that is moved.
@@ -502,12 +516,16 @@ export function isOnlyLayerConstraintSet(node: KNode, layers: Layer[], direction
  */
 export function setProperty(nodes: KNode[], layers: Layer[], target: SModelElementImpl): Action {
     const targetNode: KNode = target as KNode
-    const direction = targetNode.direction
+    const { direction } = targetNode
     // Calculate layer and position the target has in the graph at the new position
     const layerOfTarget = getLayerOfNode(targetNode, nodes, layers, direction)
     const nodesOfLayer = getNodesOfLayer(layerOfTarget, nodes)
     const positionOfTarget = getPositionInLayer(nodesOfLayer, targetNode, direction)
-    const newPositionCons = getActualTargetIndex(positionOfTarget, nodesOfLayer.indexOf(targetNode) !== -1, nodesOfLayer)
+    const newPositionCons = getActualTargetIndex(
+        positionOfTarget,
+        nodesOfLayer.indexOf(targetNode) !== -1,
+        nodesOfLayer
+    )
     const newLayerCons = getActualLayer(targetNode, nodes, layerOfTarget)
     const forbidden = isLayerForbidden(targetNode, newLayerCons)
 
@@ -522,29 +540,26 @@ export function setProperty(nodes: KNode[], layers: Layer[], target: SModelEleme
             return SetLayerConstraintAction.create({
                 id: targetNode.id,
                 layer: layerOfTarget,
-                layerConstraint: newLayerCons
-            })
-        } else {
-            // If layer and position constraint should be set - send them both in one StaticConstraint
-            return SetStaticConstraintAction.create({
-                id: targetNode.id,
-                layer: layerOfTarget,
                 layerConstraint: newLayerCons,
-                position: positionOfTarget,
-                positionConstraint: newPositionCons
             })
         }
-    } else {
-
-        // Position constraint should only be set if the position of the node changed
-        if (targetNode.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] !== positionOfTarget) {
-            // Set the position Constraint
-            return SetPositionConstraintAction.create({
-                id: targetNode.id,
-                position: positionOfTarget,
-                positionConstraint: newPositionCons
-            })
-        }
+        // If layer and position constraint should be set - send them both in one StaticConstraint
+        return SetStaticConstraintAction.create({
+            id: targetNode.id,
+            layer: layerOfTarget,
+            layerConstraint: newLayerCons,
+            position: positionOfTarget,
+            positionConstraint: newPositionCons,
+        })
+    }
+    // Position constraint should only be set if the position of the node changed
+    if (targetNode.properties['org.eclipse.elk.layered.crossingMinimization.positionId'] !== positionOfTarget) {
+        // Set the position Constraint
+        return SetPositionConstraintAction.create({
+            id: targetNode.id,
+            position: positionOfTarget,
+            positionConstraint: newPositionCons,
+        })
     }
     // If the node was moved without setting a constraint - let it snap back
     return RefreshLayoutAction.create()

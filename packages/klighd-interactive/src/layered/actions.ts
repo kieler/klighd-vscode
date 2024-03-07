@@ -24,7 +24,7 @@ import {
     InLayerSuccessorOfConstraint,
     LayerConstraint,
     PositionConstraint,
-    StaticConstraint
+    StaticConstraint,
 } from './constraint-types'
 
 /**
@@ -146,33 +146,57 @@ export namespace SetPositionConstraintAction {
 /**
  * Sent from client to server to set a in layer predecessor of constraint on a node.
  */
- export class SetInLayerPredecessorOfConstraintAction implements Action {
-    static readonly KIND: string = 'setILPredOfConstraint'
-    readonly kind = SetInLayerPredecessorOfConstraintAction.KIND
+export interface SetInLayerPredecessorOfConstraintAction extends Action {
+    kind: typeof SetInLayerPredecessorOfConstraintAction.KIND
+    constraint: InLayerPredecessorOfConstraint
+}
 
-    constructor(public readonly constraint: InLayerPredecessorOfConstraint) {
+export namespace SetInLayerPredecessorOfConstraintAction {
+    export const KIND = 'setILPredOfConstraint'
+
+    export function create(constraint: InLayerPredecessorOfConstraint): SetInLayerPredecessorOfConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
 /**
  * Sent from client to server to set a in layer successor of constraint on a node.
  */
-export class SetInLayerSuccessorOfConstraintAction implements Action {
-    static readonly KIND: string = 'setILSuccOfConstraint'
-    readonly kind = SetInLayerSuccessorOfConstraintAction.KIND
+export interface SetInLayerSuccessorOfConstraintAction extends Action {
+    kind: typeof SetInLayerSuccessorOfConstraintAction.KIND
+    constraint: InLayerSuccessorOfConstraint
+}
 
-    constructor(public readonly constraint: InLayerSuccessorOfConstraint) {
+export namespace SetInLayerSuccessorOfConstraintAction {
+    export const KIND = 'setILSuccOfConstraint'
+
+    export function create(constraint: InLayerSuccessorOfConstraint): SetInLayerSuccessorOfConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
 /**
  * Sent from client to server to delete relative constraints on a node.
  */
-export class DeleteRelativeConstraintsAction implements Action {
-    static readonly KIND: string = 'deleteRelativeConstraints'
-    readonly kind = DeleteRelativeConstraintsAction.KIND
+export interface DeleteRelativeConstraintsAction extends Action {
+    kind: typeof DeleteRelativeConstraintsAction.KIND
+    constraint: DeleteConstraint
+}
 
-    constructor(public readonly constraint: DeleteConstraint) {
+export namespace DeleteRelativeConstraintsAction {
+    export const KIND = 'deleteRelativeConstraints'
+
+    export function create(constraint: DeleteConstraint): DeleteRelativeConstraintsAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
@@ -180,11 +204,19 @@ export class DeleteRelativeConstraintsAction implements Action {
  * Sent from client to server to delete InLayerSuccessorOf constraint on a node.
  * Currently unused.
  */
-export class DeleteInLayerSuccessorOfConstraintAction implements Action {
-    static readonly KIND: string = 'deleteILSuccOfConstraint'
-    readonly kind = DeleteInLayerSuccessorOfConstraintAction.KIND
+export interface DeleteInLayerSuccessorOfConstraintAction extends Action {
+    kind: typeof DeleteInLayerSuccessorOfConstraintAction.KIND
+    constraint: DeleteConstraint
+}
 
-    constructor(public readonly constraint: DeleteConstraint) {
+export namespace DeleteInLayerSuccessorOfConstraintAction {
+    export const KIND = 'deleteILSuccOfConstraint'
+
+    export function create(constraint: DeleteConstraint): DeleteInLayerSuccessorOfConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }
 
@@ -192,10 +224,18 @@ export class DeleteInLayerSuccessorOfConstraintAction implements Action {
  * Sent from client to server to delete inLayerPredecessorOf constraint on a node.
  * Currently unused.
  */
-export class DeleteInLayerPredecessorOfConstraintAction implements Action {
-    static readonly KIND: string = 'deleteILPredOfConstraint'
-    readonly kind = DeleteInLayerPredecessorOfConstraintAction.KIND
+export interface DeleteInLayerPredecessorOfConstraintAction extends Action {
+    kind: typeof DeleteInLayerPredecessorOfConstraintAction.KIND
+    constraint: DeleteConstraint
+}
 
-    constructor(public readonly constraint: DeleteConstraint) {
+export namespace DeleteInLayerPredecessorOfConstraintAction {
+    export const KIND = 'deleteILPredOfConstraint'
+
+    export function create(constraint: DeleteConstraint): DeleteInLayerPredecessorOfConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
     }
 }

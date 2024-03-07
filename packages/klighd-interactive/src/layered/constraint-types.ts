@@ -22,6 +22,7 @@ import { Direction } from '../constraint-classes'
  */
 export class Layer {
     id: number
+
     begin: number
 
     end: number
@@ -101,6 +102,7 @@ export class StaticConstraint {
  */
 export class InLayerPredecessorOfConstraint {
     id: string
+
     referencedNode: string
 }
 
@@ -109,5 +111,6 @@ export class InLayerPredecessorOfConstraint {
  */
 export class InLayerSuccessorOfConstraint {
     id: string
+
     referencedNode: string
 }

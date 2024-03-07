@@ -53,7 +53,6 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
     /**
      * Handle moving an element in the diagram.
      * Does not use super implementation, since it calls mouseUp
-     * 
      * @param target The target element.
      * @param event The mouse event.
      * @returns The actions executed on mouse move.
@@ -86,7 +85,6 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
      * Delete constraint events are handle on mouseDown if the alt modifier is active.
      * Moreover, it is checked whether the relative constraint mode is activated.
      * This is the case if the shift-key is pressed during mouseDown.
-     * 
      * @param target The target element.
      * @param event The mouse event.
      * @returns Actions executed on mouse down. This might be any delete constraint action.
@@ -122,9 +120,11 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 this.target.shadow = true
                 if (event.altKey && event.shiftKey) {
                     if (algorithm === undefined || algorithm.endsWith('layered')) {
-                        return [new DeleteRelativeConstraintsAction({
-                            id: this.target.id
-                        })]
+                        return [
+                            DeleteRelativeConstraintsAction.create({
+                                id: this.target.id,
+                            }),
+                        ]
                     }
                 } else if (event.altKey) {
                     if (algorithm === undefined || algorithm.endsWith('layered')) {
@@ -153,7 +153,6 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
 
     /**
      * Override mouseEnter to do nothing such that mouseUp is not called.
-     * 
      * @param target The target element.
      * @param event The mouse event.
      * @returns Always an empty list.
@@ -164,10 +163,9 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
 
     /**
      * Returns the set-constraint actions that should be executed on mouseUp, additionally with the usual mouseUp actions.
-     * 
      * @param target The target element.
      * @param event The mouse event.
-     * @returns The list of set-constraint actions to be executed on mouseUp. 
+     * @returns The list of set-constraint actions to be executed on mouseUp.
      */
     mouseUp(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         if (this.hasDragged && this.target) {
@@ -178,7 +176,10 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             if (algorithm === undefined || algorithm.endsWith('layered')) {
                 if (event.shiftKey) {
                     result = (
-                        [setRelativeConstraint(this.nodes, this.data.get('layered'), this.target)] as (Action | Promise<Action>)[]
+                        [setRelativeConstraint(this.nodes, this.data.get('layered'), this.target)] as (
+                            | Action
+                            | Promise<Action>
+                        )[]
                     ).concat(super.mouseUp(this.target, event))
                 } else {
                     result = (
@@ -191,9 +192,9 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                     [setGenerateRectPackAction(this.nodes, this.target, parent, event)] as (Action | Promise<Action>)[]
                 ).concat(super.mouseUp(this.target, event))
             } else if (algorithm.endsWith('mrtree')) {
-                result = (
-                    [setTreeProperties(this.nodes, event, this.target)] as (Action | Promise<Action>)[]
-                ).concat(super.mouseUp(this.target, event))
+                result = ([setTreeProperties(this.nodes, event, this.target)] as (Action | Promise<Action>)[]).concat(
+                    super.mouseUp(this.target, event)
+                )
             } else {
                 // Algorithm not supported
             }

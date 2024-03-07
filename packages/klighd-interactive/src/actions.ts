@@ -40,7 +40,7 @@ export namespace RefreshDiagramAction {
 /**
  * A sprotty action to refresh the layout. Sent from client to server.
  */
- export interface RefreshLayoutAction extends Action {
+export interface RefreshLayoutAction extends Action {
     kind: typeof RefreshLayoutAction.KIND
 }
 

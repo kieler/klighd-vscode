@@ -77,7 +77,9 @@ export class KNode extends RectangularNode implements SKGraphElement {
     shadowX: number
 
     shadowY: number
+
     highlight: boolean
+
     forbidden: boolean
 }
 
@@ -122,13 +124,16 @@ export class KEdge extends SEdgeImpl implements SKGraphElement {
 }
 
 export class RelativeConstraintData {
-    constructor(public readonly relCons: RelativeConstraintType,
+    constructor(
+        public readonly relCons: RelativeConstraintType,
         public readonly node: KNode,
-        public readonly target: KNode) {}
+        public readonly target: KNode
+        // eslint-disable-next-line no-empty-function
+    ) {}
 }
 
 export enum RelativeConstraintType {
     IN_LAYER_SUCCESSOR_OF,
     IN_LAYER_PREDECESSOR_OF,
-    UNDEFINED
+    UNDEFINED,
 }

@@ -100,7 +100,6 @@ export class SKGraphView implements IView {
  */
 @injectable()
 export class KNodeView implements IView {
-
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
     render(node: SKNode, context: RenderingContext): VNode | undefined {
