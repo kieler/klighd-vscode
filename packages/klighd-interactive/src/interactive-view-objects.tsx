@@ -15,10 +15,10 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { VNode } from 'snabbdom';
-import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Direction } from './constraint-classes';
-import { lockPath, arrowVertical, arrowHorizontal, arrowUp, arrowDown, arrowRight, arrowLeft } from './svg-path';
+import { VNode } from 'snabbdom'
+import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Direction } from './constraint-classes'
+import { lockPath, arrowVertical, arrowHorizontal, arrowUp, arrowDown, arrowRight, arrowLeft } from './svg-path'
 
 const iconScale = 0.01
 
@@ -32,21 +32,52 @@ const iconScale = 0.01
  * @param selected Determines whether the layer represented by the rectangle is selected instead of a certain position.
  * @param direction The direction of the layer.
  */
-export function createRectangle(begin: number, end: number, top: number, bottom: number, forbidden: boolean, selected: boolean, direction: Direction): VNode {
+export function createRectangle(
+    begin: number,
+    end: number,
+    top: number,
+    bottom: number,
+    forbidden: boolean,
+    selected: boolean,
+    direction: Direction
+): VNode {
     const forbiddenColor = 'indianred'
     const backgroundColor = selected ? 'grey' : 'lightgrey'
-    // @ts-ignore
-    return <g> <rect
-                    x={(direction === Direction.RIGHT || direction === Direction.UNDEFINED) ? begin : direction === Direction.LEFT ? end : top}
-                    y={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? top : direction === Direction.UP ? end : begin}
-                    width={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? Math.abs(begin - end) : bottom - top}
-                    height={(direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT) ? bottom - top : Math.abs(begin - end)}
-                    fill={forbidden ? forbiddenColor : backgroundColor}
-                    stroke={forbidden ? forbiddenColor : 'grey'}
-                    style={{ 'stroke-dasharray': "4" }}
-                    opacity="0.5">
-                </rect>
-            </g>
+    return (
+        <g>
+            {' '}
+            <rect
+                x={
+                    direction === Direction.RIGHT || direction === Direction.UNDEFINED
+                        ? begin
+                        : direction === Direction.LEFT
+                          ? end
+                          : top
+                }
+                y={
+                    direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT
+                        ? top
+                        : direction === Direction.UP
+                          ? end
+                          : begin
+                }
+                width={
+                    direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT
+                        ? Math.abs(begin - end)
+                        : bottom - top
+                }
+                height={
+                    direction === Direction.RIGHT || direction === Direction.UNDEFINED || direction === Direction.LEFT
+                        ? bottom - top
+                        : Math.abs(begin - end)
+                }
+                fill={forbidden ? forbiddenColor : backgroundColor}
+                stroke={forbidden ? forbiddenColor : 'grey'}
+                style={{ 'stroke-dasharray': '4' }}
+                opacity='0.5'
+            ></rect>
+        </g>
+    )
 }
 
 /**
@@ -57,17 +88,36 @@ export function createRectangle(begin: number, end: number, top: number, bottom:
  * @param direction The layout direction.
  */
 export function createVerticalLine(mid: number, top: number, bot: number, direction: Direction): VNode {
-    // @ts-ignore
-    return <g> <line
-                    x1={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? mid : top}
-                    y1={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? top : mid}
-                    x2={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? mid : bot}
-                    y2={(direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED) ? bot : mid}
-                    fill='none'
-                    stroke='grey'
-                    style={{ 'stroke-dasharray': '4' }}
-                />
-            </g>
+    return (
+        <g>
+            {' '}
+            <line
+                x1={
+                    direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED
+                        ? mid
+                        : top
+                }
+                y1={
+                    direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED
+                        ? top
+                        : mid
+                }
+                x2={
+                    direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED
+                        ? mid
+                        : bot
+                }
+                y2={
+                    direction === Direction.RIGHT || direction === Direction.LEFT || direction === Direction.UNDEFINED
+                        ? bot
+                        : mid
+                }
+                fill="none"
+                stroke="grey"
+                style={{ 'stroke-dasharray': '4' }}
+            />
+        </g>
+    )
 }
 
 /**
@@ -78,16 +128,12 @@ export function createVerticalLine(mid: number, top: number, bot: number, direct
  * @param forbidden If the layer the circle is in is forbidden the colour is red.
  */
 export function renderCircle(fill: boolean, x: number, y: number, color: string): VNode {
-    // @ts-ignore
-    return  <g> <circle
-                    cx={x}
-                    cy={y}
-                    r="2"
-                    stroke={color}
-                    fill={fill ? color : "none"}
-                    style={{ 'stroke-width': '0.5' }}
-                />
-            </g>
+    return (
+        <g>
+            {' '}
+            <circle cx={x} cy={y} r="2" stroke={color} fill={fill ? color : 'none'} style={{ 'stroke-width': '0.5' }} />
+        </g>
+    )
 }
 
 /**
@@ -97,14 +143,12 @@ export function renderCircle(fill: boolean, x: number, y: number, color: string)
  */
 export function renderLock(xTranslate: number, yTranslate: number): VNode {
     const generalYOffset = 5
-    const s = "translate(" + xTranslate + ","
-            + (yTranslate - generalYOffset) + ") scale(" + iconScale + ", " + iconScale + ")"
-            // @ts-ignore
-    return  <g transform={s}
-                fill="grey" stroke="none">
-                <path d={lockPath}>
-                </path>
-            </g>
+    const s = `translate(${xTranslate},${yTranslate - generalYOffset}) scale(${iconScale}, ${iconScale})`
+    return (
+        <g transform={s} fill="grey" stroke="none">
+            <path d={lockPath}></path>
+        </g>
+    )
 }
 
 /**
@@ -114,22 +158,20 @@ export function renderLock(xTranslate: number, yTranslate: number): VNode {
  * @param vertical Determines whether the arrow should be vertical or horizontal.
  */
 export function renderArrow(xTranslate: number, yTranslate: number, vertical: boolean): VNode {
-    let s = "translate(" + xTranslate + ","
-            + yTranslate + ")"
-    s += " scale(" + iconScale + ", " + iconScale + ")"
+    let s = `translate(${xTranslate},${yTranslate})`
+    s += ` scale(${iconScale}, ${iconScale})`
     if (vertical) {
-        // @ts-ignore
-        return <g transform={s}
-            fill="grey" stroke="none">
-            <path d={arrowVertical}/>
-        </g>
-    } else {
-        // @ts-ignore
-        return <g transform={s}
-            fill="grey" stroke="none">
-            <path d={arrowHorizontal}/>
-        </g>
+        return (
+            <g transform={s} fill="grey" stroke="none">
+                <path d={arrowVertical} />
+            </g>
+        )
     }
+    return (
+        <g transform={s} fill="grey" stroke="none">
+            <path d={arrowHorizontal} />
+        </g>
+    )
 }
 
 /**
@@ -140,9 +182,8 @@ export function renderArrow(xTranslate: number, yTranslate: number, vertical: bo
  * @param color Determines the color of the arrow.
  */
 export function renderArrowInDirection(xTranslate: number, yTranslate: number, direction: Direction, color: string): VNode {
-    let s = "translate(" + xTranslate + ","
-            + yTranslate + ")"
-    s += " scale(" + iconScale + ", " + iconScale + ")"
+    let s = `translate(${xTranslate},${yTranslate})`
+    s += ` scale(${iconScale}, ${iconScale})`
     switch (direction) {
         case Direction.UP:
             // @ts-ignore

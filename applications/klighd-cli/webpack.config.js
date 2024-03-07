@@ -20,10 +20,16 @@ module.exports = {
 
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
+        fallback: {
+            "buffer": require.resolve("buffer"),
+            "crypto": require.resolve("crypto-browserify"),
+            "os": require.resolve("os-browserify/browser"),
+            "stream": require.resolve("stream-browserify"),
+        },
     },
 
     node: {
-        net: "mock",
+        __dirname: 'mock',
     },
 
     module: {
@@ -63,5 +69,13 @@ module.exports = {
             chunkFilename: "[id].css",
         }),
         new HtmlWebpackPlugin({ template: "index.html", cache: false }),
+        // Work around for Buffer is undefined:
+        // https://github.com/webpack/changelog-v5/issues/10
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        }),
     ],
 };

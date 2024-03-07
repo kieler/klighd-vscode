@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -11,24 +11,22 @@
  * This code is provided under the terms of the Eclipse Public License 2.0 (EPL-2.0).
  */
 
-import { ViewportResult } from "sprotty"
-import { Point, SModelElement as SModelElementSchema} from "sprotty-protocol";
+import { Point, SModelElement as SModelElementSchema, ViewportResult } from 'sprotty-protocol'
 
 /**
  * A IDiagramPieceRequestGenerator manages the ordering of diagram piece
  * requests.
  */
 export interface IDiagramPieceRequestManager {
-    
     /**
      * Adds a diagram piece that should be requested later.
      * @param parentId The ID of the SModelElement that is the direct parent of
-     *                 this diagram piece. This is necessary to determine the 
+     *                 this diagram piece. This is necessary to determine the
      *                 position of the piece.
      * @param diagramPiece Schema of diagram piece.
      */
     enqueue(parentId: string, diagramPiece: SModelElementSchema): void
-    
+
     /**
      * Returns the next diagram piece that should be requested and removes it
      * from the manager.
@@ -55,35 +53,38 @@ export interface IDiagramPieceRequestManager {
  * This implementation of {@link IDiagramPieceRequestManager} serves as a naive
  * implementation of the interface. Diagram pieces are stored in a simple queue
  * and requested in FIFO order. The resulting behaviour is that the pieces of a
- * diagram are requested breadth-first. The position of the viewport is not 
+ * diagram are requested breadth-first. The position of the viewport is not
  * taken into consideration in this approach.
  */
 export class QueueDiagramPieceRequestManager implements IDiagramPieceRequestManager {
-
     piecesToRequest: SModelElementSchema[] = []
+
     enqueue(_parentId: string, diagramPiece: SModelElementSchema): void {
         this.piecesToRequest.push(diagramPiece)
     }
+
     dequeue(): SModelElementSchema | undefined {
         return this.piecesToRequest.shift() // FIFO, pop() would be FILO
     }
+
     reset(): void {
         this.piecesToRequest = []
     }
+
     front(): SModelElementSchema | undefined {
         if (this.piecesToRequest.length === 0) {
             return undefined
-        } else {
-            return this.piecesToRequest[this.piecesToRequest.length - 1]
         }
+        return this.piecesToRequest[this.piecesToRequest.length - 1]
     }
+
     setViewport(_viewportResult: ViewportResult): void {
-        console.log("QueueDiagramPieceRequestManager.setViewport is unimplemented")
+        console.log('QueueDiagramPieceRequestManager.setViewport is unimplemented')
     }
 }
 
 /**
- * This class provides a more sophisticated implementaion of 
+ * This class provides a more sophisticated implementaion of
  * {@link IDiagramPieceRequestManager}. In order to send diagram piece requests
  * in order of "first needed", the diagram area is divided into a grid and the
  * locations of each piece within this grid are determined. The viewport position
@@ -94,15 +95,17 @@ export class QueueDiagramPieceRequestManager implements IDiagramPieceRequestMana
  * all the grid cells and request the first piece that is discovered.
  */
 export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManager {
-
     idToAbsolutePositions: Map<string, Point>
+
     // ordering of elements per grid corresponds to layer, therefore operations on it should be FIFO
     /* https://stackoverflow.com/questions/39005798/fastest-way-of-using-coordinates-as-keys-in-javascript-hashmap */
     /**
-     * These fields are used to map the diagram piece queues to their grid cell coordinates. 
+     * These fields are used to map the diagram piece queues to their grid cell coordinates.
      */
-    gridToPieces: Map<number, SModelElementSchema []>
-    readonly MAX_16BIT_SIGNED = (1 << (16 - 1)) - 1    // 32767
+    gridToPieces: Map<number, SModelElementSchema[]>
+
+    // eslint-disable-next-line no-bitwise
+    readonly MAX_16BIT_SIGNED = (1 << (16 - 1)) - 1 // 32767
 
     /**
      * Determines how many pixels wide each grid square should be.
@@ -125,10 +128,10 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
     /**
      * The last known grid position of the viewport.
      */
-    currentGridPosition = {x: 0, y: 0}
+    currentGridPosition = { x: 0, y: 0 }
 
     /**
-     * Transforms a coordinate pair (x,y) to a 32 bit integer. x and y must be 
+     * Transforms a coordinate pair (x,y) to a 32 bit integer. x and y must be
      * between 0 and 32767 which is a sufficiently large domain for this application.
      * The value of x is stored in the first 16 bits and the value of y is stored in
      * the last 16 bits.
@@ -136,11 +139,11 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
      * @returns Integer representing the coordinate pair.
      */
     getKey(point: Point): number {
-        const x = point.x
-        const y = point.y
+        const { x, y } = point
         if (x > this.MAX_16BIT_SIGNED || y > this.MAX_16BIT_SIGNED) {
-            throw new Error("Invalid x or y coordinates");
+            throw new Error('Invalid x or y coordinates')
         }
+        // eslint-disable-next-line no-bitwise
         return (x << 16) | y
     }
 
@@ -151,18 +154,23 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
      * @returns Coordinate pair in the form {x: valueX, y: valueY}.
      */
     getCoords(key: number): Point {
-        const keyX = (key >> 16)
-        const keyY = (key & 0xFFFF)
+        if (key > 2147352576 + 32766) {
+            throw new Error('Invalid key')
+        }
+        // eslint-disable-next-line no-bitwise
+        const keyX = key >> 16
+        // eslint-disable-next-line no-bitwise
+        const keyY = key & 0xffff
         return { x: keyX, y: keyY }
     }
 
     /**
      * Generates coordinate pairs which form a square around the origin (0,0) with a distance n
-     * from the center in exactly one or both components of the coordinate. Or expressed more 
+     * from the center in exactly one or both components of the coordinate. Or expressed more
      * mathematically:
-     * 
+     *
      * All pairs must be of the form (+-n,v) or (v,+-n) with -n <= v <= n
-     * 
+     *
      * @param n Distance of the ring from the origin.
      * @returns List of coordinate pairs: [{x: .., y: ..}, ..]
      */
@@ -179,28 +187,28 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
 
         const result = []
         // first get all edge coordinates
-        for (let i = (-(n - 1)); i <= (n - 1); i++) {
-            result.push({x: -n, y: i})
+        for (let i = -(n - 1); i <= n - 1; i++) {
+            result.push({ x: -n, y: i })
         }
-        for (let i = (-(n - 1)); i <= (n - 1); i++) {
-            result.push({x: n, y: i})
+        for (let i = -(n - 1); i <= n - 1; i++) {
+            result.push({ x: n, y: i })
         }
-        for (let i = (-(n - 1)); i <= (n - 1); i++) {
-            result.push({x: i, y: -n})
+        for (let i = -(n - 1); i <= n - 1; i++) {
+            result.push({ x: i, y: -n })
         }
-        for (let i = (-(n - 1)); i <= (n - 1); i++) {
-            result.push({x: i, y: n})
+        for (let i = -(n - 1); i <= n - 1; i++) {
+            result.push({ x: i, y: n })
         }
         // push corner coordinates
-        result.push({x: -n, y: -n})
-        result.push({x: -n, y: n})
-        result.push({x: n, y: -n})
-        result.push({x: n, y: n})
+        result.push({ x: -n, y: -n })
+        result.push({ x: -n, y: n })
+        result.push({ x: n, y: -n })
+        result.push({ x: n, y: n })
         return result
     }
 
     enqueue(parentId: string, diagramPiece: SModelElementSchema): void {
-        if (diagramPiece.type === "node") {
+        if (diagramPiece.type === 'node') {
             const castPiece = diagramPiece as any
             if (this.idToAbsolutePositions.get(parentId) !== undefined) {
                 // if parent is already known, child position is calculated relative to its parent
@@ -212,8 +220,12 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
             }
 
             // add pieces to grid
-            const gridX = Math.floor((this.idToAbsolutePositions.get(diagramPiece.id)!.x + castPiece.size.width / 2) / this.gridResolution)
-            const gridY = Math.floor((this.idToAbsolutePositions.get(diagramPiece.id)!.y + castPiece.size.height / 2) / this.gridResolution)
+            const gridX = Math.floor(
+                (this.idToAbsolutePositions.get(diagramPiece.id)!.x + castPiece.size.width / 2) / this.gridResolution
+            )
+            const gridY = Math.floor(
+                (this.idToAbsolutePositions.get(diagramPiece.id)!.y + castPiece.size.height / 2) / this.gridResolution
+            )
             // const test = this.gridToPieces.get(gridPoint)
             const key = this.getKey({ x: gridX, y: gridY })
             if (this.gridToPieces.get(key) !== undefined) {
@@ -221,98 +233,99 @@ export class GridDiagramPieceRequestManager implements IDiagramPieceRequestManag
             } else {
                 this.gridToPieces.set(key, [diagramPiece])
             }
-
         } else {
             // DO NOT DO ANYTHING WITH NON NODE ELEMENTS
             // FIXME: execution probably should reach here and should throw an error
             //        but maybe caller should not worry about this
-            
             //        In current implementation the caller just passes all types of
             //        elements, so we simply silently ignore wrong elements here
         }
     }
+
     dequeue(): SModelElementSchema | undefined {
         // if something exists in current grid position return that
         const key = this.getKey(this.currentGridPosition)
         const list = this.gridToPieces.get(key)
         if (list !== undefined && list.length > 0) {
             return list.shift()
-        } else {
-            // check for next closest piece
-            let piece: SModelElementSchema | undefined = undefined
+        }
+        // check for next closest piece
+        let piece: SModelElementSchema | undefined
 
-            // here we compute the coordinates of rings around the current central point
-            // A spiral could be another way to approach this: https://stackoverflow.com/questions/398299/looping-in-a-spiral
-            for (let i = 1; i <= this.maxRingCount; i++) {
-                const ring = this.ringCoords(i)
-                for (let j = 0; j < ring.length; j++) {
-                    const value = this.gridToPieces.get(this.getKey(Point.add(this.currentGridPosition, ring[j])))!
-                    if (value !== undefined && value.length > 0) {
-                        piece = value.shift()!
-                        return piece
-                    }
-                }
-            }
-
-            // have to do this because of:
-            /* Type 'IterableIterator<number>' is not an array type or a string type.
-             * Use compiler option '--downlevelIteration' to allow iterating of
-             * iterators.ts(2569) */
-            // Otherwise could do for (key of this.gridToPieces.keys())
-
-            // fallback if nothing in immediate area
-            const gridArray = Array.from(this.gridToPieces.keys())
-            for (const square of gridArray) {
-                const value = this.gridToPieces.get(square)!
-                if (value.length > 0) {
+        // here we compute the coordinates of rings around the current central point
+        // A spiral could be another way to approach this: https://stackoverflow.com/questions/398299/looping-in-a-spiral
+        for (let i = 1; i <= this.maxRingCount; i++) {
+            const ring = this.ringCoords(i)
+            for (let j = 0; j < ring.length; j++) {
+                const value = this.gridToPieces.get(this.getKey(Point.add(this.currentGridPosition, ring[j])))!
+                if (value !== undefined && value.length > 0) {
                     piece = value.shift()!
                     return piece
                 }
             }
         }
+
+        // have to do this because of:
+        /* Type 'IterableIterator<number>' is not an array type or a string type.
+         * Use compiler option '--downlevelIteration' to allow iterating of
+         * iterators.ts(2569) */
+        // Otherwise could do for (key of this.gridToPieces.keys())
+
+        // fallback if nothing in immediate area
+        const gridArray = Array.from(this.gridToPieces.keys())
+        for (const square of gridArray) {
+            const value = this.gridToPieces.get(square)!
+            if (value.length > 0) {
+                piece = value.shift()!
+                return piece
+            }
+        }
+        return undefined
     }
+
     reset(): void {
         this.idToAbsolutePositions = new Map<string, Point>()
         this.gridToPieces = new Map<number, SModelElementSchema[]>()
-        this.currentGridPosition = {x: 0, y: 0}
+        this.currentGridPosition = { x: 0, y: 0 }
     }
+
     front(): SModelElementSchema | undefined {
         // if something exists in current grid position return that
         const key = this.getKey(this.currentGridPosition)
         const list = this.gridToPieces.get(key)
         if (list !== undefined && list.length > 0) {
             return list[list.length - 1]
-        } else {
-            // check for next closest piece
-            let piece: SModelElementSchema | undefined = undefined
+        }
+        // check for next closest piece
+        let piece: SModelElementSchema | undefined
 
-            for (let i = 1; i <= this.maxRingCount; i++) {
-                const ring = this.ringCoords(i)
-                for (let j = 0; j < ring.length; j++) {
-                    const value = this.gridToPieces.get(this.getKey(ring[j]))!
-                    if (value !== undefined && value.length > 0) {
-                        piece = value[value.length - 1]
-                        return piece
-                    }
-                }
-            }
-
-            // fallback if nothing in immediate area
-            const gridArray = Array.from(this.gridToPieces.keys())
-            for (const square of gridArray) {
-                const value = this.gridToPieces.get(square)!
-                if (value.length > 0) {
+        for (let i = 1; i <= this.maxRingCount; i++) {
+            const ring = this.ringCoords(i)
+            for (let j = 0; j < ring.length; j++) {
+                const value = this.gridToPieces.get(this.getKey(ring[j]))!
+                if (value !== undefined && value.length > 0) {
                     piece = value[value.length - 1]
                     return piece
                 }
             }
         }
+
+        // fallback if nothing in immediate area
+        const gridArray = Array.from(this.gridToPieces.keys())
+        for (const square of gridArray) {
+            const value = this.gridToPieces.get(square)!
+            if (value.length > 0) {
+                piece = value[value.length - 1]
+                return piece
+            }
+        }
+        return undefined
     }
+
     setViewport(viewportResult: ViewportResult): void {
-        const viewport = viewportResult.viewport
-        const canvasBounds = viewportResult.canvasBounds
-        const gridX = Math.floor((viewport.scroll.x + (canvasBounds.width / 2) / viewport.zoom) / this.gridResolution)
-        const gridY = Math.floor((viewport.scroll.y + (canvasBounds.height / 2) / viewport.zoom) / this.gridResolution)
-        this.currentGridPosition = {x: gridX, y: gridY}
+        const { viewport, canvasBounds } = viewportResult
+        const gridX = Math.floor((viewport.scroll.x + canvasBounds.width / 2 / viewport.zoom) / this.gridResolution)
+        const gridY = Math.floor((viewport.scroll.y + canvasBounds.height / 2 / viewport.zoom) / this.gridResolution)
+        this.currentGridPosition = { x: gridX, y: gridY }
     }
 }

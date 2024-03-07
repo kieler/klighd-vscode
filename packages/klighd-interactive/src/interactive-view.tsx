@@ -15,14 +15,27 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { VNode } from 'snabbdom';
-import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { KNode } from './constraint-classes';
-import { filterKNodes, getSelectedNode } from './helper-methods';
-import { renderHierarchyLevel as renderHierarchyLevelLayered, renderLayeredConstraint } from './layered/layered-interactive-view';
-import { renderPositionIndicators, renderSetRelativeConstraint, setForbiddenOnNodes } from './layered/layered-relative-constraint-view';
-import { renderHierarchyLevel as renderHierarchyLevelRectPacking, renderRectPackConstraint } from './rect-packing/rect-packing-interactive-view';
-import { renderHierarchyLevel as renderHierarchyLevelTree, renderTreeConstraint } from './tree/tree-interactive-view';
+import { VNode } from 'snabbdom'
+import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { KNode } from './constraint-classes'
+import { filterKNodes, getSelectedNode } from './helper-methods'
+import {
+    renderHierarchyLevel as renderHierarchyLevelLayered,
+    renderLayeredConstraint,
+} from './layered/layered-interactive-view'
+import {
+    renderPositionIndicators,
+    renderSetRelativeConstraint,
+    setForbiddenOnNodes
+} from './layered/layered-relative-constraint-view'
+import {
+    renderHierarchyLevel as renderHierarchyLevelRectPacking,
+    renderRectPackConstraint,
+} from './rect-packing/rect-packing-interactive-view'
+import {
+    renderHierarchyLevel as renderHierarchyLevelTree,
+    renderTreeConstraint
+} from './tree/tree-interactive-view'
 
 /**
  * Visualize the layers and available positions in the graph
@@ -34,8 +47,11 @@ import { renderHierarchyLevel as renderHierarchyLevelTree, renderTreeConstraint 
 export function renderInteractiveLayout(root: KNode, relativeConstraint: boolean): VNode {
     // Filter KNodes
     const nodes = filterKNodes(root.children)
-    let result = undefined
-    if (root.properties['org.eclipse.elk.algorithm'] === undefined || (root.properties['org.eclipse.elk.algorithm'] as string).endsWith('layered')) {
+    let result
+    if (
+        root.properties['org.eclipse.elk.algorithm'] === undefined ||
+        (root.properties['org.eclipse.elk.algorithm'] as string).endsWith('layered')
+    ) {
         if (relativeConstraint) {
             const selNode = getSelectedNode(nodes)
             if (selNode !== undefined) {
@@ -52,9 +68,7 @@ export function renderInteractiveLayout(root: KNode, relativeConstraint: boolean
     } else {
         // Not supported
     }
-    return <g>
-        {result}
-    </g>
+    return <g>{result}</g>
 }
 
 /**

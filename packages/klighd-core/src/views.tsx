@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,21 +15,31 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods';
-import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view';
-import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener';
-import { renderRelativeConstraint } from '@kieler/klighd-interactive/lib/layered/layered-relative-constraint-view';
-import { inject, injectable } from 'inversify';
-import { VNode } from 'snabbdom';
-import { findParentByFeature, isViewport, IView, RenderingContext, SGraph, svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { DepthMap, DetailLevel } from './depth-map';
-import { DISymbol } from './di.symbols';
-import { overpass_mono_regular_style, overpass_regular_style } from './fonts/overpass';
-import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry';
-import { SKGraphModelRenderer } from './skgraph-model-renderer';
-import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models';
-import { getJunctionPointRenderings, getRendering } from './views-rendering';
-import { KStyles } from './views-styles';
+import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods'
+import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view'
+import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
+import { renderRelativeConstraint } from '@kieler/klighd-interactive/lib/layered/layered-relative-constraint-view'
+import { inject, injectable } from 'inversify'
+import { VNode } from 'snabbdom'
+import {
+    findParentByFeature,
+    IActionDispatcher,
+    isViewport,
+    IView,
+    RenderingContext,
+    SGraphImpl,
+    svg, // eslint-disable-line @typescript-eslint/no-unused-vars
+    TYPES,
+} from 'sprotty'
+import { SendModelContextAction } from './actions/actions'
+import { DepthMap, DetailLevel } from './depth-map'
+import { DISymbol } from './di.symbols'
+import { overpassMonoRegularStyle, overpassRegularStyle } from './fonts/overpass'
+import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry'
+import { SKGraphModelRenderer } from './skgraph-model-renderer'
+import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
+import { getJunctionPointRenderings, getRendering } from './views-rendering'
+import { KStyles } from './views-styles'
 
 /**
  * IView component that turns an SGraph element and its children into a tree of virtual DOM elements.
@@ -37,14 +47,21 @@ import { KStyles } from './views-styles';
  */
 @injectable()
 export class SKGraphView implements IView {
-
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
+
     @inject(DISymbol.RenderOptionsRegistry) renderOptionsRegistry: RenderOptionsRegistry
 
-    render(model: Readonly<SGraph>, context: RenderingContext): VNode {
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher
+
+    render(model: Readonly<SGraphImpl>, context: RenderingContext): VNode {
         const ctx = context as SKGraphModelRenderer
-        ctx.renderingDefs = new Map
-        ctx.renderingDefs.set("font", fontDefinition())
+        this.actionDispatcher.dispatch(SendModelContextAction.create(model, ctx))
+
+        if (!ctx.renderingDefs) {
+            // Make sure not to create a new map all the time
+            ctx.renderingDefs = new Map()
+        }
+        ctx.renderingDefs.set('font', fontDefinition())
         ctx.mListener = this.mListener
         ctx.renderOptionsRegistry = this.renderOptionsRegistry
 
@@ -52,10 +69,7 @@ export class SKGraphView implements IView {
         if (viewport) {
             ctx.viewport = viewport
         }
-        ctx.titles = []
-        ctx.positions = []
-
-
+        ctx.titleStorage.clear()
 
         // Add depthMap to context for rendering, when required.
         const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
@@ -65,19 +79,19 @@ export class SKGraphView implements IView {
 
         if (useSmartZoom && ctx.targetKind !== 'hidden') {
             ctx.depthMap = DepthMap.getDM()
-            if (ctx.viewport && ctx.depthMap) {
+            if (!ctx.forceRendering && ctx.viewport && ctx.depthMap) {
                 ctx.depthMap.updateDetailLevels(ctx.viewport, ctx.renderOptionsRegistry)
             }
         } else {
             ctx.depthMap = undefined
         }
 
-        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`;
-        return <svg class-sprotty-graph={true}>
-            <g transform={transform}>
-                {context.renderChildren(model)}
-            </g>
-        </svg>;
+        const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`
+        return (
+            <svg class-sprotty-graph={true}>
+                <g transform={transform}>{context.renderChildren(model)}</g>
+            </svg>
+        )
     }
 }
 
@@ -93,7 +107,7 @@ export class KNodeView implements IView {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 // Make sure this node and its children are not drawn as long as it is not on full details.
@@ -103,8 +117,6 @@ export class KNodeView implements IView {
             }
         }
 
-        ctx.titles.push([])
-        ctx.positions.push("")
         // reset these properties, if the diagram is drawn a second time
         node.areChildAreaChildrenRendered = false
         node.areNonChildAreaChildrenRendered = false
@@ -112,13 +124,13 @@ export class KNodeView implements IView {
         const result: VNode[] = []
 
         const isShadow = node.shadow
-        let shadow = undefined
-        let interactiveNodes = undefined
-        let interactiveConstraints = undefined
+        let shadow
+        let interactiveNodes
+        let interactiveConstraints
 
         if (isShadow) {
             // Render shadow of the node
-            shadow = getRendering(node.data, node, new KStyles, ctx)
+            shadow = getRendering(node.data, node, new KStyles(false), ctx)
 
             if (this.mListener.relativeConstraintMode) {
                 // render visualization for relative constraints
@@ -126,7 +138,7 @@ export class KNodeView implements IView {
             }
         }
         if (isChildSelected(node as SKNode)) {
-            if (((node as SKNode).properties['org.eclipse.elk.interactiveLayout']) && ctx.mListener.hasDragged) {
+            if ((node as SKNode).properties['org.eclipse.elk.interactiveLayout'] && ctx.mListener.hasDragged) {
                 // Render the visualization for interactive layout
                 interactiveNodes = renderInteractiveLayout(node as SKNode, this.mListener.relativeConstraintMode)
             }
@@ -134,15 +146,19 @@ export class KNodeView implements IView {
 
         // Render nodes and constraint icon. All nodes that are not moved do not have a shadow and have their opacity set to 0.1.
         node.shadow = false
-        let rendering = undefined
+        let rendering
         if (!ctx.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
             if (node.forbidden) {
                 node.opacity = 0.1
             }
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
-            rendering = getRendering(node.data, node, new KStyles, ctx)
+            rendering = getRendering(node.data, node, new KStyles(false), ctx)
 
-            if (ctx.renderOptionsRegistry.getValue(ShowConstraintOption) && (node.parent as SKNode).properties && (node.parent as SKNode).properties['org.eclipse.elk.interactiveLayout']) {
+            if (
+                ctx.renderOptionsRegistry.getValue(ShowConstraintOption) &&
+                (node.parent as SKNode).properties &&
+                (node.parent as SKNode).properties['org.eclipse.elk.interactiveLayout']
+            ) {
                 // render icon visualizing the set Constraints
                 interactiveConstraints = renderConstraints(node)
             }
@@ -167,7 +183,7 @@ export class KNodeView implements IView {
             // }
         } else {
             node.opacity = 0.1
-            rendering = getRendering(node.data, node, new KStyles, ctx)
+            rendering = getRendering(node.data, node, new KStyles(false), ctx)
         }
         node.shadow = isShadow
         node.highlight = false
@@ -178,7 +194,7 @@ export class KNodeView implements IView {
             // Add all color and shadow definitions put into the context by the child renderings.
             const defs = <defs></defs>
             ctx.renderingDefs.forEach((value: VNode) => {
-                (defs.children as (string | VNode)[]).push(value)
+                ;(defs.children as (string | VNode)[]).push(value)
             })
 
             result.push(defs)
@@ -186,8 +202,10 @@ export class KNodeView implements IView {
                 result.push(interactiveNodes)
             }
             result.push(...children)
-            result.push(...(ctx.titles.pop() ?? []))
-            ctx.positions.pop()
+            const title = ctx.titleStorage.getTitle()
+            if (title !== undefined) {
+                result.push(title)
+            }
             return <g>{...result}</g>
         }
 
@@ -198,11 +216,16 @@ export class KNodeView implements IView {
         if (rendering !== undefined) {
             result.push(rendering)
         } else {
-            ctx.positions.pop()
-            return <g>
-                {ctx.titles.pop() ?? []}
-                {ctx.renderChildren(node)}
-            </g>
+            const title = ctx.titleStorage.getTitle()
+            if (title !== undefined) {
+                result.push(title)
+            }
+            return (
+                <g>
+                    {title ?? []}
+                    {ctx.renderChildren(node)}
+                </g>
+            )
         }
         if (interactiveNodes) {
             result.push(interactiveNodes)
@@ -216,24 +239,24 @@ export class KNodeView implements IView {
         } else if (!node.areNonChildAreaChildrenRendered) {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
-        result.push(...(ctx.titles.pop() ?? []))
-        ctx.positions.pop()
+        const title = ctx.titleStorage.getTitle()
+        if (title !== undefined) {
+            result.push(title)
+        }
         return <g>{...result}</g>
     }
 }
-
 
 /**
  * IView component that translates a KPort and its children into a tree of virtual DOM elements.
  */
 @injectable()
 export class KPortView implements IView {
-
     render(port: SKPort, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 port.areChildAreaChildrenRendered = true
@@ -242,43 +265,47 @@ export class KPortView implements IView {
             }
         }
 
-        ctx.titles.push([])
-        ctx.positions.push("")
         port.areChildAreaChildrenRendered = false
         port.areNonChildAreaChildrenRendered = false
-        const rendering = getRendering(port.data, port, new KStyles, ctx)
+        const rendering = getRendering(port.data, port, new KStyles(false), ctx)
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            const element = <g>
-                {ctx.titles.pop() ?? []}
-                {ctx.renderChildren(port)}
-            </g>
+            const element = (
+                <g>
+                    {ctx.titleStorage.getTitle() ?? []}
+                    {ctx.renderChildren(port)}
+                </g>
+            )
 
-            ctx.positions.pop()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         let element: VNode
         if (!port.areChildAreaChildrenRendered) {
-            element = <g>
-                {rendering}
-                {ctx.titles.pop() ?? []}
-                {ctx.renderChildren(port)}
-            </g>
+            element = (
+                <g>
+                    {rendering}
+                    {ctx.titleStorage.getTitle() ?? []}
+                    {ctx.renderChildren(port)}
+                </g>
+            )
         } else if (!port.areNonChildAreaChildrenRendered) {
-            element = <g>
-                {rendering}
-                {ctx.titles.pop() ?? []}
-                {ctx.renderNonChildAreaChildren(port)}
-            </g>
+            element = (
+                <g>
+                    {rendering}
+                    {ctx.titleStorage.getTitle() ?? []}
+                    {ctx.renderNonChildAreaChildren(port)}
+                </g>
+            )
         } else {
-            element = <g>
-                {rendering}
-                {ctx.titles.pop() ?? []}
-            </g>
+            element = (
+                <g>
+                    {rendering}
+                    {ctx.titleStorage.getTitle() ?? []}
+                </g>
+            )
         }
 
-        ctx.positions.pop()
         return element
     }
 }
@@ -288,12 +315,11 @@ export class KPortView implements IView {
  */
 @injectable()
 export class KLabelView implements IView {
-
     render(label: SKLabel, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 label.areChildAreaChildrenRendered = true
@@ -301,8 +327,6 @@ export class KLabelView implements IView {
                 return undefined
             }
         }
-        ctx.titles.push([])
-        ctx.positions.push("")
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -311,39 +335,46 @@ export class KLabelView implements IView {
             // Nodes that are not on the same hierarchy are less visible.
             label.opacity = 0.1
         }
-        const rendering = getRendering(label.data, label, new KStyles, ctx)
+        const rendering = getRendering(label.data, label, new KStyles(false), ctx)
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            const element = <g>
-                {ctx.renderChildren(label).push(...ctx.titles.pop() ?? [])}
-            </g>
+            const element = (
+                <g>
+                    {ctx.titleStorage.getTitle() ?? []}
+                    {ctx.renderChildren(label)}
+                </g>
+            )
 
-            ctx.positions.pop()
             return element
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         let element: VNode
         if (!label.areChildAreaChildrenRendered) {
-            element = <g>
-                {rendering}
-                {ctx.titles.pop() ?? []}
-                {ctx.renderChildren(label)}
-            </g>
+            element = (
+                <g>
+                    {rendering}
+                    {ctx.titleStorage.getTitle() ?? []}
+                    {ctx.renderChildren(label)}
+                </g>
+            )
         } else if (!label.areNonChildAreaChildrenRendered) {
-            element = <g>
-                {rendering}
-                {ctx.titles.pop() ?? []}
-                {ctx.renderNonChildAreaChildren(label)}
-            </g>
+            element = (
+                <g>
+                    {rendering}
+                    {ctx.titleStorage.getTitle() ?? []}
+                    {ctx.renderNonChildAreaChildren(label)}
+                </g>
+            )
         } else {
-            element = <g>
-                {rendering}
-                {ctx.titles.pop() ?? []}
-            </g>
+            element = (
+                <g>
+                    {rendering}
+                    {ctx.titleStorage.getTitle() ?? []}
+                </g>
+            )
         }
 
-        ctx.positions.pop()
         return element
     }
 }
@@ -353,11 +384,10 @@ export class KLabelView implements IView {
  */
 @injectable()
 export class KEdgeView implements IView {
-
     render(edge: SKEdge, context: RenderingContext): VNode | undefined {
         const ctx = context as SKGraphModelRenderer
 
-        if (ctx.depthMap) {
+        if (!ctx.forceRendering && ctx.depthMap) {
             const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderOptionsRegistry)
             if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
                 edge.areChildAreaChildrenRendered = true
@@ -381,11 +411,11 @@ export class KEdgeView implements IView {
             edge.moved = (s.selected || t.selected) && ctx.mListener.hasDragged
         }
 
-        let rendering = undefined
+        let rendering
         if (!ctx.mListener.hasDragged || isChildSelected(edge.parent as SKNode)) {
             // edge should only be visible if it is in the same hierarchical level as
             // the moved node or no node is moved at all
-            rendering = getRendering(edge.data, edge, new KStyles, ctx)
+            rendering = getRendering(edge.data, edge, new KStyles(false), ctx)
         }
         edge.moved = false
 
@@ -394,37 +424,47 @@ export class KEdgeView implements IView {
 
         // If no rendering could be found, just render its children.
         if (rendering === undefined) {
-            return <g>
-                {ctx.renderChildren(edge)}
-                {...junctionPointRenderings}
-            </g>
+            return (
+                <g>
+                    {ctx.renderChildren(edge)}
+                    {...junctionPointRenderings}
+                </g>
+            )
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!edge.areChildAreaChildrenRendered) {
-            return <g>
-                {rendering}
-                {ctx.renderChildren(edge)}
-                {...junctionPointRenderings}
-            </g>
-        } else if (!edge.areNonChildAreaChildrenRendered) {
-            return <g>
-                {rendering}
-                {ctx.renderNonChildAreaChildren(edge)}
-                {...junctionPointRenderings}
-            </g>
-        } else {
-            return <g>
-                {rendering}
-                {...junctionPointRenderings}
-            </g>
+            return (
+                <g>
+                    {rendering}
+                    {ctx.renderChildren(edge)}
+                    {...junctionPointRenderings}
+                </g>
+            )
         }
+        if (!edge.areNonChildAreaChildrenRendered) {
+            return (
+                <g>
+                    {rendering}
+                    {ctx.renderNonChildAreaChildren(edge)}
+                    {...junctionPointRenderings}
+                </g>
+            )
+        }
+        return (
+            <g>
+                {rendering}
+                {...junctionPointRenderings}
+            </g>
+        )
     }
 }
 
 function fontDefinition(): VNode {
     // TODO: maybe find a way to only include the font if it is used in the SVG.
-    return <style>
-        {overpass_regular_style}
-        {overpass_mono_regular_style}
-    </style>
+    return (
+        <style>
+            {overpassRegularStyle}
+            {overpassMonoRegularStyle}
+        </style>
+    )
 }

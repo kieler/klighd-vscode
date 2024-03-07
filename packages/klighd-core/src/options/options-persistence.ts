@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable, postConstruct } from "inversify";
+import { inject, injectable, postConstruct } from 'inversify'
 import {
     ActionHandlerRegistry,
     IActionDispatcher,
@@ -23,9 +23,9 @@ import {
     IActionHandlerInitializer,
     ICommand,
     TYPES,
-} from "sprotty";
-import { Action } from "sprotty-protocol";
-import { PersistenceStorage } from "../services";
+} from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { PersistenceStorage, ServiceTypes } from '../services'
 import {
     ResetLayoutOptionsAction,
     ResetRenderOptionsAction,
@@ -33,7 +33,7 @@ import {
     SetLayoutOptionsAction,
     SetRenderOptionAction,
     SetSynthesisOptionsAction,
-} from "./actions";
+} from './actions'
 
 /**
  * {@link IActionHandler} that handles update actions for various options.
@@ -42,50 +42,51 @@ import {
  */
 @injectable()
 export class OptionsPersistence implements IActionHandler, IActionHandlerInitializer {
-    @inject(PersistenceStorage) private storage: PersistenceStorage;
-    @inject(TYPES.IActionDispatcher) private dispatcher: IActionDispatcher;
+    @inject(ServiceTypes.PersistenceStorage) private storage: PersistenceStorage
+
+    @inject(TYPES.IActionDispatcher) private dispatcher: IActionDispatcher
 
     @postConstruct()
     init(): void {
-        this.storage.onClear(this.handleClear.bind(this));
+        this.storage.onClear(this.handleClear.bind(this))
     }
 
     initialize(registry: ActionHandlerRegistry): void {
-        registry.register(SetRenderOptionAction.KIND, this);
-        registry.register(SetLayoutOptionsAction.KIND, this);
-        registry.register(SetSynthesisOptionsAction.KIND, this);
+        registry.register(SetRenderOptionAction.KIND, this)
+        registry.register(SetLayoutOptionsAction.KIND, this)
+        registry.register(SetSynthesisOptionsAction.KIND, this)
     }
 
     handle(action: Action): void | Action | ICommand {
         if (SetRenderOptionAction.isThisAction(action)) {
-            this.storage.setItem<Record<string, unknown>>("render", (prev) => {
-                const obj = prev ?? {};
-                obj[action.id] = action.value;
-                return obj;
-            });
+            this.storage.setItem<Record<string, unknown>>('render', (prev) => {
+                const obj = prev ?? {}
+                obj[action.id] = action.value
+                return obj
+            })
         } else if (SetLayoutOptionsAction.isThisAction(action)) {
-            this.storage.setItem<Record<string, unknown>>("layout", (prev) => {
-                const obj = prev ?? {};
+            this.storage.setItem<Record<string, unknown>>('layout', (prev) => {
+                const obj = prev ?? {}
                 for (const option of action.options) {
-                    obj[option.optionId] = option.value;
+                    obj[option.optionId] = option.value
                 }
-                return obj;
-            });
+                return obj
+            })
         } else if (SetSynthesisOptionsAction.isThisAction(action)) {
-            this.storage.setItem<Record<string, unknown>>("synthesis", (prev) => {
-                const obj = prev ?? {};
+            this.storage.setItem<Record<string, unknown>>('synthesis', (prev) => {
+                const obj = prev ?? {}
                 for (const option of action.options) {
-                    obj[option.id] = option.currentValue;
+                    obj[option.id] = option.currentValue
                 }
-                return obj;
-            });
+                return obj
+            })
         }
     }
 
     /** Reset all stored options when the storage gets cleared from outside. */
     private handleClear() {
-        this.dispatcher.dispatch(ResetRenderOptionsAction.create());
-        this.dispatcher.dispatch(ResetSynthesisOptionsAction.create());
-        this.dispatcher.dispatch(ResetLayoutOptionsAction.create());
+        this.dispatcher.dispatch(ResetRenderOptionsAction.create())
+        this.dispatcher.dispatch(ResetSynthesisOptionsAction.create())
+        this.dispatcher.dispatch(ResetLayoutOptionsAction.create())
     }
 }

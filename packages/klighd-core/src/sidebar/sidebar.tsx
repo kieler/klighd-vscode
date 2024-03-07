@@ -16,13 +16,14 @@
  */
 
 /** @jsx html */
-import { inject, postConstruct } from "inversify";
-import { VNode } from "snabbdom";
-import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { DISymbol } from "../di.symbols";
-import { PinSidebarOption, RenderOptionsRegistry } from "../options/render-options-registry";
-import { ShowSidebarAction, ToggleSidebarPanelAction } from "./actions";
-import { SidebarPanelRegistry } from "./sidebar-panel-registry";
+import { inject, postConstruct } from 'inversify'
+import { VNode } from 'snabbdom'
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { DISymbol } from '../di.symbols'
+import { PinSidebarOption, RenderOptionsRegistry } from '../options/render-options-registry'
+import { ShowSidebarAction, ToggleSidebarPanelAction } from './actions'
+import { SidebarPanelRegistry } from './sidebar-panel-registry'
+/* global document, HTMLElement */
 
 /**
  * UIExtension that adds a sidebar to the Sprotty container. The content of the
@@ -31,53 +32,58 @@ import { SidebarPanelRegistry } from "./sidebar-panel-registry";
  * the registry state.
  */
 export class Sidebar extends AbstractUIExtension {
-    static readonly ID = "sidebar";
+    static readonly ID = 'sidebar'
 
     /** Snabbdom patcher function and VDom root */
-    private patcher: Patcher;
-    private oldPanelContentRoot: VNode;
+    private patcher: Patcher
+
+    private oldPanelContentRoot: VNode
+
     /**
      * Maximum width of all opened panels.
      */
-    private maxWidth = 0;
+    private maxWidth = 0
 
-    @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider;
-    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher;
-    @inject(DISymbol.SidebarPanelRegistry) private sidebarPanelRegistry: SidebarPanelRegistry;
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+    @inject(TYPES.PatcherProvider) patcherProvider: PatcherProvider
+
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher
+
+    @inject(DISymbol.SidebarPanelRegistry) private sidebarPanelRegistry: SidebarPanelRegistry
+
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry
 
     @postConstruct()
     init(): void {
-        this.actionDispatcher.dispatch(ShowSidebarAction.create());
-        this.patcher = this.patcherProvider.patcher;
+        this.actionDispatcher.dispatch(ShowSidebarAction.create())
+        this.patcher = this.patcherProvider.patcher
 
         // Update the panel if the registry state changes
-        this.sidebarPanelRegistry.onChange(() => this.update());
+        this.sidebarPanelRegistry.onChange(() => this.update())
 
         // Update the panel if the current panel requests an update
         this.sidebarPanelRegistry.allPanels.forEach((panel) => {
             panel.onUpdate(() => {
-                if (panel.id === this.sidebarPanelRegistry.currentPanelID) this.update();
-            });
-        });
+                if (panel.id === this.sidebarPanelRegistry.currentPanelID) this.update()
+            })
+        })
     }
 
     id(): string {
-        return Sidebar.ID;
+        return Sidebar.ID
     }
 
     containerClass(): string {
-        return Sidebar.ID;
+        return Sidebar.ID
     }
 
     update(): void {
         // Only update if the content was initialized, which is the case if a
         // VNode Root for the panel content is created.
-        if (!this.oldPanelContentRoot) return;
+        if (!this.oldPanelContentRoot) return
 
-        const currentPanel = this.sidebarPanelRegistry.currentPanel;
+        const { currentPanel } = this.sidebarPanelRegistry
         // Reset fit to fit content to calculate the desired width at the end.
-        document.documentElement.style.setProperty('--sidebar-width', 'fit-content');
+        document.documentElement.style.setProperty('--sidebar-width', 'fit-content')
 
         const content: VNode = (
             <div class-sidebar__content="true">
@@ -85,9 +91,7 @@ export class Sidebar extends AbstractUIExtension {
                     {this.sidebarPanelRegistry.allPanels.map((panel) => (
                         <button
                             class-sidebar__toggle-button="true"
-                            class-sidebar__toggle-button--active={
-                                this.sidebarPanelRegistry.currentPanelID === panel.id
-                            }
+                            class-sidebar__toggle-button--active={this.sidebarPanelRegistry.currentPanelID === panel.id}
                             title={panel.title}
                             on-click={this.handlePanelButtonClick.bind(this, panel.id)}
                         >
@@ -95,46 +99,45 @@ export class Sidebar extends AbstractUIExtension {
                         </button>
                     ))}
                 </div>
-                <h3 class-sidebar__title="true">{currentPanel?.title ?? ""}</h3>
-                <div class-sidebar__panel-content="true">{currentPanel?.render() ?? ""}</div>
+                <h3 class-sidebar__title="true">{currentPanel?.title ?? ''}</h3>
+                <div class-sidebar__panel-content="true">{currentPanel?.render() ?? ''}</div>
             </div>
-        );
+        )
 
         // Update panel content with efficient VDOM patching.
-        this.oldPanelContentRoot = this.patcher(this.oldPanelContentRoot, content);
+        this.oldPanelContentRoot = this.patcher(this.oldPanelContentRoot, content)
 
         // Show or hide the panel
         if (currentPanel) {
-            this.containerElement.classList.add("sidebar--open");
+            this.containerElement.classList.add('sidebar--open')
         } else {
-            this.containerElement.classList.remove("sidebar--open");
+            this.containerElement.classList.remove('sidebar--open')
         }
         // Set width of sidebar to maximum width of all opened panels.
         this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
-        document.documentElement.style.setProperty('--sidebar-width', this.maxWidth + 'px');
-
+        document.documentElement.style.setProperty('--sidebar-width', `${this.maxWidth}px`)
     }
 
     protected onBeforeShow(): void {
-        this.update();
+        this.update()
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
         // Prepare the virtual DOM. Snabbdom requires an empty element.
         // Furthermore, the element is completely replaced by the panel on every update,
         // so we use an extra, empty element to ensure that we do not loose important attributes (such as classes).
-        const panelContentRoot = document.createElement("div");
-        this.oldPanelContentRoot = this.patcher(panelContentRoot, <div />);
-        containerElement.appendChild(panelContentRoot);
+        const panelContentRoot = document.createElement('div')
+        this.oldPanelContentRoot = this.patcher(panelContentRoot, <div />)
+        containerElement.appendChild(panelContentRoot)
 
         // Notice that an AbstractUIExtension only calls initializeContents once,
         // so this handler is also only registered once.
-        this.addClickOutsideListenser(containerElement);
+        this.addClickOutsideListenser(containerElement)
         this.addMouseLeaveListener(containerElement)
     }
 
     private handlePanelButtonClick(id: string) {
-        this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(id));
+        this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(id))
     }
 
     /**
@@ -143,27 +146,37 @@ export class Sidebar extends AbstractUIExtension {
      * dragging the diagram.
      */
     private addClickOutsideListenser(containerElement: HTMLElement): void {
-        document.addEventListener("mousedown", (e) => {
-            const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
+        document.addEventListener('mousedown', (e) => {
+            const { currentPanelID } = this.sidebarPanelRegistry
 
             // See for information on detecting "click outside": https://stackoverflow.com/a/64665817/7569889
-            if (currentPanelID && !e.composedPath().includes(containerElement)
-                && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
-                    this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
-                }
-        });
+            if (
+                currentPanelID &&
+                !e.composedPath().includes(containerElement) &&
+                !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)
+            ) {
+                this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, 'hide'))
+            }
+        })
     }
 
     /**
      * Register a mouse left handler that hides the content if the mouse leaves the sidebar.
      */
     private addMouseLeaveListener(containerElement: HTMLElement): void {
-        containerElement.addEventListener("mouseleave", (e) => {
-            const currentPanelID = this.sidebarPanelRegistry.currentPanelID;
-            if (currentPanelID && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
-                this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, "hide"));
+        containerElement.addEventListener('mouseleave', (e) => {
+            const { currentPanelID } = this.sidebarPanelRegistry
+            // Check if the mouse really left the bounding box of the container element.
+            // This is necessary because the mouseleave event is also triggered when the mouse
+            // "leaves" the sidebar to enter a tooltip. Take a small margin into account to
+            // avoid an issue where the mouseleave event is triggered it is still inside the
+            // container element.
+            const rect = containerElement.getBoundingClientRect()
+            if (e.x <= rect.left + 2 || e.x >= rect.right - 2 || e.y <= rect.top + 2 || e.y >= rect.bottom - 2) {
+                if (currentPanelID && !this.renderOptionsRegistry.getValueOrDefault(PinSidebarOption)) {
+                    this.actionDispatcher.dispatch(ToggleSidebarPanelAction.create(currentPanelID, 'hide'))
+                }
             }
-
-        });
+        })
     }
 }

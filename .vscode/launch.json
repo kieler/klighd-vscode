@@ -11,8 +11,7 @@
             "args": ["--extensionDevelopmentPath=${workspaceFolder}/applications/klighd-vscode"],
             "sourceMaps": true,
             "smartStep": true,
-            "outFiles": ["${workspaceFolder}/applications/klighd-vscode/dist/**/*.js"],
-            "preLaunchTask": "${defaultBuildTask}"
+            "outFiles": ["${workspaceFolder}/applications/klighd-vscode/dist/**/*.js"]
         },
         {
             "name": "Start CLI Webserver",
@@ -20,8 +19,7 @@
             "request": "launch",
             "address": "127.0.0.1:8000",
             "outputCapture": "std",
-            "program": "${workspaceFolder}/applications/klighd-cli/lib/main.js",
-            "preLaunchTask": "${defaultBuildTask}"
+            "program": "${workspaceFolder}/applications/klighd-cli/lib/main.js"
         },
         {
             "name": "Start CLI Webserver (Port)",
@@ -30,8 +28,7 @@
             "address": "127.0.0.1:8000",
             "outputCapture": "std",
             "program": "${workspaceFolder}/applications/klighd-cli/lib/main.js",
-            "args": ["--ls_port=5007"],
-            "preLaunchTask": "${defaultBuildTask}"
+            "args": ["--ls_port=5007"]
         },
         {
             "name": "Launch in Chrome",
@@ -42,6 +39,20 @@
             "sourceMapPathOverrides": {
                 "webpack:///../*": "${webRoot}/*"
             }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Mocha Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "--require", "ts-node/register",
+                "-u", "bdd",
+                "--timeout", "999999",
+                "--colors", "--recursive",
+                "${workspaceFolder}/packages/**/test/**/*.{ts,tsx}"
+            ],
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }

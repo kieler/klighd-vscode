@@ -16,10 +16,10 @@
  */
 
 /** @jsx html */
-import { VNode } from "snabbdom";
-import { html } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { FeatherIcon } from "../src/feather-icons-snabbdom/feather-icons-snabbdom";
-import { SidebarPanel } from "../src/sidebar/sidebar-panel";
+import { VNode } from 'snabbdom'
+import { html } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { FeatherIcon } from '../src/feather-icons-snabbdom/feather-icons-snabbdom'
+import { SidebarPanel } from '../src/sidebar/sidebar-panel'
 
 /**
  * Example for a simple reactive {@link SidebarPanel}. Fell free to use this as an
@@ -34,14 +34,14 @@ import { SidebarPanel } from "../src/sidebar/sidebar-panel";
  * ```
  */
 export class CounterPanel extends SidebarPanel {
-    private count = 0;
+    private count = 0
 
     get id(): string {
-        return "counter-panel";
+        return 'counter-panel'
     }
 
     get title(): string {
-        return "Counter";
+        return 'Counter'
     }
 
     render(): VNode {
@@ -55,16 +55,16 @@ export class CounterPanel extends SidebarPanel {
                     Decrement
                 </button>
             </div>
-        );
+        )
     }
 
     private changeCount(by: number) {
-        this.count += by;
+        this.count += by
         // Request an update to make the panel reactive to changes
-        this.update();
+        this.update()
     }
 
     get icon(): VNode {
-        return <FeatherIcon iconId={"percent"}/>;
+        return <FeatherIcon iconId={'percent'} />
     }
 }

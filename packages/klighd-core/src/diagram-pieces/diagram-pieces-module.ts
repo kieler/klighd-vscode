@@ -11,16 +11,16 @@
  * This code is provided under the terms of the Eclipse Public License 2.0 (EPL-2.0).
  */
 
-import { ContainerModule } from "inversify";
-import { configureCommand } from "sprotty";
-import { SetDiagramPieceCommand } from './actions';
+import { ContainerModule } from 'inversify'
+import { configureCommand } from 'sprotty'
+import { SetDiagramPieceCommand } from './actions'
 
 /**
  * Dependency injection module that adds functionality to insert diagram pieces
  * into the stored model.
  */
 const diagramPieceModule = new ContainerModule((bind, _unbind, isBound) => {
-    configureCommand({ bind, isBound }, SetDiagramPieceCommand);
-});
+    configureCommand({ bind, isBound }, SetDiagramPieceCommand)
+})
 
 export default diagramPieceModule

@@ -14,7 +14,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { SModelElement } from 'sprotty';
+import { SModelElementImpl } from 'sprotty';
 import { Action } from 'sprotty-protocol';
 import { RefreshLayoutAction } from '../actions';
 import { Direction, KEdge, KNode, RelativeConstraintData, RelativeConstraintType } from '../constraint-classes';
@@ -31,7 +31,7 @@ import { getLayerOfNode, getNodesOfLayer, getPositionInLayer } from './constrain
  * @param target SModelElement that is moved.
  * @returns The resulting action.
  */
-export function setRelativeConstraint(nodes: KNode[], layers: Layer[], target: SModelElement): Action {
+export function setRelativeConstraint(nodes: KNode[], layers: Layer[], target: SModelElementImpl): Action {
     const constraint = determineRelativeConstraint(nodes, layers, target)
 
     switch (constraint.relCons) {
@@ -60,7 +60,7 @@ export function setRelativeConstraint(nodes: KNode[], layers: Layer[], target: S
  * @param target Node that is moved
  * @returns The relative constraint that should be set based on the target element's coordinates.
  */
-export function determineRelativeConstraint(nodes: KNode[], layers: Layer[], target: SModelElement): RelativeConstraintData {
+export function determineRelativeConstraint(nodes: KNode[], layers: Layer[], target: SModelElementImpl): RelativeConstraintData {
     const targetNode: KNode = target as KNode
     const direction = targetNode.direction
 

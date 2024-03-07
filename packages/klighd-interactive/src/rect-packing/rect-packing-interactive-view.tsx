@@ -15,15 +15,15 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
-import { VNode } from 'snabbdom';
-import { svg } from 'sprotty'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { KNode } from '../constraint-classes';
-import { renderLock } from '../interactive-view-objects';
+import { VNode } from 'snabbdom'
+import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { KNode } from '../constraint-classes'
+import { renderLock } from '../interactive-view-objects'
 
 const boundingBoxMargin = 5
 const lockOffset = 7
 
- /**
+/**
  * Visualize the layer the selected node is in as a rectangle and all other layers as a vertical line.
  * The rectangle contains circles indicating the available positions.
  * @param node All nodes in the hierarchical level for which the layers should be visualized.
@@ -36,7 +36,7 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
     let y: number = Number.MAX_VALUE
     let maxX: number = Number.MIN_VALUE
     let maxY: number = Number.MIN_VALUE
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
         if (node.position.x < x) {
             x = node.position.x
         }
@@ -50,16 +50,20 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
             maxY = node.position.y + node.size.height
         }
     })
-    return <g><rect
-        x={x - boundingBoxMargin}
-        y={y - boundingBoxMargin}
-        width={maxX - x + 2 * boundingBoxMargin}
-        height={maxY - y + 2 * boundingBoxMargin}
-        stroke={color}
-        fill= 'rgba(0,0,0,0)'
-        strokeWidth={2 * boundingBoxMargin}
-        style={{ 'stroke-dasharray': '4' }}>
-    </rect></g>
+    return (
+        <g>
+            <rect
+                x={x - boundingBoxMargin}
+                y={y - boundingBoxMargin}
+                width={maxX - x + 2 * boundingBoxMargin}
+                height={maxY - y + 2 * boundingBoxMargin}
+                stroke={color}
+                fill="rgba(0,0,0,0)"
+                strokeWidth={2 * boundingBoxMargin}
+                style={{ 'stroke-dasharray': '4' }}
+            ></rect>
+        </g>
+    )
 }
 
 /**

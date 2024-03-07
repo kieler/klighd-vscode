@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2023 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,82 +14,86 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { window, TextEdit, workspace, Uri, WorkspaceEdit } from "vscode";
-import { CommonLanguageClient, Range as LspRange } from "vscode-languageclient";
+import { window, TextEdit, workspace, Uri, WorkspaceEdit } from 'vscode'
+import { Range as LspRange } from 'vscode-languageclient'
+import { LanguageClient, State } from 'vscode-languageclient/node'
 
 /** Handles KLighD specific LSP extensions. */
 export class LspHandler {
-    private lastEditSuccessful: boolean;
+    private lastEditSuccessful: boolean
 
-    constructor(private lsClient: CommonLanguageClient) {
-        lsClient.onReady().then(() => {
-            lsClient.onNotification("general/sendMessage", this.handleGeneralMessage.bind(this));
-            lsClient.onNotification(
-                "general/replaceContentInFile",
-                this.handleReplaceContentInFile.bind(this)
-            );
-        });
+    static instance: LspHandler
 
-        this.lastEditSuccessful = true;
+    constructor(private lsClient: LanguageClient) {
+        lsClient.onDidChangeState((e) => {
+            if (e.newState === State.Running) {
+                lsClient.onNotification('general/sendMessage', this.handleGeneralMessage.bind(this))
+                lsClient.onNotification('general/replaceContentInFile', this.handleReplaceContentInFile.bind(this))
+            }
+        })
+
+        this.lastEditSuccessful = true
+    }
+
+    static init(lsClient: LanguageClient) {
+        LspHandler.instance = new LspHandler(lsClient)
     }
 
     /** Handles a message notification from the server for messages that should be displayed to the user. */
-    private handleGeneralMessage(message: string, type: "info" | "warn" | "error") {
+    private handleGeneralMessage(message: string, type: 'info' | 'warn' | 'error') {
         switch (type) {
-            case "info":
-                window.showInformationMessage(message);
-                break;
-            case "warn":
-                window.showWarningMessage(message);
-                break;
-            case "error":
-                window.showErrorMessage(message);
-                break;
+            case 'info':
+                window.showInformationMessage(message)
+                break
+            case 'warn':
+                window.showWarningMessage(message)
+                break
+            case 'error':
+                window.showErrorMessage(message)
+                break
             default:
-                window.showInformationMessage(message);
-                break;
+                window.showInformationMessage(message)
+                break
         }
     }
 
     /** Handle a edit notification from the server that should replace the content of a specified file. */
     private async handleReplaceContentInFile(uri: string, code: string, lspRange: LspRange) {
-        const textDocument = workspace.textDocuments.find(
-            (doc) => doc.uri.toString() === Uri.parse(uri).toString()
-        );
+        const textDocument = workspace.textDocuments.find((doc) => doc.uri.toString() === Uri.parse(uri).toString())
         if (!textDocument) {
             console.error(
                 `Server requested a text edit but the requested uri was not found among the known documents: ${uri}`
-            );
+            )
 
             // Show a warning to the user, but only show it once per "stream of failed edits"
             if (this.lastEditSuccessful) {
-                this.lastEditSuccessful = false;
+                this.lastEditSuccessful = false
                 window.showWarningMessage(
-                    "Changes can not be saved because the effected document is unknown. Make sure that the document is open so your changes can be saved."
-                );
+                    'Changes can not be saved because the effected document is unknown. Make sure that the document is open so your changes can be saved.'
+                )
             }
-            return;
+            return
         }
 
-        const range = this.lsClient.protocol2CodeConverter.asRange(lspRange);
-        const workSpaceEdit = new WorkspaceEdit();
+        const range = this.lsClient.protocol2CodeConverter.asRange(lspRange)
+        const workSpaceEdit = new WorkspaceEdit()
 
-        const edits: TextEdit[] = [TextEdit.replace(range, code)];
-        workSpaceEdit.set(textDocument.uri, edits);
+        const edits: TextEdit[] = [TextEdit.replace(range, code)]
+        workSpaceEdit.set(textDocument.uri, edits)
 
         // Apply and save the edit. Report possible failures.
-        const edited = await workspace.applyEdit(workSpaceEdit);
+        const edited = await workspace.applyEdit(workSpaceEdit)
         if (!edited) {
-            console.error("Workspace edit could not be applied!");
-            return;
+            console.error('Workspace edit could not be applied!')
+            return
         }
 
-        const saved = await textDocument.save();
+        const saved = await textDocument.save()
         if (!saved) {
-            console.error(`TextDocument ${textDocument.uri} could not be saved!`);
-            return;
+            console.error(`TextDocument ${textDocument.uri} could not be saved!`)
+            return
         }
 
-        this.lastEditSuccessful = true;
+        this.lastEditSuccessful = true
     }
 }
