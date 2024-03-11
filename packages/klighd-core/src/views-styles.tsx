@@ -748,12 +748,12 @@ export function getSvgColorStyles(
             opacity: String(parent.opacity),
         }
     }
-    
+
     if (parent instanceof SKNode && parent.highlight) {
         return {
-            foreground: {color: '#03A9F4', opacity: '255'},
+            foreground: { color: '#03A9F4', opacity: '255' },
             background: background === undefined ? DEFAULT_FILL : background,
-            opacity: parent.opacity.toString()
+            opacity: parent.opacity.toString(),
         }
     }
 
