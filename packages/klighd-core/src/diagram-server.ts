@@ -19,9 +19,14 @@ import { saveAs } from 'file-saver'
 import { RefreshDiagramAction } from '@kieler/klighd-interactive/lib/actions'
 import {
     DeleteInLayerPredecessorOfConstraintAction,
-    DeleteInLayerSuccessorOfConstraintAction, DeleteLayerConstraintAction,
-    DeletePositionConstraintAction, DeleteRelativeConstraintsAction, DeleteStaticConstraintAction, SetInLayerPredecessorOfConstraintAction,
-    SetInLayerSuccessorOfConstraintAction, SetLayerConstraintAction,
+    DeleteInLayerSuccessorOfConstraintAction,
+    DeleteLayerConstraintAction,
+    DeletePositionConstraintAction,
+    DeleteRelativeConstraintsAction,
+    DeleteStaticConstraintAction,
+    SetInLayerPredecessorOfConstraintAction,
+    SetInLayerSuccessorOfConstraintAction,
+    SetLayerConstraintAction,
     SetPositionConstraintAction,
     SetStaticConstraintAction,
 } from '@kieler/klighd-interactive/lib/layered/actions'
@@ -30,7 +35,7 @@ import {
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
 } from '@kieler/klighd-interactive/lib/rect-packing/actions'
-import { TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions';
+import { TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions'
 import { inject, injectable, optional } from 'inversify'
 import {
     ActionHandlerRegistry,
