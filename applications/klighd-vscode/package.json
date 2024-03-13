@@ -178,7 +178,6 @@
     },
     "dependencies": {
         "@kieler/klighd-core": "^0.4.2",
-        "@kieler/klighd-interactive": "^0.4.2",
         "inversify": "^6.0.2",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.2.1",
