@@ -21,7 +21,7 @@ import { Action } from 'sprotty-protocol'
 import { DeleteConstraint } from './layered/constraint-types'
 
 /**
- * A sprotty action to refresh the diagram. Send from client to server.
+ * A sprotty action to refresh the diagram. Sent from client to server.
  */
 export interface RefreshDiagramAction extends Action {
     kind: typeof RefreshDiagramAction.KIND
@@ -31,6 +31,23 @@ export namespace RefreshDiagramAction {
     export const KIND = 'refreshDiagram'
 
     export function create(): RefreshDiagramAction {
+        return {
+            kind: KIND,
+        }
+    }
+}
+
+/**
+ * A sprotty action to refresh the layout. Sent from client to server.
+ */
+export interface RefreshLayoutAction extends Action {
+    kind: typeof RefreshLayoutAction.KIND
+}
+
+export namespace RefreshLayoutAction {
+    export const KIND = 'refreshLayout'
+
+    export function create(): RefreshLayoutAction {
         return {
             kind: KIND,
         }

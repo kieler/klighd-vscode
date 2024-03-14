@@ -17,14 +17,15 @@
 
 import { injectable } from 'inversify'
 import { MoveMouseListener, SEdgeImpl, SLabelImpl, SModelElementImpl, SNodeImpl } from 'sprotty'
-import { Action, isAction } from 'sprotty-protocol'
-import { RefreshDiagramAction } from './actions'
+import { Action } from 'sprotty-protocol'
 import { KNode } from './constraint-classes'
 import { filterKNodes } from './helper-methods'
-import { DeleteStaticConstraintAction } from './layered/actions'
+import { DeleteRelativeConstraintsAction, DeleteStaticConstraintAction } from './layered/actions'
 import { getLayers, setProperty } from './layered/constraint-utils'
+import { setRelativeConstraint } from './layered/relative-constraint-utils'
 import { RectPackDeletePositionConstraintAction } from './rect-packing/actions'
 import { setGenerateRectPackAction } from './rect-packing/constraint-util'
+import { setTreeProperties } from './tree/constraint-util'
 /* global MouseEvent */
 
 @injectable()
@@ -45,14 +46,21 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
     private target: KNode | undefined
 
     /**
+     * Whether relative constraints mode is activated.
+     */
+    public relativeConstraintMode: boolean
+
+    /**
+     * Handle moving an element in the diagram.
      * Does not use super implementation, since it calls mouseUp
-     * @param target target node
-     * @param event target event
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns The actions executed on mouse move.
      */
     mouseMove(target: SModelElementImpl, event: MouseEvent): Action[] {
         if (!event.altKey && this.target) {
             if (target instanceof SLabelImpl && target.parent instanceof SNodeImpl) {
-                // nodes should be movable when the user clicks on the label
+                // Nodes should be movable when the user clicks on the label.
                 target = target.parent
             }
             const result = []
@@ -64,7 +72,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 const moveAction = this.getElementMoves(this.target, event, false)
                 if (moveAction) result.push(moveAction)
             }
-            // workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable
+            // Workaround - when a node is moved and after that an edge, hasDragged is set to true although edges are not movable.
             if (target instanceof SEdgeImpl) {
                 this.hasDragged = false
             }
@@ -73,10 +81,18 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
         return []
     }
 
+    /**
+     * Delete constraint events are handle on mouseDown if the alt modifier is active.
+     * Moreover, it is checked whether the relative constraint mode is activated.
+     * This is the case if the shift-key is pressed during mouseDown.
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns Actions executed on mouse down. This might be any delete constraint action.
+     */
     override mouseDown(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         let targetNode = target
         if (target instanceof SLabelImpl && target.parent instanceof SNodeImpl) {
-            // nodes should be movable when the user clicks on the label
+            // Nodes should be movable when the user clicks on the label.
             targetNode = target.parent
         }
         if (targetNode && targetNode instanceof SNodeImpl) {
@@ -93,14 +109,24 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                     this.data.set('layered', getLayers(this.nodes, this.target.direction))
                 } else if (algorithm.endsWith('rectpacking')) {
                     // Do nothing
+                } else if (algorithm.endsWith('mrtree')) {
+                    // Do nothing
                 }
 
                 this.target.selected = true
-                // save the coordinates as shadow coordinates
+                // Save the coordinates as shadow coordinates
                 this.target.shadowX = this.target.position.x
                 this.target.shadowY = this.target.position.y
                 this.target.shadow = true
-                if (event.altKey) {
+                if (event.altKey && event.shiftKey) {
+                    if (algorithm === undefined || algorithm.endsWith('layered')) {
+                        return [
+                            DeleteRelativeConstraintsAction.create({
+                                id: this.target.id,
+                            }),
+                        ]
+                    }
+                } else if (event.altKey) {
                     if (algorithm === undefined || algorithm.endsWith('layered')) {
                         return [
                             DeleteStaticConstraintAction.create({
@@ -116,6 +142,9 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                         ]
                     }
                 }
+
+                // Determine which visualization should be rendered
+                this.relativeConstraintMode = !!event.shiftKey
                 return super.mouseDown(this.target as SModelElementImpl, event)
             }
         }
@@ -123,14 +152,21 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
     }
 
     /**
-     * Override size mouseEnter to not call mouseUp.
-     * @param target target
-     * @param event event
+     * Override mouseEnter to do nothing such that mouseUp is not called.
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns Always an empty list.
      */
     mouseEnter(): Action[] {
         return []
     }
 
+    /**
+     * Returns the set-constraint actions that should be executed on mouseUp, additionally with the usual mouseUp actions.
+     * @param target The target element.
+     * @param event The mouse event.
+     * @returns The list of set-constraint actions to be executed on mouseUp.
+     */
     mouseUp(target: SModelElementImpl, event: MouseEvent): (Action | Promise<Action>)[] {
         if (this.hasDragged && this.target) {
             // if a node is moved set properties
@@ -138,24 +174,34 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
             let result = super.mouseUp(this.target, event)
             const algorithm = (this.target.parent as KNode).properties['org.eclipse.elk.algorithm'] as string
             if (algorithm === undefined || algorithm.endsWith('layered')) {
-                result = (
-                    [setProperty(this.nodes, this.data.get('layered'), this.target)] as (Action | Promise<Action>)[]
-                ).concat(super.mouseUp(this.target, event))
+                if (event.shiftKey) {
+                    result = (
+                        [setRelativeConstraint(this.nodes, this.data.get('layered'), this.target)] as (
+                            | Action
+                            | Promise<Action>
+                        )[]
+                    ).concat(super.mouseUp(this.target, event))
+                } else {
+                    result = (
+                        [setProperty(this.nodes, this.data.get('layered'), this.target)] as (Action | Promise<Action>)[]
+                    ).concat(super.mouseUp(this.target, event))
+                }
             } else if (algorithm.endsWith('rectpacking')) {
                 const parent = this.nodes[0] ? (this.nodes[0].parent as KNode) : undefined
                 result = (
                     [setGenerateRectPackAction(this.nodes, this.target, parent, event)] as (Action | Promise<Action>)[]
                 ).concat(super.mouseUp(this.target, event))
+            } else if (algorithm.endsWith('mrtree')) {
+                result = ([setTreeProperties(this.nodes, event, this.target)] as (Action | Promise<Action>)[]).concat(
+                    super.mouseUp(this.target, event)
+                )
             } else {
                 // Algorithm not supported
             }
             this.target = undefined
 
             // Refresh the diagram according to the moved elements.
-            if (result.some((action) => isAction(action) && action.kind === RefreshDiagramAction.KIND)) {
-                return result
-            }
-            return result.concat([RefreshDiagramAction.create()])
+            return result
         }
         if (this.target) {
             this.target.selected = false

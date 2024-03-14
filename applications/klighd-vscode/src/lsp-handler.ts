@@ -25,14 +25,22 @@ export class LspHandler {
     static instance: LspHandler
 
     constructor(private lsClient: LanguageClient) {
-        lsClient.onDidChangeState((e) => {
-            if (e.newState === State.Running) {
-                lsClient.onNotification('general/sendMessage', this.handleGeneralMessage.bind(this))
-                lsClient.onNotification('general/replaceContentInFile', this.handleReplaceContentInFile.bind(this))
-            }
-        })
+        if (lsClient.needsStart()) {
+            lsClient.onDidChangeState((e) => {
+                if (e.newState === State.Running) {
+                    this.registerMessages(lsClient)
+                }
+            })
+        } else {
+            this.registerMessages(lsClient)
+        }
 
         this.lastEditSuccessful = true
+    }
+
+    registerMessages(lsClient: LanguageClient) {
+        lsClient.onNotification('general/sendMessage', this.handleGeneralMessage.bind(this))
+        lsClient.onNotification('general/replaceContentInFile', this.handleReplaceContentInFile.bind(this))
     }
 
     static init(lsClient: LanguageClient) {

@@ -749,6 +749,14 @@ export function getSvgColorStyles(
         }
     }
 
+    if (parent instanceof SKNode && parent.highlight) {
+        return {
+            foreground: { color: '#03A9F4', opacity: '255' },
+            background: background === undefined ? DEFAULT_FILL : background,
+            opacity: parent.opacity.toString(),
+        }
+    }
+
     return {
         foreground: foreground === undefined ? DEFAULT_FOREGROUND : foreground,
         background: background === undefined ? DEFAULT_FILL : background,

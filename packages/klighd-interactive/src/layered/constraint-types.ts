@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020 by
+ * Copyright 2019 - 2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -21,6 +21,8 @@ import { Direction } from '../constraint-classes'
  * A layer visualization data class for the interactive layered approach.
  */
 export class Layer {
+    id: number
+
     begin: number
 
     end: number
@@ -42,7 +44,8 @@ export class Layer {
      */
     direction: Direction
 
-    constructor(leftX: number, rightX: number, mid: number, direction: Direction) {
+    constructor(id: number, leftX: number, rightX: number, mid: number, direction: Direction) {
+        this.id = id
         this.begin = leftX
         this.end = rightX
         this.mid = mid
@@ -65,7 +68,7 @@ export class LayerConstraint {
 
     layer: number
 
-    layerCons: number
+    layerConstraint: number
 }
 
 /**
@@ -76,7 +79,7 @@ export class PositionConstraint {
 
     position: number
 
-    posCons: number
+    positionConstraint: number
 }
 
 /**
@@ -89,7 +92,25 @@ export class StaticConstraint {
 
     position: number
 
-    posCons: number
+    positionConstraint: number
 
-    layerCons: number
+    layerConstraint: number
+}
+
+/**
+ * Data class for a in layer predecessor of constraint.
+ */
+export class InLayerPredecessorOfConstraint {
+    id: string
+
+    referencedNode: string
+}
+
+/**
+ * Data class for a in layer successor of constraint.
+ */
+export class InLayerSuccessorOfConstraint {
+    id: string
+
+    referencedNode: string
 }

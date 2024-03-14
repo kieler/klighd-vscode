@@ -18,9 +18,14 @@
 import { saveAs } from 'file-saver'
 import { RefreshDiagramAction } from '@kieler/klighd-interactive/lib/actions'
 import {
+    DeleteInLayerPredecessorOfConstraintAction,
+    DeleteInLayerSuccessorOfConstraintAction,
     DeleteLayerConstraintAction,
     DeletePositionConstraintAction,
+    DeleteRelativeConstraintsAction,
     DeleteStaticConstraintAction,
+    SetInLayerPredecessorOfConstraintAction,
+    SetInLayerSuccessorOfConstraintAction,
     SetLayerConstraintAction,
     SetPositionConstraintAction,
     SetStaticConstraintAction,
@@ -30,6 +35,7 @@ import {
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
 } from '@kieler/klighd-interactive/lib/rect-packing/actions'
+import { TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions'
 import { inject, injectable, optional } from 'inversify'
 import {
     ActionHandlerRegistry,
@@ -197,6 +203,9 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(DeleteLayerConstraintAction.KIND, this)
         registry.register(DeletePositionConstraintAction.KIND, this)
         registry.register(DeleteStaticConstraintAction.KIND, this)
+        registry.register(DeleteRelativeConstraintsAction.KIND, this)
+        registry.register(DeleteInLayerPredecessorOfConstraintAction.KIND, this)
+        registry.register(DeleteInLayerSuccessorOfConstraintAction.KIND, this)
         registry.register(PerformActionAction.KIND, this)
         registry.register(RectPackSetPositionConstraintAction.KIND, this)
         registry.register(RectPackDeletePositionConstraintAction.KIND, this)
@@ -208,11 +217,14 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(SetLayerConstraintAction.KIND, this)
         registry.register(SetPositionConstraintAction.KIND, this)
         registry.register(SetStaticConstraintAction.KIND, this)
+        registry.register(SetInLayerPredecessorOfConstraintAction.KIND, this)
+        registry.register(SetInLayerSuccessorOfConstraintAction.KIND, this)
         registry.register(SetSynthesisAction.KIND, this)
         registry.register(StoreImagesAction.KIND, this)
         registry.register(SwitchEditModeAction.KIND, this)
         registry.register(SelectAction.KIND, this)
         registry.register(SetDiagramPieceAction.KIND, this)
+        registry.register(TreeSetPositionConstraintAction.KIND, this)
         registry.register(ViewportResult.KIND, this)
     }
 

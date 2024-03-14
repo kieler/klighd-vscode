@@ -17,56 +17,71 @@
 /** @jsx svg */
 import { VNode } from 'snabbdom'
 import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
-import { Direction, KNode } from '../constraint-classes'
+import { Direction, KNode, RelativeConstraintType } from '../constraint-classes'
 import { getSelectedNode } from '../helper-methods'
-import { createRect, createVerticalLine, renderArrow, renderCircle, renderLock } from '../interactive-view-objects'
+import { createRectangle, createVerticalLine, renderArrow, renderCircle, renderLock } from '../interactive-view-objects'
 import { Layer } from './constraint-types'
 import {
     getLayerOfNode,
     getLayers,
     getNodesOfLayer,
     getPositionInLayer,
+    HORIZONTAL_ARROW_X_OFFSET,
+    HORIZONTAL_ARROW_Y_OFFSET,
     isLayerForbidden,
-    shouldOnlyLCBeSet,
+    isOnlyLayerConstraintSet,
+    VERTICAL_ARROW_X_OFFSET,
+    VERTICAL_ARROW_Y_OFFSET,
 } from './constraint-utils'
+import { determineRelativeConstraint, isRelativeConstraintForbidden } from './relative-constraint-utils'
 
 /**
  * Visualize the layer the selected node is in as a rectangle and all other layers as a vertical line.
  * The rectangle contains circles indicating the available positions.
+ *
  * @param node All nodes in the hierarchical level for which the layers should be visualized.
  * @param root Root of the hierarchical level.
+ * @returns The constructed VNode to be added to the view, which visualizes the available layers and positions in the current hierarchy level.
  */
 export function renderHierarchyLevel(nodes: KNode[]): VNode {
     const { direction } = nodes[0]
-    const selNode = getSelectedNode(nodes)
-    if (selNode !== undefined) {
+    const selectedNode = getSelectedNode(nodes)
+    if (selectedNode !== undefined) {
         const layers = getLayers(nodes, direction)
-        const currentLayer = getLayerOfNode(selNode, nodes, layers, direction)
-        const forbidden = isLayerForbidden(selNode, currentLayer)
+        const currentLayer = getLayerOfNode(selectedNode, nodes, layers, direction)
+        const forbidden = isLayerForbidden(selectedNode, currentLayer)
+        const color = forbidden ? 'indianred' : 'grey'
 
         // y coordinates of the layers
         const { topBorder } = layers[0]
         const { bottomBorder } = layers[0]
 
-        // let globalEndCoordinate = layers[layers.length - 1].end
+        // Determines whether only the layer constraint will be set when the node is released.
+        const onlyLayerConstraint =
+            isOnlyLayerConstraintSet(selectedNode, layers, direction) &&
+            selectedNode.properties['org.eclipse.elk.layered.layering.layerId'] !== currentLayer
 
-        // determines whether only the layer constraint will be set when the node is released
-        const onlyLC =
-            shouldOnlyLCBeSet(selNode, layers, direction) &&
-            selNode.properties['org.eclipse.elk.layered.layering.layerId'] !== currentLayer
-
-        // create layers
+        let existingCurrentLayer = null
+        // Create layers.
         let result = <g></g>
-        for (let i = 0; i < layers.length; i++) {
-            const layer = layers[i]
-            if (i === currentLayer) {
+        for (const layer of layers) {
+            if (layer.id === currentLayer) {
+                existingCurrentLayer = layer
                 result = (
                     <g>
                         {result}
-                        {createRect(layer.begin, layer.end, topBorder, bottomBorder, forbidden, onlyLC, direction)}
+                        {createRectangle(
+                            layer.begin,
+                            layer.end,
+                            topBorder,
+                            bottomBorder,
+                            forbidden,
+                            onlyLayerConstraint,
+                            direction
+                        )}
                     </g>
                 )
-            } else if (!isLayerForbidden(selNode, i)) {
+            } else if (!isLayerForbidden(selectedNode, layer.id)) {
                 result = (
                     <g>
                         {result}
@@ -78,21 +93,20 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
 
         // Show a new empty last layer the node can be moved to
         const lastLayer = layers[layers.length - 1]
-        const lastLNodes = getNodesOfLayer(layers.length - 1, nodes)
-        if (lastLNodes.length !== 1 || !lastLNodes[0].selected) {
+        const lastLayerNodes = getNodesOfLayer(layers.length - 1, nodes)
+        if (lastLayerNodes.length !== 1 || !lastLayerNodes[0].selected) {
             // Only show the layer if the moved node is not (the only node) in the last layer
-            // globalEndCoordinate = lastLayer.end + lastLayer.end - lastLayer.begin
-            if (currentLayer === layers.length) {
+            if (currentLayer === lastLayer.id + 1) {
                 result = (
                     <g>
                         {result}
-                        {createRect(
+                        {createRectangle(
                             lastLayer.end,
                             lastLayer.end + (lastLayer.end - lastLayer.begin),
                             topBorder,
                             bottomBorder,
                             forbidden,
-                            onlyLC,
+                            onlyLayerConstraint,
                             direction
                         )}
                     </g>
@@ -111,14 +125,49 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
                 )
             }
         }
+        // Show a new empty first layer the node can be moved to
+        const firstLayer = layers[0]
+        const firstLayerNodes = getNodesOfLayer(0, nodes)
+        let newFirstLayer = false
+        if (firstLayerNodes.length !== 1 || !firstLayerNodes[0].selected) {
+            // Only show the layer if the moved node is not (the only node) in the first layer
+            if (currentLayer === -1) {
+                newFirstLayer = true
+                result = (
+                    <g>
+                        {result}
+                        {createRectangle(
+                            firstLayer.begin - (firstLayer.end - firstLayer.begin),
+                            firstLayer.begin,
+                            topBorder,
+                            bottomBorder,
+                            forbidden,
+                            onlyLayerConstraint,
+                            direction
+                        )}
+                    </g>
+                )
+            } else {
+                result = (
+                    <g>
+                        {result}
+                        {createVerticalLine(
+                            firstLayer.begin - (firstLayer.end - firstLayer.begin) / 2,
+                            topBorder,
+                            bottomBorder,
+                            direction
+                        )}
+                    </g>
+                )
+            }
+        }
 
         // Positions should only be rendered if a position constraint will be set
-        if (!onlyLC) {
+        if (!onlyLayerConstraint) {
             return (
-                <g>
-                    {result}
-                    {renderPositions(currentLayer, nodes, layers, forbidden, direction)}
-                </g>
+                // @ts-ignore
+                // eslint-disable-next-line prettier/prettier
+                <g>{result}{renderPositions(existingCurrentLayer, nodes, layers, color, direction, false, newFirstLayer)}</g>
             )
         }
         // Add available positions
@@ -130,29 +179,42 @@ export function renderHierarchyLevel(nodes: KNode[]): VNode {
 /**
  * Creates circles that indicate the available positions.
  * The position the node would be set to if it released is indicated by a filled circle.
- * @param current Number of the layer the selected node is currently in.
+ *
+ * @param currentLayer The layer the selected node is currently in.
  * @param nodes All nodes in the hierarchical level for which the layers should be visualized.
  * @param layers All layers in the graph at the hierarchical level.
  * @param forbidden Determines whether the current layer is forbidden.
+ * @returns VNode that adds indicators for available positions to the view.
  */
 export function renderPositions(
-    current: number,
+    currentLayer: Layer,
     nodes: KNode[],
     layers: Layer[],
-    forbidden: boolean,
-    direction: Direction
+    color: string,
+    direction: Direction,
+    relativeConstraintMode: boolean,
+    newFirstLayer: boolean
 ): VNode {
-    const layerNodes: KNode[] = getNodesOfLayer(current, nodes)
+    let layerNodes: KNode[] = []
+    if (currentLayer !== null) {
+        layerNodes = getNodesOfLayer(currentLayer.id, nodes)
+    }
 
-    // get the selected node
+    // Get the selected node.
     let target = nodes[0]
     for (const node of nodes) {
         if (node.selected) {
             target = node
         }
     }
-    // position of selected node
-    const curPos = getPositionInLayer(layerNodes, target)
+    // Position of selected node.
+    const currentPosition = getPositionInLayer(layerNodes, target, direction)
+
+    // Determine relative constraint.
+    let constraint
+    if (relativeConstraintMode) {
+        constraint = determineRelativeConstraint(nodes, layers, target)
+    }
 
     layerNodes.sort(
         (a, b) =>
@@ -168,37 +230,64 @@ export function renderPositions(
         let y = 0
         // calculate positions between nodes
         for (let i = 0; i < layerNodes.length - 1; i++) {
+            // The constraint is undefined if target is an adjacent node.
+            // If this is the case, the circle should not be filled.
+            let fill =
+                constraint !== undefined
+                    ? constraint.relCons !== RelativeConstraintType.UNDEFINED && currentPosition === i + shift
+                    : currentPosition === i + shift
             const node = layerNodes[i]
-            // at the old position of the selected node should not be a circle
-            if (!node.selected && !layerNodes[i + 1].selected) {
-                // calculate y coordinate of the mid between the two nodes
+            // Coordinates for both inspected nodes.
+            let nodeY = node.position.y
+            let nodeX = node.position.x
+            let nextNodeY = layerNodes[i + 1].position.y
+            let nextNodeX = layerNodes[i + 1].position.x
+            if (node.selected) {
+                nodeY = node.shadowY
+                nodeX = node.shadowX
+                shift = 0
+                fill =
+                    constraint !== undefined &&
+                    constraint.node.id === layerNodes[i + 1].id &&
+                    constraint.relCons === RelativeConstraintType.IN_LAYER_PREDECESSOR_OF
+            } else if (layerNodes[i + 1].selected) {
+                nextNodeY = layerNodes[i + 1].shadowY
+                nextNodeX = layerNodes[i + 1].shadowX
+                fill =
+                    constraint !== undefined &&
+                    constraint.node.id === node.id &&
+                    constraint.relCons === RelativeConstraintType.IN_LAYER_SUCCESSOR_OF
+            }
+            // At the old position of the selected node should only be a circle if a rel cons will be set
+            if (relativeConstraintMode || (!node.selected && !layerNodes[i + 1].selected)) {
+                // Calculate y coordinate of the mid between the two nodes
                 switch (direction) {
                     case Direction.UNDEFINED:
                     case Direction.RIGHT: {
-                        x = layers[current].mid
-                        const topY = node.position.y + node.size.height
-                        const botY = layerNodes[i + 1].position.y
+                        x = currentLayer.mid
+                        const topY = nodeY + node.size.height
+                        const botY = nextNodeY
                         y = topY + (botY - topY) / 2
                         break
                     }
                     case Direction.LEFT: {
-                        x = layers[current].mid
-                        const topY = node.position.y + node.size.height
-                        const botY = layerNodes[i + 1].position.y
+                        x = currentLayer.mid
+                        const topY = nodeY + node.size.height
+                        const botY = nextNodeY
                         y = topY + (botY - topY) / 2
                         break
                     }
                     case Direction.DOWN: {
-                        y = layers[current].mid
-                        const topX = node.position.x + node.size.width
-                        const botX = layerNodes[i + 1].position.x
+                        y = currentLayer.mid
+                        const topX = nodeX + node.size.width
+                        const botX = nextNodeX
                         x = topX + (botX - topX) / 2
                         break
                     }
                     case Direction.UP: {
-                        y = layers[current].mid
-                        const topX = node.position.x + node.size.width
-                        const botX = layerNodes[i + 1].position.x
+                        y = currentLayer.mid
+                        const topX = nodeX + node.size.width
+                        const botX = nextNodeX
                         x = topX + (botX - topX) / 2
                         break
                     }
@@ -209,7 +298,7 @@ export function renderPositions(
                 result = (
                     <g>
                         {result}
-                        {renderCircle(curPos === i + shift, x, y, forbidden)}
+                        {renderCircle(fill, x, y, color)}
                     </g>
                 )
             } else {
@@ -217,29 +306,29 @@ export function renderPositions(
             }
         }
 
-        // position above the first node is available if the first node is not the selected one
+        // Position above the first node is available if the first node is not the selected one.
         const first = layerNodes[0]
-        if (!first.selected) {
+        if (!first.selected && (constraint === undefined || !isRelativeConstraintForbidden(first, target))) {
             switch (direction) {
                 case Direction.UNDEFINED:
                 case Direction.RIGHT: {
-                    x = layers[current].mid
-                    y = layers[current].topBorder + (first.position.y - layers[current].topBorder) / 2
+                    x = currentLayer.mid
+                    y = currentLayer.topBorder + (first.position.y - currentLayer.topBorder) / 2
                     break
                 }
                 case Direction.LEFT: {
-                    x = layers[current].mid
-                    y = layers[current].topBorder + (first.position.y - layers[current].topBorder) / 2
+                    x = currentLayer.mid
+                    y = currentLayer.topBorder + (first.position.y - currentLayer.topBorder) / 2
                     break
                 }
                 case Direction.DOWN: {
-                    y = layers[current].mid
-                    x = layers[current].topBorder + (first.position.x - layers[current].topBorder) / 2
+                    y = currentLayer.mid
+                    x = currentLayer.topBorder + (first.position.x - currentLayer.topBorder) / 2
                     break
                 }
                 case Direction.UP: {
-                    y = layers[current].mid
-                    x = layers[current].topBorder + (first.position.x - layers[current].topBorder) / 2
+                    y = currentLayer.mid
+                    x = currentLayer.topBorder + (first.position.x - currentLayer.topBorder) / 2
                     break
                 }
                 default: {
@@ -249,41 +338,41 @@ export function renderPositions(
             result = (
                 <g>
                     {result}
-                    {renderCircle(curPos === 0, x, y, forbidden)}
+                    {renderCircle(currentPosition === 0, x, y, color)}
                 </g>
             )
         }
-        // position below the last node is available if the last node is not the selected one
+        // Position below the last node is available if the last node is not the selected one.
         const last = layerNodes[layerNodes.length - 1]
-        if (!last.selected) {
+        if (!last.selected && (constraint === undefined || !isRelativeConstraintForbidden(last, target))) {
             switch (direction) {
                 case Direction.UNDEFINED:
                 case Direction.RIGHT: {
-                    x = layers[current].mid
+                    x = currentLayer.mid
                     y =
-                        layers[current].bottomBorder -
-                        (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
+                        currentLayer.bottomBorder -
+                        (currentLayer.bottomBorder - (last.position.y + last.size.height)) / 2
                     break
                 }
                 case Direction.LEFT: {
-                    x = layers[current].mid
+                    x = currentLayer.mid
                     y =
-                        layers[current].bottomBorder -
-                        (layers[current].bottomBorder - (last.position.y + last.size.height)) / 2
+                        currentLayer.bottomBorder -
+                        (currentLayer.bottomBorder - (last.position.y + last.size.height)) / 2
                     break
                 }
                 case Direction.DOWN: {
-                    y = layers[current].mid
+                    y = currentLayer.mid
                     x =
-                        layers[current].bottomBorder -
-                        (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
+                        currentLayer.bottomBorder -
+                        (currentLayer.bottomBorder - (last.position.x + last.size.width)) / 2
                     break
                 }
                 case Direction.UP: {
-                    y = layers[current].mid
+                    y = currentLayer.mid
                     x =
-                        layers[current].bottomBorder -
-                        (layers[current].bottomBorder - (last.position.x + last.size.width)) / 2
+                        currentLayer.bottomBorder -
+                        (currentLayer.bottomBorder - (last.position.x + last.size.width)) / 2
                     break
                 }
                 default: {
@@ -293,53 +382,85 @@ export function renderPositions(
             result = (
                 <g>
                     {result}
-                    {renderCircle(curPos === layerNodes.length - 1 + shift, x, y, forbidden)}
+                    {renderCircle(currentPosition === layerNodes.length - 1 + shift, x, y, color)}
                 </g>
             )
         }
-
         return result
     }
-    // there are no nodes in the layer
-    // show a circle in the middle of the layer
+
+    // There are no nodes in the layer.
+    // Show a circle in the middle of the layer.
     let x = 0
     let y = 0
-    switch (direction) {
-        case Direction.UNDEFINED:
-        case Direction.RIGHT: {
-            const lastLayer = layers[layers.length - 1]
-            x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-            y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-            break
+    if (newFirstLayer) {
+        const firstLayer = layers[0]
+        switch (direction) {
+            case Direction.UNDEFINED:
+            case Direction.RIGHT: {
+                x = firstLayer.begin - (firstLayer.end - firstLayer.begin) / 2
+                y = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                break
+            }
+            case Direction.LEFT: {
+                x = firstLayer.begin + (firstLayer.end - firstLayer.begin) / 2
+                y = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                break
+            }
+            case Direction.DOWN: {
+                y = firstLayer.begin - (firstLayer.end - firstLayer.begin) / 2
+                x = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                break
+            }
+            case Direction.UP: {
+                y = firstLayer.begin + (firstLayer.end - firstLayer.begin) / 2
+                x = firstLayer.topBorder + (firstLayer.bottomBorder - firstLayer.topBorder) / 2
+                break
+            }
+            default: {
+                console.error('error in layered-interactive.view.tsx, unexpected direction in switch')
+            }
         }
-        case Direction.LEFT: {
-            const lastLayer = layers[layers.length - 1]
-            x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-            y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-            break
-        }
-        case Direction.DOWN: {
-            const lastLayer = layers[layers.length - 1]
-            y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-            x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-            break
-        }
-        case Direction.UP: {
-            const lastLayer = layers[layers.length - 1]
-            y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
-            x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
-            break
-        }
-        default: {
-            console.error('error in layered.interactive-view.tsx, unexpected direction in switch')
+    } else {
+        switch (direction) {
+            case Direction.UNDEFINED:
+            case Direction.RIGHT: {
+                const lastLayer = layers[layers.length - 1]
+                x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                break
+            }
+            case Direction.LEFT: {
+                const lastLayer = layers[layers.length - 1]
+                x = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                y = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                break
+            }
+            case Direction.DOWN: {
+                const lastLayer = layers[layers.length - 1]
+                y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                break
+            }
+            case Direction.UP: {
+                const lastLayer = layers[layers.length - 1]
+                y = lastLayer.mid + (lastLayer.end - lastLayer.begin)
+                x = lastLayer.topBorder + (lastLayer.bottomBorder - lastLayer.topBorder) / 2
+                break
+            }
+            default: {
+                console.error('error in layered.interactive-view.tsx, unexpected direction in switch')
+            }
         }
     }
-    return <g>{renderCircle(true, x, y, forbidden)}</g>
+    return <g>{renderCircle(true, x, y, color)}</g>
 }
 
 /**
  * Render something to indicate the constraint set on a node.
+ *
  * @param node Node with a constraint
+ * @returns The VNode that visualizes whether an absolute constraint is set on a node.
  */
 export function renderLayeredConstraint(node: KNode): VNode {
     let result = <g></g>
@@ -368,15 +489,12 @@ export function renderLayeredConstraint(node: KNode): VNode {
     return result
 }
 
-const verticalArrowXOffset = -2.5
-const verticalArrowYOffset = -5
-const horizontalArrowXOffset = -0.3
-const horizontalArrowYOffset = -0.7
-
 /**
  * Creates an icon that visualizes a layer constraint.
- * @param x
- * @param y
+ *
+ * @param x The x coordinate of the icon.
+ * @param y The y coordinate of the icon.
+ * @returns The VNode that visualizes a layer constraint.
  */
 function renderLayerConstraint(x: number, y: number, direction: Direction): VNode {
     const vertical = !(
@@ -384,8 +502,9 @@ function renderLayerConstraint(x: number, y: number, direction: Direction): VNod
         direction === Direction.RIGHT ||
         direction === Direction.LEFT
     )
-    const xOffset = vertical ? verticalArrowXOffset : horizontalArrowXOffset
-    const yOffset = vertical ? verticalArrowYOffset : horizontalArrowYOffset
+    const xOffset = vertical ? VERTICAL_ARROW_X_OFFSET : HORIZONTAL_ARROW_X_OFFSET
+    const yOffset = vertical ? VERTICAL_ARROW_Y_OFFSET : HORIZONTAL_ARROW_Y_OFFSET
+    // @ts-ignore
     return (
         <g>
             {' '}
@@ -397,13 +516,16 @@ function renderLayerConstraint(x: number, y: number, direction: Direction): VNod
 
 /**
  * Creates an icon that visualizes a position constraint.
- * @param x
- * @param y
+ *
+ * @param x The x coordinate of the icon.
+ * @param y The y coordinate of the icon.
+ * @returns The VNode that visualizes a position constraint.
  */
 function renderPositionConstraint(x: number, y: number, direction: Direction): VNode {
     const vertical = direction === Direction.UNDEFINED || direction === Direction.RIGHT || direction === Direction.LEFT
-    const xOffset = vertical ? verticalArrowXOffset : horizontalArrowXOffset
-    const yOffset = vertical ? verticalArrowYOffset : horizontalArrowYOffset
+    const xOffset = vertical ? VERTICAL_ARROW_X_OFFSET : HORIZONTAL_ARROW_X_OFFSET
+    const yOffset = vertical ? VERTICAL_ARROW_Y_OFFSET : HORIZONTAL_ARROW_Y_OFFSET
+    // @ts-ignore
     return (
         <g>
             {' '}

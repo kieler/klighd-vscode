@@ -18,6 +18,7 @@
 import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods'
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
+import { renderRelativeConstraint } from '@kieler/klighd-interactive/lib/layered/layered-relative-constraint-view'
 import { inject, injectable } from 'inversify'
 import { VNode } from 'snabbdom'
 import {
@@ -99,6 +100,8 @@ export class SKGraphView implements IView {
  */
 @injectable()
 export class KNodeView implements IView {
+    @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
+
     render(node: SKNode, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
@@ -127,11 +130,16 @@ export class KNodeView implements IView {
         if (isShadow) {
             // Render shadow of the node
             shadow = getRendering(node.data, node, new KStyles(false), ctx)
+
+            if (this.mListener.relativeConstraintMode) {
+                // render visualization for relative constraints
+                result.push(renderRelativeConstraint(node.parent as SKNode, node))
+            }
         }
         if (isChildSelected(node as SKNode)) {
             if ((node as SKNode).properties['org.eclipse.elk.interactiveLayout'] && ctx.mListener.hasDragged) {
-                // Render the objects indicating the layer and positions in the graph
-                interactiveNodes = renderInteractiveLayout(node as SKNode)
+                // Render the visualization for interactive layout
+                interactiveNodes = renderInteractiveLayout(node as SKNode, this.mListener.relativeConstraintMode)
             }
         }
 
@@ -139,6 +147,9 @@ export class KNodeView implements IView {
         node.shadow = false
         let rendering
         if (!ctx.mListener.hasDragged || isChildSelected(node.parent as SKNode)) {
+            if (node.forbidden) {
+                node.opacity = 0.1
+            }
             // Node should only be visible if the node is in the same hierarchical level as the moved node or no node is moved at all
             rendering = getRendering(node.data, node, new KStyles(false), ctx)
 
@@ -174,6 +185,7 @@ export class KNodeView implements IView {
             rendering = getRendering(node.data, node, new KStyles(false), ctx)
         }
         node.shadow = isShadow
+        node.highlight = false
 
         if (node.id === '$root') {
             // The root node should not be rendered, only its children should.

@@ -18,7 +18,7 @@
 import { getAbsoluteBounds } from 'sprotty'
 import { Action, Bounds } from 'sprotty-protocol'
 import { RectPackSetPositionConstraintAction, SetAspectRatioAction } from './actions'
-import { RefreshDiagramAction } from '../actions'
+import { RefreshLayoutAction } from '../actions'
 import { KNode } from '../constraint-classes'
 /* global MouseEvent */
 
@@ -36,10 +36,11 @@ export function setGenerateRectPackAction(
     event: MouseEvent
 ): Action {
     // If node is not put to a valid position the diagram will be refreshed.
-    let result: Action = RefreshDiagramAction.create()
+    let result: Action = RefreshLayoutAction.create()
     // If the node is moved on top of another node it takes its place.
+    let nodeFound = false
     nodes.forEach((node) => {
-        if (node.id !== target.id) {
+        if (!nodeFound && node.id !== target.id) {
             const targetBounds = getAbsoluteBounds(node)
             const { canvasBounds } = target.root
             const boundsInWindow = Bounds.translate(targetBounds, canvasBounds)
@@ -48,26 +49,31 @@ export function setGenerateRectPackAction(
             const highX = boundsInWindow.x + boundsInWindow.width
             const highY = boundsInWindow.y + boundsInWindow.height
             if (event.pageX > lowX && event.pageX < highX && event.pageY > lowY && event.pageY < highY) {
-                let actualPosition = node.properties['org.eclipse.elk.rectPacking.currentPosition'] as number
-                if (node.properties['org.eclipse.elk.alg.rectpacking.desiredPosition'] !== -1) {
-                    actualPosition = node.properties['org.eclipse.elk.alg.rectpacking.desiredPosition'] as number
+                let actualPosition = node.properties['org.eclipse.elk.rectpacking.currentPosition'] as number
+                if (
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined &&
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1
+                ) {
+                    actualPosition = node.properties['org.eclipse.elk.rectpacking.desiredPosition'] as number
                 }
-                let actualTargetPosition = target.properties['org.eclipse.elk.rectPacking.currentPosition'] as number
-                if (node.properties['org.eclipse.elk.alg.rectpacking.desiredPosition'] !== -1) {
-                    actualTargetPosition = target.properties[
-                        'org.eclipse.elk.alg.rectpacking.desiredPosition'
-                    ] as number
+                let actualTargetPosition = target.properties['org.eclipse.elk.rectpacking.currentPosition'] as number
+                if (
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== undefined &&
+                    node.properties['org.eclipse.elk.rectpacking.desiredPosition'] !== -1
+                ) {
+                    actualTargetPosition = target.properties['org.eclipse.elk.rectpacking.desiredPosition'] as number
                 }
                 if (actualPosition !== actualTargetPosition && actualPosition !== -1) {
                     result = RectPackSetPositionConstraintAction.create({
                         id: target.id,
                         order: actualPosition,
                     })
+                    nodeFound = true
                 }
             }
         }
     })
-    if (result.kind === RefreshDiagramAction.KIND) {
+    if (result.kind === RefreshLayoutAction.KIND) {
         // Case node should not be swapped.
 
         // Calculate aspect ratio.
@@ -92,7 +98,7 @@ export function setGenerateRectPackAction(
         const aspectRatio = (maxX - x) / (maxY - y)
 
         // If changed update aspect ratio.
-        if (parent && parent.properties['org.eclipse.elk.rectPacking.aspectRatio'] !== aspectRatio) {
+        if (parent && parent.properties['org.eclipse.elk.rectpacking.aspectRatio'] !== aspectRatio) {
             return SetAspectRatioAction.create({
                 id: parent.id,
                 aspectRatio,
