@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2023 by
+ * Copyright 2023-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -57,14 +57,6 @@ export class KlighDWebviewEndpoint extends WebviewEndpoint {
         this.messenger.onRequest(
             LspRequest,
             async (request) => {
-                // Catch any diagram/accept action and call the registered action handlers.
-                if (request.method === 'diagram/accept' && isActionMessage(request.params)) {
-                    const { action } = request.params
-                    const handlers = this.klighdActionHandlers.get(request.params.action.kind)
-                    if (handlers) {
-                        handlers.forEach((handler) => handler(action))
-                    }
-                }
                 const result: any =
                     request.params === undefined
                         ? await this.languageClient.sendRequest(request.method)
@@ -81,6 +73,15 @@ export class KlighDWebviewEndpoint extends WebviewEndpoint {
         this.messenger.onNotification(
             LspNotification,
             (notification) => {
+                // Catch any diagram/accept action and call the registered action handlers.
+                if (notification.method === 'diagram/accept' && isActionMessage(notification.params)) {
+                    const { action } = notification.params
+                    const handlers = this.klighdActionHandlers.get(notification.params.action.kind)
+                    if (handlers) {
+                        handlers.forEach((handler) => handler(action))
+                        // TODO: if one of the handlers says the action does not need to be forwarded to the server, do not forward it.
+                    }
+                }
                 this.languageClient.sendNotification(notification.method, notification.params)
             },
             { sender: this.messageParticipant }

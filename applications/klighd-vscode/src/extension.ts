@@ -171,9 +171,16 @@ function isLanguageClient(client: unknown): client is LanguageClient {
     // Therefore, they are two different classes internally.
 
     // To work around this, we ensure that it is an object and check the object
-    // for the existence of a few methods.
+    // for the existence of a few methods that are used in this extension.
 
-    const wantedMethod = ['onReady', 'sendNotification', 'onNotification', 'sendRequest', 'onRequest']
+    const wantedMethod = [
+        'needsStart',
+        'onDidChangeState',
+        'onNotification',
+        'onRequest',
+        'sendNotification',
+        'sendRequest',
+    ]
 
     const isObject = typeof client === 'object' && client !== null
     const hasWantedMethods = wantedMethod.every(
