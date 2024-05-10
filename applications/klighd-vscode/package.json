@@ -152,7 +152,7 @@
     "scripts": {
         "clean": "rimraf dist klighd-vscode.vsix",
         "lint": "eslint .",
-        "build": "webpack --mode development --devtool eval-source-map",
+        "build": "webpack --mode production",
         "watch": "webpack --watch --mode development --devtool eval-source-map",
         "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix",
         "predistribute": "yarn run package",
