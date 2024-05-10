@@ -1,6 +1,6 @@
 {
     "name": "@kieler/klighd-interactive",
-    "version": "0.4.2",
+    "version": "0.5.0",
     "description": "A module for klighd-core to interactively apply constraints to the diagram",
     "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "license": "EPL-2.0",

@@ -1,6 +1,6 @@
 {
     "name": "@kieler/klighd-cli",
-    "version": "0.4.2",
+    "version": "0.5.0",
     "description": "Standalone web view for klighd-core diagrams",
     "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "license": "EPL-2.0",
@@ -31,7 +31,7 @@
         "socket": "node ./lib/main.js --ls_port=5007"
     },
     "dependencies": {
-        "@kieler/klighd-core": "^0.4.2",
+        "@kieler/klighd-core": "^0.5.0",
         "buffer": "^6.0.3",
         "commander": "^8.1.0",
         "crypto-browserify": "^3.12.0",
