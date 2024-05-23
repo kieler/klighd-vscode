@@ -23,7 +23,7 @@
         "build:app": "webpack --mode production --devtool hidden-source-map",
         "build:server": "tsc -p ./tsconfig.server.json",
         "watch": "run-p --print-label \"watch:*\"",
-        "watch:app": "webpack --watch",
+        "watch:app": "webpack --watch --mode development --devtool source-map",
         "watch:server": "tsc -w -p ./tsconfig.server.json",
         "prepackage": "cross-var replace \"@VERSION@\" $npm_package_version ./lib/version.js",
         "package": "pkg -c pkg.json ./lib/klighd.js",
