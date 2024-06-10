@@ -4,7 +4,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022-2023 by
+ * Copyright 2022-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -30,6 +30,7 @@ import {
     PatcherProvider,
     SGraphImpl,
     TYPES,
+    ViewerOptions,
 } from 'sprotty'
 import { angleOfPoint, Bounds, Point } from 'sprotty-protocol'
 import { isDetailWithChildren } from '../depth-map'
@@ -126,6 +127,8 @@ export class ProxyView extends AbstractUIExtension {
 
     /** Provides the utensil to replace HTML elements. */
     @inject(TYPES.PatcherProvider) private patcherProvider: PatcherProvider
+
+    @inject(TYPES.ViewerOptions) private viewerOptions: ViewerOptions
 
     /** Used to replace HTML elements. */
     private patcher: Patcher
@@ -1328,7 +1331,7 @@ export class ProxyView extends AbstractUIExtension {
     ): VNode | undefined {
         if (!(node instanceof SKNode)) {
             // VNode, this is a predefined rendering (e.g. cluster)
-            updateTransform(node, transform)
+            updateTransform(node, transform, this.viewerOptions.baseDiv)
             return node
         }
         if (node.opacity <= 0) {
@@ -1373,11 +1376,11 @@ export class ProxyView extends AbstractUIExtension {
             // Store this node
             this.renderings.set(id, vnode)
             // Place proxy at the calculated position
-            updateTransform(vnode, transform)
+            updateTransform(vnode, transform, this.viewerOptions.baseDiv)
             // Update its opacity
-            updateOpacity(vnode, opacity)
+            updateOpacity(vnode, opacity, this.viewerOptions.baseDiv)
             // Update whether it should be click-through
-            updateClickThrough(vnode, !this.interactiveProxiesEnabled || this.clickThrough)
+            updateClickThrough(vnode, !this.interactiveProxiesEnabled || this.clickThrough, this.viewerOptions.baseDiv)
         }
 
         return vnode
@@ -1418,7 +1421,7 @@ export class ProxyView extends AbstractUIExtension {
         const vnode = ctx.forceRenderElement(edge)
 
         if (vnode) {
-            updateTransform(vnode, transform)
+            updateTransform(vnode, transform, this.viewerOptions.baseDiv)
         }
 
         return vnode
@@ -1692,7 +1695,9 @@ export class ProxyView extends AbstractUIExtension {
     setMouseUp(): void {
         // Upon release, proxies shouldn't be click-through
         this.clickThrough = false
-        this.currProxies.forEach(({ proxy }) => updateClickThrough(proxy, !this.interactiveProxiesEnabled))
+        this.currProxies.forEach(({ proxy }) =>
+            updateClickThrough(proxy, !this.interactiveProxiesEnabled, this.viewerOptions.baseDiv)
+        )
     }
 
     /** Updates the proxy-view options specified in the {@link RenderOptionsRegistry}. */
