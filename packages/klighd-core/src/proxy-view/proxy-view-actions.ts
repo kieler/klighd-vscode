@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022-2023 by
+ * Copyright 2022-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -217,6 +217,8 @@ export class ProxyViewActionHandler extends MouseListener implements IActionHand
                 this.optionsRegistry.onChange(() => this.proxyView.clearRenderings())
                 // Make sure to be notified when rendering options are changed
                 this.renderOptionsRegistry.onChange(() => this.proxyView.updateOptions(this.renderOptionsRegistry))
+                // Initialize the proxy view with all current options.
+                this.proxyView.updateOptions(this.renderOptionsRegistry)
                 this.onChangeRegistered = true
             }
         } else if (this.proxyView) {
