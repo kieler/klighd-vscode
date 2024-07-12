@@ -16,11 +16,13 @@
  */
 
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module'
+// import { structureBasedEditingModule } from '@kieler/klighd-structure-based/lib/structure-based-editing-module'
 import { Container, ContainerModule, interfaces } from 'inversify'
 import {
     configureActionHandler,
     configureModelElement,
     ConsoleLogger,
+    contextMenuModule,
     defaultModule,
     exportModule,
     hoverModule,
@@ -140,7 +142,8 @@ export default function createContainer(widgetId: string): Container {
         kGraphDiagramModule,
         updateDepthMapModule,
         /* bookmarkModule, */ diagramPieceModule,
-        proxyViewModule
+        proxyViewModule,
+        contextMenuModule
     )
     // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {

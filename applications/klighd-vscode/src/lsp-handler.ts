@@ -14,7 +14,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-import { window, TextEdit, workspace, Uri, WorkspaceEdit } from 'vscode'
+import { window, TextEdit, workspace, Uri, WorkspaceEdit, commands } from 'vscode'
 import { Range as LspRange } from 'vscode-languageclient'
 import { LanguageClient, State } from 'vscode-languageclient/node'
 
@@ -48,7 +48,7 @@ export class LspHandler {
     }
 
     /** Handles a message notification from the server for messages that should be displayed to the user. */
-    private handleGeneralMessage(message: string, type: 'info' | 'warn' | 'error') {
+    private handleGeneralMessage(message: string, type: 'info' | 'warn' | 'error' | 'switchEditor') {
         switch (type) {
             case 'info':
                 window.showInformationMessage(message)
@@ -58,6 +58,9 @@ export class LspHandler {
                 break
             case 'error':
                 window.showErrorMessage(message)
+                break
+            case 'switchEditor':
+                commands.executeCommand('workbench.action.focusPreviousGroup')
                 break
             default:
                 window.showInformationMessage(message)
