@@ -187,9 +187,9 @@ export class DepthMap {
 
             this.rootRegions.push(providedRegion)
 
-            element.properties['absoluteScale'] = 1
-            element.properties['absoluteX'] = element.bounds.x
-            element.properties['absoluteY'] = element.bounds.y
+            element.properties.absoluteScale = 1
+            element.properties.absoluteX = element.bounds.x
+            element.properties.absoluteY = element.bounds.y
         } else {
             // parent should always exist because we're traversing root to leaf
             const parentEntry = this.initKGraphElement(element.parent as KNode, viewport, renderingOptions)
@@ -218,21 +218,21 @@ export class DepthMap {
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion)
 
-                let current = element.parent as KNode
+                const current = element.parent as KNode
 
                 // compute own absolute scale and absolute position based on parent position
-                const parentAbsoluteScale = (element.parent as any).properties['absoluteScale']
+                const parentAbsoluteScale = (element.parent as any).properties.absoluteScale
                 const scaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] ?? 1
-                element.properties['absoluteScale'] = parentAbsoluteScale * scaleFactor
+                element.properties.absoluteScale = parentAbsoluteScale * scaleFactor
                 
-                element.properties['absoluteX'] = (current.properties['absoluteX'] as number) 
-                    + element.bounds.x * (element.properties['absoluteScale'] as number)
-                element.properties['absoluteY'] = (current.properties['absoluteY'] as number) 
-                    + element.bounds.y * (element.properties['absoluteScale'] as number)
+                element.properties.absoluteX = (current.properties.absoluteX as number) +
+                    element.bounds.x * (element.properties.absoluteScale as number)
+                element.properties.absoluteY = (current.properties.absoluteY as number) +
+                    element.bounds.y * (element.properties.absoluteScale as number)
 
                 entry.providingRegion.absolutePosition = {
                     x: element.properties['absoluteX'] as number,
-                    y: element.properties['absoluteY'] as number
+                    y: element.properties['absoluteY'] as number,
                 }
             }
         }
@@ -404,7 +404,7 @@ export class DepthMap {
             return DetailLevel.FullDetails
         }
         const viewportSize = this.scaleMeasureInViewport(region.boundingRectangle, viewport)
-        const scale = viewport.zoom * (region.boundingRectangle.properties['absoluteScale'] as number)
+        const scale = viewport.zoom * (region.boundingRectangle.properties.absoluteScale as number)
         // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
         if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
             return DetailLevel.FullDetails
@@ -444,7 +444,7 @@ export class DepthMap {
     scaleMeasureInViewport(node: KNode, viewport: Viewport): number {
         const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
         const vertical = node.bounds.height / (node.root.canvasBounds.height / viewport.zoom)
-        const absoluteScale = node.properties['absoluteScale'] as number
+        const absoluteScale = node.properties.absoluteScale as number
         const scaleMeasure = Math.min(horizontal, vertical)
         return scaleMeasure * absoluteScale
     }
