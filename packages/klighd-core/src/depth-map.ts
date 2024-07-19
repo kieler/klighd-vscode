@@ -224,15 +224,17 @@ export class DepthMap {
                 const parentAbsoluteScale = (element.parent as any).properties.absoluteScale
                 const scaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] ?? 1
                 element.properties.absoluteScale = parentAbsoluteScale * scaleFactor
-                
-                element.properties.absoluteX = (current.properties.absoluteX as number) +
+
+                element.properties.absoluteX =
+                    (current.properties.absoluteX as number) +
                     element.bounds.x * (element.properties.absoluteScale as number)
-                element.properties.absoluteY = (current.properties.absoluteY as number) +
+                element.properties.absoluteY =
+                    (current.properties.absoluteY as number) +
                     element.bounds.y * (element.properties.absoluteScale as number)
 
                 entry.providingRegion.absolutePosition = {
-                    x: element.properties['absoluteX'] as number,
-                    y: element.properties['absoluteY'] as number,
+                    x: element.properties.absoluteX as number,
+                    y: element.properties.absoluteY as number,
                 }
             }
         }
