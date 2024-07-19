@@ -186,7 +186,12 @@ export class DepthMap {
             providedRegion.detail = this.computeDetailLevel(providedRegion, viewport, relativeThreshold, scaleThreshold)
 
             this.rootRegions.push(providedRegion)
+
+            element.properties.absoluteScale = 1
+            element.properties.absoluteX = element.bounds.x
+            element.properties.absoluteY = element.bounds.y
         } else {
+            // parent should always exist because we're traversing root to leaf
             const parentEntry = this.initKGraphElement(element.parent as KNode, viewport, renderingOptions)
 
             entry = {
@@ -213,25 +218,23 @@ export class DepthMap {
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion)
 
-                let current = element.parent as KNode
-                let offsetX = 0
-                let offsetY = 0
+                const current = element.parent as KNode
 
-                let currentEntry = this.regionIndexMap.get(current.id)
+                // compute own absolute scale and absolute position based on parent position
+                const parentAbsoluteScale = (element.parent as any).properties.absoluteScale
+                const scaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] ?? 1
+                element.properties.absoluteScale = parentAbsoluteScale * scaleFactor
 
-                while (current && currentEntry && !currentEntry.providingRegion) {
-                    offsetX += current.bounds.x
-                    offsetY += current.bounds.y
-                    current = current.parent as KNode
-                    currentEntry = this.regionIndexMap.get(current.id)
-                }
-
-                offsetX += currentEntry?.providingRegion?.absolutePosition?.x ?? 0
-                offsetY += currentEntry?.providingRegion?.absolutePosition?.y ?? 0
+                element.properties.absoluteX =
+                    (current.properties.absoluteX as number) +
+                    element.bounds.x * (element.properties.absoluteScale as number)
+                element.properties.absoluteY =
+                    (current.properties.absoluteY as number) +
+                    element.bounds.y * (element.properties.absoluteScale as number)
 
                 entry.providingRegion.absolutePosition = {
-                    x: offsetX + element.bounds.x,
-                    y: offsetY + element.bounds.y,
+                    x: element.properties.absoluteX as number,
+                    y: element.properties.absoluteY as number,
                 }
             }
         }
@@ -402,8 +405,8 @@ export class DepthMap {
             // Regions without parents should always be full detail if they are visible
             return DetailLevel.FullDetails
         }
-        const viewportSize = this.sizeInViewport(region.boundingRectangle, viewport)
-        const scale = viewport.zoom
+        const viewportSize = this.scaleMeasureInViewport(region.boundingRectangle, viewport)
+        const scale = viewport.zoom * (region.boundingRectangle.properties.absoluteScale as number)
         // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
         if (viewportSize >= relativeThreshold || scale > scaleThreshold) {
             return DetailLevel.FullDetails
@@ -440,10 +443,12 @@ export class DepthMap {
      * @param viewport The current viewport
      * @returns the relative size of the KNodes shortest dimension
      */
-    sizeInViewport(node: KNode, viewport: Viewport): number {
+    scaleMeasureInViewport(node: KNode, viewport: Viewport): number {
         const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
         const vertical = node.bounds.height / (node.root.canvasBounds.height / viewport.zoom)
-        return horizontal < vertical ? horizontal : vertical
+        const absoluteScale = node.properties.absoluteScale as number
+        const scaleMeasure = Math.min(horizontal, vertical)
+        return scaleMeasure * absoluteScale
     }
 }
 
