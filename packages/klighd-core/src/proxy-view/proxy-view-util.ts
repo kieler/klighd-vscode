@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022-2023 by
+ * Copyright 2022-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -718,8 +718,9 @@ export function getIntersection(p1: Point, p2: Point, bounds: Bounds): Point | u
  * Updates a VNode's transform attribute.
  * @param vnode The VNode.
  * @param transform The TransformAttributes.
+ * @param baseDiv The base div ID of the root node, from the viewerOptions.
  */
-export function updateTransform(vnode: VNode, transform: TransformAttributes): void {
+export function updateTransform(vnode: VNode, transform: TransformAttributes, baseDiv: string): void {
     // Just changing the VNode's transform attribute is insufficient
     // as it doesn't change the document's transform attribute while on the canvas
     if (vnode.data) {
@@ -742,9 +743,7 @@ export function updateTransform(vnode: VNode, transform: TransformAttributes): v
         vnode.data.attrs.transform = transformString
 
         // Update transform while on the canvas
-        document
-            .getElementById(`keith-diagram_sprotty_${vnode.key?.toString()}`)
-            ?.setAttribute('transform', transformString)
+        document.getElementById(`${baseDiv}_${vnode.key?.toString()}`)?.setAttribute('transform', transformString)
     }
 }
 
@@ -752,8 +751,9 @@ export function updateTransform(vnode: VNode, transform: TransformAttributes): v
  * Updates a VNode's opacity.
  * @param vnode The VNode.
  * @param opacity The new opacity.
+ * @param baseDiv The base div ID of the root node, from the viewerOptions.
  */
-export function updateOpacity(vnode: VNode, opacity: number): void {
+export function updateOpacity(vnode: VNode, opacity: number, baseDiv: string): void {
     // Just changing the VNode's opacity is insufficient
     // as it doesn't change the document's opacity while on the canvas
     if (vnode.data) {
@@ -764,7 +764,7 @@ export function updateOpacity(vnode: VNode, opacity: number): void {
         vnode.data.style.opacity = opacity.toString()
 
         // Update opacity while on the canvas
-        const element = document.getElementById(`keith-diagram_sprotty_${vnode.key?.toString()}`)
+        const element = document.getElementById(`${baseDiv}_${vnode.key?.toString()}`)
         if (element) {
             element.style.opacity = opacity.toString()
         }
@@ -775,8 +775,9 @@ export function updateOpacity(vnode: VNode, opacity: number): void {
  * Updates a VNode's pointer-events to make it click-through.
  * @param vnode The VNode.
  * @param clickThrough Whether the VNode should be click-through.
+ * @param baseDiv The base div ID of the root node, from the viewerOptions.
  */
-export function updateClickThrough(vnode: VNode, clickThrough: boolean): void {
+export function updateClickThrough(vnode: VNode, clickThrough: boolean, baseDiv: string): void {
     // Just changing the VNode's pointer-events is insufficient
     // as it doesn't change the document's pointer-events while on the canvas
     if (vnode.data) {
@@ -788,7 +789,7 @@ export function updateClickThrough(vnode: VNode, clickThrough: boolean): void {
         vnode.data.style['pointer-events'] = pointerEvent
 
         // Update pointer-events while on the canvas
-        const element = document.getElementById(`keith-diagram_sprotty_${vnode.key?.toString()}`)
+        const element = document.getElementById(`${baseDiv}_${vnode.key?.toString()}`)
         if (element) {
             element.style.pointerEvents = pointerEvent
         }
