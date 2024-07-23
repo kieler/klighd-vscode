@@ -18,6 +18,7 @@
     "scripts": {
         "clean": "rimraf lib",
         "lint": "eslint .",
+        "lint-fix": "eslint --fix .",
         "build": "tsc",
         "watch": "tsc -w",
         "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next --no-git-tag-version"
