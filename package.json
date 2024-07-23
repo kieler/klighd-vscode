@@ -17,6 +17,7 @@
     "scripts": {
         "clean": "lerna run clean --parallel",
         "lint": "lerna run lint --parallel",
+        "lint-fix": "lerna run lint-fix --parallel",
         "prebuild": "yarn clean",
         "build": "lerna run build",
         "watch": "lerna run watch --parallel",
