@@ -318,12 +318,23 @@ export function renderRectangularShape(
             break
         }
         case K_IMAGE: {
-            const { clipShape } = rendering as KImage
-            const fullImagePath = `${(rendering as KImage).bundleName}:${(rendering as KImage).imagePath}`
+            const kImage = rendering as KImage
+            const { clipShape } = kImage
             const id = rendering.properties['klighd.lsp.rendering.id'] as string
             const clipId = `${id}$clip`
-            const extension = fullImagePath.slice(fullImagePath.lastIndexOf('.') + 1)
-            const image = `data:image/${extension};base64,${sessionStorage.getItem(fullImagePath)}`
+            let imageURI: string
+            if (kImage.bundleName === 'URI') {
+                // Bundle name "URI" is a special handling to interpret the imagePath as a URI.
+                // Here, we just add that URI to the SVG, expecting that it will be available.
+                // Note, that this does mean the URI has to be available whereever the SVG will be opened, even after saving.
+                // An alternative here would be to download and cache that image in code and include it as an embedded base64 data URI instead.
+                imageURI = kImage.imagePath
+            } else {
+                // Other images have been cached in session storage and can be embedded directly.
+                const fullImagePath = `${(rendering as KImage).bundleName}:${(rendering as KImage).imagePath}`
+                const extension = fullImagePath.slice(fullImagePath.lastIndexOf('.') + 1)
+                imageURI = `data:image/${extension};base64,${sessionStorage.getItem(fullImagePath)}`
+            }
             let clipPath: VNode | undefined
 
             // Render the clip shape within an SVG clipPath element to be used as a clipping mask for the image.
@@ -342,7 +353,7 @@ export function renderRectangularShape(
             element = (
                 <g id={id} {...gAttrs}>
                     {...clipPath ? [clipPath] : []}
-                    {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, image, styles.kShadow)}
+                    {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, imageURI, styles.kShadow)}
                 </g>
             )
             break

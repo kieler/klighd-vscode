@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -257,7 +257,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         const notCached: Pair<string, string>[] = []
         for (const image of (action as CheckImagesAction).images) {
             const id = KlighdDiagramServer.imageToSessionStorageString(image.bundleName, image.imagePath)
-            if (!this.sessionStorage.getItem(id)) {
+            // "URI" as bundle name implies that the image path is a URI that should be resolved locally.
+            if (!this.sessionStorage.getItem(id) && image.bundleName !== 'URI') {
                 notCached.push({ k: image.bundleName, v: image.imagePath })
             }
         }
