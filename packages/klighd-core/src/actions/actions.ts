@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2022 by
+ * Copyright 2019-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,8 +16,17 @@
  */
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
-import { ExportSvgAction, RequestExportSvgAction, SGraphImpl } from 'sprotty'
-import { Action, FitToScreenAction, generateRequestId, RequestAction, ResponseAction } from 'sprotty-protocol'
+import { SGraphImpl } from 'sprotty'
+import {
+    Action,
+    ExportSvgAction,
+    ExportSvgOptions,
+    FitToScreenAction,
+    generateRequestId,
+    RequestAction,
+    RequestExportSvgAction,
+    ResponseAction,
+} from 'sprotty-protocol'
 import { SKGraphModelRenderer } from '../skgraph-model-renderer'
 import { KImage } from '../skgraph-models'
 
@@ -181,10 +190,11 @@ export namespace SendModelContextAction {
 export type KlighdRequestExportSvgAction = RequestExportSvgAction
 
 export namespace KlighdRequestExportSvgAction {
-    export function create(): RequestAction<KlighdExportSvgAction> {
+    export function create(options?: ExportSvgOptions): KlighdRequestExportSvgAction {
         return {
             kind: RequestExportSvgAction.KIND,
             requestId: generateRequestId(),
+            options,
         }
     }
 }
@@ -198,12 +208,18 @@ export interface KlighdExportSvgAction extends ExportSvgAction {
 export namespace KlighdExportSvgAction {
     export const KIND = 'exportSvg'
 
-    export function create(svg: string, requestId: string, uri: string): KlighdExportSvgAction {
+    export function create(
+        svg: string,
+        requestId: string,
+        uri: string,
+        options?: ExportSvgOptions
+    ): KlighdExportSvgAction {
         return {
             kind: KIND,
             svg,
             responseId: requestId,
             uri,
+            options,
         }
     }
 }

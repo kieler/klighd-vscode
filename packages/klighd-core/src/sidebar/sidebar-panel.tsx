@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2023 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -223,8 +223,6 @@ interface QuickActionsBarProps {
  * This method creates the quick actions bar as a resuable component.
  */
 export function QuickActionsBar(props: QuickActionsBarProps): VNode {
-    // The Sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: QuickActionsBarProps }).props
     return (
         <div class-options__section="true">
             <h5 class-options__heading="true">Quick Actions</h5>
