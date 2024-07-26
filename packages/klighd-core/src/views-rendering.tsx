@@ -322,18 +322,24 @@ export function renderRectangularShape(
             const { clipShape } = kImage
             const id = rendering.properties['klighd.lsp.rendering.id'] as string
             const clipId = `${id}$clip`
-            let imageURI: string
+            let href: string
             if (kImage.bundleName === 'URI') {
                 // Bundle name "URI" is a special handling to interpret the imagePath as a URI.
                 // Here, we just add that URI to the SVG, expecting that it will be available.
                 // Note, that this does mean the URI has to be available whereever the SVG will be opened, even after saving.
                 // An alternative here would be to download and cache that image in code and include it as an embedded base64 data URI instead.
-                imageURI = kImage.imagePath
+                href = kImage.imagePath
             } else {
-                // Other images have been cached in session storage and can be embedded directly.
+                // Other images have been cached in session storage and can be embedded in the top-level defs and referenced directly.
                 const fullImagePath = `${(rendering as KImage).bundleName}:${(rendering as KImage).imagePath}`
-                const extension = fullImagePath.slice(fullImagePath.lastIndexOf('.') + 1)
-                imageURI = `data:image/${extension};base64,${sessionStorage.getItem(fullImagePath)}`
+                const imageId = `image$${fullImagePath}`
+                href = `#${imageId}`
+                // Remember the shadow definition to be added at the top level of the SVG, if the same shadow has not been defined previously.
+                if (!context.renderingDefs.has(imageId)) {
+                    const extension = fullImagePath.slice(fullImagePath.lastIndexOf('.') + 1)
+                    const imageDataURI = `data:image/${extension};base64,${sessionStorage.getItem(fullImagePath)}`
+                    context.renderingDefs.set(imageId, renderSVGImageDef(imageId, imageDataURI))
+                }
             }
             let clipPath: VNode | undefined
 
@@ -350,10 +356,16 @@ export function renderRectangularShape(
                 }
             }
             // Render the image.
+            let imageRenderings: VNode[]
+            if (kImage.bundleName === 'URI') {
+                imageRenderings = renderSVGImage(boundsAndTransformation.bounds, shadowStyles, href, styles.kShadow)
+            } else {
+                imageRenderings = renderSVGUse(boundsAndTransformation.bounds, shadowStyles, href, styles.kShadow)
+            }
             element = (
                 <g id={id} {...gAttrs}>
                     {...clipPath ? [clipPath] : []}
-                    {...renderSVGImage(boundsAndTransformation.bounds, shadowStyles, imageURI, styles.kShadow)}
+                    {...imageRenderings}
                 </g>
             )
             break
@@ -916,6 +928,16 @@ export function renderSingleSVGRect(
 }
 
 /**
+ * Renders an definition for an image to be used later with all given information. The image will have a size of 1x1 to be scaled later in its <use>.
+ *
+ * @param imageURI The image href string
+ * @returns An array of SVG elements, here <image>s and <rect>s resulting from this. <rect>s are added if a shadow effect should be applied.
+ */
+export function renderSVGImageDef(imageId: string, imageURI: string): VNode {
+    return <image width={1} height={1} id={imageId} href={imageURI} />
+}
+
+/**
  * Renders an image with all given information.
  *
  * @param bounds bounds data calculated for this image.
@@ -933,6 +955,23 @@ export function renderSVGImage(
 }
 
 /**
+ * Renders the use of a previously defined SVG shape.
+ *
+ * @param bounds bounds data calculated for this shape.
+ * @param image The use href string
+ * @param kShadow shadow information.
+ * @returns An array of SVG elements, here <use>s and <rect>s resulting from this. <rect>s are added if a shadow effect should be applied.
+ */
+export function renderSVGUse(
+    bounds: Bounds,
+    shadowStyles: string | undefined,
+    image: string,
+    kShadow: KShadow | undefined
+): VNode[] {
+    return renderWithShadow(kShadow, shadowStyles, renderSingleSVGUse, bounds, image)
+}
+
+/**
  * Renders an image with all given information.
  * If the rendering is a shadow, a shadow rect is drawn instead.
  *
@@ -941,7 +980,7 @@ export function renderSVGImage(
  * @param kShadow shadow information. Controls what this method does.
  * @param bounds bounds data calculated for this image.
  * @param image The image href string
- * @returns A single SVG <rect>.
+ * @returns A single SVG <image> or <rect>.
  */
 export function renderSingleSVGImage(
     x: number | undefined,
@@ -971,6 +1010,49 @@ export function renderSingleSVGImage(
             width={bounds.width}
             height={bounds.height}
             href={image}
+            {...(shadowStyles ? { filter: shadowStyles } : {})}
+        />
+    )
+}
+
+/**
+ * Renders a pre-defined SVG element usage with all given information.
+ * If the rendering is a shadow, a shadow rect is drawn instead.
+ *
+ * @param x x offset of the element, to be used for shadows only.
+ * @param y y offset of the element, to be used for shadows only.
+ * @param kShadow shadow information. Controls what this method does.
+ * @param bounds bounds data calculated for this element.
+ * @param href The use href string
+ * @returns A single SVG <use> or <rect>.
+ */
+export function renderSingleSVGUse(
+    x: number | undefined,
+    y: number | undefined,
+    shadowStyles: string | undefined,
+    kShadow: KShadow | undefined,
+    bounds: Bounds,
+    href: string
+): VNode {
+    // A shadow of an image is just a rectangle.
+    if (kShadow) {
+        return (
+            <rect
+                {...(x ? { x } : {})}
+                {...(y ? { y } : {})}
+                width={bounds.width}
+                height={bounds.height}
+                style={{
+                    opacity: '0.1',
+                }}
+                fill="rgb(0,0,0)"
+            />
+        )
+    }
+    return (
+        <use
+            transform={`scale(${bounds.width}, ${bounds.height})`}
+            href={href}
             {...(shadowStyles ? { filter: shadowStyles } : {})}
         />
     )
