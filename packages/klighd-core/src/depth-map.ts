@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2023 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -200,6 +200,23 @@ export class DepthMap {
             }
 
             const kRendering = this.findRendering(element)
+
+            const current = element.parent as KNode
+
+            // compute own absolute scale and absolute position based on parent position
+            const parentAbsoluteScale = (element.parent as any).properties.absoluteScale
+            const scaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] ?? 1
+            element.properties.absoluteScale = parentAbsoluteScale * scaleFactor
+
+            if (element instanceof KNode) {
+                element.properties.absoluteX =
+                    (current.properties.absoluteX as number) +
+                    element.bounds.x * (element.properties.absoluteScale as number)
+                element.properties.absoluteY =
+                    (current.properties.absoluteY as number) +
+                    element.bounds.y * (element.properties.absoluteScale as number)
+            }
+
             if (
                 element instanceof KNode &&
                 kRendering &&
@@ -217,20 +234,6 @@ export class DepthMap {
 
                 entry.providingRegion.parent = entry.containingRegion
                 entry.containingRegion.children.push(entry.providingRegion)
-
-                const current = element.parent as KNode
-
-                // compute own absolute scale and absolute position based on parent position
-                const parentAbsoluteScale = (element.parent as any).properties.absoluteScale
-                const scaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] ?? 1
-                element.properties.absoluteScale = parentAbsoluteScale * scaleFactor
-
-                element.properties.absoluteX =
-                    (current.properties.absoluteX as number) +
-                    element.bounds.x * (element.properties.absoluteScale as number)
-                element.properties.absoluteY =
-                    (current.properties.absoluteY as number) +
-                    element.bounds.y * (element.properties.absoluteScale as number)
 
                 entry.providingRegion.absolutePosition = {
                     x: element.properties.absoluteX as number,
