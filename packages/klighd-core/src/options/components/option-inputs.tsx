@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2022 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -34,8 +34,6 @@ type CheckOptionProps = BaseProps<boolean>
 
 /** Render a labeled checkbox input. */
 export function CheckOption(props: CheckOptionProps): VNode {
-    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: CheckOptionProps }).props
     return (
         <label htmlFor={props.id} title={props.description ?? props.name}>
             <input
@@ -58,8 +56,6 @@ interface ChoiceOptionProps extends BaseProps<string> {
 
 /** Render a labeled group of radio inputs. */
 export function ChoiceOption(props: ChoiceOptionProps): VNode {
-    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: ChoiceOptionProps }).props
     return (
         <div class-options__input-container="true">
             <legend>{props.name}</legend>
@@ -94,8 +90,6 @@ interface RangeOptionProps extends BaseProps<number> {
 
 /** Render a labeled range slider as input. */
 export function RangeOption(props: RangeOptionProps): VNode {
-    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: RangeOptionProps }).props
     return (
         <div class-options__column="true">
             <label htmlFor={props.id} title={props.description ?? props.name}>
@@ -121,8 +115,6 @@ type TextOptionProps = BaseProps<string>
 
 /** Renders a labeled text input. */
 export function TextOption(props: TextOptionProps): VNode {
-    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: TextOptionProps }).props
     return (
         <div class-options__column="true">
             <label htmlFor={props.id} title={props.description ?? props.name}>
@@ -143,8 +135,6 @@ export function TextOption(props: TextOptionProps): VNode {
 
 /** Renders a named separator. */
 export function SeparatorOption(props: { name: string; key?: string }): VNode {
-    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: { name: string; key?: string } }).props
     return <span class-options__separator="true">{props.name}</span>
 }
 
@@ -155,8 +145,6 @@ interface CategoryOptionProps extends BaseProps<boolean> {
 
 /** Renders a labeled options group. */
 export function CategoryOption(props: CategoryOptionProps, children: VNode[]): VNode {
-    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: CategoryOptionProps }).props
     function handleToggle(e: any) {
         // The toggle event is also fired if the details are rendered default open.
         // To prevent an infinite toggle loop, change is only called if the state has really changed.

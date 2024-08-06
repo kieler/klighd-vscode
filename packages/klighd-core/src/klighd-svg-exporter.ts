@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2023 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,59 +17,55 @@
 
 import { injectable } from 'inversify'
 import { SModelRootImpl, SvgExporter } from 'sprotty'
-import { RequestAction } from 'sprotty-protocol'
-import { KlighdExportSvgAction } from './actions/actions'
-/* global document, Element, HTMLIFrameElement, SVGSVGElement, XMLSerializer */
+import { KlighdExportSvgAction, KlighdRequestExportSvgAction } from './actions/actions'
+/* global document, Document, Element */
 
 @injectable()
 export class KlighdSvgExporter extends SvgExporter {
-    export(root: SModelRootImpl, request?: RequestAction<KlighdExportSvgAction>): void {
+    export(root: SModelRootImpl, request?: KlighdRequestExportSvgAction): void {
+        // Same as Sprotty's SvgExporter.export, but with KlighdExportSvgAction instead of
+        // ExportSvgAction to have a better default export name based on the root ID (its model URI).
         if (typeof document !== 'undefined') {
-            const div = document.getElementById(this.options.hiddenDiv)
-            if (div !== null && div.firstElementChild && div.firstElementChild.tagName === 'svg') {
-                const svgElement = div.firstElementChild as SVGSVGElement
-                const svg = this.createSvg(svgElement, root)
-                this.actionDispatcher.dispatch(
-                    KlighdExportSvgAction.create(svg, request ? request.requestId : '', root.id)
-                )
+            const hiddenDiv = document.getElementById(this.options.hiddenDiv)
+            if (hiddenDiv === null) {
+                this.log.warn(this, `Element with id ${this.options.hiddenDiv} not found. Nothing to export.`)
+                return
             }
+
+            const svgElement = hiddenDiv.querySelector('svg')
+            if (svgElement === null) {
+                this.log.warn(this, `No svg element found in ${this.options.hiddenDiv} div. Nothing to export.`)
+                return
+            }
+            const svg = this.createSvg(svgElement, root, request?.options ?? {}, request)
+            this.actionDispatcher.dispatch(
+                KlighdExportSvgAction.create(svg, request ? request.requestId : '', root.id, request?.options)
+            )
         }
     }
 
-    protected createSvg(svgElementOrig: SVGSVGElement, root: SModelRootImpl): string {
-        const serializer = new XMLSerializer()
-        const svgCopy = serializer.serializeToString(svgElementOrig)
-        const iframe: HTMLIFrameElement = document.createElement('iframe')
-        document.body.appendChild(iframe)
-        if (!iframe.contentWindow) throw new Error('IFrame has no contentWindow')
-        const docCopy = iframe.contentWindow.document
-        docCopy.open()
-        docCopy.write(svgCopy)
-        docCopy.close()
-        const svgElementNew = docCopy.getElementById(svgElementOrig.id)!
-        this.copyStyles(svgElementOrig, svgElementNew, [])
-        svgElementNew.setAttribute('version', '1.1')
-        // Somehow this is always 1.
-        svgElementNew.setAttribute('opacity', '1')
-        const bounds = this.getBounds(root)
-        svgElementNew.setAttribute('viewBox', `${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`)
-        const svgCode = serializer.serializeToString(svgElementNew)
-        document.body.removeChild(iframe)
-        return svgCode
+    protected copyStyles(_source: Element, _target: Element, _skippedProperties: string[]): void {
+        // Just don't copy the styles. This would overwrite any styles set by the SVG renderer and we do not need any other styles that may get copied here.
+        // So overwrite Sprotty's copyStyles method with an empty method.
     }
 
-    protected copyStyles(source: Element, target: Element, skipedProperties: string[]): void {
-        source.getAttributeNames().forEach((key) => {
-            if (!skipedProperties.includes(key)) {
-                const value = source.getAttribute(key)
-                if (value) target.setAttribute(key, value)
-            }
-        })
-        // IE doesn't retrun anything on source.children
-        for (let i = 0; i < source.childNodes.length; ++i) {
-            const sourceChild = source.childNodes[i]
-            const targetChild = target.childNodes[i]
-            if (sourceChild instanceof Element) this.copyStyles(sourceChild, targetChild as Element, [])
+    protected getBounds(root: SModelRootImpl, document: Document) {
+        const svgElement = document.querySelector('svg')
+        if (svgElement) {
+            // Get the actual bounding box of the SVG element, including the stroke width.
+            // should use { stroke: true } argument here, but it's not supported in chromium.
+            const box = svgElement.getBBox()
+            // Instead, remove the x/y offset and assume that the diagram is at 0/0 and that the offset on the other side is the same.
+            const xOffset = box.x
+            const yOffset = box.y
+            box.x = 0
+            box.y = 0
+            box.width += xOffset * 2
+            box.height += yOffset * 2
+
+            return box
         }
+
+        return super.getBounds(root, document)
     }
 }

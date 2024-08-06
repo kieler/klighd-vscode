@@ -1849,10 +1849,10 @@ atomic-sleep@^1.0.0:
   resolved "https://registry.yarnpkg.com/atomic-sleep/-/atomic-sleep-1.0.0.tgz#eb85b77a601fc932cfe432c5acd364a9e2c9075b"
   integrity sha512-kNOjDqAh7px0XWNI+4QbzoiR/nTkHAWNud2uvnJquD1/x5a7EQZMJT0AczqK0Qn67oY/TTQ1LbUKajZpp3I9tQ==
 
-autocompleter@^9.1.0:
-  version "9.1.2"
-  resolved "https://registry.yarnpkg.com/autocompleter/-/autocompleter-9.1.2.tgz#1f30c2db277de029a05a3fbbfac642e73ca107c1"
-  integrity sha512-L4DJ2UIsIy/YrTchKHHfyQRng2p8m9xpari1uHYZ/5DynQombeshF73uVQbrtdLxLSlK0R7ObhpnbPBkI8j8xA==
+autocompleter@^9.1.2:
+  version "9.3.0"
+  resolved "https://registry.yarnpkg.com/autocompleter/-/autocompleter-9.3.0.tgz#363142a363332e8caf651674c793ceade9e03309"
+  integrity sha512-ykZIm9OZd99I+ee3139O6mqrw9Jdtlk3CwHdDIxtOjNAcxUBChza8f0wrgL4+ZvmHNZgosljKdHskRKuiYjFHQ==
 
 available-typed-arrays@^1.0.5:
   version "1.0.5"
@@ -5344,7 +5344,6 @@ into-stream@^6.0.0:
     from2 "^2.3.0"
     p-is-promise "^3.0.0"
 
-
 invariant@^2.2.2:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.4.tgz#610f3c92c9359ce1db616e538008d23ff35158e6"
@@ -8548,7 +8547,7 @@ smart-buffer@^4.1.0:
   resolved "https://registry.yarnpkg.com/smart-buffer/-/smart-buffer-4.1.0.tgz#91605c25d91652f4661ea69ccf45f1b331ca21ba"
   integrity sha512-iVICrxOzCynf/SNaBQCw34eM9jROU/s5rzIhpOvzhzuYHfJR/DhZfDkXiZSgKXfgv26HT3Yni3AV/DGw0cGnnw==
 
-snabbdom@^3.5.1:
+snabbdom@^3.5.1, snabbdom@~3.5.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/snabbdom/-/snabbdom-3.5.1.tgz#25f80ef15b194baea703d9d5441892e369de18e1"
   integrity sha512-wHMNIOjkm/YNE5EM3RCbr/+DVgPg6AqQAX1eOxO46zYNvCXjKP5Y865tqQj3EXnaMBjkxmQA5jFuDpDK/dbfiA==
@@ -8686,10 +8685,10 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
 
-sprotty-protocol@^1.0.0, sprotty-protocol@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/sprotty-protocol/-/sprotty-protocol-1.1.0.tgz#02f30331d234c71a58646083c59b3a7b13c7861d"
-  integrity sha512-WrnCY6GpnBJa0pXdQsN1xb6b+dW9v3zHSpf063UD+E9LQfuQ2qnPzOYCz+ChmbK1wSgXzl7GYDRNfvGydD5BhA==
+sprotty-protocol@^1.0.0, sprotty-protocol@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/sprotty-protocol/-/sprotty-protocol-1.3.0.tgz#78a6a69cc5eb8b94b352882a83d0f339fd828a0d"
+  integrity sha512-cQgKHgzVRJXbosvMsEZK4YiMSPOFhL1yYa3oLBzp9lgDL7ltYbdGCQcFqoVD6h56ObuVWyjNZu1R8YSryEkZrg==
 
 sprotty-vscode-protocol@^1.0.0:
   version "1.0.0"
@@ -8720,16 +8719,16 @@ sprotty-vscode@^1.0.0:
     vscode-languageclient "^9.0.1"
     vscode-messenger "^0.4.5"
 
-sprotty@^1.0.0, sprotty@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/sprotty/-/sprotty-1.1.0.tgz#05cbae635656fc5be48fd4931ce1017dc9fcda94"
-  integrity sha512-KcM8N7flqYEIAMacmpoUh/XDnnnxPlrxMrd3WzFfhJGo306Ll6vShWba+Xfa2GwYOLEe2Uomp4dlYwbk/cNg+w==
+sprotty@^1.0.0, sprotty@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/sprotty/-/sprotty-1.3.0.tgz#c5ef6b3d3a6016e6c98e4d4af0a2b43cde7c417f"
+  integrity sha512-CFGq5po1FsQaCXx/QZjoCFYbwCrEofxAWLjxN3fJqeNmGF+CiRkHgHgXdO0OJq0o1XRgfq9ksAzYZ8Yof4Q3JA==
   dependencies:
-    autocompleter "^9.1.0"
+    autocompleter "^9.1.2"
     file-saver "^2.0.5"
     inversify "~6.0.2"
-    snabbdom "^3.5.1"
-    sprotty-protocol "^1.1.0"
+    snabbdom "~3.5.1"
+    sprotty-protocol "^1.3.0"
     tinyqueue "^2.0.3"
 
 sshpk@^1.7.0:

@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -26,8 +26,6 @@ interface SynthesisPickerProps {
 }
 
 export function SynthesisPicker(props: SynthesisPickerProps): VNode {
-    // The sprotty jsx function always puts an additional 'props' key around the element, requiring this hack.
-    props = (props as any as { props: SynthesisPickerProps }).props
     return (
         <div class-options__column="true">
             <label htmlFor="synthesisSelect">Current synthesis:</label>
