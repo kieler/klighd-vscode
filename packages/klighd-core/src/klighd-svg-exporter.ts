@@ -48,4 +48,24 @@ export class KlighdSvgExporter extends SvgExporter {
         // Just don't copy the styles. This would overwrite any styles set by the SVG renderer and we do not need any other styles that may get copied here.
         // So overwrite Sprotty's copyStyles method with an empty method.
     }
+
+    protected getBounds(root: SModelRootImpl, document: Document) {
+        const svgElement = document.querySelector('svg')
+        if (svgElement) {
+            // Get the actual bounding box of the SVG element, including the stroke width.
+            // should use { stroke: true } argument here, but it's not supported in chromium.
+            const box = svgElement.getBBox()
+            // Instead, remove the x/y offset and assume that the diagram is at 0/0 and that the offset on the other side is the same.
+            const xOffset = box.x
+            const yOffset = box.y
+            box.x = 0
+            box.y = 0
+            box.width += xOffset * 2
+            box.height += yOffset * 2
+
+            return box
+        }
+
+        return super.getBounds(root, document)
+    }
 }
