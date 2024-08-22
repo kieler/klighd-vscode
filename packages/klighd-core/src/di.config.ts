@@ -154,6 +154,8 @@ export default function createContainer(widgetId: string): Container {
             min: 0.00000000000001,
             max: 1000000000000000,
         },
+        horizontalScrollLimits: { min: -1000000000000000, max: 1000000000000000 },
+        verticalScrollLimits: { min: -1000000000000000, max: 1000000000000000 },
     })
     return container
 }
