@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -31,8 +31,9 @@ import { getArgValue, parseIntOrUndefined } from './helpers'
     const lsPath = getArgValue('ls_path') ?? defaultLSPath
 
     const server = createServer({ logging: 'debug', lsPort, lsPath })
+    const address = getArgValue('address') ?? undefined
     try {
-        await server.listen(8000)
+        await server.listen(8000, address)
     } catch (error) {
         server.log.error(error)
         process.exit(1)

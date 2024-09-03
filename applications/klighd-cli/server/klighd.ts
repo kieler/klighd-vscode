@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -35,6 +35,7 @@ Example calls:
   $ ${process.execPath.split('\\').pop()?.split('/').pop()} --ls_port 5007 ./ABRO.sctx
   $ ${process.execPath.split('\\').pop()?.split('/').pop()} --ls_path ../language-server.jar ./example.elkt
   $ ${process.execPath.split('\\').pop()?.split('/').pop()} serve -p 8000
+  $ ${process.execPath.split('\\').pop()?.split('/').pop()} serve -p 8000 -a 0.0.0.0
 `
 
 const program = new Command(process.title)
@@ -51,6 +52,7 @@ program
 program
     .option('--ls_port <port>', 'port used to connect to a language server')
     .option('--ls_path <path>', 'path to a language server jar')
+    .option('-a, --address <address>', 'address to bind the server to')
     .option('-p, --port <port>', 'port used for the diagram-view server')
 
 const serve = new Command('serve')
@@ -65,7 +67,7 @@ const serve = new Command('serve')
             const finalPort = await findPort(port)
             const server = createServer({ logging: 'error', lsPort, lsPath })
 
-            const url = await server.listen(finalPort)
+            const url = await server.listen(finalPort, program.opts().address)
 
             // Minimal CLI output so it is still understandable but also parsable in scripts.
             console.log('Server listening at:', url)
@@ -100,7 +102,7 @@ const open = new Command('open')
             const finalPort = await findPort(port)
             const server = createServer({ logging: 'warn', lsPort, lsPath })
 
-            const addr = await server.listen(finalPort)
+            const addr = await server.listen(finalPort, program.opts().address)
             const url = `${addr}?source=${fileUrl}${preferences}`
 
             console.log('\n==============================\n')
