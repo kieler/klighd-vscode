@@ -48,13 +48,18 @@ import {
 import {
     Action,
     ActionMessage,
+    ComputedBoundsAction,
     BringToFrontAction,
     findElement,
     generateRequestId,
+    IModelLayoutEngine,
+    RequestModelAction,
     GetViewportAction,
     RequestPopupModelAction,
     SelectAction,
+    SetModelAction,
     SetPopupModelAction,
+    SModelRoot,
     UpdateModelAction,
     ViewportResult,
 } from 'sprotty-protocol'
@@ -105,6 +110,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     @inject(DISymbol.RenderOptionsRegistry) @optional() private renderOptionsRegistry: RenderOptionsRegistry
 
     @inject(DISymbol.BookmarkRegistry) @optional() private bookmarkRegistry: BookmarkRegistry
+
+    @inject(TYPES.IModelLayoutEngine) @optional() protected layoutEngine?: IModelLayoutEngine
 
     constructor(@inject(ServiceTypes.Connection) connection: Connection) {
         super()
@@ -299,6 +306,35 @@ export class KlighdDiagramServer extends DiagramServerProxy {
             }
         }
         return false
+    }
+
+    // Behavior adapted from the super class and modified to the behavior of the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    handleComputedBounds(action: ComputedBoundsAction): boolean {
+        if (this.viewerOptions.needsServerLayout) {
+            return false
+        }
+        const root = this.currentRoot
+        this.computedBoundsApplicator.apply(root, action)
+        this.doSubmitModel(root, root.type === this.lastSubmittedModelType, action)
+        return false
+    }
+
+    // Behavior taken from the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    private async doSubmitModel(newRoot: SModelRoot, update: boolean, cause?: Action): Promise<void> {
+        if (this.layoutEngine) {
+            newRoot = await this.layoutEngine.layout(newRoot)
+        }
+        const modelType = newRoot.type
+        if (cause && cause.kind === RequestModelAction.KIND) {
+            const { requestId } = cause as RequestModelAction
+            const response = SetModelAction.create(newRoot, requestId)
+            this.actionDispatcher.dispatch(response)
+        } else if (update && modelType === this.lastSubmittedModelType) {
+            this.actionDispatcher.dispatch(UpdateModelAction.create(newRoot))
+        } else {
+            this.actionDispatcher.dispatch(SetModelAction.create(newRoot))
+        }
+        this.lastSubmittedModelType = modelType
     }
 
     handleRequestDiagramPiece(action: RequestDiagramPieceAction): void {
