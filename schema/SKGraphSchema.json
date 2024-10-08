@@ -1,0 +1,305 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/SKGraphSchema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "SKElement",
+    "type": "object",
+    "properties": {
+        "data": {
+            "type": "array",
+            "items": [
+                {
+                    "$ref": "#/definitions/KGraphData"
+                }
+            ],
+            "default": []
+        },
+        "properties": {
+            "type": "object",
+            "default": {}
+        },
+        "type": {
+            "type": "string"
+        }
+    },
+    "definitions": {
+        "SModelElement": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "children": {
+                    "type": "array",
+                    "items": [
+                        {
+                            "$ref": "#/definitions/SModelElement"
+                        }
+                    ],
+                    "default": []
+                },
+                "trace": {
+                    "type": "string"
+                }
+            }
+        },
+        "SShapeElement": {
+            "allOf": [{"$ref": "#/definitions/SModelElement"}],
+            "properties": {
+                "size": {
+                    "type": "object",
+                    "properties": {
+                        "width": {
+                            "type": "number"
+                        },
+                        "height": {
+                            "type": "number"
+                        }
+                    },
+                    "default": { "width": 0.0, "height": 0.0 }
+                }
+            }
+            
+        },
+        "SKGraph": {
+            "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SModelElement"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "graph"
+                },
+                "revision": {
+                    "type": "number"
+                }
+            }
+        },
+        "SKNode": {
+            "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SShapeElement"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "node"
+                }
+            }
+        },
+        "SKLabel": {
+            "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SModelElement"}],
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "label"
+                }
+            }
+        },
+        "SKEdge": {
+            "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SModelElement"}],
+            "properties": {
+                "sourceId": {
+                    "type": "string"
+                },
+                "targetId": {
+                    "type": "string"
+                },
+                "junctionPoints": {
+                    "type": "array",
+                    "items": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "x": {
+                                    "type": "number"
+                                },
+                                "y": {
+                                    "type": "number"
+                                }
+                            }
+                        }
+                    ],
+                    "default": []
+                },
+                "type": {
+                    "type": "string",
+                    "default": "edge"
+                }
+            }
+        },
+        "SKPort": {
+            "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SShapeElement"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "port"
+                }
+            }
+        },
+        "KGraphData": {
+            "properties": {
+                "properties": {
+                    "type": "object",
+                    "default": {}
+                }
+            }
+        },
+        "KRendering": {
+            "allOf": [{"$ref": "#/definitions/KGraphData"}],
+            "properties": {
+                "placementData": {
+                    "$ref": "#/definitions/KPlacementData"
+                },
+                "styles": {
+                    "type": "array",
+                    "default": []
+                },
+                "actions": {
+                    "type": "array",
+                    "default": []
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KRenderingImpl"
+                }
+            }
+        }, 
+        "KContainerRendering": {
+            "allOf": [{"$ref": "#/definitions/KRendering"}],
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": [
+                        {"$ref": "#/definitions/KRendering"}
+                    ],
+                    "default": []
+                
+                },
+                "childPlacement": {
+                    
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KContainerRenderingImpl"
+                }
+            }
+        },
+        "KRectangle": {
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KRectangleImpl"
+                }
+            }
+        },
+        "KRoundedRectangle": {
+            "allOf": [{"$ref": "#/definitions/KRectangle"}],
+            "properties": {
+                "cornerWidth": {
+                    "type": "number"
+                },
+                "cornerHeight": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KRoundedRectangleImpl"
+                }
+            }
+        },
+        "KPolyline": {
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KPolylineImpl"
+                },
+                "junctionPointRendering": {
+                    "$ref": "#/definitions/KRendering"
+                }
+            }
+        },
+        "KPolygon": {
+            "allOf": [{"$ref": "#/definitions/KPolyline"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KPolygonImpl"
+                }
+            }
+        },
+        "KSpline": {
+            "allOf": [{"$ref": "#/definitions/KPolyline"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KSplineImpl"
+                }
+            }
+        },
+        "KImage": {
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "properties": {
+                "bundleName": {
+                    "type": "string"
+                },
+                "imagePath": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KImageImpl"
+                }
+            }
+        },
+        "KEllipse": {
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KEllipseImpl"
+                }
+            }
+        },
+        "KArc": {
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "properties": {
+                "startAngle": {
+                    "type": "number"
+                },
+                "arcAngle": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KArcImpl"
+                }
+            }
+        },
+        "KText": {
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "properties": {
+                "text": {
+                    "type": "string"
+                },
+                "clip": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KTextImpl"
+                }
+            }
+        },
+        "KPlacementData": {
+            "type": "object",
+            "properties": {
+                "stub": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
