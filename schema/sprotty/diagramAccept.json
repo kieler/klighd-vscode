@@ -19,7 +19,7 @@
                     "enum": ["sprotty"]
                 },
                 "action": {
-                    "$ref": "./actions/action.json#action"
+                    "$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"
                 }
             }
         }
