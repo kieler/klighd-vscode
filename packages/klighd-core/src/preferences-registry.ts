@@ -177,7 +177,7 @@ export class PreferencesRegistry extends Registry {
         }
     }
 
-    /** Notifies the server about changed preferences that are supported by the server. */
+    /** Notifies the server about changed preferences that are supported by the client. */
     private notifyServer() {
         this.connection.onReady().then(async () => {
             const obj = {
