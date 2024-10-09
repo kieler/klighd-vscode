@@ -1,0 +1,29 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/messages/setPreferences.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "keith/preferences/setPreferences",
+    "type": "object",
+    "properties": {
+        "jsonrpc": {
+            "type": "string"
+        },
+        "method": {
+            "type": "string",
+            "enum": ["keith/preferences/setPreferences"]
+        },
+        "params": {
+            "type": "object",
+            "properties": {
+                "diagram.shouldSelectDiagram": {
+                    "type": "boolean"
+                },
+                "diagram.shouldSelectText": {
+                    "type": "boolean"
+                },
+                "diagram.incrementalDiagramGenerator": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

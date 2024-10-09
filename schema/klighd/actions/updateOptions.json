@@ -1,0 +1,158 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/actions/updateOptions.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "updateOptions",
+    "type": "object",
+    "allOf": [{"$ref": "../../sprotty/messsages/diagramAccept.json#/definitions/action"}],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["updateOptions"]
+        },
+        "valuedSynthesisOptions": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/SynthesisOption"
+            }
+        },
+        "layoutOptions": {
+            "type": "array"
+        },
+        "actions": {
+            "type": "array"
+        },
+        "modelUri": {
+            "type": "string"
+        }
+    },
+    "definitions": {
+        "SynthesisOption": {
+            "type": "object",
+            "properties": {
+                "synthesisOption": {
+                    "anyOf": [
+                        {"$ref": "#/definitions/checkSynthesisOption"},
+                        {"$ref": "#/definitions/choiceSynthesisOption"},
+                        {"$ref": "#/definitions/rangeSynthesisOption"},
+                        {"$ref": "#/definitions/textSynthesisOption"},
+                        {"$ref": "#/definitions/separatorSynthesisOption"}
+                    ]
+                },
+                "currentValue": {
+                    "type": ["string", "number", "boolean"]
+                }
+            }
+        },
+        "generalSynthesisOption": {
+            "type": "object",
+            "properties": {
+                        
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "number"
+                },
+                "updateAction": {
+                    "type": "string"
+                },
+                "category": {
+                    "$ref": "#/definitions/SynthesisCategory"
+                },
+                "sourceHash": {
+                    "type": "string"
+                },
+                "initialValue": {}
+            }
+        },
+        "checkSynthesisOption": {
+            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "properties": {
+                "type": {
+                    "type": "number",
+                    "enum": [0]
+                },
+                "initialValue": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "choiceSynthesisOption": {
+            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "properties": {
+                "type": {
+                    "type": "number",
+                    "enum": [1]
+                },
+                "initialValue": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "rangeSynthesisOption": {
+            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "properties": {
+                "type": {
+                    "type": "number",
+                    "enum": [2]
+                },
+                "initialValue": {
+                    "type": "number"
+                },
+                "range": {
+                    "type": "object",
+                    "properties": {
+                        "first": {
+                            "type": "number"
+                        },
+                        "second": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "stepSize": {
+                    "type": "number"
+                }
+            }
+        },
+        "textSynthesisOption": {
+            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "properties": {
+                "type": {
+                    "type": "number",
+                    "enum": [3]
+                },
+                "initialValue": {
+                    "type": "string"
+                }
+            }
+        },
+        "separatorSynthesisOption": {
+            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "properties": {
+                "type": {
+                    "type": "number",
+                    "enum": [4]
+                }
+            }
+        },
+        "categorySynthesisOption": {
+            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "properties": {
+                "type": {
+                    "type": "number",
+                    "enum": [5]
+                }
+            }
+        }
+    }   
+}

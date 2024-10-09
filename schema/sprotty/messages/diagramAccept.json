@@ -1,0 +1,67 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/messages/diagramAccept.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "diagram/accept",
+    "type": "object",
+    "properties": {
+        "jsonrpc": {
+            "type": "string"
+        },
+        "method": {
+            "type": "string",
+            "enum": ["diagram/accept"]
+        },
+        "params": {
+            "type": "object",
+            "properties": {
+                "clientId": {
+                    "type": "string",
+                    "enum": ["sprotty"]
+                },
+                "action": {
+                    "$ref": "#/definitions/action"
+                }
+            }
+        }
+    },
+    "definitions": {
+        "action": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                }
+            }
+        },
+        "requestModelAction": {
+            "allOf": [{"$ref": "#/definitions/action"}],
+            "properties": {
+                "kind": {
+                    "type": "string",
+                    "enum": ["requestModel"]
+                },
+                "options": {
+                    "type": "object",
+                    "properties": {
+                        "needsClientLayout": {
+                            "type": "boolean"
+                        },
+                        "needsServerLayout": {
+                            "type": "boolean"
+                        },
+                        "sourceUri": {
+                            "type": "string"
+                        },
+                        "diagramType": {
+                            "type": "string",
+                            "enum": ["keith-diagram"]
+                        }
+                    }
+                },
+                "requestId": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

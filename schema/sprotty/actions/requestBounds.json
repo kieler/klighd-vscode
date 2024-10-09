@@ -1,0 +1,34 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/messages/requestBounds.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "requestBounds",
+    "type": "object",
+    "allOf": [{"$ref": "../../sprotty/messages/diagramAccept.json#/definitions/action"}],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["requestBounds"]
+        },
+        "newRoot": {
+            "type": "object",
+            "properties": {
+                "properties": {},
+                "revision": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../klighd/SKGraphSchema#/definitions/SKGraph"
+                    }
+                }
+            }
+        }
+    }
+}
