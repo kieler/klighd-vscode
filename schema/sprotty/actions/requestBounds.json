@@ -1,9 +1,9 @@
 {
-    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/messages/requestBounds.json",
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/actions/requestBounds.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "requestBounds",
     "type": "object",
-    "allOf": [{"$ref": "../../sprotty/messages/diagramAccept.json#/definitions/action"}],
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"}],
     "properties": {
         "kind": {
             "type": "string",
@@ -25,7 +25,7 @@
                 "children": {
                     "type": "array",
                     "items": {
-                        "$ref": "../../klighd/SKGraphSchema#/definitions/SKGraph"
+                        "$ref": "/kieler/klighd-vscode/tree/main/schema/klighd/SKGraphSchema#/definitions/SKGraph"
                     }
                 }
             }

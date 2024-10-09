@@ -3,7 +3,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "updateOptions",
     "type": "object",
-    "allOf": [{"$ref": "../../sprotty/messsages/diagramAccept.json#/definitions/action"}],
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
     "properties": {
         "kind": {
             "type": "string",
@@ -12,7 +12,7 @@
         "valuedSynthesisOptions": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/SynthesisOption"
+                "$ref": "#/definitions/ValuedSynthesisOption"
             }
         },
         "layoutOptions": {
@@ -26,7 +26,7 @@
         }
     },
     "definitions": {
-        "SynthesisOption": {
+        "ValuedSynthesisOption": {
             "type": "object",
             "properties": {
                 "synthesisOption": {
@@ -35,7 +35,8 @@
                         {"$ref": "#/definitions/choiceSynthesisOption"},
                         {"$ref": "#/definitions/rangeSynthesisOption"},
                         {"$ref": "#/definitions/textSynthesisOption"},
-                        {"$ref": "#/definitions/separatorSynthesisOption"}
+                        {"$ref": "#/definitions/separatorSynthesisOption"},
+                        {"$ref": "#/definitions/categorySynthesisOption"}
                     ]
                 },
                 "currentValue": {
@@ -43,7 +44,7 @@
                 }
             }
         },
-        "generalSynthesisOption": {
+        "SynthesisOption": {
             "type": "object",
             "properties": {
                         
@@ -60,7 +61,7 @@
                     "type": "string"
                 },
                 "category": {
-                    "$ref": "#/definitions/SynthesisCategory"
+                    "$ref": "#/definitions/categorySynthesisOption"
                 },
                 "sourceHash": {
                     "type": "string"
@@ -69,7 +70,7 @@
             }
         },
         "checkSynthesisOption": {
-            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
             "properties": {
                 "type": {
                     "type": "number",
@@ -81,7 +82,7 @@
             }
         },
         "choiceSynthesisOption": {
-            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
             "properties": {
                 "type": {
                     "type": "number",
@@ -99,7 +100,7 @@
             }
         },
         "rangeSynthesisOption": {
-            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
             "properties": {
                 "type": {
                     "type": "number",
@@ -125,7 +126,7 @@
             }
         },
         "textSynthesisOption": {
-            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
             "properties": {
                 "type": {
                     "type": "number",
@@ -137,7 +138,7 @@
             }
         },
         "separatorSynthesisOption": {
-            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
             "properties": {
                 "type": {
                     "type": "number",
@@ -146,11 +147,14 @@
             }
         },
         "categorySynthesisOption": {
-            "allOf": [{"$ref": "#/definitions/generalSynthesisOption"}],
+            "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
             "properties": {
                 "type": {
                     "type": "number",
                     "enum": [5]
+                },
+                "initialValue": {
+                    "type": "boolean"
                 }
             }
         }
