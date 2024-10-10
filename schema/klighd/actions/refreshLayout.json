@@ -1,0 +1,14 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/actions/refreshLayout.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "refreshLayout",
+    "type": "object",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "required": ["kind"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["refreshLayout"]
+        }
+    }
+}

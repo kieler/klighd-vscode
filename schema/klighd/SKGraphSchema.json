@@ -62,6 +62,18 @@
                         }
                     },
                     "default": { "width": 0.0, "height": 0.0 }
+                },
+                "position": {
+                    "type": "object",
+                    "properties": {
+                        "x": {
+                            "type": "number"
+                        },
+                        "y": {
+                            "type": "number"
+                        }
+                    },
+                    "default": { "x": 0.0, "y": 0.0 }
                 }
             }
             
@@ -76,6 +88,18 @@
                 },
                 "revision": {
                     "type": "number"
+                },
+                "children": {
+                    "type": "array",
+                    "required": ["items"],
+                    "items": [
+                        {
+                            "$ref": "#/definitions/SModelElement"
+                        }
+                    ],
+                    "default": [],
+                    "minItems": 1,
+                    "maxItems": 1
                 }
             }
         },
