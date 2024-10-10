@@ -2,14 +2,9 @@
     "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/lsp/initialize.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "initialize",
-    "type": "object",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/lsp/requestMessage.json"}],
+    "required": ["method", "params"],
     "properties": {
-        "jsonrpc": {
-            "type": "string"
-        },
-        "id": {
-            "type": "number"
-        },
         "method": {
             "type": "string",
             "enum": ["initialize"]

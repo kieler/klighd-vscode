@@ -4,31 +4,14 @@
     "title": "requestBounds",
     "type": "object",
     "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"}],
+    "required": ["kind", "newRoot"],
     "properties": {
         "kind": {
             "type": "string",
             "enum": ["requestBounds"]
         },
         "newRoot": {
-            "type": "object",
-            "properties": {
-                "properties": {},
-                "revision": {
-                    "type": "number"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "/kieler/klighd-vscode/tree/main/schema/klighd/SKGraphSchema#/definitions/SKGraph"
-                    }
-                }
-            }
+            "$ref": "/kieler/klighd-vscode/tree/main/schema/klighd/SKGraphSchema#/definitions/SKGraph"
         }
     }
 }

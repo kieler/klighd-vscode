@@ -4,31 +4,32 @@
     "title": "requestBounds",
     "type": "object",
     "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"}],
-        "properties": {
-            "kind": {
-                "type": "string",
-                "enum": ["requestModel"]
-            },
-            "options": {
-                "type": "object",
-                "properties": {
-                    "needsClientLayout": {
-                        "type": "boolean"
-                    },
-                    "needsServerLayout": {
-                        "type": "boolean"
-                    },
-                    "sourceUri": {
-                        "type": "string"
-                    },
-                    "diagramType": {
-                        "type": "string",
-                        "enum": ["keith-diagram"]
-                    }
+    "required": ["kind", "options", "requestId"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["requestModel"]
+        },
+        "options": {
+            "type": "object",
+            "properties": {
+                "needsClientLayout": {
+                    "type": "boolean"
+                },
+                "needsServerLayout": {
+                    "type": "boolean"
+                },
+                "sourceUri": {
+                    "type": "string"
+                },
+                "diagramType": {
+                    "type": "string",
+                    "enum": ["keith-diagram"]
                 }
-            },
-            "requestId": {
-                "type": "string"
             }
+        },
+        "requestId": {
+            "type": "string"
         }
+    }
 }

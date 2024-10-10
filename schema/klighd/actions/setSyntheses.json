@@ -4,6 +4,7 @@
     "title": "setSyntheses",
     "type": "object",
     "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "required": ["kind", "syntheses"],
     "properties": {
         "kind": {
             "type": "string",
@@ -19,6 +20,7 @@
     "definitions": {
         "synthesis": {
             "type": "object",
+            "required": ["id", "displayName"],
             "properties": {
                 "id": {
                     "type": "string"

@@ -3,6 +3,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "SKElement",
     "type": "object",
+    "required": ["data", "properties", "type"],
     "properties": {
         "data": {
             "type": "array",
@@ -24,6 +25,7 @@
     "definitions": {
         "SModelElement": {
             "type": "object",
+            "required": ["type", "id", "children"],
             "properties": {
                 "type": {
                     "type": "string"
@@ -47,6 +49,7 @@
         },
         "SShapeElement": {
             "allOf": [{"$ref": "#/definitions/SModelElement"}],
+            "required": ["size"],
             "properties": {
                 "size": {
                     "type": "object",
@@ -65,6 +68,7 @@
         },
         "SKGraph": {
             "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SModelElement"}],
+            "required": ["type", "revision"],
             "properties": {
                 "type": {
                     "type": "string",
@@ -77,6 +81,7 @@
         },
         "SKNode": {
             "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SShapeElement"}],
+            "required": ["type"],
             "properties": {
                 "type": {
                     "type": "string",
@@ -86,6 +91,7 @@
         },
         "SKLabel": {
             "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SModelElement"}],
+            "required": ["type", "text"],
             "properties": {
                 "text": {
                     "type": "string"
@@ -98,6 +104,7 @@
         },
         "SKEdge": {
             "allOf": [{"$ref": "#"}, {"$ref": "#/definitions/SModelElement"}],
+            "required": ["type", "sourceId", "targetId"],
             "properties": {
                 "sourceId": {
                     "type": "string"

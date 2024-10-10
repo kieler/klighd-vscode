@@ -4,6 +4,7 @@
     "title": "updateOptions",
     "type": "object",
     "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "required": ["kind", "valuedSynthesisOptions", "layoutOptions", "actions", "modelUri"],
     "properties": {
         "kind": {
             "type": "string",
@@ -28,6 +29,7 @@
     "definitions": {
         "ValuedSynthesisOption": {
             "type": "object",
+            "required": ["synthesisOption", "currentValue"],
             "properties": {
                 "synthesisOption": {
                     "anyOf": [
@@ -46,8 +48,8 @@
         },
         "SynthesisOption": {
             "type": "object",
+            "required": ["id", "name", "type", "sourceHash", "initialValue"],
             "properties": {
-                        
                 "id": {
                     "type": "string"
                 },
@@ -55,7 +57,8 @@
                     "type": "string"
                 },
                 "type": {
-                    "type": "number"
+                    "type": "number",
+                    "enum": [0, 1, 2, 3, 4, 5]
                 },
                 "updateAction": {
                     "type": "string"
@@ -83,6 +86,7 @@
         },
         "choiceSynthesisOption": {
             "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
+            "required": ["values"],
             "properties": {
                 "type": {
                     "type": "number",
@@ -101,6 +105,7 @@
         },
         "rangeSynthesisOption": {
             "allOf": [{"$ref": "#/definitions/SynthesisOption"}],
+            "required": ["range", "stepSize"],
             "properties": {
                 "type": {
                     "type": "number",
