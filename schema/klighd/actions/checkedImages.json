@@ -1,0 +1,37 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/actions/checkedImages.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "checkedImages",
+    "type": "object",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "required": ["kind", "notCached", "responseId"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["checkedImages"]
+        },
+        "notCached": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/notCachedImage"
+            }
+        },
+        "responseId": {
+            "type": "string"
+        }
+    },
+    "definitions": {
+        "notCachedImage": {
+            "type": "object",
+            "required": ["k", "v"],
+            "properties": {
+                "k": {
+                    "type": "string"
+                },
+                "v": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

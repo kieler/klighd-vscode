@@ -1,0 +1,29 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/actions/elementSelected.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "elementSelected",
+    "type": "object",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"}],
+    "required": ["kind", "selectedElementsIDs", "deselectedElementsIDs", "preventOpenSelection"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["elementSelected"]
+        },
+        "selectedElementsIDs": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "deselectedElementsIDs": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "preventOpenSelection": {
+            "type": "boolean"
+        }
+    }
+}

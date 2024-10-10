@@ -1,0 +1,39 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/messages/diagramOpenInTextEditor.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "diagram/openInTextEditor",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/requestMessage.json"}],
+    "required": ["method", "params"],
+    "properties": {
+        "method": {
+            "type": "string",
+            "enum": ["diagram/openInTextEditor"]
+        },
+        "params": {
+            "type": "object",
+            "required": ["location", "forceOpen"],
+            "properties": {
+                "location": {
+                    "$ref": "#/definitions/location"
+                },
+                "forceOpen": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "definitions": {
+        "location": {
+            "type": "object",
+            "required": ["uri", "range"],
+            "properties": {
+                "uri": {
+                    "type": "string"
+                },
+                "range": {
+                    "$ref": "/kieler/klighd-vscode/tree/main/schema/lsp/range.json"
+                }
+            }
+        }
+    }
+}

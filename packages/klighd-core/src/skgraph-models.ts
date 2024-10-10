@@ -18,6 +18,7 @@
 import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import {
     boundsFeature,
+    layoutContainerFeature,
     moveFeature,
     popupFeature,
     RectangularPort,
@@ -40,6 +41,8 @@ export class SKNode extends KNode {
     hasFeature(feature: symbol): boolean {
         return (
             feature === selectFeature ||
+            feature === boundsFeature ||
+            feature === layoutContainerFeature ||
             (feature === moveFeature &&
                 (this.parent as SKNode).properties &&
                 ((this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)) ||
@@ -61,7 +64,7 @@ export class SKPort extends RectangularPort implements SKGraphElement {
     areNonChildAreaChildrenRendered = false
 
     hasFeature(feature: symbol): boolean {
-        return feature === selectFeature || feature === popupFeature
+        return feature === selectFeature || feature === boundsFeature || feature === popupFeature
     }
 
     properties: Record<string, unknown>
