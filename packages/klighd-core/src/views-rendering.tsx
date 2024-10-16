@@ -1373,7 +1373,7 @@ export function renderKRendering(
         }
         if (
             (((providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1) ||
-                context.viewport.zoom <= titleScalingFactorOption) &&
+                context.viewport.zoom < titleScalingFactorOption) &&
                 !isProxy) ||
             scaleProxy
         ) {
@@ -1478,7 +1478,7 @@ export function renderKRendering(
                 (kRendering.properties['klighd.isNodeTitle'] as boolean) &&
                 (((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && !isProxy) ||
                     scaleProxy) &&
-                ((context.viewport.zoom <= titleScalingFactorOption && !isProxy) || scaleProxy) &&
+                ((context.viewport.zoom < titleScalingFactorOption && !isProxy) || scaleProxy) &&
                 // Don't draw if the rendering is an empty KText
                 (kRendering.type !== K_TEXT || (kRendering as KText).text !== '')
             ) {
