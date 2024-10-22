@@ -1,0 +1,29 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/lsp/range.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "range",
+    "type": "object",
+    "required": ["start", "end"],
+    "properties": {
+        "start": {
+            "$ref": "#/definitions/editorPosition.json"
+        },
+        "end": {
+            "$ref": "#/definitions/editorPosition.json"
+        }
+    },
+    "definitions": {
+        "editorPosition.json": {
+            "type": "object",
+            "required": ["line", "character"],
+            "properties": {
+                "line": {
+                    "type": "integer"
+                },
+                "character": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
