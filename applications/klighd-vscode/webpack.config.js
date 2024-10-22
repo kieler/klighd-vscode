@@ -86,7 +86,7 @@ const webviewConfig = {
         filename: "webview.js",
         path: path.resolve(__dirname, "pack"),
     },
-    devtool: "nosources-source-map",
+    devtool: "eval-source-map",
 
     resolve: {
         extensions: [".ts", ".js"],
