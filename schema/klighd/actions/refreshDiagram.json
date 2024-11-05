@@ -3,12 +3,23 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "refreshDiagram",
     "type": "object",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "allOf": [{ "$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json" }],
     "required": ["kind"],
     "properties": {
         "kind": {
             "type": "string",
             "enum": ["refreshDiagram"]
+        },
+        "options": {
+            "type": "object",
+            "properties": {
+                "needsClientLayout": {
+                    "type": "boolean"
+                },
+                "needsServerLayout": {
+                    "type": "boolean"
+                }
+            }
         }
     }
 }

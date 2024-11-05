@@ -160,9 +160,9 @@ export default function createContainer(widgetId: string): Container {
     )
     // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {
-        // TODO: need some configuration switch to enable/disable client layout
-        needsClientLayout: true, // client layout = micro layout (Sprotty/Sprotty+KLighD)
-        needsServerLayout: false, // server layout = macro layout (ELK/elkjs). false here to not forward it to the Java server (the model source), but keep and handle it directly on the diagram server proxy manually
+        // These are ignored ignored and overwritten by the current needsClientLayout preference during model request.
+        needsClientLayout: false, // client layout = micro layout (Sprotty/Sprotty+KLighD)
+        needsServerLayout: true, // server layout = macro layout (ELK/elkjs). false here to not forward it to the Java server (the model source), but keep and handle it directly on the diagram server proxy manually
         baseDiv: widgetId,
         hiddenDiv: `${widgetId}_hidden`,
         // TODO: We should be able to completely deactivate Sprotty's zoom limits to not limit top down layout.

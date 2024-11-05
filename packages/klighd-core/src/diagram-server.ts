@@ -84,7 +84,7 @@ import {
 import { RequestKlighdPopupModelAction } from './hover/hover'
 import { PopupModelProvider } from './hover/popup-provider'
 import { RenderOptionsRegistry, ResizeToFit } from './options/render-options-registry'
-import { IncrementalDiagramGeneratorOption, PreferencesRegistry } from './preferences-registry'
+import { ClientLayoutOption, IncrementalDiagramGeneratorOption, PreferencesRegistry } from './preferences-registry'
 import { Connection, ServiceTypes, SessionStorage } from './services'
 import { SetSynthesisAction } from './syntheses/actions'
 import { UpdateDepthMapModelAction } from './update/update-depthmap-model'
@@ -308,9 +308,27 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         return false
     }
 
+    // Super class behavior, except taking the needsClientLayout preference into account instead of the client option.
+    override handleRequestModel(action: RequestModelAction): boolean {
+        const needsClientLayout = !!this.preferencesRegistry.getValue(ClientLayoutOption)
+        const needsServerLayout = !needsClientLayout
+
+        const newOptions = {
+            needsClientLayout,
+            needsServerLayout,
+            ...action.options,
+        }
+        const newAction = {
+            ...action,
+            options: newOptions,
+        }
+        this.forwardToServer(newAction)
+        return false
+    }
+
     // Behavior adapted from the super class and modified to the behavior of the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
     handleComputedBounds(action: ComputedBoundsAction): boolean {
-        if (this.viewerOptions.needsServerLayout) {
+        if (!this.preferencesRegistry.getValue(ClientLayoutOption)) {
             return false
         }
         const root = this.currentRoot

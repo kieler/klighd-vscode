@@ -21,6 +21,9 @@
                 },
                 "diagram.incrementalDiagramGenerator": {
                     "type": "boolean"
+                },
+                "diagram.clientLayout": {
+                    "type": "boolean"
                 }
             }
         }
