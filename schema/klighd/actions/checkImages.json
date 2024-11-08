@@ -1,0 +1,34 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/actions/checkImages.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "checkImages",
+    "type": "object",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "required": ["kind", "images"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["checkImages"]
+        },
+        "images": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/image"
+            }
+        }
+    },
+    "definitions": {
+        "image": {
+            "type": "object",
+            "required": ["bundleName", "imagePath"],
+            "properties": {
+                "bundleName": {
+                    "type": "string"
+                },
+                "imagePath": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

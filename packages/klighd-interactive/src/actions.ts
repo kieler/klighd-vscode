@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020-2021 by
+ * Copyright 2020-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,7 +17,7 @@
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
 
-import { Action } from 'sprotty-protocol'
+import { Action, JsonMap } from 'sprotty-protocol'
 import { DeleteConstraint } from './layered/constraint-types'
 
 /**
@@ -25,14 +25,16 @@ import { DeleteConstraint } from './layered/constraint-types'
  */
 export interface RefreshDiagramAction extends Action {
     kind: typeof RefreshDiagramAction.KIND
+    options?: JsonMap
 }
 
 export namespace RefreshDiagramAction {
     export const KIND = 'refreshDiagram'
 
-    export function create(): RefreshDiagramAction {
+    export function create(options?: JsonMap): RefreshDiagramAction {
         return {
             kind: KIND,
+            options,
         }
     }
 }

@@ -1,0 +1,25 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/messages/diagramOptionsPerformAction.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "keith/diagramOptions/performAction",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/requestMessage.json"}],
+    "required": ["method", "params"],
+    "properties": {
+        "method": {
+            "type": "string",
+            "enum": ["keith/diagramOptions/performAction"]
+        },
+        "params": {
+            "type": "object",
+            "required": ["actionId", "uri"],
+            "properties": {
+                "actionId": {
+                    "type": "string"
+                },
+                "uri": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

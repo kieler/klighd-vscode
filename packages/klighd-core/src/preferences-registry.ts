@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -87,6 +87,31 @@ export class IncrementalDiagramGeneratorOption implements Preference {
     debug = true
 }
 
+/**
+ * Switch between client-only and server-only layout.
+ */
+export class ClientLayoutOption implements Preference {
+    static readonly ID: string = 'diagram.clientLayout'
+
+    static readonly NAME: string = 'Client Layout'
+
+    readonly description: string | undefined = 'Switch between client-only and server-only layout.'
+
+    readonly id: string = ClientLayoutOption.ID
+
+    readonly name: string = ClientLayoutOption.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = false
+
+    currentValue = false
+
+    notifyServer = true
+
+    debug = true
+}
+
 export interface PreferenceType {
     readonly ID: string
     readonly NAME: string
@@ -116,6 +141,7 @@ export class PreferencesRegistry extends Registry {
         this.register(ShouldSelectDiagramOption)
         this.register(ShouldSelectTextOption)
         this.register(IncrementalDiagramGeneratorOption)
+        this.register(ClientLayoutOption)
     }
 
     @postConstruct()
@@ -184,6 +210,7 @@ export class PreferencesRegistry extends Registry {
                 'diagram.shouldSelectDiagram': this.getValue(ShouldSelectDiagramOption),
                 'diagram.shouldSelectText': this.getValue(ShouldSelectTextOption),
                 'diagram.incrementalDiagramGenerator': this.getValue(IncrementalDiagramGeneratorOption),
+                'diagram.clientLayout': this.getValue(ClientLayoutOption),
             }
             this.connection.sendNotification(NotificationType.SetPreferences, obj)
         })

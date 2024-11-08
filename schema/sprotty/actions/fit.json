@@ -1,0 +1,26 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/actions/fit.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "fit",
+    "type": "object",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"}],
+    "required": ["kind", "elementIds", "maxZoom", "animate"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["fit"]
+        },
+        "elementIds": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "maxZoom": {
+            "type": "number"
+        },
+        "animate": {
+            "type": "boolean"
+        }
+    }
+}

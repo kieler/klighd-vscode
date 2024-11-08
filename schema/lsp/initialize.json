@@ -1,0 +1,56 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/lsp/initialize.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "initialize",
+    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/lsp/requestMessage.json"}],
+    "required": ["method", "params"],
+    "properties": {
+        "method": {
+            "type": "string",
+            "enum": ["initialize"]
+        },
+        "params": {
+            "type": "object",
+            "properties": {
+                "processId": {},
+                "workspaceFolders": {},
+                "rootUri": {},
+                "clientInfo": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "capabilities": {
+                    "type": "object"
+                },
+                "initializationOptions": {
+                    "type": "object",
+                    "properties": {
+                        "clientDiagramOptions": {
+                            "$ref": "#/definitions/ClientDiagramOptions"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ClientDiagramOptions": {
+            "type": "object",
+            "properties": {
+                "preference": {
+                    "type": "object"
+                },
+                "render": {
+                    "type": "object"
+                },
+                "synthesis": {
+                    "type": "object"
+                }
+            }
+        }
+    }
+}

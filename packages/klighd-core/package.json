@@ -26,11 +26,13 @@
     "dependencies": {
         "@kieler/klighd-interactive": "^0.5.0",
         "@types/file-saver": "^2.0.7",
+        "elkjs": "^0.8.2",
         "feather-icons": "^4.29.1",
         "file-saver": "^2.0.5",
         "inversify": "^6.0.2",
         "snabbdom": "^3.5.1",
         "sprotty": "^1.3.0",
+        "sprotty-elk": "^1.3.0",
         "sprotty-protocol": "^1.3.0"
     },
     "devDependencies": {

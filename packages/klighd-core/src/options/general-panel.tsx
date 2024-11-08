@@ -19,9 +19,11 @@
 import { inject, injectable, postConstruct } from 'inversify'
 import { VNode } from 'snabbdom'
 import { html } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { RefreshDiagramAction } from '@kieler/klighd-interactive/lib/actions'
 import { DISymbol } from '../di.symbols'
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom'
 import {
+    ClientLayoutOption,
     IncrementalDiagramGeneratorOption,
     PreferencesRegistry,
     ShouldSelectDiagramOption,
@@ -123,6 +125,16 @@ export class GeneralPanel extends SidebarPanel {
                     ) : (
                         ''
                     )}
+                    {(this.renderOptionsRegistry.getValue(DebugOptions) as boolean) ? (
+                        <CheckOption
+                            id={ClientLayoutOption.ID}
+                            name={ClientLayoutOption.NAME}
+                            value={this.preferencesRegistry.getValue(ClientLayoutOption)}
+                            onChange={this.handlePreferenceChange.bind(this, ClientLayoutOption.ID)}
+                        />
+                    ) : (
+                        ''
+                    )}
                 </div>
             </div>
         )
@@ -134,6 +146,14 @@ export class GeneralPanel extends SidebarPanel {
 
     private handlePreferenceChange(key: string, newValue: any) {
         this.actionDispatcher.dispatch(SetPreferencesAction.create([{ id: key, value: newValue }]))
+        if (key === ClientLayoutOption.ID) {
+            this.actionDispatcher.dispatch(
+                RefreshDiagramAction.create({
+                    needsClientLayout: newValue,
+                    needsServerLayout: !newValue,
+                })
+            )
+        }
     }
 
     get icon(): VNode {

@@ -48,13 +48,18 @@ import {
 import {
     Action,
     ActionMessage,
+    ComputedBoundsAction,
     BringToFrontAction,
     findElement,
     generateRequestId,
+    IModelLayoutEngine,
+    RequestModelAction,
     GetViewportAction,
     RequestPopupModelAction,
     SelectAction,
+    SetModelAction,
     SetPopupModelAction,
+    SModelRoot,
     UpdateModelAction,
     ViewportResult,
 } from 'sprotty-protocol'
@@ -79,7 +84,7 @@ import {
 import { RequestKlighdPopupModelAction } from './hover/hover'
 import { PopupModelProvider } from './hover/popup-provider'
 import { RenderOptionsRegistry, ResizeToFit } from './options/render-options-registry'
-import { IncrementalDiagramGeneratorOption, PreferencesRegistry } from './preferences-registry'
+import { ClientLayoutOption, IncrementalDiagramGeneratorOption, PreferencesRegistry } from './preferences-registry'
 import { Connection, ServiceTypes, SessionStorage } from './services'
 import { SetSynthesisAction } from './syntheses/actions'
 import { UpdateDepthMapModelAction } from './update/update-depthmap-model'
@@ -105,6 +110,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     @inject(DISymbol.RenderOptionsRegistry) @optional() private renderOptionsRegistry: RenderOptionsRegistry
 
     @inject(DISymbol.BookmarkRegistry) @optional() private bookmarkRegistry: BookmarkRegistry
+
+    @inject(TYPES.IModelLayoutEngine) @optional() protected layoutEngine?: IModelLayoutEngine
 
     constructor(@inject(ServiceTypes.Connection) connection: Connection) {
         super()
@@ -299,6 +306,53 @@ export class KlighdDiagramServer extends DiagramServerProxy {
             }
         }
         return false
+    }
+
+    // Super class behavior, except taking the needsClientLayout preference into account instead of the client option.
+    override handleRequestModel(action: RequestModelAction): boolean {
+        const needsClientLayout = !!this.preferencesRegistry.getValue(ClientLayoutOption)
+        const needsServerLayout = !needsClientLayout
+
+        const newOptions = {
+            needsClientLayout,
+            needsServerLayout,
+            ...action.options,
+        }
+        const newAction = {
+            ...action,
+            options: newOptions,
+        }
+        this.forwardToServer(newAction)
+        return false
+    }
+
+    // Behavior adapted from the super class and modified to the behavior of the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    handleComputedBounds(action: ComputedBoundsAction): boolean {
+        if (!this.preferencesRegistry.getValue(ClientLayoutOption)) {
+            return false
+        }
+        const root = this.currentRoot
+        this.computedBoundsApplicator.apply(root, action)
+        this.doSubmitModel(root, root.type === this.lastSubmittedModelType, action)
+        return false
+    }
+
+    // Behavior taken from the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    private async doSubmitModel(newRoot: SModelRoot, update: boolean, cause?: Action): Promise<void> {
+        if (this.layoutEngine) {
+            newRoot = await this.layoutEngine.layout(newRoot)
+        }
+        const modelType = newRoot.type
+        if (cause && cause.kind === RequestModelAction.KIND) {
+            const { requestId } = cause as RequestModelAction
+            const response = SetModelAction.create(newRoot, requestId)
+            this.actionDispatcher.dispatch(response)
+        } else if (update && modelType === this.lastSubmittedModelType) {
+            this.actionDispatcher.dispatch(UpdateModelAction.create(newRoot))
+        } else {
+            this.actionDispatcher.dispatch(SetModelAction.create(newRoot))
+        }
+        this.lastSubmittedModelType = modelType
     }
 
     handleRequestDiagramPiece(action: RequestDiagramPieceAction): void {
