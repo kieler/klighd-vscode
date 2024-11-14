@@ -4,7 +4,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "storeImages",
     "type": "object",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "allOf": [{"$ref": "../../sprotty/actions/action.json"}],
     "required": ["kind", "images"],
     "properties": {
         "kind": {
@@ -16,7 +16,7 @@
             "required": ["k", "v"],
             "properties": {
                 "k": {
-                    "$ref": "/kieler/klighd-vscode/tree/main/schema/klighd/actions/checkedImages.json#/definitions/notCachedImage"
+                    "$ref": "checkedImages.json#/definitions/notCachedImage"
                 },
                 "v": {
                     "type": "string"

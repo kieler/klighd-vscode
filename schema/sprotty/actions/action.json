@@ -1,5 +1,5 @@
 {
-    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json",
+    "$id": "https://github.com../../sprotty/actions/action.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "action",
     "type": "object",

@@ -2,7 +2,7 @@
     "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/sprotty/messages/diagramAccept.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "diagram/accept",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/requestMessage.json"}],
+    "allOf": [{"$ref": "../lsp/requestMessage.json"}],
     "required": ["method", "params"],
     "properties": {
         "method": {
@@ -18,7 +18,7 @@
                     "enum": ["sprotty"]
                 },
                 "action": {
-                    "$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"
+                    "$ref": "actions/action.json"
                 }
             }
         }

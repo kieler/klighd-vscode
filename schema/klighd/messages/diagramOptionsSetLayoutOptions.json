@@ -2,7 +2,7 @@
     "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/messages/diagramOptionsSetLayoutOptions.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "keith/diagramOptions/setLayoutOptions",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/requestMessage.json"}],
+    "allOf": [{"$ref": "../../lsp/requestMessage.json"}],
     "required": ["method", "params"],
     "properties": {
         "method": {

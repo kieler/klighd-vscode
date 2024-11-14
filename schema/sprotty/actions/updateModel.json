@@ -3,7 +3,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "updateModel",
     "type": "object",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"}],
+    "allOf": [{"$ref": "action.json"}],
     "required": ["kind", "newRoot"],
     "properties": {
         "kind": {
@@ -11,7 +11,7 @@
             "enum": ["updateModel"]
         },
         "newRoot": {
-            "$ref": "/kieler/klighd-vscode/tree/main/schema/klighd/SKGraphSchema#/definitions/SKGraph"
+            "$ref": "../../klighd/SKGraphSchema.json#/definitions/SKGraph"
         }
     }
 }
