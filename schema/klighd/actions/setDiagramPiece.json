@@ -3,7 +3,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "setDiagramPiece",
     "type": "object",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "allOf": [{"$ref": "../../sprotty/actions/action.json"}],
     "required": ["kind", "diagramPiece"],
     "properties": {
         "kind": {
@@ -11,7 +11,7 @@
             "enum": ["setDiagramPiece"]
         },
         "diagramPiece": {
-            "$ref": "/kieler/klighd-vscode/tree/main/schema/klighd/SKGraphSchema.json#/definitions/SKNode"
+            "$ref": "../SKGraphSchema.json#/definitions/SKNode"
         }
     }
 }

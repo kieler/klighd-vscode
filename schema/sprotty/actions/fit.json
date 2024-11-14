@@ -3,7 +3,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "fit",
     "type": "object",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/actions/action.json"}],
+    "allOf": [{"$ref": "action.json"}],
     "required": ["kind", "elementIds", "maxZoom", "animate"],
     "properties": {
         "kind": {

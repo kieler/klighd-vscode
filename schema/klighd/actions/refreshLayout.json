@@ -3,7 +3,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "refreshLayout",
     "type": "object",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "allOf": [{"$ref": "../../sprotty/actions/action.json"}],
     "required": ["kind"],
     "properties": {
         "kind": {

@@ -3,7 +3,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "updateOptions",
     "type": "object",
-    "allOf": [{"$ref": "/kieler/klighd-vscode/tree/main/schema/sprotty/action.json"}],
+    "allOf": [{"$ref": "../../sprotty/actions/action.json"}],
     "required": ["kind", "valuedSynthesisOptions", "layoutOptions", "actions", "modelUri"],
     "properties": {
         "kind": {
@@ -13,7 +13,7 @@
         "valuedSynthesisOptions": {
             "type": "array",
             "items": {
-                "$ref": "/kieler/klighd-vscode/tree/main/schema/klighd/valuedSynthesisOption.json"
+                "$ref": "../ValuedSynthesisOption.json"
             }
         },
         "layoutOptions": {
