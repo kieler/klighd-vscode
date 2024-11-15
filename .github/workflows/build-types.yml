@@ -7,6 +7,12 @@ jobs:
   build-pydantic:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout repository
+      id: checkout_repository
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: schema
+        fetch-depth: 1
     - name: Install datamodel-code-generator
       id: install_code_generator
       run: |
