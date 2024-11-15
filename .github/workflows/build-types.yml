@@ -1,0 +1,19 @@
+name: Test Type Generation from Schemas
+
+on:
+  pull_request:
+
+jobs:
+  build-pydantic:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install datamodel-code-generator
+      id: install_code_generator
+      run: |
+        python -m venv ls-env
+        source ls-env/bin/activate
+        pip install datamodel-code-generator
+    - name: Generate Pydantic types
+      id: generate_pydantic_types
+      run: |
+        datamodel-codegen --input schema/ --input-file-type jsonschema --output GEN/ --use-default
