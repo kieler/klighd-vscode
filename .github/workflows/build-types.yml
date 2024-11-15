@@ -16,4 +16,5 @@ jobs:
     - name: Generate Pydantic types
       id: generate_pydantic_types
       run: |
+        source ls-env/bin/activate
         datamodel-codegen --input schema/ --input-file-type jsonschema --output GEN/ --use-default
