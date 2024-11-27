@@ -35,17 +35,19 @@ type CheckOptionProps = BaseProps<boolean>
 /** Render a labeled checkbox input. */
 export function CheckOption(props: CheckOptionProps): VNode {
     return (
-        <label htmlFor={props.id} title={props.description ?? props.name}>
-            <input
-                class-options__input="true"
-                type="checkbox"
-                title={props.description ?? props.name}
-                id={props.id}
-                checked={props.value}
-                on-change={() => props.onChange(!props.value)}
-            />
-            {props.name}
-        </label>
+        <div class-options__column="true">
+            <label htmlFor={props.id} title={props.description ?? props.name}>
+                <input
+                    class-options__input="true"
+                    type="checkbox"
+                    title={props.description ?? props.name}
+                    id={props.id}
+                    checked={props.value}
+                    on-change={() => props.onChange(!props.value)}
+                />
+                {props.name}
+            </label>
+        </div>
     )
 }
 
