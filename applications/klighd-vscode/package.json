@@ -2,7 +2,7 @@
     "name": "klighd-vscode",
     "displayName": "KLighD Diagrams",
     "description": "KLighD diagram support for Visual Studio Code",
-    "version": "0.5.0",
+    "version": "0.6.0",
     "publisher": "kieler",
     "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "icon": "icon.png",
@@ -152,8 +152,8 @@
     "scripts": {
         "clean": "rimraf dist klighd-vscode.vsix",
         "lint": "eslint .",
-        "build": "webpack --mode development --devtool eval-source-map",
-        "watch": "webpack --watch --mode development --devtool eval-source-map",
+        "build": "webpack --mode production --devtool false",
+        "watch": "webpack --watch --mode development",
         "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix",
         "predistribute": "yarn run package",
         "distribute": "yarn run distribute:vsce && yarn run distribute:ovsx",
@@ -177,7 +177,7 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@kieler/klighd-core": "^0.5.0",
+        "@kieler/klighd-core": "^0.6.0",
         "inversify": "^6.0.2",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.2.1",

@@ -1,0 +1,28 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/messages/diagramOptionsSetSynthesisOptions.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "keith/diagramOptions/setSynthesisOptions",
+    "allOf": [{"$ref": "../../lsp/requestMessage.json"}],
+    "required": ["method", "params"],
+    "properties": {
+        "method": {
+            "type": "string",
+            "enum": ["keith/diagramOptions/setSynthesisOptions"]
+        },
+        "params": {
+            "type": "object",
+            "required": ["synthesisOptions"],
+            "properties": {
+                "synthesisOptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "../ValuedSynthesisOption.json"
+                    }
+                },
+                "uri": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

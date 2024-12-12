@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2023 by
+ * Copyright 2019-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -420,14 +420,14 @@ export function findBoundsAndTransformationData(
             }
         }
     }
-    // Error check: If there are no bounds or decoration, at least try to fall back to possible size and position attributes in the parent element.
+    // Error check: If there are no bounds or decoration, at least try to fall back to possible position attributes in the parent element.
     // If the parent element has no bounds either, the object can not be rendered.
-    if (decoration === undefined && bounds === undefined && 'size' in parent && 'position' in parent) {
+    if (decoration === undefined && bounds === undefined && 'bounds' in parent) {
         bounds = {
-            x: (parent as any).position.x,
-            y: (parent as any).position.y,
-            width: (parent as any).size.width,
-            height: (parent as any).size.height,
+            x: 0,
+            y: 0,
+            width: (parent as any).bounds.width,
+            height: (parent as any).bounds.height,
         }
     } else if (decoration === undefined && bounds === undefined) {
         return undefined
@@ -573,16 +573,33 @@ export function findTextBoundsAndTransformationData(
                 bounds.height = decoration.bounds.height
             }
         }
-        // Error check: If there are no bounds or decoration, at least try to fall back to possible size and position attributes in the parent element.
-        // If the parent element has no bounds either, the object can not be rendered.
-        if (decoration === undefined && bounds.x === undefined && 'size' in parent && 'position' in parent) {
-            bounds.x = (parent as any).position.x
-            bounds.y = (parent as any).position.y
-            bounds.width = (parent as any).size.width
-            bounds.height = (parent as any).size.height
-        } else if (decoration === undefined && bounds.x === undefined) {
-            return undefined
+    }
+    // Error check: If there are no bounds or decoration, at least try to fall back to possible size attributes in the parent element.
+    // If the parent element has no bounds either, the object can not be rendered.
+    if (decoration === undefined && bounds.x === undefined && 'bounds' in parent) {
+        const parentBounds = {
+            x: 0,
+            y: 0,
+            width: (parent as any).bounds.width,
+            height: (parent as any).bounds.height,
         }
+
+        bounds.x = calculateX(
+            parentBounds.x,
+            parentBounds.width,
+            styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT,
+            parentBounds.width
+        )
+        bounds.y = calculateY(
+            parentBounds.y,
+            parentBounds.height,
+            styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
+            lines
+        )
+        bounds.width = parent.bounds.width
+        bounds.height = parent.bounds.height
+    } else if (decoration === undefined && bounds.x === undefined) {
+        return undefined
     }
 
     // If still no bounds are found, set all by default to 0.

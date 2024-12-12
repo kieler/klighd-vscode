@@ -16,8 +16,10 @@
  */
 
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module'
+import ElkConstructor from 'elkjs/lib/elk.bundled'
 import { Container, ContainerModule, interfaces } from 'inversify'
 import {
+    boundsModule,
     configureActionHandler,
     configureModelElement,
     ConsoleLogger,
@@ -44,6 +46,7 @@ import {
     viewportModule,
     ViewRegistry,
 } from 'sprotty'
+import { ElkFactory, ElkLayoutEngine, elkLayoutModule, ILayoutConfigurator } from 'sprotty-elk'
 import actionModule from './actions/actions-module'
 // import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols'
@@ -53,6 +56,7 @@ import { KlighdHoverMouseListener } from './hover/hover'
 import { PopupModelProvider } from './hover/popup-provider'
 import { KlighdMouseTool } from './klighd-mouse-tool'
 import { KlighdSvgExporter } from './klighd-svg-exporter'
+import { KielerLayoutConfigurator } from './layout-config'
 import { KlighdModelViewer } from './model-viewer'
 import { ResetPreferencesAction, SetPreferencesAction } from './options/actions'
 import { optionsModule } from './options/options-module'
@@ -74,6 +78,16 @@ const kGraphDiagramModule = new ContainerModule(
         bind(TYPES.ModelSource).to(KlighdDiagramServer).inSingletonScope()
         rebind(TYPES.ILogger).to(ConsoleLogger).inSingletonScope()
         rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
+
+        // required binding for elkjs to work
+        bind(TYPES.IModelLayoutEngine).toService(ElkLayoutEngine)
+
+        // Our own layout configurator that just copies the element's poperties as the layout options.
+        bind(KielerLayoutConfigurator).toSelf().inSingletonScope()
+        rebind(ILayoutConfigurator).to(KielerLayoutConfigurator).inSingletonScope()
+        const elkFactory: ElkFactory = () => new ElkConstructor({ algorithms: ['layered'] }) // See elkjs documentation
+        bind(ElkFactory).toConstantValue(elkFactory)
+
         rebind(TYPES.CommandStackOptions).toConstantValue({
             // Override the default animation speed to be 500 ms, as the default value is too quick.
             defaultDuration: 500,
@@ -126,6 +140,8 @@ export default function createContainer(widgetId: string): Container {
     const container = new Container()
     container.load(
         defaultModule,
+        boundsModule,
+        elkLayoutModule,
         selectModule,
         interactiveModule,
         viewportModule,
@@ -144,8 +160,9 @@ export default function createContainer(widgetId: string): Container {
     )
     // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {
-        needsClientLayout: false,
-        needsServerLayout: true,
+        // These are ignored ignored and overwritten by the current needsClientLayout preference during model request.
+        needsClientLayout: false, // client layout = micro layout (Sprotty/Sprotty+KLighD)
+        needsServerLayout: true, // server layout = macro layout (ELK/elkjs). false here to not forward it to the Java server (the model source), but keep and handle it directly on the diagram server proxy manually
         baseDiv: widgetId,
         hiddenDiv: `${widgetId}_hidden`,
         // TODO: We should be able to completely deactivate Sprotty's zoom limits to not limit top down layout.

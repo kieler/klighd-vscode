@@ -1,0 +1,17 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/actions/setDiagramPiece.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "setDiagramPiece",
+    "type": "object",
+    "allOf": [{"$ref": "../../sprotty/actions/action.json"}],
+    "required": ["kind", "diagramPiece"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["setDiagramPiece"]
+        },
+        "diagramPiece": {
+            "$ref": "../SKGraphSchema.json#/definitions/SKNode"
+        }
+    }
+}
