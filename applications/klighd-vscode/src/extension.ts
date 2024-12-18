@@ -18,7 +18,7 @@
 // See https://stackoverflow.com/questions/37534890/inversify-js-reflect-hasownmetadata-is-not-a-function
 import 'reflect-metadata'
 // The other imports.
-import { DebugOptions, SetRenderOptionAction } from '@kieler/klighd-core'
+import { ChangeColorThemeAction, DebugOptions, SetRenderOptionAction } from '@kieler/klighd-core'
 import { diagramType } from '@kieler/klighd-core/lib/base/external-helpers'
 import { Action, ActionMessage, isAction } from 'sprotty-protocol'
 import { registerLspEditCommands } from 'sprotty-vscode'
@@ -78,6 +78,7 @@ export function activate(context: vscode.ExtensionContext): void {
                         registerCommands(webviewPanelManager, context)
                         registerLspEditCommands(webviewPanelManager, context, { extensionPrefix: 'klighd-vscode' })
                         registerTextEditorSync(webviewPanelManager, context)
+                        registerChangeColorTheme(webviewPanelManager)
 
                         // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
                         LspHandler.init(client)
@@ -192,4 +193,16 @@ function isLanguageClient(client: unknown): client is LanguageClient {
 
 function isFileEndingsArray(array: unknown): array is string[] {
     return Array.isArray(array) && array.every((val) => typeof val === 'string')
+}
+/**
+ * Hook into VS Code's theme change and notify the webview to check the current colors and send them to the server.
+ */
+function registerChangeColorTheme(manager: KLighDWebviewPanelManager) {
+    vscode.window.onDidChangeActiveColorTheme(() => {
+        for (const endpoint of manager.endpoints) {
+            endpoint.sendAction({
+                kind: ChangeColorThemeAction.KIND,
+            })
+        }
+    })
 }

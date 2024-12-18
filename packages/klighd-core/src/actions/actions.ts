@@ -101,7 +101,7 @@ export namespace CheckedImagesAction {
 }
 
 /**
- * Sent internally to notify KLighD that the color theme has changed. Will trigger a subsequent 
+ * Sent internally to notify KLighD that the color theme has changed. Will trigger a subsequent
  * ClientColorPreferencesAction to be triggered and sent.
  */
 export interface ChangeColorThemeAction extends Action {
@@ -142,9 +142,9 @@ export namespace ClientColorPreferencesAction {
  * The color preferences data class, indicating diagram colors to be used by syntheses.
  */
 export interface ColorPreferences {
-    foreground: string,
-    background: string,
-    highlight: string,
+    foreground: string
+    background: string
+    highlight: string
 }
 
 /**
