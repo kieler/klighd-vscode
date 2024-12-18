@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,44 +15,54 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { saveAs } from 'file-saver';
-import { RefreshDiagramAction } from "@kieler/klighd-interactive/lib/actions";
+import { saveAs } from 'file-saver'
+import { RefreshDiagramAction } from '@kieler/klighd-interactive/lib/actions'
 import {
+    DeleteInLayerPredecessorOfConstraintAction,
+    DeleteInLayerSuccessorOfConstraintAction,
     DeleteLayerConstraintAction,
     DeletePositionConstraintAction,
+    DeleteRelativeConstraintsAction,
     DeleteStaticConstraintAction,
+    SetInLayerPredecessorOfConstraintAction,
+    SetInLayerSuccessorOfConstraintAction,
     SetLayerConstraintAction,
     SetPositionConstraintAction,
     SetStaticConstraintAction,
-} from "@kieler/klighd-interactive/lib/layered/actions";
+} from '@kieler/klighd-interactive/lib/layered/actions'
 import {
     RectPackDeletePositionConstraintAction,
     RectPackSetPositionConstraintAction,
     SetAspectRatioAction,
-} from "@kieler/klighd-interactive/lib/rect-packing/actions";
-import { inject, injectable } from "inversify";
+} from '@kieler/klighd-interactive/lib/rect-packing/actions'
+import { TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions'
+import { inject, injectable, optional } from 'inversify'
 import {
     ActionHandlerRegistry,
-    BringToFrontAction,
     DiagramServerProxy,
-    GetViewportAction,
     ICommand,
     SetModelCommand,
     SwitchEditModeAction,
     TYPES,
-    ViewportResult,
-} from "sprotty";
+} from 'sprotty'
 import {
     Action,
     ActionMessage,
+    ComputedBoundsAction,
+    BringToFrontAction,
     findElement,
     generateRequestId,
+    IModelLayoutEngine,
     RequestModelAction,
+    GetViewportAction,
     RequestPopupModelAction,
     SelectAction,
+    SetModelAction,
     SetPopupModelAction,
+    SModelRoot,
     UpdateModelAction,
-} from "sprotty-protocol";
+    ViewportResult,
+} from 'sprotty-protocol'
 import {
     ChangeColorThemeAction,
     CheckedImagesAction,
@@ -64,57 +74,64 @@ import {
     PerformActionAction,
     RefreshLayoutAction,
     StoreImagesAction,
-} from "./actions/actions";
-import { GoToBookmarkAction } from "./bookmarks/bookmark";
-import { BookmarkRegistry } from "./bookmarks/bookmark-registry";
-import { DISymbol } from "./di.symbols";
-import { RequestDiagramPieceAction, SetDiagramPieceAction } from './diagram-pieces/actions';
-import { GridDiagramPieceRequestManager, IDiagramPieceRequestManager } from './diagram-pieces/diagram-piece-request-manager';
-import { RequestKlighdPopupModelAction } from "./hover/hover";
-import { PopupModelProvider } from "./hover/popup-provider";
-import { RenderOptionsRegistry, ResizeToFit } from "./options/render-options-registry";
-import { IncrementalDiagramGeneratorOption, PreferencesRegistry } from "./preferences-registry";
-import { Connection, SessionStorage } from "./services";
-import { SetSynthesisAction } from "./syntheses/actions";
-import { UpdateDepthMapModelAction } from "./update/update-depthmap-model";
+} from './actions/actions'
+import { GoToBookmarkAction } from './bookmarks/bookmark'
+import { BookmarkRegistry } from './bookmarks/bookmark-registry'
+import { DISymbol } from './di.symbols'
+import { RequestDiagramPieceAction, SetDiagramPieceAction } from './diagram-pieces/actions'
+import {
+    GridDiagramPieceRequestManager,
+    IDiagramPieceRequestManager,
+} from './diagram-pieces/diagram-piece-request-manager'
+import { RequestKlighdPopupModelAction } from './hover/hover'
+import { PopupModelProvider } from './hover/popup-provider'
+import { RenderOptionsRegistry, ResizeToFit } from './options/render-options-registry'
+import { ClientLayoutOption, IncrementalDiagramGeneratorOption, PreferencesRegistry } from './preferences-registry'
+import { Connection, ServiceTypes, SessionStorage } from './services'
+import { SetSynthesisAction } from './syntheses/actions'
+import { UpdateDepthMapModelAction } from './update/update-depthmap-model'
 
 /**
- * This class extends {@link DiagramServer} to handle different `klighd-core` specific
+ * This class extends {@link DiagramServerProxy} to handle different `klighd-core` specific
  * actions and forward them to the server is required.
  */
 @injectable()
 export class KlighdDiagramServer extends DiagramServerProxy {
     /** Generic connection to the server used to send and receive actions. */
-    private _connection: Connection;
+    private _connection: Connection
 
-    childrenToRequestQueue: IDiagramPieceRequestManager = new GridDiagramPieceRequestManager
+    childrenToRequestQueue: IDiagramPieceRequestManager = new GridDiagramPieceRequestManager()
     // childrenToRequestQueue: IDiagramPieceRequestManager = new QueueDiagramPieceRequestManager
 
-    @inject(SessionStorage) private sessionStorage: SessionStorage;
-    @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider;
-    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry;
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
-    @inject(DISymbol.BookmarkRegistry) private bookmarkRegistry: BookmarkRegistry;
+    @inject(ServiceTypes.SessionStorage) private sessionStorage: SessionStorage
 
+    @inject(TYPES.IPopupModelProvider) private popupModelProvider: PopupModelProvider
 
-    constructor(@inject(Connection) connection: Connection) {
-        super();
-        this._connection = connection;
-        connection.onMessageReceived(this.messageReceived.bind(this));
+    @inject(DISymbol.PreferencesRegistry) private preferencesRegistry: PreferencesRegistry
+
+    @inject(DISymbol.RenderOptionsRegistry) @optional() private renderOptionsRegistry: RenderOptionsRegistry
+
+    @inject(DISymbol.BookmarkRegistry) @optional() private bookmarkRegistry: BookmarkRegistry
+
+    @inject(TYPES.IModelLayoutEngine) @optional() protected layoutEngine?: IModelLayoutEngine
+
+    constructor(@inject(ServiceTypes.Connection) connection: Connection) {
+        super()
+        this._connection = connection
+        connection.onMessageReceived(this.messageReceived.bind(this))
     }
 
     protected sendMessage(message: ActionMessage): void {
-        this._connection.sendMessage(message);
+        this._connection.sendMessage(message)
     }
 
     messageReceived(message: ActionMessage): void {
-        super.messageReceived(message);
+        super.messageReceived(message)
 
         const wasDiagramModelUpdated =
-            message.action.kind === SetModelCommand.KIND ||
-            message.action.kind === UpdateModelAction.KIND;
+            message.action.kind === SetModelCommand.KIND || message.action.kind === UpdateModelAction.KIND
         if (wasDiagramModelUpdated) {
-            this.actionDispatcher.dispatch(UpdateDepthMapModelAction.create());
+            this.actionDispatcher.dispatch(UpdateDepthMapModelAction.create())
 
             if (this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)) {
                 // After model is received request first piece.
@@ -126,23 +143,25 @@ export class KlighdDiagramServer extends DiagramServerProxy {
                 this.childrenToRequestQueue.reset()
                 this.actionDispatcher.dispatch(RequestDiagramPieceAction.create(generateRequestId(), '$root'))
             }
-            if (this.bookmarkRegistry.initialBookmark) {
+            if (this.bookmarkRegistry && this.bookmarkRegistry.initialBookmark) {
                 this.actionDispatcher.dispatch(GoToBookmarkAction.create(this.bookmarkRegistry.initialBookmark))
-            } else if (this.renderOptionsRegistry.getValue(ResizeToFit)) {
-                this.actionDispatcher.dispatch(KlighdFitToScreenAction.create(true));
+            } else if (this.renderOptionsRegistry && this.renderOptionsRegistry.getValue(ResizeToFit)) {
+                this.actionDispatcher.dispatch(KlighdFitToScreenAction.create(true))
             }
         } else if (message.action.kind === SetDiagramPieceAction.KIND) {
             // add any children of the requested piece as stubs into queue
             if ((message.action as SetDiagramPieceAction).diagramPiece.children !== undefined) {
                 const children = (message.action as SetDiagramPieceAction).diagramPiece.children!
-                children.forEach(element => {
+                children.forEach((element) => {
                     // FIXME: not all types of children should be added here, edges for example are already
                     //        complete as they can't have any own children
-                    this.childrenToRequestQueue.enqueue((message.action as SetDiagramPieceAction).diagramPiece.id, element)
-                });
+                    this.childrenToRequestQueue.enqueue(
+                        (message.action as SetDiagramPieceAction).diagramPiece.id,
+                        element
+                    )
+                })
             }
             if (this.childrenToRequestQueue.front() !== undefined) {
-
                 // get viewport
                 this.actionDispatcher.dispatch(GetViewportAction.create())
             }
@@ -158,63 +177,70 @@ export class KlighdDiagramServer extends DiagramServerProxy {
             case ChangeColorThemeAction.KIND:
                 return false;
             case PerformActionAction.KIND:
-                return true;
+                return true
             case RefreshDiagramAction.KIND:
-                return true;
+                return true
             case RefreshLayoutAction.KIND:
-                return true;
+                return true
             case RequestDiagramPieceAction.KIND:
-                return true;
+                return true
             case SetSynthesisAction.KIND:
-                return true;
+                return true
             case KlighdExportSvgAction.KIND:
-                return this.handleExportSvgAction(action as KlighdExportSvgAction);
+                return this.handleExportSvgAction(action as KlighdExportSvgAction)
+            default:
+            // Do nothing.
         }
-        return super.handleLocally(action);
+        return super.handleLocally(action)
     }
 
-
     protected handleExportSvgAction(action: KlighdExportSvgAction): boolean {
-        const blob = new Blob([action.svg], {type: "text/plain;charset=utf-8"});
+        const blob = new Blob([action.svg], { type: 'text/plain;charset=utf-8' })
         const fileName = action.uri.split('/').pop()
         let name = 'diagram'
         if (fileName) {
             // Get file name
-            name = fileName.split('.')[0]
+            ;[name] = fileName.split('.')
         }
-        saveAs(blob, name + '.svg');
-        return false;
+        saveAs(blob, `${name}.svg`)
+        return false
     }
 
     initialize(registry: ActionHandlerRegistry): void {
-        super.initialize(registry);
+        super.initialize(registry)
 
         // Register the KLighD specific new actions.
-        registry.register(BringToFrontAction.KIND, this);
-        registry.register(CheckImagesAction.KIND, this);
-        registry.register(CheckedImagesAction.KIND, this);
+        registry.register(BringToFrontAction.KIND, this)
+        registry.register(CheckImagesAction.KIND, this)
+        registry.register(CheckedImagesAction.KIND, this)
         registry.register(ClientColorPreferencesAction.KIND, this);
         registry.register(ChangeColorThemeAction.KIND, this);
-        registry.register(DeleteLayerConstraintAction.KIND, this);
-        registry.register(DeletePositionConstraintAction.KIND, this);
-        registry.register(DeleteStaticConstraintAction.KIND, this);
-        registry.register(PerformActionAction.KIND, this);
-        registry.register(RectPackSetPositionConstraintAction.KIND, this);
-        registry.register(RectPackDeletePositionConstraintAction.KIND, this);
-        registry.register(RefreshDiagramAction.KIND, this);
-        registry.register(RefreshLayoutAction.KIND, this);
-        registry.register(RequestPopupModelAction.KIND, this);
-        registry.register(RequestDiagramPieceAction.KIND, this);
-        registry.register(SetAspectRatioAction.KIND, this);
-        registry.register(SetLayerConstraintAction.KIND, this);
-        registry.register(SetPositionConstraintAction.KIND, this);
-        registry.register(SetStaticConstraintAction.KIND, this);
-        registry.register(SetSynthesisAction.KIND, this);
-        registry.register(StoreImagesAction.KIND, this);
-        registry.register(SwitchEditModeAction.KIND, this);
-        registry.register(SelectAction.KIND, this);
-        registry.register(SetDiagramPieceAction.KIND, this);
-        registry.register(ViewportResult.KIND, this);
+        registry.register(DeleteLayerConstraintAction.KIND, this)
+        registry.register(DeletePositionConstraintAction.KIND, this)
+        registry.register(DeleteStaticConstraintAction.KIND, this)
+        registry.register(DeleteRelativeConstraintsAction.KIND, this)
+        registry.register(DeleteInLayerPredecessorOfConstraintAction.KIND, this)
+        registry.register(DeleteInLayerSuccessorOfConstraintAction.KIND, this)
+        registry.register(PerformActionAction.KIND, this)
+        registry.register(RectPackSetPositionConstraintAction.KIND, this)
+        registry.register(RectPackDeletePositionConstraintAction.KIND, this)
+        registry.register(RefreshDiagramAction.KIND, this)
+        registry.register(RefreshLayoutAction.KIND, this)
+        registry.register(RequestPopupModelAction.KIND, this)
+        registry.register(RequestDiagramPieceAction.KIND, this)
+        registry.register(SetAspectRatioAction.KIND, this)
+        registry.register(SetLayerConstraintAction.KIND, this)
+        registry.register(SetPositionConstraintAction.KIND, this)
+        registry.register(SetStaticConstraintAction.KIND, this)
+        registry.register(SetInLayerPredecessorOfConstraintAction.KIND, this)
+        registry.register(SetInLayerSuccessorOfConstraintAction.KIND, this)
+        registry.register(SetSynthesisAction.KIND, this)
+        registry.register(StoreImagesAction.KIND, this)
+        registry.register(SwitchEditModeAction.KIND, this)
+        registry.register(SelectAction.KIND, this)
+        registry.register(SetDiagramPieceAction.KIND, this)
+        registry.register(TreeSetPositionConstraintAction.KIND, this)
+        registry.register(ViewportResult.KIND, this)
     }
 
     handle(action: Action): void | ICommand | Action {
@@ -233,42 +259,40 @@ export class KlighdDiagramServer extends DiagramServerProxy {
 
         if (action.kind === BringToFrontAction.KIND || action.kind === SwitchEditModeAction.KIND) {
             // Actions that should be ignored and not further handled by this diagram server
-            return;
+            return
         }
 
         if (action.kind === CheckImagesAction.KIND) {
-            this.handleCheckImages(action as CheckImagesAction);
+            this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === ChangeColorThemeAction.KIND) {
             this.handleChangeColorTheme();
         } else if (action.kind === StoreImagesAction.KIND) {
-            this.handleStoreImages(action as StoreImagesAction);
+            this.handleStoreImages(action as StoreImagesAction)
         } else if (action.kind === RequestPopupModelAction.KIND) {
             // Handle RequestPopupModelAction if they are modified RequestKlighdPopupModelAction.
             // Other PopupModel requests are simply ignored.
             if (RequestKlighdPopupModelAction.isThisAction(action))
-                this.handleRequestKlighdPopupModel(action as RequestKlighdPopupModelAction);
+                this.handleRequestKlighdPopupModel(action as RequestKlighdPopupModelAction)
         } else if (action.kind === RequestDiagramPieceAction.KIND) {
             this.handleRequestDiagramPiece(action as RequestDiagramPieceAction)
         } else if (action.kind === ViewportResult.KIND) {
             this.handleViewportResult(action as ViewportResult)
         } else {
-            super.handle(action);
+            super.handle(action)
         }
     }
 
     handleCheckImages(action: CheckImagesAction): void {
         // check in local storage, if these images are already stored. If not, send back a request for those images.
-        const notCached: Pair<string, string>[] = [];
+        const notCached: Pair<string, string>[] = []
         for (const image of (action as CheckImagesAction).images) {
-            const id = KlighdDiagramServer.imageToSessionStorageString(
-                image.bundleName,
-                image.imagePath
-            );
-            if (!this.sessionStorage.getItem(id)) {
-                notCached.push({ k: image.bundleName, v: image.imagePath });
+            const id = KlighdDiagramServer.imageToSessionStorageString(image.bundleName, image.imagePath)
+            // "URI" as bundle name implies that the image path is a URI that should be resolved locally.
+            if (!this.sessionStorage.getItem(id) && image.bundleName !== 'URI') {
+                notCached.push({ k: image.bundleName, v: image.imagePath })
             }
         }
-        this.actionDispatcher.dispatch(CheckedImagesAction.create(notCached));
+        this.actionDispatcher.dispatch(CheckedImagesAction.create(notCached))
     }
 
     handleChangeColorTheme(): void {
@@ -283,13 +307,10 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     handleStoreImages(action: StoreImagesAction): void {
         // Put the new images in session storage.
         for (const imagePair of (action as StoreImagesAction).images) {
-            const imageIdentifier = imagePair.k;
-            const id = KlighdDiagramServer.imageToSessionStorageString(
-                imageIdentifier.k,
-                imageIdentifier.v
-            );
-            const imageString = imagePair.v;
-            this.sessionStorage.setItem(id, imageString);
+            const imageIdentifier = imagePair.k
+            const id = KlighdDiagramServer.imageToSessionStorageString(imageIdentifier.k, imageIdentifier.v)
+            const imageString = imagePair.v
+            this.sessionStorage.setItem(id, imageString)
         }
     }
 
@@ -300,7 +321,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
      * @param imagePath The image path of the image.
      */
     private static imageToSessionStorageString(bundleName: string, imagePath: string) {
-        return bundleName + ":" + imagePath;
+        return `${bundleName}:${imagePath}`
     }
 
     /**
@@ -308,15 +329,62 @@ export class KlighdDiagramServer extends DiagramServerProxy {
      * which is stored as a protected property in the super class.
      */
     handleRequestKlighdPopupModel(action: RequestKlighdPopupModelAction): boolean {
-        const element = findElement(this.currentRoot, action.elementId);
+        const element = findElement(this.currentRoot, action.elementId)
         if (element) {
-            const model = this.popupModelProvider.getPopupModel(action, element);
+            const model = this.popupModelProvider.getPopupModel(action, element)
 
             if (model) {
-                this.actionDispatcher.dispatch(SetPopupModelAction.create(model));
+                this.actionDispatcher.dispatch(SetPopupModelAction.create(model))
             }
         }
-        return false;
+        return false
+    }
+
+    // Super class behavior, except taking the needsClientLayout preference into account instead of the client option.
+    override handleRequestModel(action: RequestModelAction): boolean {
+        const needsClientLayout = !!this.preferencesRegistry.getValue(ClientLayoutOption)
+        const needsServerLayout = !needsClientLayout
+
+        const newOptions = {
+            needsClientLayout,
+            needsServerLayout,
+            ...action.options,
+        }
+        const newAction = {
+            ...action,
+            options: newOptions,
+        }
+        this.forwardToServer(newAction)
+        return false
+    }
+
+    // Behavior adapted from the super class and modified to the behavior of the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    handleComputedBounds(action: ComputedBoundsAction): boolean {
+        if (!this.preferencesRegistry.getValue(ClientLayoutOption)) {
+            return false
+        }
+        const root = this.currentRoot
+        this.computedBoundsApplicator.apply(root, action)
+        this.doSubmitModel(root, root.type === this.lastSubmittedModelType, action)
+        return false
+    }
+
+    // Behavior taken from the DiagramServer to allow this proxy to the Java diagram server to still be able to perform the layout locally.
+    private async doSubmitModel(newRoot: SModelRoot, update: boolean, cause?: Action): Promise<void> {
+        if (this.layoutEngine) {
+            newRoot = await this.layoutEngine.layout(newRoot)
+        }
+        const modelType = newRoot.type
+        if (cause && cause.kind === RequestModelAction.KIND) {
+            const { requestId } = cause as RequestModelAction
+            const response = SetModelAction.create(newRoot, requestId)
+            this.actionDispatcher.dispatch(response)
+        } else if (update && modelType === this.lastSubmittedModelType) {
+            this.actionDispatcher.dispatch(UpdateModelAction.create(newRoot))
+        } else {
+            this.actionDispatcher.dispatch(SetModelAction.create(newRoot))
+        }
+        this.lastSubmittedModelType = modelType
     }
 
     handleRequestDiagramPiece(action: RequestDiagramPieceAction): void {

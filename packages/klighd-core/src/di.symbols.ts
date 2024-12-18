@@ -17,15 +17,17 @@
 
 /** DI Symbols for Services provided by the KLighD DI container. */
 export const DISymbol = {
-    Sidebar: Symbol("Sidebar"),
-    SidebarPanel: Symbol("SidebarPanel"),
-    SidebarPanelRegistry: Symbol("SidebarPanelRegistry"),
+    Sidebar: Symbol('Sidebar'),
+    SidebarPanel: Symbol('SidebarPanel'),
+    SidebarPanelRegistry: Symbol('SidebarPanelRegistry'),
 
-    PreferencesRegistry: Symbol("PreferencesRegistry"),
+    PreferencesRegistry: Symbol('PreferencesRegistry'),
 
-    OptionsRenderer: Symbol("OptionsRenderer"),
-    OptionsRegistry: Symbol("OptionsRegistry"),
-    RenderOptionsRegistry: Symbol("RenderOptionsRegistry"),
-    SynthesesRegistry: Symbol("SynthesesRegistry"),
-    BookmarkRegistry: Symbol("BookmarkRegistry"),
-};
+    OptionsRenderer: Symbol('OptionsRenderer'),
+    OptionsRegistry: Symbol('OptionsRegistry'),
+    RenderOptionsRegistry: Symbol('RenderOptionsRegistry'),
+    SynthesesRegistry: Symbol('SynthesesRegistry'),
+    BookmarkRegistry: Symbol('BookmarkRegistry'),
+
+    ProxyView: Symbol('ProxyView'),
+}

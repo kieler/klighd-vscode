@@ -1,0 +1,19 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/lsp/requestmessage.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "requestMessage",
+    "allOf": [{"$ref": "message.json"}],
+    "required": ["method"],
+    "properties": {
+        "id": {
+            "type": ["number", "string"]
+        },
+        "method": {
+            "type": "string",
+            "enum": ["requestMessage"]
+        },
+        "params": {
+            "type": ["array", "object"]
+        }
+    }
+}

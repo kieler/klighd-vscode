@@ -24,6 +24,7 @@ related, web-based packages. The packages are seperated in two types:
 | ------------- | ------ |
 | 0.1.0–0.2.1   | 2.1.0  |
 | 0.3.0–0.4.2   | 2.2.0  |
+| 0.5.0-0.6.0   | 3.0.2  |
 
 Moreover, the default branches of both repositories should be compatible but might experience regression.
 
@@ -31,7 +32,7 @@ Moreover, the default branches of both repositories should be compatible but mig
 
 ### Requirements
 
-Development of this project requires [Node.js _v14.x_](https://nodejs.org) and
+Development of this project requires [Node.js _v16.x_](https://nodejs.org) and
 [yarn _v1.x_](https://classic.yarnpkg.com/).
 
 Developing the `klighd-vscode` extension requires an extension that has a dependency on
@@ -77,7 +78,7 @@ The VS Code extension for this language server can be found
 
 1. Fulfill the requirements above.
 1. Run `yarn` in the monorepo root to install all dependencies (if not already done).
-1. (only on the first build:) Run `yarn build` to first do a sequential build to link the internal dependencies.  
+1. (only on the first build:) Run `yarn build` to first do a sequential build to link the internal dependencies.
 1. Run `yarn watch` in the monorepo root to watch all packages for changes.
 1. Run `yarn start` or `yarn socket` in the _applications/klighd-cli_ folder to start a web-server,
    serving the standalone view.

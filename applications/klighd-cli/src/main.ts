@@ -15,9 +15,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import "./styles/main.css";
-import "@kieler/klighd-core/styles/main.css";
-import "reflect-metadata";
+import './styles/main.css'
+import '@kieler/klighd-core/styles/main.css'
+import 'reflect-metadata'
 import {
     createKlighdDiagramContainer,
     requestModel,
@@ -25,41 +25,45 @@ import {
     bindServices,
     SetInitialBookmarkAction,
     Bookmark,
-    SetPreferencesAction
-} from "@kieler/klighd-core";
-import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from "./helpers";
-import { showPopup } from "./popup";
-import { LSPConnection } from "./services/connection";
-import { LocalStorage } from "./services/persistence";
-import { showSpinner, hideSpinner } from "./spinner";
+    SetPreferencesAction,
+} from '@kieler/klighd-core'
+import { getBookmarkViewport, getDiagramSourceUri, getLanguageId, readSearchParam, sleep } from './helpers'
+import { showPopup } from './popup'
+import { LSPConnection } from './services/connection'
+import { LocalStorage } from './services/persistence'
+import { showSpinner, hideSpinner } from './spinner'
+import 'setimmediate' // polyfill for webpack >=5
+// Block comments declaring the used global variables for eslint.
+/* global location, sessionStorage */
 
 // IIFE booting the application
-(async function main() {
-    const sourceUri = getDiagramSourceUri();
+// eslint-disable-next-line import/newline-after-import
+;(async function main() {
+    const sourceUri = getDiagramSourceUri()
 
     if (!sourceUri) {
         showPopup(
-            "warn",
-            "Wrong usage",
-            "Please specify a file URI to your diagram as a search parameter. (?source=...)",
+            'warn',
+            'Wrong usage',
+            'Please specify a file URI to your diagram as a search parameter. (?source=...)',
             { persist: true }
-        );
-        return;
+        )
+        return
     }
 
     try {
-        showSpinner("Initializing connection...");
-        await initDiagramView(sourceUri);
-        hideSpinner();
+        showSpinner('Initializing connection...')
+        await initDiagramView(sourceUri)
+        hideSpinner()
     } catch (e) {
-        console.error(e);
+        console.error(e)
         showPopup(
-            "error",
-            "Initialization error",
-            "Something went wrong while initializing the diagram. Please reload and try again."
-        );
+            'error',
+            'Initialization error',
+            'Something went wrong while initializing the diagram. Please reload and try again.'
+        )
     }
-})();
+})()
 
 /**
  * Opens a connection to the LS, prepares the `klighd-core` view and start a
@@ -67,53 +71,52 @@ import { showSpinner, hideSpinner } from "./spinner";
  * @see `klighd-core` for more getting started information.
  */
 async function initDiagramView(sourceUri: string) {
-    const languageId = getLanguageId(sourceUri);
-    const socketUrl = `ws://${location.host}/socket`;
+    const languageId = getLanguageId(sourceUri)
+    const socketUrl = `ws://${location.host}/socket`
 
-    const connection = new LSPConnection();
-    const persistenceStorage = new LocalStorage();
+    const connection = new LSPConnection()
+    const persistenceStorage = new LocalStorage()
 
-    if (readSearchParam("clearData") === "true") persistenceStorage.clear();
+    if (readSearchParam('clearData') === 'true') persistenceStorage.clear()
 
-    const diagramContainer = createKlighdDiagramContainer("sprotty");
-    bindServices(diagramContainer, { connection, sessionStorage, persistenceStorage });
+    const diagramContainer = createKlighdDiagramContainer('sprotty')
+    bindServices(diagramContainer, { connection, sessionStorage, persistenceStorage })
 
-    const actionDispatcher = getActionDispatcher(diagramContainer);
+    const actionDispatcher = getActionDispatcher(diagramContainer)
 
-    sendUrlSearchParamPreferences(actionDispatcher);
+    sendUrlSearchParamPreferences(actionDispatcher)
     setInitialBookmark(actionDispatcher)
 
     // Connect to a language server and request a diagram.
-    await connection.connect(socketUrl);
-    await connection.sendInitialize(persistenceStorage.getAllData());
-    connection.sendDocumentDidOpen(sourceUri, languageId);
+    await connection.connect(socketUrl)
+    await connection.sendInitialize(persistenceStorage.getAllData())
+    connection.sendDocumentDidOpen(sourceUri, languageId)
     // If this does not sleep for bit, the LS send two requestTextBounds and updateOptions actions.
     // Properly because the document changes, when the server still reads the document from "openDocument".
     // There is no way to await a sent notification in the vscode-languageclient api, so we can not wait until
     // the document is opened.
     // This tries to find a sweet-spot between not sacrificing user experience and
     // giving the server an opportunity to fully read the file before a model is requested.
-    await sleep(500);
-    await requestModel(actionDispatcher, sourceUri);
-
+    await sleep(500)
+    await requestModel(actionDispatcher, sourceUri)
 }
 
 /** Communicates preferences to the diagram container which are read from the url search params. */
 function sendUrlSearchParamPreferences(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
     actionDispatcher.dispatch(
-        SetPreferencesAction.create([{
-            id:"diagram.resizeToFit",
-            value:(readSearchParam("resizeToFit") === "false" ? false : true)
-        }])
-    );
+        SetPreferencesAction.create([
+            {
+                id: 'diagram.resizeToFit',
+                value: readSearchParam('resizeToFit') !== 'false',
+            },
+        ])
+    )
 }
 
 /** Set an initial Position based on the bookmark Parameters. */
 function setInitialBookmark(actionDispatcher: ReturnType<typeof getActionDispatcher>) {
-    const viewport = getBookmarkViewport();
+    const viewport = getBookmarkViewport()
     if (viewport) {
-        actionDispatcher.dispatch(
-            SetInitialBookmarkAction.create(new Bookmark(viewport, "From URI"))
-        );
+        actionDispatcher.dispatch(SetInitialBookmarkAction.create(new Bookmark(viewport, 'From URI')))
     }
 }

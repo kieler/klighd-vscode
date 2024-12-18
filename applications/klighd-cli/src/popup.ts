@@ -15,51 +15,47 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import "./styles/popup.css";
+import './styles/popup.css'
+/* global document, HTMLElement */
 
 interface PopupOptions {
     /** The created popup will not be hidden automatically. */
-    persist: boolean;
+    persist: boolean
 }
 
-type PopupType = "info" | "warn" | "error";
+type PopupType = 'info' | 'warn' | 'error'
 
 /**
  * Creates a popup message to notify the user about an important event.
  * The popup is automatically removed after 10 seconds.
  */
-export function showPopup(
-    type: PopupType,
-    title: string,
-    message: string,
-    options?: Partial<PopupOptions>
-): void {
-    const container = document.querySelector("#popup-container");
-    if (!container) throw new Error("No Popup Container found in current DOM!");
+export function showPopup(type: PopupType, title: string, message: string, options?: Partial<PopupOptions>): void {
+    const container = document.querySelector('#popup-container')
+    if (!container) throw new Error('No Popup Container found in current DOM!')
 
-    const popupEle = createPopupElement(title, message);
-    popupEle.classList.add(`popup--${type}`);
-    container.appendChild(popupEle);
+    const popupEle = createPopupElement(title, message)
+    popupEle.classList.add(`popup--${type}`)
+    container.appendChild(popupEle)
 
     if (!options?.persist) {
         // Hide the Popup after 10 seconds
-        setTimeout(() => container.removeChild(popupEle), 10000);
+        setTimeout(() => container.removeChild(popupEle), 10000)
     }
 }
 
 function createPopupElement(title: string, message: string): HTMLElement {
-    const containerEle = document.createElement("div");
-    containerEle.classList.add("popup");
+    const containerEle = document.createElement('div')
+    containerEle.classList.add('popup')
 
-    const titleEle = document.createElement("h4");
-    titleEle.classList.add("popup__title");
-    titleEle.innerText = title;
-    containerEle.appendChild(titleEle);
+    const titleEle = document.createElement('h4')
+    titleEle.classList.add('popup__title')
+    titleEle.innerText = title
+    containerEle.appendChild(titleEle)
 
-    const msgEle = document.createElement("p");
-    msgEle.classList.add("popup__message");
-    msgEle.innerHTML = message;
-    containerEle.appendChild(msgEle);
+    const msgEle = document.createElement('p')
+    msgEle.classList.add('popup__message')
+    msgEle.innerHTML = message
+    containerEle.appendChild(msgEle)
 
-    return containerEle;
+    return containerEle
 }

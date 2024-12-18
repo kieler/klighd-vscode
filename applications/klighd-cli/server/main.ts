@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,22 +18,24 @@
 // to be used for development or as a deployable server. For distribution, the
 // CLI at klighd.ts should be used.
 
-import { createServer } from "./server";
-import { join } from "path";
-import { getArgValue, parseIntOrUndefined } from "./helpers";
+import { join } from 'path'
+import { createServer } from './server'
+import { getArgValue, parseIntOrUndefined } from './helpers'
 
 // IIFE to start the server and listen for requests
-(async function main() {
-    const defaultLSPath = join(__dirname, `../language-server.jar`);
+// eslint-disable-next-line import/newline-after-import
+;(async function main() {
+    const defaultLSPath = join(__dirname, `../language-server.jar`)
 
-    const lsPort = parseIntOrUndefined(getArgValue("ls_port"));
-    const lsPath = getArgValue("ls_path") ?? defaultLSPath;
+    const lsPort = parseIntOrUndefined(getArgValue('ls_port'))
+    const lsPath = getArgValue('ls_path') ?? defaultLSPath
 
-    const server = createServer({ logging: "debug", lsPort, lsPath });
+    const server = createServer({ logging: 'debug', lsPort, lsPath })
+    const address = getArgValue('address') ?? undefined
     try {
-        await server.listen(8000);
+        await server.listen(8000, address)
     } catch (error) {
-        server.log.error(error);
-        process.exit(1);
+        server.log.error(error)
+        process.exit(1)
     }
-})();
+})()

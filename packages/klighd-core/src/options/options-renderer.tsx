@@ -16,15 +16,16 @@
  */
 
 /** @jsx html */
-import { inject, injectable } from "inversify";
-import { VNode } from "snabbdom";
-import { html, IActionDispatcher, TYPES } from "sprotty"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { inject, injectable } from 'inversify'
+import { VNode } from 'snabbdom'
+import { html, IActionDispatcher, TYPES } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { DISymbol } from '../di.symbols'
 import {
     PerformOptionsActionAction,
     SetLayoutOptionsAction,
     SetRenderOptionAction,
     SetSynthesisOptionsAction,
-} from "./actions";
+} from './actions'
 import {
     CheckOption,
     ChoiceOption,
@@ -32,7 +33,7 @@ import {
     TextOption,
     SeparatorOption,
     CategoryOption,
-} from "./components/option-inputs";
+} from './components/option-inputs'
 import {
     DisplayedActionData,
     LayoutOptionUIData,
@@ -40,23 +41,26 @@ import {
     RangeOption as RangeOptionData,
     Type,
     RenderOption,
-    TransformationOptionType
-} from "./option-models";
+    TransformationOptionType,
+} from './option-models'
+import { RenderOptionsRegistry } from './render-options-registry'
 
 // Note: Skipping a JSX children by rendering null or undefined for that child does not work the same way
 // as it works in React. It will render the literals as words. To skip a child return an empty string "".
 // See: https://github.com/snabbdom/snabbdom/issues/123
 
 interface AllOptions {
-    actions: DisplayedActionData[];
-    layoutOptions: LayoutOptionUIData[];
-    synthesisOptions: SynthesisOption[];
+    actions: DisplayedActionData[]
+    layoutOptions: LayoutOptionUIData[]
+    synthesisOptions: SynthesisOption[]
 }
 
 /** Renderer that is capable of rendering different option models to jsx. */
 @injectable()
 export class OptionsRenderer {
-    @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher;
+    @inject(TYPES.IActionDispatcher) actionDispatcher: IActionDispatcher
+
+    @inject(DISymbol.RenderOptionsRegistry) renderOptionsRegistry: RenderOptionsRegistry
 
     /**
      * Renders all diagram options that are provided by the server. This includes
@@ -66,17 +70,15 @@ export class OptionsRenderer {
         return (
             <div class-options="true">
                 {options.actions.length === 0 ? (
-                    ""
+                    ''
                 ) : (
                     <div class-options__section="true">
                         <h5 class-options__heading="true">Actions</h5>
-                        <div class-options__button-group="true">
-                            {this.renderActions(options.actions)}
-                        </div>
+                        <div class-options__button-group="true">{this.renderActions(options.actions)}</div>
                     </div>
                 )}
                 {options.synthesisOptions.length === 0 ? (
-                    ""
+                    ''
                 ) : (
                     <div class-options__section="true">
                         <h5 class-options__heading="true">Synthesis Options</h5>
@@ -84,7 +86,7 @@ export class OptionsRenderer {
                     </div>
                 )}
                 {options.layoutOptions.length === 0 ? (
-                    ""
+                    ''
                 ) : (
                     <div class-options__section="true">
                         <h5 class-options__heading="true">Layout Options</h5>
@@ -92,10 +94,10 @@ export class OptionsRenderer {
                     </div>
                 )}
             </div>
-        );
+        )
     }
 
-    private renderActions(actions: DisplayedActionData[]): (VNode | "")[] | "" {
+    private renderActions(actions: DisplayedActionData[]): (VNode | '')[] | '' {
         return actions.map((action) => (
             <button
                 class-options__button="true"
@@ -105,11 +107,11 @@ export class OptionsRenderer {
             >
                 {action.displayedName}
             </button>
-        ));
+        ))
     }
 
     private handleActionClick(actionId: string) {
-        this.actionDispatcher.dispatch(PerformOptionsActionAction.create(actionId));
+        this.actionDispatcher.dispatch(PerformOptionsActionAction.create(actionId))
     }
 
     /**
@@ -119,7 +121,7 @@ export class OptionsRenderer {
     private renderSynthesisOptions(
         synthesisOptions: SynthesisOption[],
         category: SynthesisOption | null
-    ): (VNode | "")[] | "" {
+    ): (VNode | '')[] | '' {
         return synthesisOptions
             .filter((option) => option.category?.id === category?.id)
             .map((option) => {
@@ -134,7 +136,7 @@ export class OptionsRenderer {
                                 description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             />
-                        );
+                        )
                     case TransformationOptionType.CHOICE:
                         return (
                             <ChoiceOption
@@ -146,7 +148,7 @@ export class OptionsRenderer {
                                 description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             />
-                        );
+                        )
                     case TransformationOptionType.RANGE:
                         return (
                             <RangeOption
@@ -161,7 +163,7 @@ export class OptionsRenderer {
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                                 onInput={this.handleSynthesisOptionInput.bind(this, option)}
                             />
-                        );
+                        )
                     case TransformationOptionType.TEXT:
                         return (
                             <TextOption
@@ -172,9 +174,9 @@ export class OptionsRenderer {
                                 description={option.description}
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             />
-                        );
+                        )
                     case TransformationOptionType.SEPARATOR:
-                        return <SeparatorOption key={option.id} name={option.name} />;
+                        return <SeparatorOption key={option.id} name={option.name} />
                     case TransformationOptionType.CATEGORY:
                         return (
                             <CategoryOption
@@ -186,33 +188,27 @@ export class OptionsRenderer {
                                 onChange={this.handleSynthesisOptionChange.bind(this, option)}
                             >
                                 {/* Skip rendering the children if the category is closed */}
-                                {!option.currentValue
-                                    ? ""
-                                    : this.renderSynthesisOptions(synthesisOptions, option)}
+                                {!option.currentValue ? '' : this.renderSynthesisOptions(synthesisOptions, option)}
                             </CategoryOption>
-                        );
+                        )
                     default:
-                        console.error("Unsupported option type for option:", option.name);
-                        return "";
+                        console.error('Unsupported option type for option:', option.name)
+                        return ''
                 }
-            });
+            })
     }
 
     /** Handler for synthesis options onChange. */
     private handleSynthesisOptionChange(option: SynthesisOption, newValue: any) {
-        this.actionDispatcher.dispatch(
-            SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }])
-        );
+        this.actionDispatcher.dispatch(SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }]))
     }
 
     /** Handler for synthesis options onInput, e.g. while a slider is being dragged. */
     private handleSynthesisOptionInput(option: SynthesisOption, newValue: any) {
-        this.actionDispatcher.dispatch(
-            SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }], false)
-        );
+        this.actionDispatcher.dispatch(SetSynthesisOptionsAction.create([{ ...option, currentValue: newValue }], false))
     }
 
-    private renderLayoutOptions(layoutOptions: LayoutOptionUIData[]): (VNode | "")[] | "" {
+    private renderLayoutOptions(layoutOptions: LayoutOptionUIData[]): (VNode | '')[] | '' {
         return layoutOptions.map((option) => {
             switch (option.type) {
                 case Type.INT:
@@ -230,7 +226,7 @@ export class OptionsRenderer {
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
                             onInput={this.handleLayoutOptionInput.bind(this, option)}
                         />
-                    );
+                    )
                 case Type.BOOLEAN:
                     return (
                         <CheckOption
@@ -241,7 +237,7 @@ export class OptionsRenderer {
                             description={option.description}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
                         />
-                    );
+                    )
                 case Type.ENUM:
                     return (
                         <ChoiceOption
@@ -254,106 +250,105 @@ export class OptionsRenderer {
                             description={option.description}
                             onChange={this.handleLayoutOptionChange.bind(this, option)}
                         />
-                    );
+                    )
                 default:
-                    console.error("Unsupported option type for option:", option.name);
-                    return "";
+                    console.error('Unsupported option type for option:', option.name)
+                    return ''
             }
-        });
+        })
     }
 
     /** Handler for layout options onChange. */
     private handleLayoutOptionChange(option: LayoutOptionUIData, newValue: any) {
-        this.actionDispatcher.dispatch(
-            SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }])
-        );
+        this.actionDispatcher.dispatch(SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }]))
     }
 
     /** Handler for layout options onInput, e.g. while a slider is being dragged. */
     private handleLayoutOptionInput(option: LayoutOptionUIData, newValue: any) {
         this.actionDispatcher.dispatch(
             SetLayoutOptionsAction.create([{ optionId: option.optionId, value: newValue }], false)
-        );
+        )
     }
 
     /** Renders render options that are stored in the client. An example would be "show constraints" */
-    renderRenderOptions(renderOptions: RenderOption[], renderCategory?: RenderOption): (VNode | "")[] | "" {
-        if (renderOptions.length === 0) return "";
+    renderRenderOptions(
+        renderOptions: RenderOption[],
+        debug: boolean,
+        renderCategory?: RenderOption
+    ): (VNode | '')[] | '' {
+        if (renderOptions.length === 0) return ''
 
         return renderOptions
-            .filter(option => !option.invisible)
-            .filter(option => option.renderCategory === renderCategory?.id)
+            .filter((option) => debug || !option.debug)
+            .filter((option) => option.renderCategory === renderCategory?.id)
             .map((option) => {
-            switch (option.type) {
-                case TransformationOptionType.CHECK:
-                    return (
-                        <CheckOption
-                            key={option.id}
-                            id={option.id}
-                            name={option.name}
-                            value={option.currentValue}
-                            description={option.description}
-                            onChange={this.handleRenderOptionChange.bind(this, option)}
-                        />
-                    );
-                case TransformationOptionType.RANGE:
-                    return (
-                        <RangeOption
-                            key={option.id}
-                            id={option.id}
-                            name={option.name}
-                            value={option.currentValue}
-                            minValue={(option as RangeOptionData).range.first}
-                            maxValue={(option as RangeOptionData).range.second}
-                            stepSize={(option as RangeOptionData).stepSize}
-                            description={option.description}
-                            onChange={this.handleRenderOptionChange.bind(this, option)}
-                            // Same as onChange
-                            onInput={this.handleRenderOptionChange.bind(this, option)}
-                        />
-                    );
-                case TransformationOptionType.CATEGORY:
-                    return (
-                        <CategoryOption
-                            key={option.id}
-                            id={option.id}
-                            name={option.name}
-                            value={option.currentValue}
-                            description={option.description}
-                            onChange={this.handleRenderOptionChange.bind(this, option)}
-                        >
-                            {/* Skip rendering the children if the category is closed */}
-                            {!option.currentValue
-                                ? ""
-                                : this.renderRenderOptions(renderOptions, option)}
-                        </CategoryOption>
-                    );
-                case TransformationOptionType.CHOICE:
-                    if (option.values) {
+                switch (option.type) {
+                    case TransformationOptionType.CHECK:
                         return (
-                            <ChoiceOption
+                            <CheckOption
                                 key={option.id}
                                 id={option.id}
                                 name={option.name}
                                 value={option.currentValue}
-                                availableValues={option.values}
                                 description={option.description}
                                 onChange={this.handleRenderOptionChange.bind(this, option)}
                             />
-                        );
-                    } else {
-                        console.error("No choice values for option:", option.name);
-                        return "";
-                    }
-                default:
-                    console.error("Unsupported option type for option:", option.name);
-                    return "";
-            }
-        });
+                        )
+                    case TransformationOptionType.RANGE:
+                        return (
+                            <RangeOption
+                                key={option.id}
+                                id={option.id}
+                                name={option.name}
+                                value={option.currentValue}
+                                minValue={(option as RangeOptionData).range.first}
+                                maxValue={(option as RangeOptionData).range.second}
+                                stepSize={(option as RangeOptionData).stepSize}
+                                description={option.description}
+                                onChange={this.handleRenderOptionChange.bind(this, option)}
+                                // Same as onChange
+                                onInput={this.handleRenderOptionChange.bind(this, option)}
+                            />
+                        )
+                    case TransformationOptionType.CATEGORY:
+                        return (
+                            <CategoryOption
+                                key={option.id}
+                                id={option.id}
+                                name={option.name}
+                                value={option.currentValue}
+                                description={option.description}
+                                onChange={this.handleRenderOptionChange.bind(this, option)}
+                            >
+                                {/* Skip rendering the children if the category is closed */}
+                                {!option.currentValue ? '' : this.renderRenderOptions(renderOptions, debug, option)}
+                            </CategoryOption>
+                        )
+                    case TransformationOptionType.CHOICE:
+                        if (option.values) {
+                            return (
+                                <ChoiceOption
+                                    key={option.id}
+                                    id={option.id}
+                                    name={option.name}
+                                    value={option.currentValue}
+                                    availableValues={option.values}
+                                    description={option.description}
+                                    onChange={this.handleRenderOptionChange.bind(this, option)}
+                                />
+                            )
+                        }
+                        console.error('No choice values for option:', option.name)
+                        return ''
+                    default:
+                        console.error('Unsupported option type for option:', option.name)
+                        return ''
+                }
+            })
     }
 
     /** Handler for render options onChange. */
     private handleRenderOptionChange(option: RenderOption, newValue: any) {
-        this.actionDispatcher.dispatch(SetRenderOptionAction.create(option.id, newValue));
+        this.actionDispatcher.dispatch(SetRenderOptionAction.create(option.id, newValue))
     }
 }

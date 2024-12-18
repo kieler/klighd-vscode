@@ -1,0 +1,29 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/lsp/textDocumentDocumentHighlight.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "textDocument/documentHighlight",
+    "allOf": [{"$ref": "requestMessage.json"}],
+    "required": ["method", "params"],
+    "properties": {
+        "method": {
+            "type": "string",
+            "enum": ["textDocument/documentHighlight"]
+        },
+        "params": {
+            "type": "object",
+            "properties": {
+                "textDocument": {
+                    "type":"object",
+                    "properties": {
+                        "uri": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "position": {
+                    "$ref": "range.json#/editorPosition"
+                }
+            }
+        }
+    }
+}

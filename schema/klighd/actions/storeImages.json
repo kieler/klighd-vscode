@@ -1,0 +1,27 @@
+
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/actions/storeImages.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "storeImages",
+    "type": "object",
+    "allOf": [{"$ref": "../../sprotty/actions/action.json"}],
+    "required": ["kind", "images"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["storeImages"]
+        },
+        "images": {
+            "type": "object",
+            "required": ["k", "v"],
+            "properties": {
+                "k": {
+                    "$ref": "checkedImages.json#/definitions/notCachedImage"
+                },
+                "v": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

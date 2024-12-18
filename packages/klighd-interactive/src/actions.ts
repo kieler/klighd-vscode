@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020-2021 by
+ * Copyright 2020-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,21 +14,42 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { Action } from 'sprotty-protocol';
-import { DeleteConstraint } from './layered/constraint-types';
+import { Action, JsonMap } from 'sprotty-protocol'
+import { DeleteConstraint } from './layered/constraint-types'
 
 /**
- * A sprotty action to refresh the diagram. Send from client to server.
+ * A sprotty action to refresh the diagram. Sent from client to server.
  */
 export interface RefreshDiagramAction extends Action {
     kind: typeof RefreshDiagramAction.KIND
+    options?: JsonMap
 }
 
 export namespace RefreshDiagramAction {
     export const KIND = 'refreshDiagram'
 
-    export function create(): RefreshDiagramAction {
+    export function create(options?: JsonMap): RefreshDiagramAction {
+        return {
+            kind: KIND,
+            options,
+        }
+    }
+}
+
+/**
+ * A sprotty action to refresh the layout. Sent from client to server.
+ */
+export interface RefreshLayoutAction extends Action {
+    kind: typeof RefreshLayoutAction.KIND
+}
+
+export namespace RefreshLayoutAction {
+    export const KIND = 'refreshLayout'
+
+    export function create(): RefreshLayoutAction {
         return {
             kind: KIND,
         }

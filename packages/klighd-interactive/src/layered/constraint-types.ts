@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019, 2020 by
+ * Copyright 2019 - 2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,15 +15,20 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Direction } from "../constraint-classes"
+import { Direction } from '../constraint-classes'
 
 /**
  * A layer visualization data class for the interactive layered approach.
  */
 export class Layer {
+    id: number
+
     begin: number
+
     end: number
+
     mid: number
+
     /**
      * Where up is, is determined by the direction
      */
@@ -33,18 +38,19 @@ export class Layer {
      * Where low is, is determined by the direction
      */
     bottomBorder: number
+
     /**
      * 0: UNDEFINED, 1: RIGHT, 2: LEFT, 3: DOWN, 4: UP
      */
     direction: Direction
 
-    constructor(leftX: number, rightX: number, mid: number, direction: Direction) {
+    constructor(id: number, leftX: number, rightX: number, mid: number, direction: Direction) {
+        this.id = id
         this.begin = leftX
         this.end = rightX
         this.mid = mid
         this.direction = direction
     }
-
 }
 
 /**
@@ -59,8 +65,10 @@ export class DeleteConstraint {
  */
 export class LayerConstraint {
     id: string
+
     layer: number
-    layerCons: number
+
+    layerConstraint: number
 }
 
 /**
@@ -68,8 +76,10 @@ export class LayerConstraint {
  */
 export class PositionConstraint {
     id: string
+
     position: number
-    posCons: number
+
+    positionConstraint: number
 }
 
 /**
@@ -77,8 +87,30 @@ export class PositionConstraint {
  */
 export class StaticConstraint {
     id: string
+
     layer: number
+
     position: number
-    posCons: number
-    layerCons: number
+
+    positionConstraint: number
+
+    layerConstraint: number
+}
+
+/**
+ * Data class for a in layer predecessor of constraint.
+ */
+export class InLayerPredecessorOfConstraint {
+    id: string
+
+    referencedNode: string
+}
+
+/**
+ * Data class for a in layer successor of constraint.
+ */
+export class InLayerSuccessorOfConstraint {
+    id: string
+
+    referencedNode: string
 }

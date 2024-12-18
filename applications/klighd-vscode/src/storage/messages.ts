@@ -19,7 +19,7 @@
 // to communicate data from the webview that should be persisted.
 
 /** Generic template literal type that adds a prefix to the message type. */
-type MessageType<T extends string> = `persistence/${T}`;
+type MessageType<T extends string> = `persistence/${T}`
 
 /**
  * Discriminated Union of messages that is communicated between the webview
@@ -31,7 +31,7 @@ export type PersistenceMessage<T = any> =
     | GetItemsMessage
     | SetItemMessage<T>
     | RemoveItemMessage
-    | ClearMessage;
+    | ClearMessage
 
 /**
  * Report all items that are currently stored.
@@ -39,10 +39,10 @@ export type PersistenceMessage<T = any> =
  * Direction: Extension --> Webview
  */
 export interface ReportItemsMessage {
-    type: MessageType<"reportItems">;
+    type: MessageType<'reportItems'>
     payload: {
-        items: Record<string, any>;
-    };
+        items: Record<string, any>
+    }
 }
 
 /**
@@ -52,11 +52,11 @@ export interface ReportItemsMessage {
  * Direction: Extension --> Webview
  */
 export interface ReportChangeMessage {
-    type: MessageType<"reportChange">;
+    type: MessageType<'reportChange'>
     payload: {
-        type: "set" | "remove" | "clear";
-        affectedKeys?: string[];
-    };
+        type: 'set' | 'remove' | 'clear'
+        affectedKeys?: string[]
+    }
 }
 
 /**
@@ -65,7 +65,7 @@ export interface ReportChangeMessage {
  * Direction: Webview --> Extension
  */
 export interface GetItemsMessage {
-    type: MessageType<"getItems">;
+    type: MessageType<'getItems'>
 }
 
 /**
@@ -74,11 +74,11 @@ export interface GetItemsMessage {
  * Direction: Webview --> Extension
  */
 export interface SetItemMessage<T = any> {
-    type: MessageType<"setItem">;
+    type: MessageType<'setItem'>
     payload: {
-        key: string;
-        value: T;
-    };
+        key: string
+        value: T
+    }
 }
 
 /**
@@ -87,10 +87,10 @@ export interface SetItemMessage<T = any> {
  * Direction: Webview --> Extension
  */
 export interface RemoveItemMessage {
-    type: MessageType<"removeItem">;
+    type: MessageType<'removeItem'>
     payload: {
-        key: string;
-    };
+        key: string
+    }
 }
 
 /**
@@ -99,5 +99,5 @@ export interface RemoveItemMessage {
  * Direction: Webview --> Extension
  */
 export interface ClearMessage {
-    type: MessageType<"clear">;
+    type: MessageType<'clear'>
 }

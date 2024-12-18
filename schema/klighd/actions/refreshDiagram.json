@@ -1,0 +1,25 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/actions/refreshDiagram.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "refreshDiagram",
+    "type": "object",
+    "allOf": [{ "$ref": "../../sprotty/actions/action.json" }],
+    "required": ["kind"],
+    "properties": {
+        "kind": {
+            "type": "string",
+            "enum": ["refreshDiagram"]
+        },
+        "options": {
+            "type": "object",
+            "properties": {
+                "needsClientLayout": {
+                    "type": "boolean"
+                },
+                "needsServerLayout": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

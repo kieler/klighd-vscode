@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2021 by
+ * Copyright 2019 - 2022 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -14,9 +14,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+// We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
+/* eslint-disable no-redeclare */
 
-import { Action } from 'sprotty-protocol';
-import { DeleteConstraint, LayerConstraint, PositionConstraint, StaticConstraint } from './constraint-types';
+import { Action } from 'sprotty-protocol'
+import {
+    DeleteConstraint,
+    InLayerPredecessorOfConstraint,
+    InLayerSuccessorOfConstraint,
+    LayerConstraint,
+    PositionConstraint,
+    StaticConstraint,
+} from './constraint-types'
 
 /**
  * Sent from client to server to set a position and layer constraint.
@@ -127,6 +136,103 @@ export namespace SetPositionConstraintAction {
     export const KIND = 'setPositionConstraint'
 
     export function create(constraint: PositionConstraint): SetPositionConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
+    }
+}
+
+/**
+ * Sent from client to server to set a in layer predecessor of constraint on a node.
+ */
+export interface SetInLayerPredecessorOfConstraintAction extends Action {
+    kind: typeof SetInLayerPredecessorOfConstraintAction.KIND
+    constraint: InLayerPredecessorOfConstraint
+}
+
+export namespace SetInLayerPredecessorOfConstraintAction {
+    export const KIND = 'setILPredOfConstraint'
+
+    export function create(constraint: InLayerPredecessorOfConstraint): SetInLayerPredecessorOfConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
+    }
+}
+
+/**
+ * Sent from client to server to set a in layer successor of constraint on a node.
+ */
+export interface SetInLayerSuccessorOfConstraintAction extends Action {
+    kind: typeof SetInLayerSuccessorOfConstraintAction.KIND
+    constraint: InLayerSuccessorOfConstraint
+}
+
+export namespace SetInLayerSuccessorOfConstraintAction {
+    export const KIND = 'setILSuccOfConstraint'
+
+    export function create(constraint: InLayerSuccessorOfConstraint): SetInLayerSuccessorOfConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
+    }
+}
+
+/**
+ * Sent from client to server to delete relative constraints on a node.
+ */
+export interface DeleteRelativeConstraintsAction extends Action {
+    kind: typeof DeleteRelativeConstraintsAction.KIND
+    constraint: DeleteConstraint
+}
+
+export namespace DeleteRelativeConstraintsAction {
+    export const KIND = 'deleteRelativeConstraints'
+
+    export function create(constraint: DeleteConstraint): DeleteRelativeConstraintsAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
+    }
+}
+
+/**
+ * Sent from client to server to delete InLayerSuccessorOf constraint on a node.
+ * Currently unused.
+ */
+export interface DeleteInLayerSuccessorOfConstraintAction extends Action {
+    kind: typeof DeleteInLayerSuccessorOfConstraintAction.KIND
+    constraint: DeleteConstraint
+}
+
+export namespace DeleteInLayerSuccessorOfConstraintAction {
+    export const KIND = 'deleteILSuccOfConstraint'
+
+    export function create(constraint: DeleteConstraint): DeleteInLayerSuccessorOfConstraintAction {
+        return {
+            kind: KIND,
+            constraint,
+        }
+    }
+}
+
+/**
+ * Sent from client to server to delete inLayerPredecessorOf constraint on a node.
+ * Currently unused.
+ */
+export interface DeleteInLayerPredecessorOfConstraintAction extends Action {
+    kind: typeof DeleteInLayerPredecessorOfConstraintAction.KIND
+    constraint: DeleteConstraint
+}
+
+export namespace DeleteInLayerPredecessorOfConstraintAction {
+    export const KIND = 'deleteILPredOfConstraint'
+
+    export function create(constraint: DeleteConstraint): DeleteInLayerPredecessorOfConstraintAction {
         return {
             kind: KIND,
             constraint,

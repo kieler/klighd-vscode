@@ -2,7 +2,7 @@
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
- * 
+ *
  * Copyright 2021 by
  * + Kiel University
  *   + Department of Computer Science
@@ -15,77 +15,77 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { injectable, inject } from "inversify";
-import { ICommand } from "sprotty";
-import { Action } from "sprotty-protocol";
-import { Registry } from "../base/registry";
-import { DISymbol } from "../di.symbols";
-import { AnimateGoToBookmark, RenderOptionsRegistry } from "../options/render-options-registry";
-import { AddBookmarkAction, Bookmark, DeleteBookmarkAction, GoToBookmarkAction, GoToBookmarkCommand, RenameBookmarkAction, SetInitialBookmarkAction } from "./bookmark";
+import { injectable, inject } from 'inversify'
+import { ICommand } from 'sprotty'
+import { Action } from 'sprotty-protocol'
+import { Registry } from '../base/registry'
+import { DISymbol } from '../di.symbols'
+import { AnimateGoToBookmark, RenderOptionsRegistry } from '../options/render-options-registry'
+import {
+    AddBookmarkAction,
+    Bookmark,
+    DeleteBookmarkAction,
+    GoToBookmarkAction,
+    GoToBookmarkCommand,
+    RenameBookmarkAction,
+    SetInitialBookmarkAction,
+} from './bookmark'
 
 /**
  * A simple {@link Registry} that holds a list of all added Bookmarks
  *
  * Handles CreateBookmark and GoToBookmark actions
- * 
+ *
  */
 @injectable()
 export class BookmarkRegistry extends Registry {
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry
 
-    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry;
+    private _bookmarks: Bookmark[] = []
 
-    private _bookmarks: Bookmark[] = [];
-    private _initialBookmark?: Bookmark;
-    private count = 0;
+    private _initialBookmark?: Bookmark
 
+    private count = 0
+
+    // eslint-disable-next-line consistent-return
     handle(action: Action): void | Action | ICommand {
         if (GoToBookmarkAction.isThisAction(action)) {
-
             return new GoToBookmarkCommand(action, this.renderOptionsRegistry.getValue(AnimateGoToBookmark))
-
-        } else if (SetInitialBookmarkAction.isThisAction(action)) {
-
+        }
+        if (SetInitialBookmarkAction.isThisAction(action)) {
             this._initialBookmark = action.bookmark
             this.addBookmark(this._initialBookmark)
-
         } else if (DeleteBookmarkAction.isThisAction(action)) {
-
-            this.deleteBookmark(action.bookmark_index)
-
+            this.deleteBookmark(action.bookmarkIndex)
         } else if (RenameBookmarkAction.isThisAction(action)) {
-
-            this.updateBookmarkName(action.bookmark_index, action.new_name)
-
+            this.updateBookmarkName(action.bookmarkIndex, action.newName)
         } else if (AddBookmarkAction.isThisAction(action)) {
-
             this.addBookmark(action.bookmark)
-
         }
     }
 
     protected addBookmark(bookmark: Bookmark): void {
-        bookmark.bookmarkIndex = this.count++;
+        bookmark.bookmarkIndex = this.count++
         this._bookmarks.push(bookmark)
-        this.notifyListeners();
+        this.notifyListeners()
     }
 
-    protected deleteBookmark(bookmark_index: number): void {
-        const index = this._bookmarks.findIndex((value) => value.bookmarkIndex === bookmark_index);
+    protected deleteBookmark(bookmarkIndex: number): void {
+        const index = this._bookmarks.findIndex((value) => value.bookmarkIndex === bookmarkIndex)
         this._bookmarks.splice(index, 1)
-        this.notifyListeners();
+        this.notifyListeners()
     }
 
-    protected updateBookmarkName(bookmark_index: number, new_name: string): void {
-        const bm = this._bookmarks.find((bm) => bm.bookmarkIndex === bookmark_index)
-        if (bm) {
-            if (new_name === "") {
-                bm.name = undefined
+    protected updateBookmarkName(bookmarkIndex: number, newName: string): void {
+        const bookmark = this._bookmarks.find((bm) => bm.bookmarkIndex === bookmarkIndex)
+        if (bookmark) {
+            if (newName === '') {
+                bookmark.name = undefined
             } else {
-                bm.name = new_name
+                bookmark.name = newName
             }
-            this.notifyListeners();
+            this.notifyListeners()
         }
-
     }
 
     get initialBookmark(): Bookmark | undefined {
@@ -93,7 +93,6 @@ export class BookmarkRegistry extends Registry {
     }
 
     get bookmarks(): Bookmark[] {
-        return this._bookmarks;
+        return this._bookmarks
     }
-
 }
