@@ -64,8 +64,10 @@ import {
     ViewportResult,
 } from 'sprotty-protocol'
 import {
+    ChangeColorThemeAction,
     CheckedImagesAction,
     CheckImagesAction,
+    ClientColorPreferencesAction,
     KlighdExportSvgAction,
     KlighdFitToScreenAction,
     Pair,
@@ -88,6 +90,7 @@ import { ClientLayoutOption, IncrementalDiagramGeneratorOption, PreferencesRegis
 import { Connection, ServiceTypes, SessionStorage } from './services'
 import { SetSynthesisAction } from './syntheses/actions'
 import { UpdateDepthMapModelAction } from './update/update-depthmap-model'
+/* global document, getComputedStyle */
 
 /**
  * This class extends {@link DiagramServerProxy} to handle different `klighd-core` specific
@@ -167,9 +170,13 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     }
 
     handleLocally(action: Action): boolean {
-        // In contract to the name, this should return true, if the actions should be
+        // In contrast to the name, this should return true, if the actions should be
         // sent to the server. Don't know what the Sprotty folks where thinking when they named it...
         switch (action.kind) {
+            case ClientColorPreferencesAction.KIND:
+                return true
+            case ChangeColorThemeAction.KIND:
+                return false
             case PerformActionAction.KIND:
                 return true
             case RefreshDiagramAction.KIND:
@@ -207,6 +214,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         registry.register(BringToFrontAction.KIND, this)
         registry.register(CheckImagesAction.KIND, this)
         registry.register(CheckedImagesAction.KIND, this)
+        registry.register(ClientColorPreferencesAction.KIND, this)
+        registry.register(ChangeColorThemeAction.KIND, this)
         registry.register(DeleteLayerConstraintAction.KIND, this)
         registry.register(DeletePositionConstraintAction.KIND, this)
         registry.register(DeleteStaticConstraintAction.KIND, this)
@@ -236,6 +245,25 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     }
 
     handle(action: Action): void | ICommand | Action {
+        if (action.kind === RequestModelAction.KIND && getComputedStyle !== undefined) {
+            // On any request model action, also send the current colors with the request, so the initial
+            // syntheses can use the theming of VS Code. Values will be undefined outside of VS Code and should
+            // be ignored.
+            ;(action as RequestModelAction).options = {
+                ...(action as RequestModelAction).options,
+                clientColorPreferenceForeground: getComputedStyle(document.documentElement).getPropertyValue(
+                    '--vscode-editor-foreground'
+                ),
+                clientColorPreferenceBackground: getComputedStyle(document.documentElement).getPropertyValue(
+                    '--vscode-editor-background'
+                ),
+                clientColorPreferenceHighlight: getComputedStyle(document.documentElement).getPropertyValue(
+                    '--vscode-focusBorder'
+                ),
+            }
+            super.handle(action)
+        }
+
         if (action.kind === BringToFrontAction.KIND || action.kind === SwitchEditModeAction.KIND) {
             // Actions that should be ignored and not further handled by this diagram server
             return
@@ -243,6 +271,8 @@ export class KlighdDiagramServer extends DiagramServerProxy {
 
         if (action.kind === CheckImagesAction.KIND) {
             this.handleCheckImages(action as CheckImagesAction)
+        } else if (action.kind === ChangeColorThemeAction.KIND) {
+            this.handleChangeColorTheme()
         } else if (action.kind === StoreImagesAction.KIND) {
             this.handleStoreImages(action as StoreImagesAction)
         } else if (action.kind === RequestPopupModelAction.KIND) {
@@ -270,6 +300,17 @@ export class KlighdDiagramServer extends DiagramServerProxy {
             }
         }
         this.actionDispatcher.dispatch(CheckedImagesAction.create(notCached))
+    }
+
+    handleChangeColorTheme(): void {
+        if (getComputedStyle === undefined) return
+        this.actionDispatcher.dispatch(
+            ClientColorPreferencesAction.create({
+                foreground: getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground'),
+                background: getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background'),
+                highlight: getComputedStyle(document.documentElement).getPropertyValue('--vscode-focusBorder'),
+            })
+        )
     }
 
     handleStoreImages(action: StoreImagesAction): void {
