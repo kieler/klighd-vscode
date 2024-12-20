@@ -15,12 +15,12 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { inject, injectable, postConstruct } from 'inversify'
+import { inject, injectable } from 'inversify'
 import { VNode } from 'snabbdom'
 import { ModelViewer } from 'sprotty'
 import { KlighdFitToScreenAction } from './actions/actions'
 import { DISymbol } from './di.symbols'
-import { ForceLightBackground, RenderOptionsRegistry, ResizeToFit } from './options/render-options-registry'
+import { RenderOptionsRegistry, ResizeToFit } from './options/render-options-registry'
 /* global document */
 
 /**
@@ -37,22 +37,6 @@ export class KlighdModelViewer extends ModelViewer {
     @inject(DISymbol.Sidebar) private sidebar: unknown
 
     @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry
-
-    @postConstruct()
-    init(): void {
-        // Most diagrams are not rendered with different themes in mind. In case
-        // a diagram is hard to read, the user can force a light background.
-        // This toggles such background if the user selects it.
-        this.renderOptionsRegistry.onChange(() => {
-            const baseDiv = document.querySelector(`#${this.options.baseDiv}`)
-
-            if (this.renderOptionsRegistry.getValue(ForceLightBackground)) {
-                baseDiv?.classList.add('light-bg')
-            } else {
-                baseDiv?.classList.remove('light-bg')
-            }
-        })
-    }
 
     protected override onWindowResize(vdom: VNode): void {
         const baseDiv = document.getElementById(this.options.baseDiv)

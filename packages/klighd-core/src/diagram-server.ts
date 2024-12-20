@@ -68,6 +68,7 @@ import {
     CheckedImagesAction,
     CheckImagesAction,
     ClientColorPreferencesAction,
+    ColorThemeKind,
     KlighdExportSvgAction,
     KlighdFitToScreenAction,
     Pair,
@@ -245,25 +246,6 @@ export class KlighdDiagramServer extends DiagramServerProxy {
     }
 
     handle(action: Action): void | ICommand | Action {
-        if (action.kind === RequestModelAction.KIND && getComputedStyle !== undefined) {
-            // On any request model action, also send the current colors with the request, so the initial
-            // syntheses can use the theming of VS Code. Values will be undefined outside of VS Code and should
-            // be ignored.
-            ;(action as RequestModelAction).options = {
-                ...(action as RequestModelAction).options,
-                clientColorPreferenceForeground: getComputedStyle(document.documentElement).getPropertyValue(
-                    '--vscode-editor-foreground'
-                ),
-                clientColorPreferenceBackground: getComputedStyle(document.documentElement).getPropertyValue(
-                    '--vscode-editor-background'
-                ),
-                clientColorPreferenceHighlight: getComputedStyle(document.documentElement).getPropertyValue(
-                    '--vscode-focusBorder'
-                ),
-            }
-            super.handle(action)
-        }
-
         if (action.kind === BringToFrontAction.KIND || action.kind === SwitchEditModeAction.KIND) {
             // Actions that should be ignored and not further handled by this diagram server
             return
@@ -272,7 +254,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         if (action.kind === CheckImagesAction.KIND) {
             this.handleCheckImages(action as CheckImagesAction)
         } else if (action.kind === ChangeColorThemeAction.KIND) {
-            this.handleChangeColorTheme()
+            this.handleChangeColorTheme((action as ChangeColorThemeAction).themeKind)
         } else if (action.kind === StoreImagesAction.KIND) {
             this.handleStoreImages(action as StoreImagesAction)
         } else if (action.kind === RequestPopupModelAction.KIND) {
@@ -302,10 +284,11 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         this.actionDispatcher.dispatch(CheckedImagesAction.create(notCached))
     }
 
-    handleChangeColorTheme(): void {
+    handleChangeColorTheme(kind: ColorThemeKind): void {
         if (getComputedStyle === undefined) return
         this.actionDispatcher.dispatch(
             ClientColorPreferencesAction.create({
+                kind,
                 foreground: getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-foreground'),
                 background: getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-background'),
                 highlight: getComputedStyle(document.documentElement).getPropertyValue('--vscode-focusBorder'),

@@ -74,31 +74,6 @@ export class ResizeToFit implements RenderOption {
     debug = true
 }
 
-/**
- * Uses a light background instead of an applied theme.
- */
-export class ForceLightBackground implements RenderOption {
-    static readonly ID: string = 'force-light-background'
-
-    static readonly NAME: string = 'Use Light Background'
-
-    static readonly DEFAULT: boolean = false
-
-    readonly id: string = ForceLightBackground.ID
-
-    readonly name: string = ForceLightBackground.NAME
-
-    readonly type: TransformationOptionType = TransformationOptionType.CHECK
-
-    readonly initialValue: boolean = ForceLightBackground.DEFAULT
-
-    readonly renderCategory: string = Appearance.ID
-
-    readonly description = 'Use light background regardless of the color scheme.'
-
-    currentValue = ForceLightBackground.DEFAULT
-}
-
 export class ShowConstraintOption implements RenderOption {
     static readonly ID: string = 'show-constraints'
 
@@ -541,7 +516,6 @@ export class RenderOptionsRegistry extends Registry {
         // Appearance
         this.register(Appearance)
 
-        this.register(ForceLightBackground)
         this.register(ShowConstraintOption)
         this.register(Shadows)
 

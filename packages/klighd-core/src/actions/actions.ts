@@ -106,14 +106,16 @@ export namespace CheckedImagesAction {
  */
 export interface ChangeColorThemeAction extends Action {
     kind: typeof ChangeColorThemeAction.KIND
+    themeKind: ColorThemeKind
 }
 
 export namespace ChangeColorThemeAction {
     export const KIND = 'changeColorTheme'
 
-    export function create(): ChangeColorThemeAction {
+    export function create(themeKind: ColorThemeKind): ChangeColorThemeAction {
         return {
             kind: KIND,
+            themeKind,
         }
     }
 }
@@ -139,12 +141,35 @@ export namespace ClientColorPreferencesAction {
 }
 
 /**
+ * Kinds of color themes, as an enum similar to VS Code's ColorThemeKind.
+ */
+export enum ColorThemeKind {
+    /**
+     * Light color theme with light backgrounds and darker writing
+     */
+    LIGHT = 0,
+    /**
+     * Dark color theme with dark backgrounds and lighter writing
+     */
+    DARK = 1,
+    /**
+     * Light color theme with a higher contrast.
+     */
+    HIGH_CONTRAST_LIGHT = 2,
+    /**
+     * Dark color theme with a higher contrast.
+     */
+    HIGH_CONTRAST_DARK = 3,
+}
+
+/**
  * The color preferences data class, indicating diagram colors to be used by syntheses.
  */
 export interface ColorPreferences {
-    foreground: string
-    background: string
-    highlight: string
+    kind: ColorThemeKind
+    foreground: string | undefined
+    background: string | undefined
+    highlight: string | undefined
 }
 
 /**
