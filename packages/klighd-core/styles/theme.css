@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -35,4 +35,18 @@
     --kdc-color-sidebar-font-primary: hsl(0, 0%, 12%);
     --kdc-color-sidebar-icon-primary: hsl(0, 0%, 24%);
     --kdc-color-primary: #0552b5;
+
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --kdc-color-sidebar-background: rgb(37, 37, 37);
+        --kdc-color-sidebar-trigger-background: rgb(37, 37, 37);
+        --kdc-color-sidebar-trigger-background-hover: rgb(4, 57, 94);
+        --kdc-color-sidebar-trigger-background-active: rgb(55, 55, 61);
+        --kdc-color-sidebar-hover-background: rgba(90, 93, 94, 0.31);
+        --kdc-color-sidebar-font-primary: rgb(204, 204, 204);
+        --kdc-color-sidebar-icon-primary: rgb(197, 197, 197);
+        --kdc-color-primary: rgb(0, 127, 212);
+    
+    }
 }
