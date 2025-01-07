@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2024 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -909,6 +909,7 @@ export function renderSingleSVGRect(
                 ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
                 ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
                 ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+                ...(kShadow ? {} : { 'stroke-dashoffset': lineStyles.dashOffset }),
                 ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
                 opacity: kShadow
                     ? colorStyles.opacity
@@ -1110,6 +1111,7 @@ export function renderSingleSVGArc(
                 ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
                 ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
                 ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+                ...(kShadow ? {} : { 'stroke-dashoffset': lineStyles.dashOffset }),
                 ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
                 opacity: kShadow
                     ? colorStyles.opacity
@@ -1186,6 +1188,7 @@ export function renderSingleSVGEllipse(
                 ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
                 ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
                 ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+                ...(kShadow ? {} : { 'stroke-dashoffset': lineStyles.dashOffset }),
                 ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
                 opacity: kShadow
                     ? colorStyles.opacity
@@ -1256,6 +1259,7 @@ export function renderSingleSVGLine(
                 ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
                 ...(kShadow ? {} : { 'stroke-width': lineStyles.lineWidth }),
                 ...(kShadow ? {} : { 'stroke-dasharray': lineStyles.dashArray }),
+                ...(kShadow ? {} : { 'stroke-dashoffset': lineStyles.dashOffset }),
                 ...(kShadow ? {} : { 'stroke-miterlimit': lineStyles.miterLimit }),
                 opacity: kShadow
                     ? colorStyles.opacity

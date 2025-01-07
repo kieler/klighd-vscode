@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2023 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -866,6 +866,7 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         lineCap: lineCap === DEFAULT_LINE_CAP_SVG ? undefined : lineCap,
         lineJoin: lineJoin === DEFAULT_LINE_JOIN_SVG ? undefined : lineJoin,
         dashArray: styles.kLineStyle === undefined ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
+        dashOffset: styles.kLineStyle === undefined ? undefined : styles.kLineStyle.dashOffset?.toString(),
         // Note: Here the miter limit value is also omitted if the value equals KGraph's default value of 10, because otherwise the resulting SVG would
         // always contain the miterLimit style to be set to 10, even though it is not intended by the creator of the KGraph model and it would not
         // even make any difference in the rendering. Here I cannot distinguish if the model creator really wanted to have the specific miter limit of 10
@@ -941,6 +942,7 @@ export interface LineStyles {
     lineCap: 'butt' | 'round' | 'square' | undefined
     lineJoin: 'bevel' | 'miter' | 'round' | undefined
     dashArray: string | undefined
+    dashOffset: string | undefined
     miterLimit: string | undefined
 }
 
