@@ -7,7 +7,8 @@
     "properties": {
         "method": {
             "type": "string",
-            "enum": ["keith/diagramOptions/setLayoutOptions"]
+            "enum": ["keith/diagramOptions/setLayoutOptions"],
+            "default": "keith/diagramOptions/setLayoutOptions"
         },
         "params": {
             "type": "object",

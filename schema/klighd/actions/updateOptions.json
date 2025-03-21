@@ -8,19 +8,23 @@
     "properties": {
         "kind": {
             "type": "string",
-            "enum": ["updateOptions"]
+            "enum": ["updateOptions"],
+            "default": "updateOptions"
         },
         "valuedSynthesisOptions": {
             "type": "array",
             "items": {
                 "$ref": "../SynthesisOptionSchema.json#/definitions/ValuedSynthesisOption"
-            }
+            },
+            "default": []
         },
         "layoutOptions": {
-            "type": "array"
+            "type": "array",
+            "default": []
         },
         "actions": {
-            "type": "array"
+            "type": "array",
+            "default": []
         },
         "modelUri": {
             "type": "string"

@@ -10,7 +10,8 @@
         },
         "method": {
             "type": "string",
-            "enum": ["requestMessage"]
+            "enum": ["requestMessage"],
+            "default": "requestMessage"
         },
         "params": {
             "type": ["array", "object"]

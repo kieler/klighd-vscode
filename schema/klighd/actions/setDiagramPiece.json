@@ -8,7 +8,8 @@
     "properties": {
         "kind": {
             "type": "string",
-            "enum": ["setDiagramPiece"]
+            "enum": ["setDiagramPiece"],
+            "default": "setDiagramPiece"
         },
         "diagramPiece": {
             "$ref": "../SKGraphSchema.json#/definitions/SKNode"

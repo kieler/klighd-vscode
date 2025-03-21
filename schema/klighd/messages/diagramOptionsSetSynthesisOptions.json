@@ -7,7 +7,8 @@
     "properties": {
         "method": {
             "type": "string",
-            "enum": ["keith/diagramOptions/setSynthesisOptions"]
+            "enum": ["keith/diagramOptions/setSynthesisOptions"],
+            "default": "keith/diagramOptions/setSynthesisOptions"
         },
         "params": {
             "type": "object",

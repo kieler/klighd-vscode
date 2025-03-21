@@ -9,7 +9,8 @@
     "properties": {
         "kind": {
             "type": "string",
-            "enum": ["storeImages"]
+            "enum": ["storeImages"],
+            "default": "storeImages"
         },
         "images": {
             "type": "object",

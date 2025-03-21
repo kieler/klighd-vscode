@@ -8,7 +8,8 @@
     "properties": {
         "kind": {
             "type": "string",
-            "enum": ["setModel"]
+            "enum": ["setModel"],
+            "default": "setModel"
         },
         "newRoot": {
             "$ref": "../../klighd/SKGraphSchema.json#/definitions/SKGraph"
