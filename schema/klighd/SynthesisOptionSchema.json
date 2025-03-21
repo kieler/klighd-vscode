@@ -1,25 +1,28 @@
 {
-    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/ValuedSynthesisOption.json",
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/SynthesisOptionSchema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "ValuedSynthesisOption",
+    "title": "SynthesisOptionSchema",
     "type": "object",
-    "required": ["synthesisOption", "currentValue"],
-    "properties": {
-        "synthesisOption": {
-            "anyOf": [
-                {"$ref": "#/definitions/checkSynthesisOption"},
-                {"$ref": "#/definitions/choiceSynthesisOption"},
-                {"$ref": "#/definitions/rangeSynthesisOption"},
-                {"$ref": "#/definitions/textSynthesisOption"},
-                {"$ref": "#/definitions/separatorSynthesisOption"},
-                {"$ref": "#/definitions/categorySynthesisOption"}
-            ]
-        },
-        "currentValue": {
-            "type": ["string", "number", "boolean"]
-        }
-    },
     "definitions": {
+        "ValuedSynthesisOption": {
+            "type": "object",
+            "required": ["synthesisOption", "currentValue"],
+            "properties": {
+                "synthesisOption": {
+                    "anyOf": [
+                        {"$ref": "#/definitions/checkSynthesisOption"},
+                        {"$ref": "#/definitions/choiceSynthesisOption"},
+                        {"$ref": "#/definitions/rangeSynthesisOption"},
+                        {"$ref": "#/definitions/textSynthesisOption"},
+                        {"$ref": "#/definitions/separatorSynthesisOption"},
+                        {"$ref": "#/definitions/categorySynthesisOption"}
+                    ]
+                },
+                "currentValue": {
+                    "type": ["string", "number", "boolean"]
+                }
+            }
+        },
         "SynthesisOption": {
             "type": "object",
             "required": ["id", "name", "type", "sourceHash", "initialValue"],
