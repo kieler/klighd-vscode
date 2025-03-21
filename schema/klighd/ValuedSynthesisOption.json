@@ -51,7 +51,8 @@
             "properties": {
                 "type": {
                     "type": "number",
-                    "enum": [0]
+                    "enum": [0],
+                    "default": 0
                 },
                 "initialValue": {
                     "type": "boolean"
@@ -64,7 +65,8 @@
             "properties": {
                 "type": {
                     "type": "number",
-                    "enum": [1]
+                    "enum": [1],
+                    "default": 1
                 },
                 "initialValue": {
                     "type": "string"
@@ -83,7 +85,8 @@
             "properties": {
                 "type": {
                     "type": "number",
-                    "enum": [2]
+                    "enum": [2],
+                    "default": 2
                 },
                 "initialValue": {
                     "type": "number"
@@ -109,7 +112,8 @@
             "properties": {
                 "type": {
                     "type": "number",
-                    "enum": [3]
+                    "enum": [3],
+                    "default": 3
                 },
                 "initialValue": {
                     "type": "string"
@@ -121,7 +125,8 @@
             "properties": {
                 "type": {
                     "type": "number",
-                    "enum": [4]
+                    "enum": [4],
+                    "default": 4
                 }
             }
         },
@@ -130,7 +135,8 @@
             "properties": {
                 "type": {
                     "type": "number",
-                    "enum": [5]
+                    "enum": [5],
+                    "default": 5
                 },
                 "initialValue": {
                     "type": "boolean"
