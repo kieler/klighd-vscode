@@ -7,7 +7,8 @@
     "properties": {
         "method": {
             "type": "string",
-            "enum": ["general/sendMessage"]
+            "enum": ["general/sendMessage"],
+            "default": "general/sendMessage"
         },
         "params": {
             "type": "array",

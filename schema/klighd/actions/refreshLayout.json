@@ -8,7 +8,8 @@
     "properties": {
         "kind": {
             "type": "string",
-            "enum": ["refreshLayout"]
+            "enum": ["refreshLayout"],
+            "default": "refreshLayout"
         }
     }
 }

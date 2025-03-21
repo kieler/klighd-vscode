@@ -8,7 +8,8 @@
     "properties": {
         "kind": {
             "type": "string",
-            "enum": ["setSyntheses"]
+            "enum": ["setSyntheses"],
+            "default": "setSyntheses"
         },
         "syntheses": {
             "type": "array",
