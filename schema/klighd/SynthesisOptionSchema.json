@@ -3,22 +3,6 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "SynthesisOptionSchema",
     "type": "object",
-    "required": ["synthesisOption", "currentValue"],
-    "properties": {
-        "synthesisOption": {
-            "anyOf": [
-                {"$ref": "#/definitions/checkSynthesisOption"},
-                {"$ref": "#/definitions/choiceSynthesisOption"},
-                {"$ref": "#/definitions/rangeSynthesisOption"},
-                {"$ref": "#/definitions/textSynthesisOption"},
-                {"$ref": "#/definitions/separatorSynthesisOption"},
-                {"$ref": "#/definitions/categorySynthesisOption"}
-            ]
-        },
-        "currentValue": {
-            "type": ["string", "number", "boolean"]
-        }
-    },
     "definitions": {
         "ValuedSynthesisOption": {
             "type": "object",
