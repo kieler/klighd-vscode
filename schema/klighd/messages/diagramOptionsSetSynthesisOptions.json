@@ -16,7 +16,7 @@
                 "synthesisOptions": {
                     "type": "array",
                     "items": {
-                        "$ref": "../ValuedSynthesisOption.json"
+                        "$ref": "../SynthesisOptionSchema.json#/definitions/ValuedSynthesisOption"
                     }
                 },
                 "uri": {
