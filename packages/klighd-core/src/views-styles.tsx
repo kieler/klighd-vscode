@@ -16,6 +16,7 @@
  */
 /** @jsx svg */
 import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import Color = require('color')
 import { VNode } from 'snabbdom'
 import { getZoom, isSelectable, RGBColor, svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry'
@@ -262,10 +263,10 @@ export function getKStyles(
         if (styleList.filter((style) => style.selection === true).length === 0) {
             // ...if no selection styles are available, apply default ones.
             if (isKText(styleHolder)) {
-                styleList = styleList.concat(getDefaultTextSelectionStyles())
+                styleList = styleList.concat(getDefaultTextSelectionStyles(context))
             } else if (styleHolder === getKRendering(parent.data, context)) {
                 // For non-text renderings this only applies to the root rendering
-                styleList = styleList.concat(getDefaultNonTextSelectionStyles())
+                styleList = styleList.concat(getDefaultNonTextSelectionStyles(context))
             }
         }
     }
@@ -286,16 +287,25 @@ export function getKStyles(
  * The default selection styles for text renderings.
  * @returns A list of default selection text styles.
  */
-export function getDefaultTextSelectionStyles(): KStyle[] {
+export function getDefaultTextSelectionStyles(context: SKGraphModelRenderer): KStyle[] {
+    let backgroundColor = Color.rgb(190, 190, 190)
+    if (context.backgroundColor) {
+        if (context.backgroundColor.isDark()) {
+            backgroundColor = context.backgroundColor.lightness(context.backgroundColor.lightness() + 25)
+        } else {
+            backgroundColor = context.backgroundColor.lightness(context.backgroundColor.lightness() - 25)
+        }
+    }
+
     return [
         {
             type: K_BACKGROUND,
             propagateToChildren: false,
             selection: true,
             color: {
-                red: 190,
-                green: 190,
-                blue: 190,
+                red: backgroundColor.red(),
+                green: backgroundColor.green(),
+                blue: backgroundColor.blue(),
             },
             alpha: 255,
             gradientAngle: 0,
@@ -313,16 +323,24 @@ export function getDefaultTextSelectionStyles(): KStyle[] {
  * The default selection styles for non-text renderings.
  * @returns A list of default selection non-text styles.
  */
-export function getDefaultNonTextSelectionStyles(): KStyle[] {
+export function getDefaultNonTextSelectionStyles(context: SKGraphModelRenderer): KStyle[] {
+    let backgroundColor = Color.rgb(190, 190, 190)
+    if (context.backgroundColor) {
+        if (context.backgroundColor.isDark()) {
+            backgroundColor = context.backgroundColor.lightness(context.backgroundColor.lightness() + 25)
+        } else {
+            backgroundColor = context.backgroundColor.lightness(context.backgroundColor.lightness() - 25)
+        }
+    }
     return [
         {
             type: K_BACKGROUND,
             propagateToChildren: false,
             selection: true,
             color: {
-                red: 190,
-                green: 190,
-                blue: 190,
+                red: backgroundColor.red(),
+                green: backgroundColor.green(),
+                blue: backgroundColor.blue(),
             },
             alpha: 255,
             gradientAngle: 0,

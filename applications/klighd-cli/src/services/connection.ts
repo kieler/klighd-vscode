@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,9 +17,9 @@
 
 import * as rpc from 'vscode-ws-jsonrpc'
 import * as lsp from 'vscode-languageserver-protocol'
-import { Connection, NotificationType, ActionMessage } from '@kieler/klighd-core'
+import { Connection, NotificationType, ActionMessage, ColorThemeKind } from '@kieler/klighd-core'
 import { showPopup } from '../popup'
-/* global WebSocket */
+/* global WebSocket, window */
 
 type GeneralMessageParams = [string, 'info' | 'warn' | 'error']
 
@@ -158,8 +158,15 @@ export class LSPConnection implements Connection {
     async sendInitialize(persistedData: Record<string, any>): Promise<void> {
         if (!this.connection) return
 
+        // notify the server about the preferred colors, depending on if the OS prefers light (default) or dark theme.
+        let themeKind = ColorThemeKind.LIGHT
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            // dark mode
+            themeKind = ColorThemeKind.DARK
+        }
+
         const { method } = lsp.InitializeRequest.type
-        // The standalone view does not really has any LSP capabilities
+        // The standalone view does not really have any LSP capabilities
         const initParams: lsp.InitializeParams = {
             processId: null,
             workspaceFolders: null,
@@ -168,6 +175,9 @@ export class LSPConnection implements Connection {
             capabilities: {},
             initializationOptions: {
                 clientDiagramOptions: persistedData,
+                clientColorPreferences: {
+                    kind: themeKind,
+                },
             },
         }
 

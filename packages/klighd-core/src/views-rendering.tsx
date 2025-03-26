@@ -1476,7 +1476,7 @@ export function renderKRendering(
                     height: originalHeight,
                 }
             }
-            // Draw white background for overlaying titles
+            // Draw background for overlaying titles
             if (
                 context.depthMap &&
                 (kRendering.properties['klighd.isNodeTitle'] as boolean) &&
@@ -1486,8 +1486,16 @@ export function renderKRendering(
                 // Don't draw if the rendering is an empty KText
                 (kRendering.type !== K_TEXT || (kRendering as KText).text !== '')
             ) {
+                const backgroundColor = context.backgroundColor ? context.backgroundColor.rgb().string() : 'white'
                 overlayRectangle = (
-                    <rect x={0} y={0} width={originalWidth} height={originalHeight} fill="white" opacity="0.8" />
+                    <rect
+                        x={0}
+                        y={0}
+                        width={originalWidth}
+                        height={originalHeight}
+                        fill={backgroundColor}
+                        opacity="0.8"
+                    />
                 )
             }
         }

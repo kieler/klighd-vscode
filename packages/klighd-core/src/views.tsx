@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2023 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -19,6 +19,7 @@ import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods'
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
 import { renderRelativeConstraint } from '@kieler/klighd-interactive/lib/layered/layered-relative-constraint-view'
+import Color = require('color')
 import { inject, injectable } from 'inversify'
 import { VNode } from 'snabbdom'
 import {
@@ -87,8 +88,20 @@ export class SKGraphView implements IView {
         }
 
         const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`
+        // Look for a synthesis-defined custom background color. If none is found, use 'white' as a
+        // default, assuming the synthesis does not know about theming.
+        let background = 'white'
+        if ((model as any).properties && (model as any).properties['klighd.diagramBackground'] !== undefined) {
+            const theBackground = (model as any).properties['klighd.diagramBackground']
+            const r = theBackground.red ? theBackground.red : 0
+            const g = theBackground.green ? theBackground.green : 0
+            const b = theBackground.blue ? theBackground.blue : 0
+            ctx.backgroundColor = Color.rgb(r, g, b)
+            background = ctx.backgroundColor.string()
+        }
+
         return (
-            <svg class-sprotty-graph={true}>
+            <svg class-sprotty-graph={true} style={{ background: `${background}` }}>
                 <g transform={transform}>{context.renderChildren(model)}</g>
             </svg>
         )

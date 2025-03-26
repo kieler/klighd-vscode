@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2023 by
+ * Copyright 2021-2024 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,7 +18,7 @@
 // See https://stackoverflow.com/questions/37534890/inversify-js-reflect-hasownmetadata-is-not-a-function
 import 'reflect-metadata'
 // The other imports.
-import { DebugOptions, SetRenderOptionAction } from '@kieler/klighd-core'
+import { ChangeColorThemeAction, ColorThemeKind, DebugOptions, SetRenderOptionAction } from '@kieler/klighd-core'
 import { diagramType } from '@kieler/klighd-core/lib/base/external-helpers'
 import { Action, ActionMessage, isAction } from 'sprotty-protocol'
 import { registerLspEditCommands } from 'sprotty-vscode'
@@ -58,6 +58,8 @@ export function activate(context: vscode.ExtensionContext): void {
                 )
                 return
             }
+            // add color preferences to the client's init message
+            setColorTheme(client)
             const storageService = new StorageService(mementoForPersistence, client)
             client.onDidChangeState((stateChangedEvent) => {
                 if (stateChangedEvent.newState === State.Running) {
@@ -78,6 +80,7 @@ export function activate(context: vscode.ExtensionContext): void {
                         registerCommands(webviewPanelManager, context)
                         registerLspEditCommands(webviewPanelManager, context, { extensionPrefix: 'klighd-vscode' })
                         registerTextEditorSync(webviewPanelManager, context)
+                        registerChangeColorTheme(webviewPanelManager)
 
                         // Handle notifications that are KLighD specific extensions of the LSP for this LSClient.
                         LspHandler.init(client)
@@ -192,4 +195,71 @@ function isLanguageClient(client: unknown): client is LanguageClient {
 
 function isFileEndingsArray(array: unknown): array is string[] {
     return Array.isArray(array) && array.every((val) => typeof val === 'string')
+}
+
+/**
+ * Modify the initialization options to send VSCode's current theme.
+ */
+function setColorTheme(client: LanguageClient) {
+    const kind = convertColorThemeKind(vscode.window.activeColorTheme.kind)
+    // const foreground = new vscode.ThemeColor('editor.foreground')
+    // const background = new vscode.ThemeColor('editor.background')
+    // const highlight = new vscode.ThemeColor('focusBorder')
+    // there is no API to get the color of the current theme for these colors, so just hardcode these here.
+    // from https://github.com/microsoft/vscode/blob/main/extensions/theme-defaults/themes/light_vs.json
+    // and https://github.com/microsoft/vscode/blob/main/extensions/theme-defaults/themes/light_modern.json
+    let foreground = '#000000' // editor.foreground
+    let background = '#FFFFFF' // editor.background
+    let highlight = '#005FB8' // focusBorder
+    if (kind === ColorThemeKind.DARK || kind === ColorThemeKind.HIGH_CONTRAST_DARK) {
+        // from https://github.com/microsoft/vscode/blob/main/extensions/theme-defaults/themes/dark_vs.json
+        // and https://github.com/microsoft/vscode/blob/main/extensions/theme-defaults/themes/dark_modern.json
+        foreground = '#D4D4D4' // editor.foreground
+        background = '#1E1E1E' // editor.background
+        highlight = '#0078D4' // focusBorder
+    }
+
+    // Register the current theme in the client's options.
+    client.clientOptions.initializationOptions = {
+        ...client.clientOptions.initializationOptions,
+        clientColorPreferences: {
+            kind,
+            foreground,
+            background,
+            highlight,
+        },
+    }
+}
+
+/**
+ * Hook into VS Code's theme change and notify the webview to check the current colors and send them to the server.
+ */
+function registerChangeColorTheme(manager: KLighDWebviewPanelManager) {
+    // Any future color change should be sent to the KLighD webviews.
+    vscode.window.onDidChangeActiveColorTheme((e: vscode.ColorTheme) => {
+        for (const endpoint of manager.endpoints) {
+            endpoint.sendAction(ChangeColorThemeAction.create(convertColorThemeKind(e.kind)))
+        }
+    })
+}
+
+/**
+ * Convert the vscode.ColorThemeKind to KLighDs own ColorThemeKind.
+ * @param kind VS Code's ColorThemeKind
+ * @returns KLighD'S ColorThemeKind
+ */
+function convertColorThemeKind(kind: vscode.ColorThemeKind): ColorThemeKind {
+    switch (kind) {
+        case vscode.ColorThemeKind.Light:
+            return ColorThemeKind.LIGHT
+        case vscode.ColorThemeKind.Dark:
+            return ColorThemeKind.DARK
+        case vscode.ColorThemeKind.HighContrast:
+            return ColorThemeKind.HIGH_CONTRAST_DARK
+        case vscode.ColorThemeKind.HighContrastLight:
+            return ColorThemeKind.HIGH_CONTRAST_LIGHT
+        default:
+            console.error('error in extension.ts, unknown color theme kind')
+            return ColorThemeKind.LIGHT
+    }
 }

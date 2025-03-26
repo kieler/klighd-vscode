@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2020-2023 by
+ * Copyright 2020-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,6 +17,7 @@
 
 import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
+import Color = require('color')
 import { VNode } from 'snabbdom'
 import {
     IVNodePostprocessor,
@@ -43,6 +44,11 @@ export class SKGraphModelRenderer extends ModelRenderer {
     ) {
         super(viewRegistry, targetKind, postprocessors)
     }
+
+    /**
+     * The background color given by the synthesis, or undefined.
+     */
+    backgroundColor: Color | undefined
 
     /**
      * Map for all bounds related to KRenderingRefs, mapped by their rendering ID.
