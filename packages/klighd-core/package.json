@@ -25,7 +25,9 @@
     },
     "dependencies": {
         "@kieler/klighd-interactive": "^0.6.0",
+        "@types/color": "^4.2.0",
         "@types/file-saver": "^2.0.7",
+        "color": "^4.2.3",
         "elkjs": "^0.8.2",
         "feather-icons": "^4.29.1",
         "file-saver": "^2.0.5",

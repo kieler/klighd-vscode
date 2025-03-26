@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2024 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -19,6 +19,7 @@ import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods'
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
 import { renderRelativeConstraint } from '@kieler/klighd-interactive/lib/layered/layered-relative-constraint-view'
+import Color = require('color')
 import { inject, injectable } from 'inversify'
 import { VNode } from 'snabbdom'
 import {
@@ -95,7 +96,8 @@ export class SKGraphView implements IView {
             const r = theBackground.red ? theBackground.red : 0
             const g = theBackground.green ? theBackground.green : 0
             const b = theBackground.blue ? theBackground.blue : 0
-            background = `rgb(${r},${g},${b})`
+            ctx.backgroundColor = Color.rgb(r, g, b)
+            background = ctx.backgroundColor.string()
         }
 
         return (
