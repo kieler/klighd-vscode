@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2024 by
+ * Copyright 2021-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -35,9 +35,6 @@
 // PrioStatementsActions.SHOW_PRIO_STATEMENTS, de.cau.cs.kieler.scg.klighd.actions.PrioStatementsActions.CHECK381278432
 // OptNodePrioActions.SHOW_OPT_PRIO_ID, de.cau.cs.kieler.scg.klighd.actions.OptNodePrioActions.CHECK248433877
 // SCCActions.SHOW_SCC, de.cau.cs.kieler.scg.klighd.actions.SCCActions.CHECK-1808403223
-//
-// EObjectFallback:
-// - Expand all Details (?) de.cau.cs.kieler.klighd.ide.syntheses.EObjectFallbackSynthesis.CHECK2018483773
 
 /** List of option-ids that are currently not supported and therefore should not be displayed. */
 export const optionsBlacklist = [
@@ -51,5 +48,4 @@ export const optionsBlacklist = [
     'de.cau.cs.kieler.scg.klighd.actions.PrioStatementsActions.CHECK381278432',
     'de.cau.cs.kieler.scg.klighd.actions.OptNodePrioActions.CHECK248433877',
     'de.cau.cs.kieler.scg.klighd.actions.SCCActions.CHECK-1808403223',
-    'de.cau.cs.kieler.klighd.ide.syntheses.EObjectFallbackSynthesis.CHECK2018483773',
 ]
