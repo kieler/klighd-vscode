@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2024 by
+ * Copyright 2021-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -90,7 +90,6 @@ import { RenderOptionsRegistry, ResizeToFit } from './options/render-options-reg
 import { ClientLayoutOption, IncrementalDiagramGeneratorOption, PreferencesRegistry } from './preferences-registry'
 import { Connection, ServiceTypes, SessionStorage } from './services'
 import { SetSynthesisAction } from './syntheses/actions'
-import { UpdateDepthMapModelAction } from './update/update-depthmap-model'
 /* global document, getComputedStyle */
 
 /**
@@ -133,8 +132,6 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         const wasDiagramModelUpdated =
             message.action.kind === SetModelCommand.KIND || message.action.kind === UpdateModelAction.KIND
         if (wasDiagramModelUpdated) {
-            this.actionDispatcher.dispatch(UpdateDepthMapModelAction.create())
-
             if (this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)) {
                 // After model is received request first piece.
 

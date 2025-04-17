@@ -19,13 +19,13 @@ import { KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/li
 import { VNode, VNodeStyle } from 'snabbdom'
 import { svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { Bounds } from 'sprotty-protocol'
-import { DetailLevel } from './depth-map'
 import {
     ShadowOption,
     Shadows,
     SimplifySmallText,
     TextSimplificationThreshold,
     TitleScalingFactor,
+    UseSmartZoom,
 } from './options/render-options-registry'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import {
@@ -70,6 +70,7 @@ import {
     findBoundsAndTransformationData,
     getKRendering,
     getPoints,
+    isFullDetail,
     isRotation,
     isTranslation,
     reverseTransformations,
@@ -1339,12 +1340,6 @@ export function renderKRendering(
         return renderError(kRendering)
     }
 
-    const providingRegion = context.depthMap?.getProvidingRegion(
-        parent as KNode,
-        context.viewport,
-        context.renderOptionsRegistry
-    )
-
     // Check if this is a title rendering. If we have a title, create that rendering, remember where it should be and how much space it has.
     // If we are zoomed in far enough, return that rendering, otherwise put it into the list to be rendered on top by the element rendering.
 
@@ -1355,8 +1350,9 @@ export function renderKRendering(
 
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
+    const useSmartZoom = context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom)
     if (
-        context.depthMap &&
+        useSmartZoom &&
         boundsAndTransformation.bounds.width &&
         boundsAndTransformation.bounds.height &&
         (kRendering.properties['klighd.isNodeTitle'] as boolean)
@@ -1376,7 +1372,7 @@ export function renderKRendering(
             maxScale /= context.viewport.zoom
         }
         if (
-            (((providingRegion && providingRegion.detail !== DetailLevel.FullDetails && parent.children.length > 1) ||
+            (((parent instanceof SKNode && !isFullDetail(parent, context) && parent.children.length > 1) ||
                 context.viewport.zoom < titleScalingFactorOption) &&
                 !isProxy) ||
             scaleProxy
@@ -1407,7 +1403,7 @@ export function renderKRendering(
                     }
                 })
 
-            const parentBounds = providingRegion ? providingRegion.boundingRectangle.bounds : (parent as KNode).bounds
+            const parentBounds = (parent as KNode).bounds
             const originalWidth = trueBoundingBoxAndTransformation.bounds.width
             const originalHeight = trueBoundingBoxAndTransformation.bounds.height
             const originalX = renderingOffsets.x
@@ -1478,10 +1474,9 @@ export function renderKRendering(
             }
             // Draw background for overlaying titles
             if (
-                context.depthMap &&
+                useSmartZoom &&
                 (kRendering.properties['klighd.isNodeTitle'] as boolean) &&
-                (((!providingRegion || providingRegion.detail === DetailLevel.FullDetails) && !isProxy) ||
-                    scaleProxy) &&
+                ((parent instanceof SKNode && isFullDetail(parent, context) && !isProxy) || scaleProxy) &&
                 ((context.viewport.zoom < titleScalingFactorOption && !isProxy) || scaleProxy) &&
                 // Don't draw if the rendering is an empty KText
                 (kRendering.type !== K_TEXT || (kRendering as KText).text !== '')

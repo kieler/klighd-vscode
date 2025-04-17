@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2024 by
+ * Copyright 2021-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -147,6 +147,8 @@ export class UseSmartZoom implements RenderOption {
 
     static readonly NAME: string = 'Smart Zoom'
 
+    static readonly DEFAULT: boolean = true
+
     readonly id: string = UseSmartZoom.ID
 
     readonly name: string = UseSmartZoom.NAME
@@ -194,7 +196,7 @@ export class FullDetailRelativeThreshold implements RangeOption {
 
     readonly description =
         'Shows all children of an element that uses at least the amount of the canvas.' +
-        'A value of 0.2 means an element is shown if its parent has at least 0.2 the size (minimum of width and height) of the canvas.'
+        'A value of 0.2 means an element is shown if its parent has at least 0.2 the size (maximum of width and height) of the canvas.'
 
     currentValue = 0.2
 

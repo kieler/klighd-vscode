@@ -28,7 +28,6 @@ import {
     ViewRegistry,
 } from 'sprotty'
 import { Viewport } from 'sprotty-protocol'
-import { DepthMap } from './depth-map'
 import { RenderOptionsRegistry } from './options/render-options-registry'
 import { EDGE_TYPE, KRenderingLibrary, LABEL_TYPE, NODE_TYPE, PORT_TYPE } from './skgraph-models'
 import { TitleStorage } from './titles/title-storage'
@@ -59,8 +58,6 @@ export class SKGraphModelRenderer extends ModelRenderer {
      * Map for all decoration data (bounds and rotation of decorators) related to KRenderingRefs, mapped by their rendering ID.
      */
     decorationMap: Record<string, unknown>
-
-    depthMap?: DepthMap
 
     /**
      * Access to the rendering library, expected to be defined on the root graph element.

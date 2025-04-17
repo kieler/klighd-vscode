@@ -4,7 +4,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022-2024 by
+ * Copyright 2022-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -33,11 +33,10 @@ import {
     ViewerOptions,
 } from 'sprotty'
 import { angleOfPoint, Bounds, Point } from 'sprotty-protocol'
-import { isDetailWithChildren } from '../depth-map'
 import { RenderOptionsRegistry } from '../options/render-options-registry'
 import { SKGraphModelRenderer } from '../skgraph-model-renderer'
 import { isContainerRendering, isPolyline, K_POLYGON, SKEdge, SKLabel, SKNode, SKPort } from '../skgraph-models'
-import { getKRendering } from '../views-common'
+import { getKRendering, isFullDetail } from '../views-common'
 import { K_BACKGROUND, K_FOREGROUND } from '../views-styles'
 import { ProxyFilter, ProxyFilterAndID } from './filters/proxy-view-filters'
 import { SendProxyViewAction, ShowProxyViewAction } from './proxy-view-actions'
@@ -490,13 +489,7 @@ export class ProxyView extends AbstractUIExtension {
                         if (Canvas.isOnScreen(bounds, canvasGRF)) {
                             // Just partially out of bounds
                             if (node.children.length > 0) {
-                                const region = ctx.depthMap?.getProvidingRegion(
-                                    node,
-                                    ctx.viewport,
-                                    ctx.renderOptionsRegistry
-                                )
-
-                                if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
+                                if (this.useDetailLevel || isFullDetail(node, ctx)) {
                                     // Has children, recursively check them
                                     const childRes = this.getOffAndOnScreenNodes(node, canvasGRF, depth, ctx)
                                     offScreenNodes.push(...childRes.offScreenNodes)
@@ -515,13 +508,7 @@ export class ProxyView extends AbstractUIExtension {
                         onScreenNodes.push(node)
 
                         if (node.children.length > 0) {
-                            const region = ctx.depthMap?.getProvidingRegion(
-                                node,
-                                ctx.viewport,
-                                ctx.renderOptionsRegistry
-                            )
-
-                            if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
+                            if (this.useDetailLevel || isFullDetail(node, ctx)) {
                                 // Has children, recursively check them
                                 const childRes = this.getOffAndOnScreenNodes(node, canvasGRF, depth, ctx)
                                 offScreenNodes.push(...childRes.offScreenNodes)
@@ -545,9 +532,7 @@ export class ProxyView extends AbstractUIExtension {
                     onScreenNodes.push(node)
 
                     if (node.children.length > 0) {
-                        const region = ctx.depthMap?.getProvidingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
-
-                        if (!(this.useDetailLevel && region?.detail) || isDetailWithChildren(region.detail)) {
+                        if (this.useDetailLevel || isFullDetail(node, ctx)) {
                             // Has children, recursively check them
                             const childRes = this.getOffAndOnScreenNodes(node, canvasGRF, depth, ctx)
                             offScreenNodes.push(...childRes.offScreenNodes)
