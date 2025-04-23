@@ -953,18 +953,3 @@ export function isFullDetail(node: SKNode, ctx: SKGraphModelRenderer): boolean {
     // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
     return sizeRelative >= relativeThreshold || scale > scaleThreshold
 }
-
-// FIXME: Do this calculation of the absolute positions and scales somewhere again, maybe simply extend the Sprotty getAbsoluteBounds method. Check with Top-Down layout
-// previous implementation did this in the depthmap:
-
-//             // compute own absolute scale and absolute position based on parent position
-//             const parentAbsoluteScale = (element.parent as any).properties.absoluteScale
-//             const scaleFactor = (element.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] ?? 1
-//             element.properties.absoluteScale = parentAbsoluteScale * scaleFactor
-//
-//             element.properties.absoluteX =
-//                 (current.properties.absoluteX as number) +
-//                 element.bounds.x * (element.properties.absoluteScale as number)
-//             element.properties.absoluteY =
-//                 (current.properties.absoluteY as number) +
-//                 element.bounds.y * (element.properties.absoluteScale as number)

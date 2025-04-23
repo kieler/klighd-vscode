@@ -150,13 +150,10 @@ export function renderChildArea(
     )
 
     // get scale factor and apply to child area
-    if (
-        (parent as any).properties === undefined ||
-        (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] === undefined
-    ) {
+    if (parent.properties === undefined || parent.properties['org.eclipse.elk.topdown.scaleFactor'] === undefined) {
         return element
     }
-    const topdownScaleFactor = (parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
+    const topdownScaleFactor = parent.properties['org.eclipse.elk.topdown.scaleFactor'] as number
     return <g transform={`scale (${topdownScaleFactor})`}>${element}</g>
 }
 

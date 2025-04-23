@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022-2024 by
+ * Copyright 2022-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -60,30 +60,30 @@ export interface TransformAttributes extends Bounds {
 
 /**
  * Contains all canvas-related attributes.
- * CRF - Canvas Reference Frame.
- * The canvas reference frames is the coordinate system defined by the viewport bounds.
+ * VRF - Viewport Reference Frame.
+ * The viewport reference frames is the coordinate system defined by the viewport bounds.
  * The position (0,0) is in the top left corner of the viewport on the canvas. This means
  * that scroll and zoom are already accounted for.
- * GRF - Global Reference Frame.
- * The global reference frame is the coordinate system defined by the svg bounds. The
+ * CRF - Canvas Reference Frame.
+ * The canvas reference frame is the coordinate system defined by the entire svg canvas. The
  * position (0,0) is the top left corner of the svg. All coordinates are absolute
  * positions in the svg.
  * @example (x, y, width, height, scroll, zoom)
  */
 export interface Canvas extends Viewport, Bounds {
     /**
-     * Whether the canvas is in GRF, i.e. not in CRF.
+     * Whether the canvas is in CRF, i.e. not in VRF.
      * Usually doesn't need to be set explicitly - handled by translation methods.
      * When the canvas hasn't been translated yet, this should be `undefined` or `false`,
-     * as the canvas should be in the CRF.
+     * as the canvas should be in the VRF.
      */
-    isInGRF?: boolean
+    isInCRF?: boolean
 }
 
 export namespace Canvas {
     /// / Get Canvas ////
     /**
-     * Creates a canvas in CRF.
+     * Creates a canvas in VRF.
      * @param boundsOrRoot The canvas' bounds or the root element.
      * @param viewport The viewport.
      * @returns The canvas.
@@ -96,14 +96,14 @@ export namespace Canvas {
     /// / Translation ////
 
     /**
-     * Returns the bounds translated from the GRF to the CRF.
+     * Returns the bounds translated from the CRF to the VRF.
      * E.g. calculates its position & width/height according to scroll and zoom.
-     * Inverse to {@link translateToGRF()}.
-     * @param originalBounds The bounds/point/dimension in the GRF.
+     * Inverse to {@link translateToCRF()}.
+     * @param originalBounds The bounds/point/dimension in the CRF.
      * @param canvas The canvas.
-     * @returns The bounds translated to the CRF.
+     * @returns The bounds translated to the VRF.
      */
-    export function translateToCRF(originalBounds: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+    export function translateToVRF(originalBounds: Bounds | Point | Dimension, canvas: Canvas): Bounds {
         const bounds = asBounds(originalBounds)
 
         const { scroll } = canvas
@@ -117,13 +117,13 @@ export namespace Canvas {
     }
 
     /**
-     * Returns the bounds translated from the CRF to the GRF.
-     * Inverse to {@link translateToCRF()}.
-     * @param originalBounds The bounds/point/dimension in the CRF.
+     * Returns the bounds translated from the VRF to the CRF.
+     * Inverse to {@link translateToVRF()}.
+     * @param originalBounds The bounds/point/dimension in the VRF.
      * @param canvas The canvas.
-     * @returns The bounds translated to the GRF.
+     * @returns The bounds translated to the CRF.
      */
-    export function translateToGRF(originalBounds: Bounds | Point | Dimension, canvas: Canvas): Bounds {
+    export function translateToCRF(originalBounds: Bounds | Point | Dimension, canvas: Canvas): Bounds {
         const bounds = asBounds(originalBounds)
 
         const { scroll } = canvas
@@ -137,52 +137,42 @@ export namespace Canvas {
     }
 
     /**
-     * Adds `p1` and `p2` and translates the result to the CRF.
+     * Adds `p1` and `p2` and translates the result to the VRF.
      * @param p1 The first point.
      * @param p2 The second point.
      * @param canvas The canvas.
      */
-    export function translateToCRFAdd(p1: Point, p2: Point, canvas: Canvas): Point {
-        return translateToCRF(Point.add(p1, p2), canvas)
+    export function translateToVRFAdd(p1: Point, p2: Point, canvas: Canvas): Point {
+        return translateToVRF(Point.add(p1, p2), canvas)
     }
 
     /**
-     * Translates the canvas from the GRF to the CRF, if not already in CRF.
-     * Inverse to {@link translateCanvasToGRF()}.
+     * Translates the canvas from the CRF to the VRF, if not already in VRF.
+     * Inverse to {@link translateCanvasToCRF()}.
      * @param canvas The canvas.
-     * @returns The canvas translated to the CRF.
+     * @returns The canvas translated to the VRF.
      */
-    export function translateCanvasToCRF(canvas: Canvas): Canvas {
-        if (canvas.isInGRF) {
-            return { ...canvas, ...translateToCRF(canvas, canvas), isInGRF: false }
+    export function translateCanvasToVRF(canvas: Canvas): Canvas {
+        if (canvas.isInCRF) {
+            return { ...canvas, ...translateToVRF(canvas, canvas), isInCRF: false }
         }
         return canvas
     }
 
     /**
-     * Translates the canvas from the CRF to the GRF, if not already in GRF.
-     * Inverse to {@link translateCanvasToCRF()}.
+     * Translates the canvas from the VRF to the CRF, if not already in CRF.
+     * Inverse to {@link translateCanvasToVRF()}.
      * @param canvas The canvas.
-     * @returns The canvas translated to the GRF.
+     * @returns The canvas translated to the CRF.
      */
-    export function translateCanvasToGRF(canvas: Canvas): Canvas {
-        if (canvas.isInGRF) {
+    export function translateCanvasToCRF(canvas: Canvas): Canvas {
+        if (canvas.isInCRF) {
             return canvas
         }
-        return { ...canvas, ...translateToGRF(canvas, canvas), isInGRF: true }
+        return { ...canvas, ...translateToCRF(canvas, canvas), isInCRF: true }
     }
 
     /// / Functions invariant to Reference Frame ////
-
-    /**
-     * Checks if `bounds` is (partially) on-screen.
-     * Note that `bounds` and `canvas` need to be in the same Reference Frame.
-     * @param bounds The bounds to check.
-     * @returns `true` if `b` is (partially) on-screen.
-     */
-    export function isOnScreen(bounds: Bounds, canvas: Canvas): boolean {
-        return isInBounds(bounds, canvas)
-    }
 
     /**
      * Returns the distance between the bounds and the canvas.
@@ -195,7 +185,7 @@ export namespace Canvas {
      */
     export function distance(bounds: Bounds | Point, canvas: Canvas): number {
         const dist = distanceBetweenBounds(bounds, canvas)
-        return dist * (canvas.isInGRF ? canvas.zoom : 1)
+        return dist * (canvas.isInCRF ? canvas.zoom : 1)
     }
 
     /**
@@ -395,11 +385,11 @@ export namespace Canvas {
         return { ...canvas, x, y, width, height }
     }
 
-    /// / CRF Functions ////
+    /// / VRF Functions ////
 
     /**
      * Returns the given bounds capped to the canvas border w.r.t. the sidebar if enabled.
-     * Note that `bounds` and `canvas` need to be in CRF.
+     * Note that `bounds` and `canvas` need to be in VRF.
      * Also, `bounds` has to contain the absolute position (not relative to parent).
      * @param bounds The bounds/point to cap to the canvas border, absolute.
      * @param canvas The canvas.

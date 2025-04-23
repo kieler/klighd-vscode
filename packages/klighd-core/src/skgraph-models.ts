@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2024 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -27,7 +27,7 @@ import {
     SLabelImpl,
     SModelElementImpl,
 } from 'sprotty'
-import { Bounds, Point } from 'sprotty-protocol'
+import { Bounds, isBounds, Point } from 'sprotty-protocol'
 
 export const NODE_TYPE = 'node'
 export const EDGE_TYPE = 'edge'
@@ -48,6 +48,25 @@ export class SKNode extends KNode {
                 ((this.parent as SKNode).properties['org.eclipse.elk.interactiveLayout'] as boolean)) ||
             feature === popupFeature
         )
+    }
+
+    override localToParent(point: Point | Bounds): Bounds {
+        // `this` is the parent
+        // `point` is the current element, containing its bounds
+
+        const scaleFactor = (this.properties['org.eclipse.elk.topdown.scaleFactor'] as number) ?? 1
+
+        const result = {
+            x: point.x * scaleFactor + this.position.x,
+            y: point.y * scaleFactor + this.position.y,
+            width: -1,
+            height: -1,
+        }
+        if (isBounds(point)) {
+            result.width = point.width * scaleFactor
+            result.height = point.height * scaleFactor
+        }
+        return result
     }
 }
 

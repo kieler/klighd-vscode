@@ -30,19 +30,21 @@ import {
     isBoundsAware,
     isViewport,
     IView,
+    IViewArgs,
     RenderingContext,
     SChildElementImpl,
     SGraphImpl,
-    ShapeView,
     svg, // eslint-disable-line @typescript-eslint/no-unused-vars
     TYPES,
 } from 'sprotty'
+import { Dimension } from 'sprotty-protocol'
 import { SendModelContextAction } from './actions/actions'
 import { DISymbol } from './di.symbols'
 import { overpassMonoRegularStyle, overpassRegularStyle } from './fonts/overpass'
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
+import { getViewportBounds } from './skgraph-utils'
 import { isFullDetail } from './views-common'
 import { getJunctionPointRenderings, getRendering } from './views-rendering'
 import { KStyles } from './views-styles'
@@ -109,11 +111,37 @@ export function parentSKNode(child: SKGraphElement): SKNode {
     return child as SKNode
 }
 
+@injectable()
+export abstract class KGraphElementView implements IView {
+    /**
+     * Check whether the given model element is in the current viewport, with respect to potential top-down scaling.
+     */
+    isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
+        if (context.targetKind === 'hidden') {
+            // Don't hide any element for hidden rendering
+            return true
+        }
+        if (!Dimension.isValid(model.bounds)) {
+            // We should hide only if we know the element's bounds
+            return true
+        }
+        const ab = getViewportBounds(model)
+        // Sprotty's "Canvas" is what we would call "Viewport".
+        const { canvasBounds } = model.root
+
+        return (
+            ab.x <= canvasBounds.width && ab.x + ab.width >= 0 && ab.y <= canvasBounds.height && ab.y + ab.height >= 0
+        )
+    }
+
+    abstract render(model: Readonly<SChildElementImpl>, context: RenderingContext, args?: IViewArgs): VNode | undefined
+}
+
 /**
  * IView component that translates a KNode and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KNodeView extends ShapeView {
+export class KNodeView extends KGraphElementView {
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
 
     isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
@@ -146,10 +174,10 @@ export class KNodeView extends ShapeView {
 
         // Always draw forced renderings, the root or direct children of the root (the first visible nodes) or visible nodes that should be shown according to smart zoom. Skip all remaining ones.
         if (
+            (!this.isVisible(node, context) || !shouldDraw) &&
             !ctx.forceRendering &&
             !(node.parent instanceof SGraphImpl) &&
-            !((node.parent as SKNode).parent instanceof SGraphImpl) &&
-            (!this.isVisible(node, context) || !shouldDraw)
+            !((node.parent as SKNode).parent instanceof SGraphImpl)
         ) {
             // Make sure this node and its children are not drawn as long as it is not on full details.
             node.areChildAreaChildrenRendered = true
@@ -291,7 +319,7 @@ export class KNodeView extends ShapeView {
  * IView component that translates a KPort and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KPortView extends ShapeView {
+export class KPortView extends KGraphElementView {
     isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
         // port visibility OR visibility of child label
         if (super.isVisible(model, context)) {
@@ -374,7 +402,7 @@ export class KPortView extends ShapeView {
  * IView component that translates a KLabel and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KLabelView extends ShapeView {
+export class KLabelView extends KGraphElementView {
     render(label: SKLabel, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
@@ -449,7 +477,7 @@ export class KLabelView extends ShapeView {
  * IView component that translates a KEdge and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KEdgeView extends ShapeView {
+export class KEdgeView extends KGraphElementView {
     isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
         // edge visibility OR visibility of child labels
         // TODO: edge renderings (via decorators) may be larger than the edge bounds. May need to look into renderings.
