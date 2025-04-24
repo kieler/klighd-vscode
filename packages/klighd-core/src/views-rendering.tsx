@@ -1364,13 +1364,18 @@ export function renderKRendering(
         const scaleProxy = isProxy && (kRendering as any).useTitleScaling && (kRendering as any).proxyScale < 1
         if (scaleProxy) {
             // maxScale independant of zoom, use scale of proxy instead
-            maxScale = titleScalingFactorOption / (kRendering as any).proxyScale
+            maxScale /= (kRendering as any).proxyScale
         } else if (context.viewport) {
             maxScale /= context.viewport.zoom
+
+            // include top-down scale differences
+            if (parent instanceof SKNode && parent.properties && parent.properties.absoluteScale) {
+                maxScale /= (parent as SKNode).properties.absoluteScale as number
+            }
         }
         if (
             (((parent instanceof SKNode && !isFullDetail(parent, context) && parent.children.length > 1) ||
-                context.viewport.zoom < titleScalingFactorOption) &&
+                maxScale > 1) &&
                 !isProxy) ||
             scaleProxy
         ) {
@@ -1474,7 +1479,7 @@ export function renderKRendering(
                 useSmartZoom &&
                 (kRendering.properties['klighd.isNodeTitle'] as boolean) &&
                 ((parent instanceof SKNode && isFullDetail(parent, context) && !isProxy) || scaleProxy) &&
-                ((context.viewport.zoom < titleScalingFactorOption && !isProxy) || scaleProxy) &&
+                ((maxScale > 1 && !isProxy) || scaleProxy) &&
                 // Don't draw if the rendering is an empty KText
                 (kRendering.type !== K_TEXT || (kRendering as KText).text !== '')
             ) {

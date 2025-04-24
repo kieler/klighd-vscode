@@ -77,7 +77,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
 
     viewport: Viewport
 
-    /** Used to force rendering independant of the depthMap. Needed by the proxy-view. */
+    /** Used to force rendering independant of smart zoom. Needed by the proxy-view. */
     forceRendering = false
 
     /**
@@ -106,7 +106,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
             .filter((vnode) => vnode !== undefined) as VNode[]
     }
 
-    /** Renders an element forcefully, i.e. independant of the depthMap. */
+    /** Renders an element forcefully, i.e. independant of smart zoom. */
     forceRenderElement(element: SKGraphElement): VNode | undefined {
         const prevForceRendering = this.forceRendering
         this.forceRendering = true
