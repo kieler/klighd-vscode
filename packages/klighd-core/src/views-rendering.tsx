@@ -1347,7 +1347,8 @@ export function renderKRendering(
 
     // If this rendering is the main title rendering of the element, either render it usually if
     // zoomed in far enough or remember it to be rendered later scaled up and overlayed on top of the parent rendering.
-    const useSmartZoom = context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom)
+    const useSmartZoom =
+        context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.targetKind !== 'hidden'
     if (
         useSmartZoom &&
         boundsAndTransformation.bounds.width &&
