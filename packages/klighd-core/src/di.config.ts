@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2024 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -67,7 +67,6 @@ import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions'
 import { SynthesesRegistry } from './syntheses/syntheses-registry'
-import updateDepthMapModule from './update/update-depthmap-module'
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views'
 
 /**
@@ -154,7 +153,6 @@ export default function createContainer(widgetId: string): Container {
         optionsModule,
         sidebarModule,
         kGraphDiagramModule,
-        updateDepthMapModule,
         /* bookmarkModule, */ diagramPieceModule,
         proxyViewModule
     )

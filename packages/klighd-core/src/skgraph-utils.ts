@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2023 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -15,12 +15,21 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import { SModelRootImpl } from 'sprotty'
+import {
+    findParentByFeature,
+    isBoundsAware,
+    isViewport,
+    SChildElementImpl,
+    SModelElementImpl,
+    SModelRootImpl,
+} from 'sprotty'
+import { Bounds } from 'sprotty-protocol'
 import { isProxyRendering } from './proxy-view/proxy-view-util'
 import {
     isContainerRendering,
     isPolyline,
     isRendering,
+    isSKGraphElement,
     KPolyline,
     KRendering,
     K_POLYLINE,
@@ -210,4 +219,84 @@ export function getElementByID(root: SModelRootImpl, id: string, suppressErrors 
     }
 
     return curr
+}
+
+/**
+ * Get the absolute bounds of the graph element with respect to the SVG canvas root, also using top-down scale factors.
+ * This SVG canvas also includes the entire SVG and does not incoperate the viewport. This is different from Sprotty's canvas,
+ * which we would call viewport.
+ * Expects that this function has been called on the parent element before to work correctly.
+ * @param element The element to check and persist the bounds information
+ * @returns the element's bounds w.r.t the canvas. Adds `absoluteX`, `absoluteY`, and `absoluteScale` properties to this element.
+ */
+export function getCanvasBounds(element: SModelElementImpl): Bounds {
+    // to avoid continuous looping up to the root, persist the scale and bounds in the properties.
+    // we expect that getAbsoluteBounds has been called on the parent previously and parent bounds are persisted.
+
+    const boundsElement = findParentByFeature(element, isBoundsAware)
+    // base case for the root node.
+    if (boundsElement instanceof SKNode && boundsElement.root === boundsElement.parent) {
+        boundsElement.properties.absoluteScale = 1
+        boundsElement.properties.absoluteX = boundsElement.bounds.x
+        boundsElement.properties.absoluteY = boundsElement.bounds.y
+        return boundsElement.bounds
+    }
+    // other nodes calculate their absolute bounds relative to their parent.
+    if (boundsElement !== undefined && boundsElement instanceof SChildElementImpl && isSKGraphElement(boundsElement)) {
+        const { bounds } = boundsElement
+        // This needs to be the parent KNode
+        let { parent } = boundsElement
+        while (!(parent instanceof SKNode) && parent instanceof SChildElementImpl) {
+            parent = parent.parent
+        }
+        let scaleFactor = 1
+        let parentScale = 1
+        if (isSKGraphElement(parent)) {
+            scaleFactor = (parent.properties['org.eclipse.elk.topdown.scaleFactor'] as number) ?? 1
+            parentScale = (parent.properties.absoluteScale as number) ?? 1
+        }
+        const absoluteScale = parentScale * scaleFactor
+        boundsElement.properties.absoluteScale = absoluteScale
+
+        if (isSKGraphElement(boundsElement) && isSKGraphElement(parent)) {
+            boundsElement.properties.absoluteX =
+                ((parent.properties.absoluteX as number) ?? 0) + bounds.x * absoluteScale
+            boundsElement.properties.absoluteY =
+                ((parent.properties.absoluteY as number) ?? 0) + bounds.y * absoluteScale
+        }
+
+        return {
+            x: (boundsElement.properties.absoluteX as number) ?? 0,
+            y: (boundsElement.properties.absoluteY as number) ?? 0,
+            width: bounds.width * absoluteScale,
+            height: bounds.height * absoluteScale,
+        }
+    }
+    if (element instanceof SModelRootImpl) {
+        const { canvasBounds } = element
+        return { x: 0, y: 0, width: canvasBounds.width, height: canvasBounds.height }
+    }
+    return Bounds.EMPTY
+}
+
+/**
+ * Get the absolute bounds of the graph element with respect to the viewport, also using top-down scale factors.
+ * Expects that this (or the getViewportBounds) function has been called on the parent element before to work correctly.
+ * @param element The element to check and persist the bounds information
+ * @returns the element's bounds w.r.t the viewport. Adds `absoluteX`, `absoluteY`, and `absoluteScale` properties to this element.
+ */
+export function getViewportBounds(element: SModelElementImpl): Bounds {
+    const canvasBounds = getCanvasBounds(element)
+
+    const boundsElement = findParentByFeature(element, isBoundsAware)
+    if (boundsElement !== undefined && boundsElement instanceof SChildElementImpl && isSKGraphElement(boundsElement)) {
+        const { scroll, zoom } = findParentByFeature(boundsElement, isViewport) ?? { scroll: { x: 0, y: 0 }, zoom: 1 }
+        return {
+            x: (canvasBounds.x - scroll.x) * zoom,
+            y: (canvasBounds.y - scroll.y) * zoom,
+            width: canvasBounds.width * zoom,
+            height: canvasBounds.height * zoom,
+        }
+    }
+    return canvasBounds
 }

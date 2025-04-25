@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2024 by
+ * Copyright 2019-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -16,7 +16,8 @@
  */
 
 import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import { Bounds, Point, toDegrees } from 'sprotty-protocol'
+import { Bounds, Point, toDegrees, Viewport } from 'sprotty-protocol'
+import { FullDetailRelativeThreshold, FullDetailScaleThreshold } from './options/render-options-registry'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import {
     Decoration,
@@ -914,4 +915,41 @@ export function getKRendering(datas: KGraphData[], context: SKGraphModelRenderer
         }
     }
     return undefined
+}
+
+/**
+ * Compares the size of a node to the viewport and returns the largest fraction of either height or width.
+ *
+ * @param node The KNode in question
+ * @param viewport The current viewport
+ * @returns the relative size of the KNodes longest dimension
+ */
+export function sizeRelativeToViewport(node: SKNode, viewport: Viewport): number {
+    const horizontal = node.bounds.width / (node.root.canvasBounds.width / viewport.zoom)
+    const vertical = node.bounds.height / (node.root.canvasBounds.height / viewport.zoom)
+    const absoluteScale = (node.properties.absoluteScale as number) ?? 1
+    const scaleMeasure = Math.max(horizontal, vertical)
+    return scaleMeasure * absoluteScale
+}
+
+/**
+ * Determines if the given node should be drawn in full detail according to the
+ * {@link FullDetailRelativeThreshold} and {@link FullDetailScaleThreshold} options.
+ * This means that the rendering should be drawn and all its children should at
+ * least be drawn with minimal details.
+ *
+ * @param node The node to check the options for
+ * @param ctx The rendering context
+ * @returns if the node should be drawn in full detail.
+ */
+export function isFullDetail(node: SKNode, ctx: SKGraphModelRenderer): boolean {
+    const relativeThreshold = ctx.renderOptionsRegistry.getValueOrDefault(FullDetailRelativeThreshold)
+
+    const scaleThreshold = ctx.renderOptionsRegistry.getValueOrDefault(FullDetailScaleThreshold)
+
+    const sizeRelative = sizeRelativeToViewport(node, ctx.viewport)
+
+    const scale = ctx.viewport.zoom * ((node.properties.absoluteScale as number) ?? 1)
+    // change to full detail when relative size threshold is reached or the scaling within the region is big enough to be readable.
+    return sizeRelative >= relativeThreshold || scale > scaleThreshold
 }

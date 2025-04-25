@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 /** @jsx svg */
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods'
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
@@ -25,20 +26,26 @@ import { VNode } from 'snabbdom'
 import {
     findParentByFeature,
     IActionDispatcher,
+    InternalBoundsAware,
+    isBoundsAware,
     isViewport,
     IView,
+    IViewArgs,
     RenderingContext,
+    SChildElementImpl,
     SGraphImpl,
     svg, // eslint-disable-line @typescript-eslint/no-unused-vars
     TYPES,
 } from 'sprotty'
+import { Dimension } from 'sprotty-protocol'
 import { SendModelContextAction } from './actions/actions'
-import { DepthMap, DetailLevel } from './depth-map'
 import { DISymbol } from './di.symbols'
 import { overpassMonoRegularStyle, overpassRegularStyle } from './fonts/overpass'
 import { RenderOptionsRegistry, ShowConstraintOption, UseSmartZoom } from './options/render-options-registry'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
+import { getViewportBounds } from './skgraph-utils'
+import { isFullDetail } from './views-common'
 import { getJunctionPointRenderings, getRendering } from './views-rendering'
 import { KStyles } from './views-styles'
 
@@ -72,21 +79,6 @@ export class SKGraphView implements IView {
         }
         ctx.titleStorage.clear()
 
-        // Add depthMap to context for rendering, when required.
-        const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
-
-        // Only enable, if option is found.
-        const useSmartZoom = smartZoomOption ?? false
-
-        if (useSmartZoom && ctx.targetKind !== 'hidden') {
-            ctx.depthMap = DepthMap.getDM()
-            if (!ctx.forceRendering && ctx.viewport && ctx.depthMap) {
-                ctx.depthMap.updateDetailLevels(ctx.viewport, ctx.renderOptionsRegistry)
-            }
-        } else {
-            ctx.depthMap = undefined
-        }
-
         const transform = `scale(${model.zoom}) translate(${-model.scroll.x},${-model.scroll.y})`
         // Look for a synthesis-defined custom background color. If none is found, use 'white' as a
         // default, assuming the synthesis does not know about theming.
@@ -108,25 +100,89 @@ export class SKGraphView implements IView {
     }
 }
 
+export function parentSKNode(child: SKGraphElement): SKNode {
+    if (child instanceof SKNode || child instanceof SKEdge || child instanceof SKPort) {
+        return child.parent as SKNode
+    }
+    if (child instanceof SKLabel) {
+        return parentSKNode(child.parent as SKGraphElement)
+    }
+    console.error('could not find parent SKNode of graph element, something went wrong.')
+    return child as SKNode
+}
+
+@injectable()
+export abstract class KGraphElementView implements IView {
+    /**
+     * Check whether the given model element is in the current viewport, with respect to potential top-down scaling.
+     */
+    isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
+        if (context.targetKind === 'hidden') {
+            // Don't hide any element for hidden rendering
+            return true
+        }
+        if (!Dimension.isValid(model.bounds)) {
+            // We should hide only if we know the element's bounds
+            return true
+        }
+        const ab = getViewportBounds(model)
+        // Sprotty's "Canvas" is what we would call "Viewport".
+        const { canvasBounds } = model.root
+
+        return (
+            ab.x <= canvasBounds.width && ab.x + ab.width >= 0 && ab.y <= canvasBounds.height && ab.y + ab.height >= 0
+        )
+    }
+
+    abstract render(model: Readonly<SChildElementImpl>, context: RenderingContext, args?: IViewArgs): VNode | undefined
+}
+
 /**
  * IView component that translates a KNode and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KNodeView implements IView {
+export class KNodeView extends KGraphElementView {
     @inject(KlighdInteractiveMouseListener) mListener: KlighdInteractiveMouseListener
+
+    isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
+        // node visibility OR visibility of child ports
+        if (super.isVisible(model, context)) {
+            return true
+        }
+
+        for (const child of model.children) {
+            const view = context.viewRegistry.get(child.type)
+            if (view instanceof KPortView && isBoundsAware(child) && view.isVisible(child, context)) {
+                return true
+            }
+        }
+
+        return false
+    }
 
     render(node: SKNode, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (!ctx.forceRendering && ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(node, ctx.viewport, ctx.renderOptionsRegistry)
-            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
-                // Make sure this node and its children are not drawn as long as it is not on full details.
-                node.areChildAreaChildrenRendered = true
-                node.areNonChildAreaChildrenRendered = true
-                return undefined
-            }
+        let shouldDraw = true
+
+        const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
+        const useSmartZoom = smartZoomOption ?? false
+        if (useSmartZoom && ctx.targetKind !== 'hidden') {
+            shouldDraw = isFullDetail(parentSKNode(node), ctx)
+        }
+
+        // Always draw forced renderings, the root or direct children of the root (the first visible nodes) or visible nodes that should be shown according to smart zoom. Skip all remaining ones.
+        if (
+            (!this.isVisible(node, context) || !shouldDraw) &&
+            !ctx.forceRendering &&
+            !(node.parent instanceof SGraphImpl) &&
+            !((node.parent as SKNode).parent instanceof SGraphImpl)
+        ) {
+            // Make sure this node and its children are not drawn as long as it is not on full details.
+            node.areChildAreaChildrenRendered = true
+            node.areNonChildAreaChildrenRendered = true
+            return undefined
         }
 
         // reset these properties, if the diagram is drawn a second time
@@ -263,18 +319,38 @@ export class KNodeView implements IView {
  * IView component that translates a KPort and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KPortView implements IView {
+export class KPortView extends KGraphElementView {
+    isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
+        // port visibility OR visibility of child label
+        if (super.isVisible(model, context)) {
+            return true
+        }
+
+        for (const child of model.children) {
+            const view = context.viewRegistry.get(child.type)
+            if (view instanceof KLabelView && isBoundsAware(child) && view.isVisible(child, context)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     render(port: SKPort, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (!ctx.forceRendering && ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(port, ctx.viewport, ctx.renderOptionsRegistry)
-            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
-                port.areChildAreaChildrenRendered = true
-                port.areNonChildAreaChildrenRendered = true
-                return undefined
-            }
+        let shouldDraw = true
+
+        const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
+        const useSmartZoom = smartZoomOption ?? false
+        if (useSmartZoom && ctx.targetKind !== 'hidden') {
+            shouldDraw = isFullDetail(parentSKNode(port), ctx)
+        }
+        if (!ctx.forceRendering && (!this.isVisible(port, context) || !shouldDraw)) {
+            port.areChildAreaChildrenRendered = true
+            port.areNonChildAreaChildrenRendered = true
+            return undefined
         }
 
         port.areChildAreaChildrenRendered = false
@@ -326,19 +402,25 @@ export class KPortView implements IView {
  * IView component that translates a KLabel and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KLabelView implements IView {
+export class KLabelView extends KGraphElementView {
     render(label: SKLabel, context: RenderingContext): VNode | undefined {
         // Add new level to title and position array for correct placement of titles
         const ctx = context as SKGraphModelRenderer
 
-        if (!ctx.forceRendering && ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(label, ctx.viewport, ctx.renderOptionsRegistry)
-            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
-                label.areChildAreaChildrenRendered = true
-                label.areNonChildAreaChildrenRendered = true
-                return undefined
-            }
+        let shouldDraw = true
+
+        const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
+        const useSmartZoom = smartZoomOption ?? false
+        if (useSmartZoom && ctx.targetKind !== 'hidden') {
+            shouldDraw = isFullDetail(parentSKNode(label), ctx)
         }
+
+        if (!ctx.forceRendering && (!this.isVisible(label, context) || !shouldDraw)) {
+            label.areChildAreaChildrenRendered = true
+            label.areNonChildAreaChildrenRendered = true
+            return undefined
+        }
+
         label.areChildAreaChildrenRendered = false
         label.areNonChildAreaChildrenRendered = false
 
@@ -395,17 +477,38 @@ export class KLabelView implements IView {
  * IView component that translates a KEdge and its children into a tree of virtual DOM elements.
  */
 @injectable()
-export class KEdgeView implements IView {
+export class KEdgeView extends KGraphElementView {
+    isVisible(model: Readonly<SChildElementImpl & InternalBoundsAware>, context: RenderingContext): boolean {
+        // edge visibility OR visibility of child labels
+        // TODO: edge renderings (via decorators) may be larger than the edge bounds. May need to look into renderings.
+        if (super.isVisible(model, context)) {
+            return true
+        }
+
+        for (const child of model.children) {
+            const view = context.viewRegistry.get(child.type)
+            if (view instanceof KLabelView && isBoundsAware(child) && view.isVisible(child, context)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     render(edge: SKEdge, context: RenderingContext): VNode | undefined {
         const ctx = context as SKGraphModelRenderer
 
-        if (!ctx.forceRendering && ctx.depthMap) {
-            const containingRegion = ctx.depthMap.getContainingRegion(edge, ctx.viewport, ctx.renderOptionsRegistry)
-            if (ctx.depthMap && containingRegion && containingRegion.detail !== DetailLevel.FullDetails) {
-                edge.areChildAreaChildrenRendered = true
-                edge.areNonChildAreaChildrenRendered = true
-                return undefined
-            }
+        let shouldDraw = true
+
+        const smartZoomOption = ctx.renderOptionsRegistry.getValue(UseSmartZoom)
+        const useSmartZoom = smartZoomOption ?? false
+        if (useSmartZoom && ctx.targetKind !== 'hidden') {
+            shouldDraw = isFullDetail(parentSKNode(edge), ctx)
+        }
+        if (!ctx.forceRendering && (!this.isVisible(edge, context) || !shouldDraw)) {
+            edge.areChildAreaChildrenRendered = true
+            edge.areNonChildAreaChildrenRendered = true
+            return undefined
         }
 
         edge.areChildAreaChildrenRendered = false

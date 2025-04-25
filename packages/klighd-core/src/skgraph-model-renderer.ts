@@ -28,7 +28,6 @@ import {
     ViewRegistry,
 } from 'sprotty'
 import { Viewport } from 'sprotty-protocol'
-import { DepthMap } from './depth-map'
 import { RenderOptionsRegistry } from './options/render-options-registry'
 import { EDGE_TYPE, KRenderingLibrary, LABEL_TYPE, NODE_TYPE, PORT_TYPE } from './skgraph-models'
 import { TitleStorage } from './titles/title-storage'
@@ -60,8 +59,6 @@ export class SKGraphModelRenderer extends ModelRenderer {
      */
     decorationMap: Record<string, unknown>
 
-    depthMap?: DepthMap
-
     /**
      * Access to the rendering library, expected to be defined on the root graph element.
      */
@@ -80,7 +77,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
 
     viewport: Viewport
 
-    /** Used to force rendering independant of the depthMap. Needed by the proxy-view. */
+    /** Used to force rendering independant of smart zoom. Needed by the proxy-view. */
     forceRendering = false
 
     /**
@@ -109,7 +106,7 @@ export class SKGraphModelRenderer extends ModelRenderer {
             .filter((vnode) => vnode !== undefined) as VNode[]
     }
 
-    /** Renders an element forcefully, i.e. independant of the depthMap. */
+    /** Renders an element forcefully, i.e. independant of smart zoom. */
     forceRenderElement(element: SKGraphElement): VNode | undefined {
         const prevForceRendering = this.forceRendering
         this.forceRendering = true

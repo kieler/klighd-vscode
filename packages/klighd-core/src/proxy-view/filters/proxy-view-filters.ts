@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022 by
+ * Copyright 2022-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -45,10 +45,10 @@ export interface ProxyFilterArgs {
     offScreenNodes: SKNode[]
     /** List of all on-screen nodes. */
     onScreenNodes: SKNode[]
+    /** The canvas in VRF. */
+    canvasVRF: Canvas
     /** The canvas in CRF. */
     canvasCRF: Canvas
-    /** The canvas in GRF. */
-    canvasGRF: Canvas
     /** The distance to the canvas as specified by {@link ../proxy-view-util#getDistanceToCanvas()}. */
     distance: number
 }
