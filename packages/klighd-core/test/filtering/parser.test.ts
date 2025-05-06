@@ -181,4 +181,58 @@ describe('tag expression parsing', () => {
         }
         expect(filter.filterFun(oldNode), 'node with version < 2 and not archived').to.equal(false)
     })
+
+    it('complex rule with all operators', () => {
+        const ruleString =
+            '(#active && !$disabled) || (($load + 2 * $scale - 1) / 3 >= 4 && $version != 0 && $version = 2)'
+        const rule = parse(ruleString)
+        const filter = createFilter(rule)
+
+        // Matches via first part: #active && !$disabled
+        const activeNode = new SKNode()
+        activeNode.properties = {
+            'de.cau.cs.kieler.klighd.semanticFilter.tags': [{ tag: 'active' }],
+        }
+        expect(filter.filterFun(activeNode), 'matches first part with #active and no #disabled').to.equal(true)
+
+        // Matches via second part (complex arithmetic/comparison)
+        const numericMatchNode = new SKNode()
+        numericMatchNode.properties = {
+            'de.cau.cs.kieler.klighd.semanticFilter.tags': [
+                { tag: 'load', num: 4 },
+                { tag: 'scale', num: 3 }, // (4 + 2*3 - 1) / 3 = (4 + 6 - 1)/3 = 9/3 = 3 => 3 >= 4 is false
+                { tag: 'version', num: 2 },
+            ],
+        }
+        expect(filter.filterFun(numericMatchNode), 'arithmetic computes to 3, which is < 4').to.equal(false)
+
+        const strongMatchNode = new SKNode()
+        strongMatchNode.properties = {
+            'de.cau.cs.kieler.klighd.semanticFilter.tags': [
+                { tag: 'load', num: 5 },
+                { tag: 'scale', num: 3 }, // (5 + 6 - 1)/3 = 10/3 ≈ 3.33 -> still < 4
+                { tag: 'version', num: 2 },
+            ],
+        }
+        expect(filter.filterFun(strongMatchNode), 'arithmetic computes to ~3.33, still < 4').to.equal(false)
+
+        const passNode = new SKNode()
+        passNode.properties = {
+            'de.cau.cs.kieler.klighd.semanticFilter.tags': [
+                { tag: 'load', num: 7 }, // 7 + 6 - 1 = 12 / 3 = 4
+                { tag: 'scale', num: 3 },
+                { tag: 'version', num: 2 },
+            ],
+        }
+        expect(filter.filterFun(passNode), 'complex numeric expression evaluates to >= 4 and version = 2').to.equal(true)
+
+        const negatedNode = new SKNode()
+        negatedNode.properties = {
+            'de.cau.cs.kieler.klighd.semanticFilter.tags': [
+                { tag: 'active' },
+                { tag: 'disabled' }, // this should negate the first clause
+            ],
+        }
+        expect(filter.filterFun(negatedNode), 'has both #active and #disabled, so !#disabled fails').to.equal(false)
+    })
 })

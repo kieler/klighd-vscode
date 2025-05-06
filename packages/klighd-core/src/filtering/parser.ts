@@ -91,7 +91,7 @@ export class FilterRuleSyntaxError extends SyntaxError {
 }
 
 export function parse(ruleString: string): SemanticFilterRule {
-    const tokens = ruleString.split(' ')
+    const tokens = ruleString.match(/(\|\||&&|!=|>=|<=|[()!*/+\-<>=]|[^\s()!*/+\-<>=]+)/g) || []
     const operatorStack: Array<OperatorNode> = []
     const outputStack: Array<Node> = []
 
