@@ -207,7 +207,7 @@ function convertAST(ast: Node): SemanticFilterRule {
                 break
             // NUMERIC-TO-BOOLEAN
             case '=':
-                if (ast.type === 0) {
+                if ((ast as OperatorNode).getChildren()[0].type === 0) {
                     conn = new LogicEqualConnective()
                     conn.leftOperand = convertAST((ast as OperatorNode).getChildren()[0])
                     conn.rightOperand = convertAST((ast as OperatorNode).getChildren()[1])
@@ -315,7 +315,20 @@ function popOperator(operatorStack: Array<OperatorNode>, outputStack: Array<Node
         if (operand1.type !== operand2.type) {
             throw new FilterRuleSyntaxError(`Mixed use of boolean and numeric types in operator ${operator.token}.`)
         }
-        operator.type = operand1.type
+        // numeric-to-boolean operators
+        switch (operator.token) {
+            case '>=':
+            case '>':
+            case '<=':
+            case '<':
+            case '=':
+            case '!=':
+                operator.type = 0
+                break
+            default:
+                operator.type = operand1.type
+                break
+        }
         outputStack.push(operator)
     }
 }
