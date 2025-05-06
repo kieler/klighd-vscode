@@ -224,7 +224,7 @@ describe('tag expression parsing', () => {
                 { tag: 'version', num: 2 },
             ],
         }
-        expect(filter.filterFun(passNode), 'complex numeric expression evaluates to >= 4 and version = 2').to.equal(true)
+        expect(filter.filterFun(passNode), 'numeric expression evaluates to >= 4 and version = 2').to.equal(true)
 
         const negatedNode = new SKNode()
         negatedNode.properties = {
