@@ -110,7 +110,7 @@ export namespace TrueConnective {
 export class FalseConnective implements Connective {
     static NAME = 'FALSE'
 
-    name = TrueConnective.NAME
+    name = FalseConnective.NAME
 
     ruleName?: string
 }
@@ -440,6 +440,8 @@ export class NumericAdditionConnective implements BinaryConnective {
     leftOperand: SemanticFilterRule
 
     rightOperand: SemanticFilterRule
+
+    ruleName?: string
 }
 
 export namespace NumericAdditionConnective {
@@ -460,6 +462,8 @@ export class NumericSubtractionConnective implements BinaryConnective {
     leftOperand: SemanticFilterRule
 
     rightOperand: SemanticFilterRule
+
+    ruleName?: string
 }
 
 export namespace NumericSubtractionConnective {
@@ -480,6 +484,8 @@ export class NumericMultiplicationConnective implements BinaryConnective {
     leftOperand: SemanticFilterRule
 
     rightOperand: SemanticFilterRule
+
+    ruleName?: string
 }
 
 export namespace NumericMultiplicationConnective {
@@ -500,6 +506,8 @@ export class NumericDivisionConnective implements BinaryConnective {
     leftOperand: SemanticFilterRule
 
     rightOperand: SemanticFilterRule
+
+    ruleName?: string
 }
 
 export namespace NumericDivisionConnective {
@@ -517,6 +525,8 @@ export class NumericConstantConnective implements Connective {
     name = NumericConstantConnective.NAME
 
     num: number
+
+    ruleName?: string
 }
 
 export namespace NumericConstantConnective {
@@ -618,7 +628,7 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
         case TrueConnective.NAME:
             return TrueConnective.evaluate(rule as TrueConnective, tags)
         case FalseConnective.NAME:
-            return false
+            return FalseConnective.evaluate(rule as FalseConnective, tags)
         case IdentityConnective.NAME:
             return IdentityConnective.evaluate(rule as IdentityConnective, tags)
         case NegationConnective.NAME:
