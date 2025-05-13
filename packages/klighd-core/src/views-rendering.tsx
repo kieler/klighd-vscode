@@ -614,46 +614,52 @@ export function renderKText(
     ) {
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
-        const proportionalHeight = 0.5 // height of replacement compared to full text height
+        // height of replacement compared to full text height
+        // This is the height of a small character compared to a full line of text.
+        const proportionalHeight = 0.5
+
+        // inverse of average luminance of some experimental text, making the simplified text have the same average pixel value as such actual text.
+        // measured with some kgts with different texts
+        // "single line of text": ~15%
+        // "Bold single line of text": ~25%
+        // "ALLCAPSTEXTWITHMOREOPACITY": ~20%
+        // "BOLDALLCAPSTEXTWITHEVENMOREOPACITY": ~30%
+        // take the "normal" values for bold/non-bold text for the placeholder.
+        const averageTextOpacity = (styles.kFontBold?.bold ? 0.25 : 0.15) / proportionalHeight
         if (
             context.viewport &&
             (rendering.properties['klighd.calculated.text.bounds'] as Bounds) &&
-            (rendering.properties['klighd.calculated.text.bounds'] as Bounds).height * context.viewport.zoom <=
+            ((rendering.properties['klighd.calculated.text.bounds'] as Bounds).height * context.viewport.zoom) /
+                lines.length <=
                 simplificationThreshold
         ) {
             const replacements: VNode[] = background ? [background] : []
-            lines.forEach((line, index) => {
+            const calculatedTextLineWidths = rendering.properties['klighd.calculated.text.line.widths'] as number[]
+            const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
+            let currentY =
+                (boundsAndTransformation.bounds.y ?? 0) +
+                (rendering.properties['klighd.calculated.text.bounds'] as Bounds).y
+            lines.forEach((_line, index) => {
                 const xPos = boundsAndTransformation?.bounds?.x ?? 0
                 const yPos =
-                    boundsAndTransformation?.bounds?.y &&
-                    (rendering.properties['klighd.calculated.text.line.heights'] as number[]) &&
-                    boundsAndTransformation?.bounds?.height
-                        ? boundsAndTransformation.bounds.y -
-                          boundsAndTransformation.bounds.height / 2 +
-                          ((rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] / 2) *
-                              proportionalHeight
-                        : 0
-                const width = (rendering.properties['klighd.calculated.text.line.widths'] as number[])
-                    ? (rendering.properties['klighd.calculated.text.line.widths'] as number[])[index]
-                    : 0
-                const height = (rendering.properties['klighd.calculated.text.line.heights'] as number[])
-                    ? (rendering.properties['klighd.calculated.text.line.heights'] as number[])[index] *
-                      proportionalHeight
-                    : 0
+                    currentY +
+                    (calculatedTextLineHeights ? (calculatedTextLineHeights[index] / 2) * proportionalHeight : 0)
+                const width = calculatedTextLineWidths ? calculatedTextLineWidths[index] : 0
+                const height = calculatedTextLineHeights ? calculatedTextLineHeights[index] * proportionalHeight : 0
                 // Generate rectangle for each line with color style.
-                const curLine = colorStyles.foreground ? (
+                const curLine = (
                     <rect
                         x={xPos}
                         y={yPos}
                         width={width}
                         height={height}
-                        fill={colorStyles.foreground.color}
-                        opacity="0.5"
+                        fill={colorStyles.foreground?.color ?? '#000000'}
+                        opacity={averageTextOpacity}
                     />
-                ) : (
-                    <rect x={xPos} y={yPos} width={width} height={height} fill="#000000" opacity="0.5" />
                 )
                 replacements.push(curLine)
+
+                currentY = calculatedTextLineHeights ? currentY + calculatedTextLineHeights[index] : currentY
             })
             return <g id={rendering.properties['klighd.lsp.rendering.id'] as string}>{...replacements}</g>
         }

@@ -275,7 +275,7 @@ export class TextSimplificationThreshold implements RangeOption {
 
     static readonly NAME: string = 'Text Simplification Threshold'
 
-    static readonly DEFAULT: number = 3
+    static readonly DEFAULT: number = 3.3 // This is the same time the rendering would suddenly switch to a smaller representation of the font
 
     readonly id: string = TextSimplificationThreshold.ID
 
@@ -299,7 +299,7 @@ export class TextSimplificationThreshold implements RangeOption {
     readonly description =
         'The threshold font size to simplify text.\nIf set to 3 a text which is 3 or less pixel high is simplified.'
 
-    currentValue = 3
+    currentValue = 3.3
 
     debug = true
 }
