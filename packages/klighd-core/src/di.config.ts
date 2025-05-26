@@ -68,6 +68,7 @@ import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, S
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions'
 import { SynthesesRegistry } from './syntheses/syntheses-registry'
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views'
+import { searchBarModule } from './search-bar/searchbar-module'
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
@@ -154,7 +155,8 @@ export default function createContainer(widgetId: string): Container {
         sidebarModule,
         kGraphDiagramModule,
         /* bookmarkModule, */ diagramPieceModule,
-        proxyViewModule
+        proxyViewModule,
+        searchBarModule,
     )
     // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {
