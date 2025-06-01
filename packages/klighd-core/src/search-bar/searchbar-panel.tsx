@@ -4,7 +4,7 @@ import { html, IActionDispatcher, TYPES } from 'sprotty'
 import { VNode, h } from 'snabbdom'
 import { SearchAction, ToggleSearchBarAction } from './searchbar-actions'
 import { SearchBar } from './searchbar'
-import { SModelElement } from 'sprotty-protocol'
+import { FitToScreenAction, SModelElement } from 'sprotty-protocol'
 
 @injectable()
 export class SearchBarPanel {
@@ -13,6 +13,8 @@ export class SearchBarPanel {
     private searchResults: SModelElement[] = []
     private textRes: string[] = []
     private searched: boolean = false
+    private tooltipEl: HTMLElement | null = null
+
 
     private onVisibilityChange?: () => void
 
@@ -38,8 +40,26 @@ export class SearchBarPanel {
                     input.focus()
                 }
             }, 0)
+            if (!this.tooltipEl) {
+                const tooltip = document.createElement('div')
+                tooltip.id = 'search-tooltip'
+                tooltip.style.position = 'fixed'
+                tooltip.style.pointerEvents = 'none'
+                tooltip.style.zIndex = '10000'
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'
+                tooltip.style.color = 'white'
+                tooltip.style.padding = '4px 8px'
+                tooltip.style.borderRadius = '4px'
+                tooltip.style.fontSize = '12px'
+                tooltip.style.display = 'none'
+                document.body.appendChild(tooltip)
+                this.tooltipEl = tooltip
+            }
         } else {
             document.removeEventListener('keydown', this.handleEscapeKey)
+            if (this.tooltipEl) {
+                this.tooltipEl.style.display = 'none'
+            }
         }
     }
 
@@ -102,14 +122,18 @@ export class SearchBarPanel {
                         padding: '4px'
                     },
                     on: {
-                        keydown: (event: KeyboardEvent) => {
-                            if (event.key === 'Enter') {
-                                const input = (event.target as HTMLInputElement).value
-                                this.searched = true
-                                this.actionDispatcher.dispatch(SearchAction.create(panel, SearchBar.ID, input))
-                                //this.update()
-                            }
+                        input: (event: Event) => {
+                            const input = (event.target as HTMLInputElement).value
+                            this.searched = true
+                            this.actionDispatcher.dispatch(SearchAction.create(panel, SearchBar.ID, input))
                         }
+                        // keydown: (event: KeyboardEvent) => {
+                        //     if (event.key === 'Enter') {
+                        //         const input = (event.target as HTMLInputElement).value
+                        //         this.searched = true
+                        //         this.actionDispatcher.dispatch(SearchAction.create(panel, SearchBar.ID, input))
+                        //     }
+                        // }
                     }
                 }),
 
@@ -130,7 +154,20 @@ export class SearchBarPanel {
                     }
                 }, ['x']),
             ]),
-
+            this.hoverPath ? h('div', {
+                style: {
+                    position: 'fixed',
+                    top: `${this.hoverPos!.y + 12}px`,
+                    left: `${this.hoverPos!.x + 12}px`,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    pointerEvents: 'none',
+                    zIndex: '10000'
+                }
+            }, [ this.hoverPath ]) : null,
 +            this.searched ? this.showSearchResults(panel) : null
         ])
     }
@@ -151,21 +188,83 @@ export class SearchBarPanel {
                 style: {
                     maxHeight: '200px',
                     overflowY: this.searchResults.length > 12 ? 'auto' : 'visible',
-                    paddingLeft: '20px',
+                    listStyleType: 'none',
+                    paddingLeft: '0',
                     margin: '0',
                     marginTop: '4px',
                     border: this.searchResults.length > 12 ? '1px solid #eee' : 'none'
                 }
-            }, this.textRes.map(result => { return h('li', {}, [result])
+            },
+            this.searchResults.map((result, index) => {
+                return h('li', {
+                    style: {
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        transition: 'background-color 0.2s ease',
+                        cursor: 'pointer'
+                    },
+                    on: {
+                        mouseenter: (event: MouseEvent) => {
+                            const id = this.searchResults[index].id.replace(/\$/g, '/').replace(/\/N/g, '/')
+                            if (this.tooltipEl) {
+                                this.tooltipEl.textContent = id
+                                this.tooltipEl.style.top = `${event.clientY + 12}px`
+                                this.tooltipEl.style.left = `${event.clientX + 12}px`
+                                this.tooltipEl.style.display = 'block'
+                            }
+                        },
+                        mouseleave: () => {
+                            if (this.tooltipEl) {
+                                this.tooltipEl.style.display = 'none'
+                            }
+                        },
+                        click: () => {
+                            this.panToElement(result.id)
+                        }
+                    },
+                    hook: {
+                        insert: vnode => {
+                            vnode.elm!.addEventListener('mouseover', () => {
+                                (vnode.elm as HTMLElement).style.backgroundColor = 'rgba(0, 0, 0, 0.25)'
+                            })
+                            vnode.elm!.addEventListener('mouseout', () => {
+                                (vnode.elm as HTMLElement).style.backgroundColor = 'transparent'
+                            })
+                        }
+                    }
+                }, [this.textRes[index]])
             }))
         ])
     }
 
+    private hoverPath: string | null = null
+    private hoverPos: { x: number, y: number } | null = null
+
+    private panToElement(elementId: string): void {
+        const action: FitToScreenAction = {
+            kind: 'fit',
+            elementIds: [elementId],
+            animate: true,
+            padding: 20
+        }
+        this.actionDispatcher.dispatch(action)
+    }
+
+
     private handleEscapeKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
-            this.changeVisibility(false)
+            const input = document.getElementById('search') as HTMLInputElement
+            if (input) {
+                input.value = ''
+                input.focus()
+            }
+            if (this.tooltipEl) {
+                this.tooltipEl.style.display = 'none'
+            }
+            this.searchResults = []
+            this.textRes = []
             this.searched = false
-            this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
+            this.update()
         }
     }
 }
