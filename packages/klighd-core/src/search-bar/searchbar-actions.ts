@@ -129,7 +129,30 @@ export class HandleSearchAction implements IActionHandler {
         const textRes: string[] = []
         const lowerQuery = query.toLowerCase()
 
-        const visit = (element: SModelElement): void => {
+        const queue: SModelElement[] = [root]
+
+        const visitRendering = (rendering: any, owner: SModelElement): void => {
+            if (rendering != null && isKText(rendering) && rendering.text?.toLowerCase().includes(lowerQuery)) {
+                results.push(owner)
+                textRes.push(rendering.text)
+            }
+
+            if (rendering != null && isContainerRendering(rendering)) {
+                if ('text' in rendering && typeof rendering.text === 'string' &&
+                    rendering.text.toLowerCase().includes(lowerQuery)) {
+                    results.push(owner)
+                    textRes.push(rendering.text)
+                }
+
+                for (const child of rendering.children ?? []) {
+                    visitRendering(child, owner)
+                }
+            }
+        }
+
+        while (queue.length > 0) {
+            const element = queue.shift()!
+
             if (element.type === 'label' && 'text' in element && typeof (element as any).text === 'string') {
                 const text = (element as any).text.toLowerCase()
                 if (text.includes(lowerQuery)) {
@@ -155,40 +178,11 @@ export class HandleSearchAction implements IActionHandler {
 
             if ('children' in element && Array.isArray((element as any).children)) {
                 for (const child of (element as any).children) {
-                    visit(child)
+                    queue.push(child)
                 }
             }
         }
 
-        const visitRendering = (rendering: any, owner: SModelElement): void => {
-            if (rendering != null && isKText(rendering) && rendering.text?.toLowerCase().includes(lowerQuery)) {
-                results.push(owner)
-                textRes.push(rendering.text)
-            }
-
-            if (rendering != null && isContainerRendering(rendering)) {
-                if ('text' in rendering && typeof rendering.text === 'string' &&
-                    rendering.text.toLowerCase().includes(lowerQuery)) {
-                    results.push(owner)
-                    textRes.push(rendering.text)
-                }
-
-                for (const child of rendering.children ?? []) {
-                    visitRendering(child, owner)
-                }
-            }
-        }
-
-
-        visit(root)
-        /* Debug */
-        // console.log(`[Search] Found ${results.length} results:`)
-        // for (const r of results) {
-        //     console.log(r)
-        // }
-        // for (const r of textRes) {
-        //     console.log(r)
-        // }
         panel.setTextRes(textRes)
         return results
     }
