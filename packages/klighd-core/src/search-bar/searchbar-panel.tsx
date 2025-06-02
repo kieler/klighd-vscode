@@ -13,8 +13,9 @@ export class SearchBarPanel {
     private searchResults: SModelElement[] = []
     private textRes: string[] = []
     private searched: boolean = false
+    private hoverPath: string | null = null
+    private hoverPos: { x: number, y: number } | null = null
     private tooltipEl: HTMLElement | null = null
-
 
     private onVisibilityChange?: () => void
 
@@ -26,6 +27,10 @@ export class SearchBarPanel {
         return this.visible
     }
 
+    /**
+     * Updates anything that changes, when the search bar is toggled
+     * @param vis the new visibility
+     */
     public changeVisibility(vis: boolean): void {
         this.visible = vis
         if (this.onVisibilityChange) {
@@ -34,11 +39,12 @@ export class SearchBarPanel {
 
         if (vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
+            document.addEventListener('keydown', this.handleEmptyInput)
             setTimeout(() => {
                 const input = document.getElementById('search') as HTMLInputElement
                 if (input) {
                     input.focus()
-                }
+                } 
             }, 0)
             if (!this.tooltipEl) {
                 const tooltip = document.createElement('div')
@@ -63,11 +69,19 @@ export class SearchBarPanel {
         }
     }
 
+    /**
+     * Update variable searchResults
+     * @param results : an array containing the search result elements
+     */
     public setResults(results: SModelElement[]): void {
         this.searchResults = results
         /* Debug: */ console.log("[SearchBar] setting results:", results)
     }
 
+    /**
+     * Updates the variable textRes.
+     * @param res : an array containing the text field from each search result match
+     */
     public setTextRes(res: string[]): void {
         this.textRes = res
     }
@@ -88,6 +102,12 @@ export class SearchBarPanel {
         }
     }
 
+    /**
+     * Renders the search bar.
+     * @param vis : should the search bar currently be visible
+     * @param panel : the search bar panel
+     * @returns the search bar panel if vis=true, else an empty div
+     */
     render(vis: boolean, panel: SearchBarPanel): VNode {
         if (!vis) {
             return <div style={{ display: 'none' }}></div>
@@ -125,7 +145,11 @@ export class SearchBarPanel {
                         input: (event: Event) => {
                             const input = (event.target as HTMLInputElement).value
                             this.searched = true
+                            const start = performance.now();
                             this.actionDispatcher.dispatch(SearchAction.create(panel, SearchBar.ID, input))
+                            const end = performance.now();
+                            const total = end - start;
+                            console.log(`[SearchBar] search took ${total.toFixed(10)} ms`);
                         }
                         // keydown: (event: KeyboardEvent) => {
                         //     if (event.key === 'Enter') {
@@ -172,6 +196,11 @@ export class SearchBarPanel {
         ])
     }
 
+    /**
+     * Displays the search results as a list below the search bar.
+     * @param panel The searchbar panel
+     * @returns panel with result list
+     */
     private showSearchResults(panel: SearchBarPanel): VNode {
         if (this.searchResults.length === 0) {
             return h('div', {}, [
@@ -237,9 +266,10 @@ export class SearchBarPanel {
         ])
     }
 
-    private hoverPath: string | null = null
-    private hoverPos: { x: number, y: number } | null = null
-
+    /**
+     * Zoom in on a certain element.
+     * @param elementId id of the element to zoom in to. 
+     */
     private panToElement(elementId: string): void {
         const action: FitToScreenAction = {
             kind: 'fit',
@@ -250,11 +280,35 @@ export class SearchBarPanel {
         this.actionDispatcher.dispatch(action)
     }
 
-
+    /**
+     * When pressing the escape key, the search input resets.
+     * @param event keypress (esc key)
+     */
     private handleEscapeKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
             const input = document.getElementById('search') as HTMLInputElement
             if (input) {
+                input.value = ''
+                input.focus()
+            }
+            if (this.tooltipEl) {
+                this.tooltipEl.style.display = 'none'
+            }
+            this.searchResults = []
+            this.textRes = []
+            this.searched = false
+            this.update()
+        }
+    }
+    
+    /**
+     * When the input field is cleared, the result list disappears.
+     * @param event keypress (backspace key)
+     */
+    private handleEmptyInput = (event: KeyboardEvent) => {
+        if (event.key === 'Backspace') {
+            const input = document.getElementById('search') as HTMLInputElement
+            if (input && input.value === '') {
                 input.value = ''
                 input.focus()
             }
