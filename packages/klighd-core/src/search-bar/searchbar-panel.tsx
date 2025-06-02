@@ -234,9 +234,13 @@ export class SearchBarPanel {
                     },
                     on: {
                         mouseenter: (event: MouseEvent) => {
-                            const id = this.searchResults[index].id.replace(/\$/g, '/').replace(/\/N/g, '/')
+                            const path = this.searchResults[index].id
+                                                .replace(/\$\$/g, '§')
+                                                .replace(/\$/g, ' > ')
+                                                .replace(/§/g, ' > ')
+                                                .replace(/^.*?> /, '')
                             if (this.tooltipEl) {
-                                this.tooltipEl.textContent = id
+                                this.tooltipEl.textContent = path
                                 this.tooltipEl.style.top = `${event.clientY + 12}px`
                                 this.tooltipEl.style.left = `${event.clientX + 12}px`
                                 this.tooltipEl.style.display = 'block'
