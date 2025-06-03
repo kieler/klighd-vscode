@@ -22,7 +22,6 @@ export class SearchBar extends AbstractUIExtension {
     
     @postConstruct()
     init(): void {
-        console.log('[SearchBar] init called') /*Debug*/
         
         this.patcher = this.patcherProvider.patcher
 
@@ -48,7 +47,6 @@ export class SearchBar extends AbstractUIExtension {
     }
 
     protected onBeforeShow(): void {
-        console.log('[SearchBar] onBeforeShow called') /*Debug*/
         if (!this.containerElement) {
             console.warn('[SearchBar] containerElement is not yet defined')
             return
@@ -62,7 +60,6 @@ export class SearchBar extends AbstractUIExtension {
     }
 
     update(): void {
-        /* Debug */ console.log('[SearchBar] update called')
         if (!this.containerElement) return
 
         const content: VNode = this.panel.render(this.panel.isVisible, this.panel) 
@@ -71,7 +68,6 @@ export class SearchBar extends AbstractUIExtension {
     }
 
     protected initializeContents(containerElement: HTMLElement): void {
-        /* Debug */ console.log('[SearchBar] initialzing content') 
         const contentRoot = document.createElement('div')
         this.oldContentRoot = this.patcher(contentRoot, <div />)
         
@@ -82,10 +78,8 @@ export class SearchBar extends AbstractUIExtension {
 
 
     private addKeyListener(): void {
-        /* Debug */ console.log('[SearchBar] key listener added')
         window.addEventListener('keydown', (event) => {
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
-                /* Debug */ console.log('[SearchBar] key listener activated')
                 this.panel.changeVisibility(true)
                 this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, SearchBar.ID, 'show'))
             }
