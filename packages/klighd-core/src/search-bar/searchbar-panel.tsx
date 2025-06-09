@@ -2,7 +2,7 @@
 import { injectable, inject } from 'inversify'
 import { html, IActionDispatcher, TYPES } from 'sprotty'
 import { VNode, h } from 'snabbdom'
-import { SearchAction, ToggleSearchBarAction } from './searchbar-actions'
+import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction } from './searchbar-actions'
 import { SearchBar } from './searchbar'
 import { FitToScreenAction, SModelElement } from 'sprotty-protocol'
 
@@ -39,7 +39,6 @@ export class SearchBarPanel {
 
         if (vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
-            document.addEventListener('keydown', this.handleEmptyInput)
             setTimeout(() => {
                 const input = document.getElementById('search') as HTMLInputElement
                 if (input) {
@@ -143,24 +142,24 @@ export class SearchBarPanel {
                     },
                     on: {
                         input: (event: Event) => {
+                            document.addEventListener('keydown', this.handleEmptyInput)
                             const input = (event.target as HTMLInputElement).value
                             this.searched = true
+
                             const start = performance.now();
+
+                            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
                             this.actionDispatcher.dispatch(SearchAction.create(panel, SearchBar.ID, input))
+
                             const end = performance.now();
                             const total = end - start;
                             console.log(`[SearchBar] search took ${total.toFixed(10)} ms`);
+                            
+                            document.addEventListener('keydown', this.handleEnter)
+                            document.removeEventListener('keydown', this.handleEmptyInput)
                         }
-                        // keydown: (event: KeyboardEvent) => {
-                        //     if (event.key === 'Enter') {
-                        //         const input = (event.target as HTMLInputElement).value
-                        //         this.searched = true
-                        //         this.actionDispatcher.dispatch(SearchAction.create(panel, SearchBar.ID, input))
-                        //     }
-                        // }
                     }
                 }),
-
                 h('button', {
                     style: {
                         marginLeft: '4px',
@@ -279,10 +278,12 @@ export class SearchBarPanel {
             kind: 'fit',
             elementIds: [elementId],
             animate: true,
-            padding: 20
+            padding: 20,
+            maxZoom: 2
         }
         this.actionDispatcher.dispatch(action)
     }
+
 
     /**
      * When pressing the escape key, the search input resets.
@@ -302,6 +303,7 @@ export class SearchBarPanel {
             this.textRes = []
             this.searched = false
             this.update()
+            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
         }
     }
     
@@ -323,6 +325,13 @@ export class SearchBarPanel {
             this.textRes = []
             this.searched = false
             this.update()
+            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+        }
+    }
+
+    private handleEnter = (event : KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            this.panToElement(this.searchResults[0].id)
         }
     }
 }

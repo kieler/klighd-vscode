@@ -1,11 +1,11 @@
-import { Action, SetModelAction, SModelElement, UpdateModelAction } from 'sprotty-protocol'
-import { ActionHandlerRegistry, SetUIExtensionVisibilityAction } from 'sprotty'
+import { Action, CenterAction, SetModelAction, SModelElement, UpdateModelAction } from 'sprotty-protocol'
+import { ActionHandlerRegistry, IActionDispatcher, SetUIExtensionVisibilityAction, TYPES } from 'sprotty'
 import { SearchBar } from './searchbar'
 import { IActionHandler } from 'sprotty'
 import { SearchBarPanel } from './searchbar-panel'
-import { injectable } from 'inversify'
-import { isContainerRendering, isKText } from '../skgraph-models'
-
+import { inject, injectable } from 'inversify'
+import { isContainerRendering, isKText, KColoring, KRectangle } from '../skgraph-models'
+import { rgb } from 'sprotty'
 
 /* --------------------------------- search bar visibility actions ----------------------------------------*/   
 
@@ -66,6 +66,73 @@ export class ToggleSearchBarHandler implements IActionHandler {
     }
 } 
 
+/* --------------------------------- highlight action ---------------------------------------- */
+export interface ClearHighlightsAction extends Action {
+    kind: typeof ClearHighlightsAction.KIND
+}   
+
+export namespace ClearHighlightsAction {
+    export const KIND = 'clearHighlights'
+
+    export function create() : ClearHighlightsAction {
+        return {
+            kind: KIND
+        }
+    }
+
+    export function isThisAction(action: Action): action is ClearHighlightsAction {
+        return action.kind === KIND
+    }
+}
+
+function createHighlightRectangle(xPos: number, yPos: number, width: number, height: number): KRectangle {
+    const highlight: KColoring = {
+        type: 'KBackgroundImpl',
+        color: rgb(255, 203, 136),
+        alpha: 127,
+        gradientAngle: 0,
+        propagateToChildren: false,
+        selection: false,
+    }
+
+    return {
+        type: 'KRectangleImpl',
+        id: `highlightRect-${Math.random().toString(36).substr(2, 9)}`,
+        children: [],
+        properties: {
+            x: xPos,
+            y: yPos,
+            width: width,
+            height: height,
+        },
+        actions: [],
+        styles: [highlight],
+    }
+}
+
+function removePreviousHighlights(root: SModelElement): void {
+    const queue: SModelElement[] = [root]
+
+    while (queue.length > 0) {
+        const element = queue.shift()!
+
+        if ('children' in element && Array.isArray(element.children)) {
+            element.children = element.children.filter(child => !child.id?.startsWith('highlightRect-'))
+            element.children.forEach(child => queue.push(child))
+        }
+
+        const data = (element as any).data
+        if (Array.isArray(data)) {
+            for (const item of data) {
+                if (item && 'children' in item && Array.isArray(item.children)) {
+                    item.children = item.children.filter((child: { id: string }) => !child.id?.startsWith('highlightRect-'))
+                    item.children.forEach((c: any) => queue.push(c))
+                }
+            }
+        }
+    }
+}
+
 /* --------------------------------- search action ---------------------------------------- */   
 export interface SearchAction extends Action {
     kind: typeof SearchAction.KIND
@@ -91,15 +158,25 @@ export namespace SearchAction {
     }
 }
 
+interface HighlightBounds {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
 @injectable()
 export class HandleSearchAction implements IActionHandler {
 
     private static currentModel?: SModelElement
+    
+    @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher
 
     initialize(registry: ActionHandlerRegistry): void {
         registry.register(SetModelAction.KIND, this)
         registry.register(UpdateModelAction.KIND, this)
         registry.register(SearchAction.KIND, this)
+        registry.register(ClearHighlightsAction.KIND, this)
     }
 
     handle(action: Action): void {
@@ -107,14 +184,24 @@ export class HandleSearchAction implements IActionHandler {
         if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
             const model = (action as SetModelAction).newRoot as SModelElement
             HandleSearchAction.currentModel = model
-            /* Debug */console.log("[SearchBar] model intercepted")
             return
         }
+        
+        if (!HandleSearchAction.currentModel) return
 
+        const modelId = HandleSearchAction.currentModel?.id
+
+        /* Handle ClearHighlightsActions */
+        if (ClearHighlightsAction.isThisAction(action)) {
+            removePreviousHighlights(HandleSearchAction.currentModel)
+            if (modelId && this.actionDispatcher) {
+                this.actionDispatcher.dispatch(CenterAction.create([modelId]))
+            }
+        }
+        
         /* Handle search itself */
         if (!SearchAction.isThisAction(action)) return
         if (action.id !== SearchBar.ID) return
-        if (!HandleSearchAction.currentModel) return
 
         const query = action.input.trim().toLowerCase()
         if (!query) return
@@ -124,6 +211,63 @@ export class HandleSearchAction implements IActionHandler {
         action.panel.update()
     }
 
+    /**
+     * Adds highlighting to an element if it doesn't already have it
+     * @param element the element that might get the highlight
+     * @param bounds the position and size of the highlight
+     */
+    private addHighlightToElement(element: SModelElement, bounds: HighlightBounds): void {
+        const data = (element as any).data
+        if (Array.isArray(data)) {
+            for (const item of data) {
+                if (isContainerRendering(item)) {
+                    const alreadyHasHighlight = item.children?.some(child => child.id?.startsWith('highlightRect-'))
+                    if (!alreadyHasHighlight) {
+                        const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
+                        item.children = [highlightRect, ...item.children ?? []]
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks if text matches query and adds the element to results with highlighting
+     * @param element the graph element that is checked
+     * @param text the text field of the element
+     * @param query the user input
+     * @param bounds the position and size of the possible highlight
+     * @param results the array containing all results
+     * @param textRes the array containing all {@param text} matches
+     */
+    private processTextMatch(element: SModelElement, text: string, query: string, bounds: HighlightBounds, results: SModelElement[], textRes: string[]): void {
+        if (text.toLowerCase().includes(query)) {
+            results.push(element)
+            textRes.push(text)
+            this.addHighlightToElement(element, bounds)
+        }
+    }
+
+    /**
+     * Extracts bounds from an element
+     * @param element the element, whose bounds need to be extracted
+     */
+    private extractBounds(element: any): HighlightBounds {
+        return {
+            x: Number(element.x ?? element.properties?.x ?? 0),
+            y: Number(element.y ?? element.properties?.y ?? 0),
+            width: Number(element.width ?? element.properties?.width ?? 0),
+            height: Number(element.height ?? element.properties?.height ?? 0)
+        }
+    }
+
+    /**
+     * Perform a breadth-first search on {@param root} to find {@param query}
+     * @param root the model
+     * @param query the user input
+     * @param panel the search bar panel
+     * @returns list of results
+     */
     private searchModel(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
         const results: SModelElement[] = []
         const textRes: string[] = []
@@ -131,17 +275,30 @@ export class HandleSearchAction implements IActionHandler {
 
         const queue: SModelElement[] = [root]
 
+        /**
+         * Go into a rendering to look for the text field and compare it to the input
+         * @param rendering KText or KLabel
+         * @param owner KContainerRendering that contains {@param rendering}
+         */
         const visitRendering = (rendering: any, owner: SModelElement): void => {
-            if (rendering != null && isKText(rendering) && rendering.text?.toLowerCase().includes(lowerQuery)) {
-                results.push(owner)
-                textRes.push(rendering.text)
+            /* Check KText */
+            if (rendering != null && isKText(rendering) && rendering.text) {
+                const bounds = this.extractBounds(rendering)
+                this.processTextMatch(owner, rendering.text, lowerQuery, bounds, results, textRes)
             }
 
+            /* Check KContainerElements */
             if (rendering != null && isContainerRendering(rendering)) {
-                if ('text' in rendering && typeof rendering.text === 'string' &&
-                    rendering.text.toLowerCase().includes(lowerQuery)) {
-                    results.push(owner)
-                    textRes.push(rendering.text)
+                if ('text' in rendering && typeof rendering.text === 'string') {
+                    const bounds = this.extractBounds(rendering)
+                    if (rendering.text.toLowerCase().includes(lowerQuery)) {
+                        results.push(owner)
+                        textRes.push(rendering.text)
+                        
+                        // Add highlight directly to rendering children
+                        const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
+                        rendering.children = [highlightRect, ...(rendering.children ?? [])]
+                    }
                 }
 
                 for (const child of rendering.children ?? []) {
@@ -153,22 +310,22 @@ export class HandleSearchAction implements IActionHandler {
         while (queue.length > 0) {
             const element = queue.shift()!
 
+            /* Handle label elements */
             if (element.type === 'label' && 'text' in element && typeof (element as any).text === 'string') {
-                const text = (element as any).text.toLowerCase()
-                if (text.includes(lowerQuery)) {
-                    results.push(element)
-                    textRes.push((element as any).text)
-                }
+                const bounds = this.extractBounds(element as any)
+                this.processTextMatch(element, (element as any).text, lowerQuery, bounds, results, textRes)
             }
 
+            /* Handle edge and node elements */
             if ((element.type === 'edge' || element.type === 'node') && 'text' in element) {
-                const text = (element as any).text?.toLowerCase?.()
-                if (text?.includes(lowerQuery)) {
-                    results.push(element)
-                    textRes.push((element as any).text)
+                const text = (element as any).text
+                if (text && typeof text === 'string') {
+                    const bounds = this.extractBounds(element as any)
+                    this.processTextMatch(element, text, lowerQuery, bounds, results, textRes)
                 }
             }
 
+            /* Process data field for renderings */
             const data = (element as any).data
             if (Array.isArray(data)) {
                 for (const item of data) {
@@ -176,6 +333,7 @@ export class HandleSearchAction implements IActionHandler {
                 }
             }
 
+            /* Add children to queue */
             if ('children' in element && Array.isArray((element as any).children)) {
                 for (const child of (element as any).children) {
                     queue.push(child)
