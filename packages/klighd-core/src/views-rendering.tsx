@@ -620,12 +620,12 @@ export function renderKText(
 
         // inverse of average luminance of some experimental text, making the simplified text have the same average pixel value as such actual text.
         // measured with some kgts with different texts
-        // "single line of text": ~15%
-        // "Bold single line of text": ~25%
+        // single line of text: ~15% (15.1% with 100 first chars of Lorem Ipsum)
+        // Bold single line of text: ~23% (22.9% with 100 first chars of Lorem Ipsum)
         // "ALLCAPSTEXTWITHMOREOPACITY": ~20%
         // "BOLDALLCAPSTEXTWITHEVENMOREOPACITY": ~30%
         // take the "normal" values for bold/non-bold text for the placeholder.
-        const averageTextOpacity = (styles.kFontBold?.bold ? 0.25 : 0.15) / proportionalHeight
+        const averageTextOpacity = (styles.kFontBold?.bold ? 0.23 : 0.15) / proportionalHeight
         if (
             context.viewport &&
             (rendering.properties['klighd.calculated.text.bounds'] as Bounds) &&
@@ -636,21 +636,22 @@ export function renderKText(
             const replacements: VNode[] = background ? [background] : []
             const calculatedTextLineWidths = rendering.properties['klighd.calculated.text.line.widths'] as number[]
             const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
+
+            // the bounds data of texts in `boundsAndTransformation` are based on the horizontal/vertical baseline of the text, use the unaltered bounds instead.
+            const unalteredBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
+
             let currentY =
-                (boundsAndTransformation.bounds.y ?? 0) +
-                (rendering.properties['klighd.calculated.text.bounds'] as Bounds).y
+                (unalteredBounds.y ?? 0) +
+                (calculatedTextLineHeights ? calculatedTextLineHeights[0] * ((1 - proportionalHeight) / 2) : 0)
             lines.forEach((_line, index) => {
                 const xPos = boundsAndTransformation?.bounds?.x ?? 0
-                const yPos =
-                    currentY +
-                    (calculatedTextLineHeights ? (calculatedTextLineHeights[index] / 2) * proportionalHeight : 0)
                 const width = calculatedTextLineWidths ? calculatedTextLineWidths[index] : 0
                 const height = calculatedTextLineHeights ? calculatedTextLineHeights[index] * proportionalHeight : 0
                 // Generate rectangle for each line with color style.
                 const curLine = (
                     <rect
                         x={xPos}
-                        y={yPos}
+                        y={currentY}
                         width={width}
                         height={height}
                         fill={colorStyles.foreground?.color ?? '#000000'}
