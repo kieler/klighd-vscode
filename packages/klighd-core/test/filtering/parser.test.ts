@@ -235,4 +235,26 @@ describe('tag expression parsing', () => {
         }
         expect(filter.filterFun(negatedNode), 'has both #active and #disabled, so !#disabled fails').to.equal(false)
     })
+
+    it('structural tag: $children and #children', () => {
+        const ruleString = '$children >= 2'
+        const rule = parse(ruleString)
+        const filter = createFilter(rule)
+
+        const node = new SKNode()
+        node.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const child1 = new SKNode()
+        child1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const child2 = new SKNode()
+        child2.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        node.children = [child1, child2]
+        expect(filter.filterFun(node), 'node with 2 children').to.equal(true)
+        expect(filter.filterFun(child1), 'node with 0 children').to.equal(false)
+
+        const ruleString2 = '#children'
+        const rule2 = parse(ruleString2)
+        const filter2 = createFilter(rule2)
+        expect(filter2.filterFun(node), 'node with 2 children').to.equal(true)
+        expect(filter2.filterFun(child1), 'node with 0 children').to.equal(false)
+    })
 })

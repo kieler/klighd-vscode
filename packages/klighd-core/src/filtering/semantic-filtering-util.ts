@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022-2023 by
+ * Copyright 2022-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -18,6 +18,12 @@
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
 import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import {
+    evaluateReservedNumericTag,
+    evaluateReservedStructuralTag,
+    isReservedNumericTag,
+    isReservedStructuralTag,
+} from './reserved-structural-tags'
 
 /// / Base constructs ////
 
@@ -99,7 +105,7 @@ export class TrueConnective implements Connective {
 }
 
 export namespace TrueConnective {
-    export function evaluate(_conn: TrueConnective, _tags: Array<SemanticFilterTag>): boolean {
+    export function evaluate(_conn: TrueConnective, _element: SKGraphElement): boolean {
         return true
     }
 }
@@ -116,7 +122,7 @@ export class FalseConnective implements Connective {
 }
 
 export namespace FalseConnective {
-    export function evaluate(_conn: FalseConnective, _tags: Array<SemanticFilterTag>): boolean {
+    export function evaluate(_conn: FalseConnective, _element: SKGraphElement): boolean {
         return false
     }
 }
@@ -135,8 +141,8 @@ export class IdentityConnective implements UnaryConnective {
 }
 
 export namespace IdentityConnective {
-    export function evaluate(conn: IdentityConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateRule(conn.operand, tags)
+    export function evaluate(conn: IdentityConnective, element: SKGraphElement): boolean {
+        return evaluateRule(conn.operand, element)
     }
 }
 
@@ -157,8 +163,8 @@ export class NegationConnective implements UnaryConnective {
 }
 
 export namespace NegationConnective {
-    export function evaluate(conn: NegationConnective, tags: Array<SemanticFilterTag>): boolean {
-        return !evaluateRule(conn.operand, tags)
+    export function evaluate(conn: NegationConnective, element: SKGraphElement): boolean {
+        return !evaluateRule(conn.operand, element)
     }
 }
 
@@ -181,8 +187,8 @@ export class AndConnective implements BinaryConnective {
 }
 
 export namespace AndConnective {
-    export function evaluate(conn: AndConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateRule(conn.leftOperand, tags) && evaluateRule(conn.rightOperand, tags)
+    export function evaluate(conn: AndConnective, element: SKGraphElement): boolean {
+        return evaluateRule(conn.leftOperand, element) && evaluateRule(conn.rightOperand, element)
     }
 }
 
@@ -205,8 +211,8 @@ export class OrConnective implements BinaryConnective {
 }
 
 export namespace OrConnective {
-    export function evaluate(conn: OrConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateRule(conn.leftOperand, tags) || evaluateRule(conn.rightOperand, tags)
+    export function evaluate(conn: OrConnective, element: SKGraphElement): boolean {
+        return evaluateRule(conn.leftOperand, element) || evaluateRule(conn.rightOperand, element)
     }
 }
 
@@ -230,8 +236,8 @@ export class IfThenConnective implements BinaryConnective {
 }
 
 export namespace IfThenConnective {
-    export function evaluate(conn: IfThenConnective, tags: Array<SemanticFilterTag>): boolean {
-        return !evaluateRule(conn.leftOperand, tags) || evaluateRule(conn.rightOperand, tags)
+    export function evaluate(conn: IfThenConnective, element: SKGraphElement): boolean {
+        return !evaluateRule(conn.leftOperand, element) || evaluateRule(conn.rightOperand, element)
     }
 }
 
@@ -255,8 +261,8 @@ export class LogicEqualConnective implements BinaryConnective {
 }
 
 export namespace LogicEqualConnective {
-    export function evaluate(conn: LogicEqualConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateRule(conn.leftOperand, tags) === evaluateRule(conn.rightOperand, tags)
+    export function evaluate(conn: LogicEqualConnective, element: SKGraphElement): boolean {
+        return evaluateRule(conn.leftOperand, element) === evaluateRule(conn.rightOperand, element)
     }
 }
 
@@ -282,10 +288,10 @@ export class IfThenElseConnective implements TernaryConnective {
 }
 
 export namespace IfThenElseConnective {
-    export function evaluate(conn: IfThenElseConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateRule(conn.firstOperand, tags)
-            ? evaluateRule(conn.secondOperand, tags)
-            : evaluateRule(conn.thirdOperand, tags)
+    export function evaluate(conn: IfThenElseConnective, element: SKGraphElement): boolean {
+        return evaluateRule(conn.firstOperand, element)
+            ? evaluateRule(conn.secondOperand, element)
+            : evaluateRule(conn.thirdOperand, element)
     }
 }
 
@@ -309,8 +315,8 @@ export class LessThanConnective implements BinaryConnective {
 }
 
 export namespace LessThanConnective {
-    export function evaluate(conn: LessThanConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateNumeric(conn.leftOperand, tags) < evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: LessThanConnective, element: SKGraphElement): boolean {
+        return evaluateNumeric(conn.leftOperand, element) < evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -332,8 +338,8 @@ export class GreaterThanConnective implements BinaryConnective {
 }
 
 export namespace GreaterThanConnective {
-    export function evaluate(conn: GreaterThanConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateNumeric(conn.leftOperand, tags) > evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: GreaterThanConnective, element: SKGraphElement): boolean {
+        return evaluateNumeric(conn.leftOperand, element) > evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -355,8 +361,8 @@ export class NumericEqualConnective implements BinaryConnective {
 }
 
 export namespace NumericEqualConnective {
-    export function evaluate(conn: NumericEqualConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateNumeric(conn.leftOperand, tags) === evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: NumericEqualConnective, element: SKGraphElement): boolean {
+        return evaluateNumeric(conn.leftOperand, element) === evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -377,8 +383,8 @@ export class GreaterEqualsConnective implements BinaryConnective {
 }
 
 export namespace GreaterEqualsConnective {
-    export function evaluate(conn: GreaterEqualsConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateNumeric(conn.leftOperand, tags) >= evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: GreaterEqualsConnective, element: SKGraphElement): boolean {
+        return evaluateNumeric(conn.leftOperand, element) >= evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -400,8 +406,8 @@ export class LessEqualsConnective implements BinaryConnective {
 }
 
 export namespace LessEqualsConnective {
-    export function evaluate(conn: LessEqualsConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateNumeric(conn.leftOperand, tags) <= evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: LessEqualsConnective, element: SKGraphElement): boolean {
+        return evaluateNumeric(conn.leftOperand, element) <= evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -423,8 +429,8 @@ export class NumericNotEqualConnective implements BinaryConnective {
 }
 
 export namespace NumericNotEqualConnective {
-    export function evaluate(conn: NumericNotEqualConnective, tags: Array<SemanticFilterTag>): boolean {
-        return evaluateNumeric(conn.leftOperand, tags) !== evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: NumericNotEqualConnective, element: SKGraphElement): boolean {
+        return evaluateNumeric(conn.leftOperand, element) !== evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -445,8 +451,8 @@ export class NumericAdditionConnective implements BinaryConnective {
 }
 
 export namespace NumericAdditionConnective {
-    export function evaluate(conn: NumericAdditionConnective, tags: Array<SemanticFilterTag>): number {
-        return evaluateNumeric(conn.leftOperand, tags) + evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: NumericAdditionConnective, element: SKGraphElement): number {
+        return evaluateNumeric(conn.leftOperand, element) + evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -467,8 +473,8 @@ export class NumericSubtractionConnective implements BinaryConnective {
 }
 
 export namespace NumericSubtractionConnective {
-    export function evaluate(conn: NumericSubtractionConnective, tags: Array<SemanticFilterTag>): number {
-        return evaluateNumeric(conn.leftOperand, tags) - evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: NumericSubtractionConnective, element: SKGraphElement): number {
+        return evaluateNumeric(conn.leftOperand, element) - evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -489,8 +495,8 @@ export class NumericMultiplicationConnective implements BinaryConnective {
 }
 
 export namespace NumericMultiplicationConnective {
-    export function evaluate(conn: NumericMultiplicationConnective, tags: Array<SemanticFilterTag>): number {
-        return evaluateNumeric(conn.leftOperand, tags) * evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: NumericMultiplicationConnective, element: SKGraphElement): number {
+        return evaluateNumeric(conn.leftOperand, element) * evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -511,8 +517,8 @@ export class NumericDivisionConnective implements BinaryConnective {
 }
 
 export namespace NumericDivisionConnective {
-    export function evaluate(conn: NumericDivisionConnective, tags: Array<SemanticFilterTag>): number {
-        return evaluateNumeric(conn.leftOperand, tags) / evaluateNumeric(conn.rightOperand, tags)
+    export function evaluate(conn: NumericDivisionConnective, element: SKGraphElement): number {
+        return evaluateNumeric(conn.leftOperand, element) / evaluateNumeric(conn.rightOperand, element)
     }
 }
 
@@ -563,14 +569,7 @@ export function createFilter(rule: SemanticFilterRule): Filter {
     return {
         name: ruleName,
         defaultValue: rule.defaultValue,
-        filterFun: (el) => {
-            let tags: SemanticFilterTag[] = []
-            if (el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
-                tags = el.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as SemanticFilterTag[]
-            }
-
-            return evaluateRule(rule, tags)
-        },
+        filterFun: (el) => evaluateRule(rule, el),
     }
 }
 
@@ -588,12 +587,19 @@ function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule
 
 /**
  * Evaluates a rule that reutrns a numeric result. */
-function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): number {
+function evaluateNumeric(rule: SemanticFilterRule, element: SKGraphElement): number {
+    let tags: SemanticFilterTag[] = []
+    if (element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
+        tags = element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as SemanticFilterTag[]
+    }
     // Rule is a Tag
     if (isTag(rule)) {
         const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === rule.tag)
         if (nodeTag !== undefined) {
             return nodeTag.num
+        }
+        if (isReservedNumericTag(rule.tag)) {
+            return evaluateReservedNumericTag(rule.tag, element)
         }
         return 0
     }
@@ -602,23 +608,31 @@ function evaluateNumeric(rule: SemanticFilterRule, tags: Array<SemanticFilterTag
         case NumericConstantConnective.NAME:
             return NumericConstantConnective.evaluate(rule as NumericConstantConnective)
         case NumericAdditionConnective.NAME:
-            return NumericAdditionConnective.evaluate(rule as NumericAdditionConnective, tags)
+            return NumericAdditionConnective.evaluate(rule as NumericAdditionConnective, element)
         case NumericSubtractionConnective.NAME:
-            return NumericSubtractionConnective.evaluate(rule as NumericSubtractionConnective, tags)
+            return NumericSubtractionConnective.evaluate(rule as NumericSubtractionConnective, element)
         case NumericMultiplicationConnective.NAME:
-            return NumericMultiplicationConnective.evaluate(rule as NumericMultiplicationConnective, tags)
+            return NumericMultiplicationConnective.evaluate(rule as NumericMultiplicationConnective, element)
         case NumericDivisionConnective.NAME:
-            return NumericDivisionConnective.evaluate(rule as NumericDivisionConnective, tags)
+            return NumericDivisionConnective.evaluate(rule as NumericDivisionConnective, element)
         default:
             return 0
     }
 }
 
 /** Evaluates `rule` using `tags`. See Connectives for further explanation on evaluation. */
-function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>): boolean {
+function evaluateRule(rule: SemanticFilterRule, element: SKGraphElement): boolean {
+    let tags: SemanticFilterTag[] = []
+    if (element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
+        tags = element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as SemanticFilterTag[]
+    }
     // Rule is a Tag
     if (isTag(rule)) {
-        return tags.some((tag: SemanticFilterTag) => tag.tag === rule.tag)
+        let result = tags.some((tag: SemanticFilterTag) => tag.tag === rule.tag)
+        if (!result && isReservedStructuralTag(rule.tag)) {
+            result = evaluateReservedStructuralTag(rule.tag, element)
+        }
+        return result
     }
 
     // Rule is a Connective
@@ -626,23 +640,23 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
     switch (rule.name) {
         // Logic Connectives
         case TrueConnective.NAME:
-            return TrueConnective.evaluate(rule as TrueConnective, tags)
+            return TrueConnective.evaluate(rule as TrueConnective, element)
         case FalseConnective.NAME:
-            return FalseConnective.evaluate(rule as FalseConnective, tags)
+            return FalseConnective.evaluate(rule as FalseConnective, element)
         case IdentityConnective.NAME:
-            return IdentityConnective.evaluate(rule as IdentityConnective, tags)
+            return IdentityConnective.evaluate(rule as IdentityConnective, element)
         case NegationConnective.NAME:
-            return NegationConnective.evaluate(rule as NegationConnective, tags)
+            return NegationConnective.evaluate(rule as NegationConnective, element)
         case AndConnective.NAME:
-            return AndConnective.evaluate(rule as AndConnective, tags)
+            return AndConnective.evaluate(rule as AndConnective, element)
         case OrConnective.NAME:
-            return OrConnective.evaluate(rule as OrConnective, tags)
+            return OrConnective.evaluate(rule as OrConnective, element)
         case IfThenConnective.NAME:
-            return IfThenConnective.evaluate(rule as IfThenConnective, tags)
+            return IfThenConnective.evaluate(rule as IfThenConnective, element)
         case LogicEqualConnective.NAME:
-            return LogicEqualConnective.evaluate(rule as LogicEqualConnective, tags)
+            return LogicEqualConnective.evaluate(rule as LogicEqualConnective, element)
         case IfThenElseConnective.NAME:
-            return IfThenElseConnective.evaluate(rule as IfThenElseConnective, tags)
+            return IfThenElseConnective.evaluate(rule as IfThenElseConnective, element)
         // Numeric Connectives
         /*
         For now, these are defined by an unset corresponding tag being treated as if its num was 0. TODO:
@@ -652,17 +666,17 @@ function evaluateRule(rule: SemanticFilterRule, tags: Array<SemanticFilterTag>):
         Should this redefined, make sure to check all cases, e.g. !(x < y) === x >= y, de morgan, etc.
         */
         case LessThanConnective.NAME:
-            return LessThanConnective.evaluate(rule as LessThanConnective, tags)
+            return LessThanConnective.evaluate(rule as LessThanConnective, element)
         case GreaterThanConnective.NAME:
-            return GreaterThanConnective.evaluate(rule as GreaterThanConnective, tags)
+            return GreaterThanConnective.evaluate(rule as GreaterThanConnective, element)
         case NumericEqualConnective.NAME:
-            return NumericEqualConnective.evaluate(rule as NumericEqualConnective, tags)
+            return NumericEqualConnective.evaluate(rule as NumericEqualConnective, element)
         case GreaterEqualsConnective.NAME:
-            return GreaterEqualsConnective.evaluate(rule as GreaterEqualsConnective, tags)
+            return GreaterEqualsConnective.evaluate(rule as GreaterEqualsConnective, element)
         case LessEqualsConnective.NAME:
-            return LessEqualsConnective.evaluate(rule as LessEqualsConnective, tags)
+            return LessEqualsConnective.evaluate(rule as LessEqualsConnective, element)
         case NumericNotEqualConnective.NAME:
-            return NumericNotEqualConnective.evaluate(rule as NumericNotEqualConnective, tags)
+            return NumericNotEqualConnective.evaluate(rule as NumericNotEqualConnective, element)
         default:
             return true
     }
