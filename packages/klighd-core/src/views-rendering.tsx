@@ -31,6 +31,8 @@ import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import {
     Arc,
     HorizontalAlignment,
+    isContainerRendering,
+    isKText,
     KArc,
     KChildArea,
     KContainerRendering,
@@ -1311,7 +1313,56 @@ export function getRendering(
         return undefined
     }
 
+    // look for a title rendering; if none exists, label the first (dfs) rendering as the title rendering.
+    const useSmartZoom =
+        context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.targetKind !== 'hidden'
+    // only call this on the root rendering of KNodes
+    if (useSmartZoom && parent instanceof SKNode && parent.data.includes(kRendering)) {
+        establishTitleRendering(kRendering)
+    }
+
     return renderKRendering(kRendering, parent, propagatedStyles, context, childOfNodeTitle)
+}
+
+export function establishTitleRendering(rendering: KRendering): KRendering | undefined {
+    let titleRendering = dfs(rendering, isNodeTitle)
+    if (titleRendering !== undefined) {
+        return titleRendering
+    }
+    titleRendering = dfs(rendering, isKText)
+    if (titleRendering !== undefined) {
+        titleRendering.properties['klighd.isNodeTitle'] = true
+    }
+
+    return undefined
+}
+
+/**
+ * Checks if the given rendering has the `klighd.isNodeTitle` set to `true` in its properties.
+ */
+export function isNodeTitle(rendering: KRendering): boolean {
+    return rendering.properties['klighd.isNodeTitle'] === true
+}
+
+/**
+ * Returns the first rendering that matches the `condition` via depth first search.
+ * @param rendering The rendering to search in. The condition will also be checked on this rendering itself.
+ * @param condition The condition to check
+ * @returns The first matching element, or `undefined` if none exist.
+ */
+export function dfs(rendering: KRendering, condition: (r: KRendering) => boolean): KRendering | undefined {
+    if (condition(rendering)) {
+        return rendering
+    }
+    if (isContainerRendering(rendering)) {
+        for (const childRendering of rendering.children) {
+            const childResult = dfs(childRendering, condition)
+            if (childResult !== undefined) {
+                return childResult
+            }
+        }
+    }
+    return undefined
 }
 
 /**
