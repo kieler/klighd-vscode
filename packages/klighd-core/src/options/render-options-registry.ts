@@ -347,14 +347,14 @@ export class TitleScalingFactor implements RangeOption {
 /**
  * Boolean option to toggle the scaling of lines based on zoom level.
  */
-export class UseMinimumLineWidth implements RenderOption {
-    static readonly ID: string = 'use-minimum-line-width'
+export class UseLineScaling implements RenderOption {
+    static readonly ID: string = 'use-minimum-line-scale'
 
-    static readonly NAME: string = 'Minimum Line Width'
+    static readonly NAME: string = 'Use Line Scaling'
 
-    readonly id: string = UseMinimumLineWidth.ID
+    readonly id: string = UseLineScaling.ID
 
-    readonly name: string = UseMinimumLineWidth.NAME
+    readonly name: string = UseLineScaling.NAME
 
     readonly type: TransformationOptionType = TransformationOptionType.CHECK
 
@@ -363,7 +363,7 @@ export class UseMinimumLineWidth implements RenderOption {
     readonly renderCategory: string = SmartZoom.ID
 
     readonly description =
-        "Whether all borders and lines are at least as wide as set by the corresponding 'Minimum Line Width' option."
+        "Whether all borders and lines should be scaled to stay above a minimum threshold value set by the corresponding 'Minimum Line Scale' option."
 
     currentValue = true
 
@@ -371,18 +371,18 @@ export class UseMinimumLineWidth implements RenderOption {
 }
 
 /**
- * The size scaled lines should have as a minimum at any zoom level in pixels.
+ * The minumum scale lines should have at any zoom level.
  */
-export class MinimumLineWidth implements RangeOption {
-    static readonly ID: string = 'minimum-line-width'
+export class MinimumLineScale implements RangeOption {
+    static readonly ID: string = 'minimum-line-scale'
 
-    static readonly NAME: string = 'Minimum Line Width'
+    static readonly NAME: string = 'Minimum Line Scale'
 
     static readonly DEFAULT: number = 1
 
-    readonly id: string = MinimumLineWidth.ID
+    readonly id: string = MinimumLineScale.ID
 
-    readonly name: string = MinimumLineWidth.NAME
+    readonly name: string = MinimumLineScale.NAME
 
     readonly type: TransformationOptionType = TransformationOptionType.RANGE
 
@@ -400,7 +400,7 @@ export class MinimumLineWidth implements RangeOption {
     readonly renderCategory: string = SmartZoom.ID
 
     readonly description =
-        'The minium border or line width.\nIf set to 0.5 each edge or border is at least 0.5 pixel wide.'
+        'The minimum line scale.\nIf set to 0.5 each line uses at least 0.5 times of its width set by the synthesis.'
 
     currentValue = 0.5
 
@@ -533,8 +533,8 @@ export class RenderOptionsRegistry extends Registry {
 
         this.register(TitleScalingFactor)
 
-        this.register(UseMinimumLineWidth)
-        this.register(MinimumLineWidth)
+        this.register(UseLineScaling)
+        this.register(MinimumLineScale)
     }
 
     @postConstruct()

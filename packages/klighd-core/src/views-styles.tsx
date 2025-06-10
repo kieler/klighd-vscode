@@ -19,7 +19,7 @@ import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/const
 import Color = require('color')
 import { VNode } from 'snabbdom'
 import { getZoom, isSelectable, RGBColor, svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
-import { MinimumLineWidth, UseMinimumLineWidth } from './options/render-options-registry'
+import { MinimumLineScale, UseLineScaling } from './options/render-options-registry'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import {
     HorizontalAlignment,
@@ -863,17 +863,20 @@ export function isInvisible(styles: KStyles): boolean {
 export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, context: SKGraphModelRenderer): LineStyles {
     // The line width as requested by the element
     let lineWidth = styles.kLineWidth === undefined ? DEFAULT_LINE_WIDTH : styles.kLineWidth.lineWidth
-    const useLineWidthOption = context.renderOptionsRegistry.getValue(UseMinimumLineWidth)
+    const useLineScaleOption = context.renderOptionsRegistry.getValue(UseLineScaling)
     // Only enable, if option is found.
-    const useMinimumLineWidth = useLineWidthOption ?? false
-    if (!context.forceRendering && useMinimumLineWidth) {
-        // The line witdh in px that the drawn line should not be less than.
-        const minimumLineWidth = context.renderOptionsRegistry.getValueOrDefault(MinimumLineWidth)
-        // The line width the requested one would have when rendered in the current zoom level.
-        const realLineWidth = lineWidth * getZoom(target)
-        if (realLineWidth !== 0 && realLineWidth < minimumLineWidth) {
-            // scale the used line width up to appear as big as the minimum line width requested.
-            lineWidth *= minimumLineWidth / realLineWidth
+    const useMinimumLineScale = useLineScaleOption ?? false
+    if (!context.forceRendering && useMinimumLineScale) {
+        // The line width in px that a 1px line should not be less than.
+        const minimumLineScale = context.renderOptionsRegistry.getValueOrDefault(MinimumLineScale)
+
+        // The scale that this line would be affected by
+        const scale = getZoom(target) * ((target.properties.absoluteScale as number) ?? 1)
+
+        // never scale down
+        if (lineWidth !== 0 && scale < minimumLineScale) {
+            // scale the line width up so that a 1px line appears as big as the minimum line width requested.
+            lineWidth *= minimumLineScale / scale
         }
     }
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)
