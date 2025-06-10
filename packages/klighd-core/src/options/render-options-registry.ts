@@ -371,7 +371,7 @@ export class UseLineScaling implements RenderOption {
 }
 
 /**
- * The minumum scale lines should have at any zoom level.
+ * The minimum scale lines should have at any zoom level.
  */
 export class MinimumLineScale implements RangeOption {
     static readonly ID: string = 'minimum-line-scale'
