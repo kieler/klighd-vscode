@@ -17,9 +17,10 @@
 
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
+import { SGraphImpl } from 'sprotty'
 import { parse } from '../../src/filtering/parser'
 import { createFilter } from '../../src/filtering/semantic-filtering-util'
-import { SKNode } from '../../src/skgraph-models'
+import { SKEdge, SKNode } from '../../src/skgraph-models'
 
 describe('tag expression parsing', () => {
     it('rule: #someTag && #anotherTag', () => {
@@ -256,5 +257,44 @@ describe('tag expression parsing', () => {
         const filter2 = createFilter(rule2)
         expect(filter2.filterFun(node), 'node with 2 children').to.equal(true)
         expect(filter2.filterFun(child1), 'node with 0 children').to.equal(false)
+    })
+
+    it('structural tag: $edgeDegree and #edgeDegree', () => {
+        const ruleString = '$edgeDegree >= 1'
+        const rule = parse(ruleString)
+        const filter = createFilter(rule)
+
+        const node = new SGraphImpl()
+        node.type = 'graph'
+        node.id = 'root'
+        const child1 = new SKNode()
+        child1.id = 'n1'
+        child1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const child2 = new SKNode()
+        child2.id = 'n2'
+        child2.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const edge = new SKEdge()
+        edge.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        edge.targetId = 'n2'
+        edge.sourceId = 'n1'
+        node.add(child1)
+        node.add(child2)
+        child1.add(edge)
+
+        const child3 = new SKNode()
+        child3.id = 'n3'
+        child3.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        node.add(child3)
+
+        expect(filter.filterFun(child1), 'node with outgoing edge').to.equal(true)
+        expect(filter.filterFun(child2), 'node with incoming edge').to.equal(true)
+        expect(filter.filterFun(child3), 'node with no edges').to.equal(false)
+
+        const ruleString2 = '#edgeDegree'
+        const rule2 = parse(ruleString2)
+        const filter2 = createFilter(rule2)
+        expect(filter2.filterFun(child1), 'node with outgoing edge').to.equal(true)
+        expect(filter2.filterFun(child2), 'node with incoming edge').to.equal(true)
+        expect(filter2.filterFun(child3), 'node with no edges').to.equal(false)
     })
 })
