@@ -95,7 +95,7 @@ export function parse(ruleString: string): SemanticFilterRule {
     const operatorStack: Array<OperatorNode> = []
     const outputStack: Array<Node> = []
 
-    tokens.forEach((token, _index, _array) => {
+    tokens.forEach((token: string, _index, _array) => {
         if (OPERATORS.includes(token)) {
             while (
                 !(operatorStack.length === 0) &&
