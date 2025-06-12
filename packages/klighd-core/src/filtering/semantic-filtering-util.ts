@@ -18,12 +18,7 @@
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
 import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import {
-    evaluateReservedNumericTag,
-    evaluateReservedStructuralTag,
-    isReservedNumericTag,
-    isReservedStructuralTag,
-} from './reserved-structural-tags'
+import { evaluateReservedNumericTag, evaluateReservedStructuralTag } from './reserved-structural-tags'
 
 /// / Base constructs ////
 
@@ -603,10 +598,7 @@ function evaluateNumeric(rule: SemanticFilterRule, element: SKGraphElement): num
         if (nodeTag !== undefined) {
             return nodeTag.num
         }
-        if (isReservedNumericTag(rule.tag)) {
-            return evaluateReservedNumericTag(rule.tag, element)
-        }
-        return 0
+        return evaluateReservedNumericTag(rule.tag, element) ?? 0
     }
     assertIsConnective(rule)
     switch (rule.name) {
@@ -631,8 +623,8 @@ function evaluateRule(rule: SemanticFilterRule, element: SKGraphElement): boolea
     // Rule is a Tag
     if (isTag(rule)) {
         let result = tags.some((tag: SemanticFilterTag) => tag.tag === rule.tag)
-        if (!result && isReservedStructuralTag(rule.tag)) {
-            result = evaluateReservedStructuralTag(rule.tag, element)
+        if (!result) {
+            result = evaluateReservedStructuralTag(rule.tag, element) ?? false
         }
         return result
     }

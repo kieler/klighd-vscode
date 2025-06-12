@@ -45,32 +45,17 @@ const reservedNumericTags: Record<string, (el: SKGraphElement) => number> = {
 }
 
 /**
- * Checks whether the given tag is a reserved boolean tag.
- * @param tag the tag in question
- * @returns true if it is reserved
- */
-export function isReservedStructuralTag(tag: string): boolean {
-    return tag in reservedStructuralTags
-}
-
-/**
- * Checks whether the given tag is a reserved numeric tag.
- * @param tag the tag in question
- * @returns true if it is reserved
- */
-export function isReservedNumericTag(tag: string): boolean {
-    return tag in reservedNumericTags
-}
-
-/**
  * Evaluates the given reserved tag. This function does not check again whether the tag exists and it should
  * only be called after checking first with `isReservedStructuralTag`.
  * @param tag The tag to be evaluated
  * @param element The element to evaluate the tag on
  * @returns True if the condition of the tag is fulfilled for the given element.
  */
-export function evaluateReservedStructuralTag(tag: string, element: SKGraphElement): boolean {
-    return reservedStructuralTags[tag](element)
+export function evaluateReservedStructuralTag(tag: string, element: SKGraphElement): boolean | undefined {
+    if (isReservedStructuralTag(tag)) {
+        return reservedStructuralTags[tag](element)
+    }
+    return undefined
 }
 
 /**
@@ -80,8 +65,29 @@ export function evaluateReservedStructuralTag(tag: string, element: SKGraphEleme
  * @param element The element to evaluate the tag on
  * @returns The value evaluated for tag for the given element.
  */
-export function evaluateReservedNumericTag(tag: string, element: SKGraphElement): number {
-    return reservedNumericTags[tag](element)
+export function evaluateReservedNumericTag(tag: string, element: SKGraphElement): number | undefined {
+    if (isReservedNumericTag(tag)) {
+        return reservedNumericTags[tag](element)
+    }
+    return undefined
+}
+
+/**
+ * Checks whether the given tag is a reserved boolean tag.
+ * @param tag the tag in question
+ * @returns true if it is reserved
+ */
+function isReservedStructuralTag(tag: string): boolean {
+    return tag in reservedStructuralTags
+}
+
+/**
+ * Checks whether the given tag is a reserved numeric tag.
+ * @param tag the tag in question
+ * @returns true if it is reserved
+ */
+function isReservedNumericTag(tag: string): boolean {
+    return tag in reservedNumericTags
 }
 
 /** Helper function to get incoming edges. */
