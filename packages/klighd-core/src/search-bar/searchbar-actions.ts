@@ -88,8 +88,8 @@ export namespace ClearHighlightsAction {
 function createHighlightRectangle(xPos: number, yPos: number, width: number, height: number): KRectangle {
     const highlight: KColoring = {
         type: 'KBackgroundImpl',
-        color: rgb(255, 203, 136),
-        alpha: 127,
+        color: rgb(255, 255, 0),
+        alpha: 80,
         gradientAngle: 0,
         propagateToChildren: false,
         selection: false,
@@ -133,6 +133,13 @@ function removePreviousHighlights(root: SModelElement): void {
     }
 }
 
+interface HighlightBounds {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
 /* --------------------------------- search action ---------------------------------------- */   
 export interface SearchAction extends Action {
     kind: typeof SearchAction.KIND
@@ -158,12 +165,6 @@ export namespace SearchAction {
     }
 }
 
-interface HighlightBounds {
-    x: number
-    y: number
-    width: number
-    height: number
-}
 
 @injectable()
 export class HandleSearchAction implements IActionHandler {
@@ -224,7 +225,7 @@ export class HandleSearchAction implements IActionHandler {
                     const alreadyHasHighlight = item.children?.some(child => child.id?.startsWith('highlightRect-'))
                     if (!alreadyHasHighlight) {
                         const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
-                        item.children = [highlightRect, ...item.children ?? []]
+                        item.children = [...(item.children ?? []), highlightRect]
                     }
                 }
             }
@@ -232,7 +233,7 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
-     * Checks if text matches query and adds the element to results with highlighting
+     * Checks if text matches query and possibly adds the element to results with highlighting
      * @param element the graph element that is checked
      * @param text the text field of the element
      * @param query the user input
@@ -278,31 +279,44 @@ export class HandleSearchAction implements IActionHandler {
         /**
          * Go into a rendering to look for the text field and compare it to the input
          * @param rendering KText or KLabel
-         * @param owner KContainerRendering that contains {@param rendering}
+         * @param parent KContainerRendering that contains {@param rendering}
          */
-        const visitRendering = (rendering: any, owner: SModelElement): void => {
+        const visitRendering = (rendering: any, parent: SModelElement): void => {
+            if (!rendering) return 
+
             /* Check KText */
-            if (rendering != null && isKText(rendering) && rendering.text) {
+            if (isKText(rendering) && rendering.text) {
                 const bounds = this.extractBounds(rendering)
-                this.processTextMatch(owner, rendering.text, lowerQuery, bounds, results, textRes)
+                this.processTextMatch(parent, rendering.text, lowerQuery, bounds, results, textRes)
             }
 
             /* Check KContainerElements */
-            if (rendering != null && isContainerRendering(rendering)) {
+            if (isContainerRendering(rendering)) {
                 if ('text' in rendering && typeof rendering.text === 'string') {
-                    const bounds = this.extractBounds(rendering)
                     if (rendering.text.toLowerCase().includes(lowerQuery)) {
-                        results.push(owner)
+                        results.push(rendering)
                         textRes.push(rendering.text)
                         
-                        // Add highlight directly to rendering children
+                        const bounds = this.extractBounds(rendering)
                         const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
-                        rendering.children = [highlightRect, ...(rendering.children ?? [])]
+
+                        const parentData = (parent as any).data
+                        if (Array.isArray(parentData)) {
+                            for (const item of parentData) {
+                                if (isContainerRendering(item) && item.children) {
+                                    const index = item.children.indexOf(rendering)
+                                    if (index !== -1) {
+                                        // Insert highlight right after the element with the text
+                                        item.children.splice(index + 1, 0, highlightRect)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
                 for (const child of rendering.children ?? []) {
-                    visitRendering(child, owner)
+                    visitRendering(child, parent)
                 }
             }
         }
@@ -310,19 +324,20 @@ export class HandleSearchAction implements IActionHandler {
         while (queue.length > 0) {
             const element = queue.shift()!
 
-            /* Handle label elements */
-            if (element.type === 'label' && 'text' in element && typeof (element as any).text === 'string') {
-                const bounds = this.extractBounds(element as any)
-                this.processTextMatch(element, (element as any).text, lowerQuery, bounds, results, textRes)
-            }
-
-            /* Handle edge and node elements */
-            if ((element.type === 'edge' || element.type === 'node') && 'text' in element) {
-                const text = (element as any).text
-                if (text && typeof text === 'string') {
-                    const bounds = this.extractBounds(element as any)
-                    this.processTextMatch(element, text, lowerQuery, bounds, results, textRes)
-                }
+            /* handle elements with text field */
+            switch (element.type) {
+                case 'label':
+                case 'edge':
+                case 'node':
+                case 'port':
+                    if ('text' in element) {
+                        const text = (element as any).text;
+                        if (typeof text === 'string' && text.trim()) {
+                            const bounds = this.extractBounds(element);
+                            this.processTextMatch(element, text, lowerQuery, bounds, results, textRes);
+                        }
+                    }
+                    break;
             }
 
             /* Process data field for renderings */

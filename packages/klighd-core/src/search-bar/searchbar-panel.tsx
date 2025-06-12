@@ -233,11 +233,7 @@ export class SearchBarPanel {
                     },
                     on: {
                         mouseenter: (event: MouseEvent) => {
-                            const path = this.searchResults[index].id
-                                                .replace(/\$\$/g, '§')
-                                                .replace(/\$/g, ' > ')
-                                                .replace(/§/g, ' > ')
-                                                .replace(/^.*?> /, '')
+                            const path = this.decodeId(this.searchResults[index].id)
                             if (this.tooltipEl) {
                                 this.tooltipEl.textContent = path
                                 this.tooltipEl.style.top = `${event.clientY + 12}px`
@@ -333,5 +329,44 @@ export class SearchBarPanel {
         if (event.key === 'Enter') {
             this.panToElement(this.searchResults[0].id)
         }
+    }
+
+    /**
+     * Build the path from the id of an element.
+     * @param id the id of an SModelElement
+     * @returns a readable path with icons.
+     */
+    private decodeId(id : string) : string {
+        if (!id) return ""
+
+        const iconMap: Record<string, string> = {
+            N: "🔘", 
+            E: "➖", 
+            P: "🔲", 
+            L: "🏷️", 
+        }
+
+        const segments = id.split("$")
+        const result: string[] = []
+
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i]
+
+            if (!segment || segment === "root") continue
+
+            const isUnnamed = segments[i - 1] === ""
+
+            const typeChar = segment.charAt(0)
+            const label = segment.substring(1)
+            const icon = iconMap[typeChar] ?? "❓"
+
+            if (isUnnamed) {
+                result.push(icon)
+            } else {
+                result.push(`${icon} ${label}`)
+            }
+        }
+
+        return result.join(" > ")
     }
 }
