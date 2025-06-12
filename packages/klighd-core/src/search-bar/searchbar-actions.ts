@@ -234,7 +234,7 @@ export class HandleSearchAction implements IActionHandler {
 
     /**
      * Checks if text matches query and possibly adds the element to results with highlighting
-     * @param element the graph element that is checked
+     * @param element the graph element containing the text
      * @param text the text field of the element
      * @param query the user input
      * @param bounds the position and size of the possible highlight
@@ -293,25 +293,14 @@ export class HandleSearchAction implements IActionHandler {
             /* Check KContainerElements */
             if (isContainerRendering(rendering)) {
                 if ('text' in rendering && typeof rendering.text === 'string') {
+                    const bounds = this.extractBounds(rendering)
                     if (rendering.text.toLowerCase().includes(lowerQuery)) {
                         results.push(rendering)
                         textRes.push(rendering.text)
                         
-                        const bounds = this.extractBounds(rendering)
+                        // Add highlight directly to rendering children
                         const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
-
-                        const parentData = (parent as any).data
-                        if (Array.isArray(parentData)) {
-                            for (const item of parentData) {
-                                if (isContainerRendering(item) && item.children) {
-                                    const index = item.children.indexOf(rendering)
-                                    if (index !== -1) {
-                                        // Insert highlight right after the element with the text
-                                        item.children.splice(index + 1, 0, highlightRect)
-                                    }
-                                }
-                            }
-                        }
+                        rendering = [...(rendering.children ?? []), highlightRect]
                     }
                 }
 
