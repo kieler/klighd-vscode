@@ -20,7 +20,7 @@ import { describe, it } from 'mocha'
 import { SGraphImpl } from 'sprotty'
 import { parse } from '../../src/filtering/parser'
 import { createFilter } from '../../src/filtering/semantic-filtering-util'
-import { SKEdge, SKNode } from '../../src/skgraph-models'
+import { SKEdge, SKLabel, SKNode, SKPort } from '../../src/skgraph-models'
 
 describe('tag expression parsing', () => {
     it('rule: #someTag && #anotherTag', () => {
@@ -257,6 +257,45 @@ describe('tag expression parsing', () => {
         const filter2 = createFilter(rule2)
         expect(filter2.filterFun(node), 'node with 2 children').to.equal(true)
         expect(filter2.filterFun(child1), 'node with 0 children').to.equal(false)
+    })
+
+    it('structural tags: #isNode, #isEdge, #isPort, #isLabel', () => {
+        const isNodeFilter = createFilter(parse('#isNode'))
+        const isEdgeFilter = createFilter(parse('#isEdge'))
+        const isPortFilter = createFilter(parse('#isPort'))
+        const isLabelFilter = createFilter(parse('#isLabel'))
+
+        const node = new SKNode()
+        node.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        expect(isNodeFilter.filterFun(node), 'node is node').to.equal(true)
+
+        const edge = new SKEdge()
+        edge.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        expect(isEdgeFilter.filterFun(edge), 'edge is edge').to.equal(true)
+
+        const port = new SKPort()
+        port.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        expect(isPortFilter.filterFun(port), 'port is port').to.equal(true)
+
+        const label = new SKLabel()
+        label.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        expect(isLabelFilter.filterFun(label), 'label is label').to.equal(true)
+
+        expect(isNodeFilter.filterFun(edge), 'node is not edge').to.equal(false)
+        expect(isNodeFilter.filterFun(port), 'node is not port').to.equal(false)
+        expect(isNodeFilter.filterFun(label), 'node is not label').to.equal(false)
+
+        expect(isEdgeFilter.filterFun(node), 'edge is not node').to.equal(false)
+        expect(isEdgeFilter.filterFun(port), 'edge is not port').to.equal(false)
+        expect(isEdgeFilter.filterFun(label), 'edge is not label').to.equal(false)
+
+        expect(isPortFilter.filterFun(node), 'port is not node').to.equal(false)
+        expect(isPortFilter.filterFun(edge), 'port is not edge').to.equal(false)
+        expect(isPortFilter.filterFun(label), 'port is not label').to.equal(false)
+
+        expect(isLabelFilter.filterFun(node), 'label is not node').to.equal(false)
+        expect(isLabelFilter.filterFun(edge), 'label is not edge').to.equal(false)
+        expect(isLabelFilter.filterFun(port), 'label is not port').to.equal(false)
     })
 
     it('structural tag: $edgeDegree and #edgeDegree', () => {
