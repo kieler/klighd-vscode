@@ -594,7 +594,7 @@ function getSemanticFilterTags(element: SKGraphElement) {
     return tags
 }
 
-/** Evaluates a rule that reutrns a numeric result. */
+/** Evaluates a rule that returns a numeric result. */
 function evaluateNumeric(rule: SemanticFilterRule, element: SKGraphElement): number {
     const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
     // Rule is a Tag
