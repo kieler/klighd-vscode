@@ -336,4 +336,82 @@ describe('tag expression parsing', () => {
         expect(filter2.filterFun(child2), 'node with incoming edge').to.equal(true)
         expect(filter2.filterFun(child3), 'node with no edges').to.equal(false)
     })
+
+    it('structural tag: $inDegree and #inDegree', () => {
+        const ruleString = '$inDegree >= 1'
+        const rule = parse(ruleString)
+        const filter = createFilter(rule)
+
+        const node = new SGraphImpl()
+        node.type = 'graph'
+        node.id = 'root'
+        const child1 = new SKNode()
+        child1.id = 'n1'
+        child1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const child2 = new SKNode()
+        child2.id = 'n2'
+        child2.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const edge = new SKEdge()
+        edge.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        edge.targetId = 'n2'
+        edge.sourceId = 'n1'
+        node.add(child1)
+        node.add(child2)
+        child1.add(edge)
+
+        const child3 = new SKNode()
+        child3.id = 'n3'
+        child3.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        node.add(child3)
+
+        expect(filter.filterFun(child1), 'node with outgoing edge').to.equal(false)
+        expect(filter.filterFun(child2), 'node with incoming edge').to.equal(true)
+        expect(filter.filterFun(child3), 'node with no edges').to.equal(false)
+
+        const ruleString2 = '#inDegree'
+        const rule2 = parse(ruleString2)
+        const filter2 = createFilter(rule2)
+        expect(filter2.filterFun(child1), 'node with outgoing edge').to.equal(false)
+        expect(filter2.filterFun(child2), 'node with incoming edge').to.equal(true)
+        expect(filter2.filterFun(child3), 'node with no edges').to.equal(false)
+    })
+
+    it('structural tag: $outDegree and #outDegree', () => {
+        const ruleString = '$outDegree >= 1'
+        const rule = parse(ruleString)
+        const filter = createFilter(rule)
+
+        const node = new SGraphImpl()
+        node.type = 'graph'
+        node.id = 'root'
+        const child1 = new SKNode()
+        child1.id = 'n1'
+        child1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const child2 = new SKNode()
+        child2.id = 'n2'
+        child2.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        const edge = new SKEdge()
+        edge.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        edge.targetId = 'n2'
+        edge.sourceId = 'n1'
+        node.add(child1)
+        node.add(child2)
+        child1.add(edge)
+
+        const child3 = new SKNode()
+        child3.id = 'n3'
+        child3.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+        node.add(child3)
+
+        expect(filter.filterFun(child1), 'node with outgoing edge').to.equal(true)
+        expect(filter.filterFun(child2), 'node with incoming edge').to.equal(false)
+        expect(filter.filterFun(child3), 'node with no edges').to.equal(false)
+
+        const ruleString2 = '#outDegree'
+        const rule2 = parse(ruleString2)
+        const filter2 = createFilter(rule2)
+        expect(filter2.filterFun(child1), 'node with outgoing edge').to.equal(true)
+        expect(filter2.filterFun(child2), 'node with incoming edge').to.equal(false)
+        expect(filter2.filterFun(child3), 'node with no edges').to.equal(false)
+    })
 })
