@@ -22,6 +22,7 @@ import { SEdgeImpl } from 'sprotty'
 import { FluentIterable, toArray } from 'sprotty/lib/utils/iterable'
 import { SKEdge, SKLabel, SKNode, SKPort } from '../skgraph-models'
 
+/** Dictionary of boolean tags with their evaluation implementation. */
 const reservedStructuralTags: Record<string, (el: SKGraphElement) => boolean> = {
     children: (el: SKGraphElement) => el.children.length !== 0,
     isNode: (el: SKGraphElement) => el instanceof SKNode,
@@ -34,6 +35,7 @@ const reservedStructuralTags: Record<string, (el: SKGraphElement) => boolean> = 
     outDegree: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length !== 0,
 }
 
+/** Dictionary of numeric tags with their evaluation implementation. */
 const reservedNumericTags: Record<string, (el: SKGraphElement) => number> = {
     children: (el: SKGraphElement) => el.children.length,
     edgeDegree: (el: SKGraphElement) =>
@@ -42,22 +44,47 @@ const reservedNumericTags: Record<string, (el: SKGraphElement) => number> = {
     outDegree: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length,
 }
 
+/**
+ * Checks whether the given tag is a reserved boolean tag.
+ * @param tag the tag in question
+ * @returns true if it is reserved
+ */
 export function isReservedStructuralTag(tag: string): boolean {
     return tag in reservedStructuralTags
 }
 
+/**
+ * Checks whether the given tag is a reserved numeric tag.
+ * @param tag the tag in question
+ * @returns true if it is reserved
+ */
 export function isReservedNumericTag(tag: string): boolean {
     return tag in reservedNumericTags
 }
 
+/**
+ * Evaluates the given reserved tag. This function does not check again whether the tag exists and it should
+ * only be called after checking first with `isReservedStructuralTag`.
+ * @param tag The tag to be evaluated
+ * @param element The element to evaluate the tag on
+ * @returns True if the condition of the tag is fulfilled for the given element.
+ */
 export function evaluateReservedStructuralTag(tag: string, element: SKGraphElement): boolean {
     return reservedStructuralTags[tag](element)
 }
 
+/**
+ * Evaluates the given reserved tag. This function does not check again whether the tag exists and it should
+ * only be called after checking first with `isReservedNumericTag`.
+ * @param tag The tag to be evaluated
+ * @param element The element to evaluate the tag on
+ * @returns The value evaluated for tag for the given element.
+ */
 export function evaluateReservedNumericTag(tag: string, element: SKGraphElement): number {
     return reservedNumericTags[tag](element)
 }
 
+/** Helper function to get incoming edges. */
 function getIncomingEdgesIfNode(element: SKGraphElement): FluentIterable<SEdgeImpl> {
     if (element instanceof SKNode) {
         return element.incomingEdges
@@ -65,6 +92,7 @@ function getIncomingEdgesIfNode(element: SKGraphElement): FluentIterable<SEdgeIm
     return []
 }
 
+/** Helper function to get outgoing edges. */
 function getOutgoingEdgesIfNode(element: SKGraphElement): FluentIterable<SEdgeImpl> {
     if (element instanceof SKNode) {
         return element.outgoingEdges

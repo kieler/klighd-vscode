@@ -585,13 +585,18 @@ function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule
     }
 }
 
-/**
- * Evaluates a rule that reutrns a numeric result. */
-function evaluateNumeric(rule: SemanticFilterRule, element: SKGraphElement): number {
+/** Extracts the semantic filter tags defined for an element. */
+function getSemanticFilterTags(element: SKGraphElement) {
     let tags: SemanticFilterTag[] = []
     if (element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
         tags = element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as SemanticFilterTag[]
     }
+    return tags
+}
+
+/** Evaluates a rule that reutrns a numeric result. */
+function evaluateNumeric(rule: SemanticFilterRule, element: SKGraphElement): number {
+    const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
     // Rule is a Tag
     if (isTag(rule)) {
         const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === rule.tag)
@@ -622,10 +627,7 @@ function evaluateNumeric(rule: SemanticFilterRule, element: SKGraphElement): num
 
 /** Evaluates `rule` using `tags`. See Connectives for further explanation on evaluation. */
 function evaluateRule(rule: SemanticFilterRule, element: SKGraphElement): boolean {
-    let tags: SemanticFilterTag[] = []
-    if (element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
-        tags = element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as SemanticFilterTag[]
-    }
+    const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
     // Rule is a Tag
     if (isTag(rule)) {
         let result = tags.some((tag: SemanticFilterTag) => tag.tag === rule.tag)
