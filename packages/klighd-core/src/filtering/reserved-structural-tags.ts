@@ -45,8 +45,7 @@ const reservedNumericTags: Record<string, (el: SKGraphElement) => number> = {
 }
 
 /**
- * Evaluates the given reserved tag. This function does not check again whether the tag exists and it should
- * only be called after checking first with `isReservedStructuralTag`.
+ * Evaluates the given reserved tag if it defined otherwise returns undefined.
  * @param tag The tag to be evaluated
  * @param element The element to evaluate the tag on
  * @returns True if the condition of the tag is fulfilled for the given element.
@@ -59,8 +58,7 @@ export function evaluateReservedStructuralTag(tag: string, element: SKGraphEleme
 }
 
 /**
- * Evaluates the given reserved tag. This function does not check again whether the tag exists and it should
- * only be called after checking first with `isReservedNumericTag`.
+ * Evaluates the given reserved tagif it defined otherwise returns undefined
  * @param tag The tag to be evaluated
  * @param element The element to evaluate the tag on
  * @returns The value evaluated for tag for the given element.
