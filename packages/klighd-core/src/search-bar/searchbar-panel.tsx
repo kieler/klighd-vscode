@@ -64,6 +64,7 @@ export class SearchBarPanel {
         } else {
             document.removeEventListener('keydown', this.handleEscapeKey)
             document.removeEventListener('keydown', this.handleEmptyInput)
+            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
             }
@@ -315,9 +316,7 @@ export class SearchBarPanel {
      * @param event keypress (esc key)
      */
     private handleEscapeKey = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-            this.resetUI()
-        }
+        if (event.key === 'Escape') this.resetUI()
     }
     
     /**
@@ -328,18 +327,13 @@ export class SearchBarPanel {
         if (event.key === 'Backspace') {
             const input = document.getElementById('search') as HTMLInputElement
             setTimeout(() => {
-                if (input.value === '') {
-                    console.log("Backspace && input now empty")
-                    this.resetUI()
-                }
+                if (input.value === '') this.resetUI()
             }, 0)
         }
     }
 
     private handleEnter = (event : KeyboardEvent) => {
-        if (event.key === 'Enter') {
-            this.panToElement(this.searchResults[0].id)
-        }
+        if (event.key === 'Enter') this.panToElement(this.searchResults[0].id)
     }
 
     /**
