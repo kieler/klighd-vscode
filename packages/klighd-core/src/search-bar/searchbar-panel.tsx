@@ -201,9 +201,22 @@ export class SearchBarPanel {
      * @returns panel with result list
      */
     private showSearchResults(panel: SearchBarPanel): VNode {
+        /* empty input or invalid tag (-> any tag not present in graph is invalid) */
         if (this.searchResults.length === 0) {
+            const input = document.getElementById('search') as HTMLInputElement
+            const currentInput = input ? input.value : ''
+            const isTagSearch = currentInput.startsWith('#') || currentInput.startsWith('$')
+            const message = isTagSearch ? 'Not a valid tag' : 'No results found'
+            const textColor = isTagSearch ? 'red' : 'black'
+            
             return h('div', {}, [
-                h('div', { style: { fontWeight: 'bold', marginBottom: '5px' } }, ['No results found'])
+                h('div', { 
+                    style: { 
+                        fontWeight: 'bold', 
+                        marginBottom: '5px',
+                        color: textColor
+                    } 
+                }, [message])
             ])
         }
 

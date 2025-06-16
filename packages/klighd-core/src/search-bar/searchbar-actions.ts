@@ -207,7 +207,11 @@ export class HandleSearchAction implements IActionHandler {
         const query = action.input.trim().toLowerCase()
         if (!query) return
 
-        const results : SModelElement[] = this.searchModel(HandleSearchAction.currentModel, query, action.panel)
+        const isTagQuery = query.startsWith('#') || query.startsWith('$')
+        
+        const results : SModelElement[] = isTagQuery
+            ? this.searchTags(HandleSearchAction.currentModel, query, action.panel)
+            : this.searchModel(HandleSearchAction.currentModel, query, action.panel)        
         action.panel.setResults(results)
         action.panel.update()
     }
@@ -263,6 +267,159 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
+     * Matches the query to the tags.
+     * @param tags the tags of some object
+     * @param query The user input in the format "$someTag someNumValue"
+     * @returns whether the searched tag is included in the tags 
+     */
+    private matchesTagWithNumQuery(tags: { tag: string, num?: number }[], query: string): boolean {
+        const match = query.match(/^(\w+)\s+(\d+)$/)
+        if (!match) return false
+
+        const tagToFind = match[1].toLowerCase()
+        const numToFind = parseInt(match[2], 10)
+
+        for (const tagObj of tags) {
+            console.log('Checking tag:', tagObj.tag, 'num:', tagObj.num)
+            if (tagObj.tag === tagToFind && tagObj.num === numToFind) return true
+        }
+        return false
+    }
+
+
+
+    /**
+     * Parses logical operators
+     * @param tags the tags of some element
+     * @param fullQuery the user input
+     * @returns whether fullquery is met
+     */
+    private matchesTagQuery(tags: { tag: string, num?: number }[], fullQuery: string): boolean {
+        const orClauses = fullQuery.split('||').map(s => s.trim())
+
+        for (const orClause of orClauses) {
+            const andTerms = orClause.split('&&').map(term => term.trim())
+            let allMatch = true
+
+            for (const term of andTerms) {
+                if (term.startsWith('#')) {
+                    const plainTag = term.slice(1).toLowerCase()
+                    const tagStrings = tags.map(t => t.tag)
+                    if (!tagStrings.includes(plainTag)) {
+                        allMatch = false
+                        break
+                    }
+                } else if (term.startsWith('$')) {
+                    const numQuery = term.slice(1).toLowerCase()
+                    if (!this.matchesTagWithNumQuery(tags, numQuery)) {
+                        allMatch = false
+                        break
+                    }
+                } else {
+                    allMatch = false
+                    break
+                }
+            }
+
+            if (allMatch) return true
+        }
+
+        return false
+    }
+
+    /**
+     * Extracts the tags from a graph element with the goal to further search through the tags.
+     * @param element the graph element
+     * @returns a list of tags, that the element has
+     */
+    private getTagsFromElement(element: any): { tag: string, num?: number }[] {
+        const tags: { tag: string, num?: number }[] = []
+
+        const tagProp = element.properties?.["de.cau.cs.kieler.klighd.semanticFilter.tags"]
+        if (tagProp && Array.isArray(tagProp)) {
+            const parsed = tagProp
+                .filter((item: any) => typeof item.tag === 'string')
+                .map((item: any) => ({ tag: item.tag.toLowerCase(), num: item.num }))
+            tags.push(...parsed)
+        }
+
+        if (Array.isArray(element.data)) {
+            for (const item of element.data) {
+                const dataTagProp = item?.properties?.["de.cau.cs.kieler.klighd.semanticFilter.tags"]
+                if (dataTagProp && Array.isArray(dataTagProp)) {
+                    tags.push(...dataTagProp
+                        .filter((t: any) => typeof t.tag === 'string')
+                        .map((t: any) => ({ tag: t.tag.toLowerCase(), num: t.num })))
+                }
+            }
+        }
+
+        return tags
+    }
+
+    /**
+     * Performes a tag search
+     * @param root the current model starting with the root
+     * @param query tags to find
+     * @param panel the search bar panel
+     * @returns list of results
+     */
+    private searchTags(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
+        const results: SModelElement[] = []
+        const textRes: string[] = []
+
+        const queue: SModelElement[] = [root]
+
+        while (queue.length > 0) {
+            const element = queue.shift()!
+
+            const tagObjs = this.getTagsFromElement(element)
+            const tagStrings = tagObjs.map(t => t.tag)  
+
+            const matched = this.matchesTagQuery(tagObjs, query.toLowerCase())
+
+            if (tagStrings.length > 0 && matched) {
+                const bounds = this.extractBounds(element)
+                this.addHighlightToElement(element, bounds)
+                results.push(element)
+
+                const segments = element.id.split('$')
+                let nodeName = ''
+                for (let i = segments.length - 1; i >= 0; i--) {
+                    const segment = segments[i]
+                    if (segment && segment !== '') {
+                        if (segment.length > 1) {
+                            switch (segment.charAt(0)){
+                                case 'N': nodeName = '[node]'; break
+                                case 'E': nodeName = '[edge]'; break
+                                case 'P': nodeName = '[port]'; break
+                                case 'L': nodeName = '[label]'; break
+                            }
+                            nodeName += ' ' + segment.substring(1)
+                        } else {
+                            nodeName = segment
+                        }
+                        break
+                    }
+                }
+
+                const displayText = nodeName || element.id
+                textRes.push(displayText)
+            }
+
+            if ('children' in element && Array.isArray((element as any).children)) {
+                for (const child of (element as any).children) {
+                    queue.push(child)
+                }
+            }
+        }
+
+        panel.setTextRes(textRes)
+        return results
+    }
+
+
+    /**
      * Perform a breadth-first search on {@param root} to find {@param query}
      * @param root the model
      * @param query the user input
@@ -300,7 +457,7 @@ export class HandleSearchAction implements IActionHandler {
                         
                         // Add highlight directly to rendering children
                         const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
-                        rendering = [...(rendering.children ?? []), highlightRect]
+                        rendering.children = [...(rendering.children ?? []), highlightRect]
                     }
                 }
 
