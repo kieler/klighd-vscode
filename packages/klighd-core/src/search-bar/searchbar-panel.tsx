@@ -39,6 +39,7 @@ export class SearchBarPanel {
 
         if (vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
+            document.addEventListener('keydown', this.handleEmptyInput)
             setTimeout(() => {
                 const input = document.getElementById('search') as HTMLInputElement
                 if (input) {
@@ -62,6 +63,7 @@ export class SearchBarPanel {
             }
         } else {
             document.removeEventListener('keydown', this.handleEscapeKey)
+            document.removeEventListener('keydown', this.handleEmptyInput)
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
             }
@@ -142,7 +144,6 @@ export class SearchBarPanel {
                     },
                     on: {
                         input: (event: Event) => {
-                            document.addEventListener('keydown', this.handleEmptyInput)
                             const input = (event.target as HTMLInputElement).value
                             this.searched = true
 
@@ -156,7 +157,6 @@ export class SearchBarPanel {
                             console.log(`[SearchBar] search took ${total.toFixed(10)} ms`);
                             
                             document.addEventListener('keydown', this.handleEnter)
-                            document.removeEventListener('keydown', this.handleEmptyInput)
                         }
                     }
                 }),
@@ -293,14 +293,8 @@ export class SearchBarPanel {
         this.actionDispatcher.dispatch(action)
     }
 
-
-    /**
-     * When pressing the escape key, the search input resets.
-     * @param event keypress (esc key)
-     */
-    private handleEscapeKey = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-            const input = document.getElementById('search') as HTMLInputElement
+    private resetUI() : void {
+        const input = document.getElementById('search') as HTMLInputElement
             if (input) {
                 input.value = ''
                 input.focus()
@@ -313,6 +307,16 @@ export class SearchBarPanel {
             this.searched = false
             this.update()
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+    }
+
+
+    /**
+     * When pressing the escape key, the search input resets.
+     * @param event keypress (esc key)
+     */
+    private handleEscapeKey = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            this.resetUI()
         }
     }
     
@@ -323,18 +327,12 @@ export class SearchBarPanel {
     private handleEmptyInput = (event: KeyboardEvent) => {
         if (event.key === 'Backspace') {
             const input = document.getElementById('search') as HTMLInputElement
-            if (input && input.value === '') {
-                input.value = ''
-                input.focus()
-            }
-            if (this.tooltipEl) {
-                this.tooltipEl.style.display = 'none'
-            }
-            this.searchResults = []
-            this.textRes = []
-            this.searched = false
-            this.update()
-            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+            setTimeout(() => {
+                if (input.value === '') {
+                    console.log("Backspace && input now empty")
+                    this.resetUI()
+                }
+            }, 0)
         }
     }
 
