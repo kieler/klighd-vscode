@@ -95,6 +95,15 @@ function createHighlightRectangle(xPos: number, yPos: number, width: number, hei
         selection: false,
     }
 
+    const noStroke: KColoring = {
+        type: 'KForegroundImpl',
+        color: rgb(0,0,0),
+        alpha: 0,
+        propagateToChildren: false,
+        selection: false,
+        gradientAngle: 0
+    };
+
     return {
         type: 'KRectangleImpl',
         id: `highlightRect-${Math.random().toString(36).substr(2, 9)}`,
@@ -106,7 +115,7 @@ function createHighlightRectangle(xPos: number, yPos: number, width: number, hei
             height: height,
         },
         actions: [],
-        styles: [highlight],
+        styles: [highlight,noStroke],
     }
 }
 
