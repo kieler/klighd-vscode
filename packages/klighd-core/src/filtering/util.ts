@@ -25,7 +25,7 @@ import { SemanticFilterRuleVisitor } from './SemanticFilterRuleVisitor'
  * Attempts to parse a string as a semantic filter rule and if successful, returns a filter function that can be applied
  * to SKGraphElements
  * @param rule A string following the Semantic Filter Rule language syntax
- * @returns a function of shape (element: SKGraphElement) => boolean that returns true if the element passes the filter 
+ * @returns a function of shape (element: SKGraphElement) => boolean that returns true if the element passes the filter
  *          defined by the rule
  */
 export function createSemanticFilter(rule: string): (element: SKGraphElement) => boolean {
