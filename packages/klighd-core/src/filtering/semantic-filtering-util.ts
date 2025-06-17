@@ -581,7 +581,7 @@ function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule
 }
 
 /** Extracts the semantic filter tags defined for an element. */
-function getSemanticFilterTags(element: SKGraphElement) {
+export function getSemanticFilterTags(element: SKGraphElement) {
     let tags: SemanticFilterTag[] = []
     if (element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
         tags = element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as SemanticFilterTag[]

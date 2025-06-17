@@ -8,7 +8,9 @@ plugins
 src-gen
 workspace
 yarn-error.log
+*.jar
 .browser_modules
+.antlr
 **/*.log
 **/package-backup.json
 **/gen-webpack.config.js
