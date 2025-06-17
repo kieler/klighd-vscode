@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2022-2025 by
+ * Copyright 2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,8 +17,7 @@
 
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
-import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import { evaluateReservedNumericTag, evaluateReservedStructuralTag } from './reserved-structural-tags'
+import { isTag } from '../util'
 
 /// / Base constructs ////
 
@@ -100,8 +99,8 @@ export class TrueConnective implements Connective {
 }
 
 export namespace TrueConnective {
-    export function evaluate(_conn: TrueConnective, _element: SKGraphElement): boolean {
-        return true
+    export function toString(_conn: TrueConnective): string {
+        return 'true'
     }
 }
 
@@ -117,8 +116,8 @@ export class FalseConnective implements Connective {
 }
 
 export namespace FalseConnective {
-    export function evaluate(_conn: FalseConnective, _element: SKGraphElement): boolean {
-        return false
+    export function toString(_conn: FalseConnective): string {
+        return 'false'
     }
 }
 
@@ -136,8 +135,8 @@ export class IdentityConnective implements UnaryConnective {
 }
 
 export namespace IdentityConnective {
-    export function evaluate(conn: IdentityConnective, element: SKGraphElement): boolean {
-        return evaluateRule(conn.operand, element)
+    export function toString(conn: IdentityConnective): string {
+        return convert(conn.operand)
     }
 }
 
@@ -158,8 +157,8 @@ export class NegationConnective implements UnaryConnective {
 }
 
 export namespace NegationConnective {
-    export function evaluate(conn: NegationConnective, element: SKGraphElement): boolean {
-        return !evaluateRule(conn.operand, element)
+    export function toString(conn: NegationConnective): string {
+        return `!${convert(conn.operand)}`
     }
 }
 
@@ -182,8 +181,8 @@ export class AndConnective implements BinaryConnective {
 }
 
 export namespace AndConnective {
-    export function evaluate(conn: AndConnective, element: SKGraphElement): boolean {
-        return evaluateRule(conn.leftOperand, element) && evaluateRule(conn.rightOperand, element)
+    export function toString(conn: AndConnective): string {
+        return `${convert(conn.leftOperand)}&&${convert(conn.rightOperand)}`
     }
 }
 
@@ -206,8 +205,8 @@ export class OrConnective implements BinaryConnective {
 }
 
 export namespace OrConnective {
-    export function evaluate(conn: OrConnective, element: SKGraphElement): boolean {
-        return evaluateRule(conn.leftOperand, element) || evaluateRule(conn.rightOperand, element)
+    export function toString(conn: OrConnective): string {
+        return `${convert(conn.leftOperand)}||${convert(conn.rightOperand)}`
     }
 }
 
@@ -231,8 +230,8 @@ export class IfThenConnective implements BinaryConnective {
 }
 
 export namespace IfThenConnective {
-    export function evaluate(conn: IfThenConnective, element: SKGraphElement): boolean {
-        return !evaluateRule(conn.leftOperand, element) || evaluateRule(conn.rightOperand, element)
+    export function toString(conn: IfThenConnective): string {
+        return `!${convert(conn.leftOperand)}||${convert(conn.rightOperand)}`
     }
 }
 
@@ -256,8 +255,8 @@ export class LogicEqualConnective implements BinaryConnective {
 }
 
 export namespace LogicEqualConnective {
-    export function evaluate(conn: LogicEqualConnective, element: SKGraphElement): boolean {
-        return evaluateRule(conn.leftOperand, element) === evaluateRule(conn.rightOperand, element)
+    export function toString(conn: LogicEqualConnective): string {
+        return `${convert(conn.leftOperand)}=${convert(conn.rightOperand)}`
     }
 }
 
@@ -283,10 +282,11 @@ export class IfThenElseConnective implements TernaryConnective {
 }
 
 export namespace IfThenElseConnective {
-    export function evaluate(conn: IfThenElseConnective, element: SKGraphElement): boolean {
-        return evaluateRule(conn.firstOperand, element)
-            ? evaluateRule(conn.secondOperand, element)
-            : evaluateRule(conn.thirdOperand, element)
+    export function toString(conn: IfThenElseConnective): string {
+        return (
+            `${convert(conn.firstOperand)}&&${convert(conn.secondOperand)}||` +
+            `!${convert(conn.firstOperand)}&&${convert(conn.thirdOperand)}`
+        )
     }
 }
 
@@ -310,8 +310,8 @@ export class LessThanConnective implements BinaryConnective {
 }
 
 export namespace LessThanConnective {
-    export function evaluate(conn: LessThanConnective, element: SKGraphElement): boolean {
-        return evaluateNumeric(conn.leftOperand, element) < evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: LessThanConnective): string {
+        return `${convertNumeric(conn.leftOperand)}<${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -333,8 +333,8 @@ export class GreaterThanConnective implements BinaryConnective {
 }
 
 export namespace GreaterThanConnective {
-    export function evaluate(conn: GreaterThanConnective, element: SKGraphElement): boolean {
-        return evaluateNumeric(conn.leftOperand, element) > evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: GreaterThanConnective): string {
+        return `${convertNumeric(conn.leftOperand)}>${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -356,8 +356,8 @@ export class NumericEqualConnective implements BinaryConnective {
 }
 
 export namespace NumericEqualConnective {
-    export function evaluate(conn: NumericEqualConnective, element: SKGraphElement): boolean {
-        return evaluateNumeric(conn.leftOperand, element) === evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: NumericEqualConnective): string {
+        return `${convertNumeric(conn.leftOperand)}=${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -378,8 +378,8 @@ export class GreaterEqualsConnective implements BinaryConnective {
 }
 
 export namespace GreaterEqualsConnective {
-    export function evaluate(conn: GreaterEqualsConnective, element: SKGraphElement): boolean {
-        return evaluateNumeric(conn.leftOperand, element) >= evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: GreaterEqualsConnective): string {
+        return `${convertNumeric(conn.leftOperand)}>=${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -401,8 +401,8 @@ export class LessEqualsConnective implements BinaryConnective {
 }
 
 export namespace LessEqualsConnective {
-    export function evaluate(conn: LessEqualsConnective, element: SKGraphElement): boolean {
-        return evaluateNumeric(conn.leftOperand, element) <= evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: LessEqualsConnective): string {
+        return `${convertNumeric(conn.leftOperand)}<=${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -424,8 +424,8 @@ export class NumericNotEqualConnective implements BinaryConnective {
 }
 
 export namespace NumericNotEqualConnective {
-    export function evaluate(conn: NumericNotEqualConnective, element: SKGraphElement): boolean {
-        return evaluateNumeric(conn.leftOperand, element) !== evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: NumericNotEqualConnective): string {
+        return `${convertNumeric(conn.leftOperand)}!=${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -446,8 +446,8 @@ export class NumericAdditionConnective implements BinaryConnective {
 }
 
 export namespace NumericAdditionConnective {
-    export function evaluate(conn: NumericAdditionConnective, element: SKGraphElement): number {
-        return evaluateNumeric(conn.leftOperand, element) + evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: NumericAdditionConnective): string {
+        return `${convertNumeric(conn.leftOperand)}+${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -468,8 +468,8 @@ export class NumericSubtractionConnective implements BinaryConnective {
 }
 
 export namespace NumericSubtractionConnective {
-    export function evaluate(conn: NumericSubtractionConnective, element: SKGraphElement): number {
-        return evaluateNumeric(conn.leftOperand, element) - evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: NumericSubtractionConnective): string {
+        return `${convertNumeric(conn.leftOperand)}-${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -490,8 +490,8 @@ export class NumericMultiplicationConnective implements BinaryConnective {
 }
 
 export namespace NumericMultiplicationConnective {
-    export function evaluate(conn: NumericMultiplicationConnective, element: SKGraphElement): number {
-        return evaluateNumeric(conn.leftOperand, element) * evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: NumericMultiplicationConnective): string {
+        return `${convertNumeric(conn.leftOperand)}*${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -512,8 +512,8 @@ export class NumericDivisionConnective implements BinaryConnective {
 }
 
 export namespace NumericDivisionConnective {
-    export function evaluate(conn: NumericDivisionConnective, element: SKGraphElement): number {
-        return evaluateNumeric(conn.leftOperand, element) / evaluateNumeric(conn.rightOperand, element)
+    export function toString(conn: NumericDivisionConnective): string {
+        return `${convertNumeric(conn.leftOperand)}/${convertNumeric(conn.rightOperand)}`
     }
 }
 
@@ -531,47 +531,12 @@ export class NumericConstantConnective implements Connective {
 }
 
 export namespace NumericConstantConnective {
-    export function evaluate(conn: NumericConstantConnective): number {
-        return conn.num
+    export function toString(conn: NumericConstantConnective): string {
+        return conn.num.toString()
     }
 }
 
 /// / Functions ////
-
-/**
- * A filter is used to apply a filter rule as a boolean function on a graph element. The function
- * returns true if the element fulfils the filter rule and false otherwise.
- */
-export interface Filter {
-    name?: string
-    defaultValue?: boolean
-    filterFun(el: SKGraphElement): boolean
-}
-
-/**
- * Creates a new filter with a function that can be applied to graph elements when given
- * a filter rule.
- * @param rule the rule to construct the filter from
- * @returns a new filter
- */
-export function createFilter(rule: SemanticFilterRule): Filter {
-    let ruleName
-    if (isTag(rule)) {
-        ruleName = rule.tag
-    } else {
-        ruleName = rule.ruleName
-    }
-    return {
-        name: ruleName,
-        defaultValue: rule.defaultValue,
-        filterFun: (el) => evaluateRule(rule, el),
-    }
-}
-
-/** Type narrowing function to check whether a semantic filter rule is a tag. */
-function isTag(rule: SemanticFilterTag | SemanticFilterRule): rule is SemanticFilterTag {
-    return (rule as SemanticFilterTag).tag !== undefined
-}
 
 /** Type assertion function to assert that a semantic filter rule is a connective. */
 function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule is Connective {
@@ -580,53 +545,34 @@ function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule
     }
 }
 
-/** Extracts the semantic filter tags defined for an element. */
-export function getSemanticFilterTags(element: SKGraphElement) {
-    let tags: SemanticFilterTag[] = []
-    if (element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
-        tags = element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as SemanticFilterTag[]
-    }
-    return tags
-}
-
 /** Evaluates a rule that returns a numeric result. */
-function evaluateNumeric(rule: SemanticFilterRule, element: SKGraphElement): number {
-    const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
+function convertNumeric(rule: SemanticFilterRule): string {
     // Rule is a Tag
     if (isTag(rule)) {
-        const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === rule.tag)
-        if (nodeTag !== undefined) {
-            return nodeTag.num
-        }
-        return evaluateReservedNumericTag(rule.tag, element) ?? 0
+        return `$${rule.tag}`
     }
     assertIsConnective(rule)
     switch (rule.name) {
         case NumericConstantConnective.NAME:
-            return NumericConstantConnective.evaluate(rule as NumericConstantConnective)
+            return NumericConstantConnective.toString(rule as NumericConstantConnective)
         case NumericAdditionConnective.NAME:
-            return NumericAdditionConnective.evaluate(rule as NumericAdditionConnective, element)
+            return NumericAdditionConnective.toString(rule as NumericAdditionConnective)
         case NumericSubtractionConnective.NAME:
-            return NumericSubtractionConnective.evaluate(rule as NumericSubtractionConnective, element)
+            return NumericSubtractionConnective.toString(rule as NumericSubtractionConnective)
         case NumericMultiplicationConnective.NAME:
-            return NumericMultiplicationConnective.evaluate(rule as NumericMultiplicationConnective, element)
+            return NumericMultiplicationConnective.toString(rule as NumericMultiplicationConnective)
         case NumericDivisionConnective.NAME:
-            return NumericDivisionConnective.evaluate(rule as NumericDivisionConnective, element)
+            return NumericDivisionConnective.toString(rule as NumericDivisionConnective)
         default:
-            return 0
+            return '0'
     }
 }
 
 /** Evaluates `rule` using `tags`. See Connectives for further explanation on evaluation. */
-function evaluateRule(rule: SemanticFilterRule, element: SKGraphElement): boolean {
-    const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
+export function convert(rule: SemanticFilterRule): string {
     // Rule is a Tag
     if (isTag(rule)) {
-        let result = tags.some((tag: SemanticFilterTag) => tag.tag === rule.tag)
-        if (!result) {
-            result = evaluateReservedStructuralTag(rule.tag, element) ?? false
-        }
-        return result
+        return `#${rule.tag}`
     }
 
     // Rule is a Connective
@@ -634,23 +580,23 @@ function evaluateRule(rule: SemanticFilterRule, element: SKGraphElement): boolea
     switch (rule.name) {
         // Logic Connectives
         case TrueConnective.NAME:
-            return TrueConnective.evaluate(rule as TrueConnective, element)
+            return TrueConnective.toString(rule as TrueConnective)
         case FalseConnective.NAME:
-            return FalseConnective.evaluate(rule as FalseConnective, element)
+            return FalseConnective.toString(rule as FalseConnective)
         case IdentityConnective.NAME:
-            return IdentityConnective.evaluate(rule as IdentityConnective, element)
+            return IdentityConnective.toString(rule as IdentityConnective)
         case NegationConnective.NAME:
-            return NegationConnective.evaluate(rule as NegationConnective, element)
+            return NegationConnective.toString(rule as NegationConnective)
         case AndConnective.NAME:
-            return AndConnective.evaluate(rule as AndConnective, element)
+            return AndConnective.toString(rule as AndConnective)
         case OrConnective.NAME:
-            return OrConnective.evaluate(rule as OrConnective, element)
+            return OrConnective.toString(rule as OrConnective)
         case IfThenConnective.NAME:
-            return IfThenConnective.evaluate(rule as IfThenConnective, element)
+            return IfThenConnective.toString(rule as IfThenConnective)
         case LogicEqualConnective.NAME:
-            return LogicEqualConnective.evaluate(rule as LogicEqualConnective, element)
+            return LogicEqualConnective.toString(rule as LogicEqualConnective)
         case IfThenElseConnective.NAME:
-            return IfThenElseConnective.evaluate(rule as IfThenElseConnective, element)
+            return IfThenElseConnective.toString(rule as IfThenElseConnective)
         // Numeric Connectives
         /*
         For now, these are defined by an unset corresponding tag being treated as if its num was 0. TODO:
@@ -660,35 +606,18 @@ function evaluateRule(rule: SemanticFilterRule, element: SKGraphElement): boolea
         Should this redefined, make sure to check all cases, e.g. !(x < y) === x >= y, de morgan, etc.
         */
         case LessThanConnective.NAME:
-            return LessThanConnective.evaluate(rule as LessThanConnective, element)
+            return LessThanConnective.toString(rule as LessThanConnective)
         case GreaterThanConnective.NAME:
-            return GreaterThanConnective.evaluate(rule as GreaterThanConnective, element)
+            return GreaterThanConnective.toString(rule as GreaterThanConnective)
         case NumericEqualConnective.NAME:
-            return NumericEqualConnective.evaluate(rule as NumericEqualConnective, element)
+            return NumericEqualConnective.toString(rule as NumericEqualConnective)
         case GreaterEqualsConnective.NAME:
-            return GreaterEqualsConnective.evaluate(rule as GreaterEqualsConnective, element)
+            return GreaterEqualsConnective.toString(rule as GreaterEqualsConnective)
         case LessEqualsConnective.NAME:
-            return LessEqualsConnective.evaluate(rule as LessEqualsConnective, element)
+            return LessEqualsConnective.toString(rule as LessEqualsConnective)
         case NumericNotEqualConnective.NAME:
-            return NumericNotEqualConnective.evaluate(rule as NumericNotEqualConnective, element)
+            return NumericNotEqualConnective.toString(rule as NumericNotEqualConnective)
         default:
-            return true
+            return 'true'
     }
-}
-
-/**
- * Gets all filters defined as filter rules on a given graph element.
- * @param graph the graph element to check
- * @returns array of filters
- */
-export function getFilters(graph: SKGraphElement): Array<Filter> {
-    const filters: Array<Filter> = []
-    if (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] !== undefined) {
-        ;(graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] as Array<SemanticFilterRule>).forEach(
-            (rule) => {
-                filters.push(createFilter(rule))
-            }
-        )
-    }
-    return filters
 }
