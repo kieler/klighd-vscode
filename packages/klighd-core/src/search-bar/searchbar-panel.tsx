@@ -363,7 +363,7 @@ export class SearchBarPanel {
 
             const typeChar = segment.charAt(0)
             const label = segment.substring(1)
-            const icon = iconMap[typeChar] ?? "❓"
+            const icon = iconMap[typeChar] ?? ""
 
             if (isUnnamed) {
                 result.push(icon)

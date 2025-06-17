@@ -4,7 +4,7 @@ import { SearchBar } from './searchbar'
 import { IActionHandler } from 'sprotty'
 import { SearchBarPanel } from './searchbar-panel'
 import { inject, injectable } from 'inversify'
-import { isContainerRendering, isKText, KColoring, KRectangle } from '../skgraph-models'
+import { isContainerRendering, isKText, KColoring, KRectangle, KText } from '../skgraph-models'
 import { rgb } from 'sprotty'
 
 /* --------------------------------- search bar visibility actions ----------------------------------------*/   
@@ -142,11 +142,36 @@ function removePreviousHighlights(root: SModelElement): void {
     }
 }
 
-interface HighlightBounds {
-    x: number
-    y: number
-    width: number
-    height: number
+function removeKTextHighlights(root: SModelElement): void {
+    const queue: SModelElement[] = [root]
+
+    while (queue.length > 0) {
+        const element = queue.shift()!
+
+        // Remove highlight styles from KTextImpl elements
+        if (isKText(element) && element.styles) {
+            element.styles = element.styles.filter((style: any) => 
+                !(style.type === 'KBackgroundImpl' && 
+                style.color && 
+                style.color.red === 255 && 
+                style.color.green === 255 && 
+                style.color.blue === 0)
+            )
+        }
+
+        if ('children' in element && Array.isArray(element.children)) {
+            element.children.forEach(child => queue.push(child))
+        }
+
+        const data = (element as any).data
+        if (Array.isArray(data)) {
+            for (const item of data) {
+                if (item && 'children' in item && Array.isArray(item.children)) {
+                    item.children.forEach((c: any) => queue.push(c))
+                }
+            }
+        }
+    }
 }
 
 /* --------------------------------- search action ---------------------------------------- */   
@@ -172,6 +197,13 @@ export namespace SearchAction {
     export function isThisAction(action: Action): action is SearchAction {
         return action.kind === KIND
     }
+}
+
+interface HighlightBounds {
+    x: number,
+    y: number,
+    width: number,
+    height: number
 }
 
 
@@ -204,6 +236,8 @@ export class HandleSearchAction implements IActionHandler {
         /* Handle ClearHighlightsActions */
         if (ClearHighlightsAction.isThisAction(action)) {
             removePreviousHighlights(HandleSearchAction.currentModel)
+            removeKTextHighlights(HandleSearchAction.currentModel)
+            // make changes visible
             if (modelId && this.actionDispatcher) {
                 this.actionDispatcher.dispatch(CenterAction.create([modelId]))
             }
@@ -216,7 +250,7 @@ export class HandleSearchAction implements IActionHandler {
         const query = action.input.trim().toLowerCase()
         if (!query) return
 
-        const isTagQuery = query.startsWith('#') || query.startsWith('$')
+        const isTagQuery = query.includes('#') || query.includes('$')
         
         const results : SModelElement[] = isTagQuery
             ? this.searchTags(HandleSearchAction.currentModel, query, action.panel)
@@ -226,8 +260,8 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
-     * Adds highlighting to an element if it doesn't already have it
-     * @param element the element that might get the highlight
+     * Adds highlighting to labels or nodes
+     * @param element the element whose child gets the highlight
      * @param bounds the position and size of the highlight
      */
     private addHighlightToElement(element: SModelElement, bounds: HighlightBounds): void {
@@ -246,6 +280,35 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
+     * Adds highlighting directly to the text element by modifying its styles
+     * TODO: remove previous highlights
+     * @param textElement the KTextImpl element to highlight
+     */
+    private addHighlightToKText(textElement: any): void {
+        if (!textElement.styles) {
+            textElement.styles = []
+        }
+
+        const alreadyHighlighted = textElement.styles.some((style: any) => 
+            style.type === 'KBackgroundImpl' && style.color && 
+            style.color.red === 255 && style.color.green === 255 && style.color.blue === 0
+        )
+        
+        if (!alreadyHighlighted) {
+            const highlightStyle: KColoring = {
+                type: 'KBackgroundImpl',
+                color: rgb(255, 255, 0),
+                alpha: 127,
+                gradientAngle: 0,
+                propagateToChildren: false,
+                selection: false,
+            }
+            
+            textElement.styles.push(highlightStyle)
+        }
+    }
+
+    /**
      * Checks if text matches query and possibly adds the element to results with highlighting
      * @param element the graph element containing the text
      * @param text the text field of the element
@@ -254,11 +317,17 @@ export class HandleSearchAction implements IActionHandler {
      * @param results the array containing all results
      * @param textRes the array containing all {@param text} matches
      */
-    private processTextMatch(element: SModelElement, text: string, query: string, bounds: HighlightBounds, results: SModelElement[], textRes: string[]): void {
+    private processTextMatch(parent: SModelElement, element: SModelElement, query: string, results: SModelElement[], textRes: string[]): void {
+        const text = (element as KText).text
         if (text.toLowerCase().includes(query)) {
-            results.push(element)
+            results.push(parent)
             textRes.push(text)
-            this.addHighlightToElement(element, bounds)
+            if(isKText(element)) {
+                this.addHighlightToKText(element)
+            } else {
+                const bounds = this.extractBounds(element)
+                this.addHighlightToElement(parent, bounds)
+            }
         }
     }
 
@@ -267,14 +336,94 @@ export class HandleSearchAction implements IActionHandler {
      * @param element the element, whose bounds need to be extracted
      */
     private extractBounds(element: any): HighlightBounds {
-        return {
-            x: Number(element.x ?? element.properties?.x ?? 0),
-            y: Number(element.y ?? element.properties?.y ?? 0),
-            width: Number(element.width ?? element.properties?.width ?? 0),
-            height: Number(element.height ?? element.properties?.height ?? 0)
+        const bounds = element?.properties?.['klighd.lsp.calculated.bounds']
+
+        if (!bounds) {
+            return { x: -1, y: -1, width: -1, height: -1 }
         }
+
+        return bounds
     }
 
+    /**
+     * Perform a breadth-first search on {@param root} to find {@param query}
+     * @param root the model
+     * @param query the user input
+     * @param panel the search bar panel
+     * @returns array of results
+     */
+    private searchModel(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
+        const results: SModelElement[] = []
+        const textRes: string[] = []
+        const lowerQuery = query.toLowerCase()
+
+        const queue: SModelElement[] = [root]
+
+        /**
+         * Go into a rendering to look for the text field and compare it to the input
+         * @param rendering KText or KLabel
+         * @param parent KContainerRendering that contains {@param rendering}
+         */
+        const visitRendering = (rendering: any, parent: SModelElement): void => {
+            if (!rendering) return 
+
+            /* Check KText */
+            if (isKText(rendering) && rendering.text) {
+                this.processTextMatch(parent, rendering, lowerQuery, results, textRes)
+            }
+
+            /* Check KContainerElements */
+            if (isContainerRendering(rendering)) {
+                for (const child of rendering.children ?? []) {
+                    visitRendering(child, parent)
+                }
+            }
+        }
+
+        while (queue.length > 0) {
+            const element = queue.shift()!
+
+            /* handle elements with text field */
+            switch (element.type) {
+                case 'label':
+                case 'edge':
+                case 'node':
+                case 'port':
+                    if ('text' in element) {
+                        const text = (element as any).text;
+                        if (typeof text === 'string' && text.trim()) {
+                            this.processTextMatch(element, element, lowerQuery, results, textRes);
+                        }
+                    }
+                    break;
+            }
+
+            /* Process data field for renderings */
+            const dataArr = (element as any).data
+            if (Array.isArray(dataArr) && dataArr.length > 0) {
+                const data = dataArr[0]
+                if (data && Array.isArray(data.children)) {
+                    for (const child of data.children) {
+                        visitRendering(child, element)
+                    }
+                }
+            }
+
+
+            /* Add children to queue */
+            if ('children' in element && Array.isArray((element as any).children)) {
+                for (const child of (element as any).children) {
+                    queue.push(child)
+                }
+            }
+        }
+
+        panel.setTextRes(textRes)
+        return results
+    }
+
+    ///////////////////////////////// Tag search //////////////////////////////////////
+    
     /**
      * Matches the query to the tags.
      * @param tags the tags of some object
@@ -289,7 +438,7 @@ export class HandleSearchAction implements IActionHandler {
         const numToFind = parseInt(match[2], 10)
 
         for (const tagObj of tags) {
-            console.log('Checking tag:', tagObj.tag, 'num:', tagObj.num)
+            //console.log('Checking tag:', tagObj.tag, 'num:', tagObj.num)
             if (tagObj.tag === tagToFind && tagObj.num === numToFind) return true
         }
         return false
@@ -298,9 +447,9 @@ export class HandleSearchAction implements IActionHandler {
 
 
     /**
-     * Parses logical operators
+     * Parses logical operators using a parser
      * @param tags the tags of some element
-     * @param fullQuery the user input
+     * @param query the user input
      * @returns whether fullquery is met
      */
     private matchesTagQuery(tags: { tag: string, num?: number }[], fullQuery: string): boolean {
@@ -339,7 +488,7 @@ export class HandleSearchAction implements IActionHandler {
     /**
      * Extracts the tags from a graph element with the goal to further search through the tags.
      * @param element the graph element
-     * @returns a list of tags, that the element has
+     * @returns an array of tags, that the element has
      */
     private getTagsFromElement(element: any): { tag: string, num?: number }[] {
         const tags: { tag: string, num?: number }[] = []
@@ -371,13 +520,15 @@ export class HandleSearchAction implements IActionHandler {
      * @param root the current model starting with the root
      * @param query tags to find
      * @param panel the search bar panel
-     * @returns list of results
+     * @returns array of results
      */
     private searchTags(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
         const results: SModelElement[] = []
         const textRes: string[] = []
 
         const queue: SModelElement[] = [root]
+
+        /** mixed search use -> as Trennsymbol */
 
         while (queue.length > 0) {
             const element = queue.shift()!
@@ -399,12 +550,12 @@ export class HandleSearchAction implements IActionHandler {
                     if (segment && segment !== '') {
                         if (segment.length > 1) {
                             switch (segment.charAt(0)){
-                                case 'N': nodeName = '[node]'; break
-                                case 'E': nodeName = '[edge]'; break
-                                case 'P': nodeName = '[port]'; break
-                                case 'L': nodeName = '[label]'; break
+                                case 'N': 
+                                case 'E': 
+                                case 'P': 
+                                case 'L': nodeName = ''; break
                             }
-                            nodeName += ' ' + segment.substring(1)
+                            nodeName += segment.substring(1)
                         } else {
                             nodeName = segment
                         }
@@ -416,94 +567,6 @@ export class HandleSearchAction implements IActionHandler {
                 textRes.push(displayText)
             }
 
-            if ('children' in element && Array.isArray((element as any).children)) {
-                for (const child of (element as any).children) {
-                    queue.push(child)
-                }
-            }
-        }
-
-        panel.setTextRes(textRes)
-        return results
-    }
-
-
-    /**
-     * Perform a breadth-first search on {@param root} to find {@param query}
-     * @param root the model
-     * @param query the user input
-     * @param panel the search bar panel
-     * @returns list of results
-     */
-    private searchModel(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
-        const results: SModelElement[] = []
-        const textRes: string[] = []
-        const lowerQuery = query.toLowerCase()
-
-        const queue: SModelElement[] = [root]
-
-        /**
-         * Go into a rendering to look for the text field and compare it to the input
-         * @param rendering KText or KLabel
-         * @param parent KContainerRendering that contains {@param rendering}
-         */
-        const visitRendering = (rendering: any, parent: SModelElement): void => {
-            if (!rendering) return 
-
-            /* Check KText */
-            if (isKText(rendering) && rendering.text) {
-                const bounds = this.extractBounds(rendering)
-                this.processTextMatch(parent, rendering.text, lowerQuery, bounds, results, textRes)
-            }
-
-            /* Check KContainerElements */
-            if (isContainerRendering(rendering)) {
-                if ('text' in rendering && typeof rendering.text === 'string') {
-                    const bounds = this.extractBounds(rendering)
-                    if (rendering.text.toLowerCase().includes(lowerQuery)) {
-                        results.push(rendering)
-                        textRes.push(rendering.text)
-                        
-                        // Add highlight directly to rendering children
-                        const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
-                        rendering.children = [...(rendering.children ?? []), highlightRect]
-                    }
-                }
-
-                for (const child of rendering.children ?? []) {
-                    visitRendering(child, parent)
-                }
-            }
-        }
-
-        while (queue.length > 0) {
-            const element = queue.shift()!
-
-            /* handle elements with text field */
-            switch (element.type) {
-                case 'label':
-                case 'edge':
-                case 'node':
-                case 'port':
-                    if ('text' in element) {
-                        const text = (element as any).text;
-                        if (typeof text === 'string' && text.trim()) {
-                            const bounds = this.extractBounds(element);
-                            this.processTextMatch(element, text, lowerQuery, bounds, results, textRes);
-                        }
-                    }
-                    break;
-            }
-
-            /* Process data field for renderings */
-            const data = (element as any).data
-            if (Array.isArray(data)) {
-                for (const item of data) {
-                    visitRendering(item, element)
-                }
-            }
-
-            /* Add children to queue */
             if ('children' in element && Array.isArray((element as any).children)) {
                 for (const child of (element as any).children) {
                     queue.push(child)
