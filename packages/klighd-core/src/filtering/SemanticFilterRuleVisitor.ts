@@ -19,7 +19,7 @@ import SemanticFilteringParser, {
 } from './generated/SemanticFilteringParser'
 import SemanticFilteringVisitor from './generated/SemanticFilteringVisitor'
 import { evaluateReservedNumericTag, evaluateReservedStructuralTag } from './reserved-structural-tags'
-import { getSemanticFilterTags, SemanticFilterTag } from './semantic-filtering-util'
+import { getSemanticFilterTags, SemanticFilterTag } from './util'
 import { SKNode } from '../skgraph-models'
 
 export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(element: SKGraphElement) => boolean> {
