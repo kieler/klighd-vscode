@@ -40,10 +40,20 @@ import { getSemanticFilterTags, SemanticFilterTag } from './util'
 import { SKNode } from '../skgraph-models'
 
 export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(element: SKGraphElement) => boolean> {
+    /**
+     * A semanticFilterRule always has a top-level positional filter rule followed by an EOF.
+     * positionalFilterRule EOF
+     */
     visitSemanticFilterRule: (ctx: SemanticFilterRuleContext) => (element: SKGraphElement) => boolean = (
         ctx: SemanticFilterRuleContext
     ) => this.visitPositionalFilterRule(ctx.positionalFilterRule())
 
+    /**
+     * A positional always encloses some boolean expression i.e. an or expression.
+     * This function traverses the graph according to the supplied positional quantifier and applies the nested
+     * expression at that position in the graph.
+     * ~quantifier[<orExpr>]
+     */
     visitPositionalFilterRule: (ctx: PositionalFilterRuleContext) => (element: SKGraphElement) => boolean = (
         ctx: PositionalFilterRuleContext
     ) => {
@@ -121,6 +131,11 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         }
     }
 
+    /**
+     * An orExpression is the entry point for boolean expressions.
+     * It can contain one ore more andExpressions, each of these is evaluated and the results are then combined with a
+     * logical or.
+     */
     visitOrExpr: (ctx: OrExprContext) => (element: SKGraphElement) => boolean = (ctx: OrExprContext) => {
         const operands = ctx.andExpr_list().map((expr) => this.visitAndExpr(expr))
 
@@ -135,6 +150,10 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         }
     }
 
+    /**
+     * An andExpression can contain one or more notExpressions. They are evaluated individually and combined using
+     * a logical and.
+     */
     visitAndExpr: (ctx: AndExprContext) => (element: SKGraphElement) => boolean = (ctx: AndExprContext) => {
         const operands = ctx.notExpr_list().map((expr) => this.visitNotExpr(expr))
 
@@ -149,6 +168,10 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         }
     }
 
+    /**
+     * A notExpression either contains a NOT or just an equalsExpr.
+     * An equals expression is simply evaluated, whereas a NOT is evaluated and then negated.
+     */
     visitNotExpr: (ctx: NotExprContext) => (element: SKGraphElement) => boolean = (ctx: NotExprContext) => {
         if (ctx.NOT()) {
             const nestedNot = this.visitNotExpr(ctx.notExpr())
@@ -157,9 +180,18 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         return this.visitEqualsExpr(ctx.equalsExpr())
     }
 
+    /**
+     * An equalsExpression can contain a boolean atom, a single comparisonExpression, a boolean equality, or a numeric
+     * equality.
+     * A boolean atom or a single comparison are simply evaluated.
+     * In case of a boolean equality (comparionExpr (EQ | NEQ) comparisonExpr) each comparison is evaluated and then the
+     * equality is checked.
+     * In case of a numeric equality (addExpr (EQ | NEQ) addExpr) each addition is evaluated and then the
+     * equality is checked.
+     */
     visitEqualsExpr: (ctx: EqualsExprContext) => (element: SKGraphElement) => boolean = (ctx: EqualsExprContext) => {
         if (ctx.boolAtom()) {
-            // No EQ or NEQ, just a single boolAtom — fallback
+            // No EQ or NEQ, just a single boolAtom
             return this.visitBoolAtom(ctx.boolAtom())
         }
 
@@ -203,6 +235,10 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         throw new Error('Invalid EqualsExprContext structure.')
     }
 
+    /**
+     * A comparisonExpr contains two addExpressions that are evaluated and their results checked with one of the four
+     * comparison relations: >=, >, <=, <
+     */
     visitComparisonExpr: (ctx: ComparisonExprContext) => (element: SKGraphElement) => boolean = (
         ctx: ComparisonExprContext
     ) => {
@@ -230,6 +266,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         throw new Error('visitAddEXpr should not be called directly.')
     }
 
+    /** An addExpression contains one more multExpressions which are evaluated and then summed up using + or -. */
     private evaluateAddExpr(ctx: AddExprContext): (element: SKGraphElement) => number {
         const operandFns = ctx.multExpr_list().map((expr) => this.evaluateMultExpr(expr))
 
@@ -272,6 +309,10 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         throw new Error('visitMultExpr should not be called directly.')
     }
 
+    /**
+     * A multExpression contains one or more numeric atoms combined using multiplication, division and modulo operators.
+     * Each numeric atom is evaluated first and the results are then combined using the given operators.
+     */
     private evaluateMultExpr(ctx: MultExprContext): (element: SKGraphElement) => number {
         const operands = ctx.numAtom_list().map((expr) => this.evaluateNumAtom(expr))
 
@@ -314,6 +355,11 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         }
     }
 
+    /**
+     * A boolAtom contains either a tag, which returns true if it is present in an element,
+     * or a boolean constant true/false,
+     * or a parenthesized boolean orExpression
+     */
     visitBoolAtom: (ctx: BoolAtomContext) => (element: SKGraphElement) => boolean = (ctx: BoolAtomContext) => {
         if (ctx.tag()) {
             const name = ctx.tag().ID().getText()
@@ -342,6 +388,12 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         throw new Error('visitNumAtom should not be called directly.')
     }
 
+    /**
+     * A numeric atom contains either a numeric tag, which returns the number written on the tag if it is present or 0
+     * if there is no number or the tag is not present,
+     * or a double,
+     * or a nested parenthesized addExpression.
+     */
     private evaluateNumAtom(ctx: NumAtomContext): (element: SKGraphElement) => number {
         if (ctx.numtag()) {
             const name = ctx.numtag().ID().getText()
