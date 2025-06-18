@@ -1,3 +1,20 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2025 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 import { ParseTree, RuleNode, TerminalNode, ErrorNode } from 'antlr4'
 import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { toArray } from 'sprotty/lib/utils/iterable'
@@ -58,10 +75,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
             case SemanticFilteringParser.CHILDREN:
                 return (element: SKGraphElement) => {
                     const children = (element as SParentElementImpl).children ?? []
-                    return (
-                        children.length > 0 &&
-                        children.map((child) => child as unknown as SKGraphElement).every(predicate)
-                    )
+                    return children.map((child) => child as unknown as SKGraphElement).every(predicate)
                 }
 
             case SemanticFilteringParser.SIBLING:
@@ -77,7 +91,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
                     const parentElem = (element as unknown as SChildElementImpl).parent ?? undefined
                     const siblings = parentElem?.children ?? []
                     const others = siblings.filter((sib) => (sib as unknown as SKGraphElement) !== element)
-                    return others.length > 0 && others.map((sib) => sib as unknown as SKGraphElement).every(predicate)
+                    return others.map((sib) => sib as unknown as SKGraphElement).every(predicate)
                 }
 
             case SemanticFilteringParser.ADJACENT:
