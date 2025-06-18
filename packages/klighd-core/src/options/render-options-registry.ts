@@ -173,7 +173,7 @@ export class FullDetailRelativeThreshold implements RangeOption {
 
     static readonly NAME: string = 'Full Detail Relative Threshold'
 
-    static readonly DEFAULT: number = 0.15
+    static readonly DEFAULT: number = 0.1
 
     readonly id: string = FullDetailRelativeThreshold.ID
 
@@ -196,9 +196,9 @@ export class FullDetailRelativeThreshold implements RangeOption {
 
     readonly description =
         'Shows all children of an element that uses at least the amount of the canvas.' +
-        'A value of 0.2 means an element is shown if its parent has at least 0.2 the size (maximum of width and height) of the canvas.'
+        'A value of 0.1 means an element is shown if its parent has at least 0.1 the size (maximum of width and height) of the canvas.'
 
-    currentValue = 0.2
+    currentValue = 0.1
 
     debug = true
 }
@@ -240,6 +240,33 @@ export class FullDetailScaleThreshold implements RangeOption {
     currentValue = 0.25
 
     debug = true
+}
+
+/**
+ * Boolean option to enable and disable searching for a default title rendering if none is found
+ * in the element.
+ */
+export class UseDefaultTitleRendering implements RenderOption {
+    static readonly ID: string = 'use-default-title-rendering'
+
+    static readonly NAME: string = 'Default Title Rendering'
+
+    static readonly DEFAULT: boolean = false
+
+    readonly id: string = UseDefaultTitleRendering.ID
+
+    readonly name: string = UseDefaultTitleRendering.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = false
+
+    readonly renderCategory: string = SmartZoom.ID
+
+    readonly description =
+        'Enables default title renderings that will be scaled up by the "Smart Zoom" option. Uses the first text found in nodes that have no explicit title rendering.'
+
+    currentValue = true
 }
 
 /**
@@ -527,6 +554,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(UseSmartZoom)
         this.register(FullDetailRelativeThreshold)
         this.register(FullDetailScaleThreshold)
+        this.register(UseDefaultTitleRendering)
 
         this.register(SimplifySmallText)
         this.register(TextSimplificationThreshold)
