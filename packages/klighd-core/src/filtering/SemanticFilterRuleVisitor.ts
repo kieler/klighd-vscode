@@ -39,6 +39,10 @@ import { evaluateReservedNumericTag, evaluateReservedStructuralTag } from './res
 import { getSemanticFilterTags, SemanticFilterTag } from './util'
 import { SKNode } from '../skgraph-models'
 
+function hasProperties(elem: any): elem is SKGraphElement {
+    return elem.properties !== undefined
+}
+
 export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(element: SKGraphElement) => boolean> {
     /**
      * A semanticFilterRule always has a top-level positional filter rule followed by an EOF.
@@ -69,39 +73,53 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
 
             case SemanticFilteringParser.PARENT:
                 return (element: SKGraphElement) => {
-                    const parentElem = (element as unknown as SChildElementImpl).parent ?? undefined
-                    if (parentElem !== undefined && parentElem !== null) {
-                        return predicate(parentElem as SKGraphElement)
+                    if (element instanceof SChildElementImpl) {
+                        const parentElem = element.parent
+                        if (parentElem !== undefined && parentElem !== null) {
+                            return predicate(parentElem as SKGraphElement)
+                        }
                     }
                     return false
                 }
 
             case SemanticFilteringParser.CHILD:
                 return (element: SKGraphElement) => {
-                    const children = (element as SParentElementImpl).children ?? []
-                    return children.map((child) => child as unknown as SKGraphElement).some(predicate)
+                    if (element instanceof SParentElementImpl) {
+                        return element.children.some((child) => hasProperties(child) && predicate(child))
+                    }
+                    return false
                 }
 
             case SemanticFilteringParser.CHILDREN:
                 return (element: SKGraphElement) => {
-                    const children = (element as SParentElementImpl).children ?? []
-                    return children.map((child) => child as unknown as SKGraphElement).every(predicate)
+                    if (element instanceof SParentElementImpl) {
+                        return element.children.every((child) => hasProperties(child) && predicate(child))
+                    }
+                    // vacuously true for all (0) children
+                    return true
                 }
 
             case SemanticFilteringParser.SIBLING:
                 return (element: SKGraphElement) => {
-                    const parentElem = (element as unknown as SChildElementImpl).parent ?? undefined
-                    const siblings = parentElem?.children ?? []
-                    const others = siblings.filter((sib) => (sib as unknown as SKGraphElement) !== element)
-                    return others.map((sib) => sib as unknown as SKGraphElement).some(predicate)
+                    if (element instanceof SChildElementImpl) {
+                        const parentElem = element.parent
+                        const siblings = parentElem.children
+                        const others = siblings.filter((sib) => sib !== element)
+                        return others.some((sib) => hasProperties(sib) && predicate(sib))
+                    }
+                    return false
                 }
 
             case SemanticFilteringParser.SIBLINGS:
                 return (element: SKGraphElement) => {
-                    const parentElem = (element as unknown as SChildElementImpl).parent ?? undefined
-                    const siblings = parentElem?.children ?? []
-                    const others = siblings.filter((sib) => (sib as unknown as SKGraphElement) !== element)
-                    return others.map((sib) => sib as unknown as SKGraphElement).every(predicate)
+                    if (element instanceof SChildElementImpl) {
+                        const parentElem = element.parent
+                        const siblings = parentElem?.children
+                        const others = siblings.filter((sib) => sib !== element)
+                        return others.every((sib) => hasProperties(sib) && predicate(sib))
+                    }
+                    // vacuously true for all (0) siblings
+                    return true
                 }
 
             case SemanticFilteringParser.ADJACENT:
@@ -110,7 +128,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
                         const adjacents = toArray(element.incomingEdges.map((edge) => edge.source)).concat(
                             toArray(element.outgoingEdges.map((edge) => edge.target))
                         )
-                        return adjacents.map((adj) => adj as unknown as SKGraphElement).some(predicate)
+                        return adjacents.some((adj) => hasProperties(adj) && predicate(adj))
                     }
                     return false
                 }
@@ -121,9 +139,10 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
                         const adjacents = toArray(element.incomingEdges.map((edge) => edge.source)).concat(
                             toArray(element.outgoingEdges.map((edge) => edge.target))
                         )
-                        return adjacents.map((adj) => adj as unknown as SKGraphElement).every(predicate)
+                        return adjacents.every((adj) => hasProperties(adj) && predicate(adj))
                     }
-                    return false
+                    // vacuously true for all (0) adjacents
+                    return true
                 }
 
             default:
