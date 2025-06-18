@@ -17,6 +17,7 @@
 
 :root {
     --sidebar-width: 'fit-content';
+    --sidebar-opacity: 0.9;
 }
 
 .sidebar {
@@ -25,7 +26,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    opacity: 0.85 !important;
+    opacity: var(--sidebar-opacity) !important;
 
     /* Sidebar should consume at least ~1/3th of the screen but not forced to be wider than 400px. */
     min-width: min(400px, 35vw);
@@ -36,7 +37,7 @@
 
     background-color: var(--kdc-color-sidebar-background);
     box-shadow: var(--kdc-sidebar-shadow);
-    color: var(--kdc-color-sidebar-font-primary);
+    color: from var(--kdc-color-sidebar-font-primary) r g b / var(--sidebar-opacity);
     font-size: var(--kdc-font-size-base);
     font-family: Helvetica, Arial, sans-serif;
 
@@ -86,7 +87,7 @@
 }
 
 .sidebar__toggle-button {
-    --background: var(--kdc-color-sidebar-trigger-background);
+    --background: from var(--kdc-color-sidebar-trigger-background) r g b / var(--sidebar-opacity);
     padding: 8px;
     border: none;
     border-radius: var(--kdc-border-radius-default) 0 0 var(--kdc-border-radius-default);
@@ -94,7 +95,7 @@
     cursor: pointer;
     outline: none;
     background: var(--background);
-    color: var(--kdc-color-sidebar-icon-primary);
+    color: from var(--kdc-color-sidebar-icon-primary) r g b / var(--sidebar-opacity);
     box-shadow: var(--kdc-sidebar-button-shadow);
 
     transition: background var(--kdc-transition);

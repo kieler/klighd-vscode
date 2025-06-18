@@ -50,7 +50,7 @@
     border-radius: var(--kdc-border-radius-default);
     padding: 4px;
 
-    color: var(--kdc-color-sidebar-icon-primary);
+    color: from var(--kdc-color-sidebar-icon-primary) r g b / var(--sidebar-opacity);
     background: var(--background);
     transition: background var(--kdc-transition);
     cursor: pointer;
@@ -71,7 +71,7 @@
     font-weight: 400;
 
     box-shadow: none;
-    color: var(--kdc-color-sidebar-font-primary);
+    color: from var(--kdc-color-sidebar-icon-primary) r g b / var(--sidebar-opacity);
     background: var(--kdc-color-sidebar-trigger-background-active);
     transition: box-shadow var(--kdc-transition);
     cursor: pointer;
@@ -133,7 +133,7 @@
     border: 2px solid var(--kdc-color-sidebar-trigger-background-hover);
     border-radius: var(--kdc-border-radius-default);
     background: var(--kdc-color-sidebar-trigger-background-active);
-    color: var(--kdc-color-sidebar-font-primary);
+    color: from var(--kdc-color-sidebar-icon-primary) r g b / var(--sidebar-opacity);
 }
 
 .options__text-field:focus,
@@ -172,7 +172,7 @@
     border: 2px solid var(--kdc-color-sidebar-trigger-background-hover);
     border-radius: var(--kdc-border-radius-default);
     background: var(--kdc-color-sidebar-trigger-background-active);
-    color: var(--kdc-color-sidebar-font-primary);
+    color: from var(--kdc-color-sidebar-icon-primary) r g b / var(--sidebar-opacity);
     cursor: pointer;
     font-size: 1rem;
 }
