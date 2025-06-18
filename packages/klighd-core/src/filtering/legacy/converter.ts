@@ -17,45 +17,15 @@
 
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
-import { isTag } from '../util'
+import { isTag, SemanticFilterRule, SemanticFilterTag } from '../util'
 
 /// / Base constructs ////
-
-/**
- * Base interface for numeric intermediate results.
- */
-export interface NumericResult {
-    num: number
-}
-
-/**
- * Base interface for semantic filter rules.
- */
-export interface SemanticFilterRule {
-    /** The rule name is used to identify rules and distinguish them from one another. */
-    ruleName?: string
-    /** The default value is used to indicate whether the semantic filter should be on or off by default. */
-    defaultValue?: boolean
-}
-
-/**
- * A semantic filter tag is used as a filter rule that evaluates to true iff the tag is present
- * on a graph element.
- */
-export class SemanticFilterTag implements SemanticFilterRule, NumericResult {
-    ruleName?: string
-
-    tag: string
-
-    /** If num is not defined, the server will set the value 0 by default. */
-    num: number
-}
 
 /**
  * Base interface for connectives. Connectives take one or more filter rules as operands and
  * construct a new rule.
  */
-export interface Connective extends SemanticFilterRule {
+interface Connective extends SemanticFilterRule {
     name: string
 }
 
@@ -64,14 +34,14 @@ export interface Connective extends SemanticFilterRule {
 /**
  * Base interface for unary connectives. Unary Connectives take exactly one operand.
  */
-export interface UnaryConnective extends Connective {
+interface UnaryConnective extends Connective {
     operand: SemanticFilterRule
 }
 
 /**
  * Base interface for binary connectives. Binary Connectives take exactly two operands.
  */
-export interface BinaryConnective extends Connective {
+interface BinaryConnective extends Connective {
     leftOperand: SemanticFilterRule
     rightOperand: SemanticFilterRule
 }
@@ -79,7 +49,7 @@ export interface BinaryConnective extends Connective {
 /**
  * Base interface for ternary connectives. Ternary Connectives take exactly three operands.
  */
-export interface TernaryConnective extends Connective {
+interface TernaryConnective extends Connective {
     firstOperand: SemanticFilterRule
     secondOperand: SemanticFilterRule
     thirdOperand: SemanticFilterRule
@@ -90,7 +60,7 @@ export interface TernaryConnective extends Connective {
 /**
  * A True Connective always evaluates to true.
  */
-export class TrueConnective implements Connective {
+class TrueConnective implements Connective {
     static NAME = 'TRUE'
 
     name = TrueConnective.NAME
@@ -98,7 +68,7 @@ export class TrueConnective implements Connective {
     ruleName?: string
 }
 
-export namespace TrueConnective {
+namespace TrueConnective {
     export function toString(_conn: TrueConnective): string {
         return 'true'
     }
@@ -107,7 +77,7 @@ export namespace TrueConnective {
 /**
  * A False Connective always evaluates to false.
  */
-export class FalseConnective implements Connective {
+class FalseConnective implements Connective {
     static NAME = 'FALSE'
 
     name = FalseConnective.NAME
@@ -115,7 +85,7 @@ export class FalseConnective implements Connective {
     ruleName?: string
 }
 
-export namespace FalseConnective {
+namespace FalseConnective {
     export function toString(_conn: FalseConnective): string {
         return 'false'
     }
@@ -124,7 +94,7 @@ export namespace FalseConnective {
 /**
  * An Identity Connective evaluates to its operand i.e. ID (R) is equivalent to R.
  */
-export class IdentityConnective implements UnaryConnective {
+class IdentityConnective implements UnaryConnective {
     static NAME = 'ID'
 
     name = IdentityConnective.NAME
@@ -134,7 +104,7 @@ export class IdentityConnective implements UnaryConnective {
     ruleName?: string
 }
 
-export namespace IdentityConnective {
+namespace IdentityConnective {
     export function toString(conn: IdentityConnective): string {
         return convert(conn.operand)
     }
@@ -146,7 +116,7 @@ export namespace IdentityConnective {
  * R evaluates to false.
  * @example !R
  */
-export class NegationConnective implements UnaryConnective {
+class NegationConnective implements UnaryConnective {
     static NAME = 'NOT'
 
     name = NegationConnective.NAME
@@ -156,7 +126,7 @@ export class NegationConnective implements UnaryConnective {
     ruleName?: string
 }
 
-export namespace NegationConnective {
+namespace NegationConnective {
     export function toString(conn: NegationConnective): string {
         return `!${convert(conn.operand)}`
     }
@@ -168,7 +138,7 @@ export namespace NegationConnective {
  * R1 and R2 evaluate to true.
  * @example R1 && R2
  */
-export class AndConnective implements BinaryConnective {
+class AndConnective implements BinaryConnective {
     static NAME = 'AND'
 
     name = AndConnective.NAME
@@ -180,7 +150,7 @@ export class AndConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace AndConnective {
+namespace AndConnective {
     export function toString(conn: AndConnective): string {
         return `${convert(conn.leftOperand)}&&${convert(conn.rightOperand)}`
     }
@@ -192,7 +162,7 @@ export namespace AndConnective {
  * R1 or R2 evaluate to true.
  * @example R1 || R2
  */
-export class OrConnective implements BinaryConnective {
+class OrConnective implements BinaryConnective {
     static NAME = 'OR'
 
     name = OrConnective.NAME
@@ -204,7 +174,7 @@ export class OrConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace OrConnective {
+namespace OrConnective {
     export function toString(conn: OrConnective): string {
         return `${convert(conn.leftOperand)}||${convert(conn.rightOperand)}`
     }
@@ -217,7 +187,7 @@ export namespace OrConnective {
  * @example R1 ? R2 : true
  * @example !R1 || R2
  */
-export class IfThenConnective implements BinaryConnective {
+class IfThenConnective implements BinaryConnective {
     static NAME = 'IFTHEN'
 
     name = IfThenConnective.NAME
@@ -229,7 +199,7 @@ export class IfThenConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace IfThenConnective {
+namespace IfThenConnective {
     export function toString(conn: IfThenConnective): string {
         return `!${convert(conn.leftOperand)}||${convert(conn.rightOperand)}`
     }
@@ -242,7 +212,7 @@ export namespace IfThenConnective {
  * @example R1 === R2
  * @example R1 && R2 || !R1 && !R2
  */
-export class LogicEqualConnective implements BinaryConnective {
+class LogicEqualConnective implements BinaryConnective {
     static NAME = 'LOGICEQUAL'
 
     name = LogicEqualConnective.NAME
@@ -254,7 +224,7 @@ export class LogicEqualConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace LogicEqualConnective {
+namespace LogicEqualConnective {
     export function toString(conn: LogicEqualConnective): string {
         return `${convert(conn.leftOperand)}=${convert(conn.rightOperand)}`
     }
@@ -267,7 +237,7 @@ export namespace LogicEqualConnective {
  * @example R1 ? R2 : R3
  * @example R1 && R2 || !R1 && R3
  */
-export class IfThenElseConnective implements TernaryConnective {
+class IfThenElseConnective implements TernaryConnective {
     static NAME = 'IFTHENELSE'
 
     name = IfThenElseConnective.NAME
@@ -281,7 +251,7 @@ export class IfThenElseConnective implements TernaryConnective {
     ruleName?: string
 }
 
-export namespace IfThenElseConnective {
+namespace IfThenElseConnective {
     export function toString(conn: IfThenElseConnective): string {
         return (
             `${convert(conn.firstOperand)}&&${convert(conn.secondOperand)}||` +
@@ -297,7 +267,7 @@ export namespace IfThenElseConnective {
  * iff
  * R1 < R2
  */
-export class LessThanConnective implements BinaryConnective {
+class LessThanConnective implements BinaryConnective {
     static NAME = 'LESSTHAN'
 
     name = LessThanConnective.NAME
@@ -309,7 +279,7 @@ export class LessThanConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace LessThanConnective {
+namespace LessThanConnective {
     export function toString(conn: LessThanConnective): string {
         return `${convertNumeric(conn.leftOperand)}<${convertNumeric(conn.rightOperand)}`
     }
@@ -320,7 +290,7 @@ export namespace LessThanConnective {
  * iff
  * R1 > R2
  */
-export class GreaterThanConnective implements BinaryConnective {
+class GreaterThanConnective implements BinaryConnective {
     static NAME = 'GREATERTHAN'
 
     name = GreaterThanConnective.NAME
@@ -332,7 +302,7 @@ export class GreaterThanConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace GreaterThanConnective {
+namespace GreaterThanConnective {
     export function toString(conn: GreaterThanConnective): string {
         return `${convertNumeric(conn.leftOperand)}>${convertNumeric(conn.rightOperand)}`
     }
@@ -343,7 +313,7 @@ export namespace GreaterThanConnective {
  * iff
  * R1 === R2
  */
-export class NumericEqualConnective implements BinaryConnective {
+class NumericEqualConnective implements BinaryConnective {
     static NAME = 'NUMERICEQUAL'
 
     name = NumericEqualConnective.NAME
@@ -355,7 +325,7 @@ export class NumericEqualConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace NumericEqualConnective {
+namespace NumericEqualConnective {
     export function toString(conn: NumericEqualConnective): string {
         return `${convertNumeric(conn.leftOperand)}=${convertNumeric(conn.rightOperand)}`
     }
@@ -365,7 +335,7 @@ export namespace NumericEqualConnective {
  * A GreaterEquals Connective takes two numeric rules R1 and R2 and evaluates to true
  * iff
  */
-export class GreaterEqualsConnective implements BinaryConnective {
+class GreaterEqualsConnective implements BinaryConnective {
     static NAME = 'GREATEREQUALS'
 
     name = GreaterEqualsConnective.NAME
@@ -377,7 +347,7 @@ export class GreaterEqualsConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace GreaterEqualsConnective {
+namespace GreaterEqualsConnective {
     export function toString(conn: GreaterEqualsConnective): string {
         return `${convertNumeric(conn.leftOperand)}>=${convertNumeric(conn.rightOperand)}`
     }
@@ -388,7 +358,7 @@ export namespace GreaterEqualsConnective {
  * iff
  * R1 <= R2
  */
-export class LessEqualsConnective implements BinaryConnective {
+class LessEqualsConnective implements BinaryConnective {
     static NAME = 'LESSEQUALS'
 
     name = GreaterEqualsConnective.NAME
@@ -400,7 +370,7 @@ export class LessEqualsConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace LessEqualsConnective {
+namespace LessEqualsConnective {
     export function toString(conn: LessEqualsConnective): string {
         return `${convertNumeric(conn.leftOperand)}<=${convertNumeric(conn.rightOperand)}`
     }
@@ -411,7 +381,7 @@ export namespace LessEqualsConnective {
  * iff
  * R1 != R2
  */
-export class NumericNotEqualConnective implements BinaryConnective {
+class NumericNotEqualConnective implements BinaryConnective {
     static NAME = 'NUMERICNOTEQUAL'
 
     name = GreaterEqualsConnective.NAME
@@ -423,7 +393,7 @@ export class NumericNotEqualConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace NumericNotEqualConnective {
+namespace NumericNotEqualConnective {
     export function toString(conn: NumericNotEqualConnective): string {
         return `${convertNumeric(conn.leftOperand)}!=${convertNumeric(conn.rightOperand)}`
     }
@@ -433,7 +403,7 @@ export namespace NumericNotEqualConnective {
  * A Numeric Addition Connective takes two numeric operands and evaluates
  * to their sum.
  */
-export class NumericAdditionConnective implements BinaryConnective {
+class NumericAdditionConnective implements BinaryConnective {
     static NAME = 'NUMERICADDITION'
 
     name = NumericAdditionConnective.NAME
@@ -445,7 +415,7 @@ export class NumericAdditionConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace NumericAdditionConnective {
+namespace NumericAdditionConnective {
     export function toString(conn: NumericAdditionConnective): string {
         return `${convertNumeric(conn.leftOperand)}+${convertNumeric(conn.rightOperand)}`
     }
@@ -455,7 +425,7 @@ export namespace NumericAdditionConnective {
  * A Numeric Subtraction Connective takes two numeric operands and evaluates
  * to their difference.
  */
-export class NumericSubtractionConnective implements BinaryConnective {
+class NumericSubtractionConnective implements BinaryConnective {
     static NAME = 'NUMERICSUBBTRACTION'
 
     name = NumericSubtractionConnective.NAME
@@ -467,7 +437,7 @@ export class NumericSubtractionConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace NumericSubtractionConnective {
+namespace NumericSubtractionConnective {
     export function toString(conn: NumericSubtractionConnective): string {
         return `${convertNumeric(conn.leftOperand)}-${convertNumeric(conn.rightOperand)}`
     }
@@ -477,7 +447,7 @@ export namespace NumericSubtractionConnective {
  * A Numeric Multiplication Connective takes two numeric operands and evaluates
  * to their product.
  */
-export class NumericMultiplicationConnective implements BinaryConnective {
+class NumericMultiplicationConnective implements BinaryConnective {
     static NAME = 'NUMERICMULTIPLICATION'
 
     name = NumericMultiplicationConnective.NAME
@@ -489,7 +459,7 @@ export class NumericMultiplicationConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace NumericMultiplicationConnective {
+namespace NumericMultiplicationConnective {
     export function toString(conn: NumericMultiplicationConnective): string {
         return `${convertNumeric(conn.leftOperand)}*${convertNumeric(conn.rightOperand)}`
     }
@@ -499,7 +469,7 @@ export namespace NumericMultiplicationConnective {
  * A Numeric Division Connective takes two numeric operands and evaluates
  * to their quotient.
  */
-export class NumericDivisionConnective implements BinaryConnective {
+class NumericDivisionConnective implements BinaryConnective {
     static NAME = 'NUMERICDIVISION'
 
     name = NumericDivisionConnective.NAME
@@ -511,7 +481,7 @@ export class NumericDivisionConnective implements BinaryConnective {
     ruleName?: string
 }
 
-export namespace NumericDivisionConnective {
+namespace NumericDivisionConnective {
     export function toString(conn: NumericDivisionConnective): string {
         return `${convertNumeric(conn.leftOperand)}/${convertNumeric(conn.rightOperand)}`
     }
@@ -520,7 +490,7 @@ export namespace NumericDivisionConnective {
 /**
  * A Numeric Constant Connective returns a constant value.
  */
-export class NumericConstantConnective implements Connective {
+class NumericConstantConnective implements Connective {
     static NAME = 'CONST'
 
     name = NumericConstantConnective.NAME
@@ -530,7 +500,7 @@ export class NumericConstantConnective implements Connective {
     ruleName?: string
 }
 
-export namespace NumericConstantConnective {
+namespace NumericConstantConnective {
     export function toString(conn: NumericConstantConnective): string {
         return conn.num.toString()
     }
@@ -545,7 +515,7 @@ function assertIsConnective(rule: Connective | SemanticFilterRule): asserts rule
     }
 }
 
-/** Evaluates a rule that returns a numeric result. */
+/** Converts a rule that returns a numeric result into text. */
 function convertNumeric(rule: SemanticFilterRule): string {
     // Rule is a Tag
     if (isTag(rule)) {
@@ -568,7 +538,12 @@ function convertNumeric(rule: SemanticFilterRule): string {
     }
 }
 
-/** Evaluates `rule` using `tags`. See Connectives for further explanation on evaluation. */
+/**
+ * Converts a legacy semantic filter rule sent from the server to a string that can be understood and reparsed by
+ * the antlr parser.
+ * @param rule a semantic filter rule object
+ * @returns a rulestring that can be parsed
+ */
 export function convert(rule: SemanticFilterRule): string {
     // Rule is a Tag
     if (isTag(rule)) {
@@ -598,13 +573,6 @@ export function convert(rule: SemanticFilterRule): string {
         case IfThenElseConnective.NAME:
             return IfThenElseConnective.toString(rule as IfThenElseConnective)
         // Numeric Connectives
-        /*
-        For now, these are defined by an unset corresponding tag being treated as if its num was 0. TODO:
-        There is potential to redefine this so that an unset tag corresponding tag would automatically
-        be evaluated to false. However, this may result in three-valued logic which can be very dangerous
-        as some two-values logic laws may not hold.
-        Should this redefined, make sure to check all cases, e.g. !(x < y) === x >= y, de morgan, etc.
-        */
         case LessThanConnective.NAME:
             return LessThanConnective.toString(rule as LessThanConnective)
         case GreaterThanConnective.NAME:
