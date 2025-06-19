@@ -17,6 +17,7 @@ export class SearchBarPanel {
     private hoverPos: { x: number, y: number } | null = null
     private tooltipEl: HTMLElement | null = null
     private selectedIndex: number = 0
+    private usedArrowKeys: boolean = false
 
     private onVisibilityChange?: () => void
 
@@ -161,6 +162,8 @@ export class SearchBarPanel {
                             console.log(`[SearchBar] search took ${total.toFixed(10)} ms`);
                             
                             document.addEventListener('keydown', this.handleKeyNavigation)
+                            // this.usedArrowKeys = false
+                            // this.selectedIndex = -1
                         }
                     }
                 }),
@@ -369,19 +372,25 @@ export class SearchBarPanel {
 
         if (event.key === 'ArrowDown') {
             event.preventDefault()
+            this.usedArrowKeys = true
             this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
             this.update()
         } else if (event.key === 'ArrowUp') {
             event.preventDefault()
+            this.usedArrowKeys = true
             this.selectedIndex = (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
             this.update()
         } else if (event.key === 'Enter') {
             event.preventDefault()
-            this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
-            this.update()
-            const selected = this.searchResults[this.selectedIndex]
-            if (selected) {
-                this.panToElement(selected.id)
+            if (this.usedArrowKeys) {
+                const selected = this.searchResults[this.selectedIndex]
+                if (selected) this.panToElement(selected.id)
+                this.usedArrowKeys = false
+            } else {
+                this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+                const selected = this.searchResults[this.selectedIndex]
+                if (selected) this.panToElement(selected.id)
+                this.update()
             }
         }
     }
