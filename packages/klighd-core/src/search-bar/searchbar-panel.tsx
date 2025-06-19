@@ -377,6 +377,8 @@ export class SearchBarPanel {
             this.update()
         } else if (event.key === 'Enter') {
             event.preventDefault()
+            this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+            this.update()
             const selected = this.searchResults[this.selectedIndex]
             if (selected) {
                 this.panToElement(selected.id)
