@@ -18,7 +18,15 @@
 /** @jsx html */
 import { inject, postConstruct } from 'inversify'
 import { VNode } from 'snabbdom'
-import { AbstractUIExtension, html, IActionDispatcher, InitializeCanvasBoundsAction, Patcher, PatcherProvider, TYPES } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import {
+    AbstractUIExtension,
+    html, // eslint-disable-line @typescript-eslint/no-unused-vars
+    IActionDispatcher,
+    InitializeCanvasBoundsAction,
+    Patcher,
+    PatcherProvider,
+    TYPES,
+} from 'sprotty'
 import { DISymbol } from '../di.symbols'
 import { PinSidebarOption, RenderOptionsRegistry } from '../options/render-options-registry'
 import { ShowSidebarAction, ToggleSidebarPanelAction } from './actions'
@@ -121,14 +129,16 @@ export class Sidebar extends AbstractUIExtension {
         }
         // Find the canvas element and dispatch an action to re-initialize the canvas bounds.
         // This works since the previous css property will correctly set the width of the canvas.
-        let canvas = (content.elm as HTMLElement).parentElement?.parentElement
+        const canvas = (content.elm as HTMLElement).parentElement?.parentElement
         if (canvas) {
-            this.actionDispatcher.dispatch(InitializeCanvasBoundsAction.create({
-                x: canvas.clientLeft,
-                y: canvas.clientTop,
-                width: canvas.clientWidth,
-                height: canvas.clientHeight
-            }));
+            this.actionDispatcher.dispatch(
+                InitializeCanvasBoundsAction.create({
+                    x: canvas.clientLeft,
+                    y: canvas.clientTop,
+                    width: canvas.clientWidth,
+                    height: canvas.clientHeight,
+                })
+            )
         }
     }
 
