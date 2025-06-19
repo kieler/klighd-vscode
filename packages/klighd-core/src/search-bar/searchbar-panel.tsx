@@ -16,6 +16,7 @@ export class SearchBarPanel {
     private hoverPath: string | null = null
     private hoverPos: { x: number, y: number } | null = null
     private tooltipEl: HTMLElement | null = null
+    private selectedIndex: number = 0
 
     private onVisibilityChange?: () => void
 
@@ -77,6 +78,7 @@ export class SearchBarPanel {
      */
     public setResults(results: SModelElement[]): void {
         this.searchResults = results
+        this.selectedIndex = 0
         /* Debug: */ console.log("[SearchBar] setting results:", results)
     }
 
@@ -238,12 +240,19 @@ export class SearchBarPanel {
                 }
             },
             this.searchResults.map((result, index) => {
+                const isSelected = index === this.selectedIndex
+                const listItemId = `search-result-${index}`
+
                 return h('li', {
+                    attrs: {
+                        id: listItemId
+                    },
                     style: {
                         padding: '4px 8px',
                         borderRadius: '4px',
                         transition: 'background-color 0.2s ease',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.15)' : 'transparent'
                     },
                     on: {
                         mouseenter: (event: MouseEvent) => {
@@ -262,6 +271,8 @@ export class SearchBarPanel {
                         },
                         click: () => {
                             this.panToElement(result.id)
+                            this.selectedIndex = index
+                            this.update()
                         }
                     },
                     hook: {
@@ -272,12 +283,27 @@ export class SearchBarPanel {
                             vnode.elm!.addEventListener('mouseout', () => {
                                 (vnode.elm as HTMLElement).style.backgroundColor = 'transparent'
                             })
+
+                            if (isSelected) {
+                                (vnode.elm as HTMLElement).scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'nearest'
+                                })
+                            }
+                        },
+                        update: (oldVnode, vnode) => {
+                            if (isSelected) {
+                                (vnode.elm as HTMLElement).scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'nearest'
+                                })
+                            }
                         }
                     }
                 }, [this.textRes[index]])
             }))
         ])
-    }
+    }   
 
     /**
      * Zoom in on a certain element.
@@ -306,6 +332,7 @@ export class SearchBarPanel {
             this.searchResults = []
             this.textRes = []
             this.searched = false
+            this.selectedIndex = 0
             this.update()
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
@@ -332,9 +359,21 @@ export class SearchBarPanel {
         }
     }
 
-    private handleEnter = (event : KeyboardEvent) => {
-        if (event.key === 'Enter') this.panToElement(this.searchResults[0].id)
+    /**
+     * Click through search results with enter
+     * @param event the enter keypress
+     */
+    private handleEnter = (event: KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            if (this.searchResults.length > 0) {
+                const element = this.searchResults[this.selectedIndex]
+                this.panToElement(element.id)
+                this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+                this.update()
+            }
+        }
     }
+
 
     /**
      * Build the path from the id of an element.
