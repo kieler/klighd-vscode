@@ -65,6 +65,7 @@ export class SearchBarPanel {
         } else {
             document.removeEventListener('keydown', this.handleEscapeKey)
             document.removeEventListener('keydown', this.handleEmptyInput)
+            document.removeEventListener('keydown', this.handleKeyNavigation)
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
@@ -159,7 +160,7 @@ export class SearchBarPanel {
                             const total = end - start;
                             console.log(`[SearchBar] search took ${total.toFixed(10)} ms`);
                             
-                            document.addEventListener('keydown', this.handleEnter)
+                            document.addEventListener('keydown', this.handleKeyNavigation)
                         }
                     }
                 }),
@@ -360,19 +361,29 @@ export class SearchBarPanel {
     }
 
     /**
-     * Click through search results with enter
-     * @param event the enter keypress
+     * Click through search results with enter or choose a certain result with ArrowUp/ArrowDown
+     * @param event keypresses of enter, arrowUp or arrowDown
      */
-    private handleEnter = (event: KeyboardEvent) => {
-        if (event.key === 'Enter') {
-            if (this.searchResults.length > 0) {
-                const element = this.searchResults[this.selectedIndex]
-                this.panToElement(element.id)
-                this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
-                this.update()
+    private handleKeyNavigation = (event: KeyboardEvent) => {
+        if (this.searchResults.length === 0) return
+
+        if (event.key === 'ArrowDown') {
+            event.preventDefault()
+            this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+            this.update()
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault()
+            this.selectedIndex = (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
+            this.update()
+        } else if (event.key === 'Enter') {
+            event.preventDefault()
+            const selected = this.searchResults[this.selectedIndex]
+            if (selected) {
+                this.panToElement(selected.id)
             }
         }
     }
+
 
 
     /**
