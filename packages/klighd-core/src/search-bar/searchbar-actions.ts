@@ -6,6 +6,8 @@ import { SearchBarPanel } from './searchbar-panel'
 import { inject, injectable } from 'inversify'
 import { isContainerRendering, isKText, KColoring, KRectangle, KText } from '../skgraph-models'
 import { rgb } from 'sprotty'
+import { createFilter } from '../filtering/semantic-filtering-util'
+import { parse } from '../filtering/parser'
 
 /* --------------------------------- search bar visibility actions ----------------------------------------*/   
 
@@ -148,7 +150,6 @@ function removeKTextHighlights(root: SModelElement): void {
     while (queue.length > 0) {
         const element = queue.shift()!
 
-        // Remove highlight styles from KTextImpl elements
         if (isKText(element) && element.styles) {
             element.styles = element.styles.filter((style: any) => 
                 !(style.type === 'KBackgroundImpl' && 
@@ -281,7 +282,6 @@ export class HandleSearchAction implements IActionHandler {
 
     /**
      * Adds highlighting directly to the text element by modifying its styles
-     * TODO: remove previous highlights
      * @param textElement the KTextImpl element to highlight
      */
     private addHighlightToKText(textElement: any): void {
@@ -424,153 +424,60 @@ export class HandleSearchAction implements IActionHandler {
 
     ///////////////////////////////// Tag search //////////////////////////////////////
     
-    /**
-     * Matches the query to the tags.
-     * @param tags the tags of some object
-     * @param query The user input in the format "$someTag someNumValue"
-     * @returns whether the searched tag is included in the tags 
-     */
-    private matchesTagWithNumQuery(tags: { tag: string, num?: number }[], query: string): boolean {
-        const match = query.match(/^(\w+)\s+(\d+)$/)
-        if (!match) return false
-
-        const tagToFind = match[1].toLowerCase()
-        const numToFind = parseInt(match[2], 10)
-
-        for (const tagObj of tags) {
-            //console.log('Checking tag:', tagObj.tag, 'num:', tagObj.num)
-            if (tagObj.tag === tagToFind && tagObj.num === numToFind) return true
+    private matchesFilterRule(element: any, query: string): boolean {
+       try {
+            const rule = parse(query)
+            const filter = createFilter(rule)
+            return filter.filterFun(element)
+        } catch (e) {
+            console.error('Invalid filter expression:', e)
+            return false
         }
-        return false
     }
 
-
-
-    /**
-     * Parses logical operators using a parser
-     * @param tags the tags of some element
-     * @param query the user input
-     * @returns whether fullquery is met
-     */
-    private matchesTagQuery(tags: { tag: string, num?: number }[], fullQuery: string): boolean {
-        const orClauses = fullQuery.split('||').map(s => s.trim())
-
-        for (const orClause of orClauses) {
-            const andTerms = orClause.split('&&').map(term => term.trim())
-            let allMatch = true
-
-            for (const term of andTerms) {
-                if (term.startsWith('#')) {
-                    const plainTag = term.slice(1).toLowerCase()
-                    const tagStrings = tags.map(t => t.tag)
-                    if (!tagStrings.includes(plainTag)) {
-                        allMatch = false
-                        break
-                    }
-                } else if (term.startsWith('$')) {
-                    const numQuery = term.slice(1).toLowerCase()
-                    if (!this.matchesTagWithNumQuery(tags, numQuery)) {
-                        allMatch = false
-                        break
-                    }
-                } else {
-                    allMatch = false
-                    break
-                }
-            }
-
-            if (allMatch) return true
-        }
-
-        return false
-    }
-
-    /**
-     * Extracts the tags from a graph element with the goal to further search through the tags.
-     * @param element the graph element
-     * @returns an array of tags, that the element has
-     */
-    private getTagsFromElement(element: any): { tag: string, num?: number }[] {
-        const tags: { tag: string, num?: number }[] = []
-
-        const tagProp = element.properties?.["de.cau.cs.kieler.klighd.semanticFilter.tags"]
-        if (tagProp && Array.isArray(tagProp)) {
-            const parsed = tagProp
-                .filter((item: any) => typeof item.tag === 'string')
-                .map((item: any) => ({ tag: item.tag.toLowerCase(), num: item.num }))
-            tags.push(...parsed)
-        }
-
-        if (Array.isArray(element.data)) {
-            for (const item of element.data) {
-                const dataTagProp = item?.properties?.["de.cau.cs.kieler.klighd.semanticFilter.tags"]
-                if (dataTagProp && Array.isArray(dataTagProp)) {
-                    tags.push(...dataTagProp
-                        .filter((t: any) => typeof t.tag === 'string')
-                        .map((t: any) => ({ tag: t.tag.toLowerCase(), num: t.num })))
+    private extractDisplayName(element: SModelElement): string {
+        const segments = element.id.split('$')
+        for (let i = segments.length - 1; i >= 0; i--) {
+            const segment = segments[i]
+            if (segment?.length > 1) {
+                switch (segment.charAt(0)) {
+                    case 'N':
+                    case 'E':
+                    case 'P':
+                    case 'L':
+                        return segment.substring(1)
                 }
             }
         }
-
-        return tags
+        return element.id
     }
 
     /**
-     * Performes a tag search
-     * @param root the current model starting with the root
-     * @param query tags to find
+     * Performs a tag search on the model
+     * @param root the model
+     * @param query the user input 
      * @param panel the search bar panel
-     * @returns array of results
+     * @returns an array with all query results
      */
     private searchTags(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
         const results: SModelElement[] = []
         const textRes: string[] = []
-
         const queue: SModelElement[] = [root]
-
-        /** mixed search use -> as Trennsymbol */
 
         while (queue.length > 0) {
             const element = queue.shift()!
 
-            const tagObjs = this.getTagsFromElement(element)
-            const tagStrings = tagObjs.map(t => t.tag)  
-
-            const matched = this.matchesTagQuery(tagObjs, query.toLowerCase())
-
-            if (tagStrings.length > 0 && matched) {
+            if (this.matchesFilterRule(element, query)) {
                 const bounds = this.extractBounds(element)
                 this.addHighlightToElement(element, bounds)
                 results.push(element)
 
-                const segments = element.id.split('$')
-                let nodeName = ''
-                for (let i = segments.length - 1; i >= 0; i--) {
-                    const segment = segments[i]
-                    if (segment && segment !== '') {
-                        if (segment.length > 1) {
-                            switch (segment.charAt(0)){
-                                case 'N': 
-                                case 'E': 
-                                case 'P': 
-                                case 'L': nodeName = ''; break
-                            }
-                            nodeName += segment.substring(1)
-                        } else {
-                            nodeName = segment
-                        }
-                        break
-                    }
-                }
-
-                const displayText = nodeName || element.id
-                textRes.push(displayText)
+                const name = this.extractDisplayName(element)
+                textRes.push(name)
             }
 
-            if ('children' in element && Array.isArray((element as any).children)) {
-                for (const child of (element as any).children) {
-                    queue.push(child)
-                }
+            if ('children' in element && Array.isArray(element.children)) {
+                queue.push(...element.children)
             }
         }
 
