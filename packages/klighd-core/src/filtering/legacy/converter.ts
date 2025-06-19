@@ -426,7 +426,7 @@ namespace NumericAdditionConnective {
  * to their difference.
  */
 class NumericSubtractionConnective implements BinaryConnective {
-    static NAME = 'NUMERICSUBBTRACTION'
+    static NAME = 'NUMERICSUBTRACTION'
 
     name = NumericSubtractionConnective.NAME
 
@@ -526,13 +526,13 @@ function convertNumeric(rule: SemanticFilterRule): string {
         case NumericConstantConnective.NAME:
             return NumericConstantConnective.toString(rule as NumericConstantConnective)
         case NumericAdditionConnective.NAME:
-            return NumericAdditionConnective.toString(rule as NumericAdditionConnective)
+            return `(${NumericAdditionConnective.toString(rule as NumericAdditionConnective)})`
         case NumericSubtractionConnective.NAME:
-            return NumericSubtractionConnective.toString(rule as NumericSubtractionConnective)
+            return `(${NumericSubtractionConnective.toString(rule as NumericSubtractionConnective)})`
         case NumericMultiplicationConnective.NAME:
-            return NumericMultiplicationConnective.toString(rule as NumericMultiplicationConnective)
+            return `(${NumericMultiplicationConnective.toString(rule as NumericMultiplicationConnective)})`
         case NumericDivisionConnective.NAME:
-            return NumericDivisionConnective.toString(rule as NumericDivisionConnective)
+            return `(${NumericDivisionConnective.toString(rule as NumericDivisionConnective)})`
         default:
             return '0'
     }
@@ -559,32 +559,32 @@ export function convert(rule: SemanticFilterRule): string {
         case FalseConnective.NAME:
             return FalseConnective.toString(rule as FalseConnective)
         case IdentityConnective.NAME:
-            return IdentityConnective.toString(rule as IdentityConnective)
+            return `(${IdentityConnective.toString(rule as IdentityConnective)})`
         case NegationConnective.NAME:
-            return NegationConnective.toString(rule as NegationConnective)
+            return `(${NegationConnective.toString(rule as NegationConnective)})`
         case AndConnective.NAME:
-            return AndConnective.toString(rule as AndConnective)
+            return `(${AndConnective.toString(rule as AndConnective)})`
         case OrConnective.NAME:
-            return OrConnective.toString(rule as OrConnective)
+            return `(${OrConnective.toString(rule as OrConnective)})`
         case IfThenConnective.NAME:
-            return IfThenConnective.toString(rule as IfThenConnective)
+            return `(${IfThenConnective.toString(rule as IfThenConnective)})`
         case LogicEqualConnective.NAME:
-            return LogicEqualConnective.toString(rule as LogicEqualConnective)
+            return `(${LogicEqualConnective.toString(rule as LogicEqualConnective)})`
         case IfThenElseConnective.NAME:
-            return IfThenElseConnective.toString(rule as IfThenElseConnective)
+            return `(${IfThenElseConnective.toString(rule as IfThenElseConnective)})`
         // Numeric Connectives
         case LessThanConnective.NAME:
-            return LessThanConnective.toString(rule as LessThanConnective)
+            return `(${LessThanConnective.toString(rule as LessThanConnective)})`
         case GreaterThanConnective.NAME:
-            return GreaterThanConnective.toString(rule as GreaterThanConnective)
+            return `(${GreaterThanConnective.toString(rule as GreaterThanConnective)})`
         case NumericEqualConnective.NAME:
-            return NumericEqualConnective.toString(rule as NumericEqualConnective)
+            return `(${NumericEqualConnective.toString(rule as NumericEqualConnective)})`
         case GreaterEqualsConnective.NAME:
-            return GreaterEqualsConnective.toString(rule as GreaterEqualsConnective)
+            return `(${GreaterEqualsConnective.toString(rule as GreaterEqualsConnective)})`
         case LessEqualsConnective.NAME:
-            return LessEqualsConnective.toString(rule as LessEqualsConnective)
+            return `(${LessEqualsConnective.toString(rule as LessEqualsConnective)})`
         case NumericNotEqualConnective.NAME:
-            return NumericNotEqualConnective.toString(rule as NumericNotEqualConnective)
+            return `(${NumericNotEqualConnective.toString(rule as NumericNotEqualConnective)})`
         default:
             return 'true'
     }
