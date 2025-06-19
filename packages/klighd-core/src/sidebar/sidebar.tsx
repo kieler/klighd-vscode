@@ -18,7 +18,7 @@
 /** @jsx html */
 import { inject, postConstruct } from 'inversify'
 import { VNode } from 'snabbdom'
-import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
+import { AbstractUIExtension, html, IActionDispatcher, InitializeCanvasBoundsAction, Patcher, PatcherProvider, TYPES } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { DISymbol } from '../di.symbols'
 import { PinSidebarOption, RenderOptionsRegistry } from '../options/render-options-registry'
 import { ShowSidebarAction, ToggleSidebarPanelAction } from './actions'
@@ -110,12 +110,26 @@ export class Sidebar extends AbstractUIExtension {
         // Show or hide the panel
         if (currentPanel) {
             this.containerElement.classList.add('sidebar--open')
+            // Set width of sidebar to maximum width of all opened panels.
+            this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
+            document.documentElement.style.setProperty('--sidebar-width', `${this.maxWidth}px`)
         } else {
             this.containerElement.classList.remove('sidebar--open')
+            // Reset sidebar width when closed
+            this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
+            document.documentElement.style.setProperty('--sidebar-width', '0px')
         }
-        // Set width of sidebar to maximum width of all opened panels.
-        this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
-        document.documentElement.style.setProperty('--sidebar-width', `${this.maxWidth}px`)
+        // Find the canvas element and dispatch an action to re-initialize the canvas bounds.
+        // This works since the previous css property will correctly set the width of the canvas.
+        let canvas = (content.elm as HTMLElement).parentElement?.parentElement
+        if (canvas) {
+            this.actionDispatcher.dispatch(InitializeCanvasBoundsAction.create({
+                x: canvas.clientLeft,
+                y: canvas.clientTop,
+                width: canvas.clientWidth,
+                height: canvas.clientHeight
+            }));
+        }
     }
 
     protected onBeforeShow(): void {
