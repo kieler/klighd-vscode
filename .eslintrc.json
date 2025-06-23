@@ -38,7 +38,7 @@
             }
         ]
     },
-    "ignorePatterns": ["**/*.d.ts", "lib", "dist", "pack", "webpack.config.js"],
+    "ignorePatterns": ["**/*.d.ts", "lib", "dist", "pack", "webpack.config.js", "generated"],
     "settings": {
         "import/resolver": {
           "node": {
