@@ -424,6 +424,12 @@ export class HandleSearchAction implements IActionHandler {
 
     ///////////////////////////////// Tag search //////////////////////////////////////
     
+    /**
+     * Parses the tag input and creates a filter based on it
+     * @param element a graph element
+     * @param query the tag(s)
+     * @returns true if elem has tag, otherwise false
+     */
     private matchesFilterRule(element: any, query: string): boolean {
        try {
             const rule = parse(query)
@@ -435,6 +441,11 @@ export class HandleSearchAction implements IActionHandler {
         }
     }
 
+    /**
+     * Finds a name to display for nodes that meet the searched tags
+     * @param element the node
+     * @returns name for result list
+     */
     private extractDisplayName(element: SModelElement): string {
         const segments = element.id.split('$')
         for (let i = segments.length - 1; i >= 0; i--) {
@@ -453,6 +464,39 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
+     * Checks whether a node includes the query text
+     * @param element the node to check
+     * @param query the user input
+     * @returns true if query is included, otherwise false
+     */
+    private textCheck(element: SModelElement, query: string): boolean {
+        if (!element) {
+            return false;
+        }
+
+        if ('text' in element && typeof element.text === 'string') {
+            return element.text.toLowerCase().includes(query)
+        }
+
+        if ('data' in element && Array.isArray((element as any).data)) {
+            for (const item of (element as any).data) {
+                if (this.textCheck(item as any, query)) {
+                    return true;
+                }
+            }
+        }
+        
+        if ('children' in element && Array.isArray((element as any).children)) {
+            for (const child of (element as any).children) {
+                if (this.textCheck(child as any, query)) {
+                    return true;
+                }
+            }
+        }
+        return false
+    }
+
+    /**
      * Performs a tag search on the model
      * @param root the model
      * @param query the user input 
@@ -463,11 +507,23 @@ export class HandleSearchAction implements IActionHandler {
         const results: SModelElement[] = []
         const textRes: string[] = []
         const queue: SModelElement[] = [root]
-
+        const isMixedQuery : boolean = query.includes('->') ? true : false
+        let tagQuery: string = query
+        let textQuery: string = ''
+        
+        if (isMixedQuery) {
+            const parts = query.split('->')
+            tagQuery = parts[0].trim()
+            textQuery = parts[1].trim().toLowerCase()
+        }
+        
         while (queue.length > 0) {
             const element = queue.shift()!
 
-            if (this.matchesFilterRule(element, query)) {
+            const matchesTag = this.matchesFilterRule(element, tagQuery)
+            const matchesText = !isMixedQuery || this.textCheck(element, textQuery)
+
+            if (matchesTag && matchesText) {
                 const bounds = this.extractBounds(element)
                 this.addHighlightToElement(element, bounds)
                 results.push(element)

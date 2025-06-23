@@ -162,8 +162,6 @@ export class SearchBarPanel {
                             console.log(`[SearchBar] search took ${total.toFixed(10)} ms`);
                             
                             document.addEventListener('keydown', this.handleKeyNavigation)
-                            // this.usedArrowKeys = false
-                            // this.selectedIndex = -1
                         }
                     }
                 }),
@@ -212,7 +210,8 @@ export class SearchBarPanel {
         if (this.searchResults.length === 0) {
             const input = document.getElementById('search') as HTMLInputElement
             const currentInput = input ? input.value : ''
-            const isTagSearch = currentInput.startsWith('#') || currentInput.startsWith('$')
+            const isTagSearch = (currentInput.includes('#') || currentInput.includes('$')) 
+                                && !currentInput.includes('->')
             const message = isTagSearch ? 'Not a valid tag' : 'No results found'
             const textColor = isTagSearch ? 'red' : 'black'
             
