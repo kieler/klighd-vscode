@@ -228,7 +228,8 @@ export class SearchBarPanel {
 
         return h('div', {}, [
             h('div', { style: { fontWeight: 'bold', marginBottom: '5px' } }, [
-                `Found ${this.searchResults.length} result${this.searchResults.length !== 1 ? 's' : ''}`
+                //`Found ${this.searchResults.length} result${this.searchResults.length !== 1 ? 's' : ''}`
+                `Result ${this.selectedIndex} of ${this.searchResults.length}`
             ]),
 
             h('ul', {
