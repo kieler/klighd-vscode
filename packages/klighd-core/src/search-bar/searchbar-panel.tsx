@@ -20,6 +20,7 @@ export class SearchBarPanel {
     private usedArrowKeys: boolean = false
     private lastEnterTime = 0
     private enterDebounceDelay = 200
+    private tagInputVisible: boolean = false
 
     private onVisibilityChange?: () => void
 
@@ -44,6 +45,7 @@ export class SearchBarPanel {
         if (vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
             document.addEventListener('keydown', this.handleEmptyInput)
+            document.addEventListener('keydown', this.handleTabTrap)
             setTimeout(() => {
                 const input = document.getElementById('search') as HTMLInputElement
                 if (input) {
@@ -69,10 +71,12 @@ export class SearchBarPanel {
             document.removeEventListener('keydown', this.handleEscapeKey)
             document.removeEventListener('keydown', this.handleEmptyInput)
             document.removeEventListener('keydown', this.handleKeyNavigation)
+            document.removeEventListener('keydown', this.handleTabTrap)
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
             }
+            this.tagInputVisible = false
         }
     }
 
@@ -108,6 +112,46 @@ export class SearchBarPanel {
         for (const callback of this.updateCallbacks) {
             callback()
         }
+    }
+
+    /**
+     * Toggles the visibility of the tag input field
+     */
+    private toggleTagInput(): void {
+        this.tagInputVisible = !this.tagInputVisible
+        this.update()
+        
+        if (this.tagInputVisible) {
+            setTimeout(() => {
+                const tagInput = document.getElementById('tag-search') as HTMLInputElement
+                if (tagInput) {
+                    tagInput.focus()
+                }
+            }, 0)
+        }
+    }
+
+    /**
+     * Performs the search with both main and tag inputs
+     */
+    private performSearch(): void {
+        const mainInput = document.getElementById('search') as HTMLInputElement
+        const tagInput = document.getElementById('tag-search') as HTMLInputElement
+        
+        const query = mainInput ? mainInput.value : ''
+        const tagQuery = tagInput ? tagInput.value : ''
+        
+        this.searched = true
+        const start = performance.now()
+
+        this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+        this.actionDispatcher.dispatch(SearchAction.create(this, SearchBar.ID, query, tagQuery ))
+
+        const end = performance.now()
+        const total = end - start
+        console.log(`[SearchBar] search took ${total.toFixed(10)} ms`)
+        
+        document.addEventListener('keydown', this.handleKeyNavigation)
     }
 
     /**
@@ -150,23 +194,30 @@ export class SearchBarPanel {
                         padding: '4px'
                     },
                     on: {
-                        input: (event: Event) => {
-                            const input = (event.target as HTMLInputElement).value
-                            this.searched = true
-
-                            const start = performance.now();
-
-                            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
-                            this.actionDispatcher.dispatch(SearchAction.create(panel, SearchBar.ID, input))
-
-                            const end = performance.now();
-                            const total = end - start;
-                            console.log(`[SearchBar] search took ${total.toFixed(10)} ms`);
-                            
-                            document.addEventListener('keydown', this.handleKeyNavigation)
+                        input: () => {
+                            this.performSearch()
                         }
                     }
                 }),
+                h('button', {
+                    style: {
+                        marginLeft: '4px',
+                        background: this.tagInputVisible ? '#007acc' : '#eee',
+                        border: 'none',
+                        cursor: 'pointer',
+                        width: '30px',
+                        color: this.tagInputVisible ? 'white' : 'black',
+                        transition: 'background-color 0.2s ease'
+                    },
+                    attrs: {
+                        title: 'Toggle tag search'
+                    },
+                    on: {
+                        click: () => {
+                            this.toggleTagInput()
+                        }
+                    }
+                }, ['#']),
                 h('button', {
                     style: {
                         marginLeft: '4px',
@@ -179,11 +230,39 @@ export class SearchBarPanel {
                         click: () => {
                             this.changeVisibility(false)
                             this.searched = false
+                            this.tagInputVisible = false
                             this.actionDispatcher.dispatch(ToggleSearchBarAction.create(panel, SearchBar.ID, 'hide'))
-                        },
+                        }
                     }
-                }, ['x']),
+                }, ['×'])
             ]),
+            
+            this.tagInputVisible ? h('div', {
+                style: {
+                    display: 'flex',
+                    marginBottom: '8px',
+                    animation: 'slideDown 0.2s ease-out'
+                }
+            }, [
+                h('input', {
+                    props: {
+                        id: 'tag-search',
+                        placeholder: 'Tag filter (# or $)...'
+                    },
+                    style: {
+                        flex: '1',
+                        padding: '4px',
+                        border: '1px solid #007acc',
+                        borderRadius: '2px'
+                    },
+                    on: {
+                        input: () => {
+                            this.performSearch()
+                        }
+                    }
+                }),
+            ]) : null,
+            
             this.hoverPath ? h('div', {
                 style: {
                     position: 'fixed',
@@ -198,7 +277,7 @@ export class SearchBarPanel {
                     zIndex: '10000'
                 }
             }, [ this.hoverPath ]) : null,
-+            this.searched ? this.showSearchResults(panel) : null
+            this.searched ? this.showSearchResults(panel) : null
         ])
     }
 
@@ -210,19 +289,16 @@ export class SearchBarPanel {
     private showSearchResults(panel: SearchBarPanel): VNode {
         /* empty input or invalid tag (-> any tag not present in graph is invalid) */
         if (this.searchResults.length === 0) {
-            const input = document.getElementById('search') as HTMLInputElement
-            const currentInput = input ? input.value : ''
-            const isTagSearch = (currentInput.includes('#') || currentInput.includes('$')) 
-                                && !currentInput.includes('->')
-            const message = isTagSearch ? 'Not a valid tag' : 'No results found'
-            const textColor = isTagSearch ? 'red' : 'black'
+            // TODO error handling
+            const message = 'No results found'
+            // const errorColor = hasError ? 'red' : 'black'
             
             return h('div', {}, [
                 h('div', { 
                     style: { 
                         fontWeight: 'bold', 
                         marginBottom: '5px',
-                        color: textColor
+                        //color: errorColor
                     } 
                 }, [message])
             ])
@@ -236,12 +312,12 @@ export class SearchBarPanel {
             h('ul', {
                 style: {
                     maxHeight: '200px',
-                    overflowY: this.searchResults.length > 12 ? 'auto' : 'visible',
+                    overflowY: this.searchResults.length > 8 ? 'auto' : 'visible',
                     listStyleType: 'none',
                     paddingLeft: '0',
                     margin: '0',
                     marginTop: '4px',
-                    border: this.searchResults.length > 12 ? '1px solid #eee' : 'none'
+                    border: this.searchResults.length > 8 ? '1px solid #eee' : 'none'
                 }
             },
             this.searchResults.map((result, index) => {
@@ -325,23 +401,51 @@ export class SearchBarPanel {
         this.actionDispatcher.dispatch(action)
     }
 
-    private resetUI() : void {
-        const input = document.getElementById('search') as HTMLInputElement
-            if (input) {
-                input.value = ''
-                input.focus()
-            }
-            if (this.tooltipEl) {
-                this.tooltipEl.style.display = 'none'
-            }
-            this.searchResults = []
-            this.textRes = []
-            this.searched = false
-            this.selectedIndex = -1
-            this.update()
-            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
-    }
+    /** Resets the UI by removing tooltips and the result list */
+    private resetUI(): void {
+        const input = document.getElementById('search') as HTMLInputElement | null
+        const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
+        const active = document.activeElement as HTMLElement | null
 
+        let cleared = false
+
+        if (active === input && input) {
+            input.value = ''
+            input.focus()
+            cleared = true
+        }
+
+        if (active === tagInput && tagInput) {
+            tagInput.value = ''
+            tagInput.focus()
+            cleared = true
+        }
+
+        if (cleared) {
+            this.performSearch()
+
+            if (input?.value === '' && tagInput?.value === '') {
+                this.searchResults = []
+                this.textRes = []
+                this.searched = false
+                this.selectedIndex = -1
+                this.update()
+                this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+            }
+            return
+        }
+
+        if (input) input.value = ''
+        if (tagInput) tagInput.value = ''
+        if (this.tooltipEl) this.tooltipEl.style.display = 'none'
+
+        this.searchResults = []
+        this.textRes = []
+        this.searched = false
+        this.selectedIndex = -1
+        this.update()
+        this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+    }
 
     /**
      * When pressing the escape key, the search input resets.
@@ -358,8 +462,9 @@ export class SearchBarPanel {
     private handleEmptyInput = (event: KeyboardEvent) => {
         if (event.key === 'Backspace') {
             const input = document.getElementById('search') as HTMLInputElement
+            const tagInput = document.getElementById('tag-search') as HTMLInputElement
             setTimeout(() => {
-                if (input.value === '') this.resetUI()
+                if (input.value === '' && tagInput.value === '') this.resetUI()
             }, 0)
         }
     }
@@ -419,6 +524,38 @@ export class SearchBarPanel {
         }
         this.update()
     }
+
+    /** Tab cycles between input fields */
+    private handleTabTrap = (event: KeyboardEvent) => {
+        if (event.key !== 'Tab') return
+
+        const input = document.getElementById('search') as HTMLInputElement | null
+        const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
+        const active = document.activeElement
+
+        if (!input) return
+
+        // Only #search is visible
+        if (!this.tagInputVisible && active === input) {
+            event.preventDefault()
+            this.toggleTagInput()
+            return
+        }
+
+        // Only trap tab when both inputs are visible
+        if (!input || !tagInput || !this.tagInputVisible) return
+
+        if (!(active instanceof HTMLInputElement)) return
+        const focusables = [input, tagInput]
+        const currentIndex = focusables.indexOf(active)
+
+        if (currentIndex !== -1) {
+            event.preventDefault()
+            const nextIndex = (currentIndex + focusables.length) % focusables.length
+            focusables[nextIndex].focus()
+        }
+    }
+
 
     /**
      * Build the path from the id of an element.
