@@ -18,6 +18,8 @@ export class SearchBarPanel {
     private tooltipEl: HTMLElement | null = null
     private selectedIndex: number = -1
     private usedArrowKeys: boolean = false
+    private lastEnterTime = 0
+    private enterDebounceDelay = 200
 
     private onVisibilityChange?: () => void
 
@@ -399,16 +401,20 @@ export class SearchBarPanel {
                 break
 
             case 'Enter':
+                const now = Date.now()
+                if (now - this.lastEnterTime < this.enterDebounceDelay) {
+                    return // Skip if pressed too soon after previous Enter
+                }
+                this.lastEnterTime = now
+
                 event.preventDefault()
-                if (this.usedArrowKeys) {
-                    const selected = this.searchResults[this.selectedIndex]
-                    if (selected) this.panToElement(selected.id)
-                    this.usedArrowKeys = false
-                } else {
-                    const selected = this.searchResults[this.selectedIndex]
-                    if (selected) this.panToElement(selected.id)
+                const selected = this.searchResults[this.selectedIndex]
+                if (selected) this.panToElement(selected.id)
+
+                if (!this.usedArrowKeys) {
                     this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
                 }
+                this.usedArrowKeys = false
                 break
         }
         this.update()
