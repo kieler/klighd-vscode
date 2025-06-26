@@ -80,7 +80,7 @@ export class SearchBarPanel {
      */
     public setResults(results: SModelElement[]): void {
         this.searchResults = results
-        this.selectedIndex = 0
+        this.selectedIndex = -1
         /* Debug: */ console.log("[SearchBar] setting results:", results)
     }
 
@@ -335,7 +335,7 @@ export class SearchBarPanel {
             this.searchResults = []
             this.textRes = []
             this.searched = false
-            this.selectedIndex = 0
+            this.selectedIndex = -1
             this.update()
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
@@ -405,9 +405,9 @@ export class SearchBarPanel {
                     if (selected) this.panToElement(selected.id)
                     this.usedArrowKeys = false
                 } else {
-                    this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
                     const selected = this.searchResults[this.selectedIndex]
                     if (selected) this.panToElement(selected.id)
+                    this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
                 }
                 break
         }
