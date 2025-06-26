@@ -16,7 +16,7 @@ export class SearchBarPanel {
     private hoverPath: string | null = null
     private hoverPos: { x: number, y: number } | null = null
     private tooltipEl: HTMLElement | null = null
-    private selectedIndex: number = 0
+    private selectedIndex: number = -1
     private usedArrowKeys: boolean = false
 
     private onVisibilityChange?: () => void
@@ -228,8 +228,7 @@ export class SearchBarPanel {
 
         return h('div', {}, [
             h('div', { style: { fontWeight: 'bold', marginBottom: '5px' } }, [
-                //`Found ${this.searchResults.length} result${this.searchResults.length !== 1 ? 's' : ''}`
-                `Result ${this.selectedIndex} of ${this.searchResults.length}`
+                `Result ${this.selectedIndex + 1} of ${this.searchResults.length}`
             ]),
 
             h('ul', {
@@ -370,32 +369,50 @@ export class SearchBarPanel {
     private handleKeyNavigation = (event: KeyboardEvent) => {
         if (this.searchResults.length === 0) return
 
-        if (event.key === 'ArrowDown') {
+        if (event.shiftKey && event.key === 'ArrowDown') {
             event.preventDefault()
+            this.selectedIndex = this.searchResults.length - 1
             this.usedArrowKeys = true
-            this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
             this.update()
-        } else if (event.key === 'ArrowUp') {
-            event.preventDefault()
-            this.usedArrowKeys = true
-            this.selectedIndex = (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
-            this.update()
-        } else if (event.key === 'Enter') {
-            event.preventDefault()
-            if (this.usedArrowKeys) {
-                const selected = this.searchResults[this.selectedIndex]
-                if (selected) this.panToElement(selected.id)
-                this.usedArrowKeys = false
-            } else {
-                this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
-                const selected = this.searchResults[this.selectedIndex]
-                if (selected) this.panToElement(selected.id)
-                this.update()
-            }
+            return
         }
+
+        if (event.shiftKey && event.key === 'ArrowUp') {
+            event.preventDefault()
+            this.selectedIndex = 0
+            this.usedArrowKeys = true
+            this.update()
+            return
+        }
+
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault()
+                this.usedArrowKeys = true
+                this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+                break
+
+            case 'ArrowUp':
+                event.preventDefault()
+                this.usedArrowKeys = true
+                this.selectedIndex = (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
+                break
+
+            case 'Enter':
+                event.preventDefault()
+                if (this.usedArrowKeys) {
+                    const selected = this.searchResults[this.selectedIndex]
+                    if (selected) this.panToElement(selected.id)
+                    this.usedArrowKeys = false
+                } else {
+                    this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+                    const selected = this.searchResults[this.selectedIndex]
+                    if (selected) this.panToElement(selected.id)
+                }
+                break
+        }
+        this.update()
     }
-
-
 
     /**
      * Build the path from the id of an element.
