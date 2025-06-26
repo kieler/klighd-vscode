@@ -180,17 +180,19 @@ export interface SearchAction extends Action {
     kind: typeof SearchAction.KIND
     id: string
     panel: SearchBarPanel
-    input: string
+    textInput: string,
+    tagInput: string
 }
 
 export namespace SearchAction {
     export const KIND = 'handleSearch'
 
-    export function create(panel: SearchBarPanel, id: string, input: string): SearchAction {
+    export function create(panel: SearchBarPanel, id: string, textInput: string, tagInput: string): SearchAction {
         return {
             kind: KIND,
             id,
-            input,
+            textInput,
+            tagInput,
             panel,
         }
     } 
@@ -248,14 +250,19 @@ export class HandleSearchAction implements IActionHandler {
         if (!SearchAction.isThisAction(action)) return
         if (action.id !== SearchBar.ID) return
 
-        const query = action.input.trim().toLowerCase()
-        if (!query) return
+        const query = action.textInput.trim().toLowerCase()
+        const tagQuery = action.tagInput
 
-        const isTagQuery = query.includes('#') || query.includes('$')
-        
-        const results : SModelElement[] = isTagQuery
-            ? this.searchTags(HandleSearchAction.currentModel, query, action.panel)
-            : this.searchModel(HandleSearchAction.currentModel, query, action.panel)        
+        const isTextQuery = query !== ''
+        const isTagQuery = tagQuery !== ''
+
+        if (!isTextQuery && !isTagQuery) return
+
+        const results: SModelElement[] =
+            isTagQuery
+                ? this.searchTags(HandleSearchAction.currentModel, query, tagQuery, action.panel)
+                : this.searchModel(HandleSearchAction.currentModel, query, action.panel)
+       
         action.panel.setResults(results)
         action.panel.update()
     }
@@ -464,76 +471,53 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
-     * Checks whether a node includes the query text
-     * @param element the node to check
-     * @param query the user input
-     * @returns true if query is included, otherwise false
-     */
-    private textCheck(element: SModelElement, query: string): boolean {
-        if (!element) {
-            return false;
-        }
-
-        if ('text' in element && typeof element.text === 'string') {
-            return element.text.toLowerCase().includes(query)
-        }
-
-        if ('data' in element && Array.isArray((element as any).data)) {
-            for (const item of (element as any).data) {
-                if (this.textCheck(item as any, query)) {
-                    return true;
-                }
-            }
-        }
-        
-        if ('children' in element && Array.isArray((element as any).children)) {
-            for (const child of (element as any).children) {
-                if (this.textCheck(child as any, query)) {
-                    return true;
-                }
-            }
-        }
-        return false
-    }
-
-    /**
      * Performs a tag search on the model
      * @param root the model
-     * @param query the user input 
+     * @param textQuery the user text input 
+     * @param tagQuery the tags the user entered
      * @param panel the search bar panel
      * @returns an array with all query results
      */
-    private searchTags(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
+    private searchTags(root: SModelElement, textQuery: string, tagQuery: string, panel: SearchBarPanel): SModelElement[] {
         const results: SModelElement[] = []
         const textRes: string[] = []
         const queue: SModelElement[] = [root]
-        const isMixedQuery : boolean = query.includes('->') ? true : false
-        let tagQuery: string = query
-        let textQuery: string = ''
-        
+        const isMixedQuery : boolean = !(textQuery === '')
+
         if (isMixedQuery) {
-            const parts = query.split('->')
-            tagQuery = parts[0].trim()
-            textQuery = parts[1].trim().toLowerCase()
-        }
-        
-        while (queue.length > 0) {
-            const element = queue.shift()!
+            const textResults = this.searchModel(root, textQuery, panel)
+            while (textResults.length > 0) {
+                const res = textResults.shift()
+                const match = this.matchesFilterRule(res, tagQuery)
+                if (match) {
+                    const bounds = this.extractBounds(res)
+                    this.addHighlightToElement(res as any, bounds)
+                    results.push(res as any)
 
-            const matchesTag = this.matchesFilterRule(element, tagQuery)
-            const matchesText = !isMixedQuery || this.textCheck(element, textQuery)
-
-            if (matchesTag && matchesText) {
-                const bounds = this.extractBounds(element)
-                this.addHighlightToElement(element, bounds)
-                results.push(element)
-
-                const name = this.extractDisplayName(element)
-                textRes.push(name)
+                    const name = this.extractDisplayName(res as any)
+                    textRes.push(name)
+                }
             }
 
-            if ('children' in element && Array.isArray(element.children)) {
-                queue.push(...element.children)
+        } else {
+            console.log('Else')
+            while (queue.length > 0) {
+                const element = queue.shift()!
+
+                const matchesTag = this.matchesFilterRule(element, tagQuery)
+
+                if (matchesTag) {
+                    const bounds = this.extractBounds(element)
+                    this.addHighlightToElement(element, bounds)
+                    results.push(element)
+
+                    const name = this.extractDisplayName(element)
+                    textRes.push(name)
+                }
+
+                if ('children' in element && Array.isArray(element.children)) {
+                    queue.push(...element.children)
+                }
             }
         }
 
