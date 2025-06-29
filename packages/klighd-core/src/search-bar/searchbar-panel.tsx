@@ -22,6 +22,7 @@ export class SearchBarPanel {
     private enterDebounceDelay = 200 /* time before new enter is registered to fix rendering buffering */
     private tagInputVisible: boolean = false
     private regexMode: boolean = false
+    private currentError: string | null = null
 
     private onVisibilityChange?: () => void
 
@@ -35,6 +36,20 @@ export class SearchBarPanel {
 
     public get isRegex() {
         return this.regexMode
+    }
+
+    public get hasError(): boolean {
+        return this.currentError !== null
+    }
+
+    public setError(error: string) {
+        this.currentError = error
+        this.update()
+    }
+
+    public clearError() {
+        this.currentError = null
+        this.update()
     }
 
     /**
@@ -82,6 +97,7 @@ export class SearchBarPanel {
                 this.tooltipEl.style.display = 'none'
             }
             this.tagInputVisible = false
+            this.clearError()
         }
     }
 
@@ -145,6 +161,8 @@ export class SearchBarPanel {
         
         const query = mainInput ? mainInput.value : ''
         const tagQuery = tagInput ? tagInput.value : ''
+
+        this.clearError()
         
         this.searched = true
         const start = performance.now()
@@ -311,10 +329,18 @@ export class SearchBarPanel {
      * @returns panel with result list
      */
     private showSearchResults(panel: SearchBarPanel): VNode {
-        const noResults : boolean = this.searchResults.length === 0
-        //const errorColor = 'red'
-        //Todo: regex error or tag error
-        if (noResults) {
+        if (this.hasError) {
+            return h('div', {}, [
+                h('div', {
+                    style : {
+                        fontWeight: 'bold',
+                        marginBottom: '5px',
+                        color : 'red'
+                    }
+                }, [this.currentError])
+            ])
+        }
+        if (this.searchResults.length === 0) {
             const message = 'No results found'
             
             return h('div', {}, [
@@ -322,7 +348,6 @@ export class SearchBarPanel {
                     style: { 
                         fontWeight: 'bold', 
                         marginBottom: '5px',
-                        //color: errorColor
                     } 
                 }, [message])
             ])

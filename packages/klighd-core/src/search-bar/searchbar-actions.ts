@@ -356,13 +356,15 @@ export class HandleSearchAction implements IActionHandler {
     /**
      * Helper function for regular expressions
      * @param query the user input
+     * @param panel our searchbar panel
      * @returns a parsed regular expression or an error
      */
-    private compileRegex(query: string): RegExp | null {
+    private compileRegex(query: string, panel: SearchBarPanel): RegExp | null {
         try {
             return new RegExp(query, 'i')
         } catch (e) {
-            console.error('Invalid regular expression:', e)
+            const errorMessage = e instanceof Error ? e.message : String(e)
+            panel.setError(errorMessage)
             return null
         }
     }
@@ -377,9 +379,8 @@ export class HandleSearchAction implements IActionHandler {
     private searchModel(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
         const results: SModelElement[] = []
         const textRes: string[] = []
-        const regex = panel.isRegex ? this.compileRegex(query) : null
+        const regex = panel.isRegex ? this.compileRegex(query, panel) : null
         const lowerQuery = query.toLowerCase()
-
         const queue: SModelElement[] = [root]
 
         /**
@@ -451,14 +452,16 @@ export class HandleSearchAction implements IActionHandler {
      * Parses the tag input and creates a filter based on it
      * @param element a graph element
      * @param rule the tag(s)
+     * @param panel the searchbar panel
      * @returns true if elem has tag, otherwise false
      */
-    private matchesFilterRule(element: any, rule: string): boolean {
+    private matchesFilterRule(element: any, rule: string, panel: SearchBarPanel): boolean {
        try {
             const filter = createSemanticFilter(rule)
             return filter(element)
         } catch (e) {
-            console.error('Invalid filter expression:', e)
+            const errorMessage = e instanceof Error ? e.message : String(e)
+            panel.setError(errorMessage)
             return false
         }
     }
@@ -503,7 +506,7 @@ export class HandleSearchAction implements IActionHandler {
             const textResults = this.searchModel(root, textQuery, panel)
             while (textResults.length > 0) {
                 const res = textResults.shift()
-                const match = this.matchesFilterRule(res, tagQuery)
+                const match = this.matchesFilterRule(res, tagQuery, panel)
                 if (match) {
                     const bounds = this.extractBounds(res)
                     this.addHighlightToElement(res as any, bounds)
@@ -519,7 +522,7 @@ export class HandleSearchAction implements IActionHandler {
             while (queue.length > 0) {
                 const element = queue.shift()!
 
-                const matchesTag = this.matchesFilterRule(element, tagQuery)
+                const matchesTag = this.matchesFilterRule(element, tagQuery, panel)
 
                 if (matchesTag) {
                     const bounds = this.extractBounds(element)
