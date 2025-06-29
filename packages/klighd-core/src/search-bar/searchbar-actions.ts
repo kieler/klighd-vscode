@@ -6,8 +6,7 @@ import { SearchBarPanel } from './searchbar-panel'
 import { inject, injectable } from 'inversify'
 import { isContainerRendering, isKText, KColoring, KRectangle, KText } from '../skgraph-models'
 import { rgb } from 'sprotty'
-import { createFilter } from '../filtering/semantic-filtering-util'
-import { parse } from '../filtering/parser'
+import { createSemanticFilter } from '../../src/filtering/util'
 
 /* --------------------------------- search bar visibility actions ----------------------------------------*/   
 
@@ -434,14 +433,13 @@ export class HandleSearchAction implements IActionHandler {
     /**
      * Parses the tag input and creates a filter based on it
      * @param element a graph element
-     * @param query the tag(s)
+     * @param rule the tag(s)
      * @returns true if elem has tag, otherwise false
      */
-    private matchesFilterRule(element: any, query: string): boolean {
+    private matchesFilterRule(element: any, rule: string): boolean {
        try {
-            const rule = parse(query)
-            const filter = createFilter(rule)
-            return filter.filterFun(element)
+            const filter = createSemanticFilter(rule)
+            return filter(element)
         } catch (e) {
             console.error('Invalid filter expression:', e)
             return false
