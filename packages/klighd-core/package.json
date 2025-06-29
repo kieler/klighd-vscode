@@ -21,12 +21,14 @@
         "lint-fix": "eslint --fix .",
         "build": "tsc",
         "watch": "tsc -w",
-        "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next --no-git-tag-version"
+        "publish:next": "yarn publish --new-version \"$(semver $npm_package_version -i minor)-next.$(git rev-parse --short HEAD)\" --tag next --no-git-tag-version",
+        "rebuild-semantic-filtering-parser": "sh antlr/download-and-run-antlr.sh"
     },
     "dependencies": {
         "@kieler/klighd-interactive": "^0.7.0",
         "@types/color": "^4.2.0",
         "@types/file-saver": "^2.0.7",
+        "antlr4": "^4.13.2",
         "color": "^4.2.3",
         "elkjs": "^0.8.2",
         "feather-icons": "^4.29.1",
