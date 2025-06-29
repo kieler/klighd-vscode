@@ -323,9 +323,11 @@ export class HandleSearchAction implements IActionHandler {
      * @param results the array containing all results
      * @param textRes the array containing all {@param text} matches
      */
-    private processTextMatch(parent: SModelElement, element: SModelElement, query: string, results: SModelElement[], textRes: string[]): void {
+    private processTextMatch(parent: SModelElement, element: SModelElement, query: string, results: SModelElement[], textRes: string[], regex: RegExp | null): void {
         const text = (element as KText).text
-        if (text.toLowerCase().includes(query)) {
+        const matches = regex ? regex.test(text) : text.toLowerCase().includes(query)
+
+        if (matches) {
             results.push(parent)
             textRes.push(text)
             if(isKText(element)) {
@@ -352,6 +354,20 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
+     * Helper function for regular expressions
+     * @param query the user input
+     * @returns a parsed regular expression or an error
+     */
+    private compileRegex(query: string): RegExp | null {
+        try {
+            return new RegExp(query, 'i')
+        } catch (e) {
+            console.error('Invalid regular expression:', e)
+            return null
+        }
+    }
+
+    /**
      * Perform a breadth-first search on {@param root} to find {@param query}
      * @param root the model
      * @param query the user input
@@ -361,6 +377,7 @@ export class HandleSearchAction implements IActionHandler {
     private searchModel(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
         const results: SModelElement[] = []
         const textRes: string[] = []
+        const regex = panel.isRegex ? this.compileRegex(query) : null
         const lowerQuery = query.toLowerCase()
 
         const queue: SModelElement[] = [root]
@@ -375,7 +392,7 @@ export class HandleSearchAction implements IActionHandler {
 
             /* Check KText */
             if (isKText(rendering) && rendering.text) {
-                this.processTextMatch(parent, rendering, lowerQuery, results, textRes)
+                this.processTextMatch(parent, rendering, lowerQuery, results, textRes, regex)
             }
 
             /* Check KContainerElements */
@@ -398,7 +415,7 @@ export class HandleSearchAction implements IActionHandler {
                     if ('text' in element) {
                         const text = (element as any).text;
                         if (typeof text === 'string' && text.trim()) {
-                            this.processTextMatch(element, element, lowerQuery, results, textRes);
+                            this.processTextMatch(element, element, lowerQuery, results, textRes, regex);
                         }
                     }
                     break;

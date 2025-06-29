@@ -21,6 +21,7 @@ export class SearchBarPanel {
     private lastEnterTime = 0
     private enterDebounceDelay = 200 /* time before new enter is registered to fix rendering buffering */
     private tagInputVisible: boolean = false
+    private regexMode: boolean = false
 
     private onVisibilityChange?: () => void
 
@@ -30,6 +31,10 @@ export class SearchBarPanel {
 
     public get isVisible() {
         return this.visible
+    }
+
+    public get isRegex() {
+        return this.regexMode
     }
 
     /**
@@ -221,6 +226,25 @@ export class SearchBarPanel {
                 h('button', {
                     style: {
                         marginLeft: '4px',
+                        background: this.regexMode ? '#007acc' : '#eee',
+                        border: 'none',
+                        cursor: 'pointer',
+                        width: '30px',
+                        color : this.regexMode ? 'white' : 'black'
+                    },
+                    attrs: {
+                        title: 'RegEx search'
+                    },
+                    on: {
+                        click: () => {
+                            this.regexMode = !this.regexMode
+                            this.update()
+                        }
+                    }
+                }, ['*']),
+                h('button', {
+                    style: {
+                        marginLeft: '4px',
                         background: '#eee',
                         border: 'none',
                         cursor: 'pointer',
@@ -287,11 +311,11 @@ export class SearchBarPanel {
      * @returns panel with result list
      */
     private showSearchResults(panel: SearchBarPanel): VNode {
-        /* empty input or invalid tag (-> any tag not present in graph is invalid) */
-        if (this.searchResults.length === 0) {
-            // TODO error handling
+        const noResults : boolean = this.searchResults.length === 0
+        //const errorColor = 'red'
+        //Todo: regex error or tag error
+        if (noResults) {
             const message = 'No results found'
-            // const errorColor = hasError ? 'red' : 'black'
             
             return h('div', {}, [
                 h('div', { 
