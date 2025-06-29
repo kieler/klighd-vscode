@@ -19,7 +19,7 @@ export class SearchBarPanel {
     private selectedIndex: number = -1
     private usedArrowKeys: boolean = false
     private lastEnterTime = 0
-    private enterDebounceDelay = 200
+    private enterDebounceDelay = 200 /* time before new enter is registered to fix rendering buffering */
     private tagInputVisible: boolean = false
 
     private onVisibilityChange?: () => void
@@ -45,7 +45,7 @@ export class SearchBarPanel {
         if (vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
             document.addEventListener('keydown', this.handleEmptyInput)
-            document.addEventListener('keydown', this.handleTabTrap)
+            document.addEventListener('keydown', this.handleTabKey)
             setTimeout(() => {
                 const input = document.getElementById('search') as HTMLInputElement
                 if (input) {
@@ -58,7 +58,7 @@ export class SearchBarPanel {
                 tooltip.style.position = 'fixed'
                 tooltip.style.pointerEvents = 'none'
                 tooltip.style.zIndex = '10000'
-                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'
+                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
                 tooltip.style.color = 'white'
                 tooltip.style.padding = '4px 8px'
                 tooltip.style.borderRadius = '4px'
@@ -71,7 +71,7 @@ export class SearchBarPanel {
             document.removeEventListener('keydown', this.handleEscapeKey)
             document.removeEventListener('keydown', this.handleEmptyInput)
             document.removeEventListener('keydown', this.handleKeyNavigation)
-            document.removeEventListener('keydown', this.handleTabTrap)
+            document.removeEventListener('keydown', this.handleTabKey)
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
@@ -374,14 +374,24 @@ export class SearchBarPanel {
                         },
                         update: (oldVnode, vnode) => {
                             if (isSelected) {
-                                (vnode.elm as HTMLElement).scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'nearest'
-                                })
+                                setTimeout(() => {
+                                    (vnode.elm as HTMLElement).scrollIntoView({
+                                        behavior: 'smooth',
+                                        block: 'nearest'
+                                    })
+                                }, 0)
                             }
                         }
                     }
-                }, [this.textRes[index]])
+                }, [this.textRes[index],
+                    isSelected ? h('div', {
+                        style: {
+                            fontSize: '11px',
+                            color: '#007acc',
+                            marginTop: '4px'
+                        }
+                    }, [this.decodeId(result.id)]) : null
+                ])
             }))
         ])
     }   
@@ -525,8 +535,8 @@ export class SearchBarPanel {
         this.update()
     }
 
-    /** Tab cycles between input fields */
-    private handleTabTrap = (event: KeyboardEvent) => {
+    /** Tab cycles between input fields and not the buttons as well */
+    private handleTabKey = (event: KeyboardEvent) => {
         if (event.key !== 'Tab') return
 
         const input = document.getElementById('search') as HTMLInputElement | null
@@ -542,7 +552,6 @@ export class SearchBarPanel {
             return
         }
 
-        // Only trap tab when both inputs are visible
         if (!input || !tagInput || !this.tagInputVisible) return
 
         if (!(active instanceof HTMLInputElement)) return
