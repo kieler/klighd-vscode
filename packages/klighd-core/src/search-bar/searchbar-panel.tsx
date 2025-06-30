@@ -18,8 +18,6 @@ export class SearchBarPanel {
     private tooltipEl: HTMLElement | null = null
     private selectedIndex: number = -1
     private usedArrowKeys: boolean = false
-    private lastEnterTime = 0
-    private enterDebounceDelay = 200 /* time before new enter is registered to fix rendering buffering */
     private tagInputVisible: boolean = false
     private regexMode: boolean = false
     private currentError: string | null = null
@@ -239,7 +237,8 @@ export class SearchBarPanel {
                         click: () => {
                             this.toggleTagInput()
                         }
-                    }
+                    },
+                    hook: this.conditionalHoverEffect(() => this.tagInputVisible)
                 }, ['#']),
                 h('button', {
                     style: {
@@ -248,17 +247,24 @@ export class SearchBarPanel {
                         border: 'none',
                         cursor: 'pointer',
                         width: '30px',
-                        color : this.regexMode ? 'white' : 'black'
+                        height: '30px',
+                        color : this.regexMode ? 'white' : 'black',
                     },
                     attrs: {
-                        title: 'RegEx search'
+                        title: 'Toggle RegEx search'
                     },
                     on: {
                         click: () => {
                             this.regexMode = !this.regexMode
                             this.update()
+
+                            setTimeout(() => {
+                                const input = document.getElementById('search') as HTMLInputElement
+                                if (input) input.focus()
+                            }, 0)
                         }
-                    }
+                    },
+                    hook: this.conditionalHoverEffect(() => this.regexMode)
                 }, ['*']),
                 h('button', {
                     style: {
@@ -266,7 +272,10 @@ export class SearchBarPanel {
                         background: '#eee',
                         border: 'none',
                         cursor: 'pointer',
-                        width: '30px'
+                        width: '30px',
+                    },
+                    attrs: {
+                        title: 'Close search bar'
                     },
                     on: {
                         click: () => {
@@ -275,7 +284,8 @@ export class SearchBarPanel {
                             this.tagInputVisible = false
                             this.actionDispatcher.dispatch(ToggleSearchBarAction.create(panel, SearchBar.ID, 'hide'))
                         }
-                    }
+                    },
+                    hook: this.hoverEffect()
                 }, ['×'])
             ]),
             
@@ -337,7 +347,7 @@ export class SearchBarPanel {
                         marginBottom: '5px',
                         color : 'red'
                     }
-                }, [this.currentError])
+                }, this.currentError)
             ])
         }
         if (this.searchResults.length === 0) {
@@ -565,12 +575,6 @@ export class SearchBarPanel {
                 break
 
             case 'Enter':
-                const now = Date.now()
-                if (now - this.lastEnterTime < this.enterDebounceDelay) {
-                    return // Skip if pressed too soon after previous Enter
-                }
-                this.lastEnterTime = now
-
                 event.preventDefault()
                 const selected = this.searchResults[this.selectedIndex]
                 if (selected) this.panToElement(selected.id)
@@ -614,6 +618,38 @@ export class SearchBarPanel {
         }
     }
 
+    private hoverEffect() {
+        return {
+            insert: (vnode: any) => {
+                const el = vnode.elm as HTMLElement
+                el.addEventListener('mouseenter', () => {
+                    el.style.backgroundColor = '#007acc'
+                    el.style.color = 'white'
+                })
+                el.addEventListener('mouseleave', () => {
+                    el.style.backgroundColor = '#eee'
+                    el.style.color = 'black'
+                })
+            }
+        }
+    }
+
+    private conditionalHoverEffect(condFn: () => boolean) {
+        return {
+            insert: (vnode: any) => {
+                const el = vnode.elm as HTMLElement
+                el.addEventListener('mouseenter', () => {
+                    el.style.backgroundColor = '#007acc'
+                    el.style.color = 'white'
+                })
+                el.addEventListener('mouseleave', () => {
+                    const cond = condFn()
+                    el.style.backgroundColor = cond ? '#007acc' : '#eee'
+                    el.style.color = cond ? 'white' : 'black'
+                })
+            }
+        }
+    }
 
     /**
      * Build the path from the id of an element.
