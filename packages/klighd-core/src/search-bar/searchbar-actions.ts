@@ -120,35 +120,17 @@ function createHighlightRectangle(xPos: number, yPos: number, width: number, hei
     }
 }
 
-function removePreviousHighlights(root: SModelElement): void {
-    const queue: SModelElement[] = [root]
+/**
+ * Remove either all highlights when {@param elem = root} or from a specific element
+ * @param elem a specific element or the whole model
+ */
+function removeHighlights(elem: SModelElement): void {
+    const queue: SModelElement[] = [elem]
 
     while (queue.length > 0) {
         const element = queue.shift()!
 
-        if ('children' in element && Array.isArray(element.children)) {
-            element.children = element.children.filter(child => !child.id?.startsWith('highlightRect-'))
-            element.children.forEach(child => queue.push(child))
-        }
-
-        const data = (element as any).data
-        if (Array.isArray(data)) {
-            for (const item of data) {
-                if (item && 'children' in item && Array.isArray(item.children)) {
-                    item.children = item.children.filter((child: { id: string }) => !child.id?.startsWith('highlightRect-'))
-                    item.children.forEach((c: any) => queue.push(c))
-                }
-            }
-        }
-    }
-}
-
-function removeKTextHighlights(root: SModelElement): void {
-    const queue: SModelElement[] = [root]
-
-    while (queue.length > 0) {
-        const element = queue.shift()!
-
+        // Remove KText highlights
         if (isKText(element) && element.styles) {
             element.styles = element.styles.filter((style: any) => 
                 !(style.type === 'KBackgroundImpl' && 
@@ -159,14 +141,18 @@ function removeKTextHighlights(root: SModelElement): void {
             )
         }
 
+        // Remove rectangle highlights from children
         if ('children' in element && Array.isArray(element.children)) {
+            element.children = element.children.filter(child => !child.id?.startsWith('highlightRect-'))
             element.children.forEach(child => queue.push(child))
         }
 
+        // Handle data array (for renderings)
         const data = (element as any).data
         if (Array.isArray(data)) {
             for (const item of data) {
                 if (item && 'children' in item && Array.isArray(item.children)) {
+                    item.children = item.children.filter((child: { id: string }) => !child.id?.startsWith('highlightRect-'))
                     item.children.forEach((c: any) => queue.push(c))
                 }
             }
@@ -237,8 +223,7 @@ export class HandleSearchAction implements IActionHandler {
 
         /* Handle ClearHighlightsActions */
         if (ClearHighlightsAction.isThisAction(action)) {
-            removePreviousHighlights(HandleSearchAction.currentModel)
-            removeKTextHighlights(HandleSearchAction.currentModel)
+            removeHighlights(HandleSearchAction.currentModel)
             // make changes visible
             if (modelId && this.actionDispatcher) {
                 this.actionDispatcher.dispatch(CenterAction.create([modelId]))
@@ -471,51 +456,6 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
-     * Removes highlight from a specific element
-     * @param element the element to remove highlights from
-     */
-    private removeHighlightFromElement(element: SModelElement): void {
-        // Remove rectangle highlights
-        const data = (element as any).data
-        if (Array.isArray(data)) {
-            for (const item of data) {
-                if (item && 'children' in item && Array.isArray(item.children)) {
-                    item.children = item.children.filter((child: { id: string }) => !child.id?.startsWith('highlightRect-'))
-                }
-            }
-        }
-
-        // Remove KText highlights
-        const queue: SModelElement[] = [element]
-        while (queue.length > 0) {
-            const el = queue.shift()!
-
-            if (isKText(el) && el.styles) {
-                el.styles = el.styles.filter((style: any) => 
-                    !(style.type === 'KBackgroundImpl' && 
-                    style.color && 
-                    style.color.red === 255 && 
-                    style.color.green === 255 && 
-                    style.color.blue === 0)
-                )
-            }
-
-            if ('children' in el && Array.isArray(el.children)) {
-                el.children.forEach(child => queue.push(child))
-            }
-
-            const elementData = (el as any).data
-            if (Array.isArray(elementData)) {
-                for (const item of elementData) {
-                    if (item && 'children' in item && Array.isArray(item.children)) {
-                        item.children.forEach((c: any) => queue.push(c))
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Performs a tag search on the model
      * @param root the model
      * @param textQuery the user text input 
@@ -548,7 +488,7 @@ export class HandleSearchAction implements IActionHandler {
                 const name = this.extractDisplayName(result)
                 textRes.push(name)
             } else {
-                this.removeHighlightFromElement(result)
+                removeHighlights(result)
             }
         }
 
