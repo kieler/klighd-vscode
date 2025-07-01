@@ -502,7 +502,21 @@ export class SearchBarPanel {
      * @param event keypress (esc key)
      */
     private handleEscapeKey = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') this.resetUI()
+        if (event.key === 'Escape') {
+            const active = document.activeElement as HTMLElement | null
+            const input = document.getElementById('search') as HTMLInputElement | null
+            const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
+
+            if (active === input && input) {
+                input.value = ''
+                input.focus()
+            } else if (active === tagInput && tagInput) {
+                tagInput.value = ''
+                tagInput.focus()
+            }
+            
+             this.handleInputChange()
+        }
     }
 
     /**
