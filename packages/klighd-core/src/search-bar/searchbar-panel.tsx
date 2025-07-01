@@ -62,7 +62,7 @@ export class SearchBarPanel {
 
         if (vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
-            document.addEventListener('keydown', this.handleEmptyInput)
+            document.addEventListener('keydown', this.handleExitKeycombo)
             document.addEventListener('keydown', this.handleTabKey)
             setTimeout(() => {
                 const input = document.getElementById('search') as HTMLInputElement
@@ -87,9 +87,9 @@ export class SearchBarPanel {
             }
         } else {
             document.removeEventListener('keydown', this.handleEscapeKey)
-            document.removeEventListener('keydown', this.handleEmptyInput)
             document.removeEventListener('keydown', this.handleKeyNavigation)
             document.removeEventListener('keydown', this.handleTabKey)
+            document.removeEventListener('keydown', this.handleExitKeycombo)
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
@@ -138,8 +138,18 @@ export class SearchBarPanel {
      */
     private toggleTagInput(): void {
         this.tagInputVisible = !this.tagInputVisible
+
+        if (!this.tagInputVisible) {
+            const textInput = document.getElementById('search') as HTMLInputElement 
+            const tagInput = document.getElementById('tag-search') as HTMLInputElement
+            if (tagInput) tagInput.value = ''
+            if (textInput) {
+                textInput.value === '' ? this.resetUI() : this.performSearch()
+            }
+        }
+
         this.update()
-        
+
         if (this.tagInputVisible) {
             setTimeout(() => {
                 const tagInput = document.getElementById('tag-search') as HTMLInputElement
@@ -216,7 +226,7 @@ export class SearchBarPanel {
                     },
                     on: {
                         input: () => {
-                            this.performSearch()
+                            this.handleInputChange()
                         }
                     }
                 }),
@@ -309,7 +319,7 @@ export class SearchBarPanel {
                     },
                     on: {
                         input: () => {
-                            this.performSearch()
+                            this.handleInputChange()
                         }
                     }
                 }),
@@ -474,35 +484,6 @@ export class SearchBarPanel {
     private resetUI(): void {
         const input = document.getElementById('search') as HTMLInputElement | null
         const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
-        const active = document.activeElement as HTMLElement | null
-
-        let cleared = false
-
-        if (active === input && input) {
-            input.value = ''
-            input.focus()
-            cleared = true
-        }
-
-        if (active === tagInput && tagInput) {
-            tagInput.value = ''
-            tagInput.focus()
-            cleared = true
-        }
-
-        if (cleared) {
-            this.performSearch()
-
-            if (input?.value === '' && tagInput?.value === '') {
-                this.searchResults = []
-                this.textRes = []
-                this.searched = false
-                this.selectedIndex = -1
-                this.update()
-                this.actionDispatcher.dispatch(ClearHighlightsAction.create())
-            }
-            return
-        }
 
         if (input) input.value = ''
         if (tagInput) tagInput.value = ''
@@ -523,19 +504,39 @@ export class SearchBarPanel {
     private handleEscapeKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape') this.resetUI()
     }
-    
+
     /**
-     * When the input field is cleared, the result list disappears.
-     * @param event keypress (backspace key)
-     */
-    private handleEmptyInput = (event: KeyboardEvent) => {
-        if (event.key === 'Backspace') {
-            const input = document.getElementById('search') as HTMLInputElement
-            const tagInput = document.getElementById('tag-search') as HTMLInputElement
-            setTimeout(() => {
-                if (input.value === '' && tagInput.value === '') this.resetUI()
-            }, 0)
+     * Closes the search bar with a key combination
+     * @param event keycombination ctrl+x
+     */    
+    private handleExitKeycombo = (event: KeyboardEvent) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'x') {
+            this.changeVisibility(false)
+            this.searched = false
+            this.tagInputVisible = false
+            this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
         }
+    }
+
+    /**
+     * When the input field is cleared, the result list disappears. 
+     * Otherwise the search is performed.
+     */
+    private handleInputChange(): void {
+        const input = document.getElementById('search') as HTMLInputElement
+        const tagInput = document.getElementById('tag-search') as HTMLInputElement
+
+        this.performSearch()
+
+        setTimeout(() => {
+            const inputVal = input?.value ?? ''
+            const tagVal = (this.tagInputVisible && tagInput) ? tagInput.value : ''
+
+            if (inputVal === '' && tagVal === '') {
+                console.log("Empty input")
+                this.resetUI()
+            }
+        }, 0)
     }
 
     /**
