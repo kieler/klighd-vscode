@@ -46,6 +46,9 @@ export class MessageConnection implements Connection {
         this.messenger = messenger
         // Messages from a VS Code extension arrive as a message event on the messenger
         this.messenger.onNotification(ActionNotification, (msg) => {
+            if (msg.action.kind === 'updateModel') {
+                console.log(`${Date.now()}: Client[MessageConnection]: received updateModel.`)
+            }
             this.notifyHandlers(msg)
         })
     }

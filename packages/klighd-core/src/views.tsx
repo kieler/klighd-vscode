@@ -62,6 +62,7 @@ export class SKGraphView implements IView {
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher
 
     render(model: Readonly<SGraphImpl>, context: RenderingContext): VNode {
+        console.log(`${Date.now()}: SKGraphView: render called`)
         const ctx = context as SKGraphModelRenderer
         this.actionDispatcher.dispatch(SendModelContextAction.create(model, ctx))
 
@@ -92,11 +93,13 @@ export class SKGraphView implements IView {
             background = ctx.backgroundColor.string()
         }
 
-        return (
+        const result = (
             <svg class-sprotty-graph={true} style={{ background: `${background}` }}>
                 <g transform={transform}>{context.renderChildren(model)}</g>
             </svg>
         )
+        console.log(`${Date.now()}: SKGraphView: render done`)
+        return result
     }
 }
 

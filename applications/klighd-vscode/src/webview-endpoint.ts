@@ -76,11 +76,19 @@ export class KlighDWebviewEndpoint extends WebviewEndpoint {
                 // Catch any diagram/accept action and call the registered action handlers.
                 if (notification.method === 'diagram/accept' && isActionMessage(notification.params)) {
                     const { action } = notification.params
+                    console.log(
+                        `${Date.now()}: Client[KlighDWebviewEndpoint]: received diagram/accept message ${action.kind}.`
+                    )
                     const handlers = this.klighdActionHandlers.get(notification.params.action.kind)
                     if (handlers) {
                         handlers.forEach((handler) => handler(action))
                         // TODO: if one of the handlers says the action does not need to be forwarded to the server, do not forward it.
                     }
+                    console.log(
+                        `${Date.now()}: Client[KlighDWebviewEndpoint]: finished handling diagram/accept message ${
+                            action.kind
+                        }.`
+                    )
                 }
                 this.languageClient.sendNotification(notification.method, notification.params)
             },

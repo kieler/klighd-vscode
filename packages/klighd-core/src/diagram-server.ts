@@ -132,6 +132,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
         const wasDiagramModelUpdated =
             message.action.kind === SetModelCommand.KIND || message.action.kind === UpdateModelAction.KIND
         if (wasDiagramModelUpdated) {
+            console.log(`${Date.now()}: Client[KlighdDiagramServer]: received SetModel/UpdateModel.`)
             if (this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)) {
                 // After model is received request first piece.
 
@@ -147,6 +148,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
             } else if (this.renderOptionsRegistry && this.renderOptionsRegistry.getValue(ResizeToFit)) {
                 this.actionDispatcher.dispatch(KlighdFitToScreenAction.create(true))
             }
+            console.log(`${Date.now()}: Client[KlighdDiagramServer]: finished handling SetModel/UpdateModel.`)
         } else if (message.action.kind === SetDiagramPieceAction.KIND) {
             // add any children of the requested piece as stubs into queue
             if ((message.action as SetDiagramPieceAction).diagramPiece.children !== undefined) {

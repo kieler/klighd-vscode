@@ -17,7 +17,7 @@
 
 import { interactiveModule } from '@kieler/klighd-interactive/lib/interactive-module'
 import ElkConstructor from 'elkjs/lib/elk.bundled'
-import { Container, ContainerModule, interfaces } from 'inversify'
+import { Container, ContainerModule, injectable, interfaces } from 'inversify'
 import {
     boundsModule,
     configureActionHandler,
@@ -68,6 +68,27 @@ import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, S
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions'
 import { SynthesesRegistry } from './syntheses/syntheses-registry'
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views'
+
+@injectable()
+export class TimePostprocessor implements IVNodePostprocessor {
+    decorate(
+        vnode: import('snabbdom').VNode,
+        _element: import('sprotty-protocol').SModelElement
+    ): import('snabbdom').VNode {
+        return vnode
+    }
+
+    postUpdate(_cause?: import('sprotty-protocol').Action | undefined): void {
+        console.log(`${Date.now()}: Client[IVNodePostprocessor]: postUpdate`)
+    }
+}
+
+const timingModule = new ContainerModule(
+    (bind: interfaces.Bind, _unbind: interfaces.Unbind, _isBound: interfaces.IsBound, _rebind: interfaces.Rebind) => {
+        bind(TimePostprocessor).toSelf().inSingletonScope()
+        bind(TYPES.IVNodePostprocessor).toService(TimePostprocessor)
+    }
+)
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
@@ -154,7 +175,8 @@ export default function createContainer(widgetId: string): Container {
         sidebarModule,
         kGraphDiagramModule,
         /* bookmarkModule, */ diagramPieceModule,
-        proxyViewModule
+        proxyViewModule,
+        timingModule
     )
     // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {
