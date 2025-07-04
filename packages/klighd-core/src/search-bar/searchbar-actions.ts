@@ -90,7 +90,7 @@ function createHighlightRectangle(xPos: number, yPos: number, width: number, hei
     const highlight: KColoring = {
         type: 'KBackgroundImpl',
         color: rgb(255, 255, 0),
-        alpha: 80,
+        alpha: 50,
         gradientAngle: 0,
         propagateToChildren: false,
         selection: false,
