@@ -1360,6 +1360,10 @@ export function dfs(rendering: KRendering, condition: (r: KRendering) => boolean
         for (const childRendering of rendering.children) {
             const childResult = dfs(childRendering, condition)
             if (childResult !== undefined) {
+                // hack for my thesis, the rectangle around the 'key rendering' text should be the key rendering instead.
+                if (isKText(childResult) && childResult.text === 'key rendering') {
+                    return rendering
+                }
                 return childResult
             }
         }
