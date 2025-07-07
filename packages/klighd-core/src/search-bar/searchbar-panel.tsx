@@ -173,14 +173,9 @@ export class SearchBarPanel {
         this.clearError()
         
         this.searched = true
-        const start = performance.now()
 
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
         this.actionDispatcher.dispatch(SearchAction.create(this, SearchBar.ID, query, tagQuery ))
-
-        const end = performance.now()
-        const total = end - start
-        console.log(`[SearchBar] search took ${total.toFixed(10)} ms`)
         
         document.addEventListener('keydown', this.handleKeyNavigation)
     }
@@ -498,7 +493,7 @@ export class SearchBarPanel {
     }
 
     /**
-     * When pressing the escape key, the search input resets.
+     * When pressing the escape key, the current input field resets.
      * @param event keypress (esc key)
      */
     private handleEscapeKey = (event: KeyboardEvent) => {
@@ -514,7 +509,7 @@ export class SearchBarPanel {
                 tagInput.value = ''
                 tagInput.focus()
             }
-            
+
              this.handleInputChange()
         }
     }
@@ -591,7 +586,7 @@ export class SearchBarPanel {
 
             case 'Enter':
                 event.preventDefault()
-                const selected = this.searchResults[this.selectedIndex]
+                const selected = this.searchResults[(this.selectedIndex + 1) % this.searchResults.length]
                 if (selected) this.panToElement(selected.id)
 
                 if (!this.usedArrowKeys) {
