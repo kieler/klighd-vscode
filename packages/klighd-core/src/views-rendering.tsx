@@ -157,7 +157,7 @@ export function renderChildArea(
         return element
     }
     const topdownScaleFactor = parent.properties['org.eclipse.elk.topdown.scaleFactor'] as number
-    return <g transform={`scale (${topdownScaleFactor})`}>${element}</g>
+    return <g transform={`scale (${topdownScaleFactor})`}>{element}</g>
 }
 
 /**
@@ -1728,7 +1728,7 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
 
     edge.junctionPoints.forEach((junctionPoint) => {
         const junctionPointVNode = <g transform={`translate(${junctionPoint.x},${junctionPoint.y})`}>{vNode}</g>
-        renderings.push(<g transform={`scale (${topdownScaleFactor})`}>${junctionPointVNode}</g>)
+        renderings.push(<g transform={`scale (${topdownScaleFactor})`}>{junctionPointVNode}</g>)
     })
     return renderings
 }
