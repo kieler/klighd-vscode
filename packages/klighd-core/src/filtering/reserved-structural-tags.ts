@@ -54,7 +54,7 @@ const reservedStructuralTags: Record<string, FilterDefinition<boolean>> = {
         filter: (el: SKGraphElement) => el instanceof SKLabel,
     },
     edgeDegree: {
-        description: 'True if the graph element is an edge.',
+        description: 'True if the graph element has at least one incident edge.',
         filter: (el: SKGraphElement) =>
             toArray(getIncomingEdgesIfNode(el)).length + toArray(getOutgoingEdgesIfNode(el)).length !== 0,
     },
