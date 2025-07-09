@@ -35,7 +35,7 @@ const reservedStructuralTags: Record<string, FilterDefinition<boolean>> = {
     },
     childNodes: {
         description: 'True if there is at least one child that is a node.',
-        filter: (el: SKGraphElement) => el.children.filter((child) => child instanceof SKNode).length !== 0,
+        filter: (el: SKGraphElement) => el.children.some((child) => child instanceof SKNode),
     },
     isNode: {
         description: 'True if the graph element is a node.',
