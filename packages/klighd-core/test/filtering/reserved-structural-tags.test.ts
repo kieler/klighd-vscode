@@ -60,18 +60,15 @@ describe('reserved structural tag evaluation', () => {
         child1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
         const child2 = new SKNode()
         child2.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
-        const edge = new SKEdge()
-        edge.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
         root.add(node)
         node.add(child1)
         node.add(child2)
-        node.add(edge)
-        expect(filter(node), 'node with 2 children').to.equal(true)
+        expect(filter(node), 'node with 2 child nodes').to.equal(true)
         expect(filter(child1), 'node with 0 children').to.equal(false)
 
-        const ruleString2 = '#children'
+        const ruleString2 = '#childNodes'
         const filter2 = createSemanticFilter(ruleString2)
-        expect(filter2(node), 'node with 2 children').to.equal(true)
+        expect(filter2(node), 'node with 2 child nodes').to.equal(true)
         expect(filter2(child1), 'node with 0 children').to.equal(false)
     })
 
