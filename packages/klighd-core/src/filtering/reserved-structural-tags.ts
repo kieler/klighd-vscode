@@ -22,52 +22,141 @@ import { SEdgeImpl } from 'sprotty'
 import { FluentIterable, toArray } from 'sprotty/lib/utils/iterable'
 import { SKEdge, SKLabel, SKNode, SKPort } from '../skgraph-models'
 
+type FilterDefinition<T> = {
+    description: string
+    filter: (el: SKGraphElement) => T
+}
+
 /** Dictionary of boolean tags with their evaluation implementation. */
-const reservedStructuralTags: Record<string, (el: SKGraphElement) => boolean> = {
-    children: (el: SKGraphElement) => el.children.length !== 0,
-    isNode: (el: SKGraphElement) => el instanceof SKNode,
-    isEdge: (el: SKGraphElement) => el instanceof SKEdge,
-    isPort: (el: SKGraphElement) => el instanceof SKPort,
-    isLabel: (el: SKGraphElement) => el instanceof SKLabel,
-    edgeDegree: (el: SKGraphElement) =>
-        toArray(getIncomingEdgesIfNode(el)).length + toArray(getOutgoingEdgesIfNode(el)).length !== 0,
-    inDegree: (el: SKGraphElement) => toArray(getIncomingEdgesIfNode(el)).length !== 0,
-    outDegree: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length !== 0,
+const reservedStructuralTags: Record<string, FilterDefinition<boolean>> = {
+    children: {
+        description: 'True if there is at least one child.',
+        filter: (el: SKGraphElement) => el.children.length !== 0,
+    },
+    childNodes: {
+        description: 'True if there is at least one child that is a node.',
+        filter: (el: SKGraphElement) => el.children.filter((child) => child instanceof SKNode).length !== 0,
+    },
+    isNode: {
+        description: 'True if the graph element is a node.',
+        filter: (el: SKGraphElement) => el instanceof SKNode,
+    },
+    isEdge: {
+        description: 'True if the graph element is an edge.',
+        filter: (el: SKGraphElement) => el instanceof SKEdge,
+    },
+    isPort: {
+        description: 'True if the graph element is a port.',
+        filter: (el: SKGraphElement) => el instanceof SKPort,
+    },
+    isLabel: {
+        description: 'True if the graph element is a label.',
+        filter: (el: SKGraphElement) => el instanceof SKLabel,
+    },
+    edgeDegree: {
+        description: 'True if the graph element is an edge.',
+        filter: (el: SKGraphElement) =>
+            toArray(getIncomingEdgesIfNode(el)).length + toArray(getOutgoingEdgesIfNode(el)).length !== 0,
+    },
+    inDegree: {
+        description: 'True if there is at least one incoming edge to the graph element.',
+        filter: (el: SKGraphElement) => toArray(getIncomingEdgesIfNode(el)).length !== 0,
+    },
+    outDegree: {
+        description: 'True if there is at least one outgoing edge from the graph element.',
+        filter: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length !== 0,
+    },
 }
 
 /** Dictionary of numeric tags with their evaluation implementation. */
-const reservedNumericTags: Record<string, (el: SKGraphElement) => number> = {
-    children: (el: SKGraphElement) => el.children.length,
-    edgeDegree: (el: SKGraphElement) =>
-        toArray(getIncomingEdgesIfNode(el)).length + toArray(getOutgoingEdgesIfNode(el)).length,
-    inDegree: (el: SKGraphElement) => toArray(getIncomingEdgesIfNode(el)).length,
-    outDegree: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length,
+const reservedNumericTags: Record<string, FilterDefinition<number>> = {
+    children: {
+        description: 'The number of children of the graph element.',
+        filter: (el: SKGraphElement) => el.children.length,
+    },
+    childNodes: {
+        description: 'The number of children that are nodes.',
+        filter: (el: SKGraphElement) => el.children.filter((child) => child instanceof SKNode).length,
+    },
+    edgeDegree: {
+        description: 'The number of edges connected to this graph element.',
+        filter: (el: SKGraphElement) =>
+            toArray(getIncomingEdgesIfNode(el)).length + toArray(getOutgoingEdgesIfNode(el)).length,
+    },
+    inDegree: {
+        description: 'The number of incoming edges.',
+        filter: (el: SKGraphElement) => toArray(getIncomingEdgesIfNode(el)).length,
+    },
+    outDegree: {
+        description: 'The number of outgoing edges.',
+        filter: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length,
+    },
 }
 
 /**
- * Evaluates the given reserved tag if it defined otherwise returns undefined.
+ * Evaluates the given reserved tag if it is defined otherwise returns undefined.
  * @param tag The tag to be evaluated
  * @param element The element to evaluate the tag on
  * @returns True if the condition of the tag is fulfilled for the given element.
  */
 export function evaluateReservedStructuralTag(tag: string, element: SKGraphElement): boolean | undefined {
     if (isReservedStructuralTag(tag)) {
-        return reservedStructuralTags[tag](element)
+        return reservedStructuralTags[tag].filter(element)
     }
     return undefined
 }
 
 /**
- * Evaluates the given reserved tagif it defined otherwise returns undefined
+ * Evaluates the given reserved tag if it is defined otherwise returns undefined
  * @param tag The tag to be evaluated
  * @param element The element to evaluate the tag on
  * @returns The value evaluated for tag for the given element.
  */
 export function evaluateReservedNumericTag(tag: string, element: SKGraphElement): number | undefined {
     if (isReservedNumericTag(tag)) {
-        return reservedNumericTags[tag](element)
+        return reservedNumericTags[tag].filter(element)
     }
     return undefined
+}
+
+/**
+ * Returns the description for a given reserved tag if it is defined otherwise returns undefined
+ * @param tag The tag whose descrtiption should be returned
+ * @returns The description for the tag
+ */
+export function descriptionForStructuralTag(tag: string): string | undefined {
+    if (isReservedStructuralTag(tag)) {
+        return reservedStructuralTags[tag].description
+    }
+    return undefined
+}
+
+/**
+ * Returns the description for a given reserved tag if it is defined otherwise returns undefined
+ * @param tag The tag whose descrtiption should be returned
+ * @returns The description for the tag
+ */
+export function descriptionForNumericTag(tag: string): string | undefined {
+    if (isReservedNumericTag(tag)) {
+        return reservedNumericTags[tag].description
+    }
+    return undefined
+}
+
+/**
+ * Provides the list of all pre-defined structural tags i.e. tags that can be accessed with # and will return a boolean value.
+ * @returns The list of available structural tags.
+ */
+export function getReservedStructuralTags(): string[] {
+    return Object.keys(reservedStructuralTags)
+}
+
+/**
+ * Provides the list of all pre-defined numeric tags i.e. tags that can be accessed with $ and will return a numeric value.
+ * @returns The list of available numeric tags.
+ */
+export function getReservedNumericTags(): string[] {
+    return Object.keys(reservedNumericTags)
 }
 
 /**
