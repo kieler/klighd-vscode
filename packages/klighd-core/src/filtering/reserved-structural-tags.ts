@@ -133,7 +133,7 @@ export function descriptionForStructuralTag(tag: string): string | undefined {
 
 /**
  * Returns the description for a given reserved tag if it is defined otherwise returns undefined
- * @param tag The tag whose descrtiption should be returned
+ * @param tag The tag whose description should be returned
  * @returns The description for the tag
  */
 export function descriptionForNumericTag(tag: string): string | undefined {
