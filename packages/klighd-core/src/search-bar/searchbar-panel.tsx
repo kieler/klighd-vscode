@@ -47,23 +47,40 @@ export class SearchBarPanel {
         this.onVisibilityChange = cb
     }
 
+    /**
+     * returns whether the search-bar is currently visible
+     */
     public get isVisible() {
         return this.visible
     }
 
+    /**
+     * returns whether the regex toggle is activated
+     */
     public get isRegex() {
         return this.regexMode
     }
 
+    /**
+     * returns whether the user input currently contains a syntax error
+     */
     public get hasError(): boolean {
         return this.currentError !== null
     }
 
+    /**
+     * add an error message to the UI 
+     * @param error the error message
+     */
     public setError(error: string) {
         this.currentError = error
         this.update()
     }
 
+    /**
+     * reset the error array to signalize, that the input contains no errors
+     * should be used when resetting the UI
+     */
     public clearError() {
         this.currentError = null
         this.update()
