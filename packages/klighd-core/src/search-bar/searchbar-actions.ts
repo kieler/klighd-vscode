@@ -1,14 +1,10 @@
-import { Action, CenterAction, SetModelAction, SModelElement, UpdateModelAction } from 'sprotty-protocol'
-import { ActionHandlerRegistry, IActionDispatcher, SetUIExtensionVisibilityAction, TYPES } from 'sprotty'
-import { SearchBar } from './searchbar'
-import { IActionHandler } from 'sprotty'
-import { SearchBarPanel } from './searchbar-panel'
+import { createSemanticFilter } from '../filtering/util'
 import { inject, injectable } from 'inversify'
+import { SearchBar } from './searchbar'
+import { SearchBarPanel } from './searchbar-panel'
 import { isContainerRendering, isKText, KColoring, KRectangle, KText } from '../skgraph-models'
-import { rgb } from 'sprotty'
-import { createSemanticFilter } from '../../src/filtering/util'
-
-/* --------------------------------- search bar visibility actions ----------------------------------------*/   
+import { ActionHandlerRegistry, IActionDispatcher, IActionHandler, rgb, SetUIExtensionVisibilityAction, TYPES } from 'sprotty'
+import { Action, CenterAction, SetModelAction, SModelElement, UpdateModelAction } from 'sprotty-protocol'
 
 export type ShowSearchBarAction = SetUIExtensionVisibilityAction
 
@@ -67,7 +63,6 @@ export class ToggleSearchBarHandler implements IActionHandler {
     }
 } 
 
-/* --------------------------------- highlight action ---------------------------------------- */
 export interface ClearHighlightsAction extends Action {
     kind: typeof ClearHighlightsAction.KIND
 }   
@@ -160,7 +155,6 @@ function removeHighlights(elem: SModelElement): void {
     }
 }
 
-/* --------------------------------- search action ---------------------------------------- */   
 export interface SearchAction extends Action {
     kind: typeof SearchAction.KIND
     id: string
@@ -426,12 +420,10 @@ export class HandleSearchAction implements IActionHandler {
                 }
             }
         }
-
+        
         panel.setTextRes(textRes)
         return results
     }
-
-    ///////////////////////////////// Tag search //////////////////////////////////////
 
     /**
      * Finds a name to display for nodes that meet the searched tags
