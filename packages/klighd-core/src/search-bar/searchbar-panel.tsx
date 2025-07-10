@@ -38,6 +38,8 @@ export class SearchBarPanel {
     private tagInputVisible: boolean = false
     private regexMode: boolean = false
     private currentError: string | null = null
+    private mainInput: HTMLInputElement | null = null
+    private tagInput: HTMLInputElement | null = null
 
     @inject(TYPES.IActionDispatcher) protected readonly actionDispatcher: IActionDispatcher
 
@@ -101,9 +103,8 @@ export class SearchBarPanel {
             document.addEventListener('keydown', this.handleExitKeycombo)
             document.addEventListener('keydown', this.handleTabKey)
             setTimeout(() => {
-                const input = document.getElementById('search') as HTMLInputElement
-                if(input) {
-                    input.focus()
+                if(this.mainInput) {
+                    this.mainInput.focus()
                 } 
             }, 0)
             if(!this.tooltipEl) {
@@ -167,11 +168,9 @@ export class SearchBarPanel {
         this.tagInputVisible = !this.tagInputVisible
 
         if(!this.tagInputVisible) {
-            const textInput = document.getElementById('search') as HTMLInputElement 
-            const tagInput = document.getElementById('tag-search') as HTMLInputElement
-            if(tagInput) tagInput.value = ''
-            if(textInput) {
-                textInput.value === '' ? this.resetUI() : this.performSearch()
+            if(this.tagInput) this.tagInput.value = ''
+            if(this.mainInput) {
+                this.mainInput.value === '' ? this.resetUI() : this.performSearch()
             }
         }
 
@@ -179,9 +178,8 @@ export class SearchBarPanel {
 
         if(this.tagInputVisible) {
             setTimeout(() => {
-                const tagInput = document.getElementById('tag-search') as HTMLInputElement
-                if(tagInput) {
-                    tagInput.focus()
+                if(this.tagInput) {
+                    this.tagInput.focus()
                 }
             }, 0)
         }
@@ -190,12 +188,9 @@ export class SearchBarPanel {
     /**
      * Performs the search with both main and tag inputs
      */
-    private performSearch(): void {
-        const mainInput = document.getElementById('search') as HTMLInputElement
-        const tagInput = document.getElementById('tag-search') as HTMLInputElement
-        
-        const query = mainInput ? mainInput.value : ''
-        const tagQuery = tagInput ? tagInput.value : ''
+    private performSearch(): void {        
+        const query = this.mainInput ? this.mainInput.value : ''
+        const tagQuery = this.tagInput ? this.tagInput.value : ''
 
         this.clearError()
         
@@ -225,6 +220,14 @@ export class SearchBarPanel {
                         id="search"
                         className="search-input"
                         placeholder="Search..."
+                        hook={{
+                            insert: vnode => {
+                                this.mainInput = vnode.elm as HTMLInputElement
+                            },
+                            destroy: () => {
+                                this.mainInput = null
+                            }
+                        }}
                         on={{ input: () => this.handleInputChange() }}
                     />
                     <button
@@ -243,8 +246,7 @@ export class SearchBarPanel {
                                 this.regexMode = !this.regexMode
                                 this.update()
                                 setTimeout(() => {
-                                    const input = document.getElementById('search') as HTMLInputElement
-                                    if(input) input.focus()
+                                    if(this.mainInput) this.mainInput.focus()
                                 }, 0)
                             }
                         }}
@@ -275,6 +277,14 @@ export class SearchBarPanel {
                             id="tag-search"
                             className="tag-input"
                             placeholder="Tag filter (# or $)..."
+                            hook={{
+                                insert: vnode => {
+                                    this.tagInput = vnode.elm as HTMLInputElement
+                                },
+                                destroy: () => {
+                                    this.tagInput = null
+                                }
+                            }}
                             on={{ input: () => this.handleInputChange() }}
                         />
                     </div>
@@ -412,11 +422,8 @@ export class SearchBarPanel {
 
     /** Resets the UI by removing tooltips and the result list */
     private resetUI(): void {
-        const input = document.getElementById('search') as HTMLInputElement | null
-        const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
-
-        if(input) input.value = ''
-        if(tagInput) tagInput.value = ''
+        if(this.mainInput) this.mainInput.value = ''
+        if(this.tagInput) this.tagInput.value = ''
         if(this.tooltipEl) this.tooltipEl.style.display = 'none'
 
         this.searchResults = []
@@ -434,15 +441,13 @@ export class SearchBarPanel {
     private handleEscapeKey = (event: KeyboardEvent) => {
         if(event.key === 'Escape') {
             const active = document.activeElement as HTMLElement | null
-            const input = document.getElementById('search') as HTMLInputElement | null
-            const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
 
-            if(active === input && input) {
-                input.value = ''
-                input.focus()
-            } else if(active === tagInput && tagInput) {
-                tagInput.value = ''
-                tagInput.focus()
+            if(active === this.mainInput && this.mainInput) {
+                this.mainInput.value = ''
+                this.mainInput.focus()
+            } else if(active === this.tagInput && this.tagInput) {
+                this.tagInput.value = ''
+                this.tagInput.focus()
             }
 
              this.handleInputChange()
@@ -467,14 +472,11 @@ export class SearchBarPanel {
      * Otherwise the search is performed.
      */
     private handleInputChange(): void {
-        const input = document.getElementById('search') as HTMLInputElement
-        const tagInput = document.getElementById('tag-search') as HTMLInputElement
-
         this.performSearch()
 
         setTimeout(() => {
-            const inputVal = input?.value ?? ''
-            const tagVal = (this.tagInputVisible && tagInput) ? tagInput.value : ''
+            const inputVal = this.mainInput?.value ?? ''
+            const tagVal = (this.tagInputVisible && this.tagInput) ? this.tagInput.value : ''
 
             if(inputVal === '' && tagVal === '') {
                 console.log("Empty input")
@@ -543,24 +545,21 @@ export class SearchBarPanel {
     /** Tab cycles between input fields and not the buttons as well */
     private handleTabKey = (event: KeyboardEvent) => {
         if(event.key !== 'Tab') return
-
-        const input = document.getElementById('search') as HTMLInputElement | null
-        const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
         const active = document.activeElement
 
-        if(!input) return
+        if(!this.mainInput) return
 
         // Only #search is visible
-        if(!this.tagInputVisible && active === input) {
+        if(!this.tagInputVisible && active === this.mainInput) {
             event.preventDefault()
             this.toggleTagInput()
             return
         }
 
-        if(!input || !tagInput || !this.tagInputVisible) return
+        if(!this.mainInput || !this.tagInput || !this.tagInputVisible) return
 
         if(!(active instanceof HTMLInputElement)) return
-        const focusables = [input, tagInput]
+        const focusables = [this.mainInput, this.tagInput]
         const currentIndex = focusables.indexOf(active)
 
         if(currentIndex !== -1) {
