@@ -1,9 +1,9 @@
 /** @jsx html */
-import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from 'sprotty'
 import { inject, postConstruct } from 'inversify'
-import { VNode } from 'snabbdom'
 import { ShowSearchBarAction, ToggleSearchBarAction } from './searchbar-actions'
 import { SearchBarPanel } from './searchbar-panel'
+import { VNode } from 'snabbdom'
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from 'sprotty'
 
 /**
  * A search bar extension that lets you search for text in a diagram.

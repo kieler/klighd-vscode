@@ -62,13 +62,13 @@ import { ResetPreferencesAction, SetPreferencesAction } from './options/actions'
 import { optionsModule } from './options/options-module'
 import { PreferencesRegistry } from './preferences-registry'
 import { proxyViewModule } from './proxy-view/proxy-view-module'
+import { searchBarModule } from './search-bar/searchbar-module'
 import { sidebarModule } from './sidebar'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions'
 import { SynthesesRegistry } from './syntheses/syntheses-registry'
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views'
-import { searchBarModule } from './search-bar/searchbar-module'
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
@@ -152,11 +152,11 @@ export default function createContainer(widgetId: string): Container {
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
         actionModule,
         optionsModule,
+        searchBarModule,
         sidebarModule,
         kGraphDiagramModule,
         /* bookmarkModule, */ diagramPieceModule,
-        proxyViewModule,
-        searchBarModule,
+        proxyViewModule
     )
     // FIXME: bookmarkModule is currently broken due to wrong usage of Sprotty commands. action handling needs to be reimplemented for this to work.
     overrideViewerOptions(container, {
