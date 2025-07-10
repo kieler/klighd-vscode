@@ -1,3 +1,20 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2025 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 /** @jsx html */
 import { injectable, inject } from 'inversify'
 import { SearchBar } from './searchbar'
@@ -58,21 +75,21 @@ export class SearchBarPanel {
      */
     public changeVisibility(vis: boolean): void {
         this.visible = vis
-        if (this.onVisibilityChange) {
+        if(this.onVisibilityChange) {
             this.onVisibilityChange()
         }
 
-        if (vis) {
+        if(vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
             document.addEventListener('keydown', this.handleExitKeycombo)
             document.addEventListener('keydown', this.handleTabKey)
             setTimeout(() => {
                 const input = document.getElementById('search') as HTMLInputElement
-                if (input) {
+                if(input) {
                     input.focus()
                 } 
             }, 0)
-            if (!this.tooltipEl) {
+            if(!this.tooltipEl) {
                 const tooltip = document.createElement('div')
                 tooltip.id = 'search-tooltip'
                 tooltip.className = 'search-tooltip'
@@ -85,7 +102,7 @@ export class SearchBarPanel {
             document.removeEventListener('keydown', this.handleTabKey)
             document.removeEventListener('keydown', this.handleExitKeycombo)
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
-            if (this.tooltipEl) {
+            if(this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
             }
             this.tagInputVisible = false
@@ -132,21 +149,21 @@ export class SearchBarPanel {
     private toggleTagInput(): void {
         this.tagInputVisible = !this.tagInputVisible
 
-        if (!this.tagInputVisible) {
+        if(!this.tagInputVisible) {
             const textInput = document.getElementById('search') as HTMLInputElement 
             const tagInput = document.getElementById('tag-search') as HTMLInputElement
-            if (tagInput) tagInput.value = ''
-            if (textInput) {
+            if(tagInput) tagInput.value = ''
+            if(textInput) {
                 textInput.value === '' ? this.resetUI() : this.performSearch()
             }
         }
 
         this.update()
 
-        if (this.tagInputVisible) {
+        if(this.tagInputVisible) {
             setTimeout(() => {
                 const tagInput = document.getElementById('tag-search') as HTMLInputElement
-                if (tagInput) {
+                if(tagInput) {
                     tagInput.focus()
                 }
             }, 0)
@@ -180,7 +197,7 @@ export class SearchBarPanel {
      * @returns the search bar panel if vis=true, else an empty div
      */
     render(vis: boolean, panel: SearchBarPanel): VNode {
-        if (!vis) {
+        if(!vis) {
             return <div className="search-bar-panel hidden"></div>
         }
 
@@ -210,7 +227,7 @@ export class SearchBarPanel {
                                 this.update()
                                 setTimeout(() => {
                                     const input = document.getElementById('search') as HTMLInputElement
-                                    if (input) input.focus()
+                                    if(input) input.focus()
                                 }, 0)
                             }
                         }}
@@ -270,7 +287,7 @@ export class SearchBarPanel {
      * @returns panel with result list
      */
     private showSearchResults(panel: SearchBarPanel): VNode {
-        if (this.hasError) {
+        if(this.hasError) {
             return (
                 <div>
                     <div className="search-results-error">
@@ -280,7 +297,7 @@ export class SearchBarPanel {
             )
         }
 
-        if (this.searchResults.length === 0) {
+        if(this.searchResults.length === 0) {
             return (
                 <div className="search-results">
                     <div className="search-results-header">
@@ -308,7 +325,7 @@ export class SearchBarPanel {
                                 on={{
                                     mouseenter: (event: MouseEvent) => {
                                         const path = this.decodeId(this.searchResults[index].id)
-                                        if (this.tooltipEl) {
+                                        if(this.tooltipEl) {
                                             this.tooltipEl.textContent = path
                                             this.tooltipEl.style.top = `${event.clientY + 12}px`
                                             this.tooltipEl.style.left = `${event.clientX + 12}px`
@@ -316,7 +333,7 @@ export class SearchBarPanel {
                                         }
                                     },
                                     mouseleave: () => {
-                                        if (this.tooltipEl) {
+                                        if(this.tooltipEl) {
                                             this.tooltipEl.style.display = 'none'
                                         }
                                     },
@@ -328,7 +345,7 @@ export class SearchBarPanel {
                                 }}
                                 hook={{
                                     insert: vnode => {
-                                        if (isSelected) {
+                                        if(isSelected) {
                                             (vnode.elm as HTMLElement).scrollIntoView({
                                                 behavior: 'smooth',
                                                 block: 'nearest'
@@ -336,7 +353,7 @@ export class SearchBarPanel {
                                         }
                                     },
                                     update: (oldVnode, vnode) => {
-                                        if (isSelected) {
+                                        if(isSelected) {
                                             setTimeout(() => {
                                                 (vnode.elm as HTMLElement).scrollIntoView({
                                                     behavior: 'smooth',
@@ -381,9 +398,9 @@ export class SearchBarPanel {
         const input = document.getElementById('search') as HTMLInputElement | null
         const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
 
-        if (input) input.value = ''
-        if (tagInput) tagInput.value = ''
-        if (this.tooltipEl) this.tooltipEl.style.display = 'none'
+        if(input) input.value = ''
+        if(tagInput) tagInput.value = ''
+        if(this.tooltipEl) this.tooltipEl.style.display = 'none'
 
         this.searchResults = []
         this.textRes = []
@@ -398,15 +415,15 @@ export class SearchBarPanel {
      * @param event keypress (esc key)
      */
     private handleEscapeKey = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
+        if(event.key === 'Escape') {
             const active = document.activeElement as HTMLElement | null
             const input = document.getElementById('search') as HTMLInputElement | null
             const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
 
-            if (active === input && input) {
+            if(active === input && input) {
                 input.value = ''
                 input.focus()
-            } else if (active === tagInput && tagInput) {
+            } else if(active === tagInput && tagInput) {
                 tagInput.value = ''
                 tagInput.focus()
             }
@@ -420,7 +437,7 @@ export class SearchBarPanel {
      * @param event keycombination ctrl+x
      */    
     private handleExitKeycombo = (event: KeyboardEvent) => {
-        if ((event.metaKey || event.ctrlKey) && event.key === 'x') {
+        if((event.metaKey || event.ctrlKey) && event.key === 'x') {
             this.changeVisibility(false)
             this.searched = false
             this.tagInputVisible = false
@@ -442,7 +459,7 @@ export class SearchBarPanel {
             const inputVal = input?.value ?? ''
             const tagVal = (this.tagInputVisible && tagInput) ? tagInput.value : ''
 
-            if (inputVal === '' && tagVal === '') {
+            if(inputVal === '' && tagVal === '') {
                 console.log("Empty input")
                 this.resetUI()
             }
@@ -454,9 +471,9 @@ export class SearchBarPanel {
      * @param event keypresses of enter, arrowUp or arrowDown
      */
     private handleKeyNavigation = (event: KeyboardEvent) => {
-        if (this.searchResults.length === 0) return
+        if(this.searchResults.length === 0) return
 
-        if (event.shiftKey && event.key === 'ArrowDown') {
+        if(event.shiftKey && event.key === 'ArrowDown') {
             event.preventDefault()
             this.selectedIndex = this.searchResults.length - 1
             this.usedArrowKeys = true
@@ -464,7 +481,7 @@ export class SearchBarPanel {
             return
         }
 
-        if (event.shiftKey && event.key === 'ArrowUp') {
+        if(event.shiftKey && event.key === 'ArrowUp') {
             event.preventDefault()
             this.selectedIndex = 0
             this.usedArrowKeys = true
@@ -494,9 +511,9 @@ export class SearchBarPanel {
                         : ((this.selectedIndex ?? 0) + 1) % this.searchResults.length  // move forward
                 ]
                 
-                if (selected) this.panToElement(selected.id)
+                if(selected) this.panToElement(selected.id)
 
-                if (!this.usedArrowKeys) {
+                if(!this.usedArrowKeys) {
                     this.selectedIndex = ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
                 }
 
@@ -508,28 +525,28 @@ export class SearchBarPanel {
 
     /** Tab cycles between input fields and not the buttons as well */
     private handleTabKey = (event: KeyboardEvent) => {
-        if (event.key !== 'Tab') return
+        if(event.key !== 'Tab') return
 
         const input = document.getElementById('search') as HTMLInputElement | null
         const tagInput = document.getElementById('tag-search') as HTMLInputElement | null
         const active = document.activeElement
 
-        if (!input) return
+        if(!input) return
 
         // Only #search is visible
-        if (!this.tagInputVisible && active === input) {
+        if(!this.tagInputVisible && active === input) {
             event.preventDefault()
             this.toggleTagInput()
             return
         }
 
-        if (!input || !tagInput || !this.tagInputVisible) return
+        if(!input || !tagInput || !this.tagInputVisible) return
 
-        if (!(active instanceof HTMLInputElement)) return
+        if(!(active instanceof HTMLInputElement)) return
         const focusables = [input, tagInput]
         const currentIndex = focusables.indexOf(active)
 
-        if (currentIndex !== -1) {
+        if(currentIndex !== -1) {
             event.preventDefault()
             const nextIndex = (currentIndex + focusables.length) % focusables.length
             focusables[nextIndex].focus()
@@ -575,7 +592,7 @@ export class SearchBarPanel {
      * @returns a readable path with icons.
      */
     private decodeId(id : string) : string {
-        if (!id) return ""
+        if(!id) return ""
 
         const iconMap: Record<string, string> = {
             N: "🔘", 
@@ -590,7 +607,7 @@ export class SearchBarPanel {
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i]
 
-            if (!segment || segment === "root") continue
+            if(!segment || segment === "root") continue
 
             const isUnnamed = segments[i - 1] === ""
 
@@ -598,7 +615,7 @@ export class SearchBarPanel {
             const label = segment.substring(1)
             const icon = iconMap[typeChar] ?? ""
 
-            if (isUnnamed) {
+            if(isUnnamed) {
                 result.push(icon)
             } else {
                 result.push(`${icon} ${label}`)

@@ -1,3 +1,20 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2025 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
 /** @jsx html */
 import { inject, postConstruct } from 'inversify'
 import { ShowSearchBarAction, ToggleSearchBarAction } from './searchbar-actions'
@@ -47,12 +64,12 @@ export class SearchBar extends AbstractUIExtension {
     }
 
     protected onBeforeShow(): void {
-        if (!this.containerElement) {
+        if(!this.containerElement) {
             console.warn('[SearchBar] containerElement is not yet defined')
             return
         }
 
-        if (!this.oldContentRoot) {
+        if(!this.oldContentRoot) {
             this.initializeContents(this.containerElement)
         }
 
@@ -60,7 +77,7 @@ export class SearchBar extends AbstractUIExtension {
     }
 
     update(): void {
-        if (!this.containerElement) return
+        if(!this.containerElement) return
 
         const content: VNode = this.panel.render(this.panel.isVisible, this.panel) 
 
@@ -79,7 +96,7 @@ export class SearchBar extends AbstractUIExtension {
 
     private addKeyListener(): void {
         window.addEventListener('keydown', (event) => {
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+            if((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
                 this.panel.changeVisibility(true)
                 this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, SearchBar.ID, 'show'))
             }
