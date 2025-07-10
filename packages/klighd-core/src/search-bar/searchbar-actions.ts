@@ -287,11 +287,14 @@ export class HandleSearchAction implements IActionHandler {
             textElement.styles = []
         }
 
-        const alreadyHighlighted = textElement.styles.some((style: any) => 
-            style.type === 'KBackgroundImpl' && style.color && 
-            style.color.red === 255 && style.color.green === 255 && style.color.blue === 0
+        const alreadyHighlighted = textElement.styles.some((style: any) =>
+            style.type === 'KBackgroundImpl' &&
+            style.color?.red === 255 &&
+            style.color?.green === 255 &&
+            style.color?.blue === 0 &&
+            style.highlightId === 'searchHighlight'
         )
-        
+
         if(!alreadyHighlighted) {
             const highlightStyle: KColoring = {
                 type: 'KBackgroundImpl',
