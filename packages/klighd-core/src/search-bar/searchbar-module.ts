@@ -37,4 +37,3 @@ export const searchBarModule = new ContainerModule((bind, _, isBound) => {
     bind(HandleSearchAction).toSelf().inSingletonScope()
     bind(TYPES.IActionHandlerInitializer).toService(HandleSearchAction)
 })
- 
