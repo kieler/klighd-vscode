@@ -98,7 +98,7 @@ export namespace ClearHighlightsAction {
     }
 }
 
-function createHighlightRectangle(xPos: number, yPos: number, width: number, height: number): KRectangle {
+function createHighlightRectangle(idSuffix: string | number, xPos: number, yPos: number, width: number, height: number): KRectangle {
     const highlight: KColoring = {
         type: 'KBackgroundImpl',
         color: rgb(255, 255, 0),
@@ -119,7 +119,7 @@ function createHighlightRectangle(xPos: number, yPos: number, width: number, hei
 
     return {
         type: 'KRectangleImpl',
-        id: `highlightRect-${Math.random().toString(36).substr(2, 9)}`,
+        id: `highlightRect-${idSuffix}`,
         children: [],
         properties: {
             x: xPos,
@@ -144,12 +144,8 @@ function removeHighlights(elem: SModelElement): void {
 
         // Remove KText highlights
         if(isKText(element) && element.styles) {
-            element.styles = element.styles.filter((style: any) => 
-                !(style.type === 'KBackgroundImpl' && 
-                style.color && 
-                style.color.red === 255 && 
-                style.color.green === 255 && 
-                style.color.blue === 0)
+            element.styles = element.styles.filter((style: any) =>
+                !(style.type === 'KBackgroundImpl' && style.modifierId === 'searchHighlight')
             )
         }
 
@@ -267,14 +263,14 @@ export class HandleSearchAction implements IActionHandler {
      * @param element the element whose child gets the highlight
      * @param bounds the position and size of the highlight
      */
-    private addHighlightToElement(element: SModelElement, bounds: HighlightBounds): void {
+    private addHighlightToElement(element: SModelElement, bounds: HighlightBounds, index: number): void {
         const data = (element as any).data
         if(Array.isArray(data)) {
             for (const item of data) {
                 if(isContainerRendering(item)) {
                     const alreadyHasHighlight = item.children?.some(child => child.id?.startsWith('highlightRect-'))
                     if(!alreadyHasHighlight) {
-                        const highlightRect = createHighlightRectangle(bounds.x, bounds.y, bounds.width, bounds.height)
+                        const highlightRect = createHighlightRectangle(index, bounds.x, bounds.y, bounds.width, bounds.height)
                         item.children = [...(item.children ?? []), highlightRect]
                     }
                 }
@@ -304,6 +300,7 @@ export class HandleSearchAction implements IActionHandler {
                 gradientAngle: 0,
                 propagateToChildren: false,
                 selection: false,
+                modifierId: 'searchHighlight'
             }
             
             textElement.styles.push(highlightStyle)
@@ -319,7 +316,7 @@ export class HandleSearchAction implements IActionHandler {
      * @param results the array containing all results
      * @param textRes the array containing all {@param text} matches
      */
-    private processTextMatch(parent: SModelElement, element: SModelElement, query: string, results: SModelElement[], textRes: string[], regex: RegExp | null): void {
+    private processTextMatch(parent: SModelElement, element: SModelElement, query: string, results: SModelElement[], textRes: string[], regex: RegExp | null, index: number): void {
         const text = (element as KText).text
         const matches = regex ? regex.test(text) : text.toLowerCase().includes(query)
 
@@ -330,7 +327,7 @@ export class HandleSearchAction implements IActionHandler {
                 this.addHighlightToKText(element)
             } else {
                 const bounds = this.extractBounds(element)
-                this.addHighlightToElement(parent, bounds)
+                this.addHighlightToElement(parent, bounds, index)
             }
         }
     }
@@ -378,24 +375,25 @@ export class HandleSearchAction implements IActionHandler {
         const regex = panel.isRegex ? this.compileRegex(query, panel) : null
         const lowerQuery = query.toLowerCase()
         const queue: SModelElement[] = [root]
+        let highlightIndex = 1
 
         /**
          * Go into a rendering to look for the text field and compare it to the input
          * @param rendering KText or KLabel
          * @param parent KContainerRendering that contains {@param rendering}
          */
-        const visitRendering = (rendering: any, parent: SModelElement): void => {
+        const visitRendering = (rendering: any, parent: SModelElement, index: number): void => {
             if(!rendering) return 
 
             /* Check KText */
             if(isKText(rendering) && rendering.text) {
-                this.processTextMatch(parent, rendering, lowerQuery, results, textRes, regex)
+                this.processTextMatch(parent, rendering, lowerQuery, results, textRes, regex, index)
             }
 
             /* Check KContainerElements */
             if(isContainerRendering(rendering)) {
                 for (const child of rendering.children ?? []) {
-                    visitRendering(child, parent)
+                    visitRendering(child, parent, results.length + 1)
                 }
             }
         }
@@ -412,7 +410,9 @@ export class HandleSearchAction implements IActionHandler {
                     if('text' in element) {
                         const text = (element as any).text;
                         if(typeof text === 'string' && text.trim()) {
-                            this.processTextMatch(element, element, lowerQuery, results, textRes, regex);
+                            const resultsBefore = results.length
+                            this.processTextMatch(element, element, lowerQuery, results, textRes, regex, highlightIndex);
+                            if (results.length > resultsBefore) highlightIndex++
                         }
                     }
                     break;
@@ -424,7 +424,7 @@ export class HandleSearchAction implements IActionHandler {
                 const data = dataArr[0]
                 if(data && Array.isArray(data.children)) {
                     for (const child of data.children) {
-                        visitRendering(child, element)
+                        visitRendering(child, element, results.length + 1)
                     }
                 }
             }
@@ -491,7 +491,7 @@ export class HandleSearchAction implements IActionHandler {
             if(result && filter(result)) {
                 if(!isMixedQuery) {
                     const bounds = this.extractBounds(result)
-                    this.addHighlightToElement(result,bounds)
+                    this.addHighlightToElement(result, bounds, results.length + 1)
                 }
                 results.push(result)
                 const name = this.extractDisplayName(result)
