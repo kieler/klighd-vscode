@@ -1,0 +1,131 @@
+.search-bar-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 9999;
+    background-color: white;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 250px;
+}
+
+.search-bar-panel.hidden {
+    display: none;
+}
+
+.search-controls {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 4px;
+}
+
+.search-button {
+    border: none;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    margin-left: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.search-button.inactive {
+    background: #eee;
+    color: black;
+}
+
+.search-button.active {
+    background: #007acc;
+    color: white;
+}
+
+.search-button:hover {
+    background: #007acc;
+    color: white;
+}
+
+.tag-input-container {
+    display: flex;
+    margin-bottom: 8px;
+    animation: slideDown 0.2s ease-out;
+}
+
+.tag-input {
+    flex: 1;
+    padding: 4px;
+    border: 1px solid #007acc;
+    border-radius: 2px;
+}
+
+.search-results-header {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.search-results-error {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: red;
+}
+
+.search-results-list {
+    max-height: 200px;
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+    margin-top: 4px;
+}
+
+.search-results-list.scrollable {
+    overflow-y: auto;
+    border: 1px solid #eee;
+}
+
+.search-result-item {
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.search-result-item:hover {
+    background-color: rgba(0, 0, 0, 0.25);
+}
+
+.search-result-item.selected {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.search-result-path {
+    font-size: 11px;
+    color: #007acc;
+    margin-top: 4px;
+}
+
+.search-tooltip {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10000;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: none;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

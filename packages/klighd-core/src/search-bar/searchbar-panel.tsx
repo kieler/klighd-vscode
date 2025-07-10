@@ -1,9 +1,9 @@
 /** @jsx html */
 import { injectable, inject } from 'inversify'
-import { html, IActionDispatcher, TYPES } from 'sprotty'
-import { VNode, h } from 'snabbdom'
-import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction } from './searchbar-actions'
 import { SearchBar } from './searchbar'
+import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction } from './searchbar-actions'
+import { VNode } from 'snabbdom'
+import { html, IActionDispatcher, TYPES } from 'sprotty'
 import { FitToScreenAction, SModelElement } from 'sprotty-protocol'
 
 @injectable()
@@ -16,11 +16,13 @@ export class SearchBarPanel {
     private hoverPath: string | null = null
     private hoverPos: { x: number, y: number } | null = null
     private tooltipEl: HTMLElement | null = null
-    private selectedIndex: number = -1
+    private selectedIndex: number | undefined = undefined
     private usedArrowKeys: boolean = false
     private tagInputVisible: boolean = false
     private regexMode: boolean = false
     private currentError: string | null = null
+
+    @inject(TYPES.IActionDispatcher) protected readonly actionDispatcher: IActionDispatcher
 
     private onVisibilityChange?: () => void
 
@@ -73,15 +75,7 @@ export class SearchBarPanel {
             if (!this.tooltipEl) {
                 const tooltip = document.createElement('div')
                 tooltip.id = 'search-tooltip'
-                tooltip.style.position = 'fixed'
-                tooltip.style.pointerEvents = 'none'
-                tooltip.style.zIndex = '10000'
-                tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
-                tooltip.style.color = 'white'
-                tooltip.style.padding = '4px 8px'
-                tooltip.style.borderRadius = '4px'
-                tooltip.style.fontSize = '12px'
-                tooltip.style.display = 'none'
+                tooltip.className = 'search-tooltip'
                 document.body.appendChild(tooltip)
                 this.tooltipEl = tooltip
             }
@@ -117,7 +111,6 @@ export class SearchBarPanel {
         this.textRes = res
     }
 
-    @inject(TYPES.IActionDispatcher) protected readonly actionDispatcher: IActionDispatcher
 
     readonly id: 'search-bar-panel'
     readonly title: 'Search'
@@ -188,154 +181,87 @@ export class SearchBarPanel {
      */
     render(vis: boolean, panel: SearchBarPanel): VNode {
         if (!vis) {
-            return <div style={{ display: 'none' }}></div>
+            return <div className="search-bar-panel hidden"></div>
         }
 
-        return h('div', {
-            style: {
-                position: 'absolute',
-                top: '10px',
-                left: '10px',
-                zIndex: '9999',
-                backgroundColor: 'white',
-                padding: '10px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                width: '250px'
-            }
-        }, [
-            h('div', {
-                style: {
-                    display: 'flex',
-                    marginBottom: '8px'
-                }
-            }, [
-                h('input', {
-                    props: {
-                        id: 'search',
-                        placeholder: 'Search...'
-                    },
-                    style: {
-                        flex: '1',
-                        padding: '4px'
-                    },
-                    on: {
-                        input: () => {
-                            this.handleInputChange()
-                        }
-                    }
-                }),
-                h('button', {
-                    style: {
-                        marginLeft: '4px',
-                        background: this.tagInputVisible ? '#007acc' : '#eee',
-                        border: 'none',
-                        cursor: 'pointer',
-                        width: '30px',
-                        color: this.tagInputVisible ? 'white' : 'black',
-                        transition: 'background-color 0.2s ease'
-                    },
-                    attrs: {
-                        title: 'Toggle tag search'
-                    },
-                    on: {
-                        click: () => {
-                            this.toggleTagInput()
-                        }
-                    },
-                    hook: this.conditionalHoverEffect(() => this.tagInputVisible)
-                }, ['#']),
-                h('button', {
-                    style: {
-                        marginLeft: '4px',
-                        background: this.regexMode ? '#007acc' : '#eee',
-                        border: 'none',
-                        cursor: 'pointer',
-                        width: '30px',
-                        height: '30px',
-                        color : this.regexMode ? 'white' : 'black',
-                    },
-                    attrs: {
-                        title: 'Toggle RegEx search'
-                    },
-                    on: {
-                        click: () => {
-                            this.regexMode = !this.regexMode
-                            this.update()
-
-                            setTimeout(() => {
-                                const input = document.getElementById('search') as HTMLInputElement
-                                if (input) input.focus()
-                            }, 0)
-                        }
-                    },
-                    hook: this.conditionalHoverEffect(() => this.regexMode)
-                }, ['*']),
-                h('button', {
-                    style: {
-                        marginLeft: '4px',
-                        background: '#eee',
-                        border: 'none',
-                        cursor: 'pointer',
-                        width: '30px',
-                    },
-                    attrs: {
-                        title: 'Close search bar'
-                    },
-                    on: {
-                        click: () => {
-                            this.changeVisibility(false)
-                            this.searched = false
-                            this.tagInputVisible = false
-                            this.actionDispatcher.dispatch(ToggleSearchBarAction.create(panel, SearchBar.ID, 'hide'))
-                        }
-                    },
-                    hook: this.hoverEffect()
-                }, ['×'])
-            ]),
-            
-            this.tagInputVisible ? h('div', {
-                style: {
-                    display: 'flex',
-                    marginBottom: '8px',
-                    animation: 'slideDown 0.2s ease-out'
-                }
-            }, [
-                h('input', {
-                    props: {
-                        id: 'tag-search',
-                        placeholder: 'Tag filter (# or $)...'
-                    },
-                    style: {
-                        flex: '1',
-                        padding: '4px',
-                        border: '1px solid #007acc',
-                        borderRadius: '2px'
-                    },
-                    on: {
-                        input: () => {
-                            this.handleInputChange()
-                        }
-                    }
-                }),
-            ]) : null,
-            
-            this.hoverPath ? h('div', {
-                style: {
-                    position: 'fixed',
-                    top: `${this.hoverPos!.y + 12}px`,
-                    left: `${this.hoverPos!.x + 12}px`,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    color: 'white',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    pointerEvents: 'none',
-                    zIndex: '10000'
-                }
-            }, [ this.hoverPath ]) : null,
-            this.searched ? this.showSearchResults(panel) : null
-        ])
+        return (
+            <div className="search-bar-panel">
+                <div className="search-controls">
+                    <input
+                        id="search"
+                        className="search-input"
+                        placeholder="Search..."
+                        on={{ input: () => this.handleInputChange() }}
+                    />
+                    <button
+                        className={`search-button ${this.tagInputVisible ? 'active' : 'inactive'}`}
+                        title="Toggle tag search"
+                        on={{ click: () => this.toggleTagInput() }}
+                        hook={this.conditionalHoverEffect(() => this.tagInputVisible)}
+                    >
+                        #
+                    </button>
+                    <button
+                        className={`search-button ${this.regexMode ? 'active' : 'inactive'}`}
+                        title="Toggle RegEx search"
+                        on={{ 
+                            click: () => {
+                                this.regexMode = !this.regexMode
+                                this.update()
+                                setTimeout(() => {
+                                    const input = document.getElementById('search') as HTMLInputElement
+                                    if (input) input.focus()
+                                }, 0)
+                            }
+                        }}
+                        hook={this.conditionalHoverEffect(() => this.regexMode)}
+                    >
+                        *
+                    </button>
+                    <button
+                        className="search-button inactive"
+                        title="Close search bar"
+                        on={{
+                            click: () => {
+                                this.changeVisibility(false)
+                                this.searched = false
+                                this.tagInputVisible = false
+                                this.actionDispatcher.dispatch(ToggleSearchBarAction.create(panel, SearchBar.ID, 'hide'))
+                            }
+                        }}
+                        hook={this.hoverEffect()}
+                    >
+                        ×
+                    </button>
+                </div>
+                
+                {this.tagInputVisible && (
+                    <div className="tag-input-container">
+                        <input
+                            id="tag-search"
+                            className="tag-input"
+                            placeholder="Tag filter (# or $)..."
+                            on={{ input: () => this.handleInputChange() }}
+                        />
+                    </div>
+                )}
+                
+                {this.hoverPath && (
+                    <div 
+                        className="search-tooltip"
+                        style={{
+                            top: `${this.hoverPos!.y + 12}px`,
+                            left: `${this.hoverPos!.x + 12}px`,
+                            display: 'block'
+                        }}
+                    >
+                        {this.hoverPath}
+                    </div>
+                )}
+                
+                {this.searched && this.showSearchResults(panel)}
+            </div>
+        )
     }
 
     /**
@@ -345,119 +271,94 @@ export class SearchBarPanel {
      */
     private showSearchResults(panel: SearchBarPanel): VNode {
         if (this.hasError) {
-            return h('div', {}, [
-                h('div', {
-                    style : {
-                        fontWeight: 'bold',
-                        marginBottom: '5px',
-                        color : 'red'
-                    }
-                }, this.currentError)
-            ])
+            return (
+                <div>
+                    <div className="search-results-error">
+                        {this.currentError}
+                    </div>
+                </div>
+            )
         }
+
         if (this.searchResults.length === 0) {
-            const message = 'No results found'
-            
-            return h('div', {}, [
-                h('div', { 
-                    style: { 
-                        fontWeight: 'bold', 
-                        marginBottom: '5px',
-                    } 
-                }, [message])
-            ])
+            return (
+                <div className="search-results">
+                    <div className="search-results-header">
+                        No results found
+                    </div>
+                </div>
+            )
         }
 
-        return h('div', {}, [
-            h('div', { style: { fontWeight: 'bold', marginBottom: '5px' } }, [
-                `Result ${this.selectedIndex + 1} of ${this.searchResults.length}`
-            ]),
+        return (
+            <div className="search-results">
+                <div className="search-results-header">
+                    Result {(this.selectedIndex ?? 0) + 1} of {this.searchResults.length}
+                </div>
 
-            h('ul', {
-                style: {
-                    maxHeight: '200px',
-                    overflowY: this.searchResults.length > 8 ? 'auto' : 'visible',
-                    listStyleType: 'none',
-                    paddingLeft: '0',
-                    margin: '0',
-                    marginTop: '4px',
-                    border: this.searchResults.length > 8 ? '1px solid #eee' : 'none'
-                }
-            },
-            this.searchResults.map((result, index) => {
-                const isSelected = index === this.selectedIndex
-                const listItemId = `search-result-${index}`
+                <ul className={`search-results-list ${this.searchResults.length > 8 ? 'scrollable' : ''}`}>
+                    {this.searchResults.map((result, index) => {
+                        const isSelected = index === this.selectedIndex
+                        const listItemId = `search-result-${index}`
 
-                return h('li', {
-                    attrs: {
-                        id: listItemId
-                    },
-                    style: {
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        transition: 'background-color 0.2s ease',
-                        cursor: 'pointer',
-                        backgroundColor: isSelected ? 'rgba(0, 0, 0, 0.15)' : 'transparent'
-                    },
-                    on: {
-                        mouseenter: (event: MouseEvent) => {
-                            const path = this.decodeId(this.searchResults[index].id)
-                            if (this.tooltipEl) {
-                                this.tooltipEl.textContent = path
-                                this.tooltipEl.style.top = `${event.clientY + 12}px`
-                                this.tooltipEl.style.left = `${event.clientX + 12}px`
-                                this.tooltipEl.style.display = 'block'
-                            }
-                        },
-                        mouseleave: () => {
-                            if (this.tooltipEl) {
-                                this.tooltipEl.style.display = 'none'
-                            }
-                        },
-                        click: () => {
-                            this.panToElement(result.id)
-                            this.selectedIndex = index
-                            this.update()
-                        }
-                    },
-                    hook: {
-                        insert: vnode => {
-                            vnode.elm!.addEventListener('mouseover', () => {
-                                (vnode.elm as HTMLElement).style.backgroundColor = 'rgba(0, 0, 0, 0.25)'
-                            })
-                            vnode.elm!.addEventListener('mouseout', () => {
-                                (vnode.elm as HTMLElement).style.backgroundColor = 'transparent'
-                            })
-
-                            if (isSelected) {
-                                (vnode.elm as HTMLElement).scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'nearest'
-                                })
-                            }
-                        },
-                        update: (oldVnode, vnode) => {
-                            if (isSelected) {
-                                setTimeout(() => {
-                                    (vnode.elm as HTMLElement).scrollIntoView({
-                                        behavior: 'smooth',
-                                        block: 'nearest'
-                                    })
-                                }, 0)
-                            }
-                        }
-                    }
-                }, [this.textRes[index],
-                    isSelected ? h('div', {
-                        style: {
-                            fontSize: '11px',
-                            color: '#007acc',
-                            marginTop: '4px'
-                        }
-                    }, [this.decodeId(result.id)]) : null
-                ])
-            }))
-        ])
+                        return (
+                            <li
+                                id={listItemId}
+                                className={`search-result-item ${isSelected ? 'selected' : ''}`}
+                                on={{
+                                    mouseenter: (event: MouseEvent) => {
+                                        const path = this.decodeId(this.searchResults[index].id)
+                                        if (this.tooltipEl) {
+                                            this.tooltipEl.textContent = path
+                                            this.tooltipEl.style.top = `${event.clientY + 12}px`
+                                            this.tooltipEl.style.left = `${event.clientX + 12}px`
+                                            this.tooltipEl.style.display = 'block'
+                                        }
+                                    },
+                                    mouseleave: () => {
+                                        if (this.tooltipEl) {
+                                            this.tooltipEl.style.display = 'none'
+                                        }
+                                    },
+                                    click: () => {
+                                        this.panToElement(result.id)
+                                        this.selectedIndex = index
+                                        this.update()
+                                    }
+                                }}
+                                hook={{
+                                    insert: vnode => {
+                                        if (isSelected) {
+                                            (vnode.elm as HTMLElement).scrollIntoView({
+                                                behavior: 'smooth',
+                                                block: 'nearest'
+                                            })
+                                        }
+                                    },
+                                    update: (oldVnode, vnode) => {
+                                        if (isSelected) {
+                                            setTimeout(() => {
+                                                (vnode.elm as HTMLElement).scrollIntoView({
+                                                    behavior: 'smooth',
+                                                    block: 'nearest'
+                                                })
+                                            }, 0)
+                                        }
+                                    }
+                                }}
+                            >
+                                {this.textRes[index]}
+                                {isSelected && (
+                                    <div className="search-result-path">
+                                        {this.decodeId(result.id)}
+                                    </div>
+                                )}
+                            </li>
+                        )
+                    })}
+                </ul>
+            </div>
+        )
     }   
 
     /**
@@ -487,7 +388,7 @@ export class SearchBarPanel {
         this.searchResults = []
         this.textRes = []
         this.searched = false
-        this.selectedIndex = -1
+        this.selectedIndex = undefined
         this.update()
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
@@ -575,23 +476,30 @@ export class SearchBarPanel {
             case 'ArrowDown':
                 event.preventDefault()
                 this.usedArrowKeys = true
-                this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+                this.selectedIndex = ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
                 break
 
             case 'ArrowUp':
                 event.preventDefault()
                 this.usedArrowKeys = true
-                this.selectedIndex = (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
+                this.selectedIndex = ((this.selectedIndex ?? 0) - 1 + this.searchResults.length) % this.searchResults.length
                 break
 
             case 'Enter':
                 event.preventDefault()
-                const selected = this.searchResults[(this.selectedIndex + 1) % this.searchResults.length]
+                
+                const selected = this.searchResults[
+                    this.usedArrowKeys
+                        ? (this.selectedIndex ?? 0)  // use current index
+                        : ((this.selectedIndex ?? 0) + 1) % this.searchResults.length  // move forward
+                ]
+                
                 if (selected) this.panToElement(selected.id)
 
                 if (!this.usedArrowKeys) {
-                    this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
+                    this.selectedIndex = ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
                 }
+
                 this.usedArrowKeys = false
                 break
         }
