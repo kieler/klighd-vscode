@@ -18,7 +18,7 @@
 /** @jsx html */
 import { injectable, inject } from 'inversify'
 import { SearchBar } from './searchbar'
-import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction, UpdateHighlightsAction } from './searchbar-actions'
+import { ClearHighlightsAction, RetrieveTagsAction, SearchAction, ToggleSearchBarAction, UpdateHighlightsAction } from './searchbar-actions'
 import { VNode } from 'snabbdom'
 import { html, IActionDispatcher, TYPES } from 'sprotty'
 import { FitToScreenAction, SModelElement } from 'sprotty-protocol'
@@ -41,6 +41,8 @@ export class SearchBarPanel {
     private currentError: string | null = null
     private mainInput: HTMLInputElement | null = null
     private tagInput: HTMLInputElement | null = null
+    private tags: { tag: string, num?: number }[] = []
+    private showTagList: boolean = false
 
     @inject(TYPES.IActionDispatcher) protected readonly actionDispatcher: IActionDispatcher
 
@@ -99,6 +101,16 @@ export class SearchBarPanel {
     public get tagSearch() {
         if(!this.tagInput) return
         return this.tagInput.value
+    }
+
+    /* retrive all tags of the graph */
+    public get getTags() {
+        return this.tags
+    }
+
+    /* save tags from a graph to the panel */
+    public setTags(tags: { tag: string, num?: number }[]) {
+        this.tags = tags
     }
 
     /**
@@ -299,24 +311,39 @@ export class SearchBarPanel {
                                 }
                             }}
                             on={{ input: () => this.handleInputChange() }}
-                        />
+                        /> 
+                        <button
+                            className={`search-button ${this.showTagList ? 'active' : 'inactive'}`}
+                            title="Show tags"
+                            on={{
+                                click: () => {
+                                    this.showTagList = !this.showTagList
+                                    this.update()
+                                }
+                            }}
+                        >
+                            ?
+                        </button>
                     </div>
                 )}
                 
                 {this.hoverPath && (
                     <div 
-                        className="search-tooltip"
-                        style={{
-                            top: `${this.hoverPos!.y + 12}px`,
-                            left: `${this.hoverPos!.x + 12}px`,
-                            display: 'block'
-                        }}
+                    className="search-tooltip"
+                    style={{
+                        top: `${this.hoverPos!.y + 12}px`,
+                        left: `${this.hoverPos!.x + 12}px`,
+                        display: 'block'
+                    }}
                     >
                         {this.hoverPath}
                     </div>
                 )}
-                
-                {this.searched && this.showSearchResults(panel)}
+                {this.showTagList
+                    ? this.showAvailableTags()
+                    : this.searched
+                    ? this.showSearchResults(panel)
+                    : null}
             </div>
         )
     }
@@ -418,7 +445,51 @@ export class SearchBarPanel {
                 </ul>
             </div>
         )
-    }   
+    }
+    
+    /**
+     * Show all tags in a result list
+     * @returns panel with tag list
+     */
+    private showAvailableTags(): VNode {
+        if(!this.showTagList || this.tags.length === 0) {
+            return <div></div>
+        }
+
+        return (
+            <div className="search-results">
+                <div className="search-results-header">
+                    Available Tags
+                </div>
+
+                <ul className={`search-results-list ${this.tags.length > 8 ? 'scrollable' : ''}`}>
+                    {this.tags.map(tagObj => {
+                        const isNumeric = typeof tagObj.num === 'number'
+                        const prefix = isNumeric ? '$' : '#'
+                        const tagText = `${prefix}${tagObj.tag}`
+
+                        return (
+                            <li
+                                className="search-result-item"
+                                on={{
+                                    click: () => {
+                                        if (this.tagInput) {
+                                            this.tagInput.value = (this.tagInput.value.trim() + ' ' + tagText).trim()
+                                            this.performSearch()
+                                            this.showTagList = false
+                                            this.update()
+                                        }
+                                    }
+                                }}
+                            >
+                                {tagText}
+                            </li>
+                        )
+                    })}
+                </ul>
+            </div>
+        )
+    }
 
     /**
      * Zoom in on a certain element.
@@ -446,6 +517,7 @@ export class SearchBarPanel {
         this.searched = false
         this.selectedIndex = undefined
         this.previousIndex = undefined
+        this.selectedIndex = undefined
         this.update()
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
@@ -488,6 +560,7 @@ export class SearchBarPanel {
      * Otherwise the search is performed.
      */
     private handleInputChange(): void {
+        this.showTagList = false
         this.performSearch()
 
         setTimeout(() => {

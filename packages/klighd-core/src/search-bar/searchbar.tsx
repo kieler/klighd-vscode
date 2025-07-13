@@ -17,7 +17,7 @@
 
 /** @jsx html */
 import { inject, postConstruct } from 'inversify'
-import { ShowSearchBarAction, ToggleSearchBarAction } from './searchbar-actions'
+import { RetrieveTagsAction, ShowSearchBarAction, ToggleSearchBarAction } from './searchbar-actions'
 import { SearchBarPanel } from './searchbar-panel'
 import { VNode } from 'snabbdom'
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from 'sprotty'
@@ -99,6 +99,7 @@ export class SearchBar extends AbstractUIExtension {
             if((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
                 this.panel.changeVisibility(true)
                 this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, SearchBar.ID, 'show'))
+                if(this.panel.getTags.length === 0) this.actionDispatcher.dispatch(RetrieveTagsAction.create(this.panel))
             }
         })
     }

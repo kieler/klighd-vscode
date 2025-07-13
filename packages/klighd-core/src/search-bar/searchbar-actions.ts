@@ -20,7 +20,7 @@ import { inject, injectable } from 'inversify'
 import { SearchBar } from './searchbar'
 import { SearchBarPanel } from './searchbar-panel'
 import { isContainerRendering, isKText, KColoring, KRectangle, KText } from '../skgraph-models'
-import { ActionHandlerRegistry, IActionDispatcher, IActionHandler, rgb, SetUIExtensionVisibilityAction, TYPES } from 'sprotty'
+import { ActionHandlerRegistry, IActionDispatcher, IActionHandler, name, rgb, SetUIExtensionVisibilityAction, TYPES } from 'sprotty'
 import { Action, CenterAction, SetModelAction, SModelElement, UpdateModelAction } from 'sprotty-protocol'
 
 export type ShowSearchBarAction = SetUIExtensionVisibilityAction
@@ -194,6 +194,26 @@ function removeHighlights(elem: SModelElement): void {
     }
 }
 
+export interface RetrieveTagsActions extends Action {
+    kind: typeof RetrieveTagsAction.KIND,
+    panel: SearchBarPanel
+}
+
+export namespace RetrieveTagsAction {
+    export const KIND = 'retrieveTags'
+
+    export function create(panel: SearchBarPanel) : RetrieveTagsActions {
+        return {
+            kind: KIND,
+            panel,
+        }
+    }
+
+    export function isThisAction(action: Action): action is RetrieveTagsActions {
+        return action.kind === KIND
+    }
+}
+
 export interface SearchAction extends Action {
     kind: typeof SearchAction.KIND
     id: string
@@ -241,6 +261,7 @@ export class HandleSearchAction implements IActionHandler {
         registry.register(SearchAction.KIND, this)
         registry.register(ClearHighlightsAction.KIND, this)
         registry.register(UpdateHighlightsAction.KIND, this)
+        registry.register(RetrieveTagsAction.KIND, this)
     }
 
     handle(action: Action): void {
@@ -269,6 +290,12 @@ export class HandleSearchAction implements IActionHandler {
             if(action.selectedIndex === undefined || !action.results || !action.panel) return
             this.updateHighlights(action.selectedIndex, action.previousIndex, action.results, action.panel)
         }
+
+        /* searches for all tags on the model */
+        if(RetrieveTagsAction.isThisAction(action)) {
+            if(!action.panel) return
+            this.retrieveTags(HandleSearchAction.currentModel, action.panel)
+        }
         
         /* Handle search itself */
         if(!SearchAction.isThisAction(action)) return
@@ -289,6 +316,49 @@ export class HandleSearchAction implements IActionHandler {
        
         action.panel.setResults(results)
         action.panel.update()
+    }
+
+    /**
+     * Looks for all tags on the current graph to display them on the panel.
+     * @param root the model
+     * @param panel the search bar panel
+     */
+    private retrieveTags(root: SModelElement, panel: SearchBarPanel): void {
+        const results = this.searchModel(root, '', panel)
+        if (!results) return
+
+        const seenTags = new Set<string>()
+        const tags: { tag: string, num?: number }[] = []
+
+        const collectFrom = (obj: any) => {
+            const tagProp = obj?.properties?.["de.cau.cs.kieler.klighd.semanticFilter.tags"]
+            if (Array.isArray(tagProp)) {
+                for (const item of tagProp) {
+                    if (typeof item.tag === 'string') {
+                        const tag = item.tag.toLowerCase()
+                        if (!seenTags.has(tag)) {
+                            seenTags.add(tag)
+                            tags.push({ tag, num: item.num })
+                        }
+                    }
+                }
+            }
+        }
+
+        while (results.length > 0) {
+            const currentElem = results.shift()! as any
+
+            collectFrom(currentElem)
+
+            if (Array.isArray(currentElem.data)) {
+                for (const child of currentElem.data) {
+                    collectFrom(child)
+                }
+            }
+        }
+
+        tags.sort((a, b) => a.tag.localeCompare(b.tag)) 
+        panel.setTags(tags)
     }
 
     /**
