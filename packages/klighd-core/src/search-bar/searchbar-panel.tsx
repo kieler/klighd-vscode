@@ -18,7 +18,7 @@
 /** @jsx html */
 import { injectable, inject } from 'inversify'
 import { SearchBar } from './searchbar'
-import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction } from './searchbar-actions'
+import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction, UpdateHighlightsAction } from './searchbar-actions'
 import { VNode } from 'snabbdom'
 import { html, IActionDispatcher, TYPES } from 'sprotty'
 import { FitToScreenAction, SModelElement } from 'sprotty-protocol'
@@ -34,6 +34,7 @@ export class SearchBarPanel {
     private hoverPos: { x: number, y: number } | null = null
     private tooltipEl: HTMLElement | null = null
     private selectedIndex: number | undefined = undefined
+    private previousIndex: number | undefined = undefined
     private usedArrowKeys: boolean = false
     private tagInputVisible: boolean = false
     private regexMode: boolean = false
@@ -88,6 +89,18 @@ export class SearchBarPanel {
         this.update()
     }
 
+    /** Access the input from the text field */
+    public get textInput() {
+        if(!this.mainInput) return
+        return this.mainInput.value
+    }
+
+    /** Access the tag input */
+    public get tagSearch() {
+        if(!this.tagInput) return
+        return this.tagInput.value
+    }
+
     /**
      * Updates anything that changes, when the search bar is toggled
      * @param vis the new visibility
@@ -135,7 +148,7 @@ export class SearchBarPanel {
     public setResults(results: SModelElement[]): void {
         this.searchResults = results
         this.selectedIndex = -1
-        /* Debug: */ console.log("[SearchBar] setting results:", results)
+        this.previousIndex = undefined
     }
 
     /**
@@ -367,6 +380,8 @@ export class SearchBarPanel {
                                     click: () => {
                                         this.panToElement(result.id)
                                         this.selectedIndex = index
+                                        this.actionDispatcher.dispatch(UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this))
+                                        this.previousIndex = index
                                         this.update()
                                     }
                                 }}
@@ -430,6 +445,7 @@ export class SearchBarPanel {
         this.textRes = []
         this.searched = false
         this.selectedIndex = undefined
+        this.previousIndex = undefined
         this.update()
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
@@ -479,7 +495,6 @@ export class SearchBarPanel {
             const tagVal = (this.tagInputVisible && this.tagInput) ? this.tagInput.value : ''
 
             if(inputVal === '' && tagVal === '') {
-                console.log("Empty input")
                 this.resetUI()
             }
         }, 0)
@@ -523,17 +538,17 @@ export class SearchBarPanel {
 
             case 'Enter':
                 event.preventDefault()
-                
-                const selected = this.searchResults[
-                    this.usedArrowKeys
-                        ? (this.selectedIndex ?? 0)  // use current index
-                        : ((this.selectedIndex ?? 0) + 1) % this.searchResults.length  // move forward
-                ]
-                
-                if(selected) this.panToElement(selected.id)
 
-                if(!this.usedArrowKeys) {
-                    this.selectedIndex = ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
+                this.selectedIndex = this.usedArrowKeys
+                                ? (this.selectedIndex ?? 0)
+                                : ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
+                
+                const selected = this.searchResults[this.selectedIndex]
+                
+                if(this.searchResults[this.selectedIndex]) {
+                    this.panToElement(selected.id)
+                    this.actionDispatcher.dispatch(UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this))
+                    this.previousIndex = this.selectedIndex
                 }
 
                 this.usedArrowKeys = false
