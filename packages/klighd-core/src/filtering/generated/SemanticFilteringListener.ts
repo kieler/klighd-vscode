@@ -4,7 +4,6 @@ import {ParseTreeListener} from "antlr4";
 
 
 import { SemanticFilterRuleContext } from "./SemanticFilteringParser.js";
-import { PositionalFilterRuleContext } from "./SemanticFilteringParser.js";
 import { OrExprContext } from "./SemanticFilteringParser.js";
 import { AndExprContext } from "./SemanticFilteringParser.js";
 import { NotExprContext } from "./SemanticFilteringParser.js";
@@ -14,7 +13,11 @@ import { AddExprContext } from "./SemanticFilteringParser.js";
 import { MultExprContext } from "./SemanticFilteringParser.js";
 import { BoolAtomContext } from "./SemanticFilteringParser.js";
 import { NumAtomContext } from "./SemanticFilteringParser.js";
-import { PositionalQuantifierContext } from "./SemanticFilteringParser.js";
+import { ForallExprContext } from "./SemanticFilteringParser.js";
+import { ExistsExprContext } from "./SemanticFilteringParser.js";
+import { ListExprContext } from "./SemanticFilteringParser.js";
+import { VarExprContext } from "./SemanticFilteringParser.js";
+import { ListContext } from "./SemanticFilteringParser.js";
 import { TagContext } from "./SemanticFilteringParser.js";
 import { NumtagContext } from "./SemanticFilteringParser.js";
 
@@ -34,16 +37,6 @@ export default class SemanticFilteringListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSemanticFilterRule?: (ctx: SemanticFilterRuleContext) => void;
-	/**
-	 * Enter a parse tree produced by `SemanticFilteringParser.positionalFilterRule`.
-	 * @param ctx the parse tree
-	 */
-	enterPositionalFilterRule?: (ctx: PositionalFilterRuleContext) => void;
-	/**
-	 * Exit a parse tree produced by `SemanticFilteringParser.positionalFilterRule`.
-	 * @param ctx the parse tree
-	 */
-	exitPositionalFilterRule?: (ctx: PositionalFilterRuleContext) => void;
 	/**
 	 * Enter a parse tree produced by `SemanticFilteringParser.orExpr`.
 	 * @param ctx the parse tree
@@ -135,15 +128,55 @@ export default class SemanticFilteringListener extends ParseTreeListener {
 	 */
 	exitNumAtom?: (ctx: NumAtomContext) => void;
 	/**
-	 * Enter a parse tree produced by `SemanticFilteringParser.positionalQuantifier`.
+	 * Enter a parse tree produced by `SemanticFilteringParser.forallExpr`.
 	 * @param ctx the parse tree
 	 */
-	enterPositionalQuantifier?: (ctx: PositionalQuantifierContext) => void;
+	enterForallExpr?: (ctx: ForallExprContext) => void;
 	/**
-	 * Exit a parse tree produced by `SemanticFilteringParser.positionalQuantifier`.
+	 * Exit a parse tree produced by `SemanticFilteringParser.forallExpr`.
 	 * @param ctx the parse tree
 	 */
-	exitPositionalQuantifier?: (ctx: PositionalQuantifierContext) => void;
+	exitForallExpr?: (ctx: ForallExprContext) => void;
+	/**
+	 * Enter a parse tree produced by `SemanticFilteringParser.existsExpr`.
+	 * @param ctx the parse tree
+	 */
+	enterExistsExpr?: (ctx: ExistsExprContext) => void;
+	/**
+	 * Exit a parse tree produced by `SemanticFilteringParser.existsExpr`.
+	 * @param ctx the parse tree
+	 */
+	exitExistsExpr?: (ctx: ExistsExprContext) => void;
+	/**
+	 * Enter a parse tree produced by `SemanticFilteringParser.listExpr`.
+	 * @param ctx the parse tree
+	 */
+	enterListExpr?: (ctx: ListExprContext) => void;
+	/**
+	 * Exit a parse tree produced by `SemanticFilteringParser.listExpr`.
+	 * @param ctx the parse tree
+	 */
+	exitListExpr?: (ctx: ListExprContext) => void;
+	/**
+	 * Enter a parse tree produced by `SemanticFilteringParser.varExpr`.
+	 * @param ctx the parse tree
+	 */
+	enterVarExpr?: (ctx: VarExprContext) => void;
+	/**
+	 * Exit a parse tree produced by `SemanticFilteringParser.varExpr`.
+	 * @param ctx the parse tree
+	 */
+	exitVarExpr?: (ctx: VarExprContext) => void;
+	/**
+	 * Enter a parse tree produced by `SemanticFilteringParser.list`.
+	 * @param ctx the parse tree
+	 */
+	enterList?: (ctx: ListContext) => void;
+	/**
+	 * Exit a parse tree produced by `SemanticFilteringParser.list`.
+	 * @param ctx the parse tree
+	 */
+	exitList?: (ctx: ListContext) => void;
 	/**
 	 * Enter a parse tree produced by `SemanticFilteringParser.tag`.
 	 * @param ctx the parse tree

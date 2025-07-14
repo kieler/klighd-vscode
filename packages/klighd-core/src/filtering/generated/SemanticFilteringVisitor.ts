@@ -4,7 +4,6 @@ import {ParseTreeVisitor} from 'antlr4';
 
 
 import { SemanticFilterRuleContext } from "./SemanticFilteringParser.js";
-import { PositionalFilterRuleContext } from "./SemanticFilteringParser.js";
 import { OrExprContext } from "./SemanticFilteringParser.js";
 import { AndExprContext } from "./SemanticFilteringParser.js";
 import { NotExprContext } from "./SemanticFilteringParser.js";
@@ -14,7 +13,11 @@ import { AddExprContext } from "./SemanticFilteringParser.js";
 import { MultExprContext } from "./SemanticFilteringParser.js";
 import { BoolAtomContext } from "./SemanticFilteringParser.js";
 import { NumAtomContext } from "./SemanticFilteringParser.js";
-import { PositionalQuantifierContext } from "./SemanticFilteringParser.js";
+import { ForallExprContext } from "./SemanticFilteringParser.js";
+import { ExistsExprContext } from "./SemanticFilteringParser.js";
+import { ListExprContext } from "./SemanticFilteringParser.js";
+import { VarExprContext } from "./SemanticFilteringParser.js";
+import { ListContext } from "./SemanticFilteringParser.js";
 import { TagContext } from "./SemanticFilteringParser.js";
 import { NumtagContext } from "./SemanticFilteringParser.js";
 
@@ -33,12 +36,6 @@ export default class SemanticFilteringVisitor<Result> extends ParseTreeVisitor<R
 	 * @return the visitor result
 	 */
 	visitSemanticFilterRule?: (ctx: SemanticFilterRuleContext) => Result;
-	/**
-	 * Visit a parse tree produced by `SemanticFilteringParser.positionalFilterRule`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitPositionalFilterRule?: (ctx: PositionalFilterRuleContext) => Result;
 	/**
 	 * Visit a parse tree produced by `SemanticFilteringParser.orExpr`.
 	 * @param ctx the parse tree
@@ -94,11 +91,35 @@ export default class SemanticFilteringVisitor<Result> extends ParseTreeVisitor<R
 	 */
 	visitNumAtom?: (ctx: NumAtomContext) => Result;
 	/**
-	 * Visit a parse tree produced by `SemanticFilteringParser.positionalQuantifier`.
+	 * Visit a parse tree produced by `SemanticFilteringParser.forallExpr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitPositionalQuantifier?: (ctx: PositionalQuantifierContext) => Result;
+	visitForallExpr?: (ctx: ForallExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by `SemanticFilteringParser.existsExpr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitExistsExpr?: (ctx: ExistsExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by `SemanticFilteringParser.listExpr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitListExpr?: (ctx: ListExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by `SemanticFilteringParser.varExpr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVarExpr?: (ctx: VarExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by `SemanticFilteringParser.list`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitList?: (ctx: ListContext) => Result;
 	/**
 	 * Visit a parse tree produced by `SemanticFilteringParser.tag`.
 	 * @param ctx the parse tree

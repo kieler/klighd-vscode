@@ -20,7 +20,7 @@
 The following tree shows the precedences of the semantic filtering grammar.
 Deeper levels of the tree have a higher precedence i.e. bind more tightly.
 
-positionalFilterRule
+semanticFilterRule
 └── orExpr                              (||)
     └── andExpr                         (&&)
         └── notExpr                     (!)
@@ -29,28 +29,37 @@ positionalFilterRule
                 │   └── addExpr         (+, -)
                 │       └── multExpr    (*, /, %)
                 │           └── numAtom (unary -)
-                │               └── DOUBLE | numtag | (addExpr)
-                └── addExpr (alternative path)
-                    └── multExpr
-                        └── numAtom
+                │               └── DOUBLE | numtag | NUMTAG listExpr | (addExpr)
+                ├── addExpr ((EQ|NEQ) addExpr)
+                ├── VAR (EQ|NEQ) VAR
+                └── boolAtom
+                    ├── TRUE | FALSE
+                    ├── tag                   (#id)
+                    ├── TAG listExpr          (# [x:list | pred])
+                    ├── existsExpr            exists[x:list|pred]
+                    ├── forallExpr            forall[x:list|pred]
+                    └── (orExpr)
 
-boolAtom (used in equalsExpr)
-└── TRUE | FALSE | tag | (orExpr)
+existsExpr
+└── 'exists' '[' VAR ':' listExpr '|' varExpr ']'
 
-tag / numtag
-└── TAG/NUMTAG ID
+forallExpr
+└── 'forall' '[' VAR ':' listExpr '|' varExpr ']'
 
-positionalQuantifier
-└── SELF | PARENT | CHILD | CHILDREN | ...
+listExpr
+└── list
+    └── SELF | PARENT | CHILDREN | SIBLINGS | ADJACENTS
+└── '[' VAR ':' listExpr '|' varExpr ']'
+
+varExpr
+└── orExpr
+└── VAR '<' orExpr '>'
+
+
  */
 grammar SemanticFiltering;
 
-semanticFilterRule: positionalFilterRule EOF;
-
-positionalFilterRule
-    : orExpr
-    | positionalQuantifier '[' orExpr ']'
-    ;
+semanticFilterRule: orExpr EOF;
 
 orExpr
     : andExpr (OR andExpr)*
@@ -68,6 +77,7 @@ notExpr
 equalsExpr
     : comparisonExpr ((EQ | NEQ) comparisonExpr)?
     | addExpr ((EQ | NEQ) addExpr)
+    | VAR (EQ | NEQ) VAR 
     | boolAtom
     ;
 
@@ -87,13 +97,35 @@ boolAtom
     : TRUE
     | FALSE
     | tag
+    | TAG listExpr
+    | existsExpr
+    | forallExpr
     | '(' orExpr ')'
     ;
 
 numAtom
     : SUB? DOUBLE
     | numtag
+    | NUMTAG listExpr
     | '(' addExpr ')'
+    ;
+
+forallExpr
+    : 'forall' '[' VAR ':' listExpr '|' varExpr ']'
+    ;
+
+existsExpr
+    : 'exists' '[' VAR ':' listExpr '|' varExpr ']'
+    ;
+
+listExpr
+    : list
+    | '[' VAR ':' listExpr '|' varExpr ']'
+    ;
+
+varExpr
+    : orExpr
+    | VAR '<' orExpr '>'
     ;
 
 DOUBLE
@@ -103,6 +135,8 @@ DOUBLE
     | DIGITS EXPONENT_PART                    // 1e10, 1E-10
     ;
 
+VAR: ID;
+
 fragment DIGITS
     : [0-9]+
     ;
@@ -111,14 +145,11 @@ fragment EXPONENT_PART
     : [eE] [+-]? DIGITS
     ;
 
-positionalQuantifier
+list
     : SELF
     | PARENT
-    | CHILD
     | CHILDREN
-    | SIBLING
     | SIBLINGS
-    | ADJACENT
     | ADJACENTS
     ;
     
@@ -129,14 +160,11 @@ TAG: '#';
 NUMTAG: '$';
 ID: [a-zA-Z]+;
 
-SELF:      '~';
-PARENT:    '~'( 'p' | 'parent' );
-CHILD:     '~'( 'c' | 'child' );
-CHILDREN:  '~'( 'cs' | 'children' );
-SIBLING:   '~'( 's' | 'sibling' );
-SIBLINGS:  '~'( 'ss' | 'siblings' );
-ADJACENT:  '~'( 'a' | 'adjacent' );
-ADJACENTS: '~'( 'as' | 'adjacents' );
+SELF:      'self';
+PARENT:    'parent';
+CHILDREN:  'children';
+SIBLINGS:  'siblings';
+ADJACENTS: 'adjacents';
 
 TRUE: 'true';
 FALSE: 'false';
