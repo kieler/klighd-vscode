@@ -21,40 +21,64 @@ The following tree shows the precedences of the semantic filtering grammar.
 Deeper levels of the tree have a higher precedence i.e. bind more tightly.
 
 semanticFilterRule
-└── orExpr                              (||)
-    └── andExpr                         (&&)
-        └── notExpr                     (!)
-            └── equalsExpr              (=, !=)
-                ├── comparisonExpr      (>=, >, <=, <)
-                │   └── addExpr         (+, -)
-                │       └── multExpr    (*, /, %)
-                │           └── numAtom (unary -)
-                │               └── DOUBLE | numtag | NUMTAG listExpr | (addExpr)
-                ├── addExpr ((EQ|NEQ) addExpr)
-                ├── VAR (EQ|NEQ) VAR
-                └── boolAtom
-                    ├── TRUE | FALSE
-                    ├── tag                   (#id)
-                    ├── TAG listExpr          (# [x:list | pred])
-                    ├── existsExpr            exists[x:list|pred]
-                    ├── forallExpr            forall[x:list|pred]
-                    └── (orExpr)
+└── orExpr                              (||, lowest precedence)
+    └── andExpr                        (&&)
+        └── notExpr                    (!)
+            └── equalsExpr             (=, !=)
+                ├── boolAtom
+                │   ├── TRUE | FALSE
+                │   ├── tagExpr        (#id or # [x:list | pred])
+                │   ├── existsExpr     (exists[x:list|pred])
+                │   ├── forallExpr     (forall[x:list|pred])
+                │   └── '(' orExpr ')' (parentheses)
+                ├── comparisonExpr ((EQ|NEQ) comparisonExpr)?
+                │   └── addExpr       (+, -)
+                ├── addExpr ((EQ|NEQ) addExpr)?
+                │   └── multExpr      (*, /, %)
+                │       └── numAtom   (unary - optional)
+                │           ├── DOUBLE
+                │           ├── numtagExpr ($id or $ [x:list|pred])
+                │           └── '(' addExpr ')'
+                └── ID ((EQ | NEQ) ID)?  (simple identifiers with optional =/!=)
+                
+comparisonExpr
+└── addExpr ((>=, >, <=, <) addExpr)
 
-existsExpr
-└── 'exists' '[' VAR ':' listExpr '|' varExpr ']'
+addExpr
+└── multExpr ((+, -) multExpr)*
+
+multExpr
+└── numAtom ((* / %) numAtom)*
+
+boolAtom
+└── TRUE | FALSE | tagExpr | existsExpr | forallExpr | '(' orExpr ')'
+
+numAtom
+└── optional '-' DOUBLE
+└── numtagExpr
+└── '(' addExpr ')'
 
 forallExpr
-└── 'forall' '[' VAR ':' listExpr '|' varExpr ']'
+└── 'forall' '[' ID ':' listExpr '|' varExpr ']'
+
+existsExpr
+└── 'exists' '[' ID ':' listExpr '|' varExpr ']'
+
+tagExpr
+└── '#' ID
+└── '#' listExpr
+
+numtagExpr
+└── '$' ID
+└── '$' listExpr
 
 listExpr
-└── list
-    └── SELF | PARENT | CHILDREN | SIBLINGS | ADJACENTS
-└── '[' VAR ':' listExpr '|' varExpr ']'
+└── list (SELF | PARENT | CHILDREN | SIBLINGS | ADJACENTS)
+└── '[' ID ':' listExpr '|' varExpr ']'
 
 varExpr
 └── orExpr
-└── VAR '<' orExpr '>'
-
+└── ID '<' orExpr '>'
 
  */
 grammar SemanticFiltering;
@@ -75,10 +99,10 @@ notExpr
     ;
 
 equalsExpr
-    : comparisonExpr ((EQ | NEQ) comparisonExpr)?
+    : boolAtom
+    | comparisonExpr ((EQ | NEQ) comparisonExpr)?
     | addExpr ((EQ | NEQ) addExpr)
-    | VAR (EQ | NEQ) VAR 
-    | boolAtom
+    | ID ((EQ | NEQ) ID)
     ;
 
 comparisonExpr
@@ -96,8 +120,7 @@ multExpr
 boolAtom
     : TRUE
     | FALSE
-    | tag
-    | TAG listExpr
+    | tagExpr
     | existsExpr
     | forallExpr
     | '(' orExpr ')'
@@ -105,27 +128,36 @@ boolAtom
 
 numAtom
     : SUB? DOUBLE
-    | numtag
-    | NUMTAG listExpr
+    | numtagExpr
     | '(' addExpr ')'
     ;
 
 forallExpr
-    : 'forall' '[' VAR ':' listExpr '|' varExpr ']'
+    : 'forall' '[' ID ':' listExpr '|' varExpr ']'
     ;
 
 existsExpr
-    : 'exists' '[' VAR ':' listExpr '|' varExpr ']'
+    : 'exists' '[' ID ':' listExpr '|' varExpr ']'
+    ;
+
+tagExpr
+    : TAG ID
+    | TAG listExpr
+    ;
+
+numtagExpr
+    : NUMTAG ID
+    | NUMTAG listExpr
     ;
 
 listExpr
     : list
-    | '[' VAR ':' listExpr '|' varExpr ']'
+    | '[' ID ':' listExpr '|' varExpr ']'
     ;
 
 varExpr
     : orExpr
-    | VAR '<' orExpr '>'
+    | ID '<' orExpr '>'
     ;
 
 DOUBLE
@@ -134,8 +166,6 @@ DOUBLE
     | DIGITS '.' (DIGITS?) (EXPONENT_PART)?   // 123., 123.456, 123.e+10
     | DIGITS EXPONENT_PART                    // 1e10, 1E-10
     ;
-
-VAR: ID;
 
 fragment DIGITS
     : [0-9]+
@@ -152,9 +182,6 @@ list
     | SIBLINGS
     | ADJACENTS
     ;
-    
-tag: TAG ID;
-numtag: NUMTAG ID;
 
 TAG: '#';
 NUMTAG: '$';

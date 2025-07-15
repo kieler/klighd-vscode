@@ -30,13 +30,13 @@ import SemanticFilteringParser, {
     AddExprContext,
     BoolAtomContext,
     NumAtomContext,
-    TagContext,
-    NumtagContext,
     ExistsExprContext,
     ForallExprContext,
     ListExprContext,
     ListContext,
     VarExprContext,
+    TagExprContext,
+    NumtagExprContext,
 } from './generated/SemanticFilteringParser'
 import SemanticFilteringVisitor from './generated/SemanticFilteringVisitor'
 import { evaluateReservedNumericTag, evaluateReservedStructuralTag } from './reserved-structural-tags'
@@ -136,9 +136,9 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
     }
 
     /**
-     * An equalsExpression can contain a boolean atom, a single comparisonExpression, a boolean equality, or a numeric
+     * An equalsExpression can contain a boolean atom, a boolean equality, or a numeric
      * equality.
-     * A boolean atom or a single comparison are simply evaluated.
+     * A boolean atom or a single comparison is simply evaluated.
      * In case of a boolean equality (comparionExpr (EQ | NEQ) comparisonExpr) each comparison is evaluated and then the
      * equality is checked.
      * In case of a numeric equality (addExpr (EQ | NEQ) addExpr) each addition is evaluated and then the
@@ -187,9 +187,9 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
             }
         }
 
-        if (ctx.VAR(0) && ctx.VAR(1)) {
-            const left = ctx.VAR(0).getText()
-            const right = ctx.VAR(1).getText()
+        if (ctx.ID(0) && ctx.ID(1)) {
+            const left = ctx.ID(0).getText()
+            const right = ctx.ID(1).getText()
 
             const opNode = ctx.getChild(1) as TerminalNode
             const opType = opNode.symbol.type
@@ -331,25 +331,14 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
      * or a parenthesized quantifiedExpression
      */
     visitBoolAtom: (ctx: BoolAtomContext) => boolean = (ctx: BoolAtomContext) => {
-        if (ctx.tag()) {
-            const name = ctx.tag().ID().getText()
-            const element = this.getCurrentElement()
-            const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
-            let result = tags.some((tag: SemanticFilterTag) => tag.tag === name)
-            if (!result) {
-                result = evaluateReservedStructuralTag(name, element) ?? false
-            }
-            return result
+        if (ctx.tagExpr()) {
+            return this.visitTagExpr(ctx.tagExpr())
         }
         if (ctx.TRUE()) {
             return true
         }
         if (ctx.FALSE()) {
             return false
-        }
-        if (ctx.listExpr()) {
-            const list = this.evaluateListExpr(ctx.listExpr())
-            return list.length > 0
         }
         if (ctx.existsExpr()) {
             return this.visitExistsExpr(ctx.existsExpr())
@@ -375,23 +364,12 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
      * or a nested parenthesized addExpression.
      */
     private evaluateNumAtom(ctx: NumAtomContext): number {
-        if (ctx.numtag()) {
-            const name = ctx.numtag().ID().getText()
-            const element = this.getCurrentElement()
-            const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
-            const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === name)
-            if (nodeTag !== undefined) {
-                return nodeTag.num
-            }
-            return evaluateReservedNumericTag(name, element) ?? 0
+        if (ctx.numtagExpr()) {
+            return this.evaluateNumtagExpr(ctx.numtagExpr())
         }
         if (ctx.DOUBLE()) {
             const baseValue = parseFloat(ctx.DOUBLE().getText())
             return ctx.SUB() ? -baseValue : baseValue
-        }
-        if (ctx.listExpr()) {
-            const list = this.evaluateListExpr(ctx.listExpr())
-            return list.length
         }
         if (ctx.addExpr()) {
             return this.evaluateAddExpr(ctx.addExpr())
@@ -401,7 +379,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
 
     visitExistsExpr: (ctx: ExistsExprContext) => boolean = (ctx: ExistsExprContext) => {
         const listExpr = this.evaluateListExpr(ctx.listExpr())
-        const varSymbol = ctx.VAR().getText()
+        const varSymbol = ctx.ID().getText()
 
         const filteredList = listExpr.filter((element: SKGraphElement) => {
             this.symbolTableStack.push({ k: varSymbol, v: element })
@@ -416,7 +394,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
 
     visitForallExpr: (ctx: ForallExprContext) => boolean = (ctx: ForallExprContext) => {
         const listExpr = this.evaluateListExpr(ctx.listExpr())
-        const varSymbol = ctx.VAR().getText()
+        const varSymbol = ctx.ID().getText()
 
         const filteredList = listExpr.filter((element: SKGraphElement) => {
             this.symbolTableStack.push({ k: varSymbol, v: element })
@@ -429,6 +407,45 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
         return filteredList.length === listExpr.length
     }
 
+    visitTagExpr: (ctx: TagExprContext) => boolean = (ctx: TagExprContext) => {
+        if (ctx.ID()) {
+            const name = ctx.ID().getText()
+            const element = this.getCurrentElement()
+            const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
+            let result = tags.some((tag: SemanticFilterTag) => tag.tag === name)
+            if (!result) {
+                result = evaluateReservedStructuralTag(name, element) ?? false
+            }
+            return result
+        }
+        if (ctx.listExpr()) {
+            return this.visitListExpr(ctx.listExpr())
+        }
+        throw new Error('Invalid TagExpr')
+    }
+
+    visitNumtagExpr: (ctx: NumtagExprContext) => boolean = (_: NumtagExprContext) => {
+        throw new Error('visitNumtagExpr should not be called directly.')
+    }
+
+    evaluateNumtagExpr(ctx: NumtagExprContext): number {
+        if (ctx.ID()) {
+            const name = ctx.ID().getText()
+            const element = this.getCurrentElement()
+            const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
+            const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === name)
+            if (nodeTag !== undefined) {
+                return nodeTag.num
+            }
+            return evaluateReservedNumericTag(name, element) ?? 0
+        }
+        if (ctx.listExpr()) {
+            const list = this.evaluateListExpr(ctx.listExpr())
+            return list.length
+        }
+        throw new Error('Invalid NumtagExpr')
+    }
+
     visitListExpr: (ctx: ListExprContext) => boolean = (_: ListExprContext) => {
         throw new Error('visitListExpr should not be called directly.')
     }
@@ -438,7 +455,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
             return this.evaluateList(ctx.list())
         }
         if (ctx.listExpr()) {
-            const varSymbol = ctx.VAR().getText()
+            const varSymbol = ctx.ID().getText()
             const list = this.evaluateListExpr(ctx.listExpr())
             return list.filter((element: SKGraphElement) => {
                 this.symbolTableStack.push({ k: varSymbol, v: element })
@@ -502,8 +519,8 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
     }
 
     visitVarExpr: (ctx: VarExprContext) => boolean = (ctx: VarExprContext) => {
-        if (ctx.VAR()) {
-            const varSymbol = ctx.VAR().getText()
+        if (ctx.ID()) {
+            const varSymbol = ctx.ID().getText()
             const varElem = this.lookupVariable(varSymbol)
             // push found var back on to stack for execution of subexpression
             this.symbolTableStack.push({ k: varSymbol, v: varElem })
@@ -513,14 +530,6 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
         }
         // evaluate with current scope
         return this.visitOrExpr(ctx.orExpr())
-    }
-
-    visitTag: (ctx: TagContext) => boolean = (_: TagContext) => {
-        throw new Error('visitTag should not be called directly.')
-    }
-
-    visitNumtag: (ctx: NumtagContext) => boolean = (_: NumtagContext) => {
-        throw new Error('visitNumtag should not be called directly.')
     }
 
     visit(_tree: ParseTree): boolean {

@@ -15,11 +15,11 @@ import { BoolAtomContext } from "./SemanticFilteringParser.js";
 import { NumAtomContext } from "./SemanticFilteringParser.js";
 import { ForallExprContext } from "./SemanticFilteringParser.js";
 import { ExistsExprContext } from "./SemanticFilteringParser.js";
+import { TagExprContext } from "./SemanticFilteringParser.js";
+import { NumtagExprContext } from "./SemanticFilteringParser.js";
 import { ListExprContext } from "./SemanticFilteringParser.js";
 import { VarExprContext } from "./SemanticFilteringParser.js";
 import { ListContext } from "./SemanticFilteringParser.js";
-import { TagContext } from "./SemanticFilteringParser.js";
-import { NumtagContext } from "./SemanticFilteringParser.js";
 
 
 /**
@@ -103,6 +103,18 @@ export default class SemanticFilteringVisitor<Result> extends ParseTreeVisitor<R
 	 */
 	visitExistsExpr?: (ctx: ExistsExprContext) => Result;
 	/**
+	 * Visit a parse tree produced by `SemanticFilteringParser.tagExpr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTagExpr?: (ctx: TagExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by `SemanticFilteringParser.numtagExpr`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNumtagExpr?: (ctx: NumtagExprContext) => Result;
+	/**
 	 * Visit a parse tree produced by `SemanticFilteringParser.listExpr`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -120,17 +132,5 @@ export default class SemanticFilteringVisitor<Result> extends ParseTreeVisitor<R
 	 * @return the visitor result
 	 */
 	visitList?: (ctx: ListContext) => Result;
-	/**
-	 * Visit a parse tree produced by `SemanticFilteringParser.tag`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitTag?: (ctx: TagContext) => Result;
-	/**
-	 * Visit a parse tree produced by `SemanticFilteringParser.numtag`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitNumtag?: (ctx: NumtagContext) => Result;
 }
 

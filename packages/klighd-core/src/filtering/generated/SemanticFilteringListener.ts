@@ -15,11 +15,11 @@ import { BoolAtomContext } from "./SemanticFilteringParser.js";
 import { NumAtomContext } from "./SemanticFilteringParser.js";
 import { ForallExprContext } from "./SemanticFilteringParser.js";
 import { ExistsExprContext } from "./SemanticFilteringParser.js";
+import { TagExprContext } from "./SemanticFilteringParser.js";
+import { NumtagExprContext } from "./SemanticFilteringParser.js";
 import { ListExprContext } from "./SemanticFilteringParser.js";
 import { VarExprContext } from "./SemanticFilteringParser.js";
 import { ListContext } from "./SemanticFilteringParser.js";
-import { TagContext } from "./SemanticFilteringParser.js";
-import { NumtagContext } from "./SemanticFilteringParser.js";
 
 
 /**
@@ -148,6 +148,26 @@ export default class SemanticFilteringListener extends ParseTreeListener {
 	 */
 	exitExistsExpr?: (ctx: ExistsExprContext) => void;
 	/**
+	 * Enter a parse tree produced by `SemanticFilteringParser.tagExpr`.
+	 * @param ctx the parse tree
+	 */
+	enterTagExpr?: (ctx: TagExprContext) => void;
+	/**
+	 * Exit a parse tree produced by `SemanticFilteringParser.tagExpr`.
+	 * @param ctx the parse tree
+	 */
+	exitTagExpr?: (ctx: TagExprContext) => void;
+	/**
+	 * Enter a parse tree produced by `SemanticFilteringParser.numtagExpr`.
+	 * @param ctx the parse tree
+	 */
+	enterNumtagExpr?: (ctx: NumtagExprContext) => void;
+	/**
+	 * Exit a parse tree produced by `SemanticFilteringParser.numtagExpr`.
+	 * @param ctx the parse tree
+	 */
+	exitNumtagExpr?: (ctx: NumtagExprContext) => void;
+	/**
 	 * Enter a parse tree produced by `SemanticFilteringParser.listExpr`.
 	 * @param ctx the parse tree
 	 */
@@ -177,25 +197,5 @@ export default class SemanticFilteringListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitList?: (ctx: ListContext) => void;
-	/**
-	 * Enter a parse tree produced by `SemanticFilteringParser.tag`.
-	 * @param ctx the parse tree
-	 */
-	enterTag?: (ctx: TagContext) => void;
-	/**
-	 * Exit a parse tree produced by `SemanticFilteringParser.tag`.
-	 * @param ctx the parse tree
-	 */
-	exitTag?: (ctx: TagContext) => void;
-	/**
-	 * Enter a parse tree produced by `SemanticFilteringParser.numtag`.
-	 * @param ctx the parse tree
-	 */
-	enterNumtag?: (ctx: NumtagContext) => void;
-	/**
-	 * Exit a parse tree produced by `SemanticFilteringParser.numtag`.
-	 * @param ctx the parse tree
-	 */
-	exitNumtag?: (ctx: NumtagContext) => void;
 }
 
