@@ -4,7 +4,7 @@
         "types": ["mocha", "chai"],
         "target": "es2017",
         "lib": [
-            "es2017",
+            "es2023",
             "dom"
           ],
         "jsx": "react",

@@ -15,9 +15,9 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { ParseTree, RuleNode, TerminalNode, ErrorNode, Token } from 'antlr4'
+import { ParseTree, RuleNode, TerminalNode, ErrorNode } from 'antlr4'
 import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import { FluentIterable, toArray } from 'sprotty/lib/utils/iterable'
+import { toArray } from 'sprotty/lib/utils/iterable'
 import { SChildElementImpl, SParentElementImpl } from 'sprotty'
 import SemanticFilteringParser, {
     SemanticFilterRuleContext,
@@ -48,73 +48,89 @@ function hasProperties(elem: any): elem is SKGraphElement {
     return elem.properties !== undefined
 }
 
-// TODO: with scoping I don't think we need this functional signature and it might be helpful to remove it
-export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(element: SKGraphElement) => boolean> {
+function typeFilter<T>(list: any[], callback: (elem: any) => elem is T): T[] {
+    return list
+        .filter((el) => callback(el))
+        .map((el) => {
+            callback(el)
+            return el as T
+        })
+}
 
-    private const symbolTableStack: Pair<string, SKGraphElement>[]
+// TODO: with scoping I don't think we need this functional signature and it might be helpful to remove it
+export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boolean> {
+    private symbolTableStack: Pair<string, SKGraphElement>[] = []
 
     private lookupVariable(varSymbol: string): SKGraphElement {
         const result = this.symbolTableStack.findLast((symbol) => symbol.k === varSymbol)
         if (result) {
             return result.v
         }
-        else {
-            throw new Error('Variable ' + varSymbol + ' is undefined.')
+        throw new Error(`Variable ${varSymbol} is undefined.`)
+    }
+
+    private getCurrentElement(): SKGraphElement {
+        const top = this.symbolTableStack[this.symbolTableStack.length - 1]
+        if (!top || !top.v) throw new Error('No current element in symbol table.')
+        return top.v
+    }
+
+    evaluateFilterForElement(ctx: SemanticFilterRuleContext, element: SKGraphElement): boolean {
+        this.symbolTableStack.push({ k: 'this', v: element })
+        try {
+            return this.visitSemanticFilterRule(ctx)
+        } finally {
+            this.symbolTableStack.pop()
         }
     }
+
     /**
      * A semanticFilterRule always has a top-level or expression followed by an EOF.
      * orExpr EOF
      */
-    visitSemanticFilterRule: (ctx: SemanticFilterRuleContext) => (_: SKGraphElement) => boolean = (
-        ctx: SemanticFilterRuleContext
-    ) => this.visitOrExpr(ctx.orExpr())
+    visitSemanticFilterRule: (ctx: SemanticFilterRuleContext) => boolean = (ctx: SemanticFilterRuleContext) =>
+        this.visitOrExpr(ctx.orExpr())
 
     /**
      * An orExpression is the entry point for boolean expressions.
      * It can contain one ore more andExpressions, each of these is evaluated and the results are then combined with a
      * logical or.
      */
-    visitOrExpr: (ctx: OrExprContext) => (_: SKGraphElement) => boolean = (ctx: OrExprContext) => {
+    visitOrExpr: (ctx: OrExprContext) => boolean = (ctx: OrExprContext) => {
         const operands = ctx.andExpr_list().map((expr) => this.visitAndExpr(expr))
 
-        return (element: SKGraphElement) => {
-            let result = operands[0](element)
+        let result = operands[0]
 
-            for (let i = 1; i < operands.length; i++) {
-                const rightValue = operands[i](element)
-                result ||= rightValue
-            }
-            return result
+        for (let i = 1; i < operands.length; i++) {
+            const rightValue = operands[i]
+            result ||= rightValue
         }
+        return result
     }
 
     /**
      * An andExpression can contain one or more notExpressions. They are evaluated individually and combined using
      * a logical and.
      */
-    visitAndExpr: (ctx: AndExprContext) => (_: SKGraphElement) => boolean = (ctx: AndExprContext) => {
+    visitAndExpr: (ctx: AndExprContext) => boolean = (ctx: AndExprContext) => {
         const operands = ctx.notExpr_list().map((expr) => this.visitNotExpr(expr))
 
-        return (element: SKGraphElement) => {
-            let result = operands[0](element)
+        let result = operands[0]
 
-            for (let i = 1; i < operands.length; i++) {
-                const rightValue = operands[i](element)
-                result &&= rightValue
-            }
-            return result
+        for (let i = 1; i < operands.length; i++) {
+            const rightValue = operands[i]
+            result &&= rightValue
         }
+        return result
     }
 
     /**
      * A notExpression either contains a NOT or just an equalsExpr.
      * An equals expression is simply evaluated, whereas a NOT is evaluated and then negated.
      */
-    visitNotExpr: (ctx: NotExprContext) => (_: SKGraphElement) => boolean = (ctx: NotExprContext) => {
+    visitNotExpr: (ctx: NotExprContext) => boolean = (ctx: NotExprContext) => {
         if (ctx.NOT()) {
-            const nestedNot = this.visitNotExpr(ctx.notExpr())
-            return (element: SKGraphElement) => !nestedNot(element)
+            return !this.visitNotExpr(ctx.notExpr())
         }
         return this.visitEqualsExpr(ctx.equalsExpr())
     }
@@ -128,7 +144,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
      * In case of a numeric equality (addExpr (EQ | NEQ) addExpr) each addition is evaluated and then the
      * equality is checked.
      */
-    visitEqualsExpr: (ctx: EqualsExprContext) => (_: SKGraphElement) => boolean = (ctx: EqualsExprContext) => {
+    visitEqualsExpr: (ctx: EqualsExprContext) => boolean = (ctx: EqualsExprContext) => {
         if (ctx.boolAtom()) {
             // No EQ or NEQ, just a single boolAtom
             return this.visitBoolAtom(ctx.boolAtom())
@@ -147,9 +163,9 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
 
             switch (opType) {
                 case SemanticFilteringParser.EQ:
-                    return (element) => left(element) === right(element)
+                    return left === right
                 case SemanticFilteringParser.NEQ:
-                    return (element) => left(element) !== right(element)
+                    return left !== right
                 default:
                     throw new Error(`Unknown equality operator: ${opType}`)
             }
@@ -163,9 +179,9 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
 
             switch (opType) {
                 case SemanticFilteringParser.EQ:
-                    return (element) => left(element) === right(element)
+                    return left === right
                 case SemanticFilteringParser.NEQ:
-                    return (element) => left(element) !== right(element)
+                    return left !== right
                 default:
                     throw new Error(`Unknown equality operator: ${opType}`)
             }
@@ -177,19 +193,15 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
 
             const opNode = ctx.getChild(1) as TerminalNode
             const opType = opNode.symbol.type
+
+            const symbolLeft = this.lookupVariable(left)
+            const symbolRight = this.lookupVariable(right)
+
             switch (opType) {
                 case SemanticFilteringParser.EQ:
-                    return (_) => {
-                        const symbolLeft = this.lookupVariable(left)
-                        const symbolRight = this.lookupVariable(right)
-                        return symbolLeft === symbolRight
-                    }
+                    return symbolLeft === symbolRight
                 case SemanticFilteringParser.NEQ:
-                    return (_) => {
-                        const symbolLeft = this.lookupVariable(left)
-                        const symbolRight = this.lookupVariable(right)
-                        return symbolLeft !== symbolRight
-                    }
+                    return symbolLeft !== symbolRight
                 default:
                     throw new Error(`Unknown equality operator: ${opType}`)
             }
@@ -202,9 +214,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
      * A comparisonExpr contains two addExpressions that are evaluated and their results checked with one of the four
      * comparison relations: >=, >, <=, <
      */
-    visitComparisonExpr: (ctx: ComparisonExprContext) => (_: SKGraphElement) => boolean = (
-        ctx: ComparisonExprContext
-    ) => {
+    visitComparisonExpr: (ctx: ComparisonExprContext) => boolean = (ctx: ComparisonExprContext) => {
         // there must always be two sides in a comparison
         const left = this.evaluateAddExpr(ctx.addExpr(0))
         const right = this.evaluateAddExpr(ctx.addExpr(1))
@@ -213,24 +223,24 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
 
         switch (opType) {
             case SemanticFilteringParser.GEQ:
-                return (element) => left(element) >= right(element)
+                return left >= right
             case SemanticFilteringParser.GT:
-                return (element) => left(element) > right(element)
+                return left > right
             case SemanticFilteringParser.LEQ:
-                return (element) => left(element) <= right(element)
+                return left <= right
             case SemanticFilteringParser.LT:
-                return (element) => left(element) < right(element)
+                return left < right
             default:
                 throw new Error(`Unknown operator token type in comparisonExpr: ${opType}`)
         }
     }
 
-    visitAddExpr: (ctx: AddExprContext) => (_: SKGraphElement) => boolean = (_: AddExprContext) => {
+    visitAddExpr: (ctx: AddExprContext) => boolean = (_: AddExprContext) => {
         throw new Error('visitAddEXpr should not be called directly.')
     }
 
     /** An addExpression contains one more multExpressions which are evaluated and then summed up using + or -. */
-    private evaluateAddExpr(ctx: AddExprContext): (_: SKGraphElement) => number {
+    private evaluateAddExpr(ctx: AddExprContext): number {
         const operandFns = ctx.multExpr_list().map((expr) => this.evaluateMultExpr(expr))
 
         const operators: TerminalNode[] = []
@@ -246,29 +256,27 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
             }
         }
 
-        return (element: SKGraphElement) => {
-            let result = operandFns[0](element)
+        let result = operandFns[0]
 
-            for (let i = 1; i < operandFns.length; i++) {
-                const opType = operators[i - 1].symbol.type
-                const rightVal = operandFns[i](element)
+        for (let i = 1; i < operandFns.length; i++) {
+            const opType = operators[i - 1].symbol.type
+            const rightVal = operandFns[i]
 
-                switch (opType) {
-                    case SemanticFilteringParser.ADD:
-                        result += rightVal
-                        break
-                    case SemanticFilteringParser.SUB:
-                        result -= rightVal
-                        break
-                    default:
-                        throw new Error(`Unknown operator token type in addExpr: ${opType}`)
-                }
+            switch (opType) {
+                case SemanticFilteringParser.ADD:
+                    result += rightVal
+                    break
+                case SemanticFilteringParser.SUB:
+                    result -= rightVal
+                    break
+                default:
+                    throw new Error(`Unknown operator token type in addExpr: ${opType}`)
             }
-            return result
         }
+        return result
     }
 
-    visitMultExpr: (ctx: MultExprContext) => (_: SKGraphElement) => boolean = (_: MultExprContext) => {
+    visitMultExpr: (ctx: MultExprContext) => boolean = (_: MultExprContext) => {
         throw new Error('visitMultExpr should not be called directly.')
     }
 
@@ -276,7 +284,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
      * A multExpression contains one or more numeric atoms combined using multiplication, division and modulo operators.
      * Each numeric atom is evaluated first and the results are then combined using the given operators.
      */
-    private evaluateMultExpr(ctx: MultExprContext): (_: SKGraphElement) => number {
+    private evaluateMultExpr(ctx: MultExprContext): number {
         const operands = ctx.numAtom_list().map((expr) => this.evaluateNumAtom(expr))
 
         const operators: TerminalNode[] = []
@@ -293,29 +301,27 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
             }
         }
 
-        return (element: SKGraphElement) => {
-            let result = operands[0](element)
+        let result = operands[0]
 
-            for (let i = 1; i < operands.length; i++) {
-                const opType = operators[i - 1].symbol.type
-                const rightValue = operands[i](element)
+        for (let i = 1; i < operands.length; i++) {
+            const opType = operators[i - 1].symbol.type
+            const rightValue = operands[i]
 
-                switch (opType) {
-                    case SemanticFilteringParser.MULT:
-                        result *= rightValue
-                        break
-                    case SemanticFilteringParser.DIV:
-                        result /= rightValue
-                        break
-                    case SemanticFilteringParser.MOD:
-                        result %= rightValue
-                        break
-                    default:
-                        throw new Error(`Unknown operator token type in multExpr: ${opType}`)
-                }
+            switch (opType) {
+                case SemanticFilteringParser.MULT:
+                    result *= rightValue
+                    break
+                case SemanticFilteringParser.DIV:
+                    result /= rightValue
+                    break
+                case SemanticFilteringParser.MOD:
+                    result %= rightValue
+                    break
+                default:
+                    throw new Error(`Unknown operator token type in multExpr: ${opType}`)
             }
-            return result
         }
+        return result
     }
 
     /**
@@ -324,30 +330,26 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
      * or a list -> boolean comprehension
      * or a parenthesized quantifiedExpression
      */
-    visitBoolAtom: (ctx: BoolAtomContext) => (_: SKGraphElement) => boolean = (ctx: BoolAtomContext) => {
+    visitBoolAtom: (ctx: BoolAtomContext) => boolean = (ctx: BoolAtomContext) => {
         if (ctx.tag()) {
             const name = ctx.tag().ID().getText()
-            return (_: SKGraphElement) => {
-                const element = this.symbolTableStack[-1].v
-                const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
-                let result = tags.some((tag: SemanticFilterTag) => tag.tag === name)
-                if (!result) {
-                    result = evaluateReservedStructuralTag(name, element) ?? false
-                }
-                return result
+            const element = this.getCurrentElement()
+            const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
+            let result = tags.some((tag: SemanticFilterTag) => tag.tag === name)
+            if (!result) {
+                result = evaluateReservedStructuralTag(name, element) ?? false
             }
+            return result
         }
         if (ctx.TRUE()) {
-            return (_) => true
+            return true
         }
         if (ctx.FALSE()) {
-            return (_) => false
+            return false
         }
         if (ctx.listExpr()) {
             const list = this.evaluateListExpr(ctx.listExpr())
-            return (_) => {
-                return toArray(list(_)).length > 0
-            }
+            return list.length > 0
         }
         if (ctx.existsExpr()) {
             return this.visitExistsExpr(ctx.existsExpr())
@@ -361,7 +363,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         throw new Error('Invalid BoolAtom.')
     }
 
-    visitNumAtom: (ctx: NumAtomContext) => (element: SKGraphElement) => boolean = (_: NumAtomContext) => {
+    visitNumAtom: (ctx: NumAtomContext) => boolean = (_: NumAtomContext) => {
         throw new Error('visitNumAtom should not be called directly.')
     }
 
@@ -372,28 +374,24 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
      * or a list -> number comprehension
      * or a nested parenthesized addExpression.
      */
-    private evaluateNumAtom(ctx: NumAtomContext): (element: SKGraphElement) => number {
+    private evaluateNumAtom(ctx: NumAtomContext): number {
         if (ctx.numtag()) {
             const name = ctx.numtag().ID().getText()
-            return (_: SKGraphElement) => {
-                const element = this.symbolTableStack[-1].v
-                const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
-                const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === name)
-                if (nodeTag !== undefined) {
-                    return nodeTag.num
-                }
-                return evaluateReservedNumericTag(name, element) ?? 0
+            const element = this.getCurrentElement()
+            const tags: SemanticFilterTag[] = getSemanticFilterTags(element)
+            const nodeTag = tags.find((tag: SemanticFilterTag) => tag.tag === name)
+            if (nodeTag !== undefined) {
+                return nodeTag.num
             }
+            return evaluateReservedNumericTag(name, element) ?? 0
         }
         if (ctx.DOUBLE()) {
             const baseValue = parseFloat(ctx.DOUBLE().getText())
-            return (_: SKGraphElement) => (ctx.SUB() ? -baseValue : baseValue)
+            return ctx.SUB() ? -baseValue : baseValue
         }
         if (ctx.listExpr()) {
             const list = this.evaluateListExpr(ctx.listExpr())
-            return (_) => {
-                return toArray(list(_)).length
-            }
+            return list.length
         }
         if (ctx.addExpr()) {
             return this.evaluateAddExpr(ctx.addExpr())
@@ -401,130 +399,143 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<(elem
         throw new Error('Invalid NumAtom.')
     }
 
-    visitExistsExpr: (ctx: ExistsExprContext) => (element: SKGraphElement) => boolean  = (_: ExistsExprContext) => {
-        // TODO: desugar exists quantifier
+    visitExistsExpr: (ctx: ExistsExprContext) => boolean = (ctx: ExistsExprContext) => {
+        const listExpr = this.evaluateListExpr(ctx.listExpr())
+        const varSymbol = ctx.VAR().getText()
+
+        const filteredList = listExpr.filter((element: SKGraphElement) => {
+            this.symbolTableStack.push({ k: varSymbol, v: element })
+            try {
+                return this.visitVarExpr(ctx.varExpr())
+            } finally {
+                this.symbolTableStack.pop()
+            }
+        })
+        return filteredList.length > 0
     }
 
-    visitForallExpr: (ctx: ForallExprContext) => (element: SKGraphElement) => boolean = (_: ForallExprContext) => {
-        // TODO: desugar forall quantifier
+    visitForallExpr: (ctx: ForallExprContext) => boolean = (ctx: ForallExprContext) => {
+        const listExpr = this.evaluateListExpr(ctx.listExpr())
+        const varSymbol = ctx.VAR().getText()
+
+        const filteredList = listExpr.filter((element: SKGraphElement) => {
+            this.symbolTableStack.push({ k: varSymbol, v: element })
+            try {
+                return this.visitVarExpr(ctx.varExpr())
+            } finally {
+                this.symbolTableStack.pop()
+            }
+        })
+        return filteredList.length === listExpr.length
     }
 
-    visitListExpr: (ctx: ListExprContext) => (element: SKGraphElement) => boolean = (_: ListExprContext) {
+    visitListExpr: (ctx: ListExprContext) => boolean = (_: ListExprContext) => {
         throw new Error('visitListExpr should not be called directly.')
     }
 
-    private evaluateListExpr(ctx: ListExprContext): (element: SKGraphElement) => FluentIterable<SKGraphElement> {
+    private evaluateListExpr(ctx: ListExprContext): SKGraphElement[] {
         if (ctx.list()) {
             return this.evaluateList(ctx.list())
         }
         if (ctx.listExpr()) {
             const varSymbol = ctx.VAR().getText()
             const list = this.evaluateListExpr(ctx.listExpr())
-            return (_: SKGraphElement) => {
-                return list(_).filter((element: SKGraphElement) => {
-                    this.symbolTableStack.push({ k: varSymbol, v: element })
-                    try {
-                        const varExpr = this.visitVarExpr(ctx.varExpr())
-                        return varExpr(element)
-                    } finally {
-                        this.symbolTableStack.pop()
-                    }
-                })
-            }
+            return list.filter((element: SKGraphElement) => {
+                this.symbolTableStack.push({ k: varSymbol, v: element })
+                try {
+                    return this.visitVarExpr(ctx.varExpr())
+                } finally {
+                    this.symbolTableStack.pop()
+                }
+            })
         }
         throw new Error('Invalid ListExpr.')
     }
 
-    visitList: (ctx: ListContext) => (element: SKGraphElement) => boolean = (_: ListContext) {
+    visitList: (ctx: ListContext) => boolean = (_: ListContext) => {
         throw new Error('visitList should not be called directly.')
     }
 
-    private evaluateList(ctx: ListContext): (_: SKGraphElement) => FluentIterable<SKGraphElement> {
-        switch(ctx.start.type) {
+    private evaluateList(ctx: ListContext): SKGraphElement[] {
+        const element = this.getCurrentElement()
+
+        switch (ctx.start.type) {
             case SemanticFilteringParser.SELF:
-                return (element: SKGraphElement) => [element]
+                return [element]
 
             case SemanticFilteringParser.PARENT:
-                return (element: SKGraphElement) => {
-                    if (element instanceof SChildElementImpl) {
-                        const parentElem = element.parent
-                        if (parentElem !== undefined && parentElem !== null) {
-                            return [parentElem as SKGraphElement]
-                        }
+                if (element instanceof SChildElementImpl) {
+                    const parentElem = element.parent
+                    if (parentElem !== undefined && parentElem !== null) {
+                        return [parentElem as SKGraphElement]
                     }
-                    return []
                 }
+                return []
 
             case SemanticFilteringParser.CHILDREN:
-                return (element: SKGraphElement) => {
-                    if (element instanceof SParentElementImpl) {
-                        return element.children.filter((child) => hasProperties(child))
-                    }
-                    return []
+                if (element instanceof SParentElementImpl) {
+                    return typeFilter(toArray(element.children), hasProperties)
                 }
+                return []
 
             case SemanticFilteringParser.SIBLINGS:
-                return (element: SKGraphElement) => {
-                    if (element instanceof SChildElementImpl) {
-                        const parentElem = element.parent
-                        const siblings = parentElem?.children
-                        const others = siblings.filter((sib) => sib !== element)
-                        return others.filter((sib) => hasProperties(sib))
-                    }
-                    return []
+                if (element instanceof SChildElementImpl) {
+                    const parentElem = element.parent
+                    const siblings = parentElem?.children
+                    const others = siblings.filter((sib) => sib !== element)
+                    return typeFilter(others, hasProperties)
                 }
-            
+                return []
+
             case SemanticFilteringParser.ADJACENTS:
-                return (element: SKGraphElement) => {
-                    if (element instanceof SKNode) {
-                        const adjacents = toArray(element.incomingEdges.map((edge) => edge.source)).concat(
-                            toArray(element.outgoingEdges.map((edge) => edge.target))
-                        )
-                        return adjacents.filter((adj) => hasProperties(adj))
-                    }
-                    return []
+                if (element instanceof SKNode) {
+                    const adjacents = toArray(element.incomingEdges.map((edge) => edge.source)).concat(
+                        toArray(element.outgoingEdges.map((edge) => edge.target))
+                    )
+                    return typeFilter(adjacents, hasProperties)
                 }
-            
+                return []
+
             default:
                 throw new Error(`Unknown list: ${ctx.start.text}`)
-            }
+        }
     }
 
-    visitVarExpr: (ctx: VarExprContext) => (_: SKGraphElement) => boolean = (ctx: VarExprContext) => {
+    visitVarExpr: (ctx: VarExprContext) => boolean = (ctx: VarExprContext) => {
         if (ctx.VAR()) {
-            const inner = this.visitOrExpr(ctx.orExpr())
             const varSymbol = ctx.VAR().getText()
-            return (_: SKGraphElement) => { 
-                const varElem = this.lookupVariable(varSymbol)
-                return inner(varElem)
-            }
+            const varElem = this.lookupVariable(varSymbol)
+            // push found var back on to stack for execution of subexpression
+            this.symbolTableStack.push({ k: varSymbol, v: varElem })
+            const result = this.visitOrExpr(ctx.orExpr())
+            this.symbolTableStack.pop()
+            return result
         }
-        else {
-            return this.visitOrExpr(ctx.orExpr())
-        }
+        // evaluate with current scope
+        return this.visitOrExpr(ctx.orExpr())
     }
 
-    visitTag: (ctx: TagContext) => (_: SKGraphElement) => boolean = (_: TagContext) => {
+    visitTag: (ctx: TagContext) => boolean = (_: TagContext) => {
         throw new Error('visitTag should not be called directly.')
     }
 
-    visitNumtag: (ctx: NumtagContext) => (_: SKGraphElement) => boolean = (_: NumtagContext) => {
+    visitNumtag: (ctx: NumtagContext) => boolean = (_: NumtagContext) => {
         throw new Error('visitNumtag should not be called directly.')
     }
 
-    visit(_tree: ParseTree): (_: SKGraphElement) => boolean {
+    visit(_tree: ParseTree): boolean {
         throw new Error('Method not implemented.')
     }
 
-    visitChildren(_node: RuleNode): (_: SKGraphElement) => boolean {
+    visitChildren(_node: RuleNode): boolean {
         throw new Error('Method not implemented.')
     }
 
-    visitTerminal(_node: TerminalNode): (_: SKGraphElement) => boolean {
+    visitTerminal(_node: TerminalNode): boolean {
         throw new Error('Method not implemented.')
     }
 
-    visitErrorNode(_node: ErrorNode): (_: SKGraphElement) => boolean {
+    visitErrorNode(_node: ErrorNode): boolean {
         throw new Error('Method not implemented.')
     }
 }
