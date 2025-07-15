@@ -14,7 +14,7 @@
     "target": "es2017",
     "outDir": "lib",
     "lib": [
-      "es2023",
+      "es2017",
       "dom"
     ],
     "jsx": "react",

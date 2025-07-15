@@ -133,11 +133,11 @@ numAtom
     ;
 
 forallExpr
-    : 'forall' '[' ID ':' listExpr '|' varExpr ']'
+    : 'forall' listComprehension
     ;
 
 existsExpr
-    : 'exists' '[' ID ':' listExpr '|' varExpr ']'
+    : 'exists' listComprehension
     ;
 
 tagExpr
@@ -152,7 +152,11 @@ numtagExpr
 
 listExpr
     : list
-    | '[' ID ':' listExpr '|' varExpr ']'
+    | listComprehension
+    ;
+
+listComprehension
+    : '[' ID ':' listExpr '|' varExpr ']'
     ;
 
 varExpr
@@ -185,7 +189,6 @@ list
 
 TAG: '#';
 NUMTAG: '$';
-ID: [a-zA-Z]+;
 
 SELF:      'self';
 PARENT:    'parent';
@@ -195,6 +198,8 @@ ADJACENTS: 'adjacents';
 
 TRUE: 'true';
 FALSE: 'false';
+
+ID: [a-zA-Z]+;
 
 MULT: '*';
 DIV: '/';

@@ -18,6 +18,7 @@ import { ExistsExprContext } from "./SemanticFilteringParser.js";
 import { TagExprContext } from "./SemanticFilteringParser.js";
 import { NumtagExprContext } from "./SemanticFilteringParser.js";
 import { ListExprContext } from "./SemanticFilteringParser.js";
+import { ListComprehensionContext } from "./SemanticFilteringParser.js";
 import { VarExprContext } from "./SemanticFilteringParser.js";
 import { ListContext } from "./SemanticFilteringParser.js";
 
@@ -177,6 +178,16 @@ export default class SemanticFilteringListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitListExpr?: (ctx: ListExprContext) => void;
+	/**
+	 * Enter a parse tree produced by `SemanticFilteringParser.listComprehension`.
+	 * @param ctx the parse tree
+	 */
+	enterListComprehension?: (ctx: ListComprehensionContext) => void;
+	/**
+	 * Exit a parse tree produced by `SemanticFilteringParser.listComprehension`.
+	 * @param ctx the parse tree
+	 */
+	exitListComprehension?: (ctx: ListComprehensionContext) => void;
 	/**
 	 * Enter a parse tree produced by `SemanticFilteringParser.varExpr`.
 	 * @param ctx the parse tree

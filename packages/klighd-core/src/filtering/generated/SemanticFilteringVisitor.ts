@@ -18,6 +18,7 @@ import { ExistsExprContext } from "./SemanticFilteringParser.js";
 import { TagExprContext } from "./SemanticFilteringParser.js";
 import { NumtagExprContext } from "./SemanticFilteringParser.js";
 import { ListExprContext } from "./SemanticFilteringParser.js";
+import { ListComprehensionContext } from "./SemanticFilteringParser.js";
 import { VarExprContext } from "./SemanticFilteringParser.js";
 import { ListContext } from "./SemanticFilteringParser.js";
 
@@ -120,6 +121,12 @@ export default class SemanticFilteringVisitor<Result> extends ParseTreeVisitor<R
 	 * @return the visitor result
 	 */
 	visitListExpr?: (ctx: ListExprContext) => Result;
+	/**
+	 * Visit a parse tree produced by `SemanticFilteringParser.listComprehension`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitListComprehension?: (ctx: ListComprehensionContext) => Result;
 	/**
 	 * Visit a parse tree produced by `SemanticFilteringParser.varExpr`.
 	 * @param ctx the parse tree

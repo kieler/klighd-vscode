@@ -37,6 +37,7 @@ import SemanticFilteringParser, {
     VarExprContext,
     TagExprContext,
     NumtagExprContext,
+    ListComprehensionContext,
 } from './generated/SemanticFilteringParser'
 import SemanticFilteringVisitor from './generated/SemanticFilteringVisitor'
 import { evaluateReservedNumericTag, evaluateReservedStructuralTag } from './reserved-structural-tags'
@@ -62,9 +63,11 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
     private symbolTableStack: Pair<string, SKGraphElement>[] = []
 
     private lookupVariable(varSymbol: string): SKGraphElement {
-        const result = this.symbolTableStack.findLast((symbol) => symbol.k === varSymbol)
-        if (result) {
-            return result.v
+        for (let i = this.symbolTableStack.length - 1; i >= 0; i--) {
+            const symbol = this.symbolTableStack[i]
+            if (symbol.k === varSymbol) {
+                return symbol.v
+            }
         }
         throw new Error(`Variable ${varSymbol} is undefined.`)
     }
@@ -378,33 +381,31 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
     }
 
     visitExistsExpr: (ctx: ExistsExprContext) => boolean = (ctx: ExistsExprContext) => {
-        const listExpr = this.evaluateListExpr(ctx.listExpr())
-        const varSymbol = ctx.ID().getText()
+        const listExpr = this.evaluateListExpr(ctx.listComprehension().listExpr())
+        const varSymbol = ctx.listComprehension().ID().getText()
 
-        const filteredList = listExpr.filter((element: SKGraphElement) => {
+        return listExpr.some((element: SKGraphElement) => {
             this.symbolTableStack.push({ k: varSymbol, v: element })
             try {
-                return this.visitVarExpr(ctx.varExpr())
+                return this.visitVarExpr(ctx.listComprehension().varExpr())
             } finally {
                 this.symbolTableStack.pop()
             }
         })
-        return filteredList.length > 0
     }
 
     visitForallExpr: (ctx: ForallExprContext) => boolean = (ctx: ForallExprContext) => {
-        const listExpr = this.evaluateListExpr(ctx.listExpr())
-        const varSymbol = ctx.ID().getText()
+        const listExpr = this.evaluateListExpr(ctx.listComprehension().listExpr())
+        const varSymbol = ctx.listComprehension().ID().getText()
 
-        const filteredList = listExpr.filter((element: SKGraphElement) => {
+        return listExpr.every((element: SKGraphElement) => {
             this.symbolTableStack.push({ k: varSymbol, v: element })
             try {
-                return this.visitVarExpr(ctx.varExpr())
+                return this.visitVarExpr(ctx.listComprehension().varExpr())
             } finally {
                 this.symbolTableStack.pop()
             }
         })
-        return filteredList.length === listExpr.length
     }
 
     visitTagExpr: (ctx: TagExprContext) => boolean = (ctx: TagExprContext) => {
@@ -419,7 +420,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
             return result
         }
         if (ctx.listExpr()) {
-            return this.visitListExpr(ctx.listExpr())
+            return this.evaluateListExpr(ctx.listExpr()).length > 0
         }
         throw new Error('Invalid TagExpr')
     }
@@ -454,17 +455,8 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
         if (ctx.list()) {
             return this.evaluateList(ctx.list())
         }
-        if (ctx.listExpr()) {
-            const varSymbol = ctx.ID().getText()
-            const list = this.evaluateListExpr(ctx.listExpr())
-            return list.filter((element: SKGraphElement) => {
-                this.symbolTableStack.push({ k: varSymbol, v: element })
-                try {
-                    return this.visitVarExpr(ctx.varExpr())
-                } finally {
-                    this.symbolTableStack.pop()
-                }
-            })
+        if (ctx.listComprehension()) {
+            return this.evaluateListComprehension(ctx.listComprehension())
         }
         throw new Error('Invalid ListExpr.')
     }
@@ -516,6 +508,23 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
             default:
                 throw new Error(`Unknown list: ${ctx.start.text}`)
         }
+    }
+
+    visitListComprehension: (ctx: ListComprehensionContext) => boolean = (_: ListComprehensionContext) => {
+        throw new Error('visitListComprehension should not be called directly.')
+    }
+
+    evaluateListComprehension(ctx: ListComprehensionContext): SKGraphElement[] {
+        const varSymbol = ctx.ID().getText()
+        const list = this.evaluateListExpr(ctx.listExpr())
+        return list.filter((element: SKGraphElement) => {
+            this.symbolTableStack.push({ k: varSymbol, v: element })
+            try {
+                return this.visitVarExpr(ctx.varExpr())
+            } finally {
+                this.symbolTableStack.pop()
+            }
+        })
     }
 
     visitVarExpr: (ctx: VarExprContext) => boolean = (ctx: VarExprContext) => {
