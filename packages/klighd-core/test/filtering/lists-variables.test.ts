@@ -19,7 +19,7 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import { SGraphImpl } from 'sprotty'
 import { createSemanticFilter } from '../../src/filtering/util'
-import { SKNode } from '../../src/skgraph-models'
+import { SKEdge, SKNode } from '../../src/skgraph-models'
 
 // Construct test graph
 const root = new SGraphImpl()
@@ -28,6 +28,7 @@ root.id = 'root'
 
 const parent = new SKNode()
 parent.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+parent.id = 'parent'
 root.add(parent)
 
 const child1 = new SKNode()
@@ -47,6 +48,12 @@ parent.add(child3)
 const grandChild1 = new SKNode()
 grandChild1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [{ tag: 'someTag' }] }
 child1.add(grandChild1)
+
+const edge1 = new SKEdge()
+edge1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
+edge1.sourceId = 'parent'
+edge1.targetId = 'parent'
+parent.add(edge1)
 
 describe('semantic filtering - list-based quantifiers and scoping', () => {
     it('evaluates exists with implicit scoping', () => {
@@ -96,5 +103,19 @@ describe('semantic filtering - list-based quantifiers and scoping', () => {
         const rule = `exists[x:children|$score + 5 = 10]`
         const filter = createSemanticFilter(rule)
         expect(filter(parent), 'arithmetic expression with scoped tag').to.equal(true)
+    })
+
+    it('detect self loops', () => {
+        const rule = `exists[x:self|#[y:adjacents|x = y]]`
+        const filter = createSemanticFilter(rule)
+        expect(filter(parent), 'node with a self loop').to.equal(true)
+        expect(filter(child1), 'nod with no self loop').to.equal(false)
+    })
+
+    it('number of children that are nodes', () => {
+        const rule = `$[x:children|#isNode] = 3`
+        const filter = createSemanticFilter(rule)
+        expect(filter(parent), 'node with 3 children').to.equal(true)
+        expect(filter(child1), 'node with less than 3 children').to.equal(false)
     })
 })
