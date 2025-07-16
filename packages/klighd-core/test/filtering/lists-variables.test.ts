@@ -109,7 +109,7 @@ describe('semantic filtering - list-based quantifiers and scoping', () => {
         const rule = `exists[x:self|#[y:adjacents|x = y]]`
         const filter = createSemanticFilter(rule)
         expect(filter(parent), 'node with a self loop').to.equal(true)
-        expect(filter(child1), 'nod with no self loop').to.equal(false)
+        expect(filter(child1), 'node with no self loop').to.equal(false)
     })
 
     it('number of children that are nodes', () => {
