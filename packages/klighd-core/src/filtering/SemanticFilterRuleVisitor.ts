@@ -50,15 +50,9 @@ function hasProperties(elem: any): elem is SKGraphElement {
 }
 
 function typeFilter<T>(list: any[], callback: (elem: any) => elem is T): T[] {
-    return list
-        .filter((el) => callback(el))
-        .map((el) => {
-            callback(el)
-            return el as T
-        })
+    return list.filter((el) => callback(el)).map((el) => el as T)
 }
 
-// TODO: with scoping I don't think we need this functional signature and it might be helpful to remove it
 export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boolean> {
     private symbolTableStack: Pair<string, SKGraphElement>[] = []
 
