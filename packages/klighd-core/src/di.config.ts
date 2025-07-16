@@ -46,7 +46,7 @@ import {
     viewportModule,
     ViewRegistry,
 } from 'sprotty'
-import { ElkFactory, ElkLayoutEngine, elkLayoutModule, ILayoutConfigurator } from 'sprotty-elk'
+import { ElkFactory, ElkLayoutEngine, elkLayoutModule, ILayoutConfigurator, ILayoutPostprocessor } from 'sprotty-elk'
 import actionModule from './actions/actions-module'
 // import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols'
@@ -56,7 +56,7 @@ import { KlighdHoverMouseListener } from './hover/hover'
 import { PopupModelProvider } from './hover/popup-provider'
 import { KlighdMouseTool } from './klighd-mouse-tool'
 import { KlighdSvgExporter } from './klighd-svg-exporter'
-import { KielerLayoutConfigurator } from './layout-config'
+import { KielerLayoutConfigurator, KlighdHiddenModelViewer, MicroLayoutCalculator } from './layout-config'
 import { KlighdModelViewer } from './model-viewer'
 import { ResetPreferencesAction, SetPreferencesAction } from './options/actions'
 import { optionsModule } from './options/options-module'
@@ -86,6 +86,13 @@ const kGraphDiagramModule = new ContainerModule(
         rebind(ILayoutConfigurator).to(KielerLayoutConfigurator).inSingletonScope()
         const elkFactory: ElkFactory = () => new ElkConstructor() // See elkjs documentation
         bind(ElkFactory).toConstantValue(elkFactory)
+
+        // Micro layout handling
+        bind(KlighdHiddenModelViewer).toSelf().inSingletonScope()
+        rebind(TYPES.HiddenModelViewer).toService(KlighdHiddenModelViewer)
+
+        bind(MicroLayoutCalculator).toSelf().inSingletonScope()
+        bind(ILayoutPostprocessor).to(MicroLayoutCalculator).inSingletonScope()
 
         rebind(TYPES.CommandStackOptions).toConstantValue({
             // Override the default animation speed to be 500 ms, as the default value is too quick.
