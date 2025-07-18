@@ -67,6 +67,9 @@ export class SearchBarPanel {
 
     private showTagList: boolean = false
 
+    // eslint-disable-next-line no-undef
+    private tagSearchTimeout: NodeJS.Timeout | null = null
+
     @inject(TYPES.IActionDispatcher) protected readonly actionDispatcher: IActionDispatcher
 
     private onVisibilityChange?: () => void
@@ -586,7 +589,18 @@ export class SearchBarPanel {
      */
     private handleInputChange(): void {
         this.showTagList = false
-        this.performSearch()
+
+        if (this.tagSearchTimeout) {
+            clearTimeout(this.tagSearchTimeout)
+        }
+        if (this.tagInputVisible && document.activeElement === this.tagInput) {
+            this.tagSearchTimeout = setTimeout(() => {
+                this.performSearch()
+            }, 300) // 300ms delay for tag search
+        } else {
+            // Immediate search for main input
+            this.performSearch()
+        }
 
         setTimeout(() => {
             const inputVal = this.mainInput?.value ?? ''
