@@ -16,7 +16,7 @@
  */
 
 import { ContainerModule } from 'inversify'
-import { configureActionHandler, TYPES} from 'sprotty'
+import { configureActionHandler, TYPES } from 'sprotty'
 import { DISymbol } from '../di.symbols'
 import { SearchBar } from './searchbar'
 import { SearchBarPanel } from './searchbar-panel'
