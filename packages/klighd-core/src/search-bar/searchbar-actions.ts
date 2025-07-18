@@ -29,6 +29,7 @@ import { createSemanticFilter } from '../filtering/util'
 import { SearchBar } from './searchbar'
 import { SearchBarPanel } from './searchbar-panel'
 import { isContainerRendering, isKText, KColoring, KRectangle, KText } from '../skgraph-models'
+import { getReservedStructuralTags } from '../filtering/reserved-structural-tags'
 
 export type ShowSearchBarAction = SetUIExtensionVisibilityAction
 
@@ -352,7 +353,7 @@ export class HandleSearchAction implements IActionHandler {
         if (!results) return
 
         const seenTags = new Set<string>()
-        const tags: { tag: string; num?: number }[] = []
+        const tags: { tag: string; num?: number }[] = getReservedStructuralTags().map((tag) => ({ tag }))
 
         const collectFrom = (obj: any) => {
             const tagProp = obj?.properties?.['de.cau.cs.kieler.klighd.semanticFilter.tags']
