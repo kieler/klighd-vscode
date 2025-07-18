@@ -100,8 +100,7 @@ export class SearchBar extends AbstractUIExtension {
             if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
                 this.panel.changeVisibility(true)
                 this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, SearchBar.ID, 'show'))
-                if (this.panel.getTags.length === 0)
-                    this.actionDispatcher.dispatch(RetrieveTagsAction.create(this.panel))
+                this.actionDispatcher.dispatch(RetrieveTagsAction.create(this.panel))
             }
         })
     }
