@@ -315,6 +315,7 @@ export class HandleSearchAction implements IActionHandler {
         if (UpdateHighlightsAction.isThisAction(action)) {
             if (action.selectedIndex === undefined || !action.results || !action.panel) return
             this.updateHighlights(action.selectedIndex, action.previousIndex, action.results, action.panel)
+            this.actionDispatcher.dispatch(CenterAction.create([modelId]))
         }
 
         /* searches for all tags on the model */

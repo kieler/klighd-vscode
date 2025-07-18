@@ -623,7 +623,10 @@ export class SearchBarPanel {
             event.preventDefault()
             this.selectedIndex = this.searchResults.length - 1
             this.usedArrowKeys = true
-            this.update()
+            this.actionDispatcher.dispatch(
+                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+            )
+            this.previousIndex = this.selectedIndex
             return
         }
 
@@ -631,7 +634,10 @@ export class SearchBarPanel {
             event.preventDefault()
             this.selectedIndex = 0
             this.usedArrowKeys = true
-            this.update()
+            this.actionDispatcher.dispatch(
+                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+            )
+            this.previousIndex = this.selectedIndex
             return
         }
 
@@ -640,6 +646,10 @@ export class SearchBarPanel {
                 event.preventDefault()
                 this.usedArrowKeys = true
                 this.selectedIndex = ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
+                this.actionDispatcher.dispatch(
+                    UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+                )
+                this.previousIndex = this.selectedIndex
                 break
 
             case 'ArrowUp':
@@ -647,6 +657,10 @@ export class SearchBarPanel {
                 this.usedArrowKeys = true
                 this.selectedIndex =
                     ((this.selectedIndex ?? 0) - 1 + this.searchResults.length) % this.searchResults.length
+                this.actionDispatcher.dispatch(
+                    UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+                )
+                this.previousIndex = this.selectedIndex
                 break
 
             case 'Enter': {
@@ -660,9 +674,16 @@ export class SearchBarPanel {
 
                 if (this.searchResults[this.selectedIndex]) {
                     this.panToElement(selected.id)
-                    this.actionDispatcher.dispatch(
-                        UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
-                    )
+                    if (!this.usedArrowKeys) {
+                        this.actionDispatcher.dispatch(
+                            UpdateHighlightsAction.create(
+                                this.selectedIndex,
+                                this.previousIndex,
+                                this.searchResults,
+                                this
+                            )
+                        )
+                    }
                     this.previousIndex = this.selectedIndex
                 }
 
