@@ -108,6 +108,10 @@
     transition: background-color 0.2s ease;
     cursor: pointer;
     background-color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%; 
 }
 
 .search-result-item:hover {
