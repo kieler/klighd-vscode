@@ -530,6 +530,8 @@ export class HandleSearchAction implements IActionHandler {
             if (typeof text === 'string' && text.trim()) {
                 if (isKText(element)) {
                     this.addHighlightToKText(element, element, color)
+                } else {
+                    this.addHighlightToElement(element, this.extractBounds(element), color)
                 }
             }
         }
