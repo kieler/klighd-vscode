@@ -21,8 +21,8 @@ import { SGraphImpl } from 'sprotty'
 import { createSemanticFilter } from '../../src/filtering/util'
 import { SKEdge, SKLabel, SKNode, SKPort } from '../../src/skgraph-models'
 
-describe('children list evaluation', () => {
-    it('$children and #children', () => {
+describe('reserved tags and lists tests', () => {
+    it('$children and #children list evaluation', () => {
         const ruleString = '$children >= 2'
         const filter = createSemanticFilter(ruleString)
 
