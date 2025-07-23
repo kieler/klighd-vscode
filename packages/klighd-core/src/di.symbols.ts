@@ -30,4 +30,6 @@ export const DISymbol = {
     BookmarkRegistry: Symbol('BookmarkRegistry'),
 
     ProxyView: Symbol('ProxyView'),
+
+    SearchBar: Symbol('SearchBar'),
 }
