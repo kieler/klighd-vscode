@@ -63,7 +63,7 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
                 return symbol.v
             }
         }
-        throw new Error(`Variable ${varSymbol} is undefined.`)
+        throw new Error(`Variable '${varSymbol}' is undefined. Available variables: ${this.symbolTableStack.map(s => s.k).join(', ')}`)
     }
 
     private getCurrentElement(): SKGraphElement {
