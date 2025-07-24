@@ -145,6 +145,11 @@
                     "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
                     "command": "klighd-vscode.diagram.refresh",
                     "group": "navigation@1"
+                },
+                {
+                    "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
+                    "command": "klighd-vscode.diagram.fit",
+                    "group": "navigation@2"
                 }
             ]
         }
