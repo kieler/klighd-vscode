@@ -77,7 +77,7 @@ export function createSemanticFilter(rule: string): (element: SKGraphElement) =>
     const tree = parser.semanticFilterRule()
 
     const visitor = new SemanticFilterRuleVisitor()
-    return visitor.visitSemanticFilterRule(tree)
+    return (element: SKGraphElement) => visitor.evaluateFilterForElement(tree, element)
 }
 
 // LEGACY SUPPORT

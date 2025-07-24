@@ -29,14 +29,6 @@ type FilterDefinition<T> = {
 
 /** Dictionary of boolean tags with their evaluation implementation. */
 const reservedStructuralTags: Record<string, FilterDefinition<boolean>> = {
-    children: {
-        description: 'True if there is at least one child.',
-        filter: (el: SKGraphElement) => el.children.length !== 0,
-    },
-    childNodes: {
-        description: 'True if there is at least one child that is a node.',
-        filter: (el: SKGraphElement) => el.children.some((child) => child instanceof SKNode),
-    },
     isNode: {
         description: 'True if the graph element is a node.',
         filter: (el: SKGraphElement) => el instanceof SKNode,
@@ -70,14 +62,6 @@ const reservedStructuralTags: Record<string, FilterDefinition<boolean>> = {
 
 /** Dictionary of numeric tags with their evaluation implementation. */
 const reservedNumericTags: Record<string, FilterDefinition<number>> = {
-    children: {
-        description: 'The number of children of the graph element.',
-        filter: (el: SKGraphElement) => el.children.length,
-    },
-    childNodes: {
-        description: 'The number of children that are nodes.',
-        filter: (el: SKGraphElement) => el.children.filter((child) => child instanceof SKNode).length,
-    },
     edgeDegree: {
         description: 'The number of edges connected to this graph element.',
         filter: (el: SKGraphElement) =>
