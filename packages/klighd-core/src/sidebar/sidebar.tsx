@@ -116,29 +116,30 @@ export class Sidebar extends AbstractUIExtension {
         this.oldPanelContentRoot = this.patcher(this.oldPanelContentRoot, content)
 
         // Show or hide the panel
+        this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
         if (currentPanel) {
             this.containerElement.classList.add('sidebar--open')
             // Set width of sidebar to maximum width of all opened panels.
-            this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
             document.documentElement.style.setProperty('--sidebar-width', `${this.maxWidth}px`)
         } else {
             this.containerElement.classList.remove('sidebar--open')
             // Reset sidebar width when closed
-            this.maxWidth = Math.max(this.maxWidth, this.containerElement.clientWidth)
             document.documentElement.style.setProperty('--sidebar-width', '0px')
         }
         // Find the canvas element and dispatch an action to re-initialize the canvas bounds.
         // This works since the previous css property will correctly set the width of the canvas.
-        const canvas = (content.elm as HTMLElement).parentElement?.parentElement
-        if (canvas) {
-            this.actionDispatcher.dispatch(
-                InitializeCanvasBoundsAction.create({
-                    x: canvas.clientLeft,
-                    y: canvas.clientTop,
-                    width: canvas.clientWidth,
-                    height: canvas.clientHeight,
-                })
-            )
+        if (content.elm instanceof HTMLElement) {
+            const canvas = content.elm.parentElement?.parentElement
+            if (canvas) {
+                this.actionDispatcher.dispatch(
+                    InitializeCanvasBoundsAction.create({
+                        x: canvas.clientLeft,
+                        y: canvas.clientTop,
+                        width: canvas.clientWidth,
+                        height: canvas.clientHeight,
+                    })
+                )
+            }
         }
     }
 
