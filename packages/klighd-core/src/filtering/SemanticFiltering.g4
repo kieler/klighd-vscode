@@ -20,37 +20,70 @@
 The following tree shows the precedences of the semantic filtering grammar.
 Deeper levels of the tree have a higher precedence i.e. bind more tightly.
 
-positionalFilterRule
-└── orExpr                              (||)
-    └── andExpr                         (&&)
-        └── notExpr                     (!)
-            └── equalsExpr              (=, !=)
-                ├── comparisonExpr      (>=, >, <=, <)
-                │   └── addExpr         (+, -)
-                │       └── multExpr    (*, /, %)
-                │           └── numAtom (unary -)
-                │               └── DOUBLE | numtag | (addExpr)
-                └── addExpr (alternative path)
-                    └── multExpr
-                        └── numAtom
+semanticFilterRule
+└── orExpr                              (||, lowest precedence)
+    └── andExpr                        (&&)
+        └── notExpr                    (!)
+            └── equalsExpr             (=, !=)
+                ├── boolAtom
+                │   ├── TRUE | FALSE
+                │   ├── tagExpr        (#id or # [x:list | pred])
+                │   ├── existsExpr     (exists[x:list|pred])
+                │   ├── forallExpr     (forall[x:list|pred])
+                │   └── '(' orExpr ')' (parentheses)
+                ├── comparisonExpr ((EQ|NEQ) comparisonExpr)?
+                │   └── addExpr       (+, -)
+                ├── addExpr ((EQ|NEQ) addExpr)?
+                │   └── multExpr      (*, /, %)
+                │       └── numAtom   (unary - optional)
+                │           ├── DOUBLE
+                │           ├── numtagExpr ($id or $ [x:list|pred])
+                │           └── '(' addExpr ')'
+                └── ID ((EQ | NEQ) ID)?  (simple identifiers with optional =/!=)
+                
+comparisonExpr
+└── addExpr ((>=, >, <=, <) addExpr)
 
-boolAtom (used in equalsExpr)
-└── TRUE | FALSE | tag | (orExpr)
+addExpr
+└── multExpr ((+, -) multExpr)*
 
-tag / numtag
-└── TAG/NUMTAG ID
+multExpr
+└── numAtom ((* / %) numAtom)*
 
-positionalQuantifier
-└── SELF | PARENT | CHILD | CHILDREN | ...
+boolAtom
+└── TRUE | FALSE | tagExpr | existsExpr | forallExpr | '(' orExpr ')'
+
+numAtom
+└── optional '-' DOUBLE
+└── numtagExpr
+└── '(' addExpr ')'
+
+forallExpr
+└── 'forall' '[' ID ':' listExpr '|' varExpr ']'
+
+existsExpr
+└── 'exists' '[' ID ':' listExpr '|' varExpr ']'
+
+tagExpr
+└── '#' ID
+└── '#' listExpr
+
+numtagExpr
+└── '$' ID
+└── '$' listExpr
+
+listExpr
+└── list (SELF | PARENT | CHILDREN | SIBLINGS | ADJACENTS)
+└── '[' ID ':' listExpr '|' varExpr ']'
+
+varExpr
+└── orExpr
+└── ID '<' orExpr '>'
+
  */
 grammar SemanticFiltering;
 
-semanticFilterRule: positionalFilterRule EOF;
-
-positionalFilterRule
-    : orExpr
-    | positionalQuantifier '[' orExpr ']'
-    ;
+semanticFilterRule: orExpr EOF;
 
 orExpr
     : andExpr (OR andExpr)*
@@ -66,9 +99,10 @@ notExpr
     ;
 
 equalsExpr
-    : comparisonExpr ((EQ | NEQ) comparisonExpr)?
+    : boolAtom
+    | comparisonExpr ((EQ | NEQ) comparisonExpr)?
     | addExpr ((EQ | NEQ) addExpr)
-    | boolAtom
+    | ID ((EQ | NEQ) ID)
     ;
 
 comparisonExpr
@@ -86,14 +120,48 @@ multExpr
 boolAtom
     : TRUE
     | FALSE
-    | tag
+    | tagExpr
+    | existsExpr
+    | forallExpr
     | '(' orExpr ')'
     ;
 
 numAtom
     : SUB? DOUBLE
-    | numtag
+    | numtagExpr
     | '(' addExpr ')'
+    ;
+
+forallExpr
+    : 'forall' listComprehension
+    ;
+
+existsExpr
+    : 'exists' listComprehension
+    ;
+
+tagExpr
+    : TAG ID
+    | TAG listExpr
+    ;
+
+numtagExpr
+    : NUMTAG ID
+    | NUMTAG listExpr
+    ;
+
+listExpr
+    : list
+    | listComprehension
+    ;
+
+listComprehension
+    : '[' ID ':' listExpr '|' varExpr ']'
+    ;
+
+varExpr
+    : orExpr
+    | ID '<' orExpr '>'
     ;
 
 DOUBLE
@@ -111,35 +179,27 @@ fragment EXPONENT_PART
     : [eE] [+-]? DIGITS
     ;
 
-positionalQuantifier
+list
     : SELF
     | PARENT
-    | CHILD
     | CHILDREN
-    | SIBLING
     | SIBLINGS
-    | ADJACENT
     | ADJACENTS
     ;
-    
-tag: TAG ID;
-numtag: NUMTAG ID;
 
 TAG: '#';
 NUMTAG: '$';
-ID: [a-zA-Z]+;
 
-SELF:      '~';
-PARENT:    '~'( 'p' | 'parent' );
-CHILD:     '~'( 'c' | 'child' );
-CHILDREN:  '~'( 'cs' | 'children' );
-SIBLING:   '~'( 's' | 'sibling' );
-SIBLINGS:  '~'( 'ss' | 'siblings' );
-ADJACENT:  '~'( 'a' | 'adjacent' );
-ADJACENTS: '~'( 'as' | 'adjacents' );
+SELF:      'self';
+PARENT:    'parent';
+CHILDREN:  'children';
+SIBLINGS:  'siblings';
+ADJACENTS: 'adjacents';
 
 TRUE: 'true';
 FALSE: 'false';
+
+ID: [a-zA-Z]+;
 
 MULT: '*';
 DIV: '/';
