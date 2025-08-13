@@ -17,10 +17,11 @@
 
 import { ElkNode, LayoutOptions } from 'elkjs'
 import { inject, injectable } from 'inversify'
-import { HiddenModelViewer, IActionDispatcher, IViewer, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
+import { HiddenModelViewer, IActionDispatcher, SChildElementImpl, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
 import { DefaultLayoutConfigurator, ILayoutPostprocessor } from 'sprotty-elk'
 import {
     Action,
+    Bounds,
     ComputedBoundsAction,
     ElementAndAlignment,
     ElementAndBounds,
@@ -29,7 +30,11 @@ import {
     SModelElement,
     SModelIndex,
 } from 'sprotty-protocol'
-import { KRectangle, KText, SKNode } from './skgraph-models'
+import { isRendering, isSKGraphElement, K_RENDERING_REF, KRectangle, KRendering, KText, SKNode } from './skgraph-models'
+import { boundsMax } from './micro-layout/bounds-util'
+import { estimateSize } from './micro-layout/placement-util'
+import { SKGraphModelRenderer } from './skgraph-model-renderer'
+import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 
 /**
  * This layout configurator copies all layout options from the KGraph element's properties.
@@ -105,45 +110,86 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
 
         // }
 
-        // This squishes the text smaller than it should be
-        // "klighd.calculated.text.bounds":{"x":0.0,"y":-8.249939,"width":38.666668,"height":18.567862}
-        const ktext = ((model.children[0].children[0] as SKNode).data[0] as KRectangle).children[0] as KText
-        ktext.properties['klighd.calculated.text.bounds'] = { x: 3.0, y: -5.0, width: 10.0, height: 18.567862 }
-        ktext.properties['klighd.lsp.calculated.bounds'] = { x: 3.0, y: 0.0, width: 10.0, height: 18.567862 }
-        ktext.properties['klighd.calculated.text.line.widths'] = [10]
+        // // This squishes the text smaller than it should be
+        // // "klighd.calculated.text.bounds":{"x":0.0,"y":-8.249939,"width":38.666668,"height":18.567862}
+        // const ktext = ((model.children[0].children[0] as SKNode).data[0] as KRectangle).children[0] as KText
+        // ktext.properties['klighd.calculated.text.bounds'] = { x: 3.0, y: -5.0, width: 10.0, height: 18.567862 }
+        // ktext.properties['klighd.lsp.calculated.bounds'] = { x: 3.0, y: 0.0, width: 10.0, height: 18.567862 }
+        // ktext.properties['klighd.calculated.text.line.widths'] = [10]
 
-        // This streches the rectangle longer than the node
-        // "klighd.lsp.calculated.bounds":{"x":10.0,"y":8.0,"width":375.54166,"height":18.567863}
-        ;((model.children[0].children[0] as SKNode).data[0] as KRectangle).properties['klighd.lsp.calculated.bounds'] =
-            {
-                x: 40.0,
-                y: 8.0,
-                width: 375.54166,
-                height: 18.567863,
+        // // This streches the rectangle longer than the node
+        // // "klighd.lsp.calculated.bounds":{"x":10.0,"y":8.0,"width":375.54166,"height":18.567863}
+        // ;((model.children[0].children[0] as SKNode).data[0] as KRectangle).properties['klighd.lsp.calculated.bounds'] =
+        //     {
+        //         x: 40.0,
+        //         y: 8.0,
+        //         width: 375.54166,
+        //         height: 18.567863,
+        //     }
+
+        // resizes.push({
+        //     elementId: '$root$NrectAroundText',
+        //     newSize: {
+        //         width: 40,
+        //         height: 20,
+        //         // width: 25.27276611328125,
+        //         // height: 13,
+        //     },
+        // })
+        // resizes.push({
+        //     elementId: '$root',
+        //     newSize: {
+        //         width: 40,
+        //         height: 20,
+        //         // width: 25.27276611328125,
+        //         // height: 13,
+        //     },
+        // })
+
+        const remainingElements: SKGraphElement[] = [model.children[0] as SKNode]
+        while (remainingElements.length > 0) {
+            const modelElement = remainingElements.pop()!
+            for (const child of modelElement.children) {
+                if (isSKGraphElement(child)) {
+                    remainingElements.push(child)
+                }
             }
+            const rendering = getKRendering(modelElement.data)
+            // TODO: determine MIN bounds
+            const minSize: Bounds = { x: 0, y: 0, width: 20, height: 20 }
 
-        resizes.push({
-            elementId: '$root$NrectAroundText',
-            newSize: {
-                width: 40,
-                height: 20,
-                // width: 25.27276611328125,
-                // height: 13,
-            },
-        })
-        resizes.push({
-            elementId: '$root',
-            newSize: {
-                width: 40,
-                height: 20,
-                // width: 25.27276611328125,
-                // height: 13,
-            },
-        })
+            if (rendering) {
+                const size = boundsMax(minSize, estimateSize(rendering, minSize))
+
+                // TODO: calculate insets
+
+                resizes.push({
+                    elementId: modelElement.id,
+                    newSize: size,
+                })
+            }
+            // TODO: else only calculate insets and push those resizes
+        }
+
         this.actionDispatcher.dispatch(
             ComputedBoundsAction.create(resizes, { revision, alignments, requestId: request.requestId })
         )
     }
+}
+
+// TODO: copied from view-common but stripped the SKGraphModelRenderer parts, those or something similar is necessary for KRenderingLibraries to work
+function getKRendering(datas: KGraphData[]): KRendering | undefined {
+    for (const data of datas) {
+        if (data !== null && data.type === K_RENDERING_REF) {
+            console.log('KRenderingLibrary lookup not implemented')
+        } else {
+            console.log('No KRenderingLibrary for KRenderingRef in context')
+        }
+        if (data !== null && isRendering(data)) {
+            return data
+        }
+    }
+    return undefined
 }
 
 /**
