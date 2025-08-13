@@ -17,7 +17,7 @@
 
 import { ElkNode, LayoutOptions } from 'elkjs'
 import { inject, injectable } from 'inversify'
-import { IActionDispatcher, IViewer, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
+import { HiddenModelViewer, IActionDispatcher, IViewer, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
 import { DefaultLayoutConfigurator, ILayoutPostprocessor } from 'sprotty-elk'
 import {
     Action,
@@ -57,12 +57,15 @@ export class KielerLayoutConfigurator extends DefaultLayoutConfigurator {
 }
 
 @injectable()
-export class KlighdHiddenModelViewer implements IViewer {
+export class KlighdHiddenModelViewer extends HiddenModelViewer {
     @inject(TYPES.ViewerOptions) protected options: ViewerOptions
 
     @inject(TYPES.IActionDispatcher) protected actionDispatcher: IActionDispatcher
 
     update(model: SModelRootImpl, cause?: Action): void {
+        if (cause?.kind !== RequestBoundsAction.KIND) {
+            return super.update(model, cause)
+        }
         console.log(model)
 
         // TODO:
@@ -75,6 +78,12 @@ export class KlighdHiddenModelViewer implements IViewer {
         // 3. call the macro layout like Sprotty does in its HiddenBoundsUpdater: `this.layouter.layout(this.element2boundsData)`
         // 4. (here or in the post-processor below) Do the micro layout calculation and persist all properties needed for the final rendering on the SKGraph
         // 5. dispatch a ComputedBoundsAction, see HiddenBoundsUpdater. `this.actionDispatcher.dispatch(ComputedBoundsAction.create(resizes, { revision, alignments, requestId: request.requestId }))`
+
+        // Update from Max
+        // it seems the way this is called is already correct
+        // 1. estimate sizes here and trigger ComputedBoundsAction
+        // 2. this is handled in the diagram-server, which triggers layout
+        // 3. calculate sizes in postprocessor
 
         const request = cause as RequestBoundsAction
         const resizes: ElementAndBounds[] = []
