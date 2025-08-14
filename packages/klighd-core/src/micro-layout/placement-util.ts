@@ -15,8 +15,20 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Bounds, ElementAndBounds } from 'sprotty-protocol'
-import { isContainerRendering, isKText, KContainerRendering, KRendering, KText } from '../skgraph-models'
+import { Bounds } from 'sprotty-protocol'
+import {
+    isAreaPlacementData,
+    isChildArea,
+    isContainerRendering,
+    isGridPlacementData,
+    isImage,
+    isKText,
+    isPointPlacementData,
+    isRenderingRef,
+    KContainerRendering,
+    KRendering,
+    KText,
+} from '../skgraph-models'
 import { boundsMax, emptyBounds } from './bounds-util'
 
 /**
@@ -26,14 +38,25 @@ import { boundsMax, emptyBounds } from './bounds-util'
  */
 export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
     let bounds = emptyBounds()
-    // TODO: get placement data
+    const { placementData } = rendering
 
-    // TODO: switch() over placement data: KAREA, KGRID, KPOINT
+    if (isAreaPlacementData(placementData)) {
+        // TODO
+    }
+    if (isGridPlacementData(placementData)) {
+        // TODO
+    }
+    if (isPointPlacementData(placementData)) {
+        // TODO
+    }
 
     // default:
     bounds = basicEstimateSize(rendering, givenBounds)
 
     // TODO: handle KImages
+    if (isImage(rendering)) {
+        // TODO: bounds = estimateImageSize(rendering, givenBounds)
+    }
 
     return bounds
 }
@@ -51,21 +74,19 @@ export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): B
     if (isKText(rendering)) {
         return estimateKTextSize(rendering as KText)
     }
-    // if (isKChildArea(rendering)) {
-    // TODO: implement isKChildArea
-    //    return emptyBounds()
-    // }
-    // if (isKRenderingRef(rendering)) {
-    //     // TODO: implement isKRenderingRef
-    //     // TODO: get referenced rendering and do
-    //     // return basicEstimateSize(retrievedRendering, givenBounds)
-    //     console.log('rendering refs not implemented')
-    //     return givenBounds
-    // }
+    if (isChildArea(rendering)) {
+        return emptyBounds()
+    }
+    if (isRenderingRef(rendering)) {
+        // TODO: get referenced rendering and do
+        // return basicEstimateSize(retrievedRendering, givenBounds)
+        console.log('rendering refs not implemented')
+        return givenBounds
+    }
     if (isContainerRendering(rendering)) {
         // TODO: placement handling, only default case for now
         // const placement = ...
-        // if (isKGridPlacement(placement)) {
+        // if (isGridPlacement(placement)) { 
         //         console.log('grid placement not implemented')
         //         return givenBounds
         // }

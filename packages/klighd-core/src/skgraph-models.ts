@@ -141,6 +141,7 @@ export interface KRendering extends KGraphData, KStyleHolder {
 
     /** If this rendering is used as a clip rendering. Will not be set in the model and is to be used during rendering only. */
     isClipRendering?: boolean
+    placementData: KPlacementData
 }
 
 /**
@@ -266,6 +267,61 @@ export interface KText extends KRendering {
  */
 export interface KRenderingLibrary extends KGraphData {
     renderings: KStyleHolder[]
+}
+
+/**
+ * Defines a placement for elements.
+ */
+export interface KPlacement {
+    type: string
+}
+
+/**
+ * Creates a grid with 'numColumns' inside the area defined by 'topLeft' and 'bottomRight'.
+ * the grids number of rows depends on the numer of child elements to be placed. Each child
+ * is set to the first free column inside the grid. If no column is left, the next
+ * childElement is placed in the first column of a new row.
+ */
+export interface KGridPlacement extends KPlacement {
+    numColumns: number
+    topLeft: KPosition
+    bottomRight: KPosition
+}
+
+export interface KPlacementData {
+    type: string
+}
+
+/**
+ * Specifies the area for an element by setting TopLeft and BottomRight corner absolutely.
+ */
+export interface KAreaPlacementData extends KPlacementData {
+    topLeft: KPosition
+    bottomRight: KPosition
+}
+
+/**
+ * Define the placement of elements in a gridPlacement.
+ */
+export interface KGridPlacementData extends KPlacementData {
+    minCellWidth: number
+    minCellHeight: number
+    flexibleWidth: boolean
+    flexibleHeight: boolean
+}
+
+/**
+ * with this placement it is possible to mount dynamic sized objects at a single point
+ * using the defined alignment
+ */
+export interface KPointPlacementData extends KPlacementData {
+    referencePoint: KPosition
+    horizontalAlignment: HorizontalAlignment
+    verticalAlignment: VerticalAlignment
+    horizontalMargin: number
+    verticalMargin: number
+    minWidth: number
+    minHeight: number
 }
 
 /**
@@ -670,6 +726,10 @@ export const K_SPLINE = 'KSplineImpl'
 export const K_RECTANGLE = 'KRectangleImpl'
 export const K_ROUNDED_RECTANGLE = 'KRoundedRectangleImpl'
 export const K_TEXT = 'KTextImpl'
+export const K_GRID_PLACEMENT = 'KGridPlacementImpl'
+export const K_AREA_PLACEMENT_DATA = 'KAreaPlacementDataImpl'
+export const K_GRID_PLACEMENT_DATA = 'KGridPlacementDataImpl'
+export const K_POINT_PLACEMENT_DATA = 'KPointPlacementDataImpl'
 
 /**
  * Returns if the given parameter is a KRendering.
@@ -718,6 +778,24 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
 }
 
 /**
+ * Returns true if the given parameter is a KChildArea.
+ * @param test The potential KChildArea.
+ */
+export function isChildArea(test: KGraphData): test is KChildArea {
+    const { type } = test
+    return type === K_CHILD_AREA
+}
+
+/**
+ * Returns true if the given parameter is a KRenderingRef.
+ * @param test The potential KRenderingRef.
+ */
+export function isRenderingRef(test: KGraphData): test is KRenderingRef {
+    const { type } = test
+    return type === K_RENDERING_REF
+}
+
+/**
  * Returns if the given parameter is a KPolyline.
  * @param test The potential KPolyline.
  */
@@ -733,6 +811,49 @@ export function isPolyline(test: KGraphData): test is KPolyline {
 export function isKText(test: KGraphData): test is KText {
     const { type } = test
     return type === K_TEXT
+}
+
+/**
+ * Returns true if the given parameter is a KImage.
+ * @param test The potential KImage
+ */
+export function isImage(test: KGraphData): test is KImage {
+    const { type } = test
+    return type === K_IMAGE
+}
+
+/**
+ * Returns true if the given parameter is a KGridPlacement.
+ * @param test The potential KGridPlacement.
+ */
+export function isGridPlacement(test: KPlacement): test is KGridPlacement {
+    const { type } = test
+    return type === K_GRID_PLACEMENT
+}
+
+/**
+ * Returns true if the given parameter is a KAreaPlacementData.
+ * @param test The potential KAreaPlacementData.
+ */
+export function isAreaPlacementData(test: KPlacementData): test is KAreaPlacementData {
+    const { type } = test
+    return type === K_AREA_PLACEMENT_DATA
+}
+/**
+ * Returns true if the given parameter is a KGridPlacementData.
+ * @param test The potential KGridPlacementData.
+ */
+export function isGridPlacementData(test: KPlacementData): test is KGridPlacementData {
+    const { type } = test
+    return type === K_GRID_PLACEMENT_DATA
+}
+/**
+ * Returns true if the given parameter is a KPointPlacementData.
+ * @param test The potential KPointPlacementData.
+ */
+export function isPointPlacementData(test: any): test is KPointPlacementData {
+    const { type } = test
+    return type === K_GRID_PLACEMENT
 }
 
 /**
