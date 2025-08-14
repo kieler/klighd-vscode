@@ -156,6 +156,7 @@ export type KChildArea = KRendering
  */
 export interface KContainerRendering extends KRendering {
     children: KRendering[]
+    childPlacement: KPlacement
 }
 
 /**
@@ -288,6 +289,9 @@ export interface KGridPlacement extends KPlacement {
     bottomRight: KPosition
 }
 
+/**
+ * Defines the placement for an element. Depending of the childPlacement of the parent not all placementData may be evaluated.
+ */
 export interface KPlacementData {
     type: string
 }
