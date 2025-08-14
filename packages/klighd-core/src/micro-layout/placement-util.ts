@@ -16,7 +16,7 @@
  */
 
 import { Bounds, ElementAndBounds } from 'sprotty-protocol'
-import { isContainerRendering, isKText, K_TEXT, KContainerRendering, KRendering, KText } from '../skgraph-models'
+import { isContainerRendering, isKText, KContainerRendering, KRendering, KText } from '../skgraph-models'
 import { boundsMax, emptyBounds } from './bounds-util'
 
 /**
@@ -48,8 +48,27 @@ export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): B
     // TODO: get id? KTEXT, KCHILD_AREA, KRENDERING_REF, KCONTAINER_RENDERING, KGRID_PLACEMENT
 
     // TODO: switch over id, lets assume KTEXT only for now
+    if (isKText(rendering)) {
+        return estimateKTextSize(rendering as KText)
+    }
+    // if (isKChildArea(rendering)) {
+    // TODO: implement isKChildArea
+    //    return emptyBounds()
+    // }
+    // if (isKRenderingRef(rendering)) {
+    //     // TODO: implement isKRenderingRef
+    //     // TODO: get referenced rendering and do
+    //     // return basicEstimateSize(retrievedRendering, givenBounds)
+    //     console.log('rendering refs not implemented')
+    //     return givenBounds
+    // }
     if (isContainerRendering(rendering)) {
         // TODO: placement handling, only default case for now
+        // const placement = ...
+        // if (isKGridPlacement(placement)) {
+        //         console.log('grid placement not implemented')
+        //         return givenBounds
+        // }
         let maxSize: Bounds = givenBounds
         for (const childRendering of (rendering as KContainerRendering).children) {
             const childSize: Bounds = estimateSize(childRendering, givenBounds)
@@ -58,10 +77,6 @@ export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): B
         // TODO: handling if container is a polyline
         return maxSize
     }
-    if (isKText(rendering)) {
-        return estimateKTextSize(rendering as KText)
-    }
-
     return givenBounds
 }
 
