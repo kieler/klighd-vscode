@@ -40,14 +40,12 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
     let bounds = emptyBounds()
     const { placementData } = rendering
 
-    if (isAreaPlacementData(placementData)) {
-        // TODO
-    }
-    if (isGridPlacementData(placementData)) {
-        // TODO
-    }
-    if (isPointPlacementData(placementData)) {
-        // TODO
+    if (isAreaPlacementData(placementData) || isGridPlacementData(placementData)) {
+        // TODO bounds = estimateAreaPlacedChildSize(placementData as KAreaPlacementData, givenBounds)
+        bounds = givenBounds
+    } else if (isPointPlacementData(placementData)) {
+        // TODO bounds = estimatePointPlacedChildSize(rendering, placementData as KPointPlacementData)
+        bounds = givenBounds
     }
 
     // default:

@@ -307,7 +307,7 @@ export interface KAreaPlacementData extends KPlacementData {
 /**
  * Define the placement of elements in a gridPlacement.
  */
-export interface KGridPlacementData extends KPlacementData {
+export interface KGridPlacementData extends KAreaPlacementData {
     minCellWidth: number
     minCellHeight: number
     flexibleWidth: boolean
@@ -840,6 +840,9 @@ export function isGridPlacement(test: KPlacement): test is KGridPlacement {
  * @param test The potential KAreaPlacementData.
  */
 export function isAreaPlacementData(test: KPlacementData): test is KAreaPlacementData {
+    if (!test) {
+        return false
+    }
     const { type } = test
     return type === K_AREA_PLACEMENT_DATA
 }
@@ -848,6 +851,9 @@ export function isAreaPlacementData(test: KPlacementData): test is KAreaPlacemen
  * @param test The potential KGridPlacementData.
  */
 export function isGridPlacementData(test: KPlacementData): test is KGridPlacementData {
+    if (!test) {
+        return false
+    }
     const { type } = test
     return type === K_GRID_PLACEMENT_DATA
 }
@@ -856,6 +862,9 @@ export function isGridPlacementData(test: KPlacementData): test is KGridPlacemen
  * @param test The potential KPointPlacementData.
  */
 export function isPointPlacementData(test: any): test is KPointPlacementData {
+    if (!test) {
+        return false
+    }
     const { type } = test
     return type === K_GRID_PLACEMENT
 }
