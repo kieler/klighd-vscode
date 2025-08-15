@@ -26,8 +26,11 @@ import {
     isKText,
     isPointPlacementData,
     isRenderingRef,
+    KAreaPlacementData,
     KContainerRendering,
     KImage,
+    KPointPlacementData,
+    KPosition,
     KRendering,
     KText,
 } from '../skgraph-models'
@@ -50,10 +53,9 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
     const { placementData } = rendering
 
     if (isAreaPlacementData(placementData) || isGridPlacementData(placementData)) {
-        // TODO bounds = estimateAreaPlacedChildSize(placementData as KAreaPlacementData, givenBounds)
-        bounds = givenBounds
+        bounds = estimateAreaPlacedChildSize(rendering, placementData as KAreaPlacementData, givenBounds)
     } else if (isPointPlacementData(placementData)) {
-        // TODO bounds = estimatePointPlacedChildSize(rendering, placementData as KPointPlacementData)
+        bounds = estimatePointPlacedChildSize(rendering, placementData as KPointPlacementData)
         bounds = givenBounds
     } else {
         bounds = basicEstimateSize(rendering, givenBounds)
@@ -79,7 +81,7 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
  *            {@link KShapeLayout} respectively
  * @return the minimal size
  */
-export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
+function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
     if (isKText(rendering)) {
         return estimateKTextSize(rendering as KText)
     }
@@ -117,7 +119,7 @@ export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): B
  *            the KText containing the text string whose size is to be estimated.
  * @return the minimal bounds for the {@link KText}
  */
-export function estimateKTextSize(kText: KText): Bounds {
+function estimateKTextSize(kText: KText): Bounds {
     if (kText.text === undefined) {
         if (kText.properties['klighd.labels.textOverride'] !== undefined) {
             return estimateTextSize(kText, kText.properties['klighd.labels.textOverride'] as string)
@@ -143,12 +145,12 @@ export function estimateKTextSize(kText: KText): Bounds {
  *            the actual text string whose size is to be estimated; maybe <code>null</code>
  * @return the minimal bounds for the string
  */
-export function estimateTextSize(kText: KText, text: string): Bounds {
+function estimateTextSize(kText: KText, text: string): Bounds {
     // TODO: actually figure out how to estimate the text size accurately
 
     // TODO: persist CALCULATED_TEXT_BOUNDS, CALCULATED_TEXT_LINE_WIDTHS, CALCULATED_TEXT_LINE_HEIGHTS in properties
 
-    // dummy data
+    // FIXME: dummy data
     return { x: 0, y: 0, width: 40, height: 30 }
 }
 
@@ -164,14 +166,87 @@ export function estimateTextSize(kText: KText, text: string): Bounds {
  * the absolute positioning components.<br>
  * <br>
  * If no clip shape is defined it simply returns <code>imageSize</code>.
- * 
+ *
  * @param image
  *            the {@link KImage}
  * @param imageSize
  *            the pre-calculated size of the image itself
  * @return the minimal size
  */
-export function estimateImageSize(image: KImage, givenBounds: Bounds) {
+function estimateImageSize(image: KImage, givenBounds: Bounds) {
     // TODO: implement image handling
     return givenBounds
+}
+
+/**
+ * Returns the required minimal size of a {@link KRendering} width attached
+ * {@link KAreaPlacementData}.
+ *
+ * @param container
+ *            the {@link KRendering} to be evaluated
+ * @param apd
+ *            the {@link KAreaPlacementData} to be applied
+ * @param givenBounds
+ *            the size that is currently assigned to <code>rendering</code>'s container.
+ *
+ * @return the minimal required size
+ */
+function estimateAreaPlacedChildSize(
+    rendering: KRendering,
+    areaPlacementData: KAreaPlacementData,
+    givenBounds: Bounds
+): Bounds {
+    const childSize = evaluateAreaPlacement(areaPlacementData, givenBounds)
+    const containerMinSize = basicEstimateSize(rendering, childSize)
+    return inverselyApplyBoundingBoxKPositions(
+        containerMinSize,
+        areaPlacementData.topLeft,
+        areaPlacementData.bottomRight
+    )
+}
+
+/**
+ * Inversely applies the given "passe-partout" determined by <code>topLeft</code> and
+ * <code>bottomRight</code> in order to calculate the outer bounds based on the given
+ * <code>innerBounds</code>. Method is used in the area placement and grid placement handling.
+ *
+ * @param innerBounds
+ *            the inner bounds to inversely apply the "passe-partout" on
+ * @param topLeft
+ *            the top left {@link KPosition}
+ * @param bottomRight
+ *            the bottom right {@link KPosition}
+ * @return the respective outer bounds
+ */
+function inverselyApplyBoundingBoxKPositions(innerBounds: Bounds, topLeft: KPosition, bottomRight: KPosition): Bounds {
+    // TODO: implement these required functions, this seems to be done strangely on the server
+    // return inverselyApplySizeData(
+    //     innerBounds,
+    //     getHorizontalSize(topLeft, bottomRight),
+    //     getVerticalSize(topLeft, bottomRight)
+    // )
+    return emptyBounds()
+}
+
+/**
+ * Returns the required minimal size of a {@link KRendering} width attached
+ * {@link KPointPlacementData}.
+ *
+ * @param rendering
+ *            the {@link KRendering} to be evaluated
+ * @param ppd the {@link KPointPlacementData} to be applied
+ *
+ * @return the minimal required size
+ */
+export function estimatePointPlacedChildSize(rendering: KRendering, pointPlacementData: KPointPlacementData): Bounds {
+    const minSize = { x: 0, y: 0, width: pointPlacementData.minWidth, height: pointPlacementData.minHeight }
+    const childSize = boundsMax(minSize, basicEstimateSize(rendering, minSize))
+    // TODO: implement these functions
+    // return {
+    //     x: 0,
+    //     y: 0,
+    //     width: getHorizontalSizeFromPointPlacementData(pointPlacementData, childSize.width),
+    //     height: getVerticalSizeFromPointPlacementData(pointPlacementData, childSize.height),
+    // }
+    return emptyBounds()
 }
