@@ -20,21 +20,30 @@ import {
     isAreaPlacementData,
     isChildArea,
     isContainerRendering,
+    isGridPlacement,
     isGridPlacementData,
     isImage,
     isKText,
     isPointPlacementData,
     isRenderingRef,
     KContainerRendering,
+    KImage,
     KRendering,
     KText,
 } from '../skgraph-models'
 import { boundsMax, emptyBounds } from './bounds-util'
 
 /**
- * TODO
- * @param rendering 
- * @param givenBounds 
+ * Estimates the minimal size of a KRendering.<br>
+ * The the previous defined size is incorporated while resolving relative placement/size
+ * constraints.
+ *
+ * @param rendering
+ *            the {@link KRendering} to be evaluated
+ * @param givenBounds
+ *            the size that is currently assigned to 'rendering's container or the related
+ *            {@link KShapeLayout} respectively
+ * @return the minimal size
  */
 export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
     let bounds = emptyBounds()
@@ -46,29 +55,31 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
     } else if (isPointPlacementData(placementData)) {
         // TODO bounds = estimatePointPlacedChildSize(rendering, placementData as KPointPlacementData)
         bounds = givenBounds
+    } else {
+        bounds = basicEstimateSize(rendering, givenBounds)
     }
 
-    // default:
-    bounds = basicEstimateSize(rendering, givenBounds)
-
-    // TODO: handle KImages
     if (isImage(rendering)) {
-        // TODO: bounds = estimateImageSize(rendering, givenBounds)
+        bounds = estimateImageSize(rendering as KImage, givenBounds)
     }
 
     return bounds
 }
 
 /**
- * TODO
- * @param rendering 
- * @param givenBounds 
- * @returns 
+ * Estimates the pure minimal size of a {@link KRendering} without evaluating its
+ * {@link KPlacementData} w.r.t. minimal size constraints.<br>
+ * The previous determined size is incorporated while resolving relative placement/size
+ * constraints.
+ *
+ * @param rendering
+ *            the {@link KRendering} to be evaluated
+ * @param givenBounds
+ *            the size that is currently assigned to 'rendering's container or the related
+ *            {@link KShapeLayout} respectively
+ * @return the minimal size
  */
 export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
-    // TODO: get id? KTEXT, KCHILD_AREA, KRENDERING_REF, KCONTAINER_RENDERING, KGRID_PLACEMENT
-
-    // TODO: switch over id, lets assume KTEXT only for now
     if (isKText(rendering)) {
         return estimateKTextSize(rendering as KText)
     }
@@ -82,12 +93,12 @@ export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): B
         return givenBounds
     }
     if (isContainerRendering(rendering)) {
-        // TODO: placement handling, only default case for now
-        // const placement = ...
-        // if (isGridPlacement(placement)) { 
-        //         console.log('grid placement not implemented')
-        //         return givenBounds
-        // }
+        const placement = (rendering as KContainerRendering).childPlacement
+        if (isGridPlacement(placement)) {
+            // TODO
+            console.log('grid placement not implemented')
+            return givenBounds
+        }
         let maxSize: Bounds = givenBounds
         for (const childRendering of (rendering as KContainerRendering).children) {
             const childSize: Bounds = estimateSize(childRendering, givenBounds)
@@ -100,17 +111,38 @@ export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): B
 }
 
 /**
- * TODO
- * @param kText 
+ * Returns the minimal bounds for a KText.
+ *
+ * @param kText
+ *            the KText containing the text string whose size is to be estimated.
+ * @return the minimal bounds for the {@link KText}
  */
 export function estimateKTextSize(kText: KText): Bounds {
     if (kText.text === undefined) {
-        // TODO: lots of special cases
-        return emptyBounds()
+        if (kText.properties['klighd.labels.textOverride'] !== undefined) {
+            return estimateTextSize(kText, kText.properties['klighd.labels.textOverride'] as string)
+        }
+
+        // TODO: Try to find the KText's parent label
+        // at the moment we have no easy access to parent's of KRenderings on the client
+
+        return estimateTextSize(kText, '')
     }
     return estimateTextSize(kText, kText.text)
 }
 
+/**
+ * Returns the minimal bounds for a string based on configurations of a {@link KText}. The
+ * string is handed over separately in order to allow the text size estimation for
+ * {@link KLabel KLabels}, whose text string is given outside of the {@link KText} rendering.
+ *
+ * @param kText
+ *            the KText providing font configurations like font name, size, and style; maybe
+ *            <code>null</code>
+ * @param text
+ *            the actual text string whose size is to be estimated; maybe <code>null</code>
+ * @return the minimal bounds for the string
+ */
 export function estimateTextSize(kText: KText, text: string): Bounds {
     // TODO: actually figure out how to estimate the text size accurately
 
@@ -118,4 +150,28 @@ export function estimateTextSize(kText: KText, text: string): Bounds {
 
     // dummy data
     return { x: 0, y: 0, width: 40, height: 30 }
+}
+
+/**
+ * Computes the minimal bounds of an {@link KImage}, esp. in case a clip shape is configured.<br>
+ * This method basically applies the area/point placement data of the clip shape to the already
+ * determined size of the KImage in order to avoid the extension of the, e.g., node to the
+ * complete bounds of the image.<br>
+ * <br>
+ * <b>Note</b> that the general assumption of the size estimation assuming the bounds of a child
+ * figure being completely encompassed by the bounds of the parent figure is not applied here!
+ * Instead, the size estimation of images is supposed to cope with negative values of, at least,
+ * the absolute positioning components.<br>
+ * <br>
+ * If no clip shape is defined it simply returns <code>imageSize</code>.
+ * 
+ * @param image
+ *            the {@link KImage}
+ * @param imageSize
+ *            the pre-calculated size of the image itself
+ * @return the minimal size
+ */
+export function estimateImageSize(image: KImage, givenBounds: Bounds) {
+    // TODO: implement image handling
+    return givenBounds
 }
