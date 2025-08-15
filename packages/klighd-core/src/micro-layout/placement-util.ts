@@ -15,7 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { Bounds } from 'sprotty-protocol'
+import { Bounds, Point } from 'sprotty-protocol'
 import {
     isAreaPlacementData,
     isChildArea,
@@ -25,11 +25,13 @@ import {
     isImage,
     isKText,
     isPointPlacementData,
+    isPolyline,
     isRenderingRef,
     KAreaPlacementData,
     KContainerRendering,
     KImage,
     KPointPlacementData,
+    KPolyline,
     KPosition,
     KRendering,
     KText,
@@ -106,7 +108,9 @@ function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
             const childSize: Bounds = estimateSize(childRendering, givenBounds)
             maxSize = boundsMax(givenBounds, childSize)
         }
-        // TODO: handling if container is a polyline
+        if (isPolyline(rendering)) {
+            maxSize = boundsMax(maxSize, evaluatePolylineBounds(rendering as KPolyline, maxSize))
+        }
         return maxSize
     }
     return givenBounds
@@ -249,4 +253,70 @@ export function estimatePointPlacedChildSize(rendering: KRendering, pointPlaceme
     //     height: getVerticalSizeFromPointPlacementData(pointPlacementData, childSize.height),
     // }
     return emptyBounds()
+}
+
+/**
+ * Returns the bounds for a polyline based on given bounds.
+ *
+ * @param line
+ *            the polyline with its points
+ * @param givenBounds
+ *            the given bounds
+ * @return the actual polyline's bounding box' bounds
+ */
+function evaluatePolylineBounds(line: KPolyline, givenBounds: Bounds): Bounds {
+    if (line.points.length === 0) {
+        return givenBounds
+    }
+
+    let maxX = Number.MIN_VALUE
+    let maxY = Number.MIN_VALUE
+    for (const polylinePoint of line.points) {
+        const point = evaluateKPosition(polylinePoint, givenBounds, true)
+        if (point.x > maxX) {
+            maxX = point.x
+        }
+        if (point.y > maxY) {
+            maxY = point.y
+        }
+    }
+    return boundsMax({ x: 0, y: 0, width: maxX, height: maxY }, givenBounds)
+}
+
+/**
+ * Evaluates a position inside given parent bounds.
+ *
+ * @param position
+ *            the position
+ * @param parentBounds
+ *            the parent bounds
+ * @param topLeft
+ *            in case position equals <code>null</code> assume a topLeft {@link KPosition},
+ *            and a bottomRight {@link KPosition} otherwise
+ * @return the evaluated position
+ */
+export function evaluateKPosition(position: KPosition, parentBounds: Bounds, topLeft: boolean): Point {
+    // TODO: implement missing functions
+    // const width = parentBounds.width
+    // const height = parentBounds.height
+    // const point = { x: 0, y: 0 }
+    // const xPos = topLeft ? toNonNullLeftPosition(position.x) : toNonNullRightPosition(position.x)
+    // const yPos = topLeft ? toNonNullTopPosition(position.y) : toNonNullBottomPosition(position.y)
+    // // TODO: the Java implementation here relies on interfaces to differentiate different types of positions,
+    // // we cannot do the same here so need to figure out a different solution
+    // // currently the client just treats left and right positions the same
+
+    // if (isLeftPosition(xPos)) {
+    //     point.x = xPos.relative * width + xPos.getAbsolute()
+    // } else {
+    //     point.x = width - xPos.getRelative() * width - xPos.getAbsolute()
+    // }
+
+    // if (yPos instanceof KTopPosition) {
+    //     point.y = yPos.getRelative() * height + yPos.getAbsolute()
+    // } else {
+    //     point.y = height - yPos.getRelative() * height - yPos.getAbsolute()
+    // }
+    // return point
+    return { x: position.x.relative, y: position.y.relative }
 }
