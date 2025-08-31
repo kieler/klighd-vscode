@@ -450,6 +450,13 @@ export class HandleSearchAction implements IActionHandler {
                         )
                         item.children = [...(item.children ?? []), highlightRect]
                     }
+                } else if (isKText(item)) {
+                    const alreadyHasHighlight = item.styles?.some(
+                        (style) => style.modifierId?.startsWith('searchHighlight')
+                    )
+                    if (!alreadyHasHighlight) {
+                        this.addHighlightToKText(element, element, color)
+                    }
                 }
             }
         }
@@ -465,12 +472,7 @@ export class HandleSearchAction implements IActionHandler {
         }
 
         const alreadyHighlighted = textElement.styles.some(
-            (style: any) =>
-                style.type === 'KBackgroundImpl' &&
-                style.color?.red === 255 &&
-                (style.color?.green === 255 || style.color?.green === 165) &&
-                style.color?.blue === 0 &&
-                style.highlightId === `searchHighlight-${parent.id}`
+            (style: any) => style.type === 'KBackgroundImpl' && style.highlightId === `searchHighlight-${parent.id}`
         )
 
         if (!alreadyHighlighted) {
