@@ -153,7 +153,6 @@ export class SearchBarPanel {
 
         if (vis) {
             document.addEventListener('keydown', this.handleEscapeKey)
-            document.addEventListener('keydown', this.handleExitKeycombo)
             document.addEventListener('keydown', this.handleTabKey)
             setTimeout(() => {
                 if (this.mainInput) {
@@ -171,13 +170,10 @@ export class SearchBarPanel {
             document.removeEventListener('keydown', this.handleEscapeKey)
             document.removeEventListener('keydown', this.handleKeyNavigation)
             document.removeEventListener('keydown', this.handleTabKey)
-            document.removeEventListener('keydown', this.handleExitKeycombo)
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
             }
-            this.tagInputVisible = false
-            this.clearError()
         }
     }
 
@@ -551,46 +547,12 @@ export class SearchBarPanel {
     }
 
     /**
-     * When pressing the escape key, the current input field resets, or the search bar closes if empty.
+     * When pressing the escape key, the search bar closes without clearing the input.
      * @param event keypress (esc key)
      */
     private handleEscapeKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
-            const active = document.activeElement as HTMLElement | null
-
-            // Check if there's any input to clear
-            const mainInputHasValue = this.mainInput && this.mainInput.value !== ''
-            const tagInputHasValue = this.tagInput && this.tagInput.value !== ''
-
-            if (active === this.mainInput && mainInputHasValue) {
-                // Clear main input if it has content
-                this.mainInput!.value = ''
-                this.mainInput!.focus()
-                this.handleInputChange()
-            } else if (active === this.tagInput && tagInputHasValue) {
-                // Clear tag input if it has content
-                this.tagInput!.value = ''
-                this.tagInput!.focus()
-                this.handleInputChange()
-            } else {
-                // Close the search bar if inputs are empty or no input is focused
-                this.changeVisibility(false)
-                this.searched = false
-                this.tagInputVisible = false
-                this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
-            }
-        }
-    }
-
-    /**
-     * Closes the search bar with a key combination
-     * @param event keycombination ctrl+x
-     */
-    private handleExitKeycombo = (event: KeyboardEvent) => {
-        if ((event.metaKey || event.ctrlKey) && event.key === 'x') {
             this.changeVisibility(false)
-            this.searched = false
-            this.tagInputVisible = false
             this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
         }
     }
