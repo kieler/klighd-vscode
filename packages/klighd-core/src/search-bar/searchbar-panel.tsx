@@ -551,22 +551,34 @@ export class SearchBarPanel {
     }
 
     /**
-     * When pressing the escape key, the current input field resets.
+     * When pressing the escape key, the current input field resets, or the search bar closes if empty.
      * @param event keypress (esc key)
      */
     private handleEscapeKey = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
             const active = document.activeElement as HTMLElement | null
 
-            if (active === this.mainInput && this.mainInput) {
-                this.mainInput.value = ''
-                this.mainInput.focus()
-            } else if (active === this.tagInput && this.tagInput) {
-                this.tagInput.value = ''
-                this.tagInput.focus()
-            }
+            // Check if there's any input to clear
+            const mainInputHasValue = this.mainInput && this.mainInput.value !== ''
+            const tagInputHasValue = this.tagInput && this.tagInput.value !== ''
 
-            this.handleInputChange()
+            if (active === this.mainInput && mainInputHasValue) {
+                // Clear main input if it has content
+                this.mainInput!.value = ''
+                this.mainInput!.focus()
+                this.handleInputChange()
+            } else if (active === this.tagInput && tagInputHasValue) {
+                // Clear tag input if it has content
+                this.tagInput!.value = ''
+                this.tagInput!.focus()
+                this.handleInputChange()
+            } else {
+                // Close the search bar if inputs are empty or no input is focused
+                this.changeVisibility(false)
+                this.searched = false
+                this.tagInputVisible = false
+                this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
+            }
         }
     }
 
