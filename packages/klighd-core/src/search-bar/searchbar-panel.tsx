@@ -166,6 +166,10 @@ export class SearchBarPanel {
                 document.body.appendChild(tooltip)
                 this.tooltipEl = tooltip
             }
+            // Re-add highlights if there are existing search results
+            if (this.searched && this.searchResults.length > 0) {
+                this.performSearch()
+            }
         } else {
             document.removeEventListener('keydown', this.handleEscapeKey)
             document.removeEventListener('keydown', this.handleKeyNavigation)
