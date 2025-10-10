@@ -31,19 +31,19 @@ type FilterDefinition<T> = {
 const reservedStructuralTags: Record<string, FilterDefinition<boolean>> = {
     isNode: {
         description: 'True if the graph element is a node.',
-        filter: (el: SKGraphElement) => el instanceof SKNode,
+        filter: (el: SKGraphElement) => el instanceof SKNode || el.type === 'node',
     },
     isEdge: {
         description: 'True if the graph element is an edge.',
-        filter: (el: SKGraphElement) => el instanceof SKEdge,
+        filter: (el: SKGraphElement) => el instanceof SKEdge || el.type === 'edge',
     },
     isPort: {
         description: 'True if the graph element is a port.',
-        filter: (el: SKGraphElement) => el instanceof SKPort,
+        filter: (el: SKGraphElement) => el instanceof SKPort || el.type === 'port',
     },
     isLabel: {
         description: 'True if the graph element is a label.',
-        filter: (el: SKGraphElement) => el instanceof SKLabel,
+        filter: (el: SKGraphElement) => el instanceof SKLabel || el.type === 'label',
     },
     edgeDegree: {
         description: 'True if the graph element has at least one incident edge.',
