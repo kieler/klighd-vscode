@@ -602,6 +602,19 @@ export class HandleSearchAction implements IActionHandler {
     }
 
     /**
+     * Add an element to the results and highlight it.
+     * @param element the graph element
+     * @param results the array containing all results
+     * @param textRes the array containing all text matches
+     */
+    private processElement(element: SModelElement, results: SModelElement[], textRes: string[]) {
+        results.push(element)
+        textRes.push('')
+        const bounds = this.extractBounds(element)
+        this.addHighlightToElement(element, bounds, 'yellow')
+    }
+
+    /**
      * Extracts bounds from an element
      * @param element the element, whose bounds need to be extracted
      */
@@ -669,30 +682,35 @@ export class HandleSearchAction implements IActionHandler {
         while (queue.length > 0) {
             const element = queue.shift()!
 
-            /* handle elements with text field */
-            switch (element.type) {
-                case 'label':
-                case 'edge':
-                case 'node':
-                case 'port':
-                    if ('text' in element) {
-                        const { text } = element as any
-                        if (typeof text === 'string' && text.trim()) {
-                            this.processTextMatch(element, element, lowerQuery, results, textRes, regex)
+            if (query === '') {
+                /* add all elements if text query is empty */
+                this.processElement(element, results, textRes)
+            } else {
+                /* handle elements with text field */
+                switch (element.type) {
+                    case 'label':
+                    case 'edge':
+                    case 'node':
+                    case 'port':
+                        if ('text' in element) {
+                            const { text } = element as any
+                            if (typeof text === 'string' && text.trim()) {
+                                this.processTextMatch(element, element, lowerQuery, results, textRes, regex)
+                            }
                         }
-                    }
-                    break
-                default:
-                    break
-            }
+                        break
+                    default:
+                        break
+                }
 
-            /* Process data field for renderings */
-            const dataArr = (element as any).data
-            if (Array.isArray(dataArr) && dataArr.length > 0) {
-                const data = dataArr[0]
-                if (data && Array.isArray(data.children)) {
-                    for (const child of data.children) {
-                        visitRendering(child, element)
+                /* Process data field for renderings */
+                const dataArr = (element as any).data
+                if (Array.isArray(dataArr) && dataArr.length > 0) {
+                    const data = dataArr[0]
+                    if (data && Array.isArray(data.children)) {
+                        for (const child of data.children) {
+                            visitRendering(child, element)
+                        }
                     }
                 }
             }
