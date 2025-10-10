@@ -21,7 +21,7 @@ import {
     RefreshLayoutAction,
 } from '@kieler/klighd-core'
 import 'reflect-metadata'
-import { CenterAction } from 'sprotty-protocol'
+import { CenterAction, FitToScreenAction } from 'sprotty-protocol'
 import * as vscode from 'vscode'
 import { command } from './constants'
 import { KLighDWebviewPanelManager } from './webview-panel-manager'
@@ -80,7 +80,12 @@ export function registerCommands(manager: KLighDWebviewPanelManager, context: vs
         vscode.commands.registerCommand(command.diagramRefresh, () => {
             const activeWebview = manager.findActiveWebview()
             if (activeWebview) {
-                activeWebview.sendAction(RefreshDiagramAction.create())
+                activeWebview.sendAction(RefreshDiagramAction.create()).then(() => {
+                    // If the diagram should resize to fit, send a resize to fit action.
+                    if (manager.storageService.getItem(FitToScreenAction.KIND)) {
+                        activeWebview.sendAction(KlighdFitToScreenAction.create(true))
+                    }
+                })
             }
         })
     )

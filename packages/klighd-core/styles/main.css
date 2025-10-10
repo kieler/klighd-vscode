@@ -26,6 +26,7 @@
 .sprotty {
     /* Disable text selection in diagrams and sidebar panels. */
     user-select: none;
+    width: calc(100vw - var(--sidebar-width));
 }
 
 button > svg {

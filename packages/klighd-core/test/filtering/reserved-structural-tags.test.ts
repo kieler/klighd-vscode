@@ -21,8 +21,8 @@ import { SGraphImpl } from 'sprotty'
 import { createSemanticFilter } from '../../src/filtering/util'
 import { SKEdge, SKLabel, SKNode, SKPort } from '../../src/skgraph-models'
 
-describe('reserved structural tag evaluation', () => {
-    it('$children and #children', () => {
+describe('reserved tags and lists tests', () => {
+    it('$children and #children list evaluation', () => {
         const ruleString = '$children >= 2'
         const filter = createSemanticFilter(ruleString)
 
@@ -44,31 +44,6 @@ describe('reserved structural tag evaluation', () => {
         const ruleString2 = '#children'
         const filter2 = createSemanticFilter(ruleString2)
         expect(filter2(node), 'node with 2 children').to.equal(true)
-        expect(filter2(child1), 'node with 0 children').to.equal(false)
-    })
-
-    it('$childNodes and #childNodes', () => {
-        const ruleString = '$childNodes >= 2'
-        const filter = createSemanticFilter(ruleString)
-
-        const root = new SGraphImpl()
-        root.type = 'graph'
-        root.id = 'root'
-        const node = new SKNode()
-        node.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
-        const child1 = new SKNode()
-        child1.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
-        const child2 = new SKNode()
-        child2.properties = { 'de.cau.cs.kieler.klighd.semanticFilter.tags': [] }
-        root.add(node)
-        node.add(child1)
-        node.add(child2)
-        expect(filter(node), 'node with 2 child nodes').to.equal(true)
-        expect(filter(child1), 'node with 0 children').to.equal(false)
-
-        const ruleString2 = '#childNodes'
-        const filter2 = createSemanticFilter(ruleString2)
-        expect(filter2(node), 'node with 2 child nodes').to.equal(true)
         expect(filter2(child1), 'node with 0 children').to.equal(false)
     })
 

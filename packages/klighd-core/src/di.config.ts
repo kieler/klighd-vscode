@@ -85,7 +85,7 @@ const kGraphDiagramModule = new ContainerModule(
         // Our own layout configurator that just copies the element's poperties as the layout options.
         bind(KielerLayoutConfigurator).toSelf().inSingletonScope()
         rebind(ILayoutConfigurator).to(KielerLayoutConfigurator).inSingletonScope()
-        const elkFactory: ElkFactory = () => new ElkConstructor({ algorithms: ['layered'] }) // See elkjs documentation
+        const elkFactory: ElkFactory = () => new ElkConstructor() // See elkjs documentation
         bind(ElkFactory).toConstantValue(elkFactory)
 
         rebind(TYPES.CommandStackOptions).toConstantValue({
