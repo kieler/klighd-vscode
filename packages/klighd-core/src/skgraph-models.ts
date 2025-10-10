@@ -677,6 +677,9 @@ export const K_TEXT = 'KTextImpl'
  * @param test The potential KRendering.
  */
 export function isRendering(test: KGraphData): test is KRendering {
+    if (test === null) {
+        return false
+    }
     const { type } = test
     return (
         type === K_RENDERING_REF ||
@@ -701,6 +704,9 @@ export function isRendering(test: KGraphData): test is KRendering {
  * @param test The potential KContainerRendering.
  */
 export function isContainerRendering(test: KGraphData): test is KContainerRendering {
+    if (test === null) {
+        return false
+    }
     const { type } = test
     return (
         type === K_CONTAINER_RENDERING ||
@@ -722,6 +728,9 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
  * @param test The potential KPolyline.
  */
 export function isPolyline(test: KGraphData): test is KPolyline {
+    if (test === null) {
+        return false
+    }
     const { type } = test
     return type === K_POLYLINE || type === K_POLYGON || type === K_ROUNDED_BENDS_POLYLINE || type === K_SPLINE
 }
@@ -731,6 +740,9 @@ export function isPolyline(test: KGraphData): test is KPolyline {
  * @param test The potential KText
  */
 export function isKText(test: KGraphData): test is KText {
+    if (test === null) {
+        return false
+    }
     const { type } = test
     return type === K_TEXT
 }
@@ -740,6 +752,9 @@ export function isKText(test: KGraphData): test is KText {
  * @param test The potential SKGraphElement.
  */
 export function isSKGraphElement(test: unknown): test is SKGraphElement {
+    if (test === null) {
+        return false
+    }
     return (
         test instanceof SModelElementImpl &&
         (test as any).areChildAreaChildrenRendered !== undefined &&
