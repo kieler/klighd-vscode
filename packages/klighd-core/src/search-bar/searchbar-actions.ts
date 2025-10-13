@@ -353,7 +353,7 @@ export class HandleSearchAction implements IActionHandler {
      * @param panel the search bar panel
      */
     private retrieveTags(root: SModelElement, panel: SearchBarPanel): void {
-        const results = this.searchModel(root, '', '', panel) // TODO: replace this with something that doesn't does query stuff
+        const results = this.searchModel(root, '', 'true', panel) // TODO: replace this with something that doesn't do query stuff
         if (!results) return
 
         const seenTags = new Set<string>()
