@@ -336,9 +336,12 @@ export class HandleSearchAction implements IActionHandler {
 
         if (!isTextQuery && !isTagQuery) return
 
-        const results: SModelElement[] = isTagQuery
-            ? this.searchTags(HandleSearchAction.currentModel, query, tagQuery, action.panel)
-            : this.searchModel(HandleSearchAction.currentModel, query, action.panel)
+        const results: SModelElement[] = this.searchModel(
+            HandleSearchAction.currentModel,
+            query,
+            tagQuery,
+            action.panel
+        )
 
         action.panel.setResults(results)
         action.panel.update()
@@ -350,7 +353,7 @@ export class HandleSearchAction implements IActionHandler {
      * @param panel the search bar panel
      */
     private retrieveTags(root: SModelElement, panel: SearchBarPanel): void {
-        const results = this.searchModel(root, '', panel)
+        const results = this.searchModel(root, '', '', panel) // TODO: replace this with something that doesn't does query stuff
         if (!results) return
 
         const seenTags = new Set<string>()
@@ -582,6 +585,7 @@ export class HandleSearchAction implements IActionHandler {
         parent: SModelElement,
         element: any,
         query: string,
+        filter: (el: any) => boolean,
         results: SModelElement[],
         textRes: string[],
         regex: RegExp | null
@@ -589,7 +593,7 @@ export class HandleSearchAction implements IActionHandler {
         const { text } = element as unknown as KText
         const matches = regex ? regex.test(text) : text.toLowerCase().includes(query)
 
-        if (matches) {
+        if (matches && filter(parent)) {
             results.push(parent)
             textRes.push(text)
             if (isKText(element)) {
@@ -609,9 +613,10 @@ export class HandleSearchAction implements IActionHandler {
      */
     private processElement(element: SModelElement, results: SModelElement[], textRes: string[]) {
         results.push(element)
-        textRes.push('')
         const bounds = this.extractBounds(element)
         this.addHighlightToElement(element, bounds, 'yellow')
+        const name = this.extractDisplayName(element)
+        textRes.push(name)
     }
 
     /**
@@ -644,6 +649,7 @@ export class HandleSearchAction implements IActionHandler {
         }
     }
 
+    // TODO: extract highlighting functionality so that search model can be used for any search
     /**
      * Perform a breadth-first search on {@param root} to find {@param query}
      * @param root the model
@@ -651,7 +657,7 @@ export class HandleSearchAction implements IActionHandler {
      * @param panel the search bar panel
      * @returns array of results
      */
-    private searchModel(root: SModelElement, query: string, panel: SearchBarPanel): SModelElement[] {
+    private searchModel(root: SModelElement, query: string, tagQuery: string, panel: SearchBarPanel): SModelElement[] {
         const results: SModelElement[] = []
         const textRes: string[] = []
         const regex = panel.isRegex ? this.compileRegex(query, panel) : null
@@ -668,7 +674,7 @@ export class HandleSearchAction implements IActionHandler {
 
             /* Check KText */
             if (isKText(rendering) && rendering.text) {
-                this.processTextMatch(parent, rendering, lowerQuery, results, textRes, regex)
+                this.processTextMatch(parent, rendering, lowerQuery, filter, results, textRes, regex)
             }
 
             /* Check KContainerElements */
@@ -679,12 +685,25 @@ export class HandleSearchAction implements IActionHandler {
             }
         }
 
+        let filter: (el: any) => boolean = () => true
+        if (tagQuery !== '') {
+            try {
+                filter = createSemanticFilter(tagQuery)
+            } catch (e) {
+                const errorMessage = e instanceof Error ? e.message : String(e)
+                panel.setError(errorMessage)
+                return results
+            }
+        }
+
         while (queue.length > 0) {
             const element = queue.shift()!
 
             if (query === '') {
                 /* add all elements if text query is empty */
-                this.processElement(element, results, textRes)
+                if (filter(element)) {
+                    this.processElement(element, results, textRes)
+                }
             } else {
                 /* handle elements with text field */
                 switch (element.type) {
@@ -695,7 +714,7 @@ export class HandleSearchAction implements IActionHandler {
                         if ('text' in element) {
                             const { text } = element as any
                             if (typeof text === 'string' && text.trim()) {
-                                this.processTextMatch(element, element, lowerQuery, results, textRes, regex)
+                                this.processTextMatch(element, element, lowerQuery, filter, results, textRes, regex)
                             }
                         }
                         break
@@ -749,52 +768,5 @@ export class HandleSearchAction implements IActionHandler {
             }
         }
         return element.id
-    }
-
-    /**
-     * Performs a tag search on the model
-     * @param root the model
-     * @param textQuery the user text input
-     * @param tagQuery the tags the user entered
-     * @param panel the search bar panel
-     * @returns an array with all query results
-     */
-    private searchTags(
-        root: SModelElement,
-        textQuery: string,
-        tagQuery: string,
-        panel: SearchBarPanel
-    ): SModelElement[] {
-        const results: SModelElement[] = []
-        const textRes: string[] = []
-        const isMixedQuery: boolean = textQuery !== '' && tagQuery !== ''
-
-        let filter: (el: any) => boolean = () => false
-        try {
-            filter = createSemanticFilter(tagQuery)
-        } catch (e) {
-            const errorMessage = e instanceof Error ? e.message : String(e)
-            panel.setError(errorMessage)
-            return results
-        }
-
-        const textResults = this.searchModel(root, textQuery, panel)
-        for (const result of textResults) {
-            if (result && filter(result)) {
-                if (!isMixedQuery) {
-                    this.removeSpecificHighlight(result)
-                    const bounds = this.extractBounds(result)
-                    this.addHighlightToElement(result, bounds, 'yellow')
-                }
-                results.push(result)
-                const name = this.extractDisplayName(result)
-                textRes.push(name)
-            } else {
-                this.removeSpecificHighlight(result)
-            }
-        }
-
-        panel.setTextRes(textRes)
-        return results
     }
 }
