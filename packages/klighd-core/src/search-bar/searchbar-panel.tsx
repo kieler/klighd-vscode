@@ -152,9 +152,7 @@ export class SearchBarPanel {
         }
 
         if (vis) {
-            document.addEventListener('keydown', this.handleEscapeKey)
-            document.addEventListener('keydown', this.handleExitKeycombo)
-            document.addEventListener('keydown', this.handleTabKey)
+            document.addEventListener('keydown', this.handleKeyEvent)
             setTimeout(() => {
                 if (this.mainInput) {
                     this.mainInput.focus()
@@ -168,10 +166,8 @@ export class SearchBarPanel {
                 this.tooltipEl = tooltip
             }
         } else {
-            document.removeEventListener('keydown', this.handleEscapeKey)
+            document.removeEventListener('keydown', this.handleKeyEvent)
             document.removeEventListener('keydown', this.handleKeyNavigation)
-            document.removeEventListener('keydown', this.handleTabKey)
-            document.removeEventListener('keydown', this.handleExitKeycombo)
             this.actionDispatcher.dispatch(ClearHighlightsAction.create())
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
@@ -257,6 +253,7 @@ export class SearchBarPanel {
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
         this.actionDispatcher.dispatch(SearchAction.create(this, SearchBar.ID, query, tagQuery))
 
+        // TODO: what happens when this is called repeatedly?
         document.addEventListener('keydown', this.handleKeyNavigation)
     }
 
@@ -551,36 +548,44 @@ export class SearchBarPanel {
     }
 
     /**
-     * When pressing the escape key, the current input field resets.
-     * @param event keypress (esc key)
+     * Handles key events for the search bar
+     * @param event the pressed key event
      */
-    private handleEscapeKey = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-            const active = document.activeElement as HTMLElement | null
-
-            if (active === this.mainInput && this.mainInput) {
-                this.mainInput.value = ''
-                this.mainInput.focus()
-            } else if (active === this.tagInput && this.tagInput) {
-                this.tagInput.value = ''
-                this.tagInput.focus()
+    private handleKeyEvent = (event: KeyboardEvent) => {
+        switch (event.key) {
+            case 'Enter':
+                event.preventDefault()
+                this.performSearch()
+                break
+            case 'Escape':
+                event.preventDefault()
+                this.handleExitKey()
+                break
+            default:
+                // No action for other keys
+                break
+        }
+        if (event.ctrlKey && event.altKey) {
+            switch (event.key) {
+                case 'f':
+                    event.preventDefault()
+                    this.toggleTagInput()
+                    break
+                default:
+                    break
             }
-
-            this.handleInputChange()
         }
     }
 
     /**
-     * Closes the search bar with a key combination
-     * @param event keycombination ctrl+x
+     * Closes the search bar with a escape key
+     * @param event key event
      */
-    private handleExitKeycombo = (event: KeyboardEvent) => {
-        if ((event.metaKey || event.ctrlKey) && event.key === 'x') {
-            this.changeVisibility(false)
-            this.searched = false
-            this.tagInputVisible = false
-            this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
-        }
+    private handleExitKey() {
+        this.changeVisibility(false)
+        this.searched = false
+        this.tagInputVisible = false
+        this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
     }
 
     /**
@@ -694,33 +699,6 @@ export class SearchBarPanel {
                 break
         }
         this.update()
-    }
-
-    /** Tab cycles between input fields and not the buttons as well */
-    private handleTabKey = (event: KeyboardEvent) => {
-        if (event.key !== 'Tab') return
-        const active = document.activeElement
-
-        if (!this.mainInput) return
-
-        // Only #search is visible
-        if (!this.tagInputVisible && active === this.mainInput) {
-            event.preventDefault()
-            this.toggleTagInput()
-            return
-        }
-
-        if (!this.mainInput || !this.tagInput || !this.tagInputVisible) return
-
-        if (!(active instanceof HTMLInputElement)) return
-        const focusables = [this.mainInput, this.tagInput]
-        const currentIndex = focusables.indexOf(active)
-
-        if (currentIndex !== -1) {
-            event.preventDefault()
-            const nextIndex = (currentIndex + focusables.length) % focusables.length
-            focusables[nextIndex].focus()
-        }
     }
 
     private hoverEffect() {

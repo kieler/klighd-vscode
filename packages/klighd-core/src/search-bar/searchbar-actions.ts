@@ -356,6 +356,12 @@ export class HandleSearchAction implements IActionHandler {
         const results = this.searchModel(root, '', 'true', panel) // TODO: replace this with something that doesn't do query stuff
         if (!results) return
 
+        // remove highlights created by the search
+        // TODO: these should not be created at all
+        for (const result of results) {
+            this.removeSpecificHighlight(result)
+        }
+
         const seenTags = new Set<string>()
         const tags: { tag: string; num?: number }[] = getReservedStructuralTags().map((tag) => ({ tag }))
 
@@ -683,6 +689,10 @@ export class HandleSearchAction implements IActionHandler {
                     visitRendering(child, parent)
                 }
             }
+        }
+
+        if (query === '' && tagQuery === '') {
+            return results
         }
 
         let filter: (el: any) => boolean = () => true
