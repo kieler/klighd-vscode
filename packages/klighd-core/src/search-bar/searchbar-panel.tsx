@@ -158,6 +158,7 @@ export class SearchBarPanel {
             setTimeout(() => {
                 if (this.mainInput) {
                     this.mainInput.focus()
+                    this.performSearch()
                 }
             }, 0)
             if (!this.tooltipEl) {
@@ -220,6 +221,7 @@ export class SearchBarPanel {
         this.tagInputVisible = !this.tagInputVisible
 
         if (!this.tagInputVisible) {
+            this.showTagList = false
             if (this.tagInput) this.tagInput.value = ''
             if (this.mainInput) {
                 if (this.mainInput.value === '') {

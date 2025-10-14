@@ -747,6 +747,14 @@ export class HandleSearchAction implements IActionHandler {
             }
         }
 
+        // TODO: this is necessary because this function is used
+        //       by the tag retrieval code. this should be fixed
+        //       seperating model traversal, highlighting, and
+        //       search properly
+        if (query === '' && tagQuery === 'true') {
+            return results
+        }
+
         panel.setTextRes(textRes)
         return results
     }
