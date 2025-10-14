@@ -47,7 +47,7 @@ export class SearchBarPanel {
 
     private tooltipEl: HTMLElement | null = null
 
-    private selectedIndex: number | undefined = undefined
+    private selectedIndex: number = 0
 
     private previousIndex: number | undefined = undefined
 
@@ -186,7 +186,7 @@ export class SearchBarPanel {
      */
     public setResults(results: SModelElement[]): void {
         this.searchResults = results
-        this.selectedIndex = -1
+        this.selectedIndex = 0
         this.previousIndex = undefined
     }
 
@@ -405,7 +405,7 @@ export class SearchBarPanel {
         return (
             <div className="search-results">
                 <div className="search-results-header">
-                    Result {(this.selectedIndex ?? 0) + 1} of {this.searchResults.length}
+                    Result {this.selectedIndex + 1} of {this.searchResults.length}
                 </div>
 
                 <ul className={`search-results-list ${this.searchResults.length > 8 ? 'scrollable' : ''}`}>
@@ -544,9 +544,8 @@ export class SearchBarPanel {
         this.searchResults = []
         this.textRes = []
         this.searched = false
-        this.selectedIndex = undefined
         this.previousIndex = undefined
-        this.selectedIndex = undefined
+        this.selectedIndex = 0
         this.update()
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
@@ -651,7 +650,7 @@ export class SearchBarPanel {
             case 'ArrowDown':
                 event.preventDefault()
                 this.usedArrowKeys = true
-                this.selectedIndex = ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
+                this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
                 this.actionDispatcher.dispatch(
                     UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
                 )
@@ -661,8 +660,7 @@ export class SearchBarPanel {
             case 'ArrowUp':
                 event.preventDefault()
                 this.usedArrowKeys = true
-                this.selectedIndex =
-                    ((this.selectedIndex ?? 0) - 1 + this.searchResults.length) % this.searchResults.length
+                this.selectedIndex = (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
                 this.actionDispatcher.dispatch(
                     UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
                 )
@@ -673,8 +671,8 @@ export class SearchBarPanel {
                 event.preventDefault()
 
                 this.selectedIndex = this.usedArrowKeys
-                    ? this.selectedIndex ?? 0
-                    : ((this.selectedIndex ?? 0) + 1) % this.searchResults.length
+                    ? this.selectedIndex
+                    : (this.selectedIndex + 1) % this.searchResults.length
 
                 const selected = this.searchResults[this.selectedIndex]
 

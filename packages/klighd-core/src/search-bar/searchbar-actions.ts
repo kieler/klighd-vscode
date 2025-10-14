@@ -88,7 +88,7 @@ export class ToggleSearchBarHandler implements IActionHandler {
 
 export interface UpdateHighlightsAction extends Action {
     kind: typeof UpdateHighlightsAction.KIND
-    selectedIndex: number | undefined
+    selectedIndex: number
     previousIndex: number | undefined
     results: SModelElement[]
     panel: SearchBarPanel
@@ -99,7 +99,7 @@ export namespace UpdateHighlightsAction {
     export const KIND = 'updateHighlights'
 
     export function create(
-        currentIndex: number | undefined,
+        currentIndex: number,
         prevIndex: number | undefined,
         results: SModelElement[],
         panel: SearchBarPanel
@@ -755,6 +755,8 @@ export class HandleSearchAction implements IActionHandler {
             return results
         }
 
+        // highlight the first result orange
+        this.updateHighlights(0, undefined, results, panel)
         panel.setTextRes(textRes)
         return results
     }
