@@ -331,11 +331,6 @@ export class HandleSearchAction implements IActionHandler {
         const query = action.textInput.trim().toLowerCase()
         const tagQuery = action.tagInput
 
-        const isTextQuery = query !== ''
-        const isTagQuery = tagQuery !== ''
-
-        if (!isTextQuery && !isTagQuery) return
-
         const results: SModelElement[] = this.searchModel(
             HandleSearchAction.currentModel,
             query,
