@@ -405,7 +405,7 @@ export class SearchBarPanel {
         return (
             <div className="search-results">
                 <div className="search-results-header">
-                    Result {this.selectedIndex + 1} of {this.searchResults.length}
+                    {this.selectedIndex + 1} of {this.searchResults.length}
                 </div>
 
                 <ul className={`search-results-list ${this.searchResults.length > 8 ? 'scrollable' : ''}`}>
