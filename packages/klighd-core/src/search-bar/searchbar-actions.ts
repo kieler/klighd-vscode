@@ -333,6 +333,8 @@ export class HandleSearchAction implements IActionHandler {
         const tagQuery = action.tagInput
 
         const results: SearchResult[] = this.searchModel(HandleSearchAction.currentModel, query, tagQuery, action.panel)
+        this.highlightSearchResults(results)
+        this.updateHighlights(0, undefined, results, action.panel)
 
         action.panel.setResults(results)
         action.panel.update()
@@ -389,40 +391,35 @@ export class HandleSearchAction implements IActionHandler {
 
     /**
      * Remove a specific highlight
-     * @param elem the parent container containing the highlight
+     * @param searchResult the search result for which to remove the highlight
      */
     private removeSpecificHighlight(searchResult: SearchResult) {
         const elemID = searchResult.element.id
-        const queue: SModelElement[] = [searchResult.element]
 
-        while (queue.length > 0) {
-            const element = queue.shift()!
+        const { element } = searchResult
 
-            if (isKText(element) && element.styles) {
-                element.styles = element.styles.filter(
-                    (style: any) =>
-                        !(
-                            style.type === 'KBackgroundImpl' &&
-                            (style.modifierId === `searchHighlight-${elemID}` ||
-                                style.highlightId === `searchHighlight-${elemID}`)
-                        )
-                )
-            }
+        if (isKText(element) && element.styles) {
+            element.styles = element.styles.filter(
+                (style: any) =>
+                    !(
+                        style.type === 'KBackgroundImpl' &&
+                        (style.modifierId === `searchHighlight-${elemID}` ||
+                            style.highlightId === `searchHighlight-${elemID}`)
+                    )
+            )
+        }
 
-            if ('children' in element && Array.isArray(element.children)) {
-                element.children = element.children.filter((child) => !child.id?.includes(`highlightRect-${elemID}`))
-                element.children.forEach((child) => queue.push(child))
-            }
+        if ('children' in element && Array.isArray(element.children)) {
+            element.children = element.children.filter((child) => !child.id?.includes(`highlightRect-${elemID}`))
+        }
 
-            const { data } = element as any
-            if (Array.isArray(data)) {
-                for (const item of data) {
-                    if (item && 'children' in item && Array.isArray(item.children)) {
-                        item.children = item.children.filter(
-                            (child: { id: string }) => !child.id?.includes(`highlightRect-${elemID}`)
-                        )
-                        item.children.forEach((c: any) => queue.push(c))
-                    }
+        const { data } = element as any
+        if (Array.isArray(data)) {
+            for (const item of data) {
+                if (item && 'children' in item && Array.isArray(item.children)) {
+                    item.children = item.children.filter(
+                        (child: { id: string }) => !child.id?.includes(`highlightRect-${elemID}`)
+                    )
                 }
             }
         }
@@ -464,7 +461,7 @@ export class HandleSearchAction implements IActionHandler {
 
     /**
      * Adds highlighting directly to the text element by modifying its styles
-     * @param textElement the KTextImpl element to highlight
+     * @param searchResult the search result containing the ktext to be highlighted
      */
     private addHighlightToKText(searchResult: SearchResult, color: string): void {
         if (searchResult.kText === undefined) {
@@ -518,57 +515,34 @@ export class HandleSearchAction implements IActionHandler {
             if (lastElem) this.addHighlightToElement(lastElem, this.extractBounds(lastElem), 'yellow')
             this.addHighlightToElement(results[selectedIndex], this.extractBounds(results[selectedIndex]), 'orange')
         } else {
-            this.findAndHighlightKTexts(results[selectedIndex], 'orange') // TODO: this method should become deprecated
+            if (results[selectedIndex].kText) {
+                this.addHighlightToKText(results[selectedIndex], 'orange')
+            } else {
+                const bounds = this.extractBounds(results[selectedIndex].element)
+                this.addHighlightToElement(results[selectedIndex], bounds, 'orange')
+            }
             if (lastElem) {
-                this.findAndHighlightKTexts(lastElem, 'yellow')
-            }
-        }
-    }
-
-    /**
-     * Helper method to find and highlight KText elements within an element
-     * @param element the element to search within
-     * @param color the highlight color
-     */
-    private findAndHighlightKTexts(searchResult: SearchResult, color: string): void {
-        if ('text' in searchResult.element) {
-            const { text } = searchResult.element as any
-            if (typeof text === 'string' && text.trim()) {
-                if (isKText(searchResult.element)) {
-                    this.addHighlightToKText(searchResult, color)
+                if (lastElem.kText) {
+                    this.addHighlightToKText(lastElem, 'yellow')
                 } else {
-                    this.addHighlightToElement(searchResult, this.extractBounds(searchResult.element), color)
-                }
-            }
-        }
-
-        const dataArr = (searchResult.element as any).data
-        if (Array.isArray(dataArr) && dataArr.length > 0) {
-            const data = dataArr[0]
-            if (data && Array.isArray(data.children)) {
-                for (const child of data.children) {
-                    this.visitRenderingForHighlight(child, searchResult.element, color)
+                    const bounds = this.extractBounds(lastElem.element)
+                    this.addHighlightToElement(lastElem, bounds, 'yellow')
                 }
             }
         }
     }
 
     /**
-     * Helper method to visit renderings and highlight KText elements
-     * @param rendering the rendering to visit
-     * @param parent the parent element
-     * @param color the highlight color
+     * Highlights all search results
+     * @param results the search results to highlight
      */
-    private visitRenderingForHighlight(rendering: any, parent: SModelElement, color: string): void {
-        if (!rendering) return
-
-        if (isKText(rendering) && rendering.text) {
-            this.addHighlightToKText(new SearchResult(parent, rendering, rendering.text), color) // TODO: this is hacky
-        }
-
-        if (isContainerRendering(rendering)) {
-            for (const child of rendering.children ?? []) {
-                this.visitRenderingForHighlight(child, parent, color)
+    private highlightSearchResults(results: SearchResult[]) {
+        for (const result of results) {
+            if (result.kText) {
+                this.addHighlightToKText(result, 'yellow')
+            } else {
+                const bounds = this.extractBounds(result.element)
+                this.addHighlightToElement(result, bounds, 'yellow')
             }
         }
     }
@@ -597,11 +571,6 @@ export class HandleSearchAction implements IActionHandler {
             const result = new SearchResult(parent, undefined, text)
             if (isKText(element)) {
                 result.kText = element
-                this.addHighlightToKText(result, 'yellow')
-            } else {
-                result.kText = element
-                const bounds = this.extractBounds(element)
-                this.addHighlightToElement(result, bounds, 'yellow')
             }
             results.push(result)
         }
@@ -617,8 +586,6 @@ export class HandleSearchAction implements IActionHandler {
         const name = this.extractDisplayName(element)
         const result = new SearchResult(element, undefined, name)
         results.push(result)
-        const bounds = this.extractBounds(element)
-        this.addHighlightToElement(result, bounds, 'yellow')
     }
 
     /**

@@ -48,7 +48,7 @@ export class SearchBarPanel {
 
     private selectedIndex: number = 0
 
-    private previousIndex: number | undefined = undefined
+    private previousIndex: number = 0
 
     private usedArrowKeys: boolean = false
 
@@ -186,7 +186,7 @@ export class SearchBarPanel {
     public setResults(results: SearchResult[]): void {
         this.searchResults = results
         this.selectedIndex = 0
-        this.previousIndex = undefined
+        this.previousIndex = 0
     }
 
     readonly id: 'search-bar-panel'
@@ -536,7 +536,7 @@ export class SearchBarPanel {
 
         this.searchResults = []
         this.searched = false
-        this.previousIndex = undefined
+        this.previousIndex = 0
         this.selectedIndex = 0
         this.update()
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
