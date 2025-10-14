@@ -346,14 +346,8 @@ export class HandleSearchAction implements IActionHandler {
      * @param panel the search bar panel
      */
     private retrieveTags(root: SModelElement, panel: SearchBarPanel): void {
-        const results = this.searchModel(root, '', 'true', panel) // TODO: replace this with something that doesn't do query stuff
+        const results = this.searchModel(root, '', 'true', panel).map((result) => result.element)
         if (!results) return
-
-        // remove highlights created by the search
-        // TODO: these should not be created at all
-        for (const result of results) {
-            this.removeSpecificHighlight(result)
-        }
 
         const seenTags = new Set<string>()
         const tags: { tag: string; num?: number }[] = getReservedStructuralTags().map((tag) => ({ tag }))
@@ -618,7 +612,6 @@ export class HandleSearchAction implements IActionHandler {
         }
     }
 
-    // TODO: extract highlighting functionality so that search model can be used for any search
     /**
      * Perform a breadth-first search on {@param root} to find {@param query}
      * @param root the model
@@ -714,16 +707,6 @@ export class HandleSearchAction implements IActionHandler {
             }
         }
 
-        // TODO: this is necessary because this function is used
-        //       by the tag retrieval code. this should be fixed
-        //       seperating model traversal, highlighting, and
-        //       search properly
-        if (query === '' && tagQuery === 'true') {
-            return results
-        }
-
-        // highlight the first result orange
-        this.updateHighlights(0, undefined, results, panel)
         return results
     }
 
