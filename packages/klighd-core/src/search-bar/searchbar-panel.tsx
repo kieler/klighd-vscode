@@ -25,9 +25,10 @@ import { injectable, inject } from 'inversify'
 import { VNode } from 'snabbdom'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { html, IActionDispatcher, TYPES } from 'sprotty'
-import { FitToScreenAction, SModelElement } from 'sprotty-protocol'
+import { FitToScreenAction } from 'sprotty-protocol'
 import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction, UpdateHighlightsAction } from './searchbar-actions'
 import { SearchBar } from './searchbar'
+import { SearchResult } from './search-results'
 
 @injectable()
 export class SearchBarPanel {
@@ -35,9 +36,7 @@ export class SearchBarPanel {
 
     private visible: boolean = false
 
-    private searchResults: SModelElement[] = []
-
-    private textRes: string[] = []
+    private searchResults: SearchResult[] = []
 
     private searched: boolean = false
 
@@ -184,18 +183,10 @@ export class SearchBarPanel {
      * Update variable searchResults
      * @param results : an array containing the search result elements
      */
-    public setResults(results: SModelElement[]): void {
+    public setResults(results: SearchResult[]): void {
         this.searchResults = results
         this.selectedIndex = 0
         this.previousIndex = undefined
-    }
-
-    /**
-     * Updates the variable textRes.
-     * @param res : an array containing the text field from each search result match
-     */
-    public setTextRes(res: string[]): void {
-        this.textRes = res
     }
 
     readonly id: 'search-bar-panel'
@@ -419,7 +410,7 @@ export class SearchBarPanel {
                                 className={`search-result-item ${isSelected ? 'selected' : ''}`}
                                 on={{
                                     mouseenter: (event: MouseEvent) => {
-                                        const path = this.decodeId(this.searchResults[index].id)
+                                        const path = this.decodeId(this.searchResults[index].element.id)
                                         if (this.tooltipEl) {
                                             this.tooltipEl.textContent = path
                                             this.tooltipEl.style.top = `${event.clientY + 12}px`
@@ -433,7 +424,7 @@ export class SearchBarPanel {
                                         }
                                     },
                                     click: () => {
-                                        this.panToElement(result.id)
+                                        this.panToElement(result.element.id)
                                         this.selectedIndex = index
                                         this.actionDispatcher.dispatch(
                                             UpdateHighlightsAction.create(
@@ -468,8 +459,10 @@ export class SearchBarPanel {
                                     },
                                 }}
                             >
-                                {this.textRes[index]}
-                                {isSelected && <div className="search-result-path">{this.decodeId(result.id)}</div>}
+                                {this.searchResults[index].displayText}
+                                {isSelected && (
+                                    <div className="search-result-path">{this.decodeId(result.element.id)}</div>
+                                )}
                             </li>
                         )
                     })}
@@ -542,7 +535,6 @@ export class SearchBarPanel {
         if (this.tooltipEl) this.tooltipEl.style.display = 'none'
 
         this.searchResults = []
-        this.textRes = []
         this.searched = false
         this.previousIndex = undefined
         this.selectedIndex = 0
@@ -677,7 +669,7 @@ export class SearchBarPanel {
                 const selected = this.searchResults[this.selectedIndex]
 
                 if (this.searchResults[this.selectedIndex]) {
-                    this.panToElement(selected.id)
+                    this.panToElement(selected.element.id)
                     if (!this.usedArrowKeys) {
                         this.actionDispatcher.dispatch(
                             UpdateHighlightsAction.create(
