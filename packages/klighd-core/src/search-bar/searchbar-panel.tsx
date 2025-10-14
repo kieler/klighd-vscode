@@ -67,6 +67,8 @@ export class SearchBarPanel {
 
     private showTagList: boolean = false
 
+    private lastSearchQuery: string = ''
+
     // eslint-disable-next-line no-undef
     private tagSearchTimeout: NodeJS.Timeout | null = null
 
@@ -253,7 +255,6 @@ export class SearchBarPanel {
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
         this.actionDispatcher.dispatch(SearchAction.create(this, SearchBar.ID, query, tagQuery))
 
-        // TODO: what happens when this is called repeatedly?
         document.addEventListener('keydown', this.handleKeyNavigation)
     }
 
@@ -275,6 +276,7 @@ export class SearchBarPanel {
                         id="search"
                         className="search-input"
                         placeholder="Search..."
+                        value={this.lastSearchQuery}
                         hook={{
                             insert: (vnode) => {
                                 this.mainInput = vnode.elm as HTMLInputElement
@@ -553,10 +555,6 @@ export class SearchBarPanel {
      */
     private handleKeyEvent = (event: KeyboardEvent) => {
         switch (event.key) {
-            case 'Enter':
-                event.preventDefault()
-                this.performSearch()
-                break
             case 'Escape':
                 event.preventDefault()
                 this.handleExitKey()
@@ -594,6 +592,7 @@ export class SearchBarPanel {
      */
     private handleInputChange(): void {
         this.showTagList = false
+        this.lastSearchQuery = this.mainInput ? this.mainInput.value : ''
 
         if (this.tagSearchTimeout) {
             clearTimeout(this.tagSearchTimeout)
