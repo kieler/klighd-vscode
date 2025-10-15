@@ -35,6 +35,12 @@
     --kdc-color-sidebar-font-primary: hsl(0, 0%, 12%);
     --kdc-color-sidebar-icon-primary: hsl(0, 0%, 24%);
     --kdc-color-primary: #0552b5;
+    --kdc-color-findMatchBackground: rgb(255, 165, 0);
+    --kdc-color-findMatchForeground: rgb(0, 0, 0);
+    --kdc-color-findMatchBorder: rgb(90, 90, 90);
+    --kdc-color-findMatchHighlightBackground: rgb(255, 255, 0);
+    --kdc-color-findMatchHighlightForeground: rgb(0, 0, 0);
+    --kdc-color-findMatchHighlightBorder: rgb(113, 113, 113);
 
 }
 @media (prefers-color-scheme: dark) {
@@ -47,6 +53,11 @@
         --kdc-color-sidebar-font-primary: rgb(204, 204, 204);
         --kdc-color-sidebar-icon-primary: rgb(197, 197, 197);
         --kdc-color-primary: rgb(0, 127, 212);
-    
+        --kdc-color-findMatchBackground: rgb(255, 215, 140);
+        --kdc-color-findMatchForeground: rgb(0, 0, 0);
+        --kdc-color-findMatchBorder: rgb(231, 231, 231);
+        --kdc-color-findMatchHighlightBackground: rgb(255, 255, 166);
+        --kdc-color-findMatchHighlightForeground: rgb(0, 0, 0);
+        --kdc-color-findMatchHighlightBorder: rgb(223, 223, 223);
     }
 }

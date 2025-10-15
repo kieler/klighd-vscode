@@ -20,21 +20,16 @@ import {
     ActionHandlerRegistry,
     IActionDispatcher,
     IActionHandler,
-    rgb,
-    RGBColor,
     SetUIExtensionVisibilityAction,
     TYPES,
 } from 'sprotty'
 import { Action, CenterAction, SetModelAction, SModelElement, UpdateModelAction } from 'sprotty-protocol'
-import Color = require('color')
 import { createSemanticFilter } from '../filtering/util'
 import { SearchBar } from './searchbar'
 import { SearchBarPanel } from './searchbar-panel'
-import { isContainerRendering, isKText, KColoring, KRectangle, KText } from '../skgraph-models'
+import { isContainerRendering, isKText, KRectangle, KText } from '../skgraph-models'
 import { getReservedStructuralTags } from '../filtering/reserved-structural-tags'
 import { SearchResult } from './search-results'
-import { CLI_HIGHLIGHT_COLOR, CLI_MAIN_HIGHLIGHT_COLOR } from './constants'
-/* global document, getComputedStyle */
 
 export type ShowSearchBarAction = SetUIExtensionVisibilityAction
 
@@ -148,26 +143,8 @@ function createHighlightRectangle(
     yPos: number,
     width: number,
     height: number,
-    color: RGBColor
+    highlight: number
 ): KRectangle {
-    const highlight: KColoring = {
-        type: 'KBackgroundImpl',
-        color,
-        alpha: 50,
-        gradientAngle: 0,
-        propagateToChildren: false,
-        selection: false,
-    }
-
-    const noStroke: KColoring = {
-        type: 'KForegroundImpl',
-        color: rgb(0, 0, 0),
-        alpha: 0,
-        propagateToChildren: false,
-        selection: false,
-        gradientAngle: 0,
-    }
-
     return {
         type: 'KRectangleImpl',
         id: `highlightRect-${elem.id}`,
@@ -177,9 +154,10 @@ function createHighlightRectangle(
             y: yPos,
             width,
             height,
+            'klighd.rendering.highlight': highlight,
         },
         actions: [],
-        styles: [highlight, noStroke],
+        styles: [],
     }
 }
 
@@ -195,14 +173,7 @@ function removeHighlights(elem: SModelElement): void {
 
         // Remove KText highlights
         if (isKText(element) && element.styles) {
-            element.styles = element.styles.filter(
-                (style: any) =>
-                    !(
-                        style.type === 'KBackgroundImpl' &&
-                        (style.modifierId.startsWith('searchHighlight') ||
-                            style.highlightId.startsWith('searchHighlight'))
-                    )
-            )
+            element.properties['klighd.rendering.highlight'] = 0
         }
 
         // Remove rectangle highlights from children
@@ -283,6 +254,12 @@ interface HighlightBounds {
 @injectable()
 export class HandleSearchAction implements IActionHandler {
     private static currentModel?: SModelElement
+
+    private OPACITY_INCREMENT: number = 2
+
+    private HIGHLIGHT_MATCH: number = 1
+
+    private HIGHLIGHT_MAIN_MATCH: number = 2
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher
 
@@ -397,14 +374,7 @@ export class HandleSearchAction implements IActionHandler {
         const { element } = searchResult
 
         if (isKText(element) && element.styles) {
-            element.styles = element.styles.filter(
-                (style: any) =>
-                    !(
-                        style.type === 'KBackgroundImpl' &&
-                        (style.modifierId === `searchHighlight-${elemID}` ||
-                            style.highlightId === `searchHighlight-${elemID}`)
-                    )
-            )
+            element.properties['klighd.rendering.highlight'] = 0
         }
 
         if ('children' in element && Array.isArray(element.children)) {
@@ -428,7 +398,7 @@ export class HandleSearchAction implements IActionHandler {
      * @param searchResult the the search result that shall be highlighted
      * @param bounds the position and size of the highlight
      */
-    private addHighlightToElement(searchResult: SearchResult, bounds: HighlightBounds, color: RGBColor): void {
+    private addHighlightToElement(searchResult: SearchResult, bounds: HighlightBounds, highlight: number): void {
         const { data } = searchResult.element as any
         if (Array.isArray(data)) {
             for (const item of data) {
@@ -441,52 +411,14 @@ export class HandleSearchAction implements IActionHandler {
                             bounds.y,
                             bounds.width,
                             bounds.height,
-                            color
+                            highlight + this.OPACITY_INCREMENT
                         )
                         item.children = [...(item.children ?? []), highlightRect]
                     }
                 } else if (isKText(item)) {
-                    const alreadyHasHighlight = item.styles?.some(
-                        (style) => style.modifierId?.startsWith('searchHighlight')
-                    )
-                    if (!alreadyHasHighlight) {
-                        this.addHighlightToKText(searchResult, color)
-                    }
+                    searchResult.kText!.properties['klighd.rendering.highlight'] = highlight
                 }
             }
-        }
-    }
-
-    /**
-     * Adds highlighting directly to the text element by modifying its styles
-     * @param searchResult the search result containing the ktext to be highlighted
-     */
-    private addHighlightToKText(searchResult: SearchResult, color: RGBColor): void {
-        if (searchResult.kText === undefined) {
-            return
-        }
-
-        if (!searchResult.kText.styles) {
-            searchResult.kText.styles = []
-        }
-
-        const alreadyHighlighted = searchResult.kText.styles.some(
-            (style: any) =>
-                style.type === 'KBackgroundImpl' && style.highlightId === `searchHighlight-${searchResult.element.id}`
-        )
-
-        if (!alreadyHighlighted) {
-            const highlightStyle: KColoring = {
-                type: 'KBackgroundImpl',
-                color,
-                alpha: 127,
-                gradientAngle: 0,
-                propagateToChildren: false,
-                selection: false,
-                modifierId: `searchHighlight-${searchResult.element.id}`,
-            }
-
-            searchResult.kText.styles.push(highlightStyle)
         }
     }
 
@@ -506,64 +438,32 @@ export class HandleSearchAction implements IActionHandler {
 
         this.removeSpecificHighlight(results[selectedIndex])
 
-        const rgbHighlightColor = this.getHighlightColor()
-
-        const rgbMainHighlightColor = this.getMainHighlightColor()
-
         const lastElem = lastIndex !== undefined ? results[lastIndex] : undefined
         if (lastElem) this.removeSpecificHighlight(lastElem)
 
         if (panel.textInput === '') {
-            if (lastElem) this.addHighlightToElement(lastElem, this.extractBounds(lastElem), rgbHighlightColor)
+            if (lastElem) this.addHighlightToElement(lastElem, this.extractBounds(lastElem), this.HIGHLIGHT_MATCH)
             this.addHighlightToElement(
                 results[selectedIndex],
                 this.extractBounds(results[selectedIndex]),
-                rgbMainHighlightColor
+                this.HIGHLIGHT_MAIN_MATCH
             )
         } else {
             if (results[selectedIndex].kText) {
-                this.addHighlightToKText(results[selectedIndex], rgbMainHighlightColor)
+                results[selectedIndex].kText!.properties['klighd.rendering.highlight'] = this.HIGHLIGHT_MAIN_MATCH
             } else {
                 const bounds = this.extractBounds(results[selectedIndex].element)
-                this.addHighlightToElement(results[selectedIndex], bounds, rgbMainHighlightColor)
+                this.addHighlightToElement(results[selectedIndex], bounds, this.HIGHLIGHT_MAIN_MATCH)
             }
             if (lastElem) {
                 if (lastElem.kText) {
-                    this.addHighlightToKText(lastElem, rgbHighlightColor)
+                    lastElem.kText.properties['klighd.rendering.highlight'] = this.HIGHLIGHT_MATCH
                 } else {
                     const bounds = this.extractBounds(lastElem.element)
-                    this.addHighlightToElement(lastElem, bounds, rgbHighlightColor)
+                    this.addHighlightToElement(lastElem, bounds, this.HIGHLIGHT_MATCH)
                 }
             }
         }
-    }
-
-    private getMainHighlightColor() {
-        let rgbMainHighlightColor = CLI_MAIN_HIGHLIGHT_COLOR
-        try {
-            const highlightColor = new Color(
-                getComputedStyle(document.documentElement).getPropertyValue('--vscode-editor-findMatchBackground')
-            )
-            rgbMainHighlightColor = rgb(highlightColor.red(), highlightColor.green(), highlightColor.blue())
-        } catch (error) {
-            // not in vscode extension
-        }
-        return rgbMainHighlightColor
-    }
-
-    private getHighlightColor() {
-        let rgbHighlightColor = CLI_HIGHLIGHT_COLOR
-        try {
-            const highlightColor = new Color(
-                getComputedStyle(document.documentElement).getPropertyValue(
-                    '--vscode-editor-findMatchHighlightBackground'
-                )
-            )
-            rgbHighlightColor = rgb(highlightColor.red(), highlightColor.green(), highlightColor.blue())
-        } catch (error) {
-            // not in vscode extension
-        }
-        return rgbHighlightColor
     }
 
     /**
@@ -571,14 +471,12 @@ export class HandleSearchAction implements IActionHandler {
      * @param results the search results to highlight
      */
     private highlightSearchResults(results: SearchResult[]) {
-        const rgbHighlightColor = this.getHighlightColor()
-
         for (const result of results) {
             if (result.kText) {
-                this.addHighlightToKText(result, rgbHighlightColor)
+                result.kText.properties['klighd.rendering.highlight'] = this.HIGHLIGHT_MATCH
             } else {
                 const bounds = this.extractBounds(result.element)
-                this.addHighlightToElement(result, bounds, rgbHighlightColor)
+                this.addHighlightToElement(result, bounds, this.HIGHLIGHT_MATCH)
             }
         }
     }

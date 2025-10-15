@@ -30,4 +30,10 @@ body {
     --kdc-color-sidebar-font-primary: var(--vscode-foreground);
     --kdc-color-sidebar-icon-primary: var(--vscode-icon-foreground);
     --kdc-color-primary: var(--vscode-focusBorder);
+    --kdc-color-findMatchBackground: var(--vscode-editor-findMatchBackground);
+    --kdc-color-findMatchForeground: var(--vscode-editor-findMatchForeground)
+    --kdc-color-findMatchBorder: var(--vscode-editor-findMatchBorder);
+    --kdc-color-findMatchHighlightBackground: var(--vscode-editor-findMatchHighlightBackground);
+    --kdc-color-findMatchHighlightForeground: var(--vscode-editor-findMatchHighlightForeground)
+    --kdc-color-findMatchHighlightBorder: var(--vscode-editor-findMatchHighlightBorder);
 }
