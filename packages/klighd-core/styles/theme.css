@@ -79,11 +79,11 @@
         --kdc-color-inputOption-activeBackground: rgb(4, 57, 94);
         --kdc-color-inputOption-activeBorder: hsl(0, 0%, 81%);
         --kdc-color-inputOption-hoverBackground: rgb(4, 57, 94);
-        --kdc-color-focusBorder: var(----kdc-color-primary);
+        --kdc-color-focusBorder: var(--kdc-color-primary);
         --kdc-color-errorForeground: rgb(245, 117, 117);
         --kdc-color-list-activeSelectionBackground: rgb(4, 57, 94);
         --kdc-color-list-activeSelectionForeground: rgb(204, 204, 204);
-        --kdc-color-list-focusOutline: var(----kdc-color-primary);
+        --kdc-color-list-focusOutline: var(--kdc-color-primary);
         --kdc-color-list-hoverBackground: rgb(4, 57, 94);
         --kdc-color-list-hoverForeground: rgb(204, 204, 204);
     }
