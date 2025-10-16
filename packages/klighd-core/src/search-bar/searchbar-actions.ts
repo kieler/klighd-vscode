@@ -257,9 +257,13 @@ export class HandleSearchAction implements IActionHandler {
 
     private OPACITY_INCREMENT: number = 2
 
-    private HIGHLIGHT_MATCH: number = 1
+    private HIGHLIGHT_MATCH: number = 2
 
-    private HIGHLIGHT_MAIN_MATCH: number = 2
+    private HIGHLIGHT_MAIN_MATCH: number = 1
+
+    // TODO: ktexts can't have a border, so instead of setting highlight directly on the ktext, a rectangle with the correct
+    //       size should be added behind it instead (this does pose an additional issue with the foreground then not being
+    //       applied to the text itself, so it's a choice, support border or support foreground highlight)
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher
 

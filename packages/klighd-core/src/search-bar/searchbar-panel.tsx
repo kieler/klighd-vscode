@@ -281,15 +281,14 @@ export class SearchBarPanel {
                         on={{ input: () => this.handleInputChange() }}
                     />
                     <button
-                        className={`search-button ${this.tagInputVisible ? 'active' : 'inactive'}`}
+                        className={`search-button ${this.tagInputVisible ? 'active' : ''}`}
                         title="Toggle tag search"
                         on={{ click: () => this.toggleTagInput() }}
-                        hook={this.conditionalHoverEffect(() => this.tagInputVisible)}
                     >
                         #
                     </button>
                     <button
-                        className={`search-button ${this.regexMode ? 'active' : 'inactive'}`}
+                        className={`search-button ${this.regexMode ? 'active' : ''}`}
                         title="Toggle RegEx search"
                         on={{
                             click: () => {
@@ -300,12 +299,11 @@ export class SearchBarPanel {
                                 }, 0)
                             },
                         }}
-                        hook={this.conditionalHoverEffect(() => this.regexMode)}
                     >
-                        *
+                        .*
                     </button>
                     <button
-                        className="search-button inactive"
+                        className="search-button"
                         title="Close search bar"
                         on={{
                             click: () => {
@@ -317,9 +315,8 @@ export class SearchBarPanel {
                                 )
                             },
                         }}
-                        hook={this.hoverEffect()}
                     >
-                        ×
+                        x
                     </button>
                 </div>
 
@@ -327,7 +324,7 @@ export class SearchBarPanel {
                     <div className="tag-input-container">
                         <input
                             id="tag-search"
-                            className="tag-input"
+                            className="search-input"
                             placeholder="Tag filter (# or $)..."
                             hook={{
                                 insert: (vnode) => {
@@ -340,7 +337,7 @@ export class SearchBarPanel {
                             on={{ input: () => this.handleInputChange() }}
                         />
                         <button
-                            className={`search-button ${this.showTagList ? 'active' : 'inactive'}`}
+                            className={`search-button ${this.showTagList ? 'active' : ''}`}
                             title="Show tags"
                             on={{
                                 click: () => {
@@ -690,39 +687,6 @@ export class SearchBarPanel {
                 break
         }
         this.update()
-    }
-
-    private hoverEffect() {
-        return {
-            insert: (vnode: any) => {
-                const el = vnode.elm as HTMLElement
-                el.addEventListener('mouseenter', () => {
-                    el.style.backgroundColor = '#007acc'
-                    el.style.color = 'white'
-                })
-                el.addEventListener('mouseleave', () => {
-                    el.style.backgroundColor = '#eee'
-                    el.style.color = 'black'
-                })
-            },
-        }
-    }
-
-    private conditionalHoverEffect(condFn: () => boolean) {
-        return {
-            insert: (vnode: any) => {
-                const el = vnode.elm as HTMLElement
-                el.addEventListener('mouseenter', () => {
-                    el.style.backgroundColor = '#007acc'
-                    el.style.color = 'white'
-                })
-                el.addEventListener('mouseleave', () => {
-                    const cond = condFn()
-                    el.style.backgroundColor = cond ? '#007acc' : '#eee'
-                    el.style.color = cond ? 'white' : 'black'
-                })
-            },
-        }
     }
 
     /**
