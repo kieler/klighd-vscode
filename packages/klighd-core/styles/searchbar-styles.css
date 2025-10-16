@@ -80,18 +80,20 @@
 
 .tag-input-container {
     display: flex;
-    margin-bottom: 8px;
+    margin: 0px;
+    margin-bottom: 3px;
     animation: slideDown 0.2s ease-out;
 }
 
 .search-results-header {
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
+    margin-top: 1px;
 }
 
 .search-results-error {
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     color: var(--kdc-color-errorForeground);
 }
 
@@ -100,7 +102,7 @@
     list-style-type: none;
     padding-left: 0;
     margin: 0;
-    margin-top: 4px;
+    margin-top: 3px;
 }
 
 .search-results-list.scrollable {
@@ -133,7 +135,7 @@
 .search-result-path {
     font-size: 11px;
     color: var(--kdc-color-primary);
-    margin-top: 4px;
+    margin-top: 3px;
 }
 
 .search-tooltip {
