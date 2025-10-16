@@ -53,7 +53,7 @@
 }
 
 .search-input:focus {
-    border-color: var(--kdc-color-focusBorder);
+    outline-color: var(--kdc-color-focusBorder);
 }
 
 .search-button {
