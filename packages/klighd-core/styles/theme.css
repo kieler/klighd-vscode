@@ -74,7 +74,7 @@
         --kdc-color-findMatchHighlightBorder: rgb(223, 223, 223);
         --kdc-color-input-background: rgb(37, 37, 37);
         --kdc-color-input-border: rgb(4, 57, 94);
-        --kdc-color-input-foreground:rgb(204, 204, 204);
+        --kdc-color-input-foreground: rgb(204, 204, 204);
         --kdc-color-input-placeholderForeground: hsl(0, 0%, 86%);
         --kdc-color-inputOption-activeBackground: rgb(4, 57, 94);
         --kdc-color-inputOption-activeBorder: hsl(0, 0%, 81%);
