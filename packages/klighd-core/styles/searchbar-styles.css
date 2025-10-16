@@ -71,7 +71,6 @@
 
 .search-button.active {
     background-color: var(--kdc-color-inputOption-activeBackground);
-    border-color: var(--kdc-color-inputOption-activeBorder);
     border: 1px solid var(--kdc-color-inputOption-activeBorder);
 }
 
