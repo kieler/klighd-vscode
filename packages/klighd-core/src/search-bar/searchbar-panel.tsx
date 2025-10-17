@@ -16,11 +16,7 @@
  */
 
 /** @jsx html */
-/* global KeyboardEvent */
-/* global document */
-/* global HTMLElement */
-/* global MouseEvent */
-/* global HTMLInputElement */
+/* global KeyboardEvent, document, HTMLElement, MouseEvent, HTMLInputElement */
 import { injectable, inject } from 'inversify'
 import { VNode } from 'snabbdom'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
