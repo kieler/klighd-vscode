@@ -762,7 +762,6 @@ export function getSvgColorStyles(
             case 2:
                 foreground = { color: 'var(--kdc-color-findMatchHighlightForeground)' } as ColorStyle
                 background = { color: 'var(--kdc-color-findMatchHighlightBackground)' } as ColorStyle
-                break
             // intentional fallthrough
             case 4:
                 background = { color: 'var(--kdc-color-findMatchHighlightBackground)', opacity: '0.2' } as ColorStyle
