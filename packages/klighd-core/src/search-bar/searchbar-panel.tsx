@@ -156,7 +156,7 @@ export class SearchBarPanel {
             document.addEventListener('keydown', this.handleKeyEvent)
             setTimeout(() => {
                 if (this.mainInput) {
-                    this.mainInput.focus()
+                    this.mainInput.select()
                     this.performSearch()
                 }
             }, 0)

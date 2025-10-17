@@ -56,6 +56,11 @@
     outline-color: var(--kdc-color-focusBorder);
 }
 
+.search-input::selection {
+    background-color: var(--kdc-color-selection-background);
+    color: var(--kdc-color-input-foreground);
+}
+
 .search-button {
     border: none;
     border-radius: 2px;

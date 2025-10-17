@@ -55,6 +55,7 @@
     --kdc-color-list-focusOutline: var(--kdc-color-primary);
     --kdc-color-list-hoverBackground: hsl(0, 0%, 88%);
     --kdc-color-list-hoverForeground: hsl(0, 0%, 12%);
+    --kdc-color-selection-background: rgb(0, 127, 212);
 }
 @media (prefers-color-scheme: dark) {
     :root {
@@ -86,5 +87,6 @@
         --kdc-color-list-focusOutline: var(--kdc-color-primary);
         --kdc-color-list-hoverBackground: rgb(4, 57, 94);
         --kdc-color-list-hoverForeground: rgb(204, 204, 204);
+        --kdc-color-selection-background: rgb(62, 177, 254);
     }
 }

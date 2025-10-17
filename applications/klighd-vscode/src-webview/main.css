@@ -50,4 +50,5 @@ body {
     --kdc-color-list-focusOutline: var(--vscode-list-focusOutline);
     --kdc-color-list-hoverBackground: var(--vscode-list-hoverBackground);
     --kdc-color-list-hoverForeground: var(--vscode-list-hoverForeground);
+    --kdc-color-selection-background: var(--vscode-selection-background);
 }
