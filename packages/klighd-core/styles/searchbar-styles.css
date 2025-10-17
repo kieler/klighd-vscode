@@ -57,7 +57,7 @@
 }
 
 .search-input::selection {
-    background-color: var(--kdc-color-selection-background);
+    background-color: var(--kdc-color-selection-background, rgb(153, 194, 255));
     color: var(--kdc-color-input-foreground);
 }
 
@@ -139,7 +139,7 @@
 
 .search-result-path {
     font-size: 11px;
-    color: var(--kdc-color-primary);
+    color: var(--kdc-color-list-activeSelectionForeground);
     margin-top: 3px;
 }
 
@@ -147,8 +147,9 @@
     position: fixed;
     pointer-events: none;
     z-index: 10000;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
+    color: var(--kdc-color-breadcrumb-foreground);
+    background-color: var(--kdc-color-breadcrumb-background);
+    border: 1px solid var(--kdc-color-breadcrumb-foreground);
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;

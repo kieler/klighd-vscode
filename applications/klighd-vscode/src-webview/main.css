@@ -51,4 +51,6 @@ body {
     --kdc-color-list-hoverBackground: var(--vscode-list-hoverBackground);
     --kdc-color-list-hoverForeground: var(--vscode-list-hoverForeground);
     --kdc-color-selection-background: var(--vscode-selection-background);
+    --kdc-color-breadcrumb-foreground: var(--vscode-breadcrumb-foreground);
+    --kdc-color-breadcrumb-background: var(--vscode-breadcrumb-background);
 }

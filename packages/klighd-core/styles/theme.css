@@ -56,6 +56,8 @@
     --kdc-color-list-hoverBackground: hsl(0, 0%, 88%);
     --kdc-color-list-hoverForeground: hsl(0, 0%, 12%);
     --kdc-color-selection-background: rgb(0, 127, 212);
+    --kdc-color-breadcrumb-foreground: hsl(0, 0%, 12%);
+    --kdc-color-breadcrumb-background: var(--kdc-color-sidebar-background);
 }
 @media (prefers-color-scheme: dark) {
     :root {
@@ -88,5 +90,7 @@
         --kdc-color-list-hoverBackground: rgb(4, 57, 94);
         --kdc-color-list-hoverForeground: rgb(204, 204, 204);
         --kdc-color-selection-background: rgb(62, 177, 254);
+        --kdc-color-breadcrumb-foreground: rgb(204, 204, 204);
+        --kdc-color-breadcrumb-background: var(--kdc-color-sidebar-background);
     }
 }
