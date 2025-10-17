@@ -295,17 +295,13 @@ export class HandleSearchAction implements IActionHandler {
             if (modelId && this.actionDispatcher) {
                 this.actionDispatcher.dispatch(CenterAction.create([modelId]))
             }
-        }
-
-        /* Update highlights to show current result orange  */
-        if (UpdateHighlightsAction.isThisAction(action)) {
+        } else if (UpdateHighlightsAction.isThisAction(action)) {
+            /* Update highlights to show current result orange  */
             if (action.selectedIndex === undefined || !action.results || !action.panel) return
             this.updateHighlights(action.selectedIndex, action.previousIndex, action.results, action.panel)
             this.actionDispatcher.dispatch(CenterAction.create([modelId]))
-        }
-
-        /* searches for all tags on the model */
-        if (RetrieveTagsAction.isThisAction(action)) {
+        } else if (RetrieveTagsAction.isThisAction(action)) {
+            /* searches for all tags on the model */
             if (!action.panel) return
             this.retrieveTags(HandleSearchAction.currentModel, action.panel)
         }
