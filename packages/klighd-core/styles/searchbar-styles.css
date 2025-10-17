@@ -74,7 +74,7 @@
     border: 1px solid var(--kdc-color-inputOption-activeBorder);
 }
 
-.search-button:hover {
+.search-button:not(.active):hover {
     background-color: var(--kdc-color-inputOption-hoverBackground);
 }
 

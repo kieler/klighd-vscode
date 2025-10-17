@@ -266,6 +266,7 @@ export class SearchBarPanel {
             <div className="search-bar-panel">
                 <div className="search-controls">
                     <input
+                        size="1" // flex width makes this wide again, this prevents issues with the sizing of the search bar
                         id="search"
                         className="search-input"
                         placeholder="Search..."
@@ -282,29 +283,21 @@ export class SearchBarPanel {
                     />
                     <button
                         className={`search-button ${this.tagInputVisible ? 'active' : ''}`}
-                        title="Toggle tag search"
+                        title="Toggle tag search (Ctrl+Alt+F)"
                         on={{ click: () => this.toggleTagInput() }}
                     >
                         #
                     </button>
                     <button
                         className={`search-button ${this.regexMode ? 'active' : ''}`}
-                        title="Toggle RegEx search"
-                        on={{
-                            click: () => {
-                                this.regexMode = !this.regexMode
-                                this.update()
-                                setTimeout(() => {
-                                    if (this.mainInput) this.mainInput.focus()
-                                }, 0)
-                            },
-                        }}
+                        title="Toggle RegEx search (Alt+R)"
+                        on={{ click: () => this.toggleRegexMode() }}
                     >
                         .*
                     </button>
                     <button
                         className="search-button"
-                        title="Close search bar"
+                        title="Close search bar (Esc)"
                         on={{
                             click: () => {
                                 this.changeVisibility(false)
@@ -469,6 +462,17 @@ export class SearchBarPanel {
     }
 
     /**
+     * Toggles regex mode on and off
+     */
+    private toggleRegexMode() {
+        this.regexMode = !this.regexMode
+        this.update()
+        setTimeout(() => {
+            if (this.mainInput) this.mainInput.focus()
+        }, 0)
+    }
+
+    /**
      * Show all tags in a result list
      * @returns panel with tag list
      */
@@ -562,6 +566,10 @@ export class SearchBarPanel {
                 default:
                     break
             }
+        }
+        if (event.altKey && event.key === 'R') {
+            event.preventDefault()
+            this.toggleRegexMode()
         }
     }
 
