@@ -290,7 +290,7 @@ export class SearchBarPanel {
                     </button>
                     <button
                         className={`search-button ${this.regexMode ? 'active' : ''}`}
-                        title="Toggle RegEx search (Alt+R)"
+                        title="Toggle RegEx search (Ctrl+Alt+R)"
                         on={{ click: () => this.toggleRegexMode() }}
                     >
                         .*
@@ -563,13 +563,13 @@ export class SearchBarPanel {
                     event.preventDefault()
                     this.toggleTagInput()
                     break
+                case 'r':
+                    event.preventDefault()
+                    this.toggleRegexMode()
+                    break
                 default:
                     break
             }
-        }
-        if (event.altKey && event.key === 'R') {
-            event.preventDefault()
-            this.toggleRegexMode()
         }
     }
 
@@ -666,11 +666,15 @@ export class SearchBarPanel {
 
             case 'Enter': {
                 event.preventDefault()
-
-                this.selectedIndex = this.usedArrowKeys
-                    ? this.selectedIndex
-                    : (this.selectedIndex + 1) % this.searchResults.length
-
+                if (event.shiftKey) {
+                    this.selectedIndex = this.usedArrowKeys
+                        ? this.selectedIndex
+                        : (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
+                } else {
+                    this.selectedIndex = this.usedArrowKeys
+                        ? this.selectedIndex
+                        : (this.selectedIndex + 1) % this.searchResults.length
+                }
                 const selected = this.searchResults[this.selectedIndex]
 
                 if (this.searchResults[this.selectedIndex]) {
