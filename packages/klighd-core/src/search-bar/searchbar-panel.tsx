@@ -40,10 +40,6 @@ export class SearchBarPanel {
 
     private searched: boolean = false
 
-    private hoverPath: string | null = null
-
-    private hoverPos: { x: number; y: number } | null = null
-
     private tooltipEl: HTMLElement | null = null
 
     private selectedIndex: number = 0
@@ -160,13 +156,6 @@ export class SearchBarPanel {
                     this.performSearch()
                 }
             }, 0)
-            if (!this.tooltipEl) {
-                const tooltip = document.createElement('div')
-                tooltip.id = 'search-tooltip'
-                tooltip.className = 'search-tooltip'
-                document.body.appendChild(tooltip)
-                this.tooltipEl = tooltip
-            }
         } else {
             document.removeEventListener('keydown', this.handleKeyEvent)
             document.removeEventListener('keydown', this.handleKeyNavigation)
@@ -344,21 +333,27 @@ export class SearchBarPanel {
                     </div>
                 )}
 
-                {this.hoverPath && (
-                    <div
-                        className="search-tooltip"
-                        style={{
-                            top: `${this.hoverPos!.y + 12}px`,
-                            left: `${this.hoverPos!.x + 12}px`,
-                            display: 'block',
-                        }}
-                    >
-                        {this.hoverPath}
-                    </div>
-                )}
+                {this.hoverPathDiv()}
                 {this.showTagList ? this.showAvailableTags() : this.searched ? this.showSearchResults() : null}
             </div>
         )
+    }
+
+    private hoverPathDiv(): VNode {
+        const tooltip: VNode = (
+            <div
+                className="search-tooltip"
+                style={{
+                    top: '0px',
+                    left: '0px',
+                    display: 'none',
+                }}
+                hook-insert={(vnode: VNode) => {
+                    this.tooltipEl = vnode.elm as HTMLElement
+                }}
+            ></div>
+        )
+        return tooltip
     }
 
     /**
