@@ -275,14 +275,14 @@ export class SearchBarPanel {
                         title="Toggle tag search (Ctrl+Alt+F)"
                         on={{ click: () => this.toggleTagInput() }}
                     >
-                        #
+                        <i className="codicon codicon-filter"></i>
                     </button>
                     <button
                         className={`search-button ${this.regexMode ? 'active' : ''}`}
                         title="Toggle RegEx search (Ctrl+Alt+R)"
                         on={{ click: () => this.toggleRegexMode() }}
                     >
-                        .*
+                        <i className="codicon codicon-regex"></i>
                     </button>
                     <button
                         className="search-button"
@@ -298,7 +298,7 @@ export class SearchBarPanel {
                             },
                         }}
                     >
-                        x
+                        <i className="codicon codicon-close"></i>
                     </button>
                 </div>
 
@@ -328,7 +328,7 @@ export class SearchBarPanel {
                                 },
                             }}
                         >
-                            ?
+                            <i className="codicon codicon-question"></i>
                         </button>
                     </div>
                 )}
