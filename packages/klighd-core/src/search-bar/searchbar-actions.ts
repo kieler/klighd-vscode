@@ -481,7 +481,7 @@ export class SearchBarActionHandler implements IActionHandler {
         query: string,
         filter: (el: any) => boolean,
         results: SearchResult[],
-        regex: RegExp | null
+        regex: RegExp | undefined
     ): void {
         const { text } = element as unknown as KText
         const matches = regex ? regex.test(text) : text.toLowerCase().includes(query)
@@ -526,13 +526,13 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param query the user input
      * @returns a parsed regular expression or an error
      */
-    private compileRegex(query: string): RegExp | null {
+    private compileRegex(query: string): RegExp | undefined {
         try {
             return new RegExp(query, 'i')
         } catch (e) {
             const errorMessage = e instanceof Error ? e.message : String(e)
             this.panel.setError(errorMessage)
-            return null
+            return undefined
         }
     }
 
@@ -544,7 +544,7 @@ export class SearchBarActionHandler implements IActionHandler {
      */
     private searchModel(root: SModelElement, query: string, tagQuery: string): SearchResult[] {
         const results: SearchResult[] = []
-        const regex = this.panel.isRegex ? this.compileRegex(query) : null
+        const regex = this.panel.isRegex ? this.compileRegex(query) : undefined
         const lowerQuery = query.toLowerCase()
         const queue: SModelElement[] = [root]
 

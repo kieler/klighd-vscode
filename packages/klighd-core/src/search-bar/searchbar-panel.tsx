@@ -36,7 +36,7 @@ export class SearchBarPanel {
 
     private searched: boolean = false
 
-    private tooltipEl: HTMLElement | null = null
+    private tooltipEl: HTMLElement | undefined = undefined
 
     private hoverTooltipText: string = ''
 
@@ -54,11 +54,11 @@ export class SearchBarPanel {
 
     private regexMode: boolean = false
 
-    private currentError: string | null = null
+    private currentError: string | undefined = undefined
 
-    private mainInput: HTMLInputElement | null = null
+    private mainInput: HTMLInputElement | undefined = undefined
 
-    private tagInput: HTMLInputElement | null = null
+    private tagInput: HTMLInputElement | undefined = undefined
 
     private tags: { tag: string; num?: number }[] = []
 
@@ -67,7 +67,7 @@ export class SearchBarPanel {
     private lastSearchQuery: string = ''
 
     // eslint-disable-next-line no-undef
-    private tagSearchTimeout: NodeJS.Timeout | null = null
+    private tagSearchTimeout: NodeJS.Timeout | undefined = undefined
 
     @inject(TYPES.IActionDispatcher) protected readonly actionDispatcher: IActionDispatcher
 
@@ -95,7 +95,7 @@ export class SearchBarPanel {
      * returns whether the user input currently contains a syntax error
      */
     public get hasError(): boolean {
-        return this.currentError !== null
+        return this.currentError !== undefined
     }
 
     /**
@@ -112,7 +112,7 @@ export class SearchBarPanel {
      * should be used when resetting the UI
      */
     public clearError() {
-        this.currentError = null
+        this.currentError = undefined
         this.update()
     }
 
@@ -267,7 +267,7 @@ export class SearchBarPanel {
                                 this.mainInput = vnode.elm as HTMLInputElement
                             },
                             destroy: () => {
-                                this.mainInput = null
+                                this.mainInput = undefined
                             },
                         }}
                         on={{ input: () => this.handleInputChange() }}
@@ -313,7 +313,7 @@ export class SearchBarPanel {
                                     this.tagInput = vnode.elm as HTMLInputElement
                                 },
                                 destroy: () => {
-                                    this.tagInput = null
+                                    this.tagInput = undefined
                                 },
                             }}
                             on={{ input: () => this.handleInputChange() }}
@@ -337,7 +337,7 @@ export class SearchBarPanel {
                     ? this.showAvailableTags({ key: 'available-tags' })
                     : this.searched
                       ? this.showSearchResults({ key: 'search-results' })
-                      : null}
+                      : undefined}
 
                 {this.hoverPathDiv({ key: 'hover-path' })}
             </div>
