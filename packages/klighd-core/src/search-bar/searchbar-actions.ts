@@ -70,28 +70,11 @@ export namespace ToggleSearchBarAction {
     }
 }
 
-@injectable()
-export class ToggleSearchBarHandler implements IActionHandler {
-    handle(action: Action): void {
-        if (ToggleSearchBarAction.isThisAction(action)) {
-            if (action.id !== SearchBar.ID) return
-
-            const newVisible = action.state === 'show'
-
-            if (action.panel.isVisible !== newVisible) {
-                action.panel.changeVisibility(newVisible)
-                action.panel.update()
-            }
-        }
-    }
-}
-
 export interface UpdateHighlightsAction extends Action {
     kind: typeof UpdateHighlightsAction.KIND
     selectedIndex: number
     previousIndex: number | undefined
     results: SearchResult[]
-    panel: SearchBarPanel
 }
 
 // eslint-disable-next-line no-redeclare
@@ -101,15 +84,13 @@ export namespace UpdateHighlightsAction {
     export function create(
         currentIndex: number,
         prevIndex: number | undefined,
-        results: SearchResult[],
-        panel: SearchBarPanel
+        results: SearchResult[]
     ): UpdateHighlightsAction {
         return {
             kind: KIND,
             selectedIndex: currentIndex,
             previousIndex: prevIndex,
             results,
-            panel,
         }
     }
 
@@ -137,6 +118,7 @@ export namespace ClearHighlightsAction {
     }
 }
 
+// TODO: extract this KRectangle creation to a dedicated JS KGraph creation library
 function createHighlightRectangle(
     elem: SModelElement,
     xPos: number,
@@ -199,16 +181,14 @@ function removeHighlights(elem: SModelElement): void {
 
 export interface RetrieveTagsActions extends Action {
     kind: typeof RetrieveTagsAction.KIND
-    panel: SearchBarPanel
 }
 
 export namespace RetrieveTagsAction {
     export const KIND = 'retrieveTags'
 
-    export function create(panel: SearchBarPanel): RetrieveTagsActions {
+    export function create(): RetrieveTagsActions {
         return {
             kind: KIND,
-            panel,
         }
     }
 
@@ -220,7 +200,6 @@ export namespace RetrieveTagsAction {
 export interface SearchAction extends Action {
     kind: typeof SearchAction.KIND
     id: string
-    panel: SearchBarPanel
     textInput: string
     tagInput: string
 }
@@ -229,13 +208,12 @@ export interface SearchAction extends Action {
 export namespace SearchAction {
     export const KIND = 'handleSearch'
 
-    export function create(panel: SearchBarPanel, id: string, textInput: string, tagInput: string): SearchAction {
+    export function create(id: string, textInput: string, tagInput: string): SearchAction {
         return {
             kind: KIND,
             id,
             textInput,
             tagInput,
-            panel,
         }
     }
 
@@ -252,7 +230,7 @@ interface HighlightBounds {
 }
 
 @injectable()
-export class HandleSearchAction implements IActionHandler {
+export class SearchBarActionHandler implements IActionHandler {
     private static currentModel?: SModelElement
 
     private OPACITY_INCREMENT: number = 2
@@ -260,6 +238,8 @@ export class HandleSearchAction implements IActionHandler {
     private HIGHLIGHT_MATCH: number = 2
 
     private HIGHLIGHT_MAIN_MATCH: number = 1
+
+    private panel: SearchBarPanel
 
     // TODO: ktexts can't have a border, so instead of setting highlight directly on the ktext, a rectangle with the correct
     //       size should be added behind it instead (this does pose an additional issue with the foreground then not being
@@ -270,6 +250,7 @@ export class HandleSearchAction implements IActionHandler {
     initialize(registry: ActionHandlerRegistry): void {
         registry.register(SetModelAction.KIND, this)
         registry.register(UpdateModelAction.KIND, this)
+        registry.register(ToggleSearchBarAction.KIND, this)
         registry.register(SearchAction.KIND, this)
         registry.register(ClearHighlightsAction.KIND, this)
         registry.register(UpdateHighlightsAction.KIND, this)
@@ -280,30 +261,42 @@ export class HandleSearchAction implements IActionHandler {
         /* Intercept model during SetModelAction / UpdateModelAction */
         if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
             const model = (action as SetModelAction).newRoot as SModelElement
-            HandleSearchAction.currentModel = model
+            SearchBarActionHandler.currentModel = model
             return
         }
 
-        if (!HandleSearchAction.currentModel) return
+        if (!SearchBarActionHandler.currentModel) return
 
-        const modelId = HandleSearchAction.currentModel?.id
+        const modelId = SearchBarActionHandler.currentModel?.id
 
-        /* Handle ClearHighlightsActions */
-        if (ClearHighlightsAction.isThisAction(action)) {
-            removeHighlights(HandleSearchAction.currentModel)
+        if (ToggleSearchBarAction.isThisAction(action)) {
+            if (action.id !== SearchBar.ID) return
+            if (!this.panel) {
+                this.panel = action.panel
+            }
+
+            const newVisible = action.state === 'show'
+
+            if (this.panel.isVisible !== newVisible) {
+                this.panel.changeVisibility(newVisible)
+                this.panel.update()
+            }
+        } else if (ClearHighlightsAction.isThisAction(action)) {
+            /* Handle ClearHighlightsActions */
+            removeHighlights(SearchBarActionHandler.currentModel)
             // make changes visible
             if (modelId && this.actionDispatcher) {
                 this.actionDispatcher.dispatch(CenterAction.create([modelId]))
             }
         } else if (UpdateHighlightsAction.isThisAction(action)) {
             /* Update highlights to show current result orange  */
-            if (action.selectedIndex === undefined || !action.results || !action.panel) return
-            this.updateHighlights(action.selectedIndex, action.previousIndex, action.results, action.panel)
+            if (action.selectedIndex === undefined || !action.results || !this.panel) return
+            this.updateHighlights(action.selectedIndex, action.previousIndex, action.results)
             this.actionDispatcher.dispatch(CenterAction.create([modelId]))
         } else if (RetrieveTagsAction.isThisAction(action)) {
             /* searches for all tags on the model */
-            if (!action.panel) return
-            this.retrieveTags(HandleSearchAction.currentModel, action.panel)
+            if (!this.panel) return
+            this.retrieveTags(SearchBarActionHandler.currentModel)
         }
 
         /* Handle search itself */
@@ -313,12 +306,13 @@ export class HandleSearchAction implements IActionHandler {
         const query = action.textInput.trim().toLowerCase()
         const tagQuery = action.tagInput
 
-        const results: SearchResult[] = this.searchModel(HandleSearchAction.currentModel, query, tagQuery, action.panel)
-        this.highlightSearchResults(results)
-        this.updateHighlights(0, undefined, results, action.panel)
+        const results: SearchResult[] = this.searchModel(SearchBarActionHandler.currentModel, query, tagQuery)
 
-        action.panel.setResults(results)
-        action.panel.update()
+        this.highlightSearchResults(results)
+        this.updateHighlights(0, undefined, results)
+
+        this.panel.setResults(results)
+        this.panel.update()
     }
 
     /**
@@ -326,8 +320,8 @@ export class HandleSearchAction implements IActionHandler {
      * @param root the model
      * @param panel the search bar panel
      */
-    private retrieveTags(root: SModelElement, panel: SearchBarPanel): void {
-        const results = this.searchModel(root, '', 'true', panel).map((result) => result.element)
+    private retrieveTags(root: SModelElement): void {
+        const results = this.searchModel(root, '', 'true').map((result) => result.element)
         if (!results) return
 
         const seenTags = new Set<string>()
@@ -361,7 +355,7 @@ export class HandleSearchAction implements IActionHandler {
         }
 
         tags.sort((a, b) => a.tag.localeCompare(b.tag))
-        panel.setTags(tags)
+        this.panel.setTags(tags)
     }
 
     /**
@@ -428,12 +422,7 @@ export class HandleSearchAction implements IActionHandler {
      * @param lastIndex the previous selectedIndex (currently orange -> needs to be yellow)
      * @param results the search results
      */
-    private updateHighlights(
-        selectedIndex: number,
-        lastIndex: number | undefined,
-        results: SearchResult[],
-        panel: SearchBarPanel
-    ): void {
+    private updateHighlights(selectedIndex: number, lastIndex: number | undefined, results: SearchResult[]): void {
         if (selectedIndex >= results.length) return
 
         this.removeSpecificHighlight(results[selectedIndex])
@@ -441,7 +430,7 @@ export class HandleSearchAction implements IActionHandler {
         const lastElem = lastIndex !== undefined ? results[lastIndex] : undefined
         if (lastElem) this.removeSpecificHighlight(lastElem)
 
-        if (panel.textInput === '') {
+        if (this.panel.textInput === '') {
             if (lastElem) this.addHighlightToElement(lastElem, this.extractBounds(lastElem), this.HIGHLIGHT_MATCH)
             this.addHighlightToElement(
                 results[selectedIndex],
@@ -539,15 +528,14 @@ export class HandleSearchAction implements IActionHandler {
     /**
      * Helper function for regular expressions
      * @param query the user input
-     * @param panel our searchbar panel
      * @returns a parsed regular expression or an error
      */
-    private compileRegex(query: string, panel: SearchBarPanel): RegExp | null {
+    private compileRegex(query: string): RegExp | null {
         try {
             return new RegExp(query, 'i')
         } catch (e) {
             const errorMessage = e instanceof Error ? e.message : String(e)
-            panel.setError(errorMessage)
+            this.panel.setError(errorMessage)
             return null
         }
     }
@@ -556,12 +544,11 @@ export class HandleSearchAction implements IActionHandler {
      * Perform a breadth-first search on {@param root} to find {@param query}
      * @param root the model
      * @param query the user input
-     * @param panel the search bar panel
      * @returns array of results
      */
-    private searchModel(root: SModelElement, query: string, tagQuery: string, panel: SearchBarPanel): SearchResult[] {
+    private searchModel(root: SModelElement, query: string, tagQuery: string): SearchResult[] {
         const results: SearchResult[] = []
-        const regex = panel.isRegex ? this.compileRegex(query, panel) : null
+        const regex = this.panel.isRegex ? this.compileRegex(query) : null
         const lowerQuery = query.toLowerCase()
         const queue: SModelElement[] = [root]
 
@@ -596,7 +583,7 @@ export class HandleSearchAction implements IActionHandler {
                 filter = createSemanticFilter(tagQuery)
             } catch (e) {
                 const errorMessage = e instanceof Error ? e.message : String(e)
-                panel.setError(errorMessage)
+                this.panel.setError(errorMessage)
                 return results
             }
         }

@@ -38,6 +38,12 @@ export class SearchBarPanel {
 
     private tooltipEl: HTMLElement | null = null
 
+    private hoverTooltipText: string = ''
+
+    private hoverTooltipPos: { x: number; y: number } = { x: 0, y: 0 }
+
+    private showHoverTooltip: boolean = false
+
     private selectedIndex: number = 0
 
     private previousIndex: number = 0
@@ -231,7 +237,7 @@ export class SearchBarPanel {
         this.searched = true
 
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
-        this.actionDispatcher.dispatch(SearchAction.create(this, SearchBar.ID, query, tagQuery))
+        this.actionDispatcher.dispatch(SearchAction.create(SearchBar.ID, query, tagQuery))
 
         document.addEventListener('keydown', this.handleKeyNavigation)
     }
@@ -329,25 +335,33 @@ export class SearchBarPanel {
                     </div>
                 )}
 
-                {this.hoverPathDiv()}
-                {this.showTagList ? this.showAvailableTags() : this.searched ? this.showSearchResults() : null}
+                {this.showTagList
+                    ? this.showAvailableTags({ key: 'available-tags' })
+                    : this.searched
+                      ? this.showSearchResults({ key: 'search-results' })
+                      : null}
+
+                {this.hoverPathDiv({ key: 'hover-path' })}
             </div>
         )
     }
 
-    private hoverPathDiv(): VNode {
+    private hoverPathDiv(props?: any): VNode {
         const tooltip: VNode = (
             <div
+                key={props?.key}
                 className="search-tooltip"
                 style={{
-                    top: '0px',
-                    left: '0px',
-                    display: 'none',
+                    top: `${this.hoverTooltipPos?.y ?? 0}px`,
+                    left: `${this.hoverTooltipPos?.x ?? 0}px`,
+                    display: this.showHoverTooltip ? 'block' : 'none',
                 }}
                 hook-insert={(vnode: VNode) => {
                     this.tooltipEl = vnode.elm as HTMLElement
                 }}
-            ></div>
+            >
+                {this.hoverTooltipText}
+            </div>
         )
         return tooltip
     }
@@ -357,25 +371,27 @@ export class SearchBarPanel {
      * @param panel The searchbar panel
      * @returns panel with result list
      */
-    private showSearchResults(): VNode {
+    private showSearchResults(props?: any): VNode {
         if (this.hasError) {
             return (
                 <div>
-                    <div className="search-results-error">{this.currentError}</div>
+                    <div key={props?.key} className="search-results-error">
+                        {this.currentError}
+                    </div>
                 </div>
             )
         }
 
         if (this.searchResults.length === 0) {
             return (
-                <div className="search-results">
+                <div key={props?.key} className="search-results">
                     <div className="search-results-header">No results found</div>
                 </div>
             )
         }
 
         return (
-            <div className="search-results">
+            <div key={props?.key} className="search-results">
                 <div className="search-results-header">
                     {this.selectedIndex + 1} of {this.searchResults.length}
                 </div>
@@ -392,17 +408,15 @@ export class SearchBarPanel {
                                 on={{
                                     mouseenter: (event: MouseEvent) => {
                                         const path = this.decodeId(this.searchResults[index].element.id)
-                                        if (this.tooltipEl) {
-                                            this.tooltipEl.textContent = path
-                                            this.tooltipEl.style.top = `${event.clientY + 12}px`
-                                            this.tooltipEl.style.left = `${event.clientX + 12}px`
-                                            this.tooltipEl.style.display = 'block'
-                                        }
+                                        this.hoverTooltipText = path
+                                        this.hoverTooltipPos.x = event.clientX + 12
+                                        this.hoverTooltipPos.y = event.clientY + 12
+                                        this.showHoverTooltip = true
+                                        this.update()
                                     },
                                     mouseleave: () => {
-                                        if (this.tooltipEl) {
-                                            this.tooltipEl.style.display = 'none'
-                                        }
+                                        this.showHoverTooltip = false
+                                        this.update()
                                     },
                                     click: () => {
                                         this.panToElement(result.element.id)
@@ -411,8 +425,7 @@ export class SearchBarPanel {
                                             UpdateHighlightsAction.create(
                                                 this.selectedIndex,
                                                 this.previousIndex,
-                                                this.searchResults,
-                                                this
+                                                this.searchResults
                                             )
                                         )
                                         this.previousIndex = index
@@ -467,13 +480,13 @@ export class SearchBarPanel {
      * Show all tags in a result list
      * @returns panel with tag list
      */
-    private showAvailableTags(): VNode {
+    private showAvailableTags(props?: any): VNode {
         if (!this.showTagList || this.tags.length === 0) {
             return <div></div>
         }
 
         return (
-            <div className="search-results">
+            <div key={props?.key} className="search-results">
                 <div className="search-results-header">Available Tags</div>
 
                 <ul className={`search-results-list ${this.tags.length > 8 ? 'scrollable' : ''}`}>
@@ -617,7 +630,7 @@ export class SearchBarPanel {
             this.selectedIndex = this.searchResults.length - 1
             this.usedArrowKeys = true
             this.actionDispatcher.dispatch(
-                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
             )
             this.previousIndex = this.selectedIndex
             return
@@ -628,7 +641,7 @@ export class SearchBarPanel {
             this.selectedIndex = 0
             this.usedArrowKeys = true
             this.actionDispatcher.dispatch(
-                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
             )
             this.previousIndex = this.selectedIndex
             return
@@ -640,7 +653,7 @@ export class SearchBarPanel {
                 this.usedArrowKeys = true
                 this.selectedIndex = (this.selectedIndex + 1) % this.searchResults.length
                 this.actionDispatcher.dispatch(
-                    UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+                    UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
                 )
                 this.previousIndex = this.selectedIndex
                 break
@@ -650,7 +663,7 @@ export class SearchBarPanel {
                 this.usedArrowKeys = true
                 this.selectedIndex = (this.selectedIndex - 1 + this.searchResults.length) % this.searchResults.length
                 this.actionDispatcher.dispatch(
-                    UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults, this)
+                    UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
                 )
                 this.previousIndex = this.selectedIndex
                 break
@@ -672,12 +685,7 @@ export class SearchBarPanel {
                     this.panToElement(selected.element.id)
                     if (!this.usedArrowKeys) {
                         this.actionDispatcher.dispatch(
-                            UpdateHighlightsAction.create(
-                                this.selectedIndex,
-                                this.previousIndex,
-                                this.searchResults,
-                                this
-                            )
+                            UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
                         )
                     }
                     this.previousIndex = this.selectedIndex

@@ -101,7 +101,7 @@ export class SearchBar extends AbstractUIExtension {
                 event.preventDefault()
                 this.panel.changeVisibility(true)
                 this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, SearchBar.ID, 'show'))
-                this.actionDispatcher.dispatch(RetrieveTagsAction.create(this.panel))
+                this.actionDispatcher.dispatch(RetrieveTagsAction.create())
             }
         })
     }

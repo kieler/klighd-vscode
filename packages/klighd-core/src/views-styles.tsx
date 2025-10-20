@@ -755,15 +755,17 @@ export function getSvgColorStyles(
             case 1:
                 foreground = { color: 'var(--kdc-color-findMatchForeground)' } as ColorStyle
                 background = { color: 'var(--kdc-color-findMatchBackground)' } as ColorStyle
-            // intentional fallthrough
+                break
             case 3:
+                foreground = { color: 'var(--kdc-color-findMatchForeground)' } as ColorStyle
                 background = { color: 'var(--kdc-color-findMatchBackground)', opacity: '0.2' } as ColorStyle
                 break
             case 2:
                 foreground = { color: 'var(--kdc-color-findMatchHighlightForeground)' } as ColorStyle
                 background = { color: 'var(--kdc-color-findMatchHighlightBackground)' } as ColorStyle
-            // intentional fallthrough
+                break
             case 4:
+                foreground = { color: 'var(--kdc-color-findMatchHighlightForeground)' } as ColorStyle
                 background = { color: 'var(--kdc-color-findMatchHighlightBackground)', opacity: '0.2' } as ColorStyle
                 break
             default:
