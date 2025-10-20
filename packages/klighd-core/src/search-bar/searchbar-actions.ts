@@ -47,7 +47,6 @@ export namespace ShowSearchBarAction {
 /** hide/unhide the search bar panel */
 export interface ToggleSearchBarAction extends Action {
     kind: typeof ToggleSearchBarAction.KIND
-    id: string
     state?: 'show' | 'hide'
     panel: SearchBarPanel
 }
@@ -56,10 +55,9 @@ export interface ToggleSearchBarAction extends Action {
 export namespace ToggleSearchBarAction {
     export const KIND = 'toggleSearchBar'
 
-    export function create(panel: SearchBarPanel, id: string, state?: 'show' | 'hide'): ToggleSearchBarAction {
+    export function create(panel: SearchBarPanel, state?: 'show' | 'hide'): ToggleSearchBarAction {
         return {
             kind: KIND,
-            id,
             state,
             panel,
         }
@@ -270,7 +268,6 @@ export class SearchBarActionHandler implements IActionHandler {
         const modelId = SearchBarActionHandler.currentModel?.id
 
         if (ToggleSearchBarAction.isThisAction(action)) {
-            if (action.id !== SearchBar.ID) return
             if (!this.panel) {
                 this.panel = action.panel
             }
@@ -292,27 +289,26 @@ export class SearchBarActionHandler implements IActionHandler {
             /* Update highlights to show current result orange  */
             if (action.selectedIndex === undefined || !action.results || !this.panel) return
             this.updateHighlights(action.selectedIndex, action.previousIndex, action.results)
-            this.actionDispatcher.dispatch(CenterAction.create([modelId]))
+            if (modelId && this.actionDispatcher) {
+                this.actionDispatcher.dispatch(CenterAction.create([modelId]))
+            }
         } else if (RetrieveTagsAction.isThisAction(action)) {
             /* searches for all tags on the model */
             if (!this.panel) return
             this.retrieveTags(SearchBarActionHandler.currentModel)
+        } else if (SearchAction.isThisAction(action)) {
+            /* Handle search itself */
+            const query = action.textInput.trim().toLowerCase()
+            const tagQuery = action.tagInput
+
+            const results: SearchResult[] = this.searchModel(SearchBarActionHandler.currentModel, query, tagQuery)
+
+            this.highlightSearchResults(results)
+            this.updateHighlights(0, undefined, results)
+
+            this.panel.setResults(results)
+            this.panel.update()
         }
-
-        /* Handle search itself */
-        if (!SearchAction.isThisAction(action)) return
-        if (action.id !== SearchBar.ID) return
-
-        const query = action.textInput.trim().toLowerCase()
-        const tagQuery = action.tagInput
-
-        const results: SearchResult[] = this.searchModel(SearchBarActionHandler.currentModel, query, tagQuery)
-
-        this.highlightSearchResults(results)
-        this.updateHighlights(0, undefined, results)
-
-        this.panel.setResults(results)
-        this.panel.update()
     }
 
     /**

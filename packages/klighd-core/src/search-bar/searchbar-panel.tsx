@@ -294,9 +294,7 @@ export class SearchBarPanel {
                                 this.changeVisibility(false)
                                 this.searched = false
                                 this.tagInputVisible = false
-                                this.actionDispatcher.dispatch(
-                                    ToggleSearchBarAction.create(panel, SearchBar.ID, 'hide')
-                                )
+                                this.actionDispatcher.dispatch(ToggleSearchBarAction.create(panel, 'hide'))
                             },
                         }}
                     >
@@ -585,7 +583,7 @@ export class SearchBarPanel {
         this.changeVisibility(false)
         this.searched = false
         this.tagInputVisible = false
-        this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, SearchBar.ID, 'hide'))
+        this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
     }
 
     /**
