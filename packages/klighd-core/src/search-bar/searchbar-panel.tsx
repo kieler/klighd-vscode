@@ -430,26 +430,6 @@ export class SearchBarPanel {
                                         this.update()
                                     },
                                 }}
-                                hook={{
-                                    insert: (vnode) => {
-                                        if (isSelected) {
-                                            ;(vnode.elm as HTMLElement).scrollIntoView({
-                                                behavior: 'smooth',
-                                                block: 'nearest',
-                                            })
-                                        }
-                                    },
-                                    update: (oldVnode, vnode) => {
-                                        if (isSelected) {
-                                            setTimeout(() => {
-                                                ;(vnode.elm as HTMLElement).scrollIntoView({
-                                                    behavior: 'smooth',
-                                                    block: 'nearest',
-                                                })
-                                            }, 0)
-                                        }
-                                    },
-                                }}
                             >
                                 {this.searchResults[index].displayText}
                                 {isSelected && (
