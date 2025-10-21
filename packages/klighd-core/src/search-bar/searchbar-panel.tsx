@@ -420,6 +420,10 @@ export class SearchBarPanel {
                                         this.showHoverTooltip = false
                                         this.update()
                                     },
+                                    destroy: () => {
+                                        this.showHoverTooltip = false
+                                        this.update()
+                                    },
                                     click: () => {
                                         this.panToElement(result.element.id)
                                         this.selectedIndex = index
@@ -445,6 +449,15 @@ export class SearchBarPanel {
                 </ul>
             </div>
         )
+    }
+
+    private calculateTooltip(index: number, event: MouseEvent) {
+        const path = this.decodeId(this.searchResults[index].element.id)
+        this.hoverTooltipText = path
+        this.hoverTooltipPos.x = event.clientX + 12
+        this.hoverTooltipPos.y = event.clientY + 12
+        this.showHoverTooltip = true
+        this.update()
     }
 
     /**
