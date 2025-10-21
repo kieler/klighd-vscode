@@ -218,6 +218,7 @@ export class SearchBarPanel {
             this.showTagList = false
             if (this.tagInput) this.tagInput.value = ''
             if (this.mainInput) {
+                this.mainInput.focus()
                 if (this.mainInput.value === '') {
                     this.resetUI()
                 } else {
@@ -456,20 +457,12 @@ export class SearchBarPanel {
         )
     }
 
-    private calculateTooltip(index: number, event: MouseEvent) {
-        const path = this.decodeId(this.searchResults[index].element.id)
-        this.hoverTooltipText = path
-        this.hoverTooltipPos.x = event.clientX + 12
-        this.hoverTooltipPos.y = event.clientY + 12
-        this.showHoverTooltip = true
-        this.update()
-    }
-
     /**
      * Toggles regex mode on and off
      */
     private toggleRegexMode() {
         this.regexMode = !this.regexMode
+        this.performSearch()
         this.update()
         setTimeout(() => {
             if (this.mainInput) this.mainInput.focus()

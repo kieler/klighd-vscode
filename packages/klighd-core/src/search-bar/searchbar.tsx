@@ -97,7 +97,7 @@ export class SearchBar extends AbstractUIExtension {
 
     private addKeyListener(): void {
         window.addEventListener('keydown', (event) => {
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+            if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f') {
                 event.preventDefault()
                 this.panel.changeVisibility(true)
                 this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, 'show'))
