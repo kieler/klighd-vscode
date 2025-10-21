@@ -617,7 +617,8 @@ export class SearchBarActionHandler implements IActionHandler {
 
             /* Add children to queue */
             if (isContainerRendering(element) || isSKGraphElement(element) || element.type === 'graph') {
-                for (const child of (element as any).children) { // TODO: bad don't do this
+                // TODO: bad don't do this
+                for (const child of (element as any).children) {
                     queue.push(child as SKGraphElement | KRendering)
                 }
             }
