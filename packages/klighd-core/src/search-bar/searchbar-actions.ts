@@ -20,14 +20,26 @@ import {
     ActionHandlerRegistry,
     IActionDispatcher,
     IActionHandler,
+    SChildElementImpl,
     SetUIExtensionVisibilityAction,
     TYPES,
 } from 'sprotty'
-import { Action, CenterAction, SetModelAction, SModelElement, UpdateModelAction } from 'sprotty-protocol'
+import { Action, CenterAction, SetModelAction, SModelRoot, UpdateModelAction } from 'sprotty-protocol'
+import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { createSemanticFilter } from '../filtering/util'
 import { SearchBar } from './searchbar'
 import { SearchBarPanel } from './searchbar-panel'
-import { isContainerRendering, isKText, KRectangle, KText } from '../skgraph-models'
+import {
+    isContainerRendering,
+    isKText,
+    isRendering,
+    isSKGraphElement,
+    isSKLabel,
+    KRectangle,
+    KRendering,
+    KText,
+    SKLabel,
+} from '../skgraph-models'
 import { getReservedStructuralTags } from '../filtering/reserved-structural-tags'
 import { SearchResult } from './search-results'
 
@@ -118,7 +130,7 @@ export namespace ClearHighlightsAction {
 
 // TODO: extract this KRectangle creation to a dedicated JS KGraph creation library
 function createHighlightRectangle(
-    elem: SModelElement,
+    elem: SKGraphElement,
     xPos: number,
     yPos: number,
     width: number,
@@ -145,8 +157,8 @@ function createHighlightRectangle(
  * Remove all highlights
  * @param elem the root
  */
-function removeHighlights(elem: SModelElement): void {
-    const queue: SModelElement[] = [elem]
+function removeHighlights(elem: SKGraphElement): void {
+    const queue: (SKGraphElement | KRendering)[] = [elem]
 
     while (queue.length > 0) {
         const element = queue.shift()!
@@ -158,19 +170,22 @@ function removeHighlights(elem: SModelElement): void {
 
         // Remove rectangle highlights from children
         if ('children' in element && Array.isArray(element.children)) {
-            element.children = element.children.filter((child) => !child.id?.startsWith('highlightRect-'))
-            element.children.forEach((child) => queue.push(child))
+            element.removeAll((child: SChildElementImpl) => !child.id?.startsWith('highlightRect-'))
+            element.children.forEach((child: SKGraphElement) => queue.push(child))
         }
 
         // Handle data array (for renderings)
-        const { data } = element as any
-        if (Array.isArray(data)) {
-            for (const item of data) {
-                if (item && 'children' in item && Array.isArray(item.children)) {
-                    item.children = item.children.filter(
-                        (child: { id: string }) => !child.id?.startsWith('highlightRect-')
-                    )
-                    item.children.forEach((c: any) => queue.push(c))
+        if (isSKGraphElement(element)) {
+            const { data } = element
+            if (Array.isArray(data)) {
+                // TODO: special case toplevel no container rendering
+                for (const item of data) {
+                    if (isContainerRendering(item)) {
+                        item.children = item.children.filter(
+                            (child: { id: string }) => !child.id?.startsWith('highlightRect-')
+                        )
+                        item.children.forEach((c: KRendering) => queue.push(c))
+                    }
                 }
             }
         }
@@ -229,7 +244,7 @@ interface HighlightBounds {
 
 @injectable()
 export class SearchBarActionHandler implements IActionHandler {
-    private static currentModel?: SModelElement
+    private static currentModel?: SKGraphElement
 
     private OPACITY_INCREMENT: number = 2
 
@@ -258,8 +273,11 @@ export class SearchBarActionHandler implements IActionHandler {
     handle(action: Action): void {
         /* Intercept model during SetModelAction / UpdateModelAction */
         if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
-            const model = (action as SetModelAction).newRoot as SModelElement
-            SearchBarActionHandler.currentModel = model
+            const root: SModelRoot = (action as SetModelAction).newRoot
+            if (root.type !== 'graph') {
+                return
+            }
+            SearchBarActionHandler.currentModel = root as unknown as SKGraphElement
             return
         }
 
@@ -316,14 +334,14 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param root the model
      * @param panel the search bar panel
      */
-    private retrieveTags(root: SModelElement): void {
+    private retrieveTags(root: SKGraphElement): void {
         const results = this.searchModel(root, '', 'true').map((result) => result.element)
         if (!results) return
 
         const seenTags = new Set<string>()
         const tags: { tag: string; num?: number }[] = getReservedStructuralTags().map((tag) => ({ tag }))
 
-        const collectFrom = (obj: any) => {
+        const collectFrom = (obj: SKGraphElement | KRendering) => {
             const tagProp = obj?.properties?.['de.cau.cs.kieler.klighd.semanticFilter.tags']
             if (Array.isArray(tagProp)) {
                 for (const item of tagProp) {
@@ -339,13 +357,15 @@ export class SearchBarActionHandler implements IActionHandler {
         }
 
         while (results.length > 0) {
-            const currentElem = results.shift()! as any
+            const currentElem = results.shift()!
 
             collectFrom(currentElem)
 
             if (Array.isArray(currentElem.data)) {
                 for (const child of currentElem.data) {
-                    collectFrom(child)
+                    if (isRendering(child)) {
+                        collectFrom(child)
+                    }
                 }
             }
         }
@@ -367,18 +387,17 @@ export class SearchBarActionHandler implements IActionHandler {
             element.properties['klighd.rendering.highlight'] = 0
         }
 
-        if ('children' in element && Array.isArray(element.children)) {
-            element.children = element.children.filter((child) => !child.id?.includes(`highlightRect-${elemID}`))
+        if (isContainerRendering(element)) {
+            element.removeAll((child) => !child.id?.includes(`highlightRect-${elemID}`))
         }
 
-        const { data } = element as any
-        if (Array.isArray(data)) {
-            for (const item of data) {
-                if (item && 'children' in item && Array.isArray(item.children)) {
-                    item.children = item.children.filter(
-                        (child: { id: string }) => !child.id?.includes(`highlightRect-${elemID}`)
-                    )
-                }
+        const { data } = element
+        for (const item of data) {
+            // TODO: special case toplevel no container rendering
+            if (isContainerRendering(item)) {
+                item.children = item.children.filter(
+                    (child: { id: string }) => !child.id?.includes(`highlightRect-${elemID}`)
+                )
             }
         }
     }
@@ -389,8 +408,8 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param bounds the position and size of the highlight
      */
     private addHighlightToElement(searchResult: SearchResult, bounds: HighlightBounds, highlight: number): void {
-        const { data } = searchResult.element as any
-        if (Array.isArray(data)) {
+        const { data } = searchResult.element
+        if (data !== undefined) {
             for (const item of data) {
                 if (isContainerRendering(item)) {
                     const alreadyHasHighlight = item.children?.some((child) => child.id?.startsWith('highlightRect-'))
@@ -427,10 +446,11 @@ export class SearchBarActionHandler implements IActionHandler {
         if (lastElem) this.removeSpecificHighlight(lastElem)
 
         if (this.panel.textInput === '') {
-            if (lastElem) this.addHighlightToElement(lastElem, this.extractBounds(lastElem), this.HIGHLIGHT_MATCH)
+            if (lastElem)
+                this.addHighlightToElement(lastElem, this.extractBounds(lastElem.element), this.HIGHLIGHT_MATCH)
             this.addHighlightToElement(
                 results[selectedIndex],
-                this.extractBounds(results[selectedIndex]),
+                this.extractBounds(results[selectedIndex].element),
                 this.HIGHLIGHT_MAIN_MATCH
             )
         } else {
@@ -469,17 +489,17 @@ export class SearchBarActionHandler implements IActionHandler {
     /**
      * Checks if text matches query and possibly adds the element to results with highlighting
      * @param parent the graph element containing the text
-     * @param element the text field of the element
+     * @param element the rendering containing the text or the label itself
      * @param query the user input
      * @param bounds the position and size of the possible highlight
      * @param results the array containing all results
      * @param textRes the array containing all {@param text} matches
      */
     private processTextMatch(
-        parent: SModelElement,
-        element: any,
+        parent: SKGraphElement,
+        element: KText | SKLabel,
         query: string,
-        filter: (el: any) => boolean,
+        filter: (el: SKGraphElement) => boolean,
         results: SearchResult[],
         regex: RegExp | undefined
     ): void {
@@ -501,7 +521,7 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param results the array containing all results
      * @param textRes the array containing all text matches
      */
-    private processElement(element: SModelElement, results: SearchResult[]) {
+    private processElement(element: SKGraphElement, results: SearchResult[]) {
         const name = this.extractDisplayName(element)
         const result = new SearchResult(element, undefined, name)
         results.push(result)
@@ -511,14 +531,14 @@ export class SearchBarActionHandler implements IActionHandler {
      * Extracts bounds from an element
      * @param element the element, whose bounds need to be extracted
      */
-    private extractBounds(element: any): HighlightBounds {
+    private extractBounds(element: SKGraphElement): HighlightBounds {
         const bounds = element?.properties?.['klighd.lsp.calculated.bounds']
 
         if (!bounds) {
             return { x: -1, y: -1, width: -1, height: -1 }
         }
 
-        return bounds
+        return bounds as HighlightBounds
     }
 
     /**
@@ -542,38 +562,17 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param query the user input
      * @returns array of results
      */
-    private searchModel(root: SModelElement, query: string, tagQuery: string): SearchResult[] {
+    private searchModel(root: SKGraphElement, query: string, tagQuery: string): SearchResult[] {
         const results: SearchResult[] = []
         const regex = this.panel.isRegex ? this.compileRegex(query) : undefined
         const lowerQuery = query.toLowerCase()
-        const queue: SModelElement[] = [root]
-
-        /**
-         * Go into a rendering to look for the text field and compare it to the input
-         * @param rendering KText or KLabel
-         * @param parent KContainerRendering that contains {@param rendering}
-         */
-        const visitRendering = (rendering: any, parent: SModelElement): void => {
-            if (!rendering) return
-
-            /* Check KText */
-            if (isKText(rendering) && rendering.text) {
-                this.processTextMatch(parent, rendering, lowerQuery, filter, results, regex)
-            }
-
-            /* Check KContainerElements */
-            if (isContainerRendering(rendering)) {
-                for (const child of rendering.children ?? []) {
-                    visitRendering(child, parent)
-                }
-            }
-        }
+        const queue: (SKGraphElement | KRendering)[] = [root as SKGraphElement]
 
         if (query === '' && tagQuery === '') {
             return results
         }
 
-        let filter: (el: any) => boolean = () => true
+        let filter: (el: SKGraphElement) => boolean = () => true
         if (tagQuery !== '') {
             try {
                 filter = createSemanticFilter(tagQuery)
@@ -589,43 +588,37 @@ export class SearchBarActionHandler implements IActionHandler {
 
             if (query === '') {
                 /* add all elements if text query is empty */
-                if (filter(element)) {
+                if (isSKGraphElement(element) && filter(element)) {
                     this.processElement(element, results)
                 }
             } else {
                 /* handle elements with text field */
-                switch (element.type) {
-                    case 'label':
-                    case 'edge':
-                    case 'node':
-                    case 'port':
-                        if ('text' in element) {
-                            const { text } = element as any
-                            if (typeof text === 'string' && text.trim()) {
-                                this.processTextMatch(element, element, lowerQuery, filter, results, regex)
-                            }
-                        }
-                        break
-                    default:
-                        break
+                if (isSKLabel(element)) {
+                    const { text } = element
+                    if (text.trim()) {
+                        this.processTextMatch(element, element, lowerQuery, filter, results, regex)
+                    }
                 }
 
                 /* Process data field for renderings */
-                const dataArr = (element as any).data
-                if (Array.isArray(dataArr) && dataArr.length > 0) {
-                    const data = dataArr[0]
-                    if (data && Array.isArray(data.children)) {
-                        for (const child of data.children) {
-                            visitRendering(child, element)
+                if (isSKGraphElement(element)) {
+                    const dataArr: KGraphData[] = element.data
+                    if (dataArr.length > 0) {
+                        const data = dataArr[0]
+                        // TODO: special case toplevel no container rendering
+                        if (isContainerRendering(data)) {
+                            for (const child of data.children) {
+                                this.visitRendering(child, element, lowerQuery, filter, results, regex)
+                            }
                         }
                     }
                 }
             }
 
             /* Add children to queue */
-            if ('children' in element && Array.isArray((element as any).children)) {
-                for (const child of (element as any).children) {
-                    queue.push(child)
+            if (isContainerRendering(element) || isSKGraphElement(element) || element.type === 'graph') {
+                for (const child of (element as any).children) { // TODO: bad don't do this
+                    queue.push(child as SKGraphElement | KRendering)
                 }
             }
         }
@@ -634,11 +627,43 @@ export class SearchBarActionHandler implements IActionHandler {
     }
 
     /**
+     * Go into a rendering to look for the text field and compare it to the input
+     * @param rendering KText or KLabel
+     * @param parent KContainerRendering that contains {@param rendering}
+     * @param query the query string
+     * @param filter the filter function
+     * @param results the results object to store search results in
+     * @param regex a regex if there is one
+     */
+    private visitRendering(
+        rendering: KRendering,
+        parent: SKGraphElement,
+        query: string,
+        filter: (el: SKGraphElement) => boolean,
+        results: SearchResult[],
+        regex: RegExp | undefined
+    ): void {
+        if (!rendering) return
+
+        /* Check KText */
+        if (isKText(rendering) && rendering.text) {
+            this.processTextMatch(parent, rendering, query, filter, results, regex)
+        }
+
+        /* Check KContainerElements */
+        if (isContainerRendering(rendering)) {
+            for (const child of rendering.children ?? []) {
+                this.visitRendering(child, parent, query, filter, results, regex)
+            }
+        }
+    }
+
+    /**
      * Finds a name to display for nodes that meet the searched tags
      * @param element the node
      * @returns name for result list
      */
-    private extractDisplayName(element: SModelElement): string {
+    private extractDisplayName(element: SKGraphElement): string {
         const segments = element.id.split('$')
         for (let i = segments.length - 1; i >= 0; i--) {
             const segment = segments[i]

@@ -15,17 +15,17 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { SModelElement } from 'sprotty-protocol'
+import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { KText } from '../skgraph-models'
 
 export class SearchResult {
-    element: SModelElement
+    element: SKGraphElement
 
     kText: KText | undefined
 
     displayText: string
 
-    constructor(element: SModelElement, kText: KText | undefined, displayText: string) {
+    constructor(element: SKGraphElement, kText: KText | undefined, displayText: string) {
         this.element = element
         this.kText = kText
         this.displayText = displayText

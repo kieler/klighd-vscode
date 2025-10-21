@@ -25,7 +25,6 @@ import {
     RGBColor,
     selectFeature,
     SLabelImpl,
-    SModelElementImpl,
 } from 'sprotty'
 import { Bounds, isBounds, Point } from 'sprotty-protocol'
 
@@ -97,9 +96,9 @@ export class SKLabel extends SLabelImpl implements SKGraphElement {
 
     data: KGraphData[]
 
-    areChildAreaChildrenRendered = false
+    areChildAreaChildrenRendered? = false
 
-    areNonChildAreaChildrenRendered = false
+    areNonChildAreaChildrenRendered? = false
 
     hasFeature(feature: symbol): boolean {
         // The boundsFeature here is additionally needed because bounds of labels need to be
@@ -755,11 +754,22 @@ export function isSKGraphElement(test: unknown): test is SKGraphElement {
     if (test === null) {
         return false
     }
+    const { type } = test as any
     return (
-        test instanceof SModelElementImpl &&
-        (test as any).areChildAreaChildrenRendered !== undefined &&
-        (test as any).areNonChildAreaChildrenRendered !== undefined &&
-        (test as any).opacity !== undefined &&
-        (test as any).data !== undefined
+        (type === NODE_TYPE || type === EDGE_TYPE || type === PORT_TYPE || type === LABEL_TYPE) &&
+        (test as any).data !== undefined &&
+        (test as any).properties !== undefined
     )
+}
+
+/**
+ * Returns if the given parameter is an SKLabel.
+ * @param test The potential SKLabel.
+ */
+export function isSKLabel(test: unknown): test is SKLabel {
+    if (test === null) {
+        return false
+    }
+    const { type } = test as any
+    return type === LABEL_TYPE && (test as any).data !== undefined && (test as any).properties !== undefined
 }
