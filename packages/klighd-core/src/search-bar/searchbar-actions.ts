@@ -20,7 +20,6 @@ import {
     ActionHandlerRegistry,
     IActionDispatcher,
     IActionHandler,
-    SChildElementImpl,
     SetUIExtensionVisibilityAction,
     TYPES,
 } from 'sprotty'
@@ -153,45 +152,6 @@ function createHighlightRectangle(
     }
 }
 
-/**
- * Remove all highlights
- * @param elem the root
- */
-function removeHighlights(elem: SKGraphElement): void {
-    const queue: (SKGraphElement | KRendering)[] = [elem]
-
-    while (queue.length > 0) {
-        const element = queue.shift()!
-
-        // Remove KText highlights
-        if (isKText(element) && element.styles) {
-            element.properties['klighd.rendering.highlight'] = 0
-        }
-
-        // Remove rectangle highlights from children
-        if ('children' in element && Array.isArray(element.children)) {
-            element.removeAll((child: SChildElementImpl) => !child.id?.startsWith('highlightRect-'))
-            element.children.forEach((child: SKGraphElement) => queue.push(child))
-        }
-
-        // Handle data array (for renderings)
-        if (isSKGraphElement(element)) {
-            const { data } = element
-            if (Array.isArray(data)) {
-                // TODO: special case toplevel no container rendering
-                for (const item of data) {
-                    if (isContainerRendering(item)) {
-                        item.children = item.children.filter(
-                            (child: { id: string }) => !child.id?.startsWith('highlightRect-')
-                        )
-                        item.children.forEach((c: KRendering) => queue.push(c))
-                    }
-                }
-            }
-        }
-    }
-}
-
 export interface RetrieveTagsActions extends Action {
     kind: typeof RetrieveTagsAction.KIND
 }
@@ -298,7 +258,7 @@ export class SearchBarActionHandler implements IActionHandler {
             }
         } else if (ClearHighlightsAction.isThisAction(action)) {
             /* Handle ClearHighlightsActions */
-            removeHighlights(SearchBarActionHandler.currentModel)
+            this.removeHighlights(this.panel)
             // make changes visible
             if (modelId && this.actionDispatcher) {
                 this.actionDispatcher.dispatch(CenterAction.create([modelId]))
@@ -323,6 +283,9 @@ export class SearchBarActionHandler implements IActionHandler {
 
             this.highlightSearchResults(results)
             this.updateHighlights(0, undefined, results)
+            if (modelId && this.actionDispatcher) {
+                this.actionDispatcher.dispatch(CenterAction.create([modelId]))
+            }
 
             this.panel.setResults(results)
             this.panel.update()
@@ -375,16 +338,26 @@ export class SearchBarActionHandler implements IActionHandler {
     }
 
     /**
+     * Remove all highlights
+     * @param results the highlighted results
+     */
+    private removeHighlights(panel: SearchBarPanel): void {
+        for (const result of panel.getResults()) {
+            this.removeSpecificHighlight(result)
+        }
+    }
+
+    /**
      * Remove a specific highlight
      * @param searchResult the search result for which to remove the highlight
      */
     private removeSpecificHighlight(searchResult: SearchResult) {
         const elemID = searchResult.element.id
 
-        const { element } = searchResult
+        const { element, kText } = searchResult
 
-        if (isKText(element) && element.styles) {
-            element.properties['klighd.rendering.highlight'] = 0
+        if (kText) {
+            kText.properties['klighd.rendering.highlight'] = 0
         }
 
         if (isContainerRendering(element)) {

@@ -140,6 +140,10 @@ export class SearchBarPanel {
         this.tags = tags
     }
 
+    public getResults(): SearchResult[] {
+        return this.searchResults
+    }
+
     /**
      * Updates anything that changes, when the search bar is toggled
      * @param vis the new visibility
