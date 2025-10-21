@@ -282,7 +282,7 @@ export class SearchBarActionHandler implements IActionHandler {
             const results: SearchResult[] = this.searchModel(SearchBarActionHandler.currentModel, query, tagQuery)
 
             this.highlightSearchResults(results)
-            this.updateHighlights(0, undefined, results)
+            this.updateHighlights(this.panel.getLastActiveIndex, undefined, results)
             if (modelId && this.actionDispatcher) {
                 this.actionDispatcher.dispatch(CenterAction.create([modelId]))
             }
@@ -342,7 +342,7 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param results the highlighted results
      */
     private removeHighlights(panel: SearchBarPanel): void {
-        for (const result of panel.getResults()) {
+        for (const result of panel.getResults) {
             this.removeSpecificHighlight(result)
         }
     }

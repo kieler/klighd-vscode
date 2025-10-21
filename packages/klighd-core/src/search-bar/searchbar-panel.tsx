@@ -66,6 +66,8 @@ export class SearchBarPanel {
 
     private lastSearchQuery: string = ''
 
+    private lastActiveIndex: number = 0
+
     // eslint-disable-next-line no-undef
     private tagSearchTimeout: NodeJS.Timeout | undefined = undefined
 
@@ -140,8 +142,14 @@ export class SearchBarPanel {
         this.tags = tags
     }
 
-    public getResults(): SearchResult[] {
+    /* return the currently stored results */
+    public get getResults(): SearchResult[] {
         return this.searchResults
+    }
+
+    /* return the currently stored last active index */
+    public get getLastActiveIndex(): number {
+        return this.lastActiveIndex
     }
 
     /**
@@ -180,8 +188,8 @@ export class SearchBarPanel {
      */
     public setResults(results: SearchResult[]): void {
         this.searchResults = results
-        this.selectedIndex = 0
-        this.previousIndex = 0
+        this.selectedIndex = this.lastActiveIndex
+        this.previousIndex = this.lastActiveIndex
     }
 
     readonly id: 'search-bar-panel'
@@ -252,7 +260,7 @@ export class SearchBarPanel {
      * @param panel : the search bar panel
      * @returns the search bar panel if vis=true, else an empty div
      */
-    render(vis: boolean, panel: SearchBarPanel): VNode {
+    render(vis: boolean): VNode {
         if (!vis) {
             return <div className="search-bar-panel hidden"></div>
         }
@@ -295,10 +303,7 @@ export class SearchBarPanel {
                         title="Close search bar (Esc)"
                         on={{
                             click: () => {
-                                this.changeVisibility(false)
-                                this.searched = false
-                                this.tagInputVisible = false
-                                this.actionDispatcher.dispatch(ToggleSearchBarAction.create(panel, 'hide'))
+                                this.handleExitKey()
                             },
                         }}
                     >
@@ -538,6 +543,7 @@ export class SearchBarPanel {
         this.searched = false
         this.previousIndex = 0
         this.selectedIndex = 0
+        this.lastActiveIndex = 0
         this.update()
         this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
@@ -580,6 +586,7 @@ export class SearchBarPanel {
         this.changeVisibility(false)
         this.searched = false
         this.tagInputVisible = false
+        this.lastActiveIndex = this.selectedIndex
         this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
     }
 

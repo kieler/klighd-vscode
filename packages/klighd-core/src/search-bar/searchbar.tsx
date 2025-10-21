@@ -81,7 +81,7 @@ export class SearchBar extends AbstractUIExtension {
     update(): void {
         if (!this.containerElement) return
 
-        const content: VNode = this.panel.render(this.panel.isVisible, this.panel)
+        const content: VNode = this.panel.render(this.panel.isVisible)
 
         this.oldContentRoot = this.patcher(this.oldContentRoot, content)
     }
@@ -92,7 +92,7 @@ export class SearchBar extends AbstractUIExtension {
 
         containerElement.appendChild(contentRoot)
 
-        this.panel.render(false, this.panel) /* initially not showing */
+        this.panel.render(false) /* initially not showing */
     }
 
     private addKeyListener(): void {
