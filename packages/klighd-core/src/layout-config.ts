@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2024 by
+ * Copyright 2024-2025 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -33,7 +33,11 @@ export class KielerLayoutConfigurator extends DefaultLayoutConfigurator {
         // map properties to layout options and stringify values
         const layoutOptions: LayoutOptions = {}
         Object.entries(properties).forEach(([key, value]) => {
-            layoutOptions[key] = JSON.stringify(value)
+            if (typeof value === 'string') {
+                layoutOptions[key] = value
+            } else {
+                layoutOptions[key] = JSON.stringify(value)
+            }
         })
 
         return layoutOptions

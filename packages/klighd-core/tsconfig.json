@@ -5,7 +5,7 @@
     "noImplicitAny": true,
     "noEmitOnError": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false, // eslint handles this rule instead
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

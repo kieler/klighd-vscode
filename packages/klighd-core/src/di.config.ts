@@ -62,6 +62,7 @@ import { ResetPreferencesAction, SetPreferencesAction } from './options/actions'
 import { optionsModule } from './options/options-module'
 import { PreferencesRegistry } from './preferences-registry'
 import { proxyViewModule } from './proxy-view/proxy-view-module'
+import { searchBarModule } from './search-bar/searchbar-module'
 import { sidebarModule } from './sidebar'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
@@ -105,7 +106,7 @@ const kGraphDiagramModule = new ContainerModule(
         // Our own layout configurator that just copies the element's poperties as the layout options.
         bind(KielerLayoutConfigurator).toSelf().inSingletonScope()
         rebind(ILayoutConfigurator).to(KielerLayoutConfigurator).inSingletonScope()
-        const elkFactory: ElkFactory = () => new ElkConstructor({ algorithms: ['layered'] }) // See elkjs documentation
+        const elkFactory: ElkFactory = () => new ElkConstructor() // See elkjs documentation
         bind(ElkFactory).toConstantValue(elkFactory)
 
         rebind(TYPES.CommandStackOptions).toConstantValue({
@@ -172,6 +173,7 @@ export default function createContainer(widgetId: string): Container {
         // keep the klighd-specific modules at the last positions because of possible binding overrides.
         actionModule,
         optionsModule,
+        searchBarModule,
         sidebarModule,
         kGraphDiagramModule,
         /* bookmarkModule, */ diagramPieceModule,

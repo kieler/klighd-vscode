@@ -191,7 +191,7 @@ export function renderRectangularShape(
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context, parent)
+    const colorStyles = getSvgColorStyles(styles, context, parent, rendering)
     // objects rendered here that have no background should get a invisible, but clickable background so that users do not click through the non-available background.
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
@@ -408,7 +408,7 @@ export function renderLine(
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context, parent)
+    const colorStyles = getSvgColorStyles(styles, context, parent, rendering)
     // Any non-closed line segment cannot be filled with any color.
     if (rendering.type !== K_POLYGON) {
         colorStyles.background = DEFAULT_FILL
@@ -572,7 +572,7 @@ export function renderKText(
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context, parent)
+    const colorStyles = getSvgColorStyles(styles, context, parent, rendering)
 
     // Calculate the background, if needed, as a rectangle to be placed behind the text.
     let background: VNode | undefined
