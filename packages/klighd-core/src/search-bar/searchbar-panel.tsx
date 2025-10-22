@@ -157,6 +157,7 @@ export class SearchBarPanel {
      * @param vis the new visibility
      */
     public changeVisibility(vis: boolean): void {
+        const oldVis = this.visible
         this.visible = vis
         if (this.onVisibilityChange) {
             this.onVisibilityChange()
@@ -167,7 +168,10 @@ export class SearchBarPanel {
             setTimeout(() => {
                 if (this.mainInput) {
                     this.mainInput.select()
-                    this.performSearch()
+                    if (vis !== oldVis) {
+                        // trigger search only if search wasn't already open
+                        this.performSearch()
+                    }
                 }
             }, 0)
         } else {
