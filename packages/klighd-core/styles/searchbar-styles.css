@@ -1,0 +1,168 @@
+/*
+ * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
+ *
+ * http://rtsys.informatik.uni-kiel.de/kieler
+ *
+ * Copyright 2025 by
+ * + Kiel University
+ *   + Department of Computer Science
+ *     + Real-Time and Embedded Systems Group
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
+.search-bar-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 9999;
+    background-color: var(--kdc-color-sidebar-background);
+    box-shadow: var(--kdc-sidebar-shadow);
+    color: var(--kdc-color-sidebar-font-primary);
+    font-size: var(--kdc-font-size-base);
+    font-family: Helvetica, Arial, sans-serif;
+    padding: 4px 4px;
+    border-radius: var(--kdc-border-radius-default) 0 0 var(--kdc-border-radius-default);
+    width: 250px;
+}
+
+.search-bar-panel.hidden {
+    display: none;
+}
+
+.search-controls {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+.search-input {
+    color: var(--kdc-color-input-foreground);
+    background-color: var(--kdc-color-input-background);
+    border: 1px solid var(--kdc-color-input-border);
+    flex: 1;
+    padding: 2px 6px;
+    border-radius: 2px;
+}
+
+.search-input::placeholder {
+    color: var(--kdc-color-input-placeholderForeground)
+}
+
+.search-input:focus {
+    outline-color: var(--kdc-color-focusBorder);
+}
+
+.search-input::selection {
+    background-color: var(--kdc-color-selection-background, rgb(153, 194, 255));
+    color: var(--kdc-color-input-foreground);
+}
+
+.search-button {
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    margin-left: 3px;
+    padding: 3px;
+    transition: background-color 0.2s ease;
+    background-color: var(--kdc-color-input-background);
+    color: var(--kdc-color-input-foreground);
+}
+
+.search-button.active {
+    background-color: var(--kdc-color-inputOption-activeBackground);
+    border: 1px solid var(--kdc-color-inputOption-activeBorder);
+}
+
+.search-button:not(.active):hover {
+    background-color: var(--kdc-color-inputOption-hoverBackground);
+}
+
+.tag-input-container {
+    display: flex;
+    margin: 0px;
+    margin-bottom: 3px;
+    animation: slideDown 0.2s ease-out;
+}
+
+.search-results-header {
+    font-weight: bold;
+    margin-bottom: 3px;
+    margin-top: 1px;
+}
+
+.search-results-error {
+    font-weight: bold;
+    margin-bottom: 3px;
+    color: var(--kdc-color-errorForeground);
+}
+
+.search-results-list {
+    max-height: 200px;
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+    margin-top: 3px;
+}
+
+.search-results-list.scrollable {
+    overflow-y: auto;
+    border: none;
+}
+
+.search-result-item {
+    padding: 2px 6px;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+    background-color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%; 
+}
+
+.search-result-item:hover {
+    color: var(--kdc-color-list-hoverForeground);
+    background-color: var(--kdc-color-list-hoverBackground);
+}
+
+.search-result-item.selected {
+    color: var(--kdc-color-list-activeSelectionForeground);
+    background-color: var(--kdc-color-list-activeSelectionBackground);
+    border: 1px solid var(--kdc-color-list-focusOutline);
+}
+
+.search-result-path {
+    font-size: 11px;
+    color: var(--kdc-color-list-activeSelectionForeground);
+    margin-top: 3px;
+}
+
+.search-tooltip {
+    position: fixed;
+    pointer-events: none;
+    z-index: 10000;
+    color: var(--kdc-color-breadcrumb-foreground);
+    background-color: var(--kdc-color-breadcrumb-background);
+    border: 1px solid var(--kdc-color-breadcrumb-foreground);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: none;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

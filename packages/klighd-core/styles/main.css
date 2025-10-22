@@ -18,9 +18,11 @@
 @import './theme.css';
 @import './options.css';
 @import './popup.css';
+@import './searchbar-styles.css';
 @import './sidebar.css';
 @import './proxy-view.css';
 @import 'sprotty/css/sprotty.css';
+@import '@vscode/codicons/dist/codicon.css';
 
 .sprotty {
     /* Disable text selection in diagrams and sidebar panels. */
