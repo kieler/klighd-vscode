@@ -371,11 +371,12 @@ export class SearchBarActionHandler implements IActionHandler {
 
         const { data } = element
         for (const item of data) {
-            // TODO: special case toplevel no container rendering
             if (isContainerRendering(item)) {
                 item.children = item.children.filter(
                     (child: { id: string }) => !child.id?.includes(`highlightRect-${elemID}`)
                 )
+            } else if (isRendering(item)) {
+                item.properties['klighd.rendering.highlight'] = 0
             }
         }
     }
@@ -403,7 +404,7 @@ export class SearchBarActionHandler implements IActionHandler {
                         item.children = [...(item.children ?? []), highlightRect]
                     }
                 } else if (isKText(item)) {
-                    searchResult.kText!.properties['klighd.rendering.highlight'] = highlight
+                    item.properties['klighd.rendering.highlight'] = highlight
                 }
             }
         }
@@ -583,11 +584,12 @@ export class SearchBarActionHandler implements IActionHandler {
                     const dataArr: KGraphData[] = element.data
                     if (dataArr.length > 0) {
                         const data = dataArr[0]
-                        // TODO: special case toplevel no container rendering
                         if (isContainerRendering(data)) {
                             for (const child of data.children) {
                                 this.visitRendering(child, element, lowerQuery, filter, results, regex)
                             }
+                        } else if (isRendering(data)) {
+                            this.visitRendering(data, element, lowerQuery, filter, results, regex)
                         }
                     }
                 }
