@@ -37,14 +37,7 @@ import {
 } from '@kieler/klighd-interactive/lib/rect-packing/actions'
 import { TreeSetPositionConstraintAction } from '@kieler/klighd-interactive/lib/tree/actions'
 import { inject, injectable, optional } from 'inversify'
-import {
-    ActionHandlerRegistry,
-    DiagramServerProxy,
-    ICommand,
-    SetModelCommand,
-    SwitchEditModeAction,
-    TYPES,
-} from 'sprotty'
+import { ActionHandlerRegistry, DiagramServerProxy, ICommand, SwitchEditModeAction, TYPES } from 'sprotty'
 import {
     Action,
     ActionMessage,
@@ -128,10 +121,7 @@ export class KlighdDiagramServer extends DiagramServerProxy {
 
     messageReceived(message: ActionMessage): void {
         super.messageReceived(message)
-
-        const wasDiagramModelUpdated =
-            message.action.kind === SetModelCommand.KIND || message.action.kind === UpdateModelAction.KIND
-        if (wasDiagramModelUpdated) {
+        if (message.action.kind === SetModelAction.KIND || message.action.kind === UpdateModelAction.KIND) {
             if (this.preferencesRegistry.getValue(IncrementalDiagramGeneratorOption)) {
                 // After model is received request first piece.
 
