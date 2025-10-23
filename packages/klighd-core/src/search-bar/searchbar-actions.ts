@@ -238,7 +238,7 @@ export class SearchBarActionHandler implements IActionHandler {
                 return
             }
             SearchBarActionHandler.currentModel = root as unknown as SKGraphElement
-            if (this.panel.isVisible) {
+            if (this.panel?.isVisible) {
                 this.actionDispatcher.dispatch(
                     SearchAction.create(SearchBar.ID, this.panel.textInput ?? '', this.panel.tagSearch ?? '')
                 )
