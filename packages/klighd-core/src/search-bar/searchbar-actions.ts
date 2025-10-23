@@ -243,7 +243,7 @@ export class SearchBarActionHandler implements IActionHandler {
                 return
             }
             SearchBarActionHandler.currentModel = root as unknown as SKGraphElement
-            if (this.panel.isVisible && this.modelChanged) {
+            if (this.panel?.isVisible && this.modelChanged) {
                 // only retrigger the search if the model changed since the last search
                 this.modelChanged = false
                 this.actionDispatcher.dispatch(
