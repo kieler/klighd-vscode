@@ -22,7 +22,7 @@
 import { inject, postConstruct } from 'inversify'
 import { VNode } from 'snabbdom'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, SModelRootImpl, TYPES } from 'sprotty'
+import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from 'sprotty'
 import { RetrieveTagsAction, ShowSearchBarAction, ToggleSearchBarAction } from './searchbar-actions'
 import { SearchBarPanel } from './searchbar-panel'
 

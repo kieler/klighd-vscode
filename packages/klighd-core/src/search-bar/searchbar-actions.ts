@@ -236,7 +236,7 @@ export class SearchBarActionHandler implements IActionHandler {
     }
 
     handle(action: Action): void {
-        /* Intercept model during SetModelAction / UpdateModelAction */
+        /* Intercept model from rendering step */
         if (action.kind === SendModelContextAction.KIND) {
             const root: SGraphImpl = (action as SendModelContextAction).model
             if (root.type !== 'graph') {
