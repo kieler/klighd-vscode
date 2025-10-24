@@ -177,7 +177,7 @@ export class SearchBarPanel {
         } else {
             document.removeEventListener('keydown', this.handleKeyEvent)
             document.removeEventListener('keydown', this.handleKeyNavigation)
-            this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+            this.actionDispatcher.dispatch(ClearHighlightsAction.create(this.searchResults))
             if (this.tooltipEl) {
                 this.tooltipEl.style.display = 'none'
             }
@@ -253,7 +253,7 @@ export class SearchBarPanel {
 
         this.searched = true
 
-        this.actionDispatcher.dispatch(ClearHighlightsAction.create())
+        this.actionDispatcher.dispatch(ClearHighlightsAction.create(this.searchResults))
         this.actionDispatcher.dispatch(SearchAction.create(SearchBar.ID, query, tagQuery))
 
         document.addEventListener('keydown', this.handleKeyNavigation)
@@ -535,6 +535,7 @@ export class SearchBarPanel {
         if (this.mainInput) this.mainInput.value = ''
         if (this.tagInput) this.tagInput.value = ''
         if (this.tooltipEl) this.tooltipEl.style.display = 'none'
+        this.actionDispatcher.dispatch(ClearHighlightsAction.create(this.searchResults))
 
         this.searchResults = []
         this.searched = false
@@ -542,7 +543,6 @@ export class SearchBarPanel {
         this.selectedIndex = 0
         this.lastActiveIndex = 0
         this.update()
-        this.actionDispatcher.dispatch(ClearHighlightsAction.create())
     }
 
     /**
