@@ -920,9 +920,7 @@ export class SelectedElementsUtil {
 
     /** Sets the current root. */
     static setRoot(root: SModelRootImpl): void {
-        // this.currRoot = root;
-        this.index = new ModelIndexImpl()
-        this.index.add(root)
+        this.index = root.index
 
         // calculate the selected elements.
         this.recalculateSelection()

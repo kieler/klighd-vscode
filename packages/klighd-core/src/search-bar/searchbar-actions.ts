@@ -21,9 +21,10 @@ import {
     IActionDispatcher,
     IActionHandler,
     SetUIExtensionVisibilityAction,
+    SGraphImpl,
     TYPES,
 } from 'sprotty'
-import { Action, CenterAction, SetModelAction, SModelRoot, UpdateModelAction } from 'sprotty-protocol'
+import { Action, Bounds, CenterAction, SetModelAction, UpdateModelAction } from 'sprotty-protocol'
 import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { createSemanticFilter } from '../filtering/util'
 import { SearchBar } from './searchbar'
@@ -37,10 +38,14 @@ import {
     KRectangle,
     KRendering,
     KText,
+    SKEdge,
     SKLabel,
+    SKNode,
+    SKPort,
 } from '../skgraph-models'
 import { getReservedStructuralTags } from '../filtering/reserved-structural-tags'
 import { SearchResult } from './search-results'
+import { SendModelContextAction } from '../actions/actions'
 
 export type ShowSearchBarAction = SetUIExtensionVisibilityAction
 
@@ -110,15 +115,17 @@ export namespace UpdateHighlightsAction {
 
 export interface ClearHighlightsAction extends Action {
     kind: typeof ClearHighlightsAction.KIND
+    results: SearchResult[]
 }
 
 // eslint-disable-next-line no-redeclare
 export namespace ClearHighlightsAction {
     export const KIND = 'clearHighlights'
 
-    export function create(): ClearHighlightsAction {
+    export function create(searchResults: SearchResult[]): ClearHighlightsAction {
         return {
             kind: KIND,
+            results: searchResults,
         }
     }
 
@@ -141,11 +148,8 @@ function createHighlightRectangle(
         id: `highlightRect-${elem.id}`,
         children: [],
         properties: {
-            x: xPos,
-            y: yPos,
-            width,
-            height,
             'klighd.rendering.highlight': highlight,
+            'klighd.lsp.calculated.bounds': { x: xPos, y: yPos, width, height },
         },
         actions: [],
         styles: [],
@@ -195,13 +199,6 @@ export namespace SearchAction {
     }
 }
 
-interface HighlightBounds {
-    x: number
-    y: number
-    width: number
-    height: number
-}
-
 @injectable()
 export class SearchBarActionHandler implements IActionHandler {
     private static currentModel?: SKGraphElement
@@ -214,6 +211,8 @@ export class SearchBarActionHandler implements IActionHandler {
 
     private panel: SearchBarPanel
 
+    private modelChanged: boolean = false
+
     // TODO: ktexts can't have a border, so instead of setting highlight directly on the ktext, a rectangle with the correct
     //       size should be added behind it instead (this does pose an additional issue with the foreground then not being
     //       applied to the text itself, so it's a choice, support border or support foreground highlight)
@@ -223,6 +222,7 @@ export class SearchBarActionHandler implements IActionHandler {
     initialize(registry: ActionHandlerRegistry): void {
         registry.register(SetModelAction.KIND, this)
         registry.register(UpdateModelAction.KIND, this)
+        registry.register(SendModelContextAction.KIND, this)
         registry.register(ToggleSearchBarAction.KIND, this)
         registry.register(SearchAction.KIND, this)
         registry.register(ClearHighlightsAction.KIND, this)
@@ -231,18 +231,24 @@ export class SearchBarActionHandler implements IActionHandler {
     }
 
     handle(action: Action): void {
-        /* Intercept model during SetModelAction / UpdateModelAction */
-        if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
-            const root: SModelRoot = (action as SetModelAction).newRoot
+        /* Intercept model from rendering step */
+        if (action.kind === SendModelContextAction.KIND) {
+            const root: SGraphImpl = (action as SendModelContextAction).model
             if (root.type !== 'graph') {
                 return
             }
             SearchBarActionHandler.currentModel = root as unknown as SKGraphElement
-            if (this.panel?.isVisible) {
+            if (this.panel?.isVisible && this.modelChanged) {
+                // only retrigger the search if the model changed since the last search
+                this.modelChanged = false
                 this.actionDispatcher.dispatch(
                     SearchAction.create(SearchBar.ID, this.panel.textInput ?? '', this.panel.tagSearch ?? '')
                 )
             }
+            return
+        }
+        if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
+            this.modelChanged = true
             return
         }
 
@@ -263,7 +269,7 @@ export class SearchBarActionHandler implements IActionHandler {
             }
         } else if (ClearHighlightsAction.isThisAction(action)) {
             /* Handle ClearHighlightsActions */
-            this.removeHighlights(this.panel)
+            this.removeHighlights(action.results)
             // make changes visible
             if (modelId && this.actionDispatcher) {
                 this.actionDispatcher.dispatch(CenterAction.create([modelId]))
@@ -346,8 +352,8 @@ export class SearchBarActionHandler implements IActionHandler {
      * Remove all highlights
      * @param results the highlighted results
      */
-    private removeHighlights(panel: SearchBarPanel): void {
-        for (const result of panel.getResults) {
+    private removeHighlights(searchResults: SearchResult[]): void {
+        for (const result of searchResults) {
             this.removeSpecificHighlight(result)
         }
     }
@@ -384,9 +390,10 @@ export class SearchBarActionHandler implements IActionHandler {
     /**
      * Adds highlighting to labels or nodes
      * @param searchResult the the search result that shall be highlighted
-     * @param bounds the position and size of the highlight
+     * @param highlight the type of highlight (HIGHLIGHT_MATCH, HIGHLIGHT_MAIN_MATCH, +OPACITY_INCREMENT)
      */
-    private addHighlightToElement(searchResult: SearchResult, bounds: HighlightBounds, highlight: number): void {
+    private addHighlightToElement(searchResult: SearchResult, highlight: number): void {
+        const bounds = this.extractBounds(searchResult.element)
         const { data } = searchResult.element
         if (data !== undefined) {
             for (const item of data) {
@@ -425,26 +432,19 @@ export class SearchBarActionHandler implements IActionHandler {
         if (lastElem) this.removeSpecificHighlight(lastElem)
 
         if (this.panel.textInput === '') {
-            if (lastElem)
-                this.addHighlightToElement(lastElem, this.extractBounds(lastElem.element), this.HIGHLIGHT_MATCH)
-            this.addHighlightToElement(
-                results[selectedIndex],
-                this.extractBounds(results[selectedIndex].element),
-                this.HIGHLIGHT_MAIN_MATCH
-            )
+            if (lastElem) this.addHighlightToElement(lastElem, this.HIGHLIGHT_MATCH)
+            this.addHighlightToElement(results[selectedIndex], this.HIGHLIGHT_MAIN_MATCH)
         } else {
             if (results[selectedIndex].kText) {
                 results[selectedIndex].kText!.properties['klighd.rendering.highlight'] = this.HIGHLIGHT_MAIN_MATCH
             } else {
-                const bounds = this.extractBounds(results[selectedIndex].element)
-                this.addHighlightToElement(results[selectedIndex], bounds, this.HIGHLIGHT_MAIN_MATCH)
+                this.addHighlightToElement(results[selectedIndex], this.HIGHLIGHT_MAIN_MATCH)
             }
             if (lastElem) {
                 if (lastElem.kText) {
                     lastElem.kText.properties['klighd.rendering.highlight'] = this.HIGHLIGHT_MATCH
                 } else {
-                    const bounds = this.extractBounds(lastElem.element)
-                    this.addHighlightToElement(lastElem, bounds, this.HIGHLIGHT_MATCH)
+                    this.addHighlightToElement(lastElem, this.HIGHLIGHT_MATCH)
                 }
             }
         }
@@ -459,8 +459,7 @@ export class SearchBarActionHandler implements IActionHandler {
             if (result.kText) {
                 result.kText.properties['klighd.rendering.highlight'] = this.HIGHLIGHT_MATCH
             } else {
-                const bounds = this.extractBounds(result.element)
-                this.addHighlightToElement(result, bounds, this.HIGHLIGHT_MATCH)
+                this.addHighlightToElement(result, this.HIGHLIGHT_MATCH)
             }
         }
     }
@@ -510,14 +509,41 @@ export class SearchBarActionHandler implements IActionHandler {
      * Extracts bounds from an element
      * @param element the element, whose bounds need to be extracted
      */
-    private extractBounds(element: SKGraphElement): HighlightBounds {
-        const bounds = element?.properties?.['klighd.lsp.calculated.bounds']
+    private extractBounds(element: SKGraphElement): Bounds {
+        // const bounds = element.properties['klighd.lsp.calculated.bounds']
 
-        if (!bounds) {
-            return { x: -1, y: -1, width: -1, height: -1 }
+        if (element instanceof SKNode || element instanceof SKPort || element instanceof SKLabel) {
+            return { x: 0, y: 0, width: element.bounds.width, height: element.bounds.height }
+        }
+        if (element instanceof SKEdge) {
+            let minX = Number.MAX_VALUE
+            let minY = Number.MAX_VALUE
+            let maxX = Number.MIN_VALUE
+            let maxY = Number.MIN_VALUE
+            for (const point of element.routingPoints) {
+                if (point.x < minX) {
+                    minX = point.x
+                }
+                if (point.y < minY) {
+                    minY = point.y
+                }
+                if (point.x > maxX) {
+                    maxX = point.x
+                }
+                if (point.y > maxY) {
+                    maxY = point.y
+                }
+            }
+            const PADDING = 5
+            return {
+                x: minX - PADDING,
+                y: minY - PADDING,
+                width: maxX - minX + 2 * PADDING,
+                height: maxY - minY + 2 * PADDING,
+            }
         }
 
-        return bounds as HighlightBounds
+        return { x: -1, y: -1, width: -1, height: -1 }
     }
 
     /**
