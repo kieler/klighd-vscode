@@ -21,9 +21,10 @@ import {
     IActionDispatcher,
     IActionHandler,
     SetUIExtensionVisibilityAction,
+    SGraphImpl,
     TYPES,
 } from 'sprotty'
-import { Action, CenterAction, SetModelAction, SModelRoot, UpdateModelAction } from 'sprotty-protocol'
+import { Action, CenterAction, SetModelAction, UpdateModelAction } from 'sprotty-protocol'
 import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { createSemanticFilter } from '../filtering/util'
 import { SearchBar } from './searchbar'
@@ -41,6 +42,7 @@ import {
 } from '../skgraph-models'
 import { getReservedStructuralTags } from '../filtering/reserved-structural-tags'
 import { SearchResult } from './search-results'
+import { SendModelContextAction } from '../actions/actions'
 
 export type ShowSearchBarAction = SetUIExtensionVisibilityAction
 
@@ -214,6 +216,8 @@ export class SearchBarActionHandler implements IActionHandler {
 
     private panel: SearchBarPanel
 
+    private modelChanged: boolean = false
+
     // TODO: ktexts can't have a border, so instead of setting highlight directly on the ktext, a rectangle with the correct
     //       size should be added behind it instead (this does pose an additional issue with the foreground then not being
     //       applied to the text itself, so it's a choice, support border or support foreground highlight)
@@ -223,6 +227,7 @@ export class SearchBarActionHandler implements IActionHandler {
     initialize(registry: ActionHandlerRegistry): void {
         registry.register(SetModelAction.KIND, this)
         registry.register(UpdateModelAction.KIND, this)
+        registry.register(SendModelContextAction.KIND, this)
         registry.register(ToggleSearchBarAction.KIND, this)
         registry.register(SearchAction.KIND, this)
         registry.register(ClearHighlightsAction.KIND, this)
@@ -231,18 +236,24 @@ export class SearchBarActionHandler implements IActionHandler {
     }
 
     handle(action: Action): void {
-        /* Intercept model during SetModelAction / UpdateModelAction */
-        if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
-            const root: SModelRoot = (action as SetModelAction).newRoot
+        /* Intercept model from rendering step */
+        if (action.kind === SendModelContextAction.KIND) {
+            const root: SGraphImpl = (action as SendModelContextAction).model
             if (root.type !== 'graph') {
                 return
             }
             SearchBarActionHandler.currentModel = root as unknown as SKGraphElement
-            if (this.panel.isVisible) {
+            if (this.panel?.isVisible && this.modelChanged) {
+                // only retrigger the search if the model changed since the last search
+                this.modelChanged = false
                 this.actionDispatcher.dispatch(
                     SearchAction.create(SearchBar.ID, this.panel.textInput ?? '', this.panel.tagSearch ?? '')
                 )
             }
+            return
+        }
+        if (action.kind === SetModelAction.KIND || action.kind === UpdateModelAction.KIND) {
+            this.modelChanged = true
             return
         }
 
