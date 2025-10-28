@@ -21,7 +21,7 @@ import { injectable, inject } from 'inversify'
 import { VNode } from 'snabbdom'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { html, IActionDispatcher, TYPES } from 'sprotty'
-import { FitToScreenAction } from 'sprotty-protocol'
+import { FitToScreenAction, SelectAction } from 'sprotty-protocol'
 import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction, UpdateHighlightsAction } from './searchbar-actions'
 import { SearchBar } from './searchbar'
 import { SearchResult } from './search-results'
@@ -67,6 +67,8 @@ export class SearchBarPanel {
     private lastSearchQuery: string = ''
 
     private lastActiveIndex: number = 0
+
+    private lastSelectedElementId: string = ''
 
     // eslint-disable-next-line no-undef
     private tagSearchTimeout: NodeJS.Timeout | undefined = undefined
@@ -516,18 +518,19 @@ export class SearchBarPanel {
     }
 
     /**
-     * Zoom in on a certain element.
+     * Zoom in on a certain element and select it.
      * @param elementId id of the element to zoom in to.
      */
     private panToElement(elementId: string): void {
-        const action: FitToScreenAction = {
-            kind: 'fit',
-            elementIds: [elementId],
-            animate: true,
-            padding: 20,
-            maxZoom: 2,
-        }
-        this.actionDispatcher.dispatch(action)
+        const selectAction: SelectAction = SelectAction.create({
+            selectedElementsIDs: [elementId],
+            deselectedElementsIDs: [this.lastSelectedElementId],
+        })
+        this.lastSelectedElementId = elementId
+        this.actionDispatcher.dispatch(selectAction)
+
+        const fitToScreenAction = FitToScreenAction.create([elementId], { animate: true, padding: 20, maxZoom: 2 })
+        this.actionDispatcher.dispatch(fitToScreenAction)
     }
 
     /** Resets the UI by removing tooltips and the result list */
