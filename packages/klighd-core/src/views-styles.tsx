@@ -751,26 +751,42 @@ export function getSvgColorStyles(
     let foreground
     let background
     if (rendering.properties['klighd.rendering.highlight'] !== undefined) {
+        const foregroundDefault = getSvgColorStyle(styles.kForeground as KForeground, context)
+        const backgroundDefault = getSvgColorStyle(styles.kBackground as KBackground, context)
         switch (rendering.properties['klighd.rendering.highlight']) {
             case 1:
-                foreground = { color: 'var(--kdc-color-findMatchForeground)' } as ColorStyle
-                background = { color: 'var(--kdc-color-findMatchBackground)' } as ColorStyle
+                foreground = foregroundDefault
+                background = {
+                    color: `var(--kdc-color-findMatchBackground, var(--kdc-color-findMatchBackground-default))`,
+                } as ColorStyle
                 break
             case 3:
-                foreground = { color: 'var(--kdc-color-findMatchForeground)' } as ColorStyle
-                background = { color: 'var(--kdc-color-findMatchBackground)', opacity: '0.2' } as ColorStyle
+                foreground = {
+                    color: `var(--kdc-color-findMatchBorder, ${foregroundDefault?.color})`,
+                } as ColorStyle
+                background = {
+                    color: `var(--kdc-color-findMatchBackground, var(--kdc-color-findMatchBackground-default))`,
+                    opacity: '0.2',
+                } as ColorStyle
                 break
             case 2:
-                foreground = { color: 'var(--kdc-color-findMatchHighlightForeground)' } as ColorStyle
-                background = { color: 'var(--kdc-color-findMatchHighlightBackground)' } as ColorStyle
+                foreground = foregroundDefault
+                background = {
+                    color: `var(--kdc-color-findMatchHighlightBackground, var(--kdc-color-findMatchHighlightBackground-default))`,
+                } as ColorStyle
                 break
             case 4:
-                foreground = { color: 'var(--kdc-color-findMatchHighlightForeground)' } as ColorStyle
-                background = { color: 'var(--kdc-color-findMatchHighlightBackground)', opacity: '0.2' } as ColorStyle
+                foreground = {
+                    color: `var(--kdc-color-findMatchHighlightBorder, ${foregroundDefault?.color})`,
+                } as ColorStyle
+                background = {
+                    color: `var(--kdc-color-findMatchHighlightBackground, var(--kdc-color-findMatchHighlightBackground-default))`,
+                    opacity: '0.2',
+                } as ColorStyle
                 break
             default:
-                foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
-                background = getSvgColorStyle(styles.kBackground as KBackground, context)
+                foreground = foregroundDefault
+                background = backgroundDefault
                 break
         }
     } else {
