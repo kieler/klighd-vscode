@@ -425,6 +425,7 @@ export class SearchBarActionHandler implements IActionHandler {
      */
     private updateHighlights(selectedIndex: number, lastIndex: number | undefined, results: SearchResult[]): void {
         if (selectedIndex >= results.length) return
+        if (selectedIndex === lastIndex) return
 
         this.removeSpecificHighlight(results[selectedIndex])
 
