@@ -16,7 +16,7 @@
  */
 
 /** @jsx html */
-/* global KeyboardEvent, document, HTMLElement, MouseEvent, HTMLInputElement */
+/* global KeyboardEvent, document, HTMLElement, MouseEvent, HTMLInputElement, requestAnimationFrame */
 import { injectable, inject } from 'inversify'
 import { VNode } from 'snabbdom'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -464,6 +464,21 @@ export class SearchBarPanel {
     }
 
     /**
+     * Smoothly scrolls the selected list item into the view.
+     */
+    private updateSelectedScroll() {
+        requestAnimationFrame(() => {
+            const selectedEl = document.getElementById(`search-result-${this.selectedIndex}`)
+            if (selectedEl) {
+                selectedEl.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                })
+            }
+        })
+    }
+
+    /**
      * Toggles regex mode on and off
      */
     private toggleRegexMode() {
@@ -635,28 +650,6 @@ export class SearchBarPanel {
     private handleKeyNavigation = (event: KeyboardEvent) => {
         if (this.searchResults.length === 0) return
 
-        if (event.shiftKey && event.key === 'ArrowDown') {
-            event.preventDefault()
-            this.selectedIndex = this.searchResults.length - 1
-            this.usedArrowKeys = true
-            this.actionDispatcher.dispatch(
-                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
-            )
-            this.previousIndex = this.selectedIndex
-            return
-        }
-
-        if (event.shiftKey && event.key === 'ArrowUp') {
-            event.preventDefault()
-            this.selectedIndex = 0
-            this.usedArrowKeys = true
-            this.actionDispatcher.dispatch(
-                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
-            )
-            this.previousIndex = this.selectedIndex
-            return
-        }
-
         switch (event.key) {
             case 'ArrowDown':
                 event.preventDefault()
@@ -707,6 +700,7 @@ export class SearchBarPanel {
             default:
                 break
         }
+        this.updateSelectedScroll()
         this.update()
     }
 
