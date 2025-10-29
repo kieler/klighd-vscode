@@ -135,21 +135,14 @@ export namespace ClearHighlightsAction {
 }
 
 // TODO: extract this KRectangle creation to a dedicated JS KGraph creation library
-function createHighlightRectangle(
-    elem: SKGraphElement,
-    xPos: number,
-    yPos: number,
-    width: number,
-    height: number,
-    highlight: number
-): KRectangle {
+function createHighlightRectangle(elem: SKGraphElement, bounds: Bounds, highlight: number): KRectangle {
     return {
         type: 'KRectangleImpl',
         id: `highlightRect-${elem.id}`,
         children: [],
         properties: {
             'klighd.rendering.highlight': highlight,
-            'klighd.lsp.calculated.bounds': { x: xPos, y: yPos, width, height },
+            'klighd.lsp.calculated.bounds': bounds,
         },
         actions: [],
         styles: [],
@@ -402,10 +395,7 @@ export class SearchBarActionHandler implements IActionHandler {
                     if (!alreadyHasHighlight) {
                         const highlightRect = createHighlightRectangle(
                             searchResult.element,
-                            bounds.x,
-                            bounds.y,
-                            bounds.width,
-                            bounds.height,
+                            bounds,
                             highlight + this.OPACITY_INCREMENT
                         )
                         item.children = [...(item.children ?? []), highlightRect]
@@ -511,8 +501,6 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param element the element, whose bounds need to be extracted
      */
     private extractBounds(element: SKGraphElement): Bounds {
-        // const bounds = element.properties['klighd.lsp.calculated.bounds']
-
         if (element instanceof SKNode || element instanceof SKPort || element instanceof SKLabel) {
             return { x: 0, y: 0, width: element.bounds.width, height: element.bounds.height }
         }
