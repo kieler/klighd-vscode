@@ -580,13 +580,7 @@ export class SearchBarActionHandler implements IActionHandler {
 
         let filter: (el: SKGraphElement) => boolean = () => true
         if (tagQuery !== '') {
-            try {
-                filter = createSemanticFilter(tagQuery)
-            } catch (e) {
-                const errorMessage = e instanceof Error ? e.message : String(e)
-                this.panel.setError(errorMessage)
-                return results
-            }
+            filter = createSemanticFilter(tagQuery)
         }
 
         while (queue.length > 0) {
@@ -594,8 +588,16 @@ export class SearchBarActionHandler implements IActionHandler {
 
             if (query === '') {
                 /* add all elements if text query is empty */
-                if (isSKGraphElement(element) && filter(element)) {
-                    this.processElement(element, results)
+                if (isSKGraphElement(element)) {
+                    try {
+                        if (filter(element)) {
+                            this.processElement(element, results)
+                        }
+                    } catch (e) {
+                        const errorMessage = e instanceof Error ? e.message : String(e)
+                        this.panel.setError(errorMessage)
+                        return results
+                    }
                 }
             } else {
                 /* handle elements with text field */
