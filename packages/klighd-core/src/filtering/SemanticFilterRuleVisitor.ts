@@ -506,6 +506,20 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
                 }
                 return []
 
+            case SemanticFilteringParser.INCOMING:
+                if (element instanceof SKNode) {
+                    const incoming = Array.from(element.incomingEdges)
+                    return typeFilter(incoming, hasProperties)
+                }
+                return []
+
+            case SemanticFilteringParser.OUTGOING:
+                if (element instanceof SKNode) {
+                    const outgoing = Array.from(element.outgoingEdges)
+                    return typeFilter(outgoing, hasProperties)
+                }
+                return []
+
             default:
                 throw new Error(`Unknown list: ${ctx.start.text}`)
         }
