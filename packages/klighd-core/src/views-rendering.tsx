@@ -1600,7 +1600,7 @@ export function renderKRendering(
 
 /**
  * Updates a VNode's pointer-events to make it click-through.
- * @param vnode The VNode.
+ * @param svgRendering The VNode.
  * @param clickThrough Whether the VNode should be click-through.
  */
 function configureClickThrough(svgRendering: VNode, clickThrough: boolean) {
