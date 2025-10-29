@@ -585,6 +585,7 @@ export class SearchBarPanel {
     private handleExitKey() {
         this.changeVisibility(false)
         this.searched = false
+        this.showTagList = false
         this.tagInputVisible = false
         this.lastActiveIndex = this.selectedIndex
         this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
