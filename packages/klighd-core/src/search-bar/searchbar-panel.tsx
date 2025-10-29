@@ -542,6 +542,7 @@ export class SearchBarPanel {
 
         this.searchResults = []
         this.searched = false
+        this.showTagList = false
         this.previousIndex = 0
         this.selectedIndex = 0
         this.lastActiveIndex = 0
@@ -583,12 +584,18 @@ export class SearchBarPanel {
      * @param event key event
      */
     private handleExitKey() {
-        this.changeVisibility(false)
-        this.searched = false
-        this.showTagList = false
-        this.tagInputVisible = false
-        this.lastActiveIndex = this.selectedIndex
-        this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
+        if (this.showTagList) {
+            this.showTagList = false
+            this.tagInput!.focus()
+            this.performSearch()
+            this.update()
+        } else {
+            this.changeVisibility(false)
+            this.searched = false
+            this.tagInputVisible = false
+            this.lastActiveIndex = this.selectedIndex
+            this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
+        }
     }
 
     /**
