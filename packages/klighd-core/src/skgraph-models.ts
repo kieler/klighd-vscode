@@ -140,7 +140,7 @@ export interface KRendering extends KGraphData, KStyleHolder {
 
     /** If this rendering is used as a clip rendering. Will not be set in the model and is to be used during rendering only. */
     isClipRendering?: boolean
-    placementData: KPlacementData
+    placementData?: KPlacementData
 }
 
 /**
@@ -155,7 +155,7 @@ export type KChildArea = KRendering
  */
 export interface KContainerRendering extends KRendering {
     children: KRendering[]
-    childPlacement: KPlacement
+    childPlacement?: KPlacement
 }
 
 /**
@@ -842,6 +842,10 @@ export function isImage(test: KGraphData): test is KImage {
  * @param test The potential KGridPlacement.
  */
 export function isGridPlacement(test: KPlacement): test is KGridPlacement {
+    if (!test) {
+        return false
+    }
+
     const { type } = test
     return type === K_GRID_PLACEMENT
 }

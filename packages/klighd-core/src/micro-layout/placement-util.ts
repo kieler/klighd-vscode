@@ -54,7 +54,7 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
     let bounds = emptyBounds()
     const { placementData } = rendering
 
-    if (isAreaPlacementData(placementData) || isGridPlacementData(placementData)) {
+    if (placementData && (isAreaPlacementData(placementData) || isGridPlacementData(placementData))) {
         bounds = estimateAreaPlacedChildSize(rendering, placementData as KAreaPlacementData, givenBounds)
     } else if (isPointPlacementData(placementData)) {
         bounds = estimatePointPlacedChildSize(rendering, placementData as KPointPlacementData)
@@ -98,7 +98,7 @@ function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
     }
     if (isContainerRendering(rendering)) {
         const placement = (rendering as KContainerRendering).childPlacement
-        if (isGridPlacement(placement)) {
+        if (placement && isGridPlacement(placement)) {
             // TODO
             console.log('grid placement not implemented')
             return givenBounds
@@ -151,11 +151,13 @@ function estimateKTextSize(kText: KText): Bounds {
  */
 function estimateTextSize(kText: KText, text: string): Bounds {
     // TODO: actually figure out how to estimate the text size accurately
+    // heh: implemented first heuristic based on visual estimations of the Overpass Regular font.
+    return {x : 0, y: 0, width: text.length / 4 * 30, height: 20}
 
     // TODO: persist CALCULATED_TEXT_BOUNDS, CALCULATED_TEXT_LINE_WIDTHS, CALCULATED_TEXT_LINE_HEIGHTS in properties
 
     // FIXME: dummy data
-    return { x: 0, y: 0, width: 40, height: 30 }
+    //return { x: 0, y: 0, width: 40, height: 20 }
 }
 
 /**
@@ -200,8 +202,8 @@ function estimateAreaPlacedChildSize(
     areaPlacementData: KAreaPlacementData,
     givenBounds: Bounds
 ): Bounds {
-    const childSize = evaluateAreaPlacement(areaPlacementData, givenBounds)
-    const containerMinSize = basicEstimateSize(rendering, childSize)
+    //const childSize = evaluateAreaPlacement(areaPlacementData, givenBounds)
+    const containerMinSize = basicEstimateSize(rendering, givenBounds)
     return inverselyApplyBoundingBoxKPositions(
         containerMinSize,
         areaPlacementData.topLeft,
@@ -265,7 +267,7 @@ export function estimatePointPlacedChildSize(rendering: KRendering, pointPlaceme
  * @return the actual polyline's bounding box' bounds
  */
 function evaluatePolylineBounds(line: KPolyline, givenBounds: Bounds): Bounds {
-    if (line.points.length === 0) {
+    if (!line.points || line.points.length === 0) {
         return givenBounds
     }
 
