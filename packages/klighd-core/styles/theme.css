@@ -20,8 +20,8 @@
 :root {
     /* Behavior and sizing variables */
     --kdc-transition: 200ms ease-in-out;
-    --kdc-border-radius-default: 4px;
-    --kdc-font-size-base: 16px;
+    --kdc-border-radius-default: 2px;
+    --kdc-font-size-base: 13px;
     --kdc-sidebar-shadow: 0 15px 25px rgba(0, 0, 0, 0.15), 0 5px 10px rgba(0, 0, 0, 0.05);
     --kdc-sidebar-button-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 
@@ -35,7 +35,29 @@
     --kdc-color-sidebar-font-primary: hsl(0, 0%, 12%);
     --kdc-color-sidebar-icon-primary: hsl(0, 0%, 24%);
     --kdc-color-primary: #0552b5;
-
+    --kdc-color-findMatchBackground: rgb(255, 165, 0);
+    --kdc-color-findMatchForeground: rgb(0, 0, 0);
+    --kdc-color-findMatchBorder: rgb(90, 90, 90);
+    --kdc-color-findMatchHighlightBackground: rgb(255, 255, 0);
+    --kdc-color-findMatchHighlightForeground: rgb(0, 0, 0);
+    --kdc-color-findMatchHighlightBorder: rgb(113, 113, 113);
+    --kdc-color-input-background: white;
+    --kdc-color-input-border: hsl(0, 0%, 88%);
+    --kdc-color-input-foreground: hsl(0, 0%, 12%);
+    --kdc-color-input-placeholderForeground: hsl(0, 0%, 47%);
+    --kdc-color-inputOption-activeBackground: hsl(0, 0%, 88%);
+    --kdc-color-inputOption-activeBorder: hsl(0, 0%, 81%);
+    --kdc-color-inputOption-hoverBackground: hsl(0, 0%, 88%);
+    --kdc-color-focusBorder: var(--kdc-color-primary);
+    --kdc-color-errorForeground: rgb(226, 4, 4);
+    --kdc-color-list-activeSelectionBackground: hsl(0, 0%, 88%);
+    --kdc-color-list-activeSelectionForeground: hsl(0, 0%, 12%);
+    --kdc-color-list-focusOutline: var(--kdc-color-primary);
+    --kdc-color-list-hoverBackground: hsl(0, 0%, 88%);
+    --kdc-color-list-hoverForeground: hsl(0, 0%, 12%);
+    --kdc-color-selection-background: rgb(0, 127, 212);
+    --kdc-color-breadcrumb-foreground: hsl(0, 0%, 12%);
+    --kdc-color-breadcrumb-background: var(--kdc-color-sidebar-background);
 }
 @media (prefers-color-scheme: dark) {
     :root {
@@ -47,6 +69,28 @@
         --kdc-color-sidebar-font-primary: rgb(204, 204, 204);
         --kdc-color-sidebar-icon-primary: rgb(197, 197, 197);
         --kdc-color-primary: rgb(0, 127, 212);
-    
+        --kdc-color-findMatchBackground: rgb(255, 215, 140);
+        --kdc-color-findMatchForeground: rgb(0, 0, 0);
+        --kdc-color-findMatchBorder: rgb(231, 231, 231);
+        --kdc-color-findMatchHighlightBackground: rgb(255, 255, 166);
+        --kdc-color-findMatchHighlightForeground: rgb(0, 0, 0);
+        --kdc-color-findMatchHighlightBorder: rgb(223, 223, 223);
+        --kdc-color-input-background: rgb(37, 37, 37);
+        --kdc-color-input-border: rgb(4, 57, 94);
+        --kdc-color-input-foreground: rgb(204, 204, 204);
+        --kdc-color-input-placeholderForeground: hsl(0, 0%, 86%);
+        --kdc-color-inputOption-activeBackground: rgb(4, 57, 94);
+        --kdc-color-inputOption-activeBorder: hsl(0, 0%, 81%);
+        --kdc-color-inputOption-hoverBackground: rgb(4, 57, 94);
+        --kdc-color-focusBorder: var(--kdc-color-primary);
+        --kdc-color-errorForeground: rgb(245, 117, 117);
+        --kdc-color-list-activeSelectionBackground: rgb(4, 57, 94);
+        --kdc-color-list-activeSelectionForeground: rgb(204, 204, 204);
+        --kdc-color-list-focusOutline: var(--kdc-color-primary);
+        --kdc-color-list-hoverBackground: rgb(4, 57, 94);
+        --kdc-color-list-hoverForeground: rgb(204, 204, 204);
+        --kdc-color-selection-background: rgb(62, 177, 254);
+        --kdc-color-breadcrumb-foreground: rgb(204, 204, 204);
+        --kdc-color-breadcrumb-background: var(--kdc-color-sidebar-background);
     }
 }

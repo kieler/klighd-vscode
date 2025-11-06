@@ -46,7 +46,7 @@ import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { SKEdge, SKLabel, SKNode, SKPort } from './skgraph-models'
 import { getViewportBounds } from './skgraph-utils'
 import { isFullDetail } from './views-common'
-import { getJunctionPointRenderings, getRendering } from './views-rendering'
+import { applyTopdownScale, getJunctionPointRenderings, getRendering } from './views-rendering'
 import { KStyles } from './views-styles'
 
 /**
@@ -303,7 +303,8 @@ export class KNodeView extends KGraphElementView {
         }
         // Default case. If no child area children or no non-child area children are already rendered within the rendering, add the children by default.
         if (!node.areChildAreaChildrenRendered) {
-            result.push(...ctx.renderChildren(node))
+            const element = <g>{...ctx.renderChildren(node)}</g>
+            result.push(applyTopdownScale(element, node))
         } else if (!node.areNonChildAreaChildrenRendered) {
             result.push(...ctx.renderNonChildAreaChildren(node))
         }
