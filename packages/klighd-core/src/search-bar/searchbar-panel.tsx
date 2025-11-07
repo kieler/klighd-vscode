@@ -16,12 +16,12 @@
  */
 
 /** @jsx html */
-/* global KeyboardEvent, document, HTMLElement, MouseEvent, HTMLInputElement */
+/* global KeyboardEvent, document, HTMLElement, MouseEvent, HTMLInputElement, requestAnimationFrame */
 import { injectable, inject } from 'inversify'
 import { VNode } from 'snabbdom'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { html, IActionDispatcher, TYPES } from 'sprotty'
-import { FitToScreenAction } from 'sprotty-protocol'
+import { FitToScreenAction, SelectAction } from 'sprotty-protocol'
 import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction, UpdateHighlightsAction } from './searchbar-actions'
 import { SearchBar } from './searchbar'
 import { SearchResult } from './search-results'
@@ -67,6 +67,8 @@ export class SearchBarPanel {
     private lastSearchQuery: string = ''
 
     private lastActiveIndex: number = 0
+
+    private lastSelectedElementId: string = ''
 
     // eslint-disable-next-line no-undef
     private tagSearchTimeout: NodeJS.Timeout | undefined = undefined
@@ -462,6 +464,21 @@ export class SearchBarPanel {
     }
 
     /**
+     * Smoothly scrolls the selected list item into the view.
+     */
+    private updateSelectedScroll() {
+        requestAnimationFrame(() => {
+            const selectedEl = document.getElementById(`search-result-${this.selectedIndex}`)
+            if (selectedEl) {
+                selectedEl.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                })
+            }
+        })
+    }
+
+    /**
      * Toggles regex mode on and off
      */
     private toggleRegexMode() {
@@ -516,18 +533,19 @@ export class SearchBarPanel {
     }
 
     /**
-     * Zoom in on a certain element.
+     * Zoom in on a certain element and select it.
      * @param elementId id of the element to zoom in to.
      */
     private panToElement(elementId: string): void {
-        const action: FitToScreenAction = {
-            kind: 'fit',
-            elementIds: [elementId],
-            animate: true,
-            padding: 20,
-            maxZoom: 2,
-        }
-        this.actionDispatcher.dispatch(action)
+        const selectAction: SelectAction = SelectAction.create({
+            selectedElementsIDs: [elementId],
+            deselectedElementsIDs: [this.lastSelectedElementId],
+        })
+        this.lastSelectedElementId = elementId
+        this.actionDispatcher.dispatch(selectAction)
+
+        const fitToScreenAction = FitToScreenAction.create([elementId], { animate: true, padding: 20, maxZoom: 2 })
+        this.actionDispatcher.dispatch(fitToScreenAction)
     }
 
     /** Resets the UI by removing tooltips and the result list */
@@ -539,6 +557,7 @@ export class SearchBarPanel {
 
         this.searchResults = []
         this.searched = false
+        this.showTagList = false
         this.previousIndex = 0
         this.selectedIndex = 0
         this.lastActiveIndex = 0
@@ -580,11 +599,18 @@ export class SearchBarPanel {
      * @param event key event
      */
     private handleExitKey() {
-        this.changeVisibility(false)
-        this.searched = false
-        this.tagInputVisible = false
-        this.lastActiveIndex = this.selectedIndex
-        this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
+        if (this.showTagList) {
+            this.showTagList = false
+            this.tagInput!.focus()
+            this.performSearch()
+            this.update()
+        } else {
+            this.changeVisibility(false)
+            this.searched = false
+            this.tagInputVisible = false
+            this.lastActiveIndex = this.selectedIndex
+            this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
+        }
     }
 
     /**
@@ -623,28 +649,6 @@ export class SearchBarPanel {
      */
     private handleKeyNavigation = (event: KeyboardEvent) => {
         if (this.searchResults.length === 0) return
-
-        if (event.shiftKey && event.key === 'ArrowDown') {
-            event.preventDefault()
-            this.selectedIndex = this.searchResults.length - 1
-            this.usedArrowKeys = true
-            this.actionDispatcher.dispatch(
-                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
-            )
-            this.previousIndex = this.selectedIndex
-            return
-        }
-
-        if (event.shiftKey && event.key === 'ArrowUp') {
-            event.preventDefault()
-            this.selectedIndex = 0
-            this.usedArrowKeys = true
-            this.actionDispatcher.dispatch(
-                UpdateHighlightsAction.create(this.selectedIndex, this.previousIndex, this.searchResults)
-            )
-            this.previousIndex = this.selectedIndex
-            return
-        }
 
         switch (event.key) {
             case 'ArrowDown':
@@ -696,6 +700,7 @@ export class SearchBarPanel {
             default:
                 break
         }
+        this.updateSelectedScroll()
         this.update()
     }
 
