@@ -1646,17 +1646,35 @@ export function renderKRendering(
         // If the overlay does not define actions, make it non-interactable to allow clicking through to elements behind.
         if (!hasAction(kRendering, true)) {
             // add pointer-events: none to the style attribute of this overlay.
-            if (!svgRendering.data) {
-                svgRendering.data = {}
-            }
-            if (!svgRendering.data.style) {
-                svgRendering.data.style = {}
-            }
-            svgRendering.data.style['pointer-events'] = 'none'
+            configureClickThrough(svgRendering, true)
         }
         return <g></g>
     }
+    if (
+        kRendering.properties['klighd.rendering.highlight'] !== undefined &&
+        (kRendering.properties['klighd.rendering.highlight'] as number) > 0 &&
+        kRendering.type !== K_TEXT
+    ) {
+        // add pointer-events: none to the style attribute of this highlight rendering.
+        configureClickThrough(svgRendering, true)
+    }
     return svgRendering
+}
+
+/**
+ * Updates a VNode's pointer-events to make it click-through.
+ * @param svgRendering The VNode.
+ * @param clickThrough Whether the VNode should be click-through.
+ */
+function configureClickThrough(svgRendering: VNode, clickThrough: boolean) {
+    if (!svgRendering.data) {
+        svgRendering.data = {}
+    }
+    if (!svgRendering.data.style) {
+        svgRendering.data.style = {}
+    }
+    const pointerEvent = clickThrough ? 'none' : 'auto'
+    svgRendering.data.style['pointer-events'] = pointerEvent
 }
 
 /**

@@ -135,21 +135,14 @@ export namespace ClearHighlightsAction {
 }
 
 // TODO: extract this KRectangle creation to a dedicated JS KGraph creation library
-function createHighlightRectangle(
-    elem: SKGraphElement,
-    xPos: number,
-    yPos: number,
-    width: number,
-    height: number,
-    highlight: number
-): KRectangle {
+function createHighlightRectangle(elem: SKGraphElement, bounds: Bounds, highlight: number): KRectangle {
     return {
         type: 'KRectangleImpl',
         id: `highlightRect-${elem.id}`,
         children: [],
         properties: {
             'klighd.rendering.highlight': highlight,
-            'klighd.lsp.calculated.bounds': { x: xPos, y: yPos, width, height },
+            'klighd.lsp.calculated.bounds': bounds,
         },
         actions: [],
         styles: [],
@@ -402,10 +395,7 @@ export class SearchBarActionHandler implements IActionHandler {
                     if (!alreadyHasHighlight) {
                         const highlightRect = createHighlightRectangle(
                             searchResult.element,
-                            bounds.x,
-                            bounds.y,
-                            bounds.width,
-                            bounds.height,
+                            bounds,
                             highlight + this.OPACITY_INCREMENT
                         )
                         item.children = [...(item.children ?? []), highlightRect]
@@ -425,6 +415,7 @@ export class SearchBarActionHandler implements IActionHandler {
      */
     private updateHighlights(selectedIndex: number, lastIndex: number | undefined, results: SearchResult[]): void {
         if (selectedIndex >= results.length) return
+        if (selectedIndex === lastIndex) return
 
         this.removeSpecificHighlight(results[selectedIndex])
 
@@ -510,8 +501,6 @@ export class SearchBarActionHandler implements IActionHandler {
      * @param element the element, whose bounds need to be extracted
      */
     private extractBounds(element: SKGraphElement): Bounds {
-        // const bounds = element.properties['klighd.lsp.calculated.bounds']
-
         if (element instanceof SKNode || element instanceof SKPort || element instanceof SKLabel) {
             return { x: 0, y: 0, width: element.bounds.width, height: element.bounds.height }
         }
@@ -579,13 +568,7 @@ export class SearchBarActionHandler implements IActionHandler {
 
         let filter: (el: SKGraphElement) => boolean = () => true
         if (tagQuery !== '') {
-            try {
-                filter = createSemanticFilter(tagQuery)
-            } catch (e) {
-                const errorMessage = e instanceof Error ? e.message : String(e)
-                this.panel.setError(errorMessage)
-                return results
-            }
+            filter = createSemanticFilter(tagQuery)
         }
 
         while (queue.length > 0) {
@@ -593,8 +576,16 @@ export class SearchBarActionHandler implements IActionHandler {
 
             if (query === '') {
                 /* add all elements if text query is empty */
-                if (isSKGraphElement(element) && filter(element)) {
-                    this.processElement(element, results)
+                if (isSKGraphElement(element)) {
+                    try {
+                        if (filter(element)) {
+                            this.processElement(element, results)
+                        }
+                    } catch (e) {
+                        const errorMessage = e instanceof Error ? e.message : String(e)
+                        this.panel.setError(errorMessage)
+                        return results
+                    }
                 }
             } else {
                 /* handle elements with text field */

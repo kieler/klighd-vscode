@@ -35,24 +35,26 @@ export default class SemanticFilteringParser extends Parser {
 	public static readonly CHILDREN = 14;
 	public static readonly SIBLINGS = 15;
 	public static readonly ADJACENTS = 16;
-	public static readonly TRUE = 17;
-	public static readonly FALSE = 18;
-	public static readonly ID = 19;
-	public static readonly MULT = 20;
-	public static readonly DIV = 21;
-	public static readonly MOD = 22;
-	public static readonly ADD = 23;
-	public static readonly SUB = 24;
-	public static readonly GEQ = 25;
-	public static readonly GT = 26;
-	public static readonly LEQ = 27;
-	public static readonly LT = 28;
-	public static readonly EQ = 29;
-	public static readonly NEQ = 30;
-	public static readonly NOT = 31;
-	public static readonly AND = 32;
-	public static readonly OR = 33;
-	public static readonly WS = 34;
+	public static readonly INCOMING = 17;
+	public static readonly OUTGOING = 18;
+	public static readonly TRUE = 19;
+	public static readonly FALSE = 20;
+	public static readonly ID = 21;
+	public static readonly MULT = 22;
+	public static readonly DIV = 23;
+	public static readonly MOD = 24;
+	public static readonly ADD = 25;
+	public static readonly SUB = 26;
+	public static readonly GEQ = 27;
+	public static readonly GT = 28;
+	public static readonly LEQ = 29;
+	public static readonly LT = 30;
+	public static readonly EQ = 31;
+	public static readonly NEQ = 32;
+	public static readonly NOT = 33;
+	public static readonly AND = 34;
+	public static readonly OR = 35;
+	public static readonly WS = 36;
 	public static override readonly EOF = Token.EOF;
 	public static readonly RULE_semanticFilterRule = 0;
 	public static readonly RULE_orExpr = 1;
@@ -83,6 +85,8 @@ export default class SemanticFilteringParser extends Parser {
                                                             "'children'", 
                                                             "'siblings'", 
                                                             "'adjacents'", 
+                                                            "'incoming'", 
+                                                            "'outgoing'", 
                                                             "'true'", "'false'", 
                                                             null, "'*'", 
                                                             "'/'", "'%'", 
@@ -102,6 +106,8 @@ export default class SemanticFilteringParser extends Parser {
                                                              "CHILDREN", 
                                                              "SIBLINGS", 
                                                              "ADJACENTS", 
+                                                             "INCOMING", 
+                                                             "OUTGOING", 
                                                              "TRUE", "FALSE", 
                                                              "ID", "MULT", 
                                                              "DIV", "MOD", 
@@ -171,7 +177,7 @@ export default class SemanticFilteringParser extends Parser {
 			this.state = 44;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===33) {
+			while (_la===35) {
 				{
 				{
 				this.state = 40;
@@ -213,7 +219,7 @@ export default class SemanticFilteringParser extends Parser {
 			this.state = 52;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===32) {
+			while (_la===34) {
 				{
 				{
 				this.state = 48;
@@ -250,7 +256,7 @@ export default class SemanticFilteringParser extends Parser {
 			this.state = 58;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 31:
+			case 33:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 55;
@@ -265,10 +271,10 @@ export default class SemanticFilteringParser extends Parser {
 			case 9:
 			case 10:
 			case 11:
-			case 17:
-			case 18:
 			case 19:
-			case 24:
+			case 20:
+			case 21:
+			case 26:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 57;
@@ -317,11 +323,11 @@ export default class SemanticFilteringParser extends Parser {
 				this.state = 64;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===29 || _la===30) {
+				if (_la===31 || _la===32) {
 					{
 					this.state = 62;
 					_la = this._input.LA(1);
-					if(!(_la===29 || _la===30)) {
+					if(!(_la===31 || _la===32)) {
 					this._errHandler.recoverInline(this);
 					}
 					else {
@@ -343,7 +349,7 @@ export default class SemanticFilteringParser extends Parser {
 				{
 				this.state = 67;
 				_la = this._input.LA(1);
-				if(!(_la===29 || _la===30)) {
+				if(!(_la===31 || _la===32)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -363,7 +369,7 @@ export default class SemanticFilteringParser extends Parser {
 				{
 				this.state = 71;
 				_la = this._input.LA(1);
-				if(!(_la===29 || _la===30)) {
+				if(!(_la===31 || _la===32)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -404,7 +410,7 @@ export default class SemanticFilteringParser extends Parser {
 			{
 			this.state = 76;
 			_la = this._input.LA(1);
-			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 503316480) !== 0))) {
+			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 2013265920) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -443,12 +449,12 @@ export default class SemanticFilteringParser extends Parser {
 			this.state = 84;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===23 || _la===24) {
+			while (_la===25 || _la===26) {
 				{
 				{
 				this.state = 80;
 				_la = this._input.LA(1);
-				if(!(_la===23 || _la===24)) {
+				if(!(_la===25 || _la===26)) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -492,12 +498,12 @@ export default class SemanticFilteringParser extends Parser {
 			this.state = 92;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 7340032) !== 0)) {
+			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 29360128) !== 0)) {
 				{
 				{
 				this.state = 88;
 				_la = this._input.LA(1);
-				if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 7340032) !== 0))) {
+				if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 29360128) !== 0))) {
 				this._errHandler.recoverInline(this);
 				}
 				else {
@@ -536,14 +542,14 @@ export default class SemanticFilteringParser extends Parser {
 			this.state = 104;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 17:
+			case 19:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 95;
 				this.match(SemanticFilteringParser.TRUE);
 				}
 				break;
-			case 18:
+			case 20:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 96;
@@ -610,13 +616,13 @@ export default class SemanticFilteringParser extends Parser {
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case 9:
-			case 24:
+			case 26:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 107;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (_la===24) {
+				if (_la===26) {
 					{
 					this.state = 106;
 					this.match(SemanticFilteringParser.SUB);
@@ -814,6 +820,8 @@ export default class SemanticFilteringParser extends Parser {
 			case 14:
 			case 15:
 			case 16:
+			case 17:
+			case 18:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 135;
@@ -936,7 +944,7 @@ export default class SemanticFilteringParser extends Parser {
 			{
 			this.state = 155;
 			_la = this._input.LA(1);
-			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 126976) !== 0))) {
+			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 520192) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -960,7 +968,7 @@ export default class SemanticFilteringParser extends Parser {
 		return localctx;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,34,158,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,36,158,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,
 	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,
 	7,17,1,0,1,0,1,0,1,1,1,1,1,1,5,1,43,8,1,10,1,12,1,46,9,1,1,2,1,2,1,2,5,
@@ -972,40 +980,40 @@ export default class SemanticFilteringParser extends Parser {
 	12,3,12,128,8,12,1,13,1,13,1,13,1,13,3,13,134,8,13,1,14,1,14,3,14,138,8,
 	14,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,16,1,16,1,16,1,16,1,16,1,16,
 	3,16,154,8,16,1,17,1,17,1,17,0,0,18,0,2,4,6,8,10,12,14,16,18,20,22,24,26,
-	28,30,32,34,0,5,1,0,29,30,1,0,25,28,1,0,23,24,1,0,20,22,1,0,12,16,160,0,
+	28,30,32,34,0,5,1,0,31,32,1,0,27,30,1,0,25,26,1,0,22,24,1,0,12,18,160,0,
 	36,1,0,0,0,2,39,1,0,0,0,4,47,1,0,0,0,6,58,1,0,0,0,8,73,1,0,0,0,10,75,1,
 	0,0,0,12,79,1,0,0,0,14,87,1,0,0,0,16,104,1,0,0,0,18,115,1,0,0,0,20,117,
 	1,0,0,0,22,120,1,0,0,0,24,127,1,0,0,0,26,133,1,0,0,0,28,137,1,0,0,0,30,
 	139,1,0,0,0,32,153,1,0,0,0,34,155,1,0,0,0,36,37,3,2,1,0,37,38,5,0,0,1,38,
-	1,1,0,0,0,39,44,3,4,2,0,40,41,5,33,0,0,41,43,3,4,2,0,42,40,1,0,0,0,43,46,
+	1,1,0,0,0,39,44,3,4,2,0,40,41,5,35,0,0,41,43,3,4,2,0,42,40,1,0,0,0,43,46,
 	1,0,0,0,44,42,1,0,0,0,44,45,1,0,0,0,45,3,1,0,0,0,46,44,1,0,0,0,47,52,3,
-	6,3,0,48,49,5,32,0,0,49,51,3,6,3,0,50,48,1,0,0,0,51,54,1,0,0,0,52,50,1,
-	0,0,0,52,53,1,0,0,0,53,5,1,0,0,0,54,52,1,0,0,0,55,56,5,31,0,0,56,59,3,6,
+	6,3,0,48,49,5,34,0,0,49,51,3,6,3,0,50,48,1,0,0,0,51,54,1,0,0,0,52,50,1,
+	0,0,0,52,53,1,0,0,0,53,5,1,0,0,0,54,52,1,0,0,0,55,56,5,33,0,0,56,59,3,6,
 	3,0,57,59,3,8,4,0,58,55,1,0,0,0,58,57,1,0,0,0,59,7,1,0,0,0,60,74,3,16,8,
 	0,61,64,3,10,5,0,62,63,7,0,0,0,63,65,3,10,5,0,64,62,1,0,0,0,64,65,1,0,0,
 	0,65,74,1,0,0,0,66,67,3,12,6,0,67,68,7,0,0,0,68,69,3,12,6,0,69,74,1,0,0,
-	0,70,71,5,19,0,0,71,72,7,0,0,0,72,74,5,19,0,0,73,60,1,0,0,0,73,61,1,0,0,
+	0,70,71,5,21,0,0,71,72,7,0,0,0,72,74,5,21,0,0,73,60,1,0,0,0,73,61,1,0,0,
 	0,73,66,1,0,0,0,73,70,1,0,0,0,74,9,1,0,0,0,75,76,3,12,6,0,76,77,7,1,0,0,
 	77,78,3,12,6,0,78,11,1,0,0,0,79,84,3,14,7,0,80,81,7,2,0,0,81,83,3,14,7,
 	0,82,80,1,0,0,0,83,86,1,0,0,0,84,82,1,0,0,0,84,85,1,0,0,0,85,13,1,0,0,0,
 	86,84,1,0,0,0,87,92,3,18,9,0,88,89,7,3,0,0,89,91,3,18,9,0,90,88,1,0,0,0,
 	91,94,1,0,0,0,92,90,1,0,0,0,92,93,1,0,0,0,93,15,1,0,0,0,94,92,1,0,0,0,95,
-	105,5,17,0,0,96,105,5,18,0,0,97,105,3,24,12,0,98,105,3,22,11,0,99,105,3,
+	105,5,19,0,0,96,105,5,20,0,0,97,105,3,24,12,0,98,105,3,22,11,0,99,105,3,
 	20,10,0,100,101,5,1,0,0,101,102,3,2,1,0,102,103,5,2,0,0,103,105,1,0,0,0,
 	104,95,1,0,0,0,104,96,1,0,0,0,104,97,1,0,0,0,104,98,1,0,0,0,104,99,1,0,
-	0,0,104,100,1,0,0,0,105,17,1,0,0,0,106,108,5,24,0,0,107,106,1,0,0,0,107,
+	0,0,104,100,1,0,0,0,105,17,1,0,0,0,106,108,5,26,0,0,107,106,1,0,0,0,107,
 	108,1,0,0,0,108,109,1,0,0,0,109,116,5,9,0,0,110,116,3,26,13,0,111,112,5,
 	1,0,0,112,113,3,12,6,0,113,114,5,2,0,0,114,116,1,0,0,0,115,107,1,0,0,0,
 	115,110,1,0,0,0,115,111,1,0,0,0,116,19,1,0,0,0,117,118,5,3,0,0,118,119,
 	3,30,15,0,119,21,1,0,0,0,120,121,5,4,0,0,121,122,3,30,15,0,122,23,1,0,0,
-	0,123,124,5,10,0,0,124,128,5,19,0,0,125,126,5,10,0,0,126,128,3,28,14,0,
+	0,123,124,5,10,0,0,124,128,5,21,0,0,125,126,5,10,0,0,126,128,3,28,14,0,
 	127,123,1,0,0,0,127,125,1,0,0,0,128,25,1,0,0,0,129,130,5,11,0,0,130,134,
-	5,19,0,0,131,132,5,11,0,0,132,134,3,28,14,0,133,129,1,0,0,0,133,131,1,0,
+	5,21,0,0,131,132,5,11,0,0,132,134,3,28,14,0,133,129,1,0,0,0,133,131,1,0,
 	0,0,134,27,1,0,0,0,135,138,3,34,17,0,136,138,3,30,15,0,137,135,1,0,0,0,
-	137,136,1,0,0,0,138,29,1,0,0,0,139,140,5,5,0,0,140,141,5,19,0,0,141,142,
+	137,136,1,0,0,0,138,29,1,0,0,0,139,140,5,5,0,0,140,141,5,21,0,0,141,142,
 	5,6,0,0,142,143,3,28,14,0,143,144,5,7,0,0,144,145,3,32,16,0,145,146,5,8,
-	0,0,146,31,1,0,0,0,147,154,3,2,1,0,148,149,5,19,0,0,149,150,5,28,0,0,150,
-	151,3,2,1,0,151,152,5,26,0,0,152,154,1,0,0,0,153,147,1,0,0,0,153,148,1,
+	0,0,146,31,1,0,0,0,147,154,3,2,1,0,148,149,5,21,0,0,149,150,5,30,0,0,150,
+	151,3,2,1,0,151,152,5,28,0,0,152,154,1,0,0,0,153,147,1,0,0,0,153,148,1,
 	0,0,0,154,33,1,0,0,0,155,156,7,4,0,0,156,35,1,0,0,0,14,44,52,58,64,73,84,
 	92,104,107,115,127,133,137,153];
 
@@ -1742,6 +1750,12 @@ export class ListContext extends ParserRuleContext {
 	}
 	public ADJACENTS(): TerminalNode {
 		return this.getToken(SemanticFilteringParser.ADJACENTS, 0);
+	}
+	public INCOMING(): TerminalNode {
+		return this.getToken(SemanticFilteringParser.INCOMING, 0);
+	}
+	public OUTGOING(): TerminalNode {
+		return this.getToken(SemanticFilteringParser.OUTGOING, 0);
 	}
     public get ruleIndex(): number {
     	return SemanticFilteringParser.RULE_list;
