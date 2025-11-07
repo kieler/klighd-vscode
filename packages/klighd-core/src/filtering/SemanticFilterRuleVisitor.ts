@@ -496,10 +496,27 @@ export class SemanticFilterRuleVisitor implements SemanticFilteringVisitor<boole
 
             case SemanticFilteringParser.ADJACENTS:
                 if (element instanceof SKNode) {
-                    const adjacents = toArray(element.incomingEdges.map((edge) => edge.source)).concat(
-                        toArray(element.outgoingEdges.map((edge) => edge.target))
+                    const adjacents = Array.from(
+                        new Set([
+                            ...element.incomingEdges.map((edge) => edge.source),
+                            ...element.outgoingEdges.map((edge) => edge.target),
+                        ])
                     )
                     return typeFilter(adjacents, hasProperties)
+                }
+                return []
+
+            case SemanticFilteringParser.INCOMING:
+                if (element instanceof SKNode) {
+                    const incoming = Array.from(element.incomingEdges)
+                    return typeFilter(incoming, hasProperties)
+                }
+                return []
+
+            case SemanticFilteringParser.OUTGOING:
+                if (element instanceof SKNode) {
+                    const outgoing = Array.from(element.outgoingEdges)
+                    return typeFilter(outgoing, hasProperties)
                 }
                 return []
 

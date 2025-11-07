@@ -73,7 +73,7 @@ numtagExpr
 └── '$' listExpr
 
 listExpr
-└── list (SELF | PARENT | CHILDREN | SIBLINGS | ADJACENTS)
+└── list (SELF | PARENT | CHILDREN | SIBLINGS | ADJACENTS | INCOMING | OUTGOING)
 └── '[' ID ':' listExpr '|' varExpr ']'
 
 varExpr
@@ -185,6 +185,8 @@ list
     | CHILDREN
     | SIBLINGS
     | ADJACENTS
+    | INCOMING
+    | OUTGOING
     ;
 
 TAG: '#';
@@ -195,6 +197,8 @@ PARENT:    'parent';
 CHILDREN:  'children';
 SIBLINGS:  'siblings';
 ADJACENTS: 'adjacents';
+INCOMING:  'incoming';
+OUTGOING:  'outgoing';
 
 TRUE: 'true';
 FALSE: 'false';
