@@ -37,6 +37,7 @@ import {
     KText,
 } from '../skgraph-models'
 import { boundsMax, emptyBounds } from './bounds-util'
+import { toNonNullLeftPosition, toNonNullRightPosition } from './krendering-util'
 
 /**
  * Estimates the minimal size of a KRendering.<br>
@@ -152,7 +153,7 @@ function estimateKTextSize(kText: KText): Bounds {
 function estimateTextSize(kText: KText, text: string): Bounds {
     // TODO: actually figure out how to estimate the text size accurately
     // heh: implemented first heuristic based on visual estimations of the Overpass Regular font.
-    return {x : 0, y: 0, width: text.length / 4 * 30, height: 20}
+    return { x: 0, y: 0, width: (text.length / 4) * 25, height: 20 }
 
     // TODO: persist CALCULATED_TEXT_BOUNDS, CALCULATED_TEXT_LINE_WIDTHS, CALCULATED_TEXT_LINE_HEIGHTS in properties
 
@@ -202,13 +203,41 @@ function estimateAreaPlacedChildSize(
     areaPlacementData: KAreaPlacementData,
     givenBounds: Bounds
 ): Bounds {
-    //const childSize = evaluateAreaPlacement(areaPlacementData, givenBounds)
-    const containerMinSize = basicEstimateSize(rendering, givenBounds)
+    const childSize = evaluateAreaPlacement(areaPlacementData, givenBounds)
+    const containerMinSize = basicEstimateSize(rendering, childSize)
     return inverselyApplyBoundingBoxKPositions(
         containerMinSize,
         areaPlacementData.topLeft,
         areaPlacementData.bottomRight
     )
+}
+
+/**
+ * Returns the bounds for a direct placement data in given parent bounds.
+ * @param dpd 
+ *          the direct placement data
+ * @param parentBounds 
+ *          the parent bounds
+ * @returns 
+ */
+function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds) : Bounds {
+    // TODO: Test this method
+
+    if (!dpd) return parentBounds
+    // Determine the top-left
+    const topLeftPoint = dpd.topLeft
+        ? evaluateKPosition(dpd.topLeft, parentBounds, true)
+        : { x: 0, y: 0 }
+    // Determine the bottom-right
+    const bottomRightPoint = dpd.bottomRight
+        ? evaluateKPosition(dpd.bottomRight, parentBounds, false)
+        : { x: parentBounds.width, y: parentBounds.height }
+    return {
+        x: topLeftPoint.x,
+        y: topLeftPoint.y,
+        width: bottomRightPoint.x - topLeftPoint.y,
+        height: bottomRightPoint.y - topLeftPoint.y,
+    }
 }
 
 /**
@@ -225,13 +254,73 @@ function estimateAreaPlacedChildSize(
  * @return the respective outer bounds
  */
 function inverselyApplyBoundingBoxKPositions(innerBounds: Bounds, topLeft: KPosition, bottomRight: KPosition): Bounds {
-    // TODO: implement these required functions, this seems to be done strangely on the server
-    // return inverselyApplySizeData(
-    //     innerBounds,
-    //     getHorizontalSize(topLeft, bottomRight),
-    //     getVerticalSize(topLeft, bottomRight)
-    // )
-    return emptyBounds()
+    // TODO: Test this method
+    return inverselyApplySizeData(
+        innerBounds,
+        getHorizontalSize(topLeft, bottomRight),
+        getVerticalSize(topLeft, bottomRight)
+    )
+}
+
+function inverselyApplySizeData(bounds: Bounds, horSize: [number, number], vertSize: [number, number]): Bounds {
+    // TODO: Test this method
+    const absXOffset = horSize[0]
+    const relWidth = horSize[1]
+
+    const absYOffset = vertSize[0]
+    const relHeight = vertSize[1]
+
+    const width = relWidth ? (bounds.width  + absXOffset) / relWidth : absXOffset
+    const height = relHeight ? (bounds.height  + absYOffset) / relHeight : absYOffset
+
+    return {x: bounds.x, y: bounds.y, width: width, height: height}
+}
+
+const PRIMARY = 0
+const SECONDARY = 1
+
+function getHorizontalSize(tL: KPosition, bR: KPosition): [number, number] {
+    // TODO: Fully implement this method and sub methods
+    let abs0, abs1, rel0, rel1: number
+    let posId0, posId1: number
+
+    if (!tL) {
+        abs0 = 0.0
+        rel0 = 0.0
+        posId0 = PRIMARY
+    } else {
+        const lPos = toNonNullLeftPosition(tL.x)
+        abs0 = lPos.absolute
+        rel0 = lPos.relative
+        //posId0 = lPos.eClass().getClassifierID() == KRenderingPackage.KLEFT_POSITION ? PRIMARY : SECONDARY
+        // TODO: Remove this stub.
+        posId0 = SECONDARY
+    }
+
+    if (!bR) {
+        abs1 = 0.0
+        rel1 = 0.0
+        posId1 = PRIMARY
+    } else {
+        const rPos = toNonNullRightPosition(bR.x)
+        abs1 = rPos.absolute
+        rel1 = rPos.relative
+        //posId1 = rPos.eClass().getClassifierID() == KRenderingPackage.KRIGHT_POSITION ? PRIMARY : SECONDARY;
+        // TODO: Remove this stub.
+        posId1 = SECONDARY
+    }
+
+    return getSize(abs0, rel0, posId0, abs1, rel1, posId1)
+}
+
+function getVerticalSize(topLeft: KPosition, bottomRight: KPosition): [number, number] {
+    // TODO: Test this method
+    throw new Error('Function not implemented.')
+}
+
+function getSize(abs0: number, rel0: number, posId0: number, abs1: number, rel1: number, posId1: number) : [number, number] {
+    // TODO: Test this method
+    throw new Error('Function not implemented.')
 }
 
 /**
