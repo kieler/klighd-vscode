@@ -17,6 +17,7 @@
 
 import { Bounds, Point } from 'sprotty-protocol'
 import {
+    HorizontalAlignment,
     isAreaPlacementData,
     isChildArea,
     isContainerRendering,
@@ -24,9 +25,11 @@ import {
     isGridPlacementData,
     isImage,
     isKText,
+    isLeftPosition,
     isPointPlacementData,
     isPolyline,
     isRenderingRef,
+    isTopPosition,
     K_BOTTOM_POSITION,
     K_LEFT_POSITION,
     K_RIGHT_POSITION,
@@ -40,6 +43,7 @@ import {
     KRendering,
     KRenderingRef,
     KText,
+    VerticalAlignment,
 } from '../skgraph-models'
 import { boundsMax, emptyBounds } from './bounds-util'
 import {
@@ -69,7 +73,6 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
         bounds = estimateAreaPlacedChildSize(rendering, placementData as KAreaPlacementData, givenBounds)
     } else if (isPointPlacementData(placementData)) {
         bounds = estimatePointPlacedChildSize(rendering, placementData as KPointPlacementData)
-        bounds = givenBounds
     } else {
         bounds = basicEstimateSize(rendering, givenBounds)
     }
@@ -104,7 +107,7 @@ function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
     if (isRenderingRef(rendering)) {
         const retrievedRendering = (rendering as KRenderingRef).rendering
 
-        // Currently always undefined
+        // TODO: Currently always undefined, as the KRenderingRef's rendering is not set.
         if (retrievedRendering !== undefined) return basicEstimateSize(retrievedRendering, givenBounds)
 
         console.log('rendering refs not implemented')
@@ -235,6 +238,7 @@ function estimateAreaPlacedChildSize(
  */
 function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds): Bounds {
     // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'evaluateAreaPlacement')
 
     if (!dpd) return parentBounds
     // Determine the top-left
@@ -266,6 +270,8 @@ function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds): B
  */
 function inverselyApplyBoundingBoxKPositions(innerBounds: Bounds, topLeft: KPosition, bottomRight: KPosition): Bounds {
     // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'inverselyApplyBoundingBoxKPositions')
+
     return inverselyApplySizeData(
         innerBounds,
         getHorizontalSize(topLeft, bottomRight),
@@ -275,6 +281,8 @@ function inverselyApplyBoundingBoxKPositions(innerBounds: Bounds, topLeft: KPosi
 
 function inverselyApplySizeData(bounds: Bounds, horSize: [number, number], vertSize: [number, number]): Bounds {
     // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'inverselyApplySizeData')
+
     const absXOffset = horSize[0]
     const relWidth = horSize[1]
 
@@ -314,6 +322,8 @@ const SECONDARY_SECONDARY = SECONDARY * FIRST_OFFSET + SECONDARY
 
 function getHorizontalSize(tL: KPosition, bR: KPosition): [number, number] {
     // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'getHorizontalSize')
+
     let abs0, abs1, rel0, rel1: number
     let posId0, posId1: number
 
@@ -344,6 +354,8 @@ function getHorizontalSize(tL: KPosition, bR: KPosition): [number, number] {
 
 function getVerticalSize(tL: KPosition, bR: KPosition): [number, number] {
     // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'getVerticalSize')
+
     let abs0, abs1, rel0, rel1: number
     let posId0, posId1: number
 
@@ -380,9 +392,9 @@ function getSize(
     rel1: number,
     posId1: number
 ): [number, number] {
-    console.warn("METHOD IS BEING USED: " + "getSize")
-
     // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'getSize')
+
     let absOffset, relWidth: number
     const position = posId0 * FIRST_OFFSET + posId1
 
@@ -390,32 +402,32 @@ function getSize(
         case PRIMARY_PRIMARY:
             // top left comes from left
             // bottom right comes from right
-            relWidth = 1.0 - (rel1 + rel0)
+            relWidth = 1 - (rel1 + rel0)
             absOffset = abs0 + abs1
             break
         case PRIMARY_SECONDARY:
             // top left comes from left
             // bottom right comes from left
             relWidth = rel1 - rel0
-            if (relWidth === 0.0) absOffset = abs1
+            if (relWidth === 0) absOffset = abs1
             else absOffset = abs0 - abs1
             break
         case SECONDARY_PRIMARY:
             // top left comes from right
             // bottom right comes from right
             relWidth = rel0 - rel1
-            if (relWidth === 0.0) absOffset = abs0
+            if (relWidth === 0) absOffset = abs0
             else absOffset = -abs0 + abs1
             break
         case SECONDARY_SECONDARY:
             // top left comes from right
             // bottom right comes from left
-            relWidth = rel1 + rel0 - 1.0
+            relWidth = rel1 + rel0 - 1
             absOffset = -abs0 - abs1
             break
         default:
-            relWidth = 1.0
-            absOffset = 0.0
+            relWidth = 1
+            absOffset = 0
             break
     }
 
@@ -435,14 +447,90 @@ function getSize(
 export function estimatePointPlacedChildSize(rendering: KRendering, pointPlacementData: KPointPlacementData): Bounds {
     const minSize = { x: 0, y: 0, width: pointPlacementData.minWidth, height: pointPlacementData.minHeight }
     const childSize = boundsMax(minSize, basicEstimateSize(rendering, minSize))
-    // TODO: implement these functions
-    // return {
-    //     x: 0,
-    //     y: 0,
-    //     width: getHorizontalSizeFromPointPlacementData(pointPlacementData, childSize.width),
-    //     height: getVerticalSizeFromPointPlacementData(pointPlacementData, childSize.height),
-    // }
-    return emptyBounds()
+    return {
+        x: 0,
+        y: 0,
+        width: getHorizontalSizeFromPointPlacementData(pointPlacementData, childSize.width),
+        height: getVerticalSizeFromPointPlacementData(pointPlacementData, childSize.height),
+    }
+}
+
+/**
+ * Determines the horizontal size value for a point-based placed child.
+ *
+ * @param ppd
+ *            the {@link KPointPlacementData} containing the required declarations
+ * @param minWidth
+ *            the estimated minimal width of the child
+ * @return a {@link Number} of the horizontal size value for a point-based placed child
+ */
+function getHorizontalSizeFromPointPlacementData(ppd: KPointPlacementData, minWidth: number): number {
+    // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'getHorizontalSizeFromPointPlacementData')
+
+    if (!ppd) return minWidth
+
+    const pos = ppd.referencePoint
+    const abs = pos && pos.x ? pos.x.absolute : 0
+    let calculatedWidth = 0
+
+    switch (ppd.horizontalAlignment) {
+        case HorizontalAlignment.LEFT:
+        case HorizontalAlignment.RIGHT:
+            // the child requires its minWidth and the absolute margin defined by pos.getX()
+            calculatedWidth = abs + minWidth + ppd.horizontalMargin
+            break
+        case HorizontalAlignment.CENTER:
+            const halfWidth = minWidth / 2
+            // in this case the child requires, depending on type of pos.getX, on one side more
+            // space than on the other, so:
+            if (abs > halfWidth) calculatedWidth = abs + halfWidth + ppd.horizontalAlignment
+            // in case one might argue the same way, but there's still the relative part
+            // so I think potentially shrinking the width is not reasonable; thus:
+            else calculatedWidth = minWidth + 2 * ppd.horizontalAlignment
+            break
+    }
+
+    return calculatedWidth
+}
+
+/**
+ * Determines the vertical size value for a point-based placed child.
+ *
+ * @param ppd
+ *            the {@link KPointPlacementData} containing the required declarations
+ * @param minHeight
+ *            the estimated minimal height of the child
+ * @return a {@link Number} of the vertical size value for a point-based placed child
+ */
+function getVerticalSizeFromPointPlacementData(ppd: KPointPlacementData, minHeight: number): number {
+    // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'getVerticalSizeFromPointPlacementData')
+
+    if (!ppd) return minHeight
+
+    const pos = ppd.referencePoint
+    const abs = pos && pos.y ? pos.y.absolute : 0
+    let calculatedHeight = 0
+
+    switch (ppd.verticalAlignment) {
+        case VerticalAlignment.TOP:
+        case VerticalAlignment.BOTTOM:
+            // the child requires its minHeight and the absolute margin defined by pos.getY()
+            calculatedHeight = abs + minHeight + ppd.verticalMargin
+            break
+        case VerticalAlignment.CENTER:
+            const halfHeight = minHeight / 2
+            // in this case the child requires, depending on type of pos.getY, on one side more
+            // space than on the other, so:
+            if (abs > halfHeight) calculatedHeight = abs + halfHeight + ppd.verticalMargin
+            // in case one might argue the same way, but there's still the relative part
+            // so I think potentially shrinking the width is not reasonable; thus:
+            else calculatedHeight = minHeight + 2 * ppd.verticalMargin
+            break
+    }
+
+    return calculatedHeight
 }
 
 /**
@@ -486,27 +574,25 @@ function evaluatePolylineBounds(line: KPolyline, givenBounds: Bounds): Bounds {
  * @return the evaluated position
  */
 export function evaluateKPosition(position: KPosition, parentBounds: Bounds, topLeft: boolean): Point {
-    // TODO: implement missing functions
-    // const width = parentBounds.width
-    // const height = parentBounds.height
-    // const point = { x: 0, y: 0 }
-    // const xPos = topLeft ? toNonNullLeftPosition(position.x) : toNonNullRightPosition(position.x)
-    // const yPos = topLeft ? toNonNullTopPosition(position.y) : toNonNullBottomPosition(position.y)
-    // // TODO: the Java implementation here relies on interfaces to differentiate different types of positions,
-    // // we cannot do the same here so need to figure out a different solution
-    // // currently the client just treats left and right positions the same
+    // TODO: Test this method
+    console.warn('METHOD IS BEING USED: ' + 'evaluateKPosition')
 
-    // if (isLeftPosition(xPos)) {
-    //     point.x = xPos.relative * width + xPos.getAbsolute()
-    // } else {
-    //     point.x = width - xPos.getRelative() * width - xPos.getAbsolute()
-    // }
+    const width = parentBounds.width
+    const height = parentBounds.height
 
-    // if (yPos instanceof KTopPosition) {
-    //     point.y = yPos.getRelative() * height + yPos.getAbsolute()
-    // } else {
-    //     point.y = height - yPos.getRelative() * height - yPos.getAbsolute()
-    // }
-    // return point
-    return { x: position.x.relative, y: position.y.relative }
+    const point = { x: 0, y: 0 }
+    const xPos = topLeft ? toNonNullLeftPosition(position.x) : toNonNullRightPosition(position.x)
+    const yPos = topLeft ? toNonNullTopPosition(position.y) : toNonNullBottomPosition(position.y)
+
+    if (isLeftPosition(xPos)) {
+        point.x = xPos.relative * width + xPos.absolute
+    } else {
+        point.x = width - xPos.relative * width - xPos.absolute
+    }
+    if (isTopPosition(yPos)) {
+        point.y = yPos.relative * height + yPos.absolute
+    } else {
+        point.y = height - yPos.relative * height - yPos.absolute
+    }
+    return point
 }

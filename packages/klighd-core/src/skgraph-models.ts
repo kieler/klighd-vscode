@@ -916,3 +916,38 @@ export function isSKLabel(test: unknown): test is SKLabel {
     const { type } = test as any
     return type === LABEL_TYPE && (test as any).data !== undefined && (test as any).properties !== undefined
 }
+
+// Changing "boolean" to "test is KLeftPosition" results in unexpected behaviour for "evaluateKPosition" in placement-util.ts
+export function isLeftPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_LEFT_POSITION
+}
+
+// TODO: Currently unused
+export function isRightPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_RIGHT_POSITION
+}
+
+export function isTopPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_TOP_POSITION
+}
+
+// TODO: Currently unused
+export function isBottomPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_BOTTOM_POSITION
+}
