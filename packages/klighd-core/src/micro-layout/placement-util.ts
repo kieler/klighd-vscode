@@ -27,6 +27,10 @@ import {
     isPointPlacementData,
     isPolyline,
     isRenderingRef,
+    K_BOTTOM_POSITION,
+    K_LEFT_POSITION,
+    K_RIGHT_POSITION,
+    K_TOP_POSITION,
     KAreaPlacementData,
     KContainerRendering,
     KImage,
@@ -34,10 +38,16 @@ import {
     KPolyline,
     KPosition,
     KRendering,
+    KRenderingRef,
     KText,
 } from '../skgraph-models'
 import { boundsMax, emptyBounds } from './bounds-util'
-import { toNonNullLeftPosition, toNonNullRightPosition } from './krendering-util'
+import {
+    toNonNullBottomPosition,
+    toNonNullLeftPosition,
+    toNonNullRightPosition,
+    toNonNullTopPosition,
+} from './krendering-util'
 
 /**
  * Estimates the minimal size of a KRendering.<br>
@@ -92,8 +102,11 @@ function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
         return emptyBounds()
     }
     if (isRenderingRef(rendering)) {
-        // TODO: get referenced rendering and do
-        // return basicEstimateSize(retrievedRendering, givenBounds)
+        const retrievedRendering = (rendering as KRenderingRef).rendering
+
+        // Currently always undefined
+        if (retrievedRendering !== undefined) return basicEstimateSize(retrievedRendering, givenBounds)
+
         console.log('rendering refs not implemented')
         return givenBounds
     }
@@ -214,20 +227,18 @@ function estimateAreaPlacedChildSize(
 
 /**
  * Returns the bounds for a direct placement data in given parent bounds.
- * @param dpd 
+ * @param dpd
  *          the direct placement data
- * @param parentBounds 
+ * @param parentBounds
  *          the parent bounds
- * @returns 
+ * @returns
  */
-function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds) : Bounds {
+function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds): Bounds {
     // TODO: Test this method
 
     if (!dpd) return parentBounds
     // Determine the top-left
-    const topLeftPoint = dpd.topLeft
-        ? evaluateKPosition(dpd.topLeft, parentBounds, true)
-        : { x: 0, y: 0 }
+    const topLeftPoint = dpd.topLeft ? evaluateKPosition(dpd.topLeft, parentBounds, true) : { x: 0, y: 0 }
     // Determine the bottom-right
     const bottomRightPoint = dpd.bottomRight
         ? evaluateKPosition(dpd.bottomRight, parentBounds, false)
@@ -270,17 +281,39 @@ function inverselyApplySizeData(bounds: Bounds, horSize: [number, number], vertS
     const absYOffset = vertSize[0]
     const relHeight = vertSize[1]
 
-    const width = relWidth ? (bounds.width  + absXOffset) / relWidth : absXOffset
-    const height = relHeight ? (bounds.height  + absYOffset) / relHeight : absYOffset
+    const width = relWidth ? (bounds.width + absXOffset) / relWidth : absXOffset
+    const height = relHeight ? (bounds.height + absYOffset) / relHeight : absYOffset
 
-    return {x: bounds.x, y: bounds.y, width: width, height: height}
+    return { x: bounds.x, y: bounds.y, width: width, height: height }
 }
 
+/**
+ * whether a position is measured in the same direction as the point it is defining e.g. a top
+ * left position is measured from left
+ */
 const PRIMARY = 0
+/**
+ * whether a position is measured contrary to the point it is defining e.g. a top right position
+ * is measured from left
+ */
 const SECONDARY = 1
+/**
+ * offset to be used to calculate below defined constants to determine how positions interact
+ * first positions are left or top.
+ */
+const FIRST_OFFSET = 100
+
+/** both positions are measured direct. */
+const PRIMARY_PRIMARY = PRIMARY * FIRST_OFFSET + PRIMARY
+/** first position is measured directly, second position is measured indirectly. */
+const PRIMARY_SECONDARY = PRIMARY * FIRST_OFFSET + SECONDARY
+/** first position is measured indirectly, second position is measured directly. */
+const SECONDARY_PRIMARY = SECONDARY * FIRST_OFFSET + PRIMARY
+/** both positions are measured indirectly. */
+const SECONDARY_SECONDARY = SECONDARY * FIRST_OFFSET + SECONDARY
 
 function getHorizontalSize(tL: KPosition, bR: KPosition): [number, number] {
-    // TODO: Fully implement this method and sub methods
+    // TODO: Test this method
     let abs0, abs1, rel0, rel1: number
     let posId0, posId1: number
 
@@ -292,9 +325,7 @@ function getHorizontalSize(tL: KPosition, bR: KPosition): [number, number] {
         const lPos = toNonNullLeftPosition(tL.x)
         abs0 = lPos.absolute
         rel0 = lPos.relative
-        //posId0 = lPos.eClass().getClassifierID() == KRenderingPackage.KLEFT_POSITION ? PRIMARY : SECONDARY
-        // TODO: Remove this stub.
-        posId0 = SECONDARY
+        posId0 = lPos.type === K_LEFT_POSITION ? PRIMARY : SECONDARY
     }
 
     if (!bR) {
@@ -305,22 +336,90 @@ function getHorizontalSize(tL: KPosition, bR: KPosition): [number, number] {
         const rPos = toNonNullRightPosition(bR.x)
         abs1 = rPos.absolute
         rel1 = rPos.relative
-        //posId1 = rPos.eClass().getClassifierID() == KRenderingPackage.KRIGHT_POSITION ? PRIMARY : SECONDARY;
-        // TODO: Remove this stub.
-        posId1 = SECONDARY
+        posId1 = rPos.type === K_RIGHT_POSITION ? PRIMARY : SECONDARY
     }
 
     return getSize(abs0, rel0, posId0, abs1, rel1, posId1)
 }
 
-function getVerticalSize(topLeft: KPosition, bottomRight: KPosition): [number, number] {
+function getVerticalSize(tL: KPosition, bR: KPosition): [number, number] {
     // TODO: Test this method
-    throw new Error('Function not implemented.')
+    let abs0, abs1, rel0, rel1: number
+    let posId0, posId1: number
+
+    if (!tL) {
+        abs0 = 0.0
+        rel0 = 0.0
+        posId0 = PRIMARY
+    } else {
+        const lPos = toNonNullTopPosition(tL.x)
+        abs0 = lPos.absolute
+        rel0 = lPos.relative
+        posId0 = lPos.type === K_TOP_POSITION ? PRIMARY : SECONDARY
+    }
+
+    if (!bR) {
+        abs1 = 0.0
+        rel1 = 0.0
+        posId1 = PRIMARY
+    } else {
+        const rPos = toNonNullBottomPosition(bR.x)
+        abs1 = rPos.absolute
+        rel1 = rPos.relative
+        posId1 = rPos.type === K_BOTTOM_POSITION ? PRIMARY : SECONDARY
+    }
+
+    return getSize(abs0, rel0, posId0, abs1, rel1, posId1)
 }
 
-function getSize(abs0: number, rel0: number, posId0: number, abs1: number, rel1: number, posId1: number) : [number, number] {
+function getSize(
+    abs0: number,
+    rel0: number,
+    posId0: number,
+    abs1: number,
+    rel1: number,
+    posId1: number
+): [number, number] {
+    console.warn("METHOD IS BEING USED: " + "getSize")
+
     // TODO: Test this method
-    throw new Error('Function not implemented.')
+    let absOffset, relWidth: number
+    const position = posId0 * FIRST_OFFSET + posId1
+
+    switch (position) {
+        case PRIMARY_PRIMARY:
+            // top left comes from left
+            // bottom right comes from right
+            relWidth = 1.0 - (rel1 + rel0)
+            absOffset = abs0 + abs1
+            break
+        case PRIMARY_SECONDARY:
+            // top left comes from left
+            // bottom right comes from left
+            relWidth = rel1 - rel0
+            if (relWidth === 0.0) absOffset = abs1
+            else absOffset = abs0 - abs1
+            break
+        case SECONDARY_PRIMARY:
+            // top left comes from right
+            // bottom right comes from right
+            relWidth = rel0 - rel1
+            if (relWidth === 0.0) absOffset = abs0
+            else absOffset = -abs0 + abs1
+            break
+        case SECONDARY_SECONDARY:
+            // top left comes from right
+            // bottom right comes from left
+            relWidth = rel1 + rel0 - 1.0
+            absOffset = -abs0 - abs1
+            break
+        default:
+            relWidth = 1.0
+            absOffset = 0.0
+            break
+    }
+
+    return [absOffset, relWidth]
 }
 
 /**

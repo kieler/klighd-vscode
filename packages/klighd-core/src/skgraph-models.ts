@@ -733,6 +733,10 @@ export const K_GRID_PLACEMENT = 'KGridPlacementImpl'
 export const K_AREA_PLACEMENT_DATA = 'KAreaPlacementDataImpl'
 export const K_GRID_PLACEMENT_DATA = 'KGridPlacementDataImpl'
 export const K_POINT_PLACEMENT_DATA = 'KPointPlacementDataImpl'
+export const K_TOP_POSITION = 'KTopPositionImpl'
+export const K_BOTTOM_POSITION = 'KBottomPositionImpl'
+export const K_LEFT_POSITION = 'KLeftPositionImpl'
+export const K_RIGHT_POSITION = 'KRightPositionImpl'
 
 /**
  * Returns if the given parameter is a KRendering.
@@ -740,7 +744,7 @@ export const K_POINT_PLACEMENT_DATA = 'KPointPlacementDataImpl'
  * @param test The potential KRendering.
  */
 export function isRendering(test: KGraphData): test is KRendering {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
@@ -767,7 +771,7 @@ export function isRendering(test: KGraphData): test is KRendering {
  * @param test The potential KContainerRendering.
  */
 export function isContainerRendering(test: KGraphData): test is KContainerRendering {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
@@ -809,7 +813,7 @@ export function isRenderingRef(test: KGraphData): test is KRenderingRef {
  * @param test The potential KPolyline.
  */
 export function isPolyline(test: KGraphData): test is KPolyline {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
@@ -821,7 +825,7 @@ export function isPolyline(test: KGraphData): test is KPolyline {
  * @param test The potential KText
  */
 export function isKText(test: KGraphData): test is KText {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
@@ -855,6 +859,7 @@ export function isGridPlacement(test: KPlacement): test is KGridPlacement {
  * @param test The potential KAreaPlacementData.
  */
 export function isAreaPlacementData(test: KPlacementData): test is KAreaPlacementData {
+    // TODO: Sanatize to use "test === null"
     if (!test) {
         return false
     }
@@ -889,7 +894,7 @@ export function isPointPlacementData(test: any): test is KPointPlacementData {
  * @param test The potential SKGraphElement.
  */
 export function isSKGraphElement(test: unknown): test is SKGraphElement {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test as any
@@ -905,7 +910,7 @@ export function isSKGraphElement(test: unknown): test is SKGraphElement {
  * @param test The potential SKLabel.
  */
 export function isSKLabel(test: unknown): test is SKLabel {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test as any
