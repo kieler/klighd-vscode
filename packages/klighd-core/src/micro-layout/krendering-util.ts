@@ -20,7 +20,6 @@ import {
     K_LEFT_POSITION,
     K_RIGHT_POSITION,
     K_TOP_POSITION,
-    KPosition,
     KXPosition,
 } from '../skgraph-models'
 
