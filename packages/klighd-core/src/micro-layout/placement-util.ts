@@ -28,21 +28,27 @@ import {
     isLeftPosition,
     isPointPlacementData,
     isPolyline,
+    isRendering,
     isRenderingRef,
+    isSKLabel,
     isTopPosition,
+    K_AREA_PLACEMENT_DATA,
     K_BOTTOM_POSITION,
     K_LEFT_POSITION,
+    K_POINT_PLACEMENT_DATA,
     K_RIGHT_POSITION,
     K_TOP_POSITION,
     KAreaPlacementData,
     KContainerRendering,
     KImage,
+    KPlacement,
     KPointPlacementData,
     KPolyline,
     KPosition,
     KRendering,
     KRenderingRef,
     KText,
+    SKLabel,
     VerticalAlignment,
 } from '../skgraph-models'
 import { boundsMax, emptyBounds } from './bounds-util'
@@ -141,17 +147,22 @@ function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
  * @return the minimal bounds for the {@link KText}
  */
 function estimateKTextSize(kText: KText): Bounds {
-    if (kText.text === undefined) {
-        if (kText.properties['klighd.labels.textOverride'] !== undefined) {
+    if (!kText.text) {
+        if (kText.properties['klighd.labels.textOverride']) {
             return estimateTextSize(kText, kText.properties['klighd.labels.textOverride'] as string)
         }
 
         // TODO: Try to find the KText's parent label
         // at the moment we have no easy access to parent's of KRenderings on the client
+        /*
+        let o = kText.parent
+        while (isRendering(o)) o = o.parent
 
+        if (isSKLabel(o)) return estimateTextSize(kText, (o as SKLabel).text)
+        else return estimateTextSize(kText, '')
+        */
         return estimateTextSize(kText, '')
-    }
-    return estimateTextSize(kText, kText.text)
+    } else return estimateTextSize(kText, kText.text)
 }
 
 /**
@@ -196,9 +207,107 @@ function estimateTextSize(kText: KText, text: string): Bounds {
  *            the pre-calculated size of the image itself
  * @return the minimal size
  */
-function estimateImageSize(image: KImage, givenBounds: Bounds) {
-    // TODO: implement image handling
-    return givenBounds
+function estimateImageSize(image: KImage, givenBounds: Bounds): Bounds {
+    // TODO: Test this method
+    // TODO: Comment this method
+    console.warn('METHOD IS BEING USED: ' + 'estimateImageSize')
+
+    // Make a writable copy
+    let imageSize = { x: givenBounds.x, y: givenBounds.y, width: givenBounds.width, height: givenBounds.height }
+    let cs = image.clipShape
+
+    if (!cs) return imageSize
+    else {
+        const pd = image.placementData
+        const pdType = pd ? pd.type : 0
+
+        switch (pdType) {
+            case K_POINT_PLACEMENT_DATA:
+                const cpd = cs.placementData
+                const cpdType = cs ? cpd?.type : 0
+                switch (cpdType) {
+                    case K_POINT_PLACEMENT_DATA:
+                        return estimatePointPlacedChildSize(cs, cpd as KPointPlacementData)
+                    case K_AREA_PLACEMENT_DATA:
+                        const ppd = pd as KPointPlacementData
+                        return calculateBounds(
+                            null,
+                            { x: 0, y: 0, width: ppd.minWidth, height: ppd.minHeight },
+                            null,
+                            cs
+                        )
+                    default:
+                        return imageSize
+                }
+            case K_AREA_PLACEMENT_DATA:
+                const apd = pd as KAreaPlacementData
+                const tl = apd.topLeft
+                const br = apd.bottomRight
+
+                const widthModEnabled = tl && br && tl.x.type == br.x.type
+                const heightModEnabled = tl && br && tl.y.type == br.y.type
+
+                if (widthModEnabled) {
+                    imageSize.x = 0
+                    if (tl.x.type === K_LEFT_POSITION) imageSize.width -= tl.x.absolute
+                    else imageSize.width -= br.x.absolute
+                }
+
+                if (heightModEnabled) {
+                    imageSize.y = 0
+                    if (tl.y.type === K_TOP_POSITION) imageSize.height -= tl.y.absolute
+                    else imageSize.height -= br.y.absolute
+                }
+
+                return calculateBounds(null, imageSize, null, cs)
+            default:
+                return imageSize
+        }
+    }
+}
+
+function calculateBounds(
+    placement: KPlacement | null,
+    parentBounds: Bounds,
+    children: Array<KRendering> | null,
+    child: KRendering
+): Bounds {
+    // TODO: Implement this method
+    // TODO: Comment this method
+    console.warn('METHOD IS BEING USED: ' + 'calculateBounds')
+    let bounds: Bounds
+
+    if (!placement) {
+        const pd = child.placementData
+        const ppd = pd as KPointPlacementData
+        if (ppd)
+            bounds = evaluatePointPlacement(ppd, estimateSize(child, { x: 0, y: 0, width: 0, height: 0 }), parentBounds)
+        else bounds = evaluateAreaPlacement(pd as KAreaPlacementData, parentBounds)
+    } else {
+        // Remove this
+        bounds = { x: 0, y: 0, width: 100, height: 100 }
+        /* TODO: Port this
+        bounds = new KRenderingSwitch<Bounds>() {
+                @Override
+                public Bounds caseKGridPlacement(final KGridPlacement gridPlacement) {
+                    // evaluate grid based on the children, their placementData and size
+                    // and get placement for current child
+                    final Bounds[] childBounds = GridPlacementUtil.evaluateGridPlacement(
+                            gridPlacement, children, parentBounds);
+                    if (childBounds == null) {
+                        return Bounds.of(0, 0);
+                    } else {
+                        final int index = children.lastIndexOf(child);
+                        return childBounds[index];
+                    }
+                }
+            }
+            .doSwitch(placement);
+        */
+    }
+
+    if (isPolyline(child)) return evaluatePolylineBounds(child as KPolyline, bounds)
+    else return bounds
 }
 
 /**
@@ -253,6 +362,48 @@ function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds): B
         width: bottomRightPoint.x - topLeftPoint.y,
         height: bottomRightPoint.y - topLeftPoint.y,
     }
+}
+
+function evaluatePointPlacement(ppd: KPointPlacementData, ownBounds: Bounds, parentBounds: Bounds): Bounds {
+    // TODO: Test this method
+    // TODO: Comment this method
+    console.warn('METHOD IS BEING USED: ' + 'evaluatePointPlacement')
+    if (!ppd) return { x: 0, y: 0, width: parentBounds.width, height: parentBounds.height }
+
+    const width = Math.max(ownBounds.width, ppd.minWidth)
+    const height = Math.max(ownBounds.height, ppd.minHeight)
+
+    const ref = ppd.referencePoint
+    const refPoint = ref ? evaluateKPosition(ref, parentBounds, true) : Point.ORIGIN
+
+    let x0 = refPoint.x
+    let y0 = refPoint.y
+
+    switch (ppd.horizontalAlignment) {
+        case HorizontalAlignment.CENTER:
+            x0 -= width / 2
+            break
+        case HorizontalAlignment.RIGHT:
+            x0 -= width
+            break
+        default:
+        case HorizontalAlignment.LEFT:
+            break
+    }
+
+    switch (ppd.verticalAlignment) {
+        case VerticalAlignment.CENTER:
+            y0 -= height / 2
+            break
+        case VerticalAlignment.BOTTOM:
+            y0 -= height
+            break
+        default:
+        case VerticalAlignment.TOP:
+            break
+    }
+
+    return { x: x0, y: y0, width: width, height: height }
 }
 
 /**

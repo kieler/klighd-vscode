@@ -141,6 +141,9 @@ export interface KRendering extends KGraphData, KStyleHolder {
     /** If this rendering is used as a clip rendering. Will not be set in the model and is to be used during rendering only. */
     isClipRendering?: boolean
     placementData?: KPlacementData
+
+    // TODO: Formalize this.
+    //parent?: KRendering
 }
 
 /**
