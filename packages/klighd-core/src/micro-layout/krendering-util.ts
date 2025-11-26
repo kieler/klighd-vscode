@@ -16,10 +16,19 @@
  */
 
 import {
+    isGridPlacement,
+    isGridPlacementData,
+    isRenderingRef,
     K_BOTTOM_POSITION,
     K_LEFT_POSITION,
     K_RIGHT_POSITION,
     K_TOP_POSITION,
+    KGridPlacement,
+    KGridPlacementData,
+    KPlacement,
+    KPlacementData,
+    KRendering,
+    KRenderingRef,
     KXPosition,
 } from '../skgraph-models'
 
@@ -64,4 +73,31 @@ export function toNonNullTopPosition(position: KXPosition): KXPosition {
 
 export function toNonNullBottomPosition(position: KXPosition): KXPosition {
     return position ? position : RIGHT_BOTTOM_POS.y
+}
+
+export function getPlacementData(rendering: KRendering): KPlacementData | null {
+    // TODO: Test this method
+    // TODO: Comment this method
+    console.warn('METHOD IS BEING USED: ' + 'getPlacementData')
+
+    let placementData = rendering.placementData
+    if (placementData) return placementData
+    else if (isRenderingRef(rendering)) {
+        const ref = rendering as KRenderingRef
+        if (!ref.rendering) return null
+        else return getPlacementData(ref.rendering)
+    } else return null
+}
+
+export function asGridPlacementData(data: KPlacementData | null): KGridPlacementData | null {
+    // TODO: Test this method
+    // TODO: Comment this method
+    console.warn('METHOD IS BEING USED: ' + 'asGridPlacementData')
+    if (data && isGridPlacementData(data)) return data as KGridPlacementData
+    else return null
+}
+
+export function asGridPlacement(placement: KPlacement): KGridPlacement | null {
+    if (placement && isGridPlacement(placement)) return placement as KGridPlacement
+    else return null
 }

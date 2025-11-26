@@ -58,6 +58,7 @@ import {
     toNonNullRightPosition,
     toNonNullTopPosition,
 } from './krendering-util'
+import { estimateGridSize } from './gridplacement-util'
 
 /**
  * Estimates the minimal size of a KRendering.<br>
@@ -103,7 +104,7 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
  *            {@link KShapeLayout} respectively
  * @return the minimal size
  */
-function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
+export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
     if (isKText(rendering)) {
         return estimateKTextSize(rendering as KText)
     }
@@ -122,9 +123,7 @@ function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
     if (isContainerRendering(rendering)) {
         const placement = (rendering as KContainerRendering).childPlacement
         if (placement && isGridPlacement(placement)) {
-            // TODO
-            console.log('grid placement not implemented')
-            return givenBounds
+            return estimateGridSize(rendering, givenBounds)
         }
         let maxSize: Bounds = givenBounds
         for (const childRendering of (rendering as KContainerRendering).children) {
@@ -137,6 +136,27 @@ function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
         return maxSize
     }
     return givenBounds
+}
+
+export function findChildArea(rendering: KRendering, path: KRendering[]): boolean {
+    // TODO: Test this method
+    // TODO: Comment this method
+    console.warn('METHOD IS BEING USED: ' + 'findChildArea')
+
+    path.push(rendering)
+    if (isChildArea(rendering)) return true
+    if (isRenderingRef(rendering)) {
+        const renderingReference = rendering as KRenderingRef
+        const referencedRendering = renderingReference.rendering
+        if (referencedRendering && findChildArea(referencedRendering, path)) return true
+    } else if (isContainerRendering(rendering)) {
+        const containerRendering = rendering as KContainerRendering
+        for (let childRendering of containerRendering.children) {
+            if (findChildArea(childRendering, path)) return true
+        }
+    }
+    path.pop()
+    return false
 }
 
 /**
@@ -244,8 +264,8 @@ function estimateImageSize(image: KImage, givenBounds: Bounds): Bounds {
                 const tl = apd.topLeft
                 const br = apd.bottomRight
 
-                const widthModEnabled = tl && br && tl.x.type == br.x.type
-                const heightModEnabled = tl && br && tl.y.type == br.y.type
+                const widthModEnabled = tl && br && tl.x.type === br.x.type
+                const heightModEnabled = tl && br && tl.y.type === br.y.type
 
                 if (widthModEnabled) {
                     imageSize.x = 0
@@ -269,7 +289,7 @@ function estimateImageSize(image: KImage, givenBounds: Bounds): Bounds {
 function calculateBounds(
     placement: KPlacement | null,
     parentBounds: Bounds,
-    children: Array<KRendering> | null,
+    children: Array<KRendering> | null, // TODO: Use Array<T> or T[]?
     child: KRendering
 ): Bounds {
     // TODO: Implement this method
@@ -419,7 +439,7 @@ function evaluatePointPlacement(ppd: KPointPlacementData, ownBounds: Bounds, par
  *            the bottom right {@link KPosition}
  * @return the respective outer bounds
  */
-function inverselyApplyBoundingBoxKPositions(innerBounds: Bounds, topLeft: KPosition, bottomRight: KPosition): Bounds {
+export function inverselyApplyBoundingBoxKPositions(innerBounds: Bounds, topLeft: KPosition, bottomRight: KPosition): Bounds {
     // TODO: Test this method
     console.warn('METHOD IS BEING USED: ' + 'inverselyApplyBoundingBoxKPositions')
 
