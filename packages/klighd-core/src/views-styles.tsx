@@ -912,6 +912,9 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
     const useLineScaleOption = context.renderOptionsRegistry.getValue(UseLineScaling)
     // Only enable, if option is found.
     const useMinimumLineScale = useLineScaleOption ?? false
+
+    // The scale factor for lines
+    let lineScaleFactor = 1
     if (!context.forceRendering && useMinimumLineScale) {
         // The line width in px that a 1px line should not be less than.
         const minimumLineScale = context.renderOptionsRegistry.getValueOrDefault(MinimumLineScale)
@@ -922,7 +925,8 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         // never scale down
         if (lineWidth !== 0 && scale < minimumLineScale) {
             // scale the line width up so that a 1px line appears as big as the minimum line width requested.
-            lineWidth *= minimumLineScale / scale
+            lineScaleFactor = minimumLineScale / scale
+            lineWidth *= lineScaleFactor
         }
     }
     const lineCap = styles.kLineCap === undefined ? undefined : lineCapText(styles.kLineCap)
@@ -932,7 +936,8 @@ export function getSvgLineStyles(styles: KStyles, target: SKGraphElement, contex
         lineWidth: lineWidth === DEFAULT_LINE_WIDTH ? undefined : `${lineWidth}px`,
         lineCap: lineCap === DEFAULT_LINE_CAP_SVG ? undefined : lineCap,
         lineJoin: lineJoin === DEFAULT_LINE_JOIN_SVG ? undefined : lineJoin,
-        dashArray: styles.kLineStyle === undefined ? undefined : lineStyleText(styles.kLineStyle, lineWidth),
+        dashArray:
+            styles.kLineStyle === undefined ? undefined : lineStyleText(styles.kLineStyle, lineWidth, lineScaleFactor),
         dashOffset: styles.kLineStyle === undefined ? undefined : styles.kLineStyle.dashOffset?.toString(),
         // Note: Here the miter limit value is also omitted if the value equals KGraph's default value of 10, because otherwise the resulting SVG would
         // always contain the miterLimit style to be set to 10, even though it is not intended by the creator of the KGraph model and it would not

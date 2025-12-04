@@ -109,8 +109,9 @@ export function lineJoinText(lineJoin: KLineJoin): 'bevel' | 'miter' | 'round' {
  * If the resulting dasharray would be a solid line, return undefined instead.
  * @param lineStyle The KLineStyle
  * @param lineWidth The width of the drawn line
+ * @param lineScaleFactor The factor to scale the line offset styles with (lineWidth is expected to be scaled already)
  */
-export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string | undefined {
+export function lineStyleText(lineStyle: KLineStyle, lineWidth: number, lineScaleFactor: number): string | undefined {
     // TODO: implement dashOffset
     const one: string = (1 * lineWidth).toString()
     const three: string = (3 * lineWidth).toString()
@@ -120,7 +121,7 @@ export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string 
                 // Draw a solid line if the custom dashPattern is not defined.
                 return undefined
             }
-            return lineStyle.dashPattern.join(' ')
+            return lineStyle.dashPattern.map((v) => v * lineScaleFactor).join(' ')
         }
         case LineStyle.DASH: {
             return [three, one].join(' ')
