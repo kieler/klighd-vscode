@@ -30,7 +30,16 @@ import {
     SModelElement,
     SModelIndex,
 } from 'sprotty-protocol'
-import { isRendering, isSKGraphElement, K_RENDERING_REF, KRectangle, KRendering, KText, SKNode } from './skgraph-models'
+import {
+    isContainerRendering,
+    isRendering,
+    isSKGraphElement,
+    K_RENDERING_REF,
+    KRectangle,
+    KRendering,
+    KText,
+    SKNode,
+} from './skgraph-models'
 import { boundsMax } from './micro-layout/bounds-util'
 import { estimateSize } from './micro-layout/placement-util'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
@@ -155,11 +164,9 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
                 }
             }
             const rendering = getKRendering(modelElement.data)
-            // TODO: determine MIN bounds
-            const minSize: Bounds = { x: 0, y: 0, width: 20, height: 20 }
 
             if (rendering) {
-                const size = boundsMax(minSize, estimateSize(rendering, minSize))
+                const size = boundsMax(Bounds.EMPTY, estimateSize(rendering, Bounds.EMPTY))
 
                 // TODO: calculate insets
 
@@ -178,18 +185,19 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
 }
 
 // TODO: copied from view-common but stripped the SKGraphModelRenderer parts, those or something similar is necessary for KRenderingLibraries to work
-function getKRendering(datas: KGraphData[]): KRendering | undefined {
-    for (const data of datas) {
-        if (data !== null && data.type === K_RENDERING_REF) {
-            console.log('KRenderingLibrary lookup not implemented')
-        } else {
-            console.log('No KRenderingLibrary for KRenderingRef in context')
+function getKRendering(datas?: KGraphData[]): KRendering | undefined {
+    if (datas)
+        for (const data of datas) {
+            if (data !== null && data.type === K_RENDERING_REF) {
+                console.log('KRenderingLibrary lookup not implemented')
+            } else {
+                console.log('No KRenderingLibrary for KRenderingRef in context')
+            }
+            if (data !== null && isRendering(data)) {
+                return data
+            }
         }
-        if (data !== null && isRendering(data)) {
-            return data
-        }
-    }
-    return undefined
+    else return undefined
 }
 
 /**
@@ -199,9 +207,25 @@ function getKRendering(datas: KGraphData[]): KRendering | undefined {
 export class MicroLayoutCalculator implements ILayoutPostprocessor {
     postprocess(elkGraph: ElkNode, sgraph: SGraph, index: SModelIndex): void {
         // TODO: Micro layout calculation here or in Step 4 from above
-        console.log('micro layout postprosessor called!')
-        console.log(elkGraph)
-        console.log(sgraph)
-        console.log(index)
+        // TODO: Test this method.
+        console.warn('METHOD IS BEING USED: ' + 'MicroLayoutCalculator.postprocess')
+        
+        // TODO: Really find out how to convert this structure into a hierarchical Rendering.
+        console.log(sgraph.children[0])
+
+        const root = getKRendering((sgraph.children[0] as unknown as SKNode).data)
+        const remainingElements = [root]
+        while (remainingElements.length > 0) {
+            //console.log(remainingElements)
+            const rendering = remainingElements.pop()
+            if (rendering) {
+                if (isContainerRendering(rendering))
+                    for (const child of rendering.children) remainingElements.push(child)
+                const bounds = estimateSize(rendering, Bounds.EMPTY)
+                rendering.properties[CALCULATED_BOUNDS] = bounds
+            }
+        }
     }
 }
+
+const CALCULATED_BOUNDS = 'klighd.lsp.calculated.bounds'

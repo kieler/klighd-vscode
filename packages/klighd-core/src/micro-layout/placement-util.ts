@@ -40,6 +40,7 @@ import {
     K_TOP_POSITION,
     KAreaPlacementData,
     KContainerRendering,
+    KGridPlacement,
     KImage,
     KPlacement,
     KPointPlacementData,
@@ -58,7 +59,7 @@ import {
     toNonNullRightPosition,
     toNonNullTopPosition,
 } from './krendering-util'
-import { estimateGridSize } from './gridplacement-util'
+import { estimateGridSize, evaluateGridPlacement } from './gridplacement-util'
 
 /**
  * Estimates the minimal size of a KRendering.<br>
@@ -300,13 +301,17 @@ function calculateBounds(
     if (!placement) {
         const pd = child.placementData
         const ppd = pd as KPointPlacementData
-        if (ppd)
-            bounds = evaluatePointPlacement(ppd, estimateSize(child, { x: 0, y: 0, width: 0, height: 0 }), parentBounds)
-        else bounds = evaluateAreaPlacement(pd as KAreaPlacementData, parentBounds)
+        bounds = ppd
+            ? evaluatePointPlacement(ppd, estimateSize(child, Bounds.EMPTY), parentBounds)
+            : evaluateAreaPlacement(pd as KAreaPlacementData, parentBounds)
     } else {
-        // Remove this
-        bounds = { x: 0, y: 0, width: 100, height: 100 }
-        /* TODO: Port this
+        // TODO: Fully port the rest of the KRenderingSwitch functionality.
+        // This here should be enough, as in the Java implementation the Switch returns null for all methods inside the KGRIDPLACEMENT-case.
+        const gridPlacement = placement as KGridPlacement
+        const childBounds = evaluateGridPlacement(gridPlacement, children, parentBounds)
+        bounds = childBounds && children ? childBounds[children.lastIndexOf(child)] : Bounds.EMPTY
+
+        /*
         bounds = new KRenderingSwitch<Bounds>() {
                 @Override
                 public Bounds caseKGridPlacement(final KGridPlacement gridPlacement) {
@@ -439,7 +444,11 @@ function evaluatePointPlacement(ppd: KPointPlacementData, ownBounds: Bounds, par
  *            the bottom right {@link KPosition}
  * @return the respective outer bounds
  */
-export function inverselyApplyBoundingBoxKPositions(innerBounds: Bounds, topLeft: KPosition, bottomRight: KPosition): Bounds {
+export function inverselyApplyBoundingBoxKPositions(
+    innerBounds: Bounds,
+    topLeft: KPosition,
+    bottomRight: KPosition
+): Bounds {
     // TODO: Test this method
     console.warn('METHOD IS BEING USED: ' + 'inverselyApplyBoundingBoxKPositions')
 

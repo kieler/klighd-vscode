@@ -120,3 +120,18 @@ function isGridSizeAssignment(test: unknown): test is GridSizeAssignment {
 // TODO: IMPORTANT: Collect all properties and store them somewhere like this for easier access.
 export const ESTIMATED_GRID_DATA = 'klighd.grid.estimatedGridData'
 export const CHILD_AREA_POSITION = 'klighd.grid.childAreaPosition'
+
+export function evaluateGridPlacement(
+    gridPlacement: KGridPlacement,
+    children: KRendering[] | null,
+    parentBounds: Bounds
+): Bounds[] | null {
+    // TODO: Test this method
+    // TODO: Comment this method
+    console.warn('METHOD IS BEING USED: ' + 'evaluateGridPlacement')
+    if (parentBounds === Bounds.EMPTY && children) return new Array<Bounds>(children.length).fill(Bounds.EMPTY)
+    //const placer =
+    return null
+}
+
+// TODO: Port GridPlacer-class

@@ -889,7 +889,7 @@ export function isPointPlacementData(test: any): test is KPointPlacementData {
         return false
     }
     const { type } = test
-    return type === K_GRID_PLACEMENT
+    return type === K_POINT_PLACEMENT_DATA
 }
 
 /**
