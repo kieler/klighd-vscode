@@ -229,3 +229,32 @@ export class MicroLayoutCalculator implements ILayoutPostprocessor {
 }
 
 const CALCULATED_BOUNDS = 'klighd.lsp.calculated.bounds'
+
+
+/*
+@injectable()
+export class MicroLayoutCalculator implements ILayoutPostprocessor {
+    postprocess(elkGraph: ElkNode, sgraph: SGraph, index: SModelIndex): void {
+        // TODO: Micro layout calculation here or in Step 4 from above
+        // TODO: Test this method.
+        console.warn('METHOD IS BEING USED: ' + 'MicroLayoutCalculator.postprocess')
+
+        // TODO: Really find out how to convert this structure into a hierarchical Rendering.
+        const remainingElements = sgraph.children
+        while (remainingElements.length > 0) {
+            //console.log(remainingElements)
+            const child = remainingElements.pop()!
+            // Render child
+            const rendering = getKRendering((child as unknown as SKNode).data)
+            if (rendering) {
+                const bounds = estimateSize(rendering, Bounds.EMPTY)
+                console.warn(bounds)
+                rendering.properties[CALCULATED_BOUNDS] = bounds
+            }
+
+            // Add all children of the child
+            for (const childChild of child.children!) remainingElements.push(childChild)
+        }
+    }
+}
+*/
