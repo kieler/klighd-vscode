@@ -48,9 +48,10 @@ import {
     SKNode,
 } from './skgraph-models'
 import { boundsMax } from './micro-layout/bounds-util'
-import { estimateSize } from './micro-layout/placement-util'
+import { estimateSize, evaluatePointPlacementRendering } from './micro-layout/placement-util'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { evaluatePointPlacement } from './micro-layout/placement-util'
 
 const CALCULATED_BOUNDS = 'klighd.lsp.calculated.bounds'
 const CALCULATED_BOUNDS_MAP = 'klighd.lsp.calculated.bounds.map'
@@ -479,6 +480,8 @@ function handleKRendering(
         decorationMap,
         element
     )
+
+    // TODO: Continue here!
 }
 
 // TODO: Implement this if needed.
@@ -525,12 +528,12 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
     switch (placementData!.type) {
         case 'KAreaPlacementData': {
             // Evaluate the area placement micro layout with the help of KLighD.
-            bounds = estimateSize(rendering, parentBounds) // If needed, implement evaluateAreaPlacement
+            //bounds = evaluateAreaPlacement(rendering, parentBounds) // If needed, implement evaluateAreaPlacement
             break
         }
         case 'KPointPlacementData': {
             // Evaluate the point placement micro layout with the help of KLighD.
-            bounds = estimateSize(rendering, parentBounds) // If needed, implement evaluatePointPlacement
+            bounds = evaluatePointPlacementRendering(rendering, placementData as KPointPlacementData, parentBounds) // If needed, implement evaluatePointPlacement
             break
         }
         case 'KDecoratorPlacementData': {

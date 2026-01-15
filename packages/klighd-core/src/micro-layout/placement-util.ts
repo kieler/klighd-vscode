@@ -389,6 +389,10 @@ function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds): B
     }
 }
 
+export function evaluatePointPlacementRendering(rendering: KRendering, ppd: KPointPlacementData, parentBounds: Bounds) {
+    return evaluatePointPlacement(ppd, basicEstimateSize(rendering, Bounds.EMPTY), parentBounds)
+}
+
 function evaluatePointPlacement(ppd: KPointPlacementData, ownBounds: Bounds, parentBounds: Bounds): Bounds {
     // TODO: Test this method
     // TODO: Comment this method
