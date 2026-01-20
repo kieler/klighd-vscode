@@ -736,6 +736,7 @@ export const K_GRID_PLACEMENT = 'KGridPlacementImpl'
 export const K_AREA_PLACEMENT_DATA = 'KAreaPlacementDataImpl'
 export const K_GRID_PLACEMENT_DATA = 'KGridPlacementDataImpl'
 export const K_POINT_PLACEMENT_DATA = 'KPointPlacementDataImpl'
+export const K_DECORATOR_PLACEMENT_DATA = 'KDecoratorPlacementDataImpl' // TODO: Actually implement this type.
 export const K_TOP_POSITION = 'KTopPositionImpl'
 export const K_BOTTOM_POSITION = 'KBottomPositionImpl'
 export const K_LEFT_POSITION = 'KLeftPositionImpl'
