@@ -46,18 +46,21 @@ import {
     KRendering,
     KRenderingRef,
     SKEdge,
+    SKLabel,
     SKNode,
 } from './skgraph-models'
 import { boundsMax } from './micro-layout/bounds-util'
 import { estimateSize, evaluatePointPlacementRendering } from './micro-layout/placement-util'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
-import { KEdge, KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 
 const CALCULATED_BOUNDS = 'klighd.lsp.calculated.bounds'
 const CALCULATED_BOUNDS_MAP = 'klighd.lsp.calculated.bounds.map'
 const CALCULATED_DECORATION = 'klighd.lsp.calculated.decoration'
 const CALCULATED_DECORATION_MAP = 'klighd.lsp.calculated.decoration.map'
 const RENDERING_ID = 'klighd.lsp.rendering.id'
+const EXPANDED = 'klighd.lsp.expanded'
+const EXPAND = 'de.cau.cs.kieler.klighd.expand'
 
 /**
  * This layout configurator copies all layout options from the KGraph element's properties.
@@ -379,36 +382,60 @@ export class MicroLayoutCalculator implements ILayoutPostprocessor {
     }
         */
 
-        // TODO: Micro layout calculation here or in Step 4 from above
-        // TODO: Test this method.
-        console.warn('METHOD IS BEING USED: ' + 'MicroLayoutCalculator.postprocess')
-
         const element = sgraph.children[0] as unknown as SKGraphElement
+        prepareRenderingLayout(element)
+    }
+}
 
-        for (let i = 0; i < element.data.length; i++) {
-            const data = element.data[i]
-            switch (data.type) {
-                case K_RENDERING_REF: {
-                    const krenderingref = data as KRenderingRef
+function prepareRenderingLayout(element: SKGraphElement) {
+    // TODO: Micro layout calculation here or in Step 4 from above
+    // TODO: Test this method.
+    console.warn('METHOD IS BEING USED: ' + 'prepareRenderingLayout')
 
-                    // all references to KRenderings need to place a map with their
-                    // sizes and their decoration in this case in the properties of the reference.
-                    const boundsMap: Record<string, Bounds> = {}
-                    const decorationMap: Record<string, Decoration> = {}
-                    handleKRendering(element, getKRendering([krenderingref])!, boundsMap, decorationMap)
-                    // add new Property to contain the boundsMap
-                    krenderingref.properties[CALCULATED_BOUNDS] = boundsMap
-                    // and the decorationMap
-                    krenderingref.properties[CALCULATED_DECORATION_MAP] = decorationMap
-                    break
-                }
-                case 'KRendering': {
-                    handleKRendering(element, data as KRendering, null, null)
-                    break
-                }
-            }
+    if (!element.data) return
+
+    for (let i = 0; i < element.data.length; i++) {
+        const data = element.data[i]
+        // FIXME: Data == null case needs to be covered.
+        if (!data) continue
+        if (isRenderingRef(data)) {
+            // all references to KRenderings need to place a map with their
+            // sizes and their decoration in this case in the properties of the reference.
+            let boundsMap: Record<string, Bounds> = {}
+            let decorationMap: Record<string, Decoration> = {}
+            handleKRendering(element, getKRendering([data])!, boundsMap, decorationMap)
+            // add new Property to contain the boundsMap
+            data.properties[CALCULATED_BOUNDS_MAP] = boundsMap
+            // and the decorationMap
+            data.properties[CALCULATED_DECORATION_MAP] = decorationMap
+            break
+        } else if (isRendering(data)) {
+            handleKRendering(element, data, null, null)
+            break
         }
     }
+    // TODO: Replace the following with correct checks.
+    // if (isKLabeledGraphElement(element))
+    if ('labels' in element)
+        for (const label of element.labels as SKGraphElement[]) prepareRenderingLayout(label as unknown as SKLabel)
+
+    if (element.type === 'node') {
+        element = element as SKNode // Or as KNode?
+        // TODO: Correctly search for expansion property.
+        if (true || element.properties[EXPAND])
+            for (const node of element.children) // FIXME: Correctly use for loops!
+                prepareRenderingLayout(node as unknown as KNode)
+        // FIXME: element.outgoingEdges does not exist.
+        // for (const edge of element.outgoingEdges)
+        //     // ...
+
+        // FIXME: Same problem
+        // for (const port of element.ports)
+        //     // ...
+    }
+
+    // PROXY STUFF
+    // ...
 }
 
 function handleKRendering(
@@ -521,7 +548,10 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
     // properties.
     // TODO: Remove all forced non-nulls when 'KDecoratorPlacementData' case is implemented.
     if (!usedBoundsMap) {
+        console.log(rendering.type)
+        console.log(rendering.properties[CALCULATED_BOUNDS])
         rendering.properties[CALCULATED_BOUNDS] = bounds!
+        console.log(rendering.properties[CALCULATED_BOUNDS])
         if (decoration) rendering.properties[CALCULATED_DECORATION] = decoration
     } else {
         usedBoundsMap[rendering.properties[RENDERING_ID] as string] = bounds!
