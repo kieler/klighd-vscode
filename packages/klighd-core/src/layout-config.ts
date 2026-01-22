@@ -17,7 +17,7 @@
 
 import { ElkNode, LayoutOptions } from 'elkjs'
 import { inject, injectable } from 'inversify'
-import { HiddenModelViewer, IActionDispatcher, SChildElementImpl, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
+import { HiddenModelViewer, IActionDispatcher, SChildElementImpl, SModelRootImpl, SNodeImpl, TYPES, ViewerOptions } from 'sprotty'
 import { DefaultLayoutConfigurator, ILayoutPostprocessor } from 'sprotty-elk'
 import {
     Action,
@@ -25,6 +25,7 @@ import {
     ComputedBoundsAction,
     ElementAndAlignment,
     ElementAndBounds,
+    Point,
     RequestBoundsAction,
     SGraph,
     SModelElement,
@@ -33,8 +34,10 @@ import {
 import {
     Decoration,
     isContainerRendering,
+    isEdge,
     isGridPlacement,
     isImage,
+    isPolygon,
     isPolyline,
     isRendering,
     isRenderingRef,
@@ -43,17 +46,26 @@ import {
     K_DECORATOR_PLACEMENT_DATA,
     K_POINT_PLACEMENT_DATA,
     K_RENDERING_REF,
+    KAreaPlacementData,
     KContainerRendering,
     KPlacement,
     KPointPlacementData,
+    KPolygon,
     KRendering,
     KRenderingRef,
+    NODE_TYPE,
     SKEdge,
     SKLabel,
     SKNode,
 } from './skgraph-models'
 import { boundsMax } from './micro-layout/bounds-util'
-import { estimateSize, evaluatePointPlacementRendering } from './micro-layout/placement-util'
+import {
+    basicEstimateSize,
+    estimateSize,
+    evaluateAreaPlacement,
+    evaluateKPosition,
+    evaluatePointPlacementRendering,
+} from './micro-layout/placement-util'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 
@@ -260,14 +272,13 @@ function prepareRenderingLayout(element: SKGraphElement) {
     if ('labels' in element)
         for (const label of element.labels as SKGraphElement[]) prepareRenderingLayout(label as unknown as SKLabel)
 
-    if (element.type === 'node') {
-        element = element as SKNode // Or as KNode?
+    if (element.type === NODE_TYPE) {
+        let node = element as unknown as SNodeImpl // TODO: Find out if this is the right cast, and `node.outgoingEdges` works as intended.
         // TODO: Correctly search for expansion property.
         if (true || element.properties[EXPAND])
-            for (const node of element.children) // FIXME: Correctly use for loops!
+            for (const node of element.children) // TODO: Change this when we differentiate between different kinds of children ('edges' and 'ports')
                 prepareRenderingLayout(node as unknown as KNode)
-        // FIXME: element.outgoingEdges does not exist.
-        // for (const edge of element.outgoingEdges)
+        // for (const edge of node.outgoingEdges)
         //     // ...
 
         // FIXME: Same problem
@@ -275,7 +286,7 @@ function prepareRenderingLayout(element: SKGraphElement) {
         //     // ...
     }
 
-    // PROXY STUFF
+    // PROXY STUFF (Skipped for now)
     // ...
 }
 
@@ -321,7 +332,7 @@ function handleKRendering(
 }
 
 // TODO: Implement this if needed.
-function edgeBounds(edge: SKEdge): Bounds {
+function edgeBounds(edge: KEdge): Bounds {
     var minX = Number.POSITIVE_INFINITY
     var minY = Number.POSITIVE_INFINITY
     var maxX = Number.NEGATIVE_INFINITY
@@ -364,17 +375,51 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
     switch (placementData?.type) {
         case K_AREA_PLACEMENT_DATA: {
             // Evaluate the area placement micro layout with the help of KLighD.
-            //bounds = evaluateAreaPlacement(rendering, parentBounds) // If needed, implement evaluateAreaPlacement
+            bounds = evaluateAreaPlacement(placementData as KAreaPlacementData, parentBounds)
             break
         }
         case K_POINT_PLACEMENT_DATA: {
             // Evaluate the point placement micro layout with the help of KLighD.
-            bounds = evaluatePointPlacementRendering(rendering, placementData as KPointPlacementData, parentBounds) // If needed, implement evaluatePointPlacement
+            bounds = evaluatePointPlacementRendering(rendering, placementData as KPointPlacementData, parentBounds)
             break
         }
         case K_DECORATOR_PLACEMENT_DATA: {
-            // TODO: Implement later
-            // ...
+            basicEstimateSize(rendering, Bounds.EMPTY)
+            // Decorator placements can only be evaluated if the path they should decorate is known.
+            // to call KLighD's DecoratorPlacementUtil#evaluateDecoratorPlacement the points of the path of the
+            // parent rendering have to be stored.
+            let path: Point[]
+            // Todo: Can't figure out parent rendering currenlty.
+            let parentRendering // = rendering.eContainer
+
+            // Get inset from parent region
+            let leftInset = 0
+            let topInset = 0
+            if (isEdge(parent)) {
+                // TODO: Implement this method in SKGraphUtils
+                // if (isDecendant(parent.target, parent.source))
+                // TODO: Get parent insets.
+                if (true) {
+                    leftInset // = parent.source.insets.left
+                    topInset // = parent.source.insets.top
+                } else {
+                    leftInset // = parent.source.parent.insets.left
+                    topInset // = parent.source.parent.insets.top
+                }
+            }
+            // TODO: Remove forced non-nulls later.
+            if (isPolygon(parentRendering!)) {
+                let points = []
+                for (const point of (parentRendering as KPolygon).points) {
+                    const position = evaluateKPosition(point, parentBounds, true)
+                    const x = position.x + leftInset
+                    const y = position.y + topInset
+                    points.push({ x: x, y: y })
+                }
+                path = points
+            } else if (isPolyline(parentRendering!)) {
+                // TODO: Continue here!
+            }
             break
         }
         default: {
@@ -419,16 +464,16 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
 }
 
 function handleChildren(
-    renderings: KRendering[],
+    renderings: KRendering[] | undefined,
     placement: KPlacement | undefined,
     parentBounds: Bounds,
     boundsMap: Record<string, Bounds> | null,
     decorationMap: Record<string, Decoration> | null,
     parent: SKGraphElement
 ) {
-    if (placement && isGridPlacement(placement))
+    if (placement && isGridPlacement(placement) && renderings)
         handleGridPlacementRendering(renderings, placement, parentBounds, boundsMap, decorationMap, parent)
-    else
+    else if (renderings)
         for (const childRendering of renderings)
             handleAreaAndPointAndDecoratorPlacementRendering(
                 childRendering,
@@ -453,7 +498,7 @@ function handleGridPlacementRendering(
 
 // JAVA EQUIVALENT:
 // TODO: DO THIS:
-        /*
+/*
         static def void prepareRenderingLayout(KGraphElement element, Map<KGraphElement, SModelElement> kGraphToSGraph) {
         // calculate the sizes of all renderings:
         for (var int i = 0; i < element.data.size; i++) {

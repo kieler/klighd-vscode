@@ -142,7 +142,7 @@ export interface KRendering extends KGraphData, KStyleHolder {
     isClipRendering?: boolean
     placementData?: KPlacementData
 
-    // TODO: Formalize this.
+    // TODO: Either implement this or find some way to find the parent Rendering by using the SKGraph.
     //parent?: KRendering
 }
 
@@ -328,6 +328,10 @@ export interface KPointPlacementData extends KPlacementData {
     verticalMargin: number
     minWidth: number
     minHeight: number
+}
+
+export interface KDecoratorPlacementData extends KPlacementData {
+    // TODO: Implement this type!
 }
 
 /**
@@ -824,6 +828,10 @@ export function isPolyline(test: KGraphData): test is KPolyline {
     return type === K_POLYLINE || type === K_POLYGON || type === K_ROUNDED_BENDS_POLYLINE || type === K_SPLINE
 }
 
+export function isPolygon(test: KGraphData): test is KPolygon {
+    return isPolyline(test)
+}
+
 /**
  * Returns if the given parameter is a KText.
  * @param test The potential KText
@@ -863,7 +871,6 @@ export function isGridPlacement(test: KPlacement): test is KGridPlacement {
  * @param test The potential KAreaPlacementData.
  */
 export function isAreaPlacementData(test: KPlacementData): test is KAreaPlacementData {
-    // TODO: Sanatize to use "test === null"
     if (!test) {
         return false
     }
@@ -919,6 +926,10 @@ export function isSKLabel(test: unknown): test is SKLabel {
     }
     const { type } = test as any
     return type === LABEL_TYPE && (test as any).data !== undefined && (test as any).properties !== undefined
+}
+
+export function isEdge(test: any): test is KEdge {
+    return isSKGraphElement(test) && test.type === EDGE_TYPE
 }
 
 // Changing "boolean" to "test is KLeftPosition" results in unexpected behaviour for "evaluateKPosition" in placement-util.ts

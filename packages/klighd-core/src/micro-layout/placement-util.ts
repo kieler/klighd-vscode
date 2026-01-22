@@ -290,7 +290,7 @@ function estimateImageSize(image: KImage, givenBounds: Bounds): Bounds {
 function calculateBounds(
     placement: KPlacement | null,
     parentBounds: Bounds,
-    children: Array<KRendering> | null, // TODO: Use Array<T> or T[]?
+    children: KRendering[] | null,
     child: KRendering
 ): Bounds {
     // TODO: Implement this method
@@ -370,7 +370,7 @@ function estimateAreaPlacedChildSize(
  *          the parent bounds
  * @returns
  */
-function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds): Bounds {
+export function evaluateAreaPlacement(dpd: KAreaPlacementData, parentBounds: Bounds): Bounds {
     // TODO: Test this method
     console.warn('METHOD IS BEING USED: ' + 'evaluateAreaPlacement')
 
