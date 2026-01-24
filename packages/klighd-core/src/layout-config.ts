@@ -33,6 +33,7 @@ import {
 } from 'sprotty-protocol'
 import {
     Decoration,
+    EDGE_TYPE,
     isContainerRendering,
     isEdge,
     isGridPlacement,
@@ -57,7 +58,7 @@ import {
     SKLabel,
     SKNode,
 } from './skgraph-models'
-import { boundsMax } from './micro-layout/bounds-util'
+import { boundsMax, emptyBounds } from './micro-layout/bounds-util'
 import {
     basicEstimateSize,
     estimateSize,
@@ -205,9 +206,18 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
 
             if (rendering) {
                 // TODO: Find out how to get the real minimal size.
-                const minSize = (modelElement as KNode).size as Bounds // Seems to be most accurate guess for now (may even be correct).
-                //const minSize = root.size as Bounds
-                //const minSize = Bounds.EMPTY
+                let minSize: Bounds
+                switch (modelElement.type){
+                    case NODE_TYPE:
+                        minSize = (modelElement as KNode).size as Bounds // Seems to be most accurate guess for now (may even be correct).
+                        break;
+                    case EDGE_TYPE:
+                        minSize = Bounds.EMPTY // TODO: Implement edge size estimation.
+                        break;
+                    default:
+                        minSize = root.size as Bounds // Fallback
+                }
+
                 const size = estimateSize(rendering, minSize) // I'm not sure if this is correct.
 
                 // TODO: calculate insets
@@ -398,7 +408,7 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
             break
         }
         case K_DECORATOR_PLACEMENT_DATA: {
-            basicEstimateSize(rendering, Bounds.EMPTY)
+            bounds = basicEstimateSize(rendering, parentBounds) // (Fallback)
             // Decorator placements can only be evaluated if the path they should decorate is known.
             // to call KLighD's DecoratorPlacementUtil#evaluateDecoratorPlacement the points of the path of the
             // parent rendering have to be stored.
