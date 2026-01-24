@@ -187,6 +187,11 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
         // })
 
         const root = model.children[0] as SKNode
+
+        // TODO: Really figure out padding handling.
+        // (model as unknown as SKGraphElement).properties['org.eclipse.elk.padding'] = Bounds.EMPTY
+        // root.properties['org.eclipse.elk.padding'] = Bounds.EMPTY
+
         const remainingElements: SKGraphElement[] = [root]
 
         while (remainingElements.length > 0) {
@@ -203,8 +208,7 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
                 const minSize = (modelElement as KNode).size as Bounds // Seems to be most accurate guess for now (may even be correct).
                 //const minSize = root.size as Bounds
                 //const minSize = Bounds.EMPTY
-                const size = boundsMax(minSize, estimateSize(rendering, Bounds.EMPTY))
-                //const size = estimateSize(rendering, Bounds.EMPTY)
+                const size = estimateSize(rendering, minSize) // I'm not sure if this is correct.
 
                 // TODO: calculate insets
 
