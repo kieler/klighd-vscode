@@ -74,7 +74,7 @@ import { estimateGridSize, evaluateGridPlacement } from './gridplacement-util'
  * @return the minimal size
  */
 export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds {
-    let bounds = emptyBounds()
+    let bounds = Bounds.EMPTY
     const { placementData } = rendering
 
     if (placementData && (isAreaPlacementData(placementData) || isGridPlacementData(placementData))) {

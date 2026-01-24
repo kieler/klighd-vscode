@@ -17,7 +17,7 @@
 
 import { ElkNode, LayoutOptions } from 'elkjs'
 import { inject, injectable } from 'inversify'
-import { HiddenModelViewer, IActionDispatcher, SChildElementImpl, SModelRootImpl, SNodeImpl, TYPES, ViewerOptions } from 'sprotty'
+import { HiddenModelViewer, IActionDispatcher, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
 import { DefaultLayoutConfigurator, ILayoutPostprocessor } from 'sprotty-elk'
 import {
     Action,
@@ -54,7 +54,6 @@ import {
     KRendering,
     KRenderingRef,
     NODE_TYPE,
-    SKEdge,
     SKLabel,
     SKNode,
 } from './skgraph-models'
@@ -66,7 +65,6 @@ import {
     evaluateKPosition,
     evaluatePointPlacementRendering,
 } from './micro-layout/placement-util'
-import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 
 const CALCULATED_BOUNDS = 'klighd.lsp.calculated.bounds'
@@ -74,8 +72,8 @@ const CALCULATED_BOUNDS_MAP = 'klighd.lsp.calculated.bounds.map'
 const CALCULATED_DECORATION = 'klighd.lsp.calculated.decoration'
 const CALCULATED_DECORATION_MAP = 'klighd.lsp.calculated.decoration.map'
 const RENDERING_ID = 'klighd.lsp.rendering.id'
-const EXPANDED = 'klighd.lsp.expanded'
-const EXPAND = 'de.cau.cs.kieler.klighd.expand'
+const EXPANDED = 'klighd.lsp.expanded' // Unused.
+const EXPAND = 'de.cau.cs.kieler.klighd.expand' // Currently always undefined property.
 
 /**
  * This layout configurator copies all layout options from the KGraph element's properties.
@@ -188,7 +186,9 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
         //     },
         // })
 
-        const remainingElements: SKGraphElement[] = [model.children[0] as SKNode]
+        const root = model.children[0] as SKNode
+        const remainingElements: SKGraphElement[] = [root]
+
         while (remainingElements.length > 0) {
             const modelElement = remainingElements.pop()!
             for (const child of modelElement.children) {
@@ -199,7 +199,12 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
             const rendering = getKRendering(modelElement.data)
 
             if (rendering) {
-                const size = boundsMax(Bounds.EMPTY, estimateSize(rendering, Bounds.EMPTY))
+                // TODO: Find out how to get the real minimal size.
+                const minSize = (modelElement as KNode).size as Bounds // Seems to be most accurate guess for now (may even be correct).
+                //const minSize = root.size as Bounds
+                //const minSize = Bounds.EMPTY
+                const size = boundsMax(minSize, estimateSize(rendering, Bounds.EMPTY))
+                //const size = estimateSize(rendering, Bounds.EMPTY)
 
                 // TODO: calculate insets
 
@@ -220,11 +225,14 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
 // TODO: copied from view-common but stripped the SKGraphModelRenderer parts, those or something similar is necessary for KRenderingLibraries to work
 function getKRendering(datas: KGraphData[] | undefined): KRendering | undefined {
     if (datas)
+        // TODO: Returning nothing for KRenderingRefs is not correct,
+        // but currently does not change anything,
+        // as else the KRendering has no data relevant for layouting.
         for (const data of datas) {
-            if (data !== null && data.type === K_RENDERING_REF) console.log('KRenderingLibrary lookup not implemented')
-            else console.log('No KRenderingLibrary for KRenderingRef in context')
-
-            if (data !== null && isRendering(data)) return data
+            if (isRendering(data))
+                if (data.type === K_RENDERING_REF) console.log('KRenderingLibrary lookup not implemented')
+                else return data
+            else if (!data) console.log('No KRenderingLibrary for KRenderingRef in context') // TODO: Really understand what should be done here.
         }
     else return undefined
 }
@@ -256,7 +264,9 @@ function prepareRenderingLayout(element: SKGraphElement) {
             // sizes and their decoration in this case in the properties of the reference.
             let boundsMap: Record<string, Bounds> = {}
             let decorationMap: Record<string, Decoration> = {}
-            handleKRendering(element, getKRendering([data])!, boundsMap, decorationMap)
+            const rendering = getKRendering([data])
+            if (!rendering) continue
+            handleKRendering(element, rendering, boundsMap, decorationMap)
             // add new Property to contain the boundsMap
             data.properties[CALCULATED_BOUNDS_MAP] = boundsMap
             // and the decorationMap
@@ -273,11 +283,11 @@ function prepareRenderingLayout(element: SKGraphElement) {
         for (const label of element.labels as SKGraphElement[]) prepareRenderingLayout(label as unknown as SKLabel)
 
     if (element.type === NODE_TYPE) {
-        let node = element as unknown as SNodeImpl // TODO: Find out if this is the right cast, and `node.outgoingEdges` works as intended.
+        //let node = element as unknown as SNodeImpl // TODO: Find out if this is the right cast, and `node.outgoingEdges` works as intended.
         // TODO: Correctly search for expansion property.
         if (true || element.properties[EXPAND])
-            for (const node of element.children) // TODO: Change this when we differentiate between different kinds of children ('edges' and 'ports')
-                prepareRenderingLayout(node as unknown as KNode)
+            for (const child of element.children) // TODO: Change this when we differentiate between different kinds of children ('edges' and 'ports')
+                prepareRenderingLayout(child as unknown as SKGraphElement)
         // for (const edge of node.outgoingEdges)
         //     // ...
 
