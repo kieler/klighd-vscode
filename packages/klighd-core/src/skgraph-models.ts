@@ -331,7 +331,13 @@ export interface KPointPlacementData extends KPlacementData {
 }
 
 export interface KDecoratorPlacementData extends KPlacementData {
-    // TODO: Implement this type!
+    absolute: number,
+    relative: number,
+    xOffset: number,
+    yOffset: number,
+    width: number,
+    height: number,
+    rotateWithLine: boolean,
 }
 
 /**
@@ -892,12 +898,20 @@ export function isGridPlacementData(test: KPlacementData): test is KGridPlacemen
  * Returns true if the given parameter is a KPointPlacementData.
  * @param test The potential KPointPlacementData.
  */
-export function isPointPlacementData(test: any): test is KPointPlacementData {
+export function isPointPlacementData(test: KPlacementData): test is KPointPlacementData {
     if (!test) {
         return false
     }
     const { type } = test
     return type === K_POINT_PLACEMENT_DATA
+}
+
+export function isDecoratorPlacementData(test: KPlacementData): test is KDecoratorPlacementData {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_DECORATOR_PLACEMENT_DATA
 }
 
 /**
