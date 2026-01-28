@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2024 by
+ * Copyright 2021-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -21,10 +21,12 @@ import { Connection, NotificationType, ActionMessage, ColorThemeKind } from '@ki
 import { showPopup } from '../popup'
 /* global WebSocket, window */
 
+// TODO: deprecated, see below.
 type GeneralMessageParams = [string, 'info' | 'warn' | 'error']
 
-// Custom LSP methods defined by KLighD
+// Custom LSP methods defined by Sprotty and KLighD
 const acceptMessageType = new rpc.NotificationType<ActionMessage, void>('diagram/accept')
+// TODO: this message type is deprecated and will be removed in the next major KLighD release. It is replaced by the LSP "window/showMessage" message that should be only supported in the next major klighd-vscode release.
 const generalMessageType = new rpc.NotificationType<GeneralMessageParams, void>('general/sendMessage')
 
 /**
@@ -108,6 +110,8 @@ export class LSPConnection implements Connection {
                     this.connection.onNotification(acceptMessageType, this.notifyHandlers.bind(this))
 
                     // Handle message from the server that should be displayed to the user
+                    this.connection.onNotification(lsp.ShowMessageNotification.method, this.showMessage.bind(this))
+                    // TODO: deprecated, see above.
                     this.connection.onNotification(generalMessageType, this.displayGeneralMessage.bind(this))
 
                     resolve(this)
@@ -138,10 +142,26 @@ export class LSPConnection implements Connection {
         })
     }
 
+    // TODO: deprecated, see above.
     private displayGeneralMessage(params: GeneralMessageParams) {
         const [message, type] = params
 
         showPopup(type, 'Server message', message)
+    }
+
+    private showMessage(params: lsp.ShowMessageParams) {
+        const { message } = params
+        let type: 'info' | 'warn' | 'error' = 'info'
+        if (params.type === lsp.MessageType.Info) {
+            type = 'info'
+        } else if (params.type === lsp.MessageType.Warning) {
+            type = 'warn'
+        } else if (params.type === lsp.MessageType.Error) {
+            type = 'error'
+        }
+
+        console.log(`Server message ${type}: ${message}`)
+        showPopup(type, 'Server message', message, { persist: type === 'error' })
     }
 
     /** Close the connection. */
