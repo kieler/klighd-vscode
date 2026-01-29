@@ -207,13 +207,13 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
             if (rendering) {
                 // TODO: Find out how to get the real minimal size.
                 let minSize: Bounds
-                switch (modelElement.type){
+                switch (modelElement.type) {
                     case NODE_TYPE:
                         minSize = (modelElement as KNode).size as Bounds // Seems to be most accurate guess for now (may even be correct).
-                        break;
+                        break
                     case EDGE_TYPE:
                         minSize = Bounds.EMPTY // TODO: Implement edge size estimation.
-                        break;
+                        break
                     default:
                         minSize = root.size as Bounds // Fallback
                 }
@@ -388,7 +388,8 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
         usedBoundsMap = {}
         usedDecorationMap = {}
         // TODO: Fully implement KRenderingRef lookup, then remove the '?'.
-        placementData = (getKRendering([rendering]) as KRenderingRef).rendering?.placementData // What the hell?
+        const realRendering = getKRendering([rendering])
+        if (realRendering) placementData = realRendering.placementData // What the hell?
 
         // add new Property to contain the boundsMap
         rendering.properties[CALCULATED_BOUNDS_MAP] = usedBoundsMap

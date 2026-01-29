@@ -79,7 +79,7 @@ export function estimateSize(rendering: KRendering, givenBounds: Bounds): Bounds
 
     if (placementData && (isAreaPlacementData(placementData) || isGridPlacementData(placementData))) {
         bounds = estimateAreaPlacedChildSize(rendering, placementData as KAreaPlacementData, givenBounds)
-    } else if (isPointPlacementData(placementData)) {
+    } else if (placementData && isPointPlacementData(placementData)) {
         bounds = estimatePointPlacedChildSize(rendering, placementData as KPointPlacementData)
     } else {
         bounds = basicEstimateSize(rendering, givenBounds)
