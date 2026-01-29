@@ -25,18 +25,6 @@ jobs:
                   scope: '@kieler'
             - run: yarn
             - run: yarn package
-            - name: Publish next klighd-interactive
-              if: github.repository == 'kieler/klighd-vscode' # only publish next version on the main repo
-              run: yarn publish:next
-              working-directory: ./packages/klighd-interactive
-              env: 
-                NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-            - name: Publish next klighd-core
-              if: github.repository == 'kieler/klighd-vscode' # only publish next version on the main repo
-              run: yarn publish:next
-              working-directory: ./packages/klighd-core
-              env: 
-                NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
             # Artifacts have a few limitation and will always be zips. See: https://github.com/actions/upload-artifact#zipped-artifact-downloads
             - uses: actions/upload-artifact@v4
               with:
