@@ -20,7 +20,7 @@ jobs:
                   key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
             - uses: actions/setup-node@v2
               with:
-                  node-version: 16.x
+                  node-version: 24.x
                   registry-url: 'https://registry.npmjs.org'
                   scope: '@kieler'
             - run: yarn
