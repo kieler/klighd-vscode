@@ -814,6 +814,15 @@ export function isChildArea(test: KGraphData): test is KChildArea {
 }
 
 /**
+ * Returns true if the given parameter is a KRenderingLibrary.
+ * @param test The potential KRenderingLibrary.
+ */
+export function isRenderingLibrary(test: KGraphData): test is KRenderingLibrary {
+    const { type } = test
+    return type === K_RENDERING_LIBRARY
+}
+
+/**
  * Returns true if the given parameter is a KRenderingRef.
  * @param test The potential KRenderingRef.
  */

@@ -62,6 +62,7 @@ import {
     SKLabel,
     SKNode,
     VerticalAlignment,
+    isRenderingLibrary,
 } from './skgraph-models'
 import { hasAction } from './skgraph-utils'
 import {
@@ -1276,6 +1277,10 @@ export function renderSingleSVGLine(
             {...(shadowStyles ? { filter: shadowStyles } : {})}
         />
     )
+}
+
+export function getKRenderingLibrary(root: SKGraphElement): KRenderingLibrary | undefined {
+    return root.data.find(isRenderingLibrary)
 }
 
 /**
