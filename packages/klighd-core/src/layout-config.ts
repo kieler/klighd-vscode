@@ -203,6 +203,8 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
                 }
             }
             const rendering = getKRendering(modelElement.data)
+            
+            // TODO: Determine why sometimes container bounds are too small (laptop vs. desktop?).
 
             if (rendering) {
                 // TODO: Find out how to get the real minimal size.
