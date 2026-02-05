@@ -127,10 +127,11 @@ export function basicEstimateSize(rendering: KRendering, givenBounds: Bounds): B
             return estimateGridSize(rendering, givenBounds)
         }
         let maxSize: Bounds = givenBounds
-        for (const childRendering of (rendering as KContainerRendering).children) {
-            const childSize: Bounds = estimateSize(childRendering, givenBounds)
-            maxSize = boundsMax(maxSize, childSize) // Ooops, `maxSize` was not correclty updated before!
-        }
+        if ((rendering as KContainerRendering).children)
+            for (const childRendering of (rendering as KContainerRendering).children) {
+                const childSize: Bounds = estimateSize(childRendering, givenBounds)
+                maxSize = boundsMax(maxSize, childSize)
+            }
         if (isPolyline(rendering)) {
             maxSize = boundsMax(maxSize, evaluatePolylineBounds(rendering as KPolyline, maxSize))
         }

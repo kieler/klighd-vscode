@@ -38,6 +38,9 @@ import {
     SKLabel,
     SKNode,
     SKPort,
+    KRenderingLibrary,
+    KRenderingRef,
+    isRenderingLibrary,
 } from './skgraph-models'
 /* global Element, SVGElement */
 
@@ -299,4 +302,29 @@ export function getViewportBounds(element: SModelElementImpl): Bounds {
         }
     }
     return canvasBounds
+}
+
+// TODO: Merge with other KRendering code (views-common.ts)
+export function resolveKRendering(
+    datas: KGraphData[],
+    kRenderingLibrary: KRenderingLibrary | undefined
+): KRendering | undefined {
+    for (const data of datas) {
+        if (data !== null && data.type === K_RENDERING_REF) {
+            if (kRenderingLibrary) {
+                let id = (data as KRenderingRef).properties['klighd.lsp.rendering.id'] as string
+                // trim the ID to remove the leading parent graph element ID that is prefixed in rendering refs
+                id = id.substring(id.indexOf('$$lib$$$'))
+                for (const rendering of kRenderingLibrary.renderings)
+                    if (((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string) === id)
+                        return rendering as KRendering
+            } else console.log('No KRenderingLibrary for KRenderingRef in context')
+        }
+        if (data && isRendering(data)) return data
+    }
+    return undefined
+}
+
+export function getKRenderingLibrary(root: SKGraphElement): KRenderingLibrary | undefined {
+    return root.data.find(isRenderingLibrary)
 }

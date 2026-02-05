@@ -1279,10 +1279,6 @@ export function renderSingleSVGLine(
     )
 }
 
-export function getKRenderingLibrary(root: SKGraphElement): KRenderingLibrary | undefined {
-    return root.data.find(isRenderingLibrary)
-}
-
 /**
  * Looks up the KRendering in the given data pool and generates a SVG rendering from that.
  * @param datas The list of possible KRenderings and additional data.
