@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2025 by
+ * Copyright 2019-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -578,7 +578,7 @@ export class KEdgeView extends KGraphElementView {
 function fontDefinition(): VNode {
     // TODO: maybe find a way to only include the font if it is used in the SVG.
     return (
-        <style>
+        <style id="overpass-fonts">
             {overpassRegularStyle}
             {overpassMonoRegularStyle}
         </style>
