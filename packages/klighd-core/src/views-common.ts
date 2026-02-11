@@ -46,8 +46,15 @@ import {
     SKNode,
     Underline,
     VerticalAlignment,
+    KFontSize,
 } from './skgraph-models'
-import { ColorStyle, DEFAULT_K_HORIZONTAL_ALIGNMENT, DEFAULT_K_VERTICAL_ALIGNMENT, KStyles } from './views-styles'
+import {
+    ColorStyle,
+    DEFAULT_K_FONT_SIZE,
+    DEFAULT_K_HORIZONTAL_ALIGNMENT,
+    DEFAULT_K_VERTICAL_ALIGNMENT,
+    KStyles,
+} from './views-styles'
 
 // ------------- Util Class names ------------- //
 const K_LEFT_POSITION = 'KLeftPositionImpl'
@@ -148,10 +155,11 @@ export function lineStyleText(lineStyle: KLineStyle, lineWidth: number): string 
  * Translates a VerticalAlignment into the text needed for the SVG text 'dominant-baseline' attribute.
  * @param verticalAlignment The VerticalAlignment.
  */
-export function verticalAlignmentText(verticalAlignment: VerticalAlignment): 'middle' | 'baseline' | 'hanging' {
+export function verticalAlignmentText(verticalAlignment: VerticalAlignment): 'auto' | 'baseline' | 'hanging' {
     switch (verticalAlignment) {
         case VerticalAlignment.CENTER: {
-            return 'middle'
+            // return 'middle'
+            return 'auto'
         }
         case VerticalAlignment.BOTTOM: {
             return 'baseline'
@@ -261,7 +269,8 @@ export function calculateY(
     y: number,
     height: number,
     verticalAlignment: KVerticalAlignment,
-    numberOfLines: number
+    numberOfLines: number,
+    fontSize: KFontSize
 ): number {
     let lineHeight = height / numberOfLines
     if (numberOfLines === 0) {
@@ -269,7 +278,7 @@ export function calculateY(
     }
     switch (verticalAlignment.verticalAlignment) {
         case VerticalAlignment.CENTER: {
-            return y + lineHeight / 2
+            return y + lineHeight / 2 + fontSize.size * 0.34 // * 0.255
         }
         case VerticalAlignment.BOTTOM: {
             return y + lineHeight
@@ -511,7 +520,8 @@ export function findTextBoundsAndTransformationData(
                 foundBounds.y,
                 foundBounds.height,
                 styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
-                lines
+                lines,
+                styles.kFontSize ?? DEFAULT_K_FONT_SIZE
             )
             bounds.width = textWidth
             bounds.height = textHeight
@@ -530,7 +540,8 @@ export function findTextBoundsAndTransformationData(
                     foundBounds.y,
                     foundBounds.height,
                     styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
-                    lines
+                    lines,
+                    styles.kFontSize ?? DEFAULT_K_FONT_SIZE
                 )
                 bounds.width = textWidth
                 bounds.height = textHeight
@@ -549,7 +560,8 @@ export function findTextBoundsAndTransformationData(
                 decoration.bounds.y + decoration.origin.y,
                 textHeight,
                 styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
-                lines
+                lines,
+                styles.kFontSize ?? DEFAULT_K_FONT_SIZE
             )
             bounds.width = decoration.bounds.width
             bounds.height = decoration.bounds.height
@@ -568,7 +580,8 @@ export function findTextBoundsAndTransformationData(
                     decoration.bounds.y + decoration.origin.y,
                     textHeight,
                     styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
-                    lines
+                    lines,
+                    styles.kFontSize ?? DEFAULT_K_FONT_SIZE
                 )
                 bounds.width = decoration.bounds.width
                 bounds.height = decoration.bounds.height
@@ -595,7 +608,8 @@ export function findTextBoundsAndTransformationData(
             parentBounds.y,
             parentBounds.height,
             styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
-            lines
+            lines,
+            styles.kFontSize ?? DEFAULT_K_FONT_SIZE
         )
         bounds.width = parent.bounds.width
         bounds.height = parent.bounds.height

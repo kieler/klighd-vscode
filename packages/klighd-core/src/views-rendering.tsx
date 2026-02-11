@@ -664,7 +664,7 @@ export function renderKText(
     // The svg style of the resulting text element.
     const opacity = context.mListener.hasDragged ? 0.1 : parent.opacity
     const style = {
-        ...{ 'dominant-baseline': textStyles.dominantBaseline },
+        // ...{ 'dominant-baseline': textStyles.dominantBaseline },
         ...{ 'font-family': textStyles.fontFamily },
         ...{ 'font-size': textStyles.fontSize },
         ...{ 'font-style': textStyles.fontStyle },
