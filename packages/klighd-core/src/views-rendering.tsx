@@ -94,6 +94,7 @@ import {
     KStyles,
     LineStyles,
 } from './views-styles'
+import { findTag } from './filtering/util'
 /* global sessionStorage */
 
 // ----------------------------- Functions for rendering different KRendering as VNodes in svg --------------------------------------------
@@ -601,12 +602,7 @@ export function renderKText(
     // Replace text with rectangle, if the text is too small.
     const simplifySmallTextOption = context.renderOptionsRegistry.getValue(SimplifySmallText)
     const simplifySmallText = simplifySmallTextOption ?? false // Only enable, if option is found.
-    if (
-        !context.forceRendering &&
-        simplifySmallText &&
-        (!rendering.properties['klighd.isNodeTitle'] as boolean) &&
-        !childOfNodeTitle
-    ) {
+    if (!context.forceRendering && simplifySmallText && !findTag(rendering, 'isNodeTitle') && !childOfNodeTitle) {
         const simplificationThreshold = context.renderOptionsRegistry.getValueOrDefault(TextSimplificationThreshold)
 
         // height of replacement compared to full text height
@@ -1355,7 +1351,7 @@ export function renderKRendering(
         useSmartZoom &&
         boundsAndTransformation.bounds.width &&
         boundsAndTransformation.bounds.height &&
-        (kRendering.properties['klighd.isNodeTitle'] as boolean)
+        findTag(kRendering, 'isNodeTitle') !== undefined
     ) {
         // Scale to limit of bounding box or max size.
         const titleScalingFactorOption = context.renderOptionsRegistry.getValueOrDefault(TitleScalingFactor) as number
@@ -1480,7 +1476,7 @@ export function renderKRendering(
             // Draw background for overlaying titles
             if (
                 useSmartZoom &&
-                (kRendering.properties['klighd.isNodeTitle'] as boolean) &&
+                findTag(kRendering, 'isNodeTitle') &&
                 ((parent instanceof SKNode && isFullDetail(parent, context) && !isProxy) || scaleProxy) &&
                 ((maxScale > 1 && !isProxy) || scaleProxy) &&
                 // Don't draw if the rendering is an empty KText
