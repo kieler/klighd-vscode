@@ -102,6 +102,12 @@ export class Sidebar extends AbstractUIExtension {
                             class-sidebar__toggle-button--active={this.sidebarPanelRegistry.currentPanelID === panel.id}
                             title={panel.title}
                             on-click={this.handlePanelButtonClick.bind(this, panel.id)}
+                            // Return a on hover if the sidebar is not currently opened.
+                            onmouseover={
+                                !this.sidebarPanelRegistry.currentPanelID
+                                    ? this.handlePanelButtonClick.bind(this, panel.id)
+                                    : () => {}
+                            }
                         >
                             {panel.icon}
                         </button>
