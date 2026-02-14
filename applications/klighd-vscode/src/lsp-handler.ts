@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2023 by
+ * Copyright 2021-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -39,30 +39,11 @@ export class LspHandler {
     }
 
     registerMessages(lsClient: LanguageClient) {
-        lsClient.onNotification('general/sendMessage', this.handleGeneralMessage.bind(this))
         lsClient.onNotification('general/replaceContentInFile', this.handleReplaceContentInFile.bind(this))
     }
 
     static init(lsClient: LanguageClient) {
         LspHandler.instance = new LspHandler(lsClient)
-    }
-
-    /** Handles a message notification from the server for messages that should be displayed to the user. */
-    private handleGeneralMessage(message: string, type: 'info' | 'warn' | 'error') {
-        switch (type) {
-            case 'info':
-                window.showInformationMessage(message)
-                break
-            case 'warn':
-                window.showWarningMessage(message)
-                break
-            case 'error':
-                window.showErrorMessage(message)
-                break
-            default:
-                window.showInformationMessage(message)
-                break
-        }
     }
 
     /** Handle a edit notification from the server that should replace the content of a specified file. */
