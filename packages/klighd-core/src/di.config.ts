@@ -48,10 +48,12 @@ import {
     updateModule,
     viewportModule,
     ViewRegistry,
+    ZoomMouseListener,
 } from 'sprotty'
 import { ElkFactory, ElkLayoutEngine, elkLayoutModule, ILayoutConfigurator } from 'sprotty-elk'
 import actionModule from './actions/actions-module'
 // import bookmarkModule from './bookmarks/bookmark-module';
+import { AnimateZoomMouseListener } from './animate-zoom'
 import { DISymbol } from './di.symbols'
 import diagramPieceModule from './diagram-pieces/diagram-pieces-module'
 import { KlighdDiagramServer } from './diagram-server'
@@ -99,6 +101,8 @@ const kGraphDiagramModule = new ContainerModule(
         })
         rebind(MouseTool).to(KlighdMouseTool)
         bind(KlighdMouseTool).toSelf().inSingletonScope()
+        rebind(ZoomMouseListener).to(AnimateZoomMouseListener)
+        bind(AnimateZoomMouseListener).toSelf().inSingletonScope()
         rebind(SetViewportCommand).to(NewSetViewportCommand)
         rebind(CenterCommand).to(NewCenterCommand)
         rebind(FitToScreenCommand).to(NewFitToScreenCommand)
