@@ -77,6 +77,8 @@ const CALCULATED_DECORATION_MAP = 'klighd.lsp.calculated.decoration.map'
 const RENDERING_ID = 'klighd.lsp.rendering.id'
 const EXPANDED = 'klighd.lsp.expanded' // Unused.
 const EXPAND = 'de.cau.cs.kieler.klighd.expand' // Currently always undefined property.
+const PROXY_VIEW_RENDER_NODE_AS_PROXY = 'de.cau.cs.kieler.klighd.proxyView.renderNodeAsProxy'
+const PROXY_VIEW_PROXY_RENDERING = 'de.cau.cs.kieler.klighd.proxyView.proxyRendering'
 
 /**
  * This layout configurator copies all layout options from the KGraph element's properties.
@@ -302,7 +304,42 @@ function prepareRenderingLayout(element: SKGraphElement, library: KRenderingLibr
     }
 
     // PROXY STUFF (Skipped for now)
-    // ...
+    const proxyRendering: KGraphData[] = element.properties[PROXY_VIEW_PROXY_RENDERING] as KGraphData[]
+    if (element.properties[PROXY_VIEW_RENDER_NODE_AS_PROXY] === true && proxyRendering) {
+        for (let i = 0; i < proxyRendering.length; i++) {
+            const data = proxyRendering[i]
+            if (!data) continue
+            if (isRenderingRef(data)) {
+                // all references to KRenderings need to place a map with their
+                // sizes and their decoration in this case in the properties of the reference.
+                const boundsMap: Record<string, Bounds> = {}
+                const decorationMap: Record<string, Decoration> = {}
+                if (!data.rendering) continue
+                handleKRendering(element, data.rendering, boundsMap, decorationMap, library)
+                // add new Property to contain the boundsMap
+                data.properties[CALCULATED_BOUNDS_MAP] = boundsMap
+                // and the decorationMap
+                data.properties[CALCULATED_DECORATION_MAP] = decorationMap
+                break
+            } else if (isRendering(data)) {
+                handleKRendering(
+                    {
+                        size: {
+                            x: 0,
+                            y: 0,
+                            width: 10,
+                            height: 10,
+                        } as Bounds,
+                    } as unknown as SKGraphElement,
+                    data,
+                    null,
+                    null,
+                    library
+                )
+                break
+            }
+        }
+    }
 }
 
 function handleKRendering(
