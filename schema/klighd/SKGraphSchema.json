@@ -184,10 +184,16 @@
                 },
                 "styles": {
                     "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KStyle"
+                    },
                     "default": []
                 },
                 "actions": {
                     "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KAction"
+                    },
                     "default": []
                 },
                 "type": {
@@ -208,7 +214,7 @@
                 
                 },
                 "childPlacement": {
-                    
+                    "$ref": "#/definitions/KPlacement"
                 },
                 "type": {
                     "type": "string",
@@ -327,10 +333,311 @@
         "KPlacementData": {
             "type": "object",
             "properties": {
-                "stub": {
-                    "type": "string"
+                "type": {
+                    "type": "string",
+                    "default": "KPlacementDataImpl"
                 }
             }
+        },
+        "KPointPlacementData": {
+            "allOf": [{"$ref": "#/definitions/KPlacementData"}],
+            "properties": {
+                "referencePoint": {
+                    "$ref": "#/definitions/KPosition"
+                },
+                "horizontalAlignment": {
+                    "type": "number",
+                    "default": 0
+                },
+                "verticalAlignment": {
+                    "type": "number",
+                    "default": 0
+                },
+                "horizontalMargin": {
+                    "type": "number",
+                    "default": 0
+                },
+                "verticalMargin": {
+                    "type": "number",
+                    "default": 0
+                },
+                "minWidth": {
+                    "type": "number",
+                    "default": 0
+                },
+                "minHeight": {
+                    "type": "number",
+                    "default": 0
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KPointPlacementDataImpl"
+                }
+            }
+        },
+        "KAreaPlacementData": {
+            "allOf": [{"$ref": "#/definitions/KPlacementData"}],
+            "properties": {
+                "topLeft": {
+                    "$ref": "#/definitions/KPosition"
+                },
+                "bottomRight": {
+                    "$ref": "#/definitions/KPosition"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KAreaPlacementDataImpl"
+                }
+            }
+        },
+        "KGridPlacementData": {
+            "allOf": [{"$ref": "#/definitions/KPlacementData"}],
+            "properties": {
+                "minCellWidth": {
+                    "type": "number",
+                    "default": 0
+                },
+                "minCellHeight": {
+                    "type": "number",
+                    "default": 0
+                },
+                "flexibleWidth": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "flexibleHeight": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KGridPlacementDataImpl"
+                } 
+            }
+        },
+        "KPosition": {
+            "type": "object",
+            "properties": {
+                "x": {
+                    "$ref": "#/definitions/KXPosition"
+                },
+                "y": {
+                    "$ref": "#/definitions/KYPosition"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KPositionImpl"
+                }
+            }
+        },
+        "KXPosition": {
+            "type": "object",
+            "properties": {
+                "absolute": {
+                    "type": "number"
+                },
+                "relative": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KXPositionImpl"
+                }
+            }
+        },
+        "KYPosition": {
+            "type": "object",
+            "properties": {
+                "absolute": {
+                    "type": "number"
+                },
+                "relative": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KYPositionImpl"
+                }
+            }
+        },
+        "KLeftPosition": {
+            "allOf": [{"$ref": "#/definitions/KXPosition"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KLeftPositionImpl"
+                }
+            }
+        },
+        "KRightPosition": {
+            "allOf": [{"$ref": "#/definitions/KXPosition"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KRightPositionImpl"
+                }
+            }
+        },
+        "KTopPosition": {
+            "allOf": [{"$ref": "#/definitions/KYPosition"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KTopPositionImpl"
+                }
+            }
+        },
+        "KBottomPosition": {
+            "allOf": [{"$ref": "#/definitions/KYPosition"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KBottomPositionImpl"
+                }
+            }
+        },
+        "KPlacement": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KPlacementImpl"
+                }
+            }
+        },
+        "KGridPlacement": {
+            "allOf": [{"$ref": "#/definitions/KPlacement"}],
+            "properties": {
+                "numColumns": {
+                    "type": "number",
+                    "default": 0
+                },
+                "topLeft": {
+                    "$ref": "#/definitions/KPosition"
+                },
+                "bottomRight": {
+                    "$ref": "#/definitions/KPosition"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KGridPlacementImpl"
+                }
+            }
+        },
+        "KStyle": {
+            "type": "object",
+            "properties": {
+                "propagateToChildren": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "modifierId": {
+                    "type": "string"
+                },
+                "selection": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KStyleImpl"
+                }
+            }
+        },
+        "KColoringImpl": {
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "color": {
+                    "$ref": "#/definitions/KColor"
+                },
+                "alpha": {
+                    "type": "number",
+                    "default": 255
+                },
+                "targetColor": {
+                    "$ref": "#/definitions/KColor"
+                },
+                "targetAlpha": {
+                    "type": "number",
+                    "default": 0
+                },
+                "gradientAngle": {
+                    "type": "number",
+                    "default": 0
+                }
+            }
+        },
+        "KColor": {
+            "type": "object",
+            "properties": {
+                "red": {
+                    "type": "number",
+                    "default": 0
+                },
+                "green": {
+                    "type": "number",
+                    "default": 0
+                },
+                "blue": {
+                    "type": "number",
+                    "default": 0
+                }
+            }
+        },
+        "KInvisibility": {
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "invisible": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KInvisibilityImpl"
+                }
+            }
+        },
+        "KAction": {
+            "type": "object",
+            "properties": {
+                "actionId": {
+                    "type": "string"
+                },
+                "trigger": {
+                    "$ref": "#/definitions/Trigger"
+                },
+                "altPressed": {
+                    "$ref": "#/definitions/ModifierState"
+                },
+                "ctrlCmdPressed": {
+                    "$ref": "#/definitions/ModifierState"
+                },
+                "shiftPressed": {
+                    "$ref": "#/definitions/ModifierState"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KActionImpl"
+                }
+            }
+        },
+        "Trigger": {
+            "type": "number",
+            "enum": [0,1,2,3,4,5]
+        },
+        "TriggerSingleClick": {
+            "type": "number",
+            "enum": [0],
+            "default": 0
+        },
+        "ModifierState": {
+            "type": "number",
+            "enum": [0,1,2]
+        },
+        "ModifierStateDontCare": {
+            "type": "number",
+            "enum": [0],
+            "default": 0
         }
     }
 }
