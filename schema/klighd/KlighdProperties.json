@@ -32,8 +32,11 @@
                     "default": "de.cau.cs.kieler.klighd.proxyView.proxyRendering"
                 },
                 "defaultValue": {
-                    "type": "boolean",
-                    "default": true
+                    "type": "array",
+                    "items": {
+                        "$ref": "./SKGraphSchema.json#/definitions/KGraphData"
+                    },
+                    "default": []
                 }
             }
         },
