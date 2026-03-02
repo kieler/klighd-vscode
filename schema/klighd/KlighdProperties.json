@@ -11,6 +11,32 @@
         "defaultValue": {}
     },
     "definitions": {
+        "IsNodeTitle": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "klighd.isNodeTitle"
+                },
+                "defaultValue": {
+                    "type": "boolean",
+                    "default": true
+                }
+            }
+        },
+        "Tooltip": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "klighd.tooltip"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "default": ""
+                }
+            }
+        },
         "ProxyViewRenderNodeAsProxy": {
             "allOf": [{"$ref": "#"}],
             "properties": {
@@ -65,6 +91,19 @@
                 "num": {
                     "type": "number",
                     "default": 0
+                }
+            }
+        },
+        "RenderingId": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "klighd.lsp.rendering.id"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "default": ""
                 }
             }
         }
