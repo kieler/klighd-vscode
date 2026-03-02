@@ -604,16 +604,20 @@
                     "type": "string"
                 },
                 "trigger": {
-                    "$ref": "#/definitions/Trigger"
+                    "type": "number",
+                    "default": 0
                 },
                 "altPressed": {
-                    "$ref": "#/definitions/ModifierState"
+                    "type": "number",
+                    "default": 0
                 },
                 "ctrlCmdPressed": {
-                    "$ref": "#/definitions/ModifierState"
+                    "type": "number",
+                    "default": 0
                 },
                 "shiftPressed": {
-                    "$ref": "#/definitions/ModifierState"
+                    "type": "number",
+                    "default": 0
                 },
                 "type": {
                     "type": "string",
@@ -622,22 +626,23 @@
             }
         },
         "Trigger": {
-            "type": "number",
-            "enum": [0,1,2,3,4,5]
-        },
-        "TriggerSingleClick": {
-            "type": "number",
-            "enum": [0],
-            "default": 0
+            "type": "object",
+            "properties": {
+                "singleClick": { "type": "number", "default": 0},
+                "doubleClick": { "type": "number", "default": 1},
+                "singleOrMultiClick": { "type": "number", "default": 2},
+                "middleSingleClick": { "type": "number", "default": 3},
+                "middleDoubleClick": { "type": "number", "default": 4},
+                "middleSingleOrMultiClick": { "type": "number", "default": 5}
+            }
         },
         "ModifierState": {
             "type": "number",
-            "enum": [0,1,2]
-        },
-        "ModifierStateDontCare": {
-            "type": "number",
-            "enum": [0],
-            "default": 0
+            "properties": {
+                "dontCare": { "type": "number", "default": 0},
+                "pressed": {"type": "number", "default": 1},
+                "notPressed": {"type": "number", "default": 2}
+            }
         }
     }
 }
