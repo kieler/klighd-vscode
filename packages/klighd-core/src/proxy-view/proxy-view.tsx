@@ -1330,7 +1330,9 @@ export class ProxyView extends AbstractUIExtension {
             // Change its id to differ from the original node
             node.id = id
             // Clear children, proxies don't show nested nodes (but keep labels)
-            node.children = node.children.filter((theNode) => theNode instanceof SKLabel)
+            node.children = node.children.filter(
+                (theNode) => theNode instanceof SKLabel && !node.properties[ProxyView.PROXY_RENDERING_PROPERTY]
+            )
             const scale = transform.scale ?? 1
             // Add the proxy's scale to the data
             node.data = this.getNodeData(node.data, scale)

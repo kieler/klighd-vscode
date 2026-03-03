@@ -202,7 +202,7 @@ function estimateKTextSize(kText: KText): Bounds {
 function estimateTextSize(kText: KText, text: string): Bounds {
     // TODO: actually figure out how to estimate the text size accurately
     // heh: implemented first heuristic based on visual estimations of the Overpass Regular font.
-    const bounds = { x: 0, y: 0, width: (text.length / 4) * 25, height: 20 }
+    const bounds = { x: 0, y: 0, width: (text.length / 4) * 27, height: 20 }
 
     kText.properties['klighd.calculated.text.bounds'] = bounds
     return bounds

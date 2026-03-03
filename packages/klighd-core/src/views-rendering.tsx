@@ -637,7 +637,7 @@ export function renderKText(
             const unalteredBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
 
             let currentY =
-                (unalteredBounds.y ?? 0) +
+                (unalteredBounds?.y ?? 0) +
                 (calculatedTextLineHeights ? calculatedTextLineHeights[0] * ((1 - proportionalHeight) / 2) : 0)
             lines.forEach((_line, index) => {
                 const xPos = boundsAndTransformation?.bounds?.x ?? 0
