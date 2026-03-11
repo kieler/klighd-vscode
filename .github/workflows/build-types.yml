@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: Checkout repository
       id: checkout_repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         sparse-checkout: schema
         fetch-depth: 1
