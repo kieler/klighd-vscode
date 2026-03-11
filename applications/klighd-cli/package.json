@@ -61,7 +61,7 @@
         "mini-css-extract-plugin": "^2.7.6",
         "node-polyfill-webpack-plugin": "^3.0.0",
         "npm-run-all": "^4.1.5",
-        "pkg": "^5.8.1",
+        "@yao-pkg/pkg": "^6.14.1",
         "replace": "^1.2.2",
         "rimraf": "^4.4.0",
         "ts-loader": "^9.5.1",
