@@ -26,15 +26,11 @@ jobs:
                   registry-url: 'https://registry.npmjs.org'
                   scope: '@kieler'
             - run: yarn
-            - run: yarn distribute
-              env:
-                  VSCE_PAT: ${{ secrets.VSCE_PAT }}
-                  OVSX_PAT: ${{ secrets.OVSX_PAT }}
             - name: Publish klighd-interactive
-              run: yarn publish
+              run: npm publish
               working-directory: ./packages/klighd-interactive
             - name: Publish klighd-core
-              run: yarn publish
+              run: npm publish
               working-directory: ./packages/klighd-core
     release-assets:
         name: "Add assets to release"
