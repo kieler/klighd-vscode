@@ -13,12 +13,12 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v2
-            - uses: actions/cache@v3
+            - uses: actions/checkout@v6
+            - uses: actions/cache@v5
               with:
                   path: '**/node_modules'
                   key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-            - uses: actions/setup-node@v2
+            - uses: actions/setup-node@v6
               with:
                   node-version: 24.x
                   registry-url: 'https://registry.npmjs.org'
@@ -26,12 +26,12 @@ jobs:
             - run: yarn
             - run: yarn package
             # Artifacts have a few limitation and will always be zips. See: https://github.com/actions/upload-artifact#zipped-artifact-downloads
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v6
               with:
                   name: klighd-cli
                   path: applications/klighd-cli/bin
                   if-no-files-found: error
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v6
               with:
                   name: klighd-vsix
                   path: applications/klighd-vscode/klighd-vscode.vsix
