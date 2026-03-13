@@ -25,6 +25,7 @@ related, web-based packages. The packages are seperated in two types:
 | 0.1.0–0.2.1   | 2.1.0  |
 | 0.3.0–0.4.2   | 2.2.0  |
 | 0.5.0-0.6.0   | 3.0.2  |
+| 0.7.0-0.8.0   | 3.1.0  |
 
 Moreover, the default branches of both repositories should be compatible but might experience regression.
 
@@ -32,7 +33,7 @@ Moreover, the default branches of both repositories should be compatible but mig
 
 ### Requirements
 
-Development of this project requires [Node.js _v16.x_](https://nodejs.org) and
+Development of this project requires [Node.js _v24.x_](https://nodejs.org) and
 [yarn _v1.x_](https://classic.yarnpkg.com/).
 
 Developing the `klighd-vscode` extension requires an extension that has a dependency on

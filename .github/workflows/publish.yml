@@ -6,21 +6,23 @@ name: publish
 on:
     release:
         types: [published]
-
+permissions:
+    id-token: write
+    contents: read
 jobs:
     distribute:
         name: "Distribute VSCode extension"
         runs-on: ubuntu-latest
 
         steps:
-            - uses: actions/checkout@v2
-            - uses: actions/cache@v3
+            - uses: actions/checkout@v6
+            - uses: actions/cache@v5
               with:
                   path: '**/node_modules'
                   key: ${{ runner.os }}-node-modules-${{ hashFiles('**/yarn.lock') }}
-            - uses: actions/setup-node@v2
+            - uses: actions/setup-node@v6
               with:
-                  node-version: "16.x"
+                  node-version: "24.x"
                   registry-url: 'https://registry.npmjs.org'
                   scope: '@kieler'
             - run: yarn
@@ -29,15 +31,11 @@ jobs:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
                   OVSX_PAT: ${{ secrets.OVSX_PAT }}
             - name: Publish klighd-interactive
-              run: yarn publish
+              run: npm publish
               working-directory: ./packages/klighd-interactive
-              env:
-                  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
             - name: Publish klighd-core
-              run: yarn publish
+              run: npm publish
               working-directory: ./packages/klighd-core
-              env:
-                  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
     release-assets:
         name: "Add assets to release"
         runs-on: ubuntu-latest
@@ -45,10 +43,10 @@ jobs:
         # Github has no official action for this. Uses: https://github.com/JasonEtco/upload-to-release
         # Uploads each CLI asset separately to create more targeted download options
         steps:
-            - uses: actions/checkout@v2
-            - uses: actions/setup-node@v2
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v6
               with:
-                  node-version: "16.x"
+                  node-version: "24.x"
             - run: yarn
             - run: yarn package
 

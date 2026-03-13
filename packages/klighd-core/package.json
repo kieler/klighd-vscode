@@ -1,6 +1,6 @@
 {
     "name": "@kieler/klighd-core",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "description": "Core KLighD diagram visualization with Sprotty",
     "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "license": "EPL-2.0",
@@ -25,9 +25,10 @@
         "rebuild-semantic-filtering-parser": "sh antlr/download-and-run-antlr.sh"
     },
     "dependencies": {
-        "@kieler/klighd-interactive": "^0.7.0",
+        "@kieler/klighd-interactive": "^0.8.0",
         "@types/color": "^4.2.0",
         "@types/file-saver": "^2.0.7",
+        "@vscode/codicons": "^0.0.41",
         "antlr4": "^4.13.2",
         "color": "^4.2.3",
         "elkjs": "^0.8.2",

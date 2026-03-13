@@ -20,6 +20,7 @@ import { inject, injectable, postConstruct } from 'inversify'
 import { VNode } from 'snabbdom'
 import { html } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { RefreshDiagramAction } from '@kieler/klighd-interactive/lib/actions'
+import { CenterAction } from 'sprotty-protocol'
 import { DISymbol } from '../di.symbols'
 import { FeatherIcon } from '../feather-icons-snabbdom/feather-icons-snabbdom'
 import {
@@ -153,6 +154,9 @@ export class GeneralPanel extends SidebarPanel {
                     needsServerLayout: !newValue,
                 })
             )
+        } else {
+            // hack to force sprotty to re-render diagram
+            this.actionDispatcher.dispatch(CenterAction.create(['']))
         }
     }
 

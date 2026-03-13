@@ -149,12 +149,7 @@ export function renderChildArea(
         </g>
     )
 
-    // get scale factor and apply to child area
-    if (parent.properties === undefined || parent.properties['org.eclipse.elk.topdown.scaleFactor'] === undefined) {
-        return element
-    }
-    const topdownScaleFactor = parent.properties['org.eclipse.elk.topdown.scaleFactor'] as number
-    return <g transform={`scale (${topdownScaleFactor})`}>${element}</g>
+    return applyTopdownScale(element, parent)
 }
 
 /**
@@ -193,7 +188,7 @@ export function renderRectangularShape(
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context, parent)
+    const colorStyles = getSvgColorStyles(styles, context, parent, rendering)
     // objects rendered here that have no background should get a invisible, but clickable background so that users do not click through the non-available background.
     if (colorStyles.background === DEFAULT_FILL) {
         colorStyles.background = DEFAULT_CLICKABLE_FILL
@@ -410,7 +405,7 @@ export function renderLine(
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context, parent)
+    const colorStyles = getSvgColorStyles(styles, context, parent, rendering)
     // Any non-closed line segment cannot be filled with any color.
     if (rendering.type !== K_POLYGON) {
         colorStyles.background = DEFAULT_FILL
@@ -574,7 +569,7 @@ export function renderKText(
     }
 
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
-    const colorStyles = getSvgColorStyles(styles, context, parent)
+    const colorStyles = getSvgColorStyles(styles, context, parent, rendering)
 
     // Calculate the background, if needed, as a rectangle to be placed behind the text.
     let background: VNode | undefined
@@ -1588,17 +1583,35 @@ export function renderKRendering(
         // If the overlay does not define actions, make it non-interactable to allow clicking through to elements behind.
         if (!hasAction(kRendering, true)) {
             // add pointer-events: none to the style attribute of this overlay.
-            if (!svgRendering.data) {
-                svgRendering.data = {}
-            }
-            if (!svgRendering.data.style) {
-                svgRendering.data.style = {}
-            }
-            svgRendering.data.style['pointer-events'] = 'none'
+            configureClickThrough(svgRendering, true)
         }
         return <g></g>
     }
+    if (
+        kRendering.properties['klighd.rendering.highlight'] !== undefined &&
+        (kRendering.properties['klighd.rendering.highlight'] as number) > 0 &&
+        kRendering.type !== K_TEXT
+    ) {
+        // add pointer-events: none to the style attribute of this highlight rendering.
+        configureClickThrough(svgRendering, true)
+    }
     return svgRendering
+}
+
+/**
+ * Updates a VNode's pointer-events to make it click-through.
+ * @param svgRendering The VNode.
+ * @param clickThrough Whether the VNode should be click-through.
+ */
+function configureClickThrough(svgRendering: VNode, clickThrough: boolean) {
+    if (!svgRendering.data) {
+        svgRendering.data = {}
+    }
+    if (!svgRendering.data.style) {
+        svgRendering.data.style = {}
+    }
+    const pointerEvent = clickThrough ? 'none' : 'auto'
+    svgRendering.data.style['pointer-events'] = pointerEvent
 }
 
 /**
@@ -1655,17 +1668,24 @@ export function getJunctionPointRenderings(edge: SKEdge, context: SKGraphModelRe
 
     const renderings: VNode[] = []
 
-    let topdownScaleFactor = 1
-    if (
-        (edge.parent as any).properties === undefined ||
-        (edge.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] === undefined
-    ) {
-        topdownScaleFactor = (edge.parent as any).properties['org.eclipse.elk.topdown.scaleFactor'] as number
-    }
-
     edge.junctionPoints.forEach((junctionPoint) => {
         const junctionPointVNode = <g transform={`translate(${junctionPoint.x},${junctionPoint.y})`}>{vNode}</g>
-        renderings.push(<g transform={`scale (${topdownScaleFactor})`}>${junctionPointVNode}</g>)
+        renderings.push(junctionPointVNode)
     })
     return renderings
+}
+
+/**
+ * Applies the topdown scale factor, if present, to the returned rendering.
+ * @param element The non-scaled rendered element.
+ * @param parent The parent graph element that this rendering is for.
+ * @returns The (scaled) rendered element.
+ */
+export function applyTopdownScale(element: VNode, parent: SKGraphElement) {
+    // get scale factor and apply it
+    if (parent.properties === undefined || parent.properties['org.eclipse.elk.topdown.scaleFactor'] === undefined) {
+        return element
+    }
+    const topdownScaleFactor = parent.properties['org.eclipse.elk.topdown.scaleFactor'] as number
+    return <g transform={`scale(${topdownScaleFactor})`}>{element}</g>
 }

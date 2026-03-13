@@ -37,6 +37,7 @@ import {
     KLineJoin,
     KLineStyle,
     KLineWidth,
+    KRendering,
     KRotation,
     KShadow,
     KStyle,
@@ -739,14 +740,59 @@ export function getSvgShadowStyles(styles: KStyles, context: SKGraphModelRendere
  * or a url for a gradient color definition that is remembered in the rendering context and has to be added to the SVG later.
  * @param styles The KStyles of the rendering.
  * @param context The rendering context.
+ * @param rendering The rendering itself.
  */
 export function getSvgColorStyles(
     styles: KStyles,
     context: SKGraphModelRenderer,
-    parent: SKGraphElement | SKEdge
+    parent: SKGraphElement | SKEdge,
+    rendering: KRendering
 ): ColorStyles {
-    const foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
-    const background = getSvgColorStyle(styles.kBackground as KBackground, context)
+    let foreground
+    let background
+    if (rendering.properties['klighd.rendering.highlight'] !== undefined) {
+        const foregroundDefault = getSvgColorStyle(styles.kForeground as KForeground, context)
+        const backgroundDefault = getSvgColorStyle(styles.kBackground as KBackground, context)
+        switch (rendering.properties['klighd.rendering.highlight']) {
+            case 1:
+                foreground = foregroundDefault
+                background = {
+                    color: `var(--kdc-color-findMatchBackground, var(--kdc-color-findMatchBackground-default))`,
+                } as ColorStyle
+                break
+            case 3:
+                foreground = {
+                    color: `var(--kdc-color-findMatchBorder, ${foregroundDefault?.color})`,
+                } as ColorStyle
+                background = {
+                    color: `var(--kdc-color-findMatchBackground, var(--kdc-color-findMatchBackground-default))`,
+                    opacity: '0.2',
+                } as ColorStyle
+                break
+            case 2:
+                foreground = foregroundDefault
+                background = {
+                    color: `var(--kdc-color-findMatchHighlightBackground, var(--kdc-color-findMatchHighlightBackground-default))`,
+                } as ColorStyle
+                break
+            case 4:
+                foreground = {
+                    color: `var(--kdc-color-findMatchHighlightBorder, ${foregroundDefault?.color})`,
+                } as ColorStyle
+                background = {
+                    color: `var(--kdc-color-findMatchHighlightBackground, var(--kdc-color-findMatchHighlightBackground-default))`,
+                    opacity: '0.2',
+                } as ColorStyle
+                break
+            default:
+                foreground = foregroundDefault
+                background = backgroundDefault
+                break
+        }
+    } else {
+        foreground = getSvgColorStyle(styles.kForeground as KForeground, context)
+        background = getSvgColorStyle(styles.kBackground as KBackground, context)
+    }
     const grayedOutColor = { color: 'grey', opacity: '255' }
 
     if (parent instanceof SKEdge && parent.moved) {

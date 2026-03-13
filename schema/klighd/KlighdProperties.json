@@ -1,0 +1,111 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/klighd/KlighdProperties.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Property",
+    "type": "object",
+    "required": ["id", "defaultValue"],
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "defaultValue": {}
+    },
+    "definitions": {
+        "IsNodeTitle": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "klighd.isNodeTitle"
+                },
+                "defaultValue": {
+                    "type": "boolean",
+                    "default": true
+                }
+            }
+        },
+        "Tooltip": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "klighd.tooltip"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "default": ""
+                }
+            }
+        },
+        "ProxyViewRenderNodeAsProxy": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "de.cau.cs.kieler.klighd.proxyView.renderNodeAsProxy"
+                },
+                "defaultValue": {
+                    "type": "boolean",
+                    "default": true
+                }
+            }
+        },
+        "ProxyViewProxyRendering": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "de.cau.cs.kieler.klighd.proxyView.proxyRendering"
+                },
+                "defaultValue": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./SKGraphSchema.json#/definitions/KGraphData"
+                    },
+                    "default": []
+                }
+            }
+        },
+        "SemanticFilterTags": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "de.cau.cs.kieler.klighd.semanticFilter.tags"
+                },
+                "defaultValue": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SemanticFilterTag"
+                    },
+                    "default": []
+                }
+            }
+        },
+        "SemanticFilterTag": {
+            "type": "object",
+            "properties": {
+                "tag": {
+                    "type": "string"
+                },
+                "num": {
+                    "type": "number",
+                    "default": 0
+                }
+            }
+        },
+        "RenderingId": {
+            "allOf": [{"$ref": "#"}],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "default": "klighd.lsp.rendering.id"
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "default": ""
+                }
+            }
+        }
+    }
+}

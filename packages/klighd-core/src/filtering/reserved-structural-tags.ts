@@ -18,8 +18,6 @@
 // We follow Sprotty's way of redeclaring the interface and its create function, so disable this lint check for this file.
 /* eslint-disable no-redeclare */
 import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import { SEdgeImpl } from 'sprotty'
-import { FluentIterable, toArray } from 'sprotty/lib/utils/iterable'
 import { SKEdge, SKLabel, SKNode, SKPort } from '../skgraph-models'
 
 type FilterDefinition<T> = {
@@ -31,51 +29,24 @@ type FilterDefinition<T> = {
 const reservedStructuralTags: Record<string, FilterDefinition<boolean>> = {
     isNode: {
         description: 'True if the graph element is a node.',
-        filter: (el: SKGraphElement) => el instanceof SKNode,
+        filter: (el: SKGraphElement) => el instanceof SKNode || el.type === 'node',
     },
     isEdge: {
         description: 'True if the graph element is an edge.',
-        filter: (el: SKGraphElement) => el instanceof SKEdge,
+        filter: (el: SKGraphElement) => el instanceof SKEdge || el.type === 'edge',
     },
     isPort: {
         description: 'True if the graph element is a port.',
-        filter: (el: SKGraphElement) => el instanceof SKPort,
+        filter: (el: SKGraphElement) => el instanceof SKPort || el.type === 'port',
     },
     isLabel: {
         description: 'True if the graph element is a label.',
-        filter: (el: SKGraphElement) => el instanceof SKLabel,
-    },
-    edgeDegree: {
-        description: 'True if the graph element has at least one incident edge.',
-        filter: (el: SKGraphElement) =>
-            toArray(getIncomingEdgesIfNode(el)).length + toArray(getOutgoingEdgesIfNode(el)).length !== 0,
-    },
-    inDegree: {
-        description: 'True if there is at least one incoming edge to the graph element.',
-        filter: (el: SKGraphElement) => toArray(getIncomingEdgesIfNode(el)).length !== 0,
-    },
-    outDegree: {
-        description: 'True if there is at least one outgoing edge from the graph element.',
-        filter: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length !== 0,
+        filter: (el: SKGraphElement) => el instanceof SKLabel || el.type === 'label',
     },
 }
 
 /** Dictionary of numeric tags with their evaluation implementation. */
-const reservedNumericTags: Record<string, FilterDefinition<number>> = {
-    edgeDegree: {
-        description: 'The number of edges connected to this graph element.',
-        filter: (el: SKGraphElement) =>
-            toArray(getIncomingEdgesIfNode(el)).length + toArray(getOutgoingEdgesIfNode(el)).length,
-    },
-    inDegree: {
-        description: 'The number of incoming edges.',
-        filter: (el: SKGraphElement) => toArray(getIncomingEdgesIfNode(el)).length,
-    },
-    outDegree: {
-        description: 'The number of outgoing edges.',
-        filter: (el: SKGraphElement) => toArray(getOutgoingEdgesIfNode(el)).length,
-    },
-}
+const reservedNumericTags: Record<string, FilterDefinition<number>> = {}
 
 /**
  * Evaluates the given reserved tag if it is defined otherwise returns undefined.
@@ -159,20 +130,4 @@ function isReservedStructuralTag(tag: string): boolean {
  */
 function isReservedNumericTag(tag: string): boolean {
     return tag in reservedNumericTags
-}
-
-/** Helper function to get incoming edges. */
-function getIncomingEdgesIfNode(element: SKGraphElement): FluentIterable<SEdgeImpl> {
-    if (element instanceof SKNode) {
-        return element.incomingEdges
-    }
-    return []
-}
-
-/** Helper function to get outgoing edges. */
-function getOutgoingEdgesIfNode(element: SKGraphElement): FluentIterable<SEdgeImpl> {
-    if (element instanceof SKNode) {
-        return element.outgoingEdges
-    }
-    return []
 }

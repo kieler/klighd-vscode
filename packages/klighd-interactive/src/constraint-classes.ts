@@ -34,13 +34,13 @@ export interface SKGraphElement extends SParentElementImpl {
      * Remembers, if this element's children that are placed within a potential child area have already been rendered.
      * Accounts for child nodes and edges.
      */
-    areChildAreaChildrenRendered: boolean
+    areChildAreaChildrenRendered?: boolean
     /**
      * Remembers, if this element's children that are not placed within a potential child area have already been rendered.
      * Accounts for child ports and labels.
      */
-    areNonChildAreaChildrenRendered: boolean
-    opacity: number
+    areNonChildAreaChildrenRendered?: boolean
+    opacity?: number
 
     /**
      * The properties of this element.

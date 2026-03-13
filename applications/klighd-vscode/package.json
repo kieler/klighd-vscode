@@ -2,7 +2,7 @@
     "name": "klighd-vscode",
     "displayName": "KLighD Diagrams",
     "description": "KLighD diagram support for Visual Studio Code",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "publisher": "kieler",
     "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "icon": "icon.png",
@@ -182,7 +182,7 @@
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@kieler/klighd-core": "^0.7.0",
+        "@kieler/klighd-core": "^0.8.0",
         "inversify": "^6.0.2",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.2.1",
