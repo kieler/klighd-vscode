@@ -140,7 +140,10 @@ export interface KRendering extends KGraphData, KStyleHolder {
 
     /** If this rendering is used as a clip rendering. Will not be set in the model and is to be used during rendering only. */
     isClipRendering?: boolean
-    placementData: KPlacementData
+    placementData?: KPlacementData
+
+    // TODO: Either implement this or find some way to find the parent Rendering by using the SKGraph.
+    //parent?: KRendering
 }
 
 /**
@@ -155,7 +158,7 @@ export type KChildArea = KRendering
  */
 export interface KContainerRendering extends KRendering {
     children: KRendering[]
-    childPlacement: KPlacement
+    childPlacement?: KPlacement
 }
 
 /**
@@ -325,6 +328,16 @@ export interface KPointPlacementData extends KPlacementData {
     verticalMargin: number
     minWidth: number
     minHeight: number
+}
+
+export interface KDecoratorPlacementData extends KPlacementData {
+    absolute: number,
+    relative: number,
+    xOffset: number,
+    yOffset: number,
+    width: number,
+    height: number,
+    rotateWithLine: boolean,
 }
 
 /**
@@ -733,6 +746,11 @@ export const K_GRID_PLACEMENT = 'KGridPlacementImpl'
 export const K_AREA_PLACEMENT_DATA = 'KAreaPlacementDataImpl'
 export const K_GRID_PLACEMENT_DATA = 'KGridPlacementDataImpl'
 export const K_POINT_PLACEMENT_DATA = 'KPointPlacementDataImpl'
+export const K_DECORATOR_PLACEMENT_DATA = 'KDecoratorPlacementDataImpl' // TODO: Actually implement this type.
+export const K_TOP_POSITION = 'KTopPositionImpl'
+export const K_BOTTOM_POSITION = 'KBottomPositionImpl'
+export const K_LEFT_POSITION = 'KLeftPositionImpl'
+export const K_RIGHT_POSITION = 'KRightPositionImpl'
 
 /**
  * Returns if the given parameter is a KRendering.
@@ -740,7 +758,7 @@ export const K_POINT_PLACEMENT_DATA = 'KPointPlacementDataImpl'
  * @param test The potential KRendering.
  */
 export function isRendering(test: KGraphData): test is KRendering {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
@@ -767,7 +785,7 @@ export function isRendering(test: KGraphData): test is KRendering {
  * @param test The potential KContainerRendering.
  */
 export function isContainerRendering(test: KGraphData): test is KContainerRendering {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
@@ -796,6 +814,15 @@ export function isChildArea(test: KGraphData): test is KChildArea {
 }
 
 /**
+ * Returns true if the given parameter is a KRenderingLibrary.
+ * @param test The potential KRenderingLibrary.
+ */
+export function isRenderingLibrary(test: KGraphData): test is KRenderingLibrary {
+    const { type } = test
+    return type === K_RENDERING_LIBRARY
+}
+
+/**
  * Returns true if the given parameter is a KRenderingRef.
  * @param test The potential KRenderingRef.
  */
@@ -809,11 +836,15 @@ export function isRenderingRef(test: KGraphData): test is KRenderingRef {
  * @param test The potential KPolyline.
  */
 export function isPolyline(test: KGraphData): test is KPolyline {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
     return type === K_POLYLINE || type === K_POLYGON || type === K_ROUNDED_BENDS_POLYLINE || type === K_SPLINE
+}
+
+export function isPolygon(test: KGraphData): test is KPolygon {
+    return isPolyline(test)
 }
 
 /**
@@ -821,7 +852,7 @@ export function isPolyline(test: KGraphData): test is KPolyline {
  * @param test The potential KText
  */
 export function isKText(test: KGraphData): test is KText {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test
@@ -842,6 +873,10 @@ export function isImage(test: KGraphData): test is KImage {
  * @param test The potential KGridPlacement.
  */
 export function isGridPlacement(test: KPlacement): test is KGridPlacement {
+    if (!test) {
+        return false
+    }
+
     const { type } = test
     return type === K_GRID_PLACEMENT
 }
@@ -872,12 +907,20 @@ export function isGridPlacementData(test: KPlacementData): test is KGridPlacemen
  * Returns true if the given parameter is a KPointPlacementData.
  * @param test The potential KPointPlacementData.
  */
-export function isPointPlacementData(test: any): test is KPointPlacementData {
+export function isPointPlacementData(test: KPlacementData): test is KPointPlacementData {
     if (!test) {
         return false
     }
     const { type } = test
-    return type === K_GRID_PLACEMENT
+    return type === K_POINT_PLACEMENT_DATA
+}
+
+export function isDecoratorPlacementData(test: KPlacementData): test is KDecoratorPlacementData {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_DECORATOR_PLACEMENT_DATA
 }
 
 /**
@@ -885,7 +928,7 @@ export function isPointPlacementData(test: any): test is KPointPlacementData {
  * @param test The potential SKGraphElement.
  */
 export function isSKGraphElement(test: unknown): test is SKGraphElement {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test as any
@@ -901,9 +944,48 @@ export function isSKGraphElement(test: unknown): test is SKGraphElement {
  * @param test The potential SKLabel.
  */
 export function isSKLabel(test: unknown): test is SKLabel {
-    if (test === null) {
+    if (!test) {
         return false
     }
     const { type } = test as any
     return type === LABEL_TYPE && (test as any).data !== undefined && (test as any).properties !== undefined
+}
+
+export function isEdge(test: any): test is KEdge {
+    return isSKGraphElement(test) && test.type === EDGE_TYPE
+}
+
+// Changing "boolean" to "test is KLeftPosition" results in unexpected behaviour for "evaluateKPosition" in placement-util.ts
+export function isLeftPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_LEFT_POSITION
+}
+
+// TODO: Currently unused
+export function isRightPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_RIGHT_POSITION
+}
+
+export function isTopPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_TOP_POSITION
+}
+
+// TODO: Currently unused
+export function isBottomPosition(test: any): boolean {
+    if (!test) {
+        return false
+    }
+    const { type } = test
+    return type === K_BOTTOM_POSITION
 }

@@ -17,7 +17,7 @@
 
 import { ElkNode, LayoutOptions } from 'elkjs'
 import { inject, injectable } from 'inversify'
-import { HiddenModelViewer, IActionDispatcher, SChildElementImpl, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
+import { HiddenModelViewer, IActionDispatcher, SModelRootImpl, TYPES, ViewerOptions } from 'sprotty'
 import { DefaultLayoutConfigurator, ILayoutPostprocessor } from 'sprotty-elk'
 import {
     Action,
@@ -25,16 +25,58 @@ import {
     ComputedBoundsAction,
     ElementAndAlignment,
     ElementAndBounds,
+    Point,
     RequestBoundsAction,
     SGraph,
     SModelElement,
     SModelIndex,
 } from 'sprotty-protocol'
-import { isRendering, isSKGraphElement, K_RENDERING_REF, KRectangle, KRendering, KText, SKNode } from './skgraph-models'
-import { boundsMax } from './micro-layout/bounds-util'
-import { estimateSize } from './micro-layout/placement-util'
-import { SKGraphModelRenderer } from './skgraph-model-renderer'
-import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import {
+    Decoration,
+    EDGE_TYPE,
+    isContainerRendering,
+    isEdge,
+    isGridPlacement,
+    isImage,
+    isPolygon,
+    isPolyline,
+    isRendering,
+    isRenderingRef,
+    isSKGraphElement,
+    K_AREA_PLACEMENT_DATA,
+    K_DECORATOR_PLACEMENT_DATA,
+    K_POINT_PLACEMENT_DATA,
+    K_RENDERING_REF,
+    KAreaPlacementData,
+    KContainerRendering,
+    KPlacement,
+    KPointPlacementData,
+    KPolygon,
+    KRendering,
+    KRenderingLibrary,
+    KRenderingRef,
+    NODE_TYPE,
+    SKLabel,
+    SKNode,
+} from './skgraph-models'
+import { boundsMax, emptyBounds } from './micro-layout/bounds-util'
+import {
+    basicEstimateSize,
+    estimateSize,
+    evaluateAreaPlacement,
+    evaluateKPosition,
+    evaluatePointPlacementRendering,
+} from './micro-layout/placement-util'
+import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { getKRenderingLibrary, resolveKRendering } from './skgraph-utils'
+
+const CALCULATED_BOUNDS = 'klighd.lsp.calculated.bounds'
+const CALCULATED_BOUNDS_MAP = 'klighd.lsp.calculated.bounds.map'
+const CALCULATED_DECORATION = 'klighd.lsp.calculated.decoration'
+const CALCULATED_DECORATION_MAP = 'klighd.lsp.calculated.decoration.map'
+const RENDERING_ID = 'klighd.lsp.rendering.id'
+const EXPANDED = 'klighd.lsp.expanded' // Unused.
+const EXPAND = 'de.cau.cs.kieler.klighd.expand' // Currently always undefined property.
 
 /**
  * This layout configurator copies all layout options from the KGraph element's properties.
@@ -71,7 +113,8 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
         if (cause?.kind !== RequestBoundsAction.KIND) {
             return super.update(model, cause)
         }
-        console.log(model)
+        console.warn('SModelRootImpl')
+        console.log(model.children[0])
 
         // TODO:
         // Overwriting this goes quite deep into Sprotty, as it usually expects a full hidden DOM rendering from its HiddenModelViewer implementation.
@@ -146,7 +189,15 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
         //     },
         // })
 
-        const remainingElements: SKGraphElement[] = [model.children[0] as SKNode]
+        const root = model.children[0] as SKNode
+        const library = getKRenderingLibrary(root)
+
+        // Set padding in SKGraph and root not of SKGraph.
+        ;(model as unknown as SKNode).properties['elk.padding'] = '[top=0,left=0,bottom=0,right=0]'
+        root.properties['elk.padding'] = '[top=0,left=0,bottom=0,right=0]'
+
+        const remainingElements: SKGraphElement[] = [root]
+
         while (remainingElements.length > 0) {
             const modelElement = remainingElements.pop()!
             for (const child of modelElement.children) {
@@ -154,12 +205,25 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
                     remainingElements.push(child)
                 }
             }
-            const rendering = getKRendering(modelElement.data)
-            // TODO: determine MIN bounds
-            const minSize: Bounds = { x: 0, y: 0, width: 20, height: 20 }
+            const rendering = resolveKRendering(modelElement.data, library) // FIXME.
+
+            // TODO: Determine why sometimes container bounds are too small (laptop vs. desktop?).
 
             if (rendering) {
-                const size = boundsMax(minSize, estimateSize(rendering, minSize))
+                // TODO: Find out how to get the real minimal size.
+                let minSize: Bounds
+                switch (modelElement.type) {
+                    case NODE_TYPE:
+                        minSize = (modelElement as KNode).size as Bounds // Seems to be most accurate guess for now (may even be correct).
+                        break
+                    case EDGE_TYPE:
+                        minSize = Bounds.EMPTY // TODO: Implement edge size estimation.
+                        break
+                    default:
+                        minSize = root.size as Bounds // Fallback
+                }
+
+                const size = estimateSize(rendering, minSize) // I'm not sure if this is correct.
 
                 // TODO: calculate insets
 
@@ -177,31 +241,451 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
     }
 }
 
-// TODO: copied from view-common but stripped the SKGraphModelRenderer parts, those or something similar is necessary for KRenderingLibraries to work
-function getKRendering(datas: KGraphData[]): KRendering | undefined {
-    for (const data of datas) {
-        if (data !== null && data.type === K_RENDERING_REF) {
-            console.log('KRenderingLibrary lookup not implemented')
-        } else {
-            console.log('No KRenderingLibrary for KRenderingRef in context')
-        }
-        if (data !== null && isRendering(data)) {
-            return data
-        }
-    }
-    return undefined
-}
-
 /**
  * Layout postprocessor that calculates the KLighD macro layout
  */
 @injectable()
 export class MicroLayoutCalculator implements ILayoutPostprocessor {
     postprocess(elkGraph: ElkNode, sgraph: SGraph, index: SModelIndex): void {
-        // TODO: Micro layout calculation here or in Step 4 from above
-        console.log('micro layout postprosessor called!')
-        console.log(elkGraph)
-        console.log(sgraph)
-        console.log(index)
+        const root = sgraph.children[0] as unknown as SKGraphElement
+        prepareRenderingLayout(root, getKRenderingLibrary(root)!)
     }
 }
+
+function prepareRenderingLayout(element: SKGraphElement, library: KRenderingLibrary) {
+    // TODO: Micro layout calculation here or in Step 4 from above
+    // TODO: Test this method.
+    console.warn('METHOD IS BEING USED: ' + 'prepareRenderingLayout')
+
+    if (!element.data) return
+
+    for (let i = 0; i < element.data.length; i++) {
+        const data = element.data[i]
+        // FIXME: Data == null case needs to be covered.
+        if (!data) continue
+        const rendering = resolveKRendering([data], library)
+        if (isRenderingRef(data)) {
+            // all references to KRenderings need to place a map with their
+            // sizes and their decoration in this case in the properties of the reference.
+            let boundsMap: Record<string, Bounds> = {}
+            let decorationMap: Record<string, Decoration> = {}
+            if (!rendering) continue
+            handleKRendering(element, rendering, boundsMap, decorationMap, library)
+            // add new Property to contain the boundsMap
+            data.properties[CALCULATED_BOUNDS_MAP] = boundsMap
+            // and the decorationMap
+            data.properties[CALCULATED_DECORATION_MAP] = decorationMap
+            break
+        } else if (isRendering(data)) {
+            handleKRendering(element, data, null, null, library)
+            break
+        }
+    }
+    // TODO: Replace the following with correct checks.
+    // if (isKLabeledGraphElement(element))
+    if ('labels' in element)
+        for (const label of element.labels as SKGraphElement[])
+            prepareRenderingLayout(label as unknown as SKLabel, library)
+
+    if (element.type === NODE_TYPE) {
+        //let node = element as unknown as SNodeImpl // TODO: Find out if this is the right cast, and `node.outgoingEdges` works as intended.
+        // TODO: Correctly search for expansion property.
+        if (true || element.properties[EXPAND])
+            for (const child of element.children) // TODO: Change this when we differentiate between different kinds of children ('edges' and 'ports')
+                prepareRenderingLayout(child as unknown as SKGraphElement, library)
+        // for (const edge of node.outgoingEdges)
+        //     // ...
+
+        // FIXME: Same problem
+        // for (const port of element.ports)
+        //     // ...
+    }
+
+    // PROXY STUFF (Skipped for now)
+    // ...
+}
+
+function handleKRendering(
+    element: SKGraphElement,
+    rendering: KRendering,
+    boundsMap: Record<string, Bounds> | null,
+    decorationMap: Record<string, Decoration> | null,
+    library: KRenderingLibrary
+) {
+    let bounds: Bounds
+    if ('size' in element) {
+        // The parent rendering inherits its bounds from the element containing the rendering.
+        bounds = element.size as Bounds
+    } else {
+        // In this case the element is a KEdge.
+        bounds = edgeBounds(element as KEdge)
+    }
+
+    // Calculate the bounds of the rendering.
+    handleAreaAndPointAndDecoratorPlacementRendering(rendering, bounds, boundsMap, decorationMap, element, library)
+
+    // Calculate the bounds for the junction point rendering.
+    if (isPolyline(rendering))
+        if (rendering.junctionPointRendering)
+            handleAreaAndPointAndDecoratorPlacementRendering(
+                rendering.junctionPointRendering,
+                bounds,
+                boundsMap,
+                decorationMap,
+                element,
+                library
+            )
+
+    // Calculate the bounds for the clip shape.
+    if (isImage(rendering))
+        if (rendering.clipShape)
+            handleAreaAndPointAndDecoratorPlacementRendering(
+                rendering.clipShape,
+                bounds,
+                boundsMap,
+                decorationMap,
+                element,
+                library
+            )
+}
+
+// TODO: Implement this if needed.
+function edgeBounds(edge: KEdge): Bounds {
+    var minX = Number.POSITIVE_INFINITY
+    var minY = Number.POSITIVE_INFINITY
+    var maxX = Number.NEGATIVE_INFINITY
+    var maxY = Number.NEGATIVE_INFINITY
+    var pointList = []
+
+    if (edge.source) pointList.push(edge.source.position)
+
+    //pointList.push(edge.bendpoints)
+    // ...
+    return Bounds.EMPTY
+}
+
+function handleAreaAndPointAndDecoratorPlacementRendering(
+    rendering: KRendering,
+    parentBounds: Bounds,
+    boundsMap: Record<string, Bounds> | null,
+    decorationMap: Record<string, Decoration> | null,
+    parent: SKGraphElement,
+    library: KRenderingLibrary
+) {
+    let placementData = rendering.placementData
+    let bounds: Bounds
+    let decoration: Decoration | null = null
+    let usedBoundsMap = boundsMap
+    let usedDecorationMap = decorationMap
+
+    // KRenderingRefs inside other renderings. This reference needs a new bounds- and decoration map to be stored
+    if (rendering.type === K_RENDERING_REF) {
+        usedBoundsMap = {}
+        usedDecorationMap = {}
+        // TODO: Fully implement KRenderingRef lookup, then remove the '?'.
+        const realRendering = resolveKRendering([rendering], library)
+        if (realRendering) placementData = realRendering.placementData // What the hell?
+
+        // add new Property to contain the boundsMap
+        rendering.properties[CALCULATED_BOUNDS_MAP] = usedBoundsMap
+        // and the decorationMap
+        rendering.properties[CALCULATED_DECORATION_MAP] = usedDecorationMap
+    }
+
+    switch (placementData?.type) {
+        case K_AREA_PLACEMENT_DATA: {
+            // Evaluate the area placement micro layout with the help of KLighD.
+            bounds = evaluateAreaPlacement(placementData as KAreaPlacementData, parentBounds)
+            break
+        }
+        case K_POINT_PLACEMENT_DATA: {
+            // Evaluate the point placement micro layout with the help of KLighD.
+            bounds = evaluatePointPlacementRendering(rendering, placementData as KPointPlacementData, parentBounds)
+            break
+        }
+        case K_DECORATOR_PLACEMENT_DATA: {
+            bounds = basicEstimateSize(rendering, parentBounds) // (Fallback)
+            // Decorator placements can only be evaluated if the path they should decorate is known.
+            // to call KLighD's DecoratorPlacementUtil#evaluateDecoratorPlacement the points of the path of the
+            // parent rendering have to be stored.
+            let path: Point[]
+            // Todo: Can't figure out parent rendering currenlty.
+            let parentRendering // = rendering.eContainer
+
+            // Get inset from parent region
+            let leftInset = 0
+            let topInset = 0
+            if (isEdge(parent)) {
+                // TODO: Implement this method in SKGraphUtils
+                // if (isDecendant(parent.target, parent.source))
+                // TODO: Get parent insets.
+                if (true) {
+                    leftInset // = parent.source.insets.left
+                    topInset // = parent.source.insets.top
+                } else {
+                    leftInset // = parent.source.parent.insets.left
+                    topInset // = parent.source.parent.insets.top
+                }
+            }
+            // TODO: Remove forced non-nulls later.
+            if (isPolygon(parentRendering!)) {
+                let points = []
+                for (const point of (parentRendering as KPolygon).points) {
+                    const position = evaluateKPosition(point, parentBounds, true)
+                    const x = position.x + leftInset
+                    const y = position.y + topInset
+                    points.push({ x: x, y: y })
+                }
+                path = points
+            } else if (isPolyline(parentRendering!)) {
+                // TODO: Continue here!
+            }
+            break
+        }
+        default: {
+            // If no placementData is defined, assume the width and height of the parent object
+            // placed at the top left corner.
+            bounds = { x: 0, y: 0, width: parentBounds.width, height: parentBounds.height }
+            break
+        }
+    }
+
+    // Decide if the bounds and decoration should be put in the boundsMap/decorationMap or in the rendering's
+    // properties.
+    // TODO: Remove all forced non-nulls when 'KDecoratorPlacementData' case is implemented.
+    if (!usedBoundsMap) {
+        console.log(rendering.type)
+        console.log(rendering.properties[CALCULATED_BOUNDS])
+        rendering.properties[CALCULATED_BOUNDS] = bounds!
+        console.log(rendering.properties[CALCULATED_BOUNDS])
+        if (decoration) rendering.properties[CALCULATED_DECORATION] = decoration
+    } else {
+        usedBoundsMap[rendering.properties[RENDERING_ID] as string] = bounds!
+        if (decoration) usedDecorationMap![rendering.properties[RENDERING_ID] as string] = decoration
+    }
+
+    // Process modifiable styles
+    // TODO: Implement this if needed
+    //processModifiableStyles(rendering, parent)
+    // Calculate the bounds and decorations of all child renderings.
+    if (isContainerRendering(rendering)) {
+        handleChildren(
+            rendering.children,
+            rendering.childPlacement,
+            bounds!,
+            usedBoundsMap,
+            usedDecorationMap,
+            parent,
+            library
+        )
+    } else if (isRenderingRef(rendering) && isContainerRendering(rendering.rendering)) {
+        const referencedRendering = rendering.rendering as KContainerRendering
+        handleChildren(
+            referencedRendering.children,
+            referencedRendering.childPlacement,
+            bounds!,
+            usedBoundsMap,
+            usedDecorationMap,
+            parent,
+            library
+        )
+    }
+}
+
+function handleChildren(
+    renderings: KRendering[] | undefined,
+    placement: KPlacement | undefined,
+    parentBounds: Bounds,
+    boundsMap: Record<string, Bounds> | null,
+    decorationMap: Record<string, Decoration> | null,
+    parent: SKGraphElement,
+    library: KRenderingLibrary
+) {
+    if (placement && isGridPlacement(placement) && renderings)
+        handleGridPlacementRendering(renderings, placement, parentBounds, boundsMap, decorationMap, parent)
+    else if (renderings)
+        for (const childRendering of renderings)
+            handleAreaAndPointAndDecoratorPlacementRendering(
+                childRendering,
+                parentBounds,
+                boundsMap,
+                decorationMap,
+                parent,
+                library
+            )
+}
+
+function handleGridPlacementRendering(
+    renderings: KRendering[],
+    placement: KPlacement,
+    parentBounds: Bounds,
+    boundsMap: Record<string, Bounds> | null,
+    decorationMap: Record<string, Decoration> | null,
+    parent: SKGraphElement
+) {
+    // TODO: Do the thing!
+    return
+}
+
+// JAVA EQUIVALENT:
+// TODO: DO THIS:
+/*
+        static def void prepareRenderingLayout(KGraphElement element, Map<KGraphElement, SModelElement> kGraphToSGraph) {
+        // calculate the sizes of all renderings:
+        for (var int i = 0; i < element.data.size; i++) {
+            val data = element.data.get(i)
+            switch(data) {
+                KRenderingRef: {
+                    // all references to KRenderings need to place a map with their 
+                    // sizes and their decoration in this case in the properties of the reference.
+                    var boundsMap = new HashMap<String, Bounds>
+                    var decorationMap = new HashMap<String, Decoration>
+                    handleKRendering(element, data.rendering, boundsMap, decorationMap)
+                    // add new Property to contain the boundsMap
+                    data.properties.put(CALCULATED_BOUNDS_MAP, boundsMap)
+                    // and the decorationMap
+                    data.properties.put(CALCULATED_DECORATION_MAP, decorationMap)
+                }
+                KRendering: {
+                    // TODO: Important.
+                    handleKRendering(element, data, null, null)
+                }
+            }
+        }
+        
+        // Recursively call this method for every child KGraphElement of this.
+        // (all labels, child nodes, outgoing edges and ports)
+        
+        if (element instanceof KLabeledGraphElement) {
+            for (label : element.labels) {
+                prepareRenderingLayout(label, kGraphToSGraph)
+            }
+        }
+        if (element instanceof KNode) {
+            // Do not recurse generating IDs if the element is not expanded, as there won't be any SGraph generated for
+            // it.
+            var boolean isExpanded
+            val renderingContextData = RenderingContextData.get(element)
+            if (renderingContextData.hasProperty(SprottyProperties.EXPANDED)) {
+                isExpanded = renderingContextData.getProperty(SprottyProperties.EXPANDED)
+            } else {
+                // If the expanded property does not exist yet, use the initial expansion.
+                isExpanded = element.getProperty(KlighdProperties.EXPAND)
+            }
+            
+            if (isExpanded) {
+                for (node : element.children) {
+                    prepareRenderingLayout(node, kGraphToSGraph)
+                }
+            }
+            for (edge : element.outgoingEdges) {
+                // not expanded => edge must not have the target node inside the non-expanded
+                if (isExpanded || !KGraphUtil.isDescendant(edge.target, element)) {
+                    prepareRenderingLayout(edge, kGraphToSGraph)
+                }
+            }
+            for (port : element.ports) {
+                prepareRenderingLayout(port, kGraphToSGraph)
+            }
+        }
+
+        private static def void handleKRendering(KGraphElement element, KRendering rendering, Map<String, Bounds> boundsMap,
+        Map<String, Decoration> decorationMap) {
+        var Bounds bounds
+        if (element instanceof KShapeLayout) {
+            // The parent rendering inherits its bounds from the element containing the rendering.
+            bounds = new Bounds(element.width, element.height)
+        } else {
+            // In this case the element is a KEdge.
+            bounds = edgeBounds(element as KEdge)
+        }
+        // Calculate the bounds of the rendering.
+        // TODO: This is _very_ important.
+        handleAreaAndPointAndDecoratorPlacementRendering(rendering, bounds, boundsMap, decorationMap, element)
+        
+        // Calculate the bounds for the junction point rendering.
+        if (rendering instanceof KPolyline) {
+            if (rendering.junctionPointRendering !== null) {                
+                handleAreaAndPointAndDecoratorPlacementRendering(rendering.junctionPointRendering, bounds, boundsMap,
+                    decorationMap, element)
+            }
+        }
+        
+        // Calculate the bounds for the clip shape.
+        if (rendering instanceof KImage) {
+            if (rendering.clipShape !== null) {
+                handleAreaAndPointAndDecoratorPlacementRendering(rendering.clipShape, bounds, boundsMap, decorationMap,
+                    element)
+            }
+        }
+    }
+
+    private static def void handleAreaAndPointAndDecoratorPlacementRendering(KRendering rendering, Bounds parentBounds,
+        Map<String, Bounds> boundsMap, Map<String, Decoration> decorationMap, KGraphElement parent) {
+        var placementData = rendering.placementData
+        var Bounds bounds
+        var Decoration decoration = null
+        var Map<String, Bounds> usedBoundsMap = boundsMap
+        var Map<String, Decoration> usedDecorationMap = decorationMap
+        
+        
+        
+        // KRenderingRefs inside other renderings. This reference needs a new bounds- and decoration map to be stored
+        // inside it.
+        if (rendering instanceof KRenderingRef) {
+            usedBoundsMap = new HashMap<String, Bounds>
+            usedDecorationMap = new HashMap<String, Decoration>
+            placementData = rendering.rendering.placementData
+            
+             // add new Property to contain the boundsMap
+            rendering.properties.put(CALCULATED_BOUNDS_MAP, usedBoundsMap)
+            // and the decorationMap
+            rendering.properties.put(CALCULATED_DECORATION_MAP, usedDecorationMap)
+        }
+        
+        switch (placementData) {
+            KAreaPlacementData: {
+                // Evaluate the area placement micro layout with the help of KLighD.
+                bounds = PlacementUtil.evaluateAreaPlacement(placementData, parentBounds)
+            }
+            // TODO: Important.
+            KPointPlacementData: {
+                // Evaluate the point placement micro layout with the help of KLighD.
+                bounds = PlacementUtil.evaluatePointPlacement(rendering, placementData, parentBounds)
+            }
+            // TODO: The rest of this...
+            KDecoratorPlacementData: {...}
+            default: {
+                // If no placementData is defined, assume the width and height of the parent object
+                // placed at the top left corner.
+                bounds = new Bounds(parentBounds.width, parentBounds.height)
+            }
+        }
+        // Decide if the bounds and decoration should be put in the boundsMap/decorationMap or in the rendering's
+        // properties.
+        if (usedBoundsMap === null) {
+            // TODO: Important.
+            rendering.setBounds(bounds)
+            if (decoration !== null) {
+                rendering.setDecoration(decoration)
+            }
+        } else {
+            usedBoundsMap.put(rendering.renderingId, bounds)
+            if (decoration !== null) {
+                usedDecorationMap.put(rendering.renderingId, decoration)
+            }
+        }
+        // Process modifiable styles
+        processModifiableStyles(rendering, parent)
+        // Calculate the bounds and decorations of all child renderings.
+        if (rendering instanceof KContainerRendering) {
+            handleChildren(rendering.children, rendering.childPlacement, bounds, usedBoundsMap, usedDecorationMap, parent)
+        } else if (rendering instanceof KRenderingRef
+            && (rendering as KRenderingRef).rendering instanceof KContainerRendering
+        ) {
+            val referencedRendering = (rendering as KRenderingRef).rendering as KContainerRendering
+            handleChildren(referencedRendering.children, referencedRendering.childPlacement, bounds, usedBoundsMap,
+                usedDecorationMap, parent)
+        }
+    }
+        */

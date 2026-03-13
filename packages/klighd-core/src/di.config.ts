@@ -49,7 +49,7 @@ import {
     viewportModule,
     ViewRegistry,
 } from 'sprotty'
-import { ElkFactory, ElkLayoutEngine, elkLayoutModule, ILayoutConfigurator, ILayoutPostprocessor } from 'sprotty-elk'
+import { ElkFactory, ElkLayoutEngine, elkLayoutModule, IElementFilter, ILayoutConfigurator, ILayoutPostprocessor, ILayoutPreprocessor } from 'sprotty-elk'
 import actionModule from './actions/actions-module'
 // import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols'
@@ -73,6 +73,7 @@ import { EDGE_TYPE, LABEL_TYPE, NODE_TYPE, PORT_TYPE, SKEdge, SKLabel, SKNode, S
 import { SetSynthesesAction, SetSynthesisAction } from './syntheses/actions'
 import { SynthesesRegistry } from './syntheses/syntheses-registry'
 import { KEdgeView, KLabelView, KNodeView, KPortView, SKGraphView } from './views'
+import { KlighdLayoutEngine } from './layout/klighd-layout-engine'
 
 /**
  * Dependency injection module that adds functionality for diagrams and configures the views for SKGraphElements.
@@ -84,7 +85,27 @@ const kGraphDiagramModule = new ContainerModule(
         rebind(TYPES.LogLevel).toConstantValue(LogLevel.warn)
 
         // required binding for elkjs to work
-        bind(TYPES.IModelLayoutEngine).toService(ElkLayoutEngine)
+        bind(KlighdLayoutEngine)
+            .toDynamicValue((context) => {
+                const elkFactory = context.container.get<ElkFactory>(ElkFactory)
+                const elementFilter = context.container.get<IElementFilter>(IElementFilter)
+                const layoutConfigurator = context.container.get<ILayoutConfigurator>(ILayoutConfigurator)
+                const layoutPreprocessor = context.container.isBound(ILayoutPreprocessor)
+                    ? context.container.get<ILayoutPreprocessor>(ILayoutPreprocessor)
+                    : undefined
+                const layoutPostprocessor = context.container.isBound(ILayoutPostprocessor)
+                    ? context.container.get<ILayoutPostprocessor>(ILayoutPostprocessor)
+                    : undefined
+                return new KlighdLayoutEngine(
+                    elkFactory,
+                    elementFilter,
+                    layoutConfigurator,
+                    layoutPreprocessor,
+                    layoutPostprocessor
+                )
+            })
+            .inSingletonScope()
+        bind(TYPES.IModelLayoutEngine).toService(KlighdLayoutEngine)
 
         // Our own layout configurator that just copies the element's poperties as the layout options.
         bind(KielerLayoutConfigurator).toSelf().inSingletonScope()
