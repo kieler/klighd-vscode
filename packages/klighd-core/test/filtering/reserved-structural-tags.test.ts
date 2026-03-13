@@ -86,8 +86,8 @@ describe('reserved tags and lists tests', () => {
         expect(isLabelFilter(port), 'label is not port').to.equal(false)
     })
 
-    it('$edgeDegree and #edgeDegree', () => {
-        const ruleString = '$edgeDegree >= 1'
+    it('$adjacents and #adjacents', () => {
+        const ruleString = '$adjacents >= 1'
         const filter = createSemanticFilter(ruleString)
 
         const node = new SGraphImpl()
@@ -116,15 +116,15 @@ describe('reserved tags and lists tests', () => {
         expect(filter(child2), 'node with incoming edge').to.equal(true)
         expect(filter(child3), 'node with no edges').to.equal(false)
 
-        const ruleString2 = '#edgeDegree'
+        const ruleString2 = '#adjacents'
         const filter2 = createSemanticFilter(ruleString2)
         expect(filter2(child1), 'node with outgoing edge').to.equal(true)
         expect(filter2(child2), 'node with incoming edge').to.equal(true)
         expect(filter2(child3), 'node with no edges').to.equal(false)
     })
 
-    it('$inDegree and #inDegree', () => {
-        const ruleString = '$inDegree >= 1'
+    it('$incoming and #incoming', () => {
+        const ruleString = '$incoming >= 1'
         const filter = createSemanticFilter(ruleString)
 
         const node = new SGraphImpl()
@@ -153,15 +153,15 @@ describe('reserved tags and lists tests', () => {
         expect(filter(child2), 'node with incoming edge').to.equal(true)
         expect(filter(child3), 'node with no edges').to.equal(false)
 
-        const ruleString2 = '#inDegree'
+        const ruleString2 = '#incoming'
         const filter2 = createSemanticFilter(ruleString2)
         expect(filter2(child1), 'node with outgoing edge').to.equal(false)
         expect(filter2(child2), 'node with incoming edge').to.equal(true)
         expect(filter2(child3), 'node with no edges').to.equal(false)
     })
 
-    it('$outDegree and #outDegree', () => {
-        const ruleString = '$outDegree >= 1'
+    it('$outgoing and #outgoing', () => {
+        const ruleString = '$outgoing >= 1'
         const filter = createSemanticFilter(ruleString)
 
         const node = new SGraphImpl()
@@ -190,7 +190,7 @@ describe('reserved tags and lists tests', () => {
         expect(filter(child2), 'node with incoming edge').to.equal(false)
         expect(filter(child3), 'node with no edges').to.equal(false)
 
-        const ruleString2 = '#outDegree'
+        const ruleString2 = '#outgoing'
         const filter2 = createSemanticFilter(ruleString2)
         expect(filter2(child1), 'node with outgoing edge').to.equal(true)
         expect(filter2(child2), 'node with incoming edge').to.equal(false)

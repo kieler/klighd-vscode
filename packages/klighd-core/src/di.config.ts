@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2019-2025 by
+ * Copyright 2019-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -20,11 +20,13 @@ import ElkConstructor from 'elkjs/lib/elk.bundled'
 import { Container, ContainerModule, interfaces } from 'inversify'
 import {
     boundsModule,
+    CenterCommand,
     configureActionHandler,
     configureModelElement,
     ConsoleLogger,
     defaultModule,
     exportModule,
+    FitToScreenCommand,
     hoverModule,
     HoverState,
     HtmlRootImpl,
@@ -40,6 +42,7 @@ import {
     PreRenderedView,
     RenderingTargetKind,
     selectModule,
+    SetViewportCommand,
     SGraphImpl,
     TYPES,
     updateModule,
@@ -58,6 +61,7 @@ import { KlighdMouseTool } from './klighd-mouse-tool'
 import { KlighdSvgExporter } from './klighd-svg-exporter'
 import { KielerLayoutConfigurator, KlighdHiddenModelViewer, MicroLayoutCalculator } from './layout-config'
 import { KlighdModelViewer } from './model-viewer'
+import { NewCenterCommand, NewFitToScreenCommand, NewSetViewportCommand } from './new-viewport-command'
 import { ResetPreferencesAction, SetPreferencesAction } from './options/actions'
 import { optionsModule } from './options/options-module'
 import { PreferencesRegistry } from './preferences-registry'
@@ -123,6 +127,9 @@ const kGraphDiagramModule = new ContainerModule(
         })
         rebind(MouseTool).to(KlighdMouseTool)
         bind(KlighdMouseTool).toSelf().inSingletonScope()
+        rebind(SetViewportCommand).to(NewSetViewportCommand)
+        rebind(CenterCommand).to(NewCenterCommand)
+        rebind(FitToScreenCommand).to(NewFitToScreenCommand)
         bind(TYPES.MouseListener).to(KlighdHoverMouseListener)
         bind(TYPES.IPopupModelProvider).to(PopupModelProvider)
         rebind<HoverState>(TYPES.HoverState).toDynamicValue(() => ({

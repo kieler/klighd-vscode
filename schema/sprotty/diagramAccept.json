@@ -16,7 +16,8 @@
             "properties": {
                 "clientId": {
                     "type": "string",
-                    "enum": ["sprotty"]
+                    "enum": ["sprotty"],
+                    "default": "sprotty"
                 },
                 "action": {
                     "$ref": "actions/action.json"
