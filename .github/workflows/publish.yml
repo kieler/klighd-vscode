@@ -6,13 +6,13 @@ name: publish
 on:
     release:
         types: [published]
-permissions:
-    id-token: write
-    contents: read
 jobs:
     distribute:
         name: "Distribute VSCode extension"
         runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
 
         steps:
             - uses: actions/checkout@v6
@@ -39,9 +39,9 @@ jobs:
     release-assets:
         name: "Add assets to release"
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
 
-        # Github has no official action for this. Uses: https://github.com/JasonEtco/upload-to-release
-        # Uploads each CLI asset separately to create more targeted download options
         steps:
             - uses: actions/checkout@v6
             - uses: actions/setup-node@v6
@@ -50,30 +50,12 @@ jobs:
             - run: yarn
             - run: yarn package
 
-            - name: Upload VSIX
-              uses: JasonEtco/upload-to-release@master
+            - name: Upload release assets
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  args: ./applications/klighd-vscode/klighd-vscode.vsix application/octet-stream
-
-            - name: Upload CLI Linux
-              uses: JasonEtco/upload-to-release@master
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  args: ./applications/klighd-cli/bin/klighd-linux application/octet-stream
-
-            - name: Upload CLI MacOS
-              uses: JasonEtco/upload-to-release@master
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  args: ./applications/klighd-cli/bin/klighd-macos application/octet-stream
-
-            - name: Upload CLI Windows
-              uses: JasonEtco/upload-to-release@master
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              with:
-                  args: ./applications/klighd-cli/bin/klighd-win.exe application/octet-stream
+              run: |
+                  gh release upload ${{ github.event.release.tag_name }} \
+                    ./applications/klighd-vscode/klighd-vscode.vsix \
+                    ./applications/klighd-cli/bin/klighd-linux \
+                    ./applications/klighd-cli/bin/klighd-macos \
+                    ./applications/klighd-cli/bin/klighd-win.exe
