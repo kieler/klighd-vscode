@@ -58,4 +58,5 @@ jobs:
                     ./applications/klighd-vscode/klighd-vscode.vsix \
                     ./applications/klighd-cli/bin/klighd-linux \
                     ./applications/klighd-cli/bin/klighd-macos \
-                    ./applications/klighd-cli/bin/klighd-win.exe
+                    ./applications/klighd-cli/bin/klighd-win.exe \
+                    --clobber
