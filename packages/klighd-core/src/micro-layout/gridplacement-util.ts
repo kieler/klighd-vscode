@@ -9,7 +9,7 @@ export function estimateGridSize(container: KContainerRendering, parentBounds: B
     // TODO: Comment this method
     console.warn('METHOD IS BEING USED: ' + 'estimateGridSize')
 
-    let numColumns = (container.childPlacement as KGridPlacement).numColumns
+    let { numColumns } = container.childPlacement as KGridPlacement
     const childRenderings = container.children
 
     let numRows
@@ -21,8 +21,8 @@ export function estimateGridSize(container: KContainerRendering, parentBounds: B
         numRows = childRenderings.length
     } else numRows = (childRenderings.length + numColumns - 1) / numColumns
 
-    let minColumnWidths = new Array<number>(numColumns)
-    let minRowHeights = new Array<number>(numRows)
+    const minColumnWidths = new Array<number>(numColumns)
+    const minRowHeights = new Array<number>(numRows)
 
     let childAreaRowId = -1
     let childAreaColId = -1
@@ -33,7 +33,7 @@ export function estimateGridSize(container: KContainerRendering, parentBounds: B
         const row = k / numColumns
         const col = k - row * numColumns
 
-        let path: KRendering[] = []
+        const path: KRendering[] = []
         if (findChildArea(currentChild, path)) {
             childAreaColId = col
             childAreaRowId = row
@@ -86,10 +86,10 @@ export function estimateGridSize(container: KContainerRendering, parentBounds: B
     // TODO: Restore deliver here.
     // container.deliver(deliver)
 
-    let childBounds = { x: 0, y: 0, width: 0, height: 0 }
+    const childBounds = { x: 0, y: 0, width: 0, height: 0 }
 
-    for (let width of minColumnWidths) childBounds.width += width
-    for (let height of minRowHeights) childBounds.height += height
+    for (const width of minColumnWidths) childBounds.width += width
+    for (const height of minRowHeights) childBounds.height += height
 
     // TODO: May break here, depends on what we know at this point.
     if (container.childPlacement) {
@@ -130,7 +130,7 @@ export function evaluateGridPlacement(
     // TODO: Comment this method
     console.warn('METHOD IS BEING USED: ' + 'evaluateGridPlacement')
     if (parentBounds === Bounds.EMPTY && children) return new Array<Bounds>(children.length).fill(Bounds.EMPTY)
-    //const placer =
+    // const placer =
     return null
 }
 

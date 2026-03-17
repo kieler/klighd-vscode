@@ -62,7 +62,6 @@ import {
     SKLabel,
     SKNode,
     VerticalAlignment,
-    isRenderingLibrary,
 } from './skgraph-models'
 import { hasAction } from './skgraph-utils'
 import {

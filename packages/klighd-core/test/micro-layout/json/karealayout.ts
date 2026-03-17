@@ -1,4 +1,4 @@
-export const karealayout_pre = {
+export const karealayoutPre = {
     properties: {},
     revision: 1,
     type: 'graph',
@@ -144,7 +144,7 @@ export const karealayout_pre = {
     ],
 }
 
-export const karealayout_post = {
+export const karealayoutPost = {
     properties: {},
     revision: 2,
     type: 'graph',
@@ -200,7 +200,7 @@ export const karealayout_post = {
                     properties: {
                         'org.eclipse.elk.nodeSize.minimum': {
                             x: 428.0,
-                            y: 16.880386352539062,
+                            y: 16.880386,
                         },
                         'org.eclipse.elk.layered.crossingMinimization.positionId': -1,
                         'org.eclipse.elk.padding': {
@@ -221,7 +221,7 @@ export const karealayout_post = {
                     selected: false,
                     hoverFeedback: false,
                     position: { x: 0.0, y: 80.0 },
-                    size: { width: 428.0, height: 16.880386352539062 },
+                    size: { width: 428.0, height: 16.880386 },
                     type: 'node',
                     id: '$root$$N0',
                     children: [],

@@ -17,24 +17,24 @@
 
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
+import { Bounds } from 'sprotty-protocol'
 import { KRectangle, KText } from '../../src/skgraph-models'
 import { estimateSize } from '../../src/micro-layout/placement-util'
-import { Bounds } from 'sprotty-protocol'
 
-import { karealayout_pre } from './json/karealayout'
+import { karealayoutPre } from './json/karealayout'
 import { KNode } from '../../../klighd-interactive/src/constraint-classes'
 
-const root = karealayout_pre.children[0] as unknown as KNode
+const root = karealayoutPre.children[0] as unknown as KNode
 const ktext = root.children[0] as unknown as KText
 const knode = root.children[1] as unknown as KNode
-const rendering_1 = knode.data[0] as unknown as KRectangle
-const rendering_11 = rendering_1.children[0] as unknown as KRectangle
-const rendering_12 = rendering_1.children[1] as unknown as KRectangle
+const rendering1 = knode.data[0] as unknown as KRectangle
+const rendering11 = rendering1.children[0] as unknown as KRectangle
+const rendering12 = rendering1.children[1] as unknown as KRectangle
 
 describe('Micro Layout - Pointplaced & Areaplaced Children', () => {
     const RESULT1 = { width: 30, height: 40, x: 0, y: 0 }
-    it('Evaluates estimated bounds of `rendering_1`', () => {
-        let estimatedBounds = estimateSize(rendering_1, root.size as Bounds)
+    it('Evaluates estimated bounds of `rendering1`', () => {
+        const estimatedBounds = estimateSize(rendering1, root.size as Bounds)
         expect(estimatedBounds.width, 'should match with server-calculated estimation bounds width').to.equal(
             RESULT1.width
         )
