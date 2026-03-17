@@ -49,7 +49,7 @@
 }
 
 .search-input::placeholder {
-    color: var(--kdc-color-input-placeholderForeground)
+    color: var(--kdc-color-input-placeholderForeground);
 }
 
 .search-input:focus {
@@ -123,7 +123,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%; 
+    max-width: 100%;
 }
 
 .search-result-item:hover {

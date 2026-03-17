@@ -49,7 +49,14 @@ import {
     viewportModule,
     ViewRegistry,
 } from 'sprotty'
-import { ElkFactory, ElkLayoutEngine, elkLayoutModule, IElementFilter, ILayoutConfigurator, ILayoutPostprocessor, ILayoutPreprocessor } from 'sprotty-elk'
+import {
+    ElkFactory,
+    elkLayoutModule,
+    IElementFilter,
+    ILayoutConfigurator,
+    ILayoutPostprocessor,
+    ILayoutPreprocessor,
+} from 'sprotty-elk'
 import actionModule from './actions/actions-module'
 // import bookmarkModule from './bookmarks/bookmark-module';
 import { DISymbol } from './di.symbols'

@@ -143,7 +143,7 @@ export interface KRendering extends KGraphData, KStyleHolder {
     placementData?: KPlacementData
 
     // TODO: Either implement this or find some way to find the parent Rendering by using the SKGraph.
-    //parent?: KRendering
+    // parent?: KRendering
 }
 
 /**
@@ -331,13 +331,13 @@ export interface KPointPlacementData extends KPlacementData {
 }
 
 export interface KDecoratorPlacementData extends KPlacementData {
-    absolute: number,
-    relative: number,
-    xOffset: number,
-    yOffset: number,
-    width: number,
-    height: number,
-    rotateWithLine: boolean,
+    absolute: number
+    relative: number
+    xOffset: number
+    yOffset: number
+    width: number
+    height: number
+    rotateWithLine: boolean
 }
 
 /**

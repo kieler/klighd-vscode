@@ -205,9 +205,6 @@ function estimateTextSize(kText: KText, text: string): Bounds {
     return { x: 0, y: 0, width: (text.length / 4) * 25, height: 20 }
 
     // TODO: persist CALCULATED_TEXT_BOUNDS, CALCULATED_TEXT_LINE_WIDTHS, CALCULATED_TEXT_LINE_HEIGHTS in properties
-
-    // FIXME: dummy data
-    //return { x: 0, y: 0, width: 40, height: 20 }
 }
 
 /**
@@ -235,7 +232,7 @@ function estimateImageSize(image: KImage, givenBounds: Bounds): Bounds {
     console.warn('METHOD IS BEING USED: ' + 'estimateImageSize')
 
     // Make a writable copy
-    let imageSize = { x: givenBounds.x, y: givenBounds.y, width: givenBounds.width, height: givenBounds.height }
+    const imageSize = { x: givenBounds.x, y: givenBounds.y, width: givenBounds.width, height: givenBounds.height }
     let cs = image.clipShape
 
     if (!cs) return imageSize
@@ -712,6 +709,8 @@ function getVerticalSizeFromPointPlacementData(ppd: KPointPlacementData, minHeig
             // in case one might argue the same way, but there's still the relative part
             // so I think potentially shrinking the width is not reasonable; thus:
             else calculatedHeight = minHeight + 2 * ppd.verticalMargin
+            break
+        default:
             break
     }
 
