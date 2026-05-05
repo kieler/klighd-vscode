@@ -25,6 +25,9 @@ import { VNode } from 'snabbdom'
 import { AbstractUIExtension, html, IActionDispatcher, Patcher, PatcherProvider, TYPES } from 'sprotty'
 import { RetrieveTagsAction, ShowSearchBarAction, ToggleSearchBarAction } from './searchbar-actions'
 import { SearchBarPanel } from './searchbar-panel'
+import { SetRenderOptionAction } from '../options/actions'
+import { RenderOptionsRegistry, SearchBarVisibleOption } from '../options/render-options-registry'
+import { DISymbol } from '../di.symbols'
 
 /**
  * A search bar extension that lets you search for text in a diagram.
@@ -41,6 +44,8 @@ export class SearchBar extends AbstractUIExtension {
 
     @inject(TYPES.IActionDispatcher) private actionDispatcher: IActionDispatcher
 
+    @inject(DISymbol.RenderOptionsRegistry) private renderOptionsRegistry: RenderOptionsRegistry
+
     @inject(SearchBarPanel) private panel: SearchBarPanel
 
     @postConstruct()
@@ -52,6 +57,8 @@ export class SearchBar extends AbstractUIExtension {
         this.panel.setVisibilityChangeCallback(() => {
             this.update()
         })
+        this.renderOptionsRegistry.onChange(() => this.syncVisibilityWithRenderOption())
+        this.syncVisibilityWithRenderOption(false)
 
         setTimeout(() => {
             this.actionDispatcher.dispatch(ShowSearchBarAction.create())
@@ -99,10 +106,28 @@ export class SearchBar extends AbstractUIExtension {
         window.addEventListener('keydown', (event) => {
             if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f') {
                 event.preventDefault()
-                this.panel.changeVisibility(true)
-                this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, 'show'))
-                this.actionDispatcher.dispatch(RetrieveTagsAction.create())
+                if (this.panel.isVisible) {
+                    this.panel.focus()
+                    return
+                }
+
+                this.actionDispatcher.dispatch(SetRenderOptionAction.create(SearchBarVisibleOption.ID, true))
             }
         })
+    }
+
+    private syncVisibilityWithRenderOption(focusSearch: boolean = true): void {
+        const newState = this.renderOptionsRegistry.getValueOrDefault(SearchBarVisibleOption)
+        if (this.panel.isVisible === newState) return
+
+        if (newState) {
+            this.actionDispatcher.dispatch(ShowSearchBarAction.create())
+        }
+
+        this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, newState ? 'show' : 'hide', focusSearch))
+
+        if (newState) {
+            this.actionDispatcher.dispatch(RetrieveTagsAction.create())
+        }
     }
 }

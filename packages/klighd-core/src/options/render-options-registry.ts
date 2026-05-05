@@ -47,6 +47,29 @@ export class PinSidebarOption implements RenderOption {
 }
 
 /**
+ * Whether the search bar is visible or not.
+ */
+export class SearchBarVisibleOption implements RenderOption {
+    static readonly ID: string = 'search-bar-visible'
+
+    static readonly NAME: string = 'Search Bar Visible'
+
+    static readonly DEFAULT: boolean = false
+
+    readonly id: string = SearchBarVisibleOption.ID
+
+    readonly name: string = SearchBarVisibleOption.NAME
+
+    readonly type: TransformationOptionType = TransformationOptionType.CHECK
+
+    readonly initialValue: boolean = SearchBarVisibleOption.DEFAULT
+
+    currentValue = SearchBarVisibleOption.DEFAULT
+
+    debug = true
+}
+
+/**
  * Resize the diagram to fit the viewport if it is redrawn after a model update
  * or a viewport resize.
  * This has to have the same id as the corresponding FitToScreenAction.
@@ -539,6 +562,7 @@ export class RenderOptionsRegistry extends Registry {
         this.register(DebugOptions)
         this.register(ResizeToFit)
         this.register(PinSidebarOption)
+        this.register(SearchBarVisibleOption)
 
         this.register(AnimateGoToBookmark)
 
