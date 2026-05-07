@@ -25,12 +25,15 @@ import {
     SimplifySmallText,
     TextSimplificationThreshold,
     TitleScalingFactor,
+    UseDefaultTitleRendering,
     UseSmartZoom,
 } from './options/render-options-registry'
 import { SKGraphModelRenderer } from './skgraph-model-renderer'
 import {
     Arc,
     HorizontalAlignment,
+    isContainerRendering,
+    isKText,
     KArc,
     KChildArea,
     KContainerRendering,
@@ -1306,7 +1309,57 @@ export function getRendering(
         return undefined
     }
 
+    // look for a title rendering; if none exists, label the first (dfs) rendering as the title rendering.
+    const useSmartZoom =
+        context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.targetKind !== 'hidden'
+    const useDefaultTitleRendering = context.renderOptionsRegistry.getValueOrDefault(UseDefaultTitleRendering)
+    // only call this on the root rendering of KNodes
+    if (useSmartZoom && useDefaultTitleRendering && parent instanceof SKNode && parent.data.includes(kRendering)) {
+        establishTitleRendering(kRendering)
+    }
+
     return renderKRendering(kRendering, parent, propagatedStyles, context, childOfNodeTitle)
+}
+
+export function establishTitleRendering(rendering: KRendering): KRendering | undefined {
+    let titleRendering = dfs(rendering, isNodeTitle)
+    if (titleRendering !== undefined) {
+        return titleRendering
+    }
+    titleRendering = dfs(rendering, isKText)
+    if (titleRendering !== undefined) {
+        titleRendering.properties['klighd.isNodeTitle'] = true
+    }
+
+    return undefined
+}
+
+/**
+ * Checks if the given rendering has the `klighd.isNodeTitle` set to `true` in its properties.
+ */
+export function isNodeTitle(rendering: KRendering): boolean {
+    return rendering.properties['klighd.isNodeTitle'] === true
+}
+
+/**
+ * Returns the first rendering that matches the `condition` via depth first search.
+ * @param rendering The rendering to search in. The condition will also be checked on this rendering itself.
+ * @param condition The condition to check
+ * @returns The first matching element, or `undefined` if none exist.
+ */
+export function dfs(rendering: KRendering, condition: (r: KRendering) => boolean): KRendering | undefined {
+    if (condition(rendering)) {
+        return rendering
+    }
+    if (isContainerRendering(rendering)) {
+        for (const childRendering of rendering.children) {
+            const childResult = dfs(childRendering, condition)
+            if (childResult !== undefined) {
+                return childResult
+            }
+        }
+    }
+    return undefined
 }
 
 /**
@@ -1414,8 +1467,14 @@ export function renderKRendering(
             const originalX = renderingOffsets.x
             const originalY = renderingOffsets.y
 
-            const maxScaleX = parentBounds.width / originalWidth
-            const maxScaleY = parentBounds.height / originalHeight
+            let maxScaleX = parentBounds.width / originalWidth
+            let maxScaleY = parentBounds.height / originalHeight
+            // If scaling up is not really worthwile, don't bother to scale at all.
+            if (maxScaleX < 1.2 || maxScaleY < 1.2) {
+                maxScaleX = 1
+                maxScaleY = 1
+            }
+
             // Don't let scalingfactor get too big.
             let scalingFactor = Math.min(maxScaleX, maxScaleY, maxScale)
             // Make sure we never scale down.
@@ -1482,7 +1541,7 @@ export function renderKRendering(
                 useSmartZoom &&
                 (kRendering.properties['klighd.isNodeTitle'] as boolean) &&
                 ((parent instanceof SKNode && isFullDetail(parent, context) && !isProxy) || scaleProxy) &&
-                ((maxScale > 1 && !isProxy) || scaleProxy) &&
+                ((scalingFactor > 1 && !isProxy) || scaleProxy) &&
                 // Don't draw if the rendering is an empty KText
                 (kRendering.type !== K_TEXT || (kRendering as KText).text !== '')
             ) {
