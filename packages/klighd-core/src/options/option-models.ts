@@ -39,7 +39,7 @@ export interface RenderOption extends Option {
 }
 
 /** Type for available quick actions. */
-export type PossibleQuickAction = 'center' | 'fit' | 'layout' | 'refresh' | 'export' | 'create-bookmark' | 'pin-sidebar'
+export type PossibleQuickAction = 'center' | 'fit' | 'layout' | 'refresh' | 'export' | 'pin-sidebar'
 
 export interface QuickActionOption {
     key: PossibleQuickAction
