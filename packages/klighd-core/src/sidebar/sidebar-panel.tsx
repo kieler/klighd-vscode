@@ -123,8 +123,8 @@ export abstract class SidebarPanel implements ISidebarPanel {
             {
                 key: 'search',
                 title: this.renderOptionsRegistry.getValueOrDefault(SearchBarVisibleOption)
-                    ? 'Hide search'
-                    : 'Search diagram',
+                    ? 'Hide search (Ctrl+F)'
+                    : 'Search diagram (Ctrl+F)',
                 iconId: 'search',
                 action: SetRenderOptionAction.create(
                     SearchBarVisibleOption.ID,
