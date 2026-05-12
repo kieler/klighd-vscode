@@ -124,7 +124,9 @@ export class SearchBar extends AbstractUIExtension {
             this.actionDispatcher.dispatch(ShowSearchBarAction.create())
         }
 
-        this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this.panel, newState ? 'show' : 'hide', focusSearch))
+        this.actionDispatcher.dispatch(
+            ToggleSearchBarAction.create(this.panel, newState ? 'show' : 'hide', focusSearch)
+        )
 
         if (newState) {
             this.actionDispatcher.dispatch(RetrieveTagsAction.create())
