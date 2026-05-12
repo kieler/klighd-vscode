@@ -65,17 +65,23 @@ export interface ToggleSearchBarAction extends Action {
     kind: typeof ToggleSearchBarAction.KIND
     state?: 'show' | 'hide'
     panel: SearchBarPanel
+    focusSearch: boolean
 }
 
 // eslint-disable-next-line no-redeclare
 export namespace ToggleSearchBarAction {
     export const KIND = 'toggleSearchBar'
 
-    export function create(panel: SearchBarPanel, state?: 'show' | 'hide'): ToggleSearchBarAction {
+    export function create(
+        panel: SearchBarPanel,
+        state?: 'show' | 'hide',
+        focusSearch: boolean = true
+    ): ToggleSearchBarAction {
         return {
             kind: KIND,
             state,
             panel,
+            focusSearch,
         }
     }
 
@@ -202,7 +208,7 @@ export class SearchBarActionHandler implements IActionHandler {
 
     private HIGHLIGHT_MAIN_MATCH: number = 1
 
-    private panel: SearchBarPanel
+    @inject(SearchBarPanel) private panel: SearchBarPanel
 
     private modelChanged: boolean = false
 
@@ -245,22 +251,24 @@ export class SearchBarActionHandler implements IActionHandler {
             return
         }
 
-        if (!SearchBarActionHandler.currentModel) return
-
-        const modelId = SearchBarActionHandler.currentModel?.id
-
         if (ToggleSearchBarAction.isThisAction(action)) {
-            if (!this.panel) {
-                this.panel = action.panel
-            }
-
             const newVisible = action.state === 'show'
 
             if (this.panel.isVisible !== newVisible) {
                 this.panel.changeVisibility(newVisible)
                 this.panel.update()
             }
-        } else if (ClearHighlightsAction.isThisAction(action)) {
+            if (newVisible && action.focusSearch) {
+                this.panel.focus()
+            }
+            return
+        }
+
+        if (!SearchBarActionHandler.currentModel) return
+
+        const modelId = SearchBarActionHandler.currentModel?.id
+
+        if (ClearHighlightsAction.isThisAction(action)) {
             /* Handle ClearHighlightsActions */
             this.removeHighlights(action.results)
             // make changes visible
