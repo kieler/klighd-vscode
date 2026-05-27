@@ -22,10 +22,6 @@
     "activationEvents": [
         "onCommand:klighd-vscode.setLanguageClient"
     ],
-    "files": [
-        "README.md",
-        "dist"
-    ],
     "main": "./dist/extension.js",
     "contributes": {
         "commands": [
