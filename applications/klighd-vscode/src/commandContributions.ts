@@ -164,8 +164,9 @@ export function registerTextEditorSync(manager: KLighDWebviewPanelManager, conte
             const activeWebview = manager.findActiveWebview()
             let targetUri = editor.document.uri
             if (manager.getShowMainDiagram()) {
-                targetUri = manager.getMainDiagramUri() ?? editor.document.uri
-                if (!manager.getMainDiagramUri()) {
+                const mainDiagramUri = manager.getMainDiagramUri()
+                targetUri = mainDiagramUri ?? editor.document.uri
+                if (!mainDiagramUri) {
                     manager.setMainDiagramUri(targetUri)
                 }
             }
