@@ -75,7 +75,7 @@ export class KLighDWebviewPanelManager extends LspWebviewPanelManager {
         vscode.commands.executeCommand('setContext', contextKeys.syncWithEditor, sync)
     }
 
-    getSyncWithEdior(): boolean {
+    getSyncWithEditor(): boolean {
         return this.syncWithEditor
     }
 

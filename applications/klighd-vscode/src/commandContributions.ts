@@ -156,7 +156,7 @@ export function registerTextEditorSync(manager: KLighDWebviewPanelManager, conte
         vscode.window.onDidChangeActiveTextEditor(async (editor) => {
             if (!editor) return
 
-            if (!manager.getSyncWithEdior()) return
+            if (!manager.getSyncWithEditor()) return
 
             const shouldOpen = manager.storageService.getItem('diagramOpen')
             if (!shouldOpen) return
