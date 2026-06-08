@@ -31,6 +31,12 @@ export class KlighdWebviewReopener {
     reopenDiagram(): void {
         const diagramWasOpen = this.storage.getItem('diagramOpen')
         if (diagramWasOpen === undefined || diagramWasOpen) {
+            const showMainDiagram = !!this.storage.getItem('showMainDiagram')
+            const mainDiagramUri = this.storage.getItem('mainDiagramUri')
+            if (showMainDiagram && typeof mainDiagramUri === 'string') {
+                commands.executeCommand(command.diagramOpen, Uri.parse(mainDiagramUri))
+                return
+            }
             const { activeTextEditor } = window
             if (activeTextEditor) {
                 const uri = activeTextEditor.document.fileName

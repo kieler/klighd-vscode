@@ -54,8 +54,11 @@ export const command = {
     diagramRefresh: withPrefix('diagram.refresh'),
     diagramSync: withPrefix('diagram.sync'),
     diagramNoSync: withPrefix('diagram.noSync'),
+    diagramShowMain: withPrefix('diagram.showMain'),
+    diagramShowActive: withPrefix('diagram.showActive'),
 }
 
 export const contextKeys = {
     syncWithEditor: withPrefix('syncWithEditor'),
+    showMainDiagram: withPrefix('showMainDiagram'),
 }

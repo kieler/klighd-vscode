@@ -22,6 +22,7 @@ import {
 } from '@kieler/klighd-core'
 import 'reflect-metadata'
 import { CenterAction, FitToScreenAction } from 'sprotty-protocol'
+import { serializeUri } from 'sprotty-vscode'
 import * as vscode from 'vscode'
 import { command } from './constants'
 import { KLighDWebviewPanelManager } from './webview-panel-manager'
@@ -48,6 +49,9 @@ export function registerCommands(manager: KLighDWebviewPanelManager, context: vs
             const uri = getURI(commandArgs)
             if (uri) {
                 manager.storageService.setItem('diagramOpen', true)
+                if (manager.getShowMainDiagram()) {
+                    manager.setMainDiagramUri(uri)
+                }
                 manager.openDiagram(uri, { reveal: true })
             }
         })
@@ -101,6 +105,7 @@ export function registerCommands(manager: KLighDWebviewPanelManager, context: vs
     context.subscriptions.push(
         vscode.commands.registerCommand(command.diagramSync, () => {
             manager.setSyncWithEditor(true)
+            manager.setShowMainDiagram(false)
             const { activeTextEditor } = vscode.window
             if (activeTextEditor) {
                 const uri = activeTextEditor.document.fileName
@@ -113,6 +118,32 @@ export function registerCommands(manager: KLighDWebviewPanelManager, context: vs
             manager.setSyncWithEditor(false)
         })
     )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(command.diagramShowMain, () => {
+            manager.setSyncWithEditor(true)
+            manager.setShowMainDiagram(true)
+
+            const activeDiagramUri = manager.findActiveWebview()?.diagramIdentifier?.uri
+            const mainDiagramUri = activeDiagramUri
+                ? vscode.Uri.parse(activeDiagramUri)
+                : vscode.window.activeTextEditor?.document.uri
+            if (mainDiagramUri) {
+                manager.setMainDiagramUri(mainDiagramUri)
+                manager.openDiagram(mainDiagramUri, { reveal: true })
+            }
+        })
+    )
+    context.subscriptions.push(
+        vscode.commands.registerCommand(command.diagramShowActive, () => {
+            manager.setSyncWithEditor(true)
+            manager.setShowMainDiagram(false)
+
+            const { activeTextEditor } = vscode.window
+            if (activeTextEditor) {
+                manager.openDiagram(activeTextEditor.document.uri, { reveal: true })
+            }
+        })
+    )
 }
 
 /**
@@ -123,13 +154,25 @@ export function registerCommands(manager: KLighDWebviewPanelManager, context: vs
 export function registerTextEditorSync(manager: KLighDWebviewPanelManager, context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTextEditor(async (editor) => {
-            const activeWebview = manager.findActiveWebview()
-            const alreadyOpen =
-                `${editor?.document.uri.scheme}://${editor?.document.uri.path}` ===
-                activeWebview?.diagramIdentifier?.uri
+            if (!editor) return
+
+            if (!manager.getSyncWithEdior()) return
+
             const shouldOpen = manager.storageService.getItem('diagramOpen')
-            if (editor && manager.getSyncWithEdior() && !alreadyOpen && shouldOpen) {
-                manager.openDiagram(editor.document.uri)
+            if (!shouldOpen) return
+
+            const activeWebview = manager.findActiveWebview()
+            let targetUri = editor.document.uri
+            if (manager.getShowMainDiagram()) {
+                targetUri = manager.getMainDiagramUri() ?? editor.document.uri
+                if (!manager.getMainDiagramUri()) {
+                    manager.setMainDiagramUri(targetUri)
+                }
+            }
+
+            const alreadyOpen = serializeUri(targetUri) === activeWebview?.diagramIdentifier?.uri
+            if (!alreadyOpen) {
+                manager.openDiagram(targetUri)
             }
         })
     )

@@ -41,6 +41,10 @@ export class KLighDWebviewPanelManager extends LspWebviewPanelManager {
 
     private syncWithEditor: boolean
 
+    private showMainDiagram: boolean
+
+    private mainDiagramUri: vscode.Uri | undefined
+
     private actionHandlers: { kind: string; actionHandler: ActionHandlerCallback }[]
 
     constructor(
@@ -52,17 +56,50 @@ export class KLighDWebviewPanelManager extends LspWebviewPanelManager {
         this.storageService = storageService
         this.actionHandlers = actionHandlers
         this.syncWithEditor = true
-        this.setSyncWithEditor(true)
+        this.showMainDiagram = false
+        const persistedMainDiagramUri = this.storageService.getItem('mainDiagramUri')
+        this.mainDiagramUri =
+            typeof persistedMainDiagramUri === 'string' ? vscode.Uri.parse(persistedMainDiagramUri) : undefined
+
+        const persistedSyncWithEditor = this.storageService.getItem('syncWithEditor')
+        this.setSyncWithEditor(persistedSyncWithEditor === undefined ? true : !!persistedSyncWithEditor)
+
+        const persistedShowMainDiagram = this.storageService.getItem('showMainDiagram')
+        this.setShowMainDiagram(persistedShowMainDiagram === undefined ? false : !!persistedShowMainDiagram)
     }
 
     /** Changes the behavior of "sync with editor". If disabled, the diagram view will not update when the active editor changes. */
     setSyncWithEditor(sync: boolean): void {
         this.syncWithEditor = sync
+        this.storageService.setItem('syncWithEditor', sync)
         vscode.commands.executeCommand('setContext', contextKeys.syncWithEditor, sync)
     }
 
     getSyncWithEdior(): boolean {
         return this.syncWithEditor
+    }
+
+    setShowMainDiagram(showMainDiagram: boolean): void {
+        this.showMainDiagram = showMainDiagram
+        this.storageService.setItem('showMainDiagram', showMainDiagram)
+        vscode.commands.executeCommand('setContext', contextKeys.showMainDiagram, showMainDiagram)
+    }
+
+    getShowMainDiagram(): boolean {
+        return this.showMainDiagram
+    }
+
+    setMainDiagramUri(uri: vscode.Uri | undefined): void {
+        this.mainDiagramUri = uri
+        if (uri) {
+            this.storageService.setItem('mainDiagramUri', uri.toString())
+        } else {
+            this.storageService.setItem('mainDiagramUri', undefined)
+        }
+    }
+
+    getMainDiagramUri(): vscode.Uri | undefined {
+        return this.mainDiagramUri
     }
 
     protected override async createDiagramIdentifier(

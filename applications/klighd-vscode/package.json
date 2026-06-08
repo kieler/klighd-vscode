@@ -83,6 +83,18 @@
                 "title": "Disable Sync With Editor",
                 "enablement": "klighd-vscode.syncWithEditor",
                 "category": "KLighD Diagram"
+            },
+            {
+                "command": "klighd-vscode.diagram.showMain",
+                "title": "Show Main Diagram",
+                "enablement": "!klighd-vscode.showMainDiagram",
+                "category": "KLighD Diagram"
+            },
+            {
+                "command": "klighd-vscode.diagram.showActive",
+                "title": "Show Active File Diagram",
+                "enablement": "klighd-vscode.showMainDiagram",
+                "category": "KLighD Diagram"
             }
         ],
         "menus": {
@@ -124,6 +136,14 @@
                 {
                     "when": "keith-diagram-focused",
                     "command": "klighd-vscode.diagram.noSync"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-vscode.diagram.showMain"
+                },
+                {
+                    "when": "keith-diagram-focused",
+                    "command": "klighd-vscode.diagram.showActive"
                 }
             ],
             "editor/title": [
@@ -136,6 +156,16 @@
                     "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
                     "command": "klighd-vscode.diagram.noSync",
                     "group": "2_diagram-controls@1"
+                },
+                {
+                    "when": "keith-diagram-focused && !klighd-vscode.showMainDiagram",
+                    "command": "klighd-vscode.diagram.showMain",
+                    "group": "2_diagram-controls@2"
+                },
+                {
+                    "when": "keith-diagram-focused && klighd-vscode.showMainDiagram",
+                    "command": "klighd-vscode.diagram.showActive",
+                    "group": "2_diagram-controls@2"
                 },
                 {
                     "when": "keith-diagram-focused && klighd-vscode.syncWithEditor",
