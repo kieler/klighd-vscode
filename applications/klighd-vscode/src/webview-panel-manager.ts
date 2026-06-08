@@ -41,7 +41,7 @@ export class KLighDWebviewPanelManager extends LspWebviewPanelManager {
 
     private syncWithEditor: boolean
 
-    private showMainDiagram: boolean
+    private showMainDiagram = false
 
     private mainDiagramUri: vscode.Uri | undefined
 
@@ -56,7 +56,6 @@ export class KLighDWebviewPanelManager extends LspWebviewPanelManager {
         this.storageService = storageService
         this.actionHandlers = actionHandlers
         this.syncWithEditor = true
-        this.showMainDiagram = false
         const persistedMainDiagramUri = this.storageService.getItem('mainDiagramUri')
         this.mainDiagramUri =
             typeof persistedMainDiagramUri === 'string' ? vscode.Uri.parse(persistedMainDiagramUri) : undefined
