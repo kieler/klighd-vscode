@@ -124,12 +124,12 @@ export function registerCommands(manager: KLighDWebviewPanelManager, context: vs
             manager.setShowMainDiagram(true)
 
             const activeDiagramUri = manager.findActiveWebview()?.diagramIdentifier?.uri
-            const mainDiagramUri = activeDiagramUri
+            const selectedMainDiagramUri = activeDiagramUri
                 ? vscode.Uri.parse(activeDiagramUri)
                 : vscode.window.activeTextEditor?.document.uri
-            if (mainDiagramUri) {
-                manager.setMainDiagramUri(mainDiagramUri)
-                manager.openDiagram(mainDiagramUri, { reveal: true })
+            if (selectedMainDiagramUri) {
+                manager.setMainDiagramUri(selectedMainDiagramUri)
+                manager.openDiagram(selectedMainDiagramUri, { reveal: true })
             }
         })
     )
@@ -165,8 +165,9 @@ export function registerTextEditorSync(manager: KLighDWebviewPanelManager, conte
             let targetUri = editor.document.uri
             if (manager.getShowMainDiagram()) {
                 const mainDiagramUri = manager.getMainDiagramUri()
-                targetUri = mainDiagramUri ?? editor.document.uri
-                if (!mainDiagramUri) {
+                if (mainDiagramUri) {
+                    targetUri = mainDiagramUri
+                } else {
                     manager.setMainDiagramUri(targetUri)
                 }
             }
