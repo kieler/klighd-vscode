@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2025 by
+ * Copyright 2025-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -99,7 +99,7 @@ class IdentityConnective implements UnaryConnective {
 
     name = IdentityConnective.NAME
 
-    operand: SemanticFilterRule
+    operand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -121,7 +121,7 @@ class NegationConnective implements UnaryConnective {
 
     name = NegationConnective.NAME
 
-    operand: SemanticFilterRule
+    operand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -143,9 +143,9 @@ class AndConnective implements BinaryConnective {
 
     name = AndConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -167,9 +167,9 @@ class OrConnective implements BinaryConnective {
 
     name = OrConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -192,9 +192,9 @@ class IfThenConnective implements BinaryConnective {
 
     name = IfThenConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -217,9 +217,9 @@ class LogicEqualConnective implements BinaryConnective {
 
     name = LogicEqualConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -242,11 +242,11 @@ class IfThenElseConnective implements TernaryConnective {
 
     name = IfThenElseConnective.NAME
 
-    firstOperand: SemanticFilterRule
+    firstOperand: SemanticFilterRule = {}
 
-    secondOperand: SemanticFilterRule
+    secondOperand: SemanticFilterRule = {}
 
-    thirdOperand: SemanticFilterRule
+    thirdOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -272,9 +272,9 @@ class LessThanConnective implements BinaryConnective {
 
     name = LessThanConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -295,9 +295,9 @@ class GreaterThanConnective implements BinaryConnective {
 
     name = GreaterThanConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -318,9 +318,9 @@ class NumericEqualConnective implements BinaryConnective {
 
     name = NumericEqualConnective.NAME
 
-    leftOperand: SemanticFilterTag
+    leftOperand: SemanticFilterTag = { tag: '', num: 0 }
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -340,9 +340,9 @@ class GreaterEqualsConnective implements BinaryConnective {
 
     name = GreaterEqualsConnective.NAME
 
-    leftOperand: SemanticFilterTag
+    leftOperand: SemanticFilterTag = { tag: '', num: 0 }
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -363,9 +363,9 @@ class LessEqualsConnective implements BinaryConnective {
 
     name = GreaterEqualsConnective.NAME
 
-    leftOperand: SemanticFilterTag
+    leftOperand: SemanticFilterTag = { tag: '', num: 0 }
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -386,9 +386,9 @@ class NumericNotEqualConnective implements BinaryConnective {
 
     name = GreaterEqualsConnective.NAME
 
-    leftOperand: SemanticFilterTag
+    leftOperand: SemanticFilterTag = { tag: '', num: 0 }
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -408,9 +408,9 @@ class NumericAdditionConnective implements BinaryConnective {
 
     name = NumericAdditionConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -430,9 +430,9 @@ class NumericSubtractionConnective implements BinaryConnective {
 
     name = NumericSubtractionConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -452,9 +452,9 @@ class NumericMultiplicationConnective implements BinaryConnective {
 
     name = NumericMultiplicationConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -474,9 +474,9 @@ class NumericDivisionConnective implements BinaryConnective {
 
     name = NumericDivisionConnective.NAME
 
-    leftOperand: SemanticFilterRule
+    leftOperand: SemanticFilterRule = {}
 
-    rightOperand: SemanticFilterRule
+    rightOperand: SemanticFilterRule = {}
 
     ruleName?: string
 }
@@ -495,7 +495,7 @@ class NumericConstantConnective implements Connective {
 
     name = NumericConstantConnective.NAME
 
-    num: number
+    num: number = 0
 
     ruleName?: string
 }

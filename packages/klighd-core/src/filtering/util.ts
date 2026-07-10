@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2025 by
+ * Copyright 2025-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -46,10 +46,10 @@ export interface SemanticFilterRule {
 export class SemanticFilterTag implements SemanticFilterRule, NumericResult {
     ruleName?: string
 
-    tag: string
+    tag: string = ''
 
     /** If num is not defined, the server will set the value 0 by default. */
-    num: number
+    num: number = 0
 }
 
 /** Extracts the semantic filter tags defined for an element. */

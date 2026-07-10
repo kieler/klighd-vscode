@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2025 by
+ * Copyright 2025-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -17,130 +17,105 @@
 
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
+
 import { convert } from '../../src/filtering/legacy/converter'
-import { SemanticFilterTag } from '../../src/filtering/util'
+
+import { binaryRule, constant, numericWrapper, tag, unaryRule } from './util/legacy-filter-fixtures'
+import { SemanticFilterRule } from '../../lib/filtering/util'
+
+function expectConversion(expression: unknown, expected: string, message?: string): void {
+    expect(convert(expression as SemanticFilterRule), message).to.equal(expected)
+}
 
 describe('converting legacy filter rule objects to text', () => {
-    it('atomic rules', () => {
-        const filter = new SemanticFilterTag()
-        filter.tag = 'someTag'
+    it('converts atomic rules', () => {
+        // Given
+        const someTag = tag('someTag')
 
-        expect(convert(filter), 'atomic tag rule').to.equal('#someTag')
+        const trueFilter = {
+            ruleName: 'boolean true',
+            name: 'TRUE',
+        }
 
-        const trueFilter = { ruleName: 'boolean true', name: 'TRUE' }
-        expect(convert(trueFilter), 'TRUE constant').to.equal('true')
+        const falseFilter = {
+            ruleName: 'boolean false',
+            name: 'FALSE',
+        }
 
-        const falseFilter = { ruleName: 'boolean false', name: 'FALSE' }
-        expect(convert(falseFilter), 'FALSE constant').to.equal('false')
+        // Then
+        expectConversion(someTag, '#someTag', 'atomic tag rule')
+        expectConversion(trueFilter, 'true', 'TRUE constant')
+        expectConversion(falseFilter, 'false', 'FALSE constant')
     })
 
-    it('logical connectives', () => {
-        const tag1 = new SemanticFilterTag()
-        tag1.tag = 'someTag'
+    it('converts logical connectives', () => {
+        // Given
+        const tag1 = tag('someTag')
+        const tag2 = tag('anotherTag')
 
-        const tag2 = new SemanticFilterTag()
-        tag2.tag = 'anotherTag'
+        // Then
+        expectConversion(binaryRule('AND', tag1, tag2), '(#someTag&&#anotherTag)', 'logical AND')
 
-        const logicalAnd = { ruleName: 'AND', name: 'AND', leftOperand: tag1, rightOperand: tag2 }
-        expect(convert(logicalAnd), 'logical AND').to.equal('(#someTag&&#anotherTag)')
+        expectConversion(binaryRule('OR', tag1, tag2), '(#someTag||#anotherTag)', 'logical OR')
 
-        const logicalOr = { ruleName: 'OR', name: 'OR', leftOperand: tag1, rightOperand: tag2 }
-        expect(convert(logicalOr), 'logical OR').to.equal('(#someTag||#anotherTag)')
+        expectConversion(unaryRule('NOT', tag1), '(!#someTag)', 'logical NOT')
 
-        const logicalNot = { ruleName: 'NOT', name: 'NOT', operand: tag1 }
-        expect(convert(logicalNot), 'logical OR').to.equal('(!#someTag)')
-
-        const logicalEquals = { ruleName: 'LOGICEQUAL', name: 'LOGICEQUAL', leftOperand: tag1, rightOperand: tag2 }
-        expect(convert(logicalEquals), 'logical equals').to.equal('(#someTag=#anotherTag)')
+        expectConversion(binaryRule('LOGICEQUAL', tag1, tag2), '(#someTag=#anotherTag)', 'logical equals')
     })
 
-    it('numeric to boolean connectives', () => {
-        const tag1 = new SemanticFilterTag()
-        tag1.tag = 'someTag'
-        tag1.num = 1
+    it('converts numeric-to-boolean connectives', () => {
+        // Given
+        const tag1 = tag('someTag', 1)
+        const tag2 = tag('anotherTag', 2)
 
-        const tag2 = new SemanticFilterTag()
-        tag2.tag = 'anotherTag'
-        tag2.num = 2
+        // Then
+        expectConversion(binaryRule('LESSTHAN', tag1, tag2), '($someTag<$anotherTag)')
 
-        const lessThan = { ruleName: 'LESSTHAN', name: 'LESSTHAN', leftOperand: tag1, rightOperand: tag2 }
-        expect(convert(lessThan), 'less than').to.equal('($someTag<$anotherTag)')
+        expectConversion(binaryRule('GREATERTHAN', tag1, tag2), '($someTag>$anotherTag)')
 
-        const greaterThan = { ruleName: 'GREATERTHAN', name: 'GREATERTHAN', leftOperand: tag1, rightOperand: tag2 }
-        expect(convert(greaterThan), 'greater than').to.equal('($someTag>$anotherTag)')
+        expectConversion(binaryRule('LESSEQUALS', tag1, tag2), '($someTag<=$anotherTag)')
 
-        const lessEquals = { ruleName: 'LESSEQUALS', name: 'LESSEQUALS', leftOperand: tag1, rightOperand: tag2 }
-        expect(convert(lessEquals), 'less equals').to.equal('($someTag<=$anotherTag)')
+        expectConversion(binaryRule('GREATEREQUALS', tag1, tag2), '($someTag>=$anotherTag)')
 
-        const greaterEquals = {
-            ruleName: 'GREATEREQUALS',
-            name: 'GREATEREQUALS',
-            leftOperand: tag1,
-            rightOperand: tag2,
-        }
-        expect(convert(greaterEquals), 'greater equals').to.equal('($someTag>=$anotherTag)')
-
-        const numericEquals = { ruleName: 'NUMERICEQUAL', name: 'NUMERICEQUAL', leftOperand: tag1, rightOperand: tag2 }
-        expect(convert(numericEquals), 'numeric equals').to.equal('($someTag=$anotherTag)')
+        expectConversion(binaryRule('NUMERICEQUAL', tag1, tag2), '($someTag=$anotherTag)')
     })
 
-    it('numeric constants', () => {
-        const tag1 = new SemanticFilterTag()
-        tag1.tag = 'someTag'
-        tag1.num = 1
+    it('converts numeric constants', () => {
+        // Given
+        const tag1 = tag('someTag', 1)
 
-        const numericConstant = { ruleName: 'numeric constant', name: 'CONST', num: 5 }
-        // the converter expects consts and numeric tags to be nested in numeric-to-boolean constructs
-        const containerExpression = {
-            ruleName: 'containerExpression',
-            name: 'LESSTHAN',
-            leftOperand: tag1,
-            rightOperand: numericConstant,
-        }
-        expect(convert(containerExpression), 'numeric constant and numeric tag').to.equal('($someTag<5)')
+        const expression = binaryRule('LESSTHAN', tag1, constant(5))
+
+        // Then
+        expectConversion(expression, '($someTag<5)', 'numeric constant and numeric tag')
     })
 
-    it('numeric connectives', () => {
-        const tag1 = new SemanticFilterTag()
-        tag1.tag = 'someTag'
-        tag1.num = 1
+    it('converts numeric connectives', () => {
+        // Given
+        const tag1 = tag('someTag', 1)
+        const tag2 = tag('anotherTag', 2)
 
-        const tag2 = new SemanticFilterTag()
-        tag2.tag = 'anotherTag'
-        tag2.num = 2
+        const expressions = [
+            ['NUMERICADDITION', '($someTag=($someTag+$anotherTag))'],
+            ['NUMERICSUBTRACTION', '($someTag=($someTag-$anotherTag))'],
+            ['NUMERICMULTIPLICATION', '($someTag=($someTag*$anotherTag))'],
+            ['NUMERICDIVISION', '($someTag!=($someTag/$anotherTag))'],
+        ] as const
 
-        // numeric connectives need to be wrapped in something that converts their type to a boolean so that they represent a valid formula
-        const addition = { ruleName: 'NUMERICADDITION', name: 'NUMERICADDITION', leftOperand: tag1, rightOperand: tag2 }
-        const wrapper = { ruleName: 'wrapper', name: 'NUMERICEQUAL', leftOperand: tag1, rightOperand: addition }
-        expect(convert(wrapper), 'addition').to.equal('($someTag=($someTag+$anotherTag))')
+        // Then
+        for (const [operator, expected] of expressions) {
+            const name = operator === 'NUMERICDIVISION' ? 'NUMERICNOTEQUAL' : 'NUMERICEQUAL'
 
-        const subtraction = {
-            ruleName: 'NUMERICSUBTRACTION',
-            name: 'NUMERICSUBTRACTION',
-            leftOperand: tag1,
-            rightOperand: tag2,
+            expectConversion(
+                numericWrapper(name, tag1, {
+                    ruleName: operator,
+                    name: operator,
+                    leftOperand: tag1,
+                    rightOperand: tag2,
+                }),
+                expected,
+                operator
+            )
         }
-        wrapper.rightOperand = subtraction
-        expect(convert(wrapper), 'subtraction').to.equal('($someTag=($someTag-$anotherTag))')
-
-        const multiplication = {
-            ruleName: 'NUMERICMULTIPLICATION',
-            name: 'NUMERICMULTIPLICATION',
-            leftOperand: tag1,
-            rightOperand: tag2,
-        }
-        wrapper.rightOperand = multiplication
-        expect(convert(wrapper), 'multiplication').to.equal('($someTag=($someTag*$anotherTag))')
-
-        const division = {
-            ruleName: 'NUMERICDIVISION',
-            name: 'NUMERICDIVISION',
-            leftOperand: tag1,
-            rightOperand: tag2,
-        }
-        wrapper.rightOperand = division
-        // test not equal here as well
-        wrapper.name = 'NUMERICNOTEQUAL'
-        expect(convert(wrapper), 'division').to.equal('($someTag!=($someTag/$anotherTag))')
     })
 })
