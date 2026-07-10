@@ -361,7 +361,7 @@ namespace GreaterEqualsConnective {
 class LessEqualsConnective implements BinaryConnective {
     static NAME = 'LESSEQUALS'
 
-    name = GreaterEqualsConnective.NAME
+    name = LessEqualsConnective.NAME
 
     leftOperand: SemanticFilterTag = { tag: '', num: 0 }
 
@@ -384,7 +384,7 @@ namespace LessEqualsConnective {
 class NumericNotEqualConnective implements BinaryConnective {
     static NAME = 'NUMERICNOTEQUAL'
 
-    name = GreaterEqualsConnective.NAME
+    name = NumericNotEqualConnective.NAME
 
     leftOperand: SemanticFilterTag = { tag: '', num: 0 }
 

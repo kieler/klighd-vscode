@@ -21,7 +21,7 @@ import { describe, it } from 'mocha'
 import { convert } from '../../src/filtering/legacy/converter'
 
 import { binaryRule, constant, numericWrapper, tag, unaryRule } from './util/legacy-filter-fixtures'
-import { SemanticFilterRule } from '../../lib/filtering/util'
+import type { SemanticFilterRule } from '../../src/filtering/util'
 
 function expectConversion(expression: unknown, expected: string, message?: string): void {
     expect(convert(expression as SemanticFilterRule), message).to.equal(expected)
