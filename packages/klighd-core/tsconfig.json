@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
     "noImplicitAny": true,
@@ -10,7 +11,7 @@
     "strictPropertyInitialization": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "module": "es2022",
+    "module": "commonjs",
     "moduleResolution": "bundler",
     "target": "es2025",
     "rootDir": "src",
