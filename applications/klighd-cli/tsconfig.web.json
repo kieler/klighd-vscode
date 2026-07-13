@@ -3,7 +3,6 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "src",
-    "module": "es2022",
     "target": "es2025"
   },
   "include": ["src"]
