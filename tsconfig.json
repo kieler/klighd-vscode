@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "experimentalDecorators": true,
+        "strictPropertyInitialization": false,
         "types": ["mocha", "chai"],
         "target": "es2025",
         "lib": [
