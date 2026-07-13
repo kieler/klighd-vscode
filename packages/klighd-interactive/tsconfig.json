@@ -11,6 +11,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es2017",
+    "rootDir": "src",
     "outDir": "lib",
     "lib": [
       "es2017",

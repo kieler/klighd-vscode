@@ -8531,7 +8531,7 @@ osenv@^0.1.4:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
 
-ovsx@^10.12.0:
+ovsx@^0.10.12:
   version "0.10.12"
   resolved "https://registry.yarnpkg.com/ovsx/-/ovsx-0.10.12.tgz#01064789142149080702bde158ca84f19e63ea32"
   integrity sha512-WwMj1iQDvCk02029oxPnkFXsPrHZ+WzmoNW5pJ8JGepHtL30i2JE4s3C3wqzQqj6a35vx2hp0gV3TdfefGmvMg==
