@@ -104,6 +104,12 @@ const webviewConfig = {
                 test: /\.(ttf)$/,
                 type: 'asset/resource',
             },
+            {
+                test: /node_modules[\\/]antlr4[\\/].*\.mjs$/,
+                resolve: {
+                    fullySpecified: false
+                }
+            }
         ],
     },
     plugins: [new webpack.WatchIgnorePlugin({

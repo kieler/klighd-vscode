@@ -2,8 +2,9 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "module": "es6",
-    "target": "es5"
+    "rootDir": "src",
+    "module": "es2022",
+    "target": "es2025"
   },
   "include": ["src"]
 }

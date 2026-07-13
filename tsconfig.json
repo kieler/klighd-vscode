@@ -2,9 +2,9 @@
     "compilerOptions": {
         "experimentalDecorators": true,
         "types": ["mocha", "chai"],
-        "target": "es2017",
+        "target": "es2025",
         "lib": [
-            "es2017",
+            "ES2025",
             "dom"
           ],
         "jsx": "react",

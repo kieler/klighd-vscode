@@ -43,6 +43,7 @@
         "open": "^7.4.2",
         "os-browserify": "^0.3.0",
         "pino-pretty": "^4.7.1",
+        "process": "^0.11.10",
         "reflect-metadata": "^0.2.1",
         "setimmediate": "^1.0.5",
         "sprotty-protocol": "^1.3.0",

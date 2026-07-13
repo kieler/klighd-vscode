@@ -29,16 +29,17 @@ import { PROXY_SUFFIX, isProxy } from './proxy-view/proxy-view-util'
 export class KlighdMouseTool extends MouseTool {
     decorate(vnode: VNode, element: SModelElementImpl): VNode {
         if (element instanceof SModelRootImpl || isProxy(vnode)) {
-            on(vnode, 'mouseover', this.mouseOver.bind(this, element))
-            on(vnode, 'mouseout', this.mouseOut.bind(this, element))
-            on(vnode, 'mouseenter', this.mouseEnter.bind(this, element))
-            on(vnode, 'mouseleave', this.mouseLeave.bind(this, element))
-            on(vnode, 'mousedown', this.mouseDown.bind(this, element))
-            on(vnode, 'mouseup', this.mouseUp.bind(this, element))
-            on(vnode, 'mousemove', this.mouseMove.bind(this, element))
-            on(vnode, 'wheel', this.wheel.bind(this, element))
-            on(vnode, 'contextmenu', this.contextMenu.bind(this, element))
-            on(vnode, 'dblclick', this.doubleClick.bind(this, element))
+            const root = element as SModelRootImpl
+            on(vnode, 'mouseover', (event) => this.mouseOver(root, event as MouseEvent))
+            on(vnode, 'mouseout', (event) => this.mouseOut(root, event as MouseEvent))
+            on(vnode, 'mouseenter', (event) => this.mouseEnter(root, event as MouseEvent))
+            on(vnode, 'mouseleave', (event) => this.mouseLeave(root, event as MouseEvent))
+            on(vnode, 'mousedown', (event) => this.mouseDown(root, event as MouseEvent))
+            on(vnode, 'mouseup', (event) => this.mouseUp(root, event as MouseEvent))
+            on(vnode, 'mousemove', (event) => this.mouseMove(root, event as MouseEvent))
+            on(vnode, 'wheel', (event) => this.wheel(root, event as WheelEvent))
+            on(vnode, 'contextmenu', (event) => this.contextMenu(root, event as MouseEvent))
+            on(vnode, 'dblclick', (event) => this.doubleClick(root, event as MouseEvent))
         }
         vnode = this.mouseListeners.reduce((n: VNode, listener: MouseListener) => listener.decorate(n, element), vnode)
         return vnode

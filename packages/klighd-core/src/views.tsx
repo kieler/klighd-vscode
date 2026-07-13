@@ -20,7 +20,7 @@ import { isChildSelected } from '@kieler/klighd-interactive/lib/helper-methods'
 import { renderConstraints, renderInteractiveLayout } from '@kieler/klighd-interactive/lib/interactive-view'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
 import { renderRelativeConstraint } from '@kieler/klighd-interactive/lib/layered/layered-relative-constraint-view'
-import Color = require('color')
+import * as Color from 'color'
 import { inject, injectable } from 'inversify'
 import { VNode } from 'snabbdom'
 import {

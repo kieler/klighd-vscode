@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es2017",
+        "module": "es2022",
+        "target": "es2025",
         "outDir": "out",
-        "lib": ["es2017", "dom"],
+        "lib": ["es2025", "dom"],
         // Decorators are required for the Sprotty container inside the webview
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
