@@ -17,7 +17,7 @@
 
 import { SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
 import { KlighdInteractiveMouseListener } from '@kieler/klighd-interactive/lib/klighd-interactive-mouselistener'
-import Color = require('color')
+import * as Color from 'color'
 import { VNode } from 'snabbdom'
 import {
     IVNodePostprocessor,

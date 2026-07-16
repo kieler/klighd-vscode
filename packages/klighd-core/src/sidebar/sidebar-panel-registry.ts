@@ -53,7 +53,10 @@ export class SidebarPanelRegistry extends Registry {
         // Reopen general panel if a panel was pinned.
         // Record has to be retrieved manually since the renderOptionsRegistry is not yet initialized and
         // cannot be changed to distribute a ready signal.
-        this.storage.getItem<Record<string, unknown>>('render').then((data: Record<string, unknown>) => {
+        this.storage.getItem<Record<string, unknown>>('render').then((data: Record<string, unknown> | undefined) => {
+            if (!data) {
+                return // TODO: double check if this should be handled differently
+            }
             for (const entry of Object.entries(data)) {
                 if (entry[0] === PinSidebarOption.ID && entry[1] && this.allPanels.length > 0) {
                     this._currentPanelID = this.allPanels[0].id

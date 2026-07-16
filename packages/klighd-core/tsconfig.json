@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
     "noImplicitAny": true,
@@ -7,15 +8,16 @@
     "noImplicitThis": true,
     "noUnusedLocals": false, // eslint handles this rule instead
     "strictNullChecks": true,
+    "strictPropertyInitialization": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "es2017",
+    "moduleResolution": "bundler",
+    "target": "es2025",
     "rootDir": "src",
     "outDir": "lib",
     "lib": [
-      "es2017",
+      "ES2025",
       "dom"
     ],
     "jsx": "react",

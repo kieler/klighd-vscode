@@ -25,6 +25,7 @@ module.exports = {
             "crypto": require.resolve("crypto-browserify"),
             "os": require.resolve("os-browserify/browser"),
             "stream": require.resolve("stream-browserify"),
+            "process": require.resolve("process/browser")
         },
     },
 
@@ -54,6 +55,12 @@ module.exports = {
                 test: /\.(ttf)$/,
                 type: 'asset/resource',
             },
+            {
+                test: /node_modules[\\/]antlr4[\\/].*\.mjs$/,
+                resolve: {
+                    fullySpecified: false
+                }
+            }
         ],
     },
     plugins: [

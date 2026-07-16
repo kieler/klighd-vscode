@@ -111,10 +111,12 @@ const kGraphDiagramModule = new ContainerModule(
             previousPopupElement: undefined,
         }))
         rebind<ModelRendererFactory>(TYPES.ModelRendererFactory).toFactory<SKGraphModelRenderer>(
-            (ctx) => (targetKind: RenderingTargetKind, processors: IVNodePostprocessor[]) => {
-                const viewRegistry = ctx.container.get<ViewRegistry>(TYPES.ViewRegistry)
-                return new SKGraphModelRenderer(viewRegistry, targetKind, processors)
-            }
+            (ctx) =>
+                (...args: unknown[]) => {
+                    const [targetKind, processors] = args as [RenderingTargetKind, IVNodePostprocessor[]]
+                    const viewRegistry = ctx.container.get<ViewRegistry>(TYPES.ViewRegistry)
+                    return new SKGraphModelRenderer(viewRegistry, targetKind, processors)
+                }
         )
         // Notes that this rebinds the Service and not the TYPE.ModelViewer intentionally as the type is bound to a dynamic value in Sprotty
         rebind(ModelViewer).to(KlighdModelViewer).inSingletonScope()

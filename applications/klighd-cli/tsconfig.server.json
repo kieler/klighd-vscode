@@ -3,9 +3,9 @@
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
+    "rootDir": "./server",
     "outDir": "./lib",
-    "module": "CommonJS",
-    "target": "es5"
+    "target": "es2025"
   },
   "include": ["server"]
 }

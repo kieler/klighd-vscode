@@ -116,8 +116,6 @@ export class SKEdge extends KEdge {
     hasFeature(feature: symbol): boolean {
         return feature === selectFeature || feature === popupFeature
     }
-
-    properties: Record<string, unknown>
 }
 
 /**

@@ -16,7 +16,7 @@
  */
 /** @jsx svg */
 import { KGraphData, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import Color = require('color')
+import * as Color from 'color'
 import { VNode } from 'snabbdom'
 import { getZoom, isSelectable, RGBColor, svg } from 'sprotty' // eslint-disable-line @typescript-eslint/no-unused-vars
 import { MinimumLineScale, UseLineScaling } from './options/render-options-registry'

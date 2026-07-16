@@ -72,8 +72,7 @@ export class SearchBarPanel {
 
     private lastSelectedElementId: string = ''
 
-    // eslint-disable-next-line no-undef
-    private tagSearchTimeout: NodeJS.Timeout | undefined = undefined
+    private tagSearchTimeout: ReturnType<typeof setTimeout> | undefined
 
     @inject(TYPES.IActionDispatcher) protected readonly actionDispatcher: IActionDispatcher
 
