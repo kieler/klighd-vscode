@@ -1,0 +1,56 @@
+{
+    "$id": "https://github.com/kieler/klighd-vscode/tree/main/schema/lsp/windowShowMessage.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "window/showMessage",
+    "allOf": [{"$ref": "requestMessage.json"}],
+    "required": ["method", "params"],
+    "properties": {
+        "method": {
+            "type": "string",
+            "enum": ["window/showMessage"],
+            "default": "window/showMessage"
+        },
+        "params": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/MessageType"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "definitions": {
+        "MessageType": {
+            "type": "number",
+            "enum": [1,2,3,4,5]
+        },
+        "Error": {
+            "type": "number",
+            "enum": [1],
+            "default": 1
+        },
+        "Warning": {
+            "type": "number",
+            "enum": [2],
+            "default": 2
+        },
+        "Info": {
+            "type": "number",
+            "enum": [3],
+            "default": 3
+        },
+        "Log": {
+            "type": "number",
+            "enum": [4],
+            "default": 4
+        },
+        "Debug": {
+            "type": "number",
+            "enum": [5],
+            "default": 5
+        }
+    }
+}
