@@ -19,7 +19,7 @@ import { VNode } from 'snabbdom'
 import { Transformation } from '../views-common'
 
 /**
- * Storage of data related to title renderings with the 'klighd.isNodeTitle' property.
+ * Storage of data related to title renderings with the 'klighd.isNodeTitle' tag.
  * Requires the framework to call {@link decendToChild()} when starting the rendering of a child graph element and {@link ascendToParent()}
  * after finishing that and returning to the parent handling.
  */

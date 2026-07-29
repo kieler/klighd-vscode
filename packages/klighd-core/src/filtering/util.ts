@@ -120,11 +120,18 @@ export function createFilter(rule: SemanticFilterRule): Filter {
 }
 
 /**
+ * Type to check that properties exist.
+ */
+export type PropertyHolder = {
+    properties: Record<string, any>
+}
+
+/**
  * Gets all filters defined as filter rules on a given graph element.
  * @param graph the graph element to check
  * @returns array of filters
  */
-export function getFilters(graph: SKGraphElement): Array<Filter> {
+export function getFilters(graph: PropertyHolder): Array<Filter> {
     const filters: Array<Filter> = []
     if (graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] !== undefined) {
         ;(graph.properties['de.cau.cs.kieler.klighd.semanticFilter.rules'] as Array<SemanticFilterRule>).forEach(
@@ -134,4 +141,22 @@ export function getFilters(graph: SKGraphElement): Array<Filter> {
         )
     }
     return filters
+}
+
+/**
+ * Finds a semantic tag by its ID and returns the first one found if it exists.
+ * @param element The element to search through
+ * @param tag The tag id
+ * @returns The found tag or undefined if it doesn't exist
+ */
+export function findTag(element: PropertyHolder, tag: string): SemanticFilterTag | undefined {
+    if (element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] !== undefined) {
+        const matches: SemanticFilterTag[] = (
+            element.properties['de.cau.cs.kieler.klighd.semanticFilter.tags'] as Array<SemanticFilterTag>
+        ).filter((filterTag) => tag === filterTag.tag)
+        if (matches.length > 0) {
+            return matches[0]
+        }
+    }
+    return undefined
 }
