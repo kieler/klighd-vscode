@@ -2,7 +2,7 @@
     "name": "klighd-vscode",
     "displayName": "KLighD Diagrams",
     "description": "KLighD diagram support for Visual Studio Code",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "publisher": "kieler",
     "author": "KIELER <kieler@rtsys.informatik.uni-kiel.de>",
     "icon": "icon.png",
@@ -21,10 +21,6 @@
     ],
     "activationEvents": [
         "onCommand:klighd-vscode.setLanguageClient"
-    ],
-    "files": [
-        "README.md",
-        "dist"
     ],
     "main": "./dist/extension.js",
     "contributes": {
@@ -169,20 +165,20 @@
         "@types/node": "^16.11.7",
         "@types/vscode": "^1.85.0",
         "@types/vscode-webview": "^1.57.4",
+        "@vscode/vsce": "^3.9.1",
         "css-loader": "^6.8.1",
         "file-loader": "6.2.0",
-        "ovsx": "^0.2.0",
+        "ovsx": "^0.10.12",
         "rimraf": "^4.4.0",
         "source-map-loader": "^3.0.0",
         "style-loader": "3.3.3",
         "ts-loader": "^9.5.1",
         "typescript": "^5.3.3",
-        "vsce": "^1.95.1",
         "webpack": "^5.89.0",
         "webpack-cli": "^5.1.4"
     },
     "dependencies": {
-        "@kieler/klighd-core": "^0.8.0",
+        "@kieler/klighd-core": "^0.8.1",
         "inversify": "^6.0.2",
         "nanoid": "^3.1.23",
         "reflect-metadata": "^0.2.1",

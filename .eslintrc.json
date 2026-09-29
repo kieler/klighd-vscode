@@ -13,7 +13,7 @@
         "no-plusplus": 0,
         "import/no-unresolved": [2, { "ignore": ["vscode"] }],
         "import/prefer-default-export": 0,
-        "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.[jt]s", "**/*.test.[jt]sx", "**/*.spec.[jt]s"]}],
+        "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/test/**/*.[jt]s", "**/test/**/*.[jt]sx"]}],
         "no-useless-constructor": 0,
         "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
         "max-classes-per-file": 0,

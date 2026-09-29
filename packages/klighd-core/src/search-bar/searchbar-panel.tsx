@@ -22,9 +22,11 @@ import { VNode } from 'snabbdom'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { html, IActionDispatcher, TYPES } from 'sprotty'
 import { FitToScreenAction, SelectAction } from 'sprotty-protocol'
-import { ClearHighlightsAction, SearchAction, ToggleSearchBarAction, UpdateHighlightsAction } from './searchbar-actions'
+import { ClearHighlightsAction, SearchAction, UpdateHighlightsAction } from './searchbar-actions'
 import { SearchBar } from './searchbar'
 import { SearchResult } from './search-results'
+import { SetRenderOptionAction } from '../options/actions'
+import { SearchBarVisibleOption } from '../options/render-options-registry'
 
 @injectable()
 export class SearchBarPanel {
@@ -154,6 +156,12 @@ export class SearchBarPanel {
         return this.lastActiveIndex
     }
 
+    public focus(): void {
+        setTimeout(() => {
+            this.mainInput?.select()
+        }, 0)
+    }
+
     /**
      * Updates anything that changes, when the search bar is toggled
      * @param vis the new visibility
@@ -168,12 +176,9 @@ export class SearchBarPanel {
         if (vis) {
             document.addEventListener('keydown', this.handleKeyEvent)
             setTimeout(() => {
-                if (this.mainInput) {
-                    this.mainInput.select()
-                    if (vis !== oldVis) {
-                        // trigger search only if search wasn't already open
-                        this.performSearch()
-                    }
+                if (this.mainInput && vis !== oldVis) {
+                    // trigger search only if search wasn't already open
+                    this.performSearch()
                 }
             }, 0)
         } else {
@@ -609,7 +614,7 @@ export class SearchBarPanel {
             this.searched = false
             this.tagInputVisible = false
             this.lastActiveIndex = this.selectedIndex
-            this.actionDispatcher.dispatch(ToggleSearchBarAction.create(this, 'hide'))
+            this.actionDispatcher.dispatch(SetRenderOptionAction.create(SearchBarVisibleOption.ID, false))
         }
     }
 
