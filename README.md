@@ -6,10 +6,10 @@ The repository contains multiple projects that use web technologies to visualize
 ## Packages
 
 This repository contains a [monorepo](https://en.wikipedia.org/wiki/Monorepo) for different KLighD
-related, web-based packages. The packages are seperated in two types:
+related, web-based packages. The packages are separated in two types:
 
--   Packages that produce **usable applications** are placed in the `applications` folder.
--   Packages that serve as **library code** are placed in the `packages` folder.
+- Packages that produce **usable applications** are placed in the `applications` folder.
+- Packages that serve as **library code** are placed in the `packages` folder.
 
 | Package name                                                | Type        | Description                                                                                                                                                              |
 | :---------------------------------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
