@@ -824,7 +824,7 @@ export function getPoints(
 ): Point[] {
     let points: Point[] = []
     // If the rendering has points defined, use them for the rendering.
-    if ('points' in rendering) {
+    if ('points' in rendering && rendering.points.length > 0) {
         const kPositions = rendering.points
         kPositions.forEach((kPosition) => {
             const pos = evaluateKPosition(kPosition, boundsAndTransformation.bounds, true)
