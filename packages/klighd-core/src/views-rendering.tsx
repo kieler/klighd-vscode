@@ -1488,13 +1488,17 @@ export function renderKRendering(
             // ...and to its right
             const spaceR = parentBounds.width - originalX - originalWidth
             // New x value after taking space off both sides at an equal ratio
-            const newX = originalX - (spaceL * (newWidth - originalWidth)) / (spaceL + spaceR)
+            const horizontalSpace = spaceL + spaceR
+            const newX =
+                horizontalSpace === 0 ? originalX : originalX - (spaceL * (newWidth - originalWidth)) / horizontalSpace
 
             // Same for y axis, just with switched dimensional variables.
             const newHeight = originalHeight * scalingFactor
             const spaceT = originalY
             const spaceB = parentBounds.height - originalY - originalHeight
-            const newY = originalY - (spaceT * (newHeight - originalHeight)) / (spaceT + spaceB)
+            const verticalSpace = spaceT + spaceB
+            const newY =
+                verticalSpace === 0 ? originalY : originalY - (spaceT * (newHeight - originalHeight)) / verticalSpace
 
             // Apply the new bounds and scaling as the element's transformation.
             const translateAndScale: Transformation[] = []
