@@ -177,8 +177,11 @@
             }
         },
         "KRendering": {
-            "allOf": [{"$ref": "#/definitions/KGraphData"}],
+            "allOf": [{"$ref": "#/definitions/KGraphData"}, {"$ref": "#/definitions/KStyleHolder"}],
             "properties": {
+                "parent": {
+                    "$ref": "#/definitions/KContainerRendering"
+                },
                 "placementData": {
                     "$ref": "#/definitions/KPlacementData"
                 },
@@ -222,6 +225,33 @@
                 }
             }
         },
+        "KCustomRendering": {
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "properties": {
+                "className": {
+                    "type": "string"
+                },
+                "bundleName": {
+                    "type": "string"
+                },
+                "figureObject": {
+                    "type": "object"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KCustomRenderingImpl"
+                }
+            }
+        },
+        "KChildArea": {
+            "allOf": [{"$ref": "#/definitions/KRendering"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KChildAreaImpl"
+                }
+            }
+        },
         "KRectangle": {
             "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
             "properties": {
@@ -232,7 +262,7 @@
             }
         },
         "KRoundedRectangle": {
-            "allOf": [{"$ref": "#/definitions/KRectangle"}],
+            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
             "properties": {
                 "cornerWidth": {
                     "type": "number"
@@ -249,12 +279,31 @@
         "KPolyline": {
             "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
             "properties": {
+                "points": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KPosition"
+                    },
+                    "default": []
+                },
                 "type": {
                     "type": "string",
                     "default": "KPolylineImpl"
                 },
                 "junctionPointRendering": {
                     "$ref": "#/definitions/KRendering"
+                }
+            }
+        },
+        "KRoundedBendsPolyline": {
+            "allOf": [{"$ref": "#/definitions/KPolyline"}],
+            "properties": {
+                "bendRadius": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KRoundedBendsPolylineImpl"
                 }
             }
         },
@@ -285,6 +334,12 @@
                 "imagePath": {
                     "type": "string"
                 },
+                "imageObject": {
+                    "type": "object"
+                },
+                "clipShape": {
+                    "$ref": "#/definitions/KRendering"
+                },
                 "type": {
                     "type": "string",
                     "default": "KImageImpl"
@@ -309,6 +364,9 @@
                 "arcAngle": {
                     "type": "number"
                 },
+                "arcType": {
+                    "$ref": "#/definitions/Arc" 
+                },
                 "type": {
                     "type": "string",
                     "default": "KArcImpl"
@@ -316,13 +374,18 @@
             }
         },
         "KText": {
-            "allOf": [{"$ref": "#/definitions/KContainerRendering"}],
+            "allOf": [{"$ref": "#/definitions/KRendering"}],
             "properties": {
                 "text": {
                     "type": "string"
                 },
-                "clip": {
-                    "type": "boolean"
+                "cursorSelectable": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "editable": {
+                    "type": "boolean",
+                    "default": false
                 },
                 "type": {
                     "type": "string",
@@ -331,11 +394,41 @@
             }
         },
         "KPlacementData": {
-            "type": "object",
+            "type": "object", 
             "properties": {
                 "type": {
                     "type": "string",
                     "default": "KPlacementDataImpl"
+                }
+            }
+        },
+        "KDecoratorPlacementData": {
+            "allOf": [{"$ref": "#/definitions/KPlacementData"}],
+            "properties": {
+                "absolute": {
+                    "type": "number" 
+                },
+                "xOffset": {
+                    "type": "number" 
+                },
+                "yOffset": {
+                    "type": "number" 
+                },
+                "rotateWithLine": {
+                    "type": "boolean"
+                },
+                "width": {
+                    "type": "number" 
+                },
+                "height": {
+                    "type": "number" 
+                },
+                "relative": {
+                    "type": "number" 
+                },
+                 "type": {
+                    "type": "string",
+                    "default": "KDecoratorPlacementDataImpl"
                 }
             }
         },
@@ -346,12 +439,10 @@
                     "$ref": "#/definitions/KPosition"
                 },
                 "horizontalAlignment": {
-                    "type": "number",
-                    "default": 0
+                    "$ref": "#/definitions/HorizontalAlignment"
                 },
                 "verticalAlignment": {
-                    "type": "number",
-                    "default": 0
+                    "$ref": "#/definitions/VerticalAlignment"
                 },
                 "horizontalMargin": {
                     "type": "number",
@@ -391,7 +482,7 @@
             }
         },
         "KGridPlacementData": {
-            "allOf": [{"$ref": "#/definitions/KPlacementData"}],
+            "allOf": [{"$ref": "#/definitions/KAreaPlacementData"}],
             "properties": {
                 "minCellWidth": {
                     "type": "number",
@@ -509,7 +600,7 @@
             "allOf": [{"$ref": "#/definitions/KPlacement"}],
             "properties": {
                 "numColumns": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "topLeft": {
@@ -544,26 +635,295 @@
                 }
             }
         },
-        "KColoringImpl": {
+        "KFontBold": {
+           "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {  
+                "bold": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KFontBoldImpl"
+                }
+            }
+        },
+        "KFontItalic": {
+           "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {  
+                "italic": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KFontItalicImpl"
+                }
+            }
+        },
+        "KFontName": {
+           "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {  
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KFontNameImpl"
+                }
+            }
+        },
+        "KFontSize": {
+           "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": { 
+                "size": {
+                    "type": "integer"
+                },
+                "scaleWithZoom": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KFontSizeImpl"
+                }
+            }
+        },
+        "KHorizontalAlignment": {
+           "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": { 
+                "horizontalAlignment": {
+                    "$ref": "#/definitions/HorizontalAlignment"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KHorizontalAlignmentImpl"
+                }
+            }
+        },
+        "KLineCap": { 
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "lineCap": {
+                    "$ref": "#/definitions/LineCap"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KLineCapImpl"
+                }
+            }
+        },
+        "KLineJoin": {  
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "lineJoin": {
+                    "$ref": "#/definitions/LineJoin"
+                },
+                "miterLimit": {
+                    "type": "number",
+                    "default": 10
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KLineJoinImpl"
+                }
+            }
+        },
+        "KLineStyle": {  
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "lineStyle": {
+                    "$ref": "#/definitions/LineStyle"
+                },
+                "dashPattern": {
+                    "type": "array",
+                    "items": [
+                        {"type": "number"}
+                    ],
+                    "default": []
+                },
+                "dashOffset": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KLineStyleImpl"
+                }
+            }
+        },
+        "KLineWidth": {  
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "lineWidth": {
+                    "type": "number",
+                    "default": 1.0
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KLineWidthImpl"
+                }
+            }
+        },
+        "KRotation": {  
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "rotation": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "rotationAnchor": {
+                    "$ref": "#/definitions/KPosition"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KRotationImpl"
+                }
+            }
+        },
+        "KShadow": {  
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "xOffset": {
+                    "type": "number",
+                    "default": 3
+                },
+                "yOffset": {
+                    "type": "number",
+                    "default": 3
+                },
+                "blur": {
+                    "type": "number",
+                    "default": 0.0
+                },
+                "color": {
+                    "$ref": "#/definitions/KColor"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KShadowImpl"
+                }
+            }
+        },
+        "KStyleHolder": {  
+            "type": "object", 
+            "properties": {
+                "styles": {
+                    "type": "array",
+                    "items": [
+                        {"$ref": "#/definitions/KStyle"}
+                    ],
+                    "default": []
+                },
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KStyleHolderImpl"
+                }
+            }
+        },
+        "KStyleRef": {  
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "styleHolder": {
+                    "$ref": "#/definitions/KStyleHolder"
+                },
+                "referencedTypes": {
+                    "type": "array",
+                    "items": [
+                        {"$ref": "#/definitions/KStyle"}
+                    ],
+                    "default": []
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KStyleRefImpl"
+                }
+            }
+        },
+        "KTextStrikeout": {
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "struckOut": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "color": {
+                    "$ref": "#/definitions/KColor"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KTextStrikeoutImpl"
+                }
+            }
+        },
+        "KTextUnderline": {
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "underline": {
+                    "$ref": "#/definitions/Underline"
+                },
+                "color": {
+                    "$ref": "#/definitions/KColor"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KTextUnderlineImpl"
+                }
+            }
+        },
+        "KVerticalAlignment": {
+            "allOf": [{"$ref": "#/definitions/KStyle"}],
+            "properties": {
+                "verticalAlignment": {
+                    "$ref": "#/definitions/VerticalAlignment"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KVerticalAlignmentImpl"
+                }
+            }
+        },
+        "KColoring": {
             "allOf": [{"$ref": "#/definitions/KStyle"}],
             "properties": {
                 "color": {
                     "$ref": "#/definitions/KColor"
                 },
                 "alpha": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 255
                 },
                 "targetColor": {
                     "$ref": "#/definitions/KColor"
                 },
                 "targetAlpha": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "gradientAngle": {
                     "type": "number",
                     "default": 0
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KColoringImpl"
+                }
+            }
+        },
+        "KForeground": {
+            "allOf": [{"$ref": "#/definitions/KColoring"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KForegroundImpl"
+                }
+            }
+        },
+        "KBackground": {
+            "allOf": [{"$ref": "#/definitions/KColoring"}],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "default": "KBackgroundImpl"
                 }
             }
         },
@@ -571,15 +931,15 @@
             "type": "object",
             "properties": {
                 "red": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "green": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "blue": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 }
             }
@@ -597,6 +957,34 @@
                 }
             }
         },
+        "KRenderingRef": {
+            "allOf": [{"$ref": "#/definitions/KRendering"}],
+            "properties": {
+                "rendering": {
+                    "$ref": "#/definitions/KRendering"
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KRenderingRefImpl"
+                }
+            }
+        },
+        "KRenderingLibrary": {
+            "allOf": [{"$ref": "#/definitions/KGraphData"}],
+            "properties": {
+                "rendering": {
+                    "type": "array",
+                    "items": [
+                        {"$ref": "#/definitions/KStyleHolder"}
+                    ],
+                    "default": []
+                },
+                "type": {
+                    "type": "string",
+                    "default": "KRenderingLibraryImpl"
+                }
+            }
+        },
         "KAction": {
             "type": "object",
             "properties": {
@@ -604,19 +992,19 @@
                     "type": "string"
                 },
                 "trigger": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "altPressed": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "ctrlCmdPressed": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "shiftPressed": {
-                    "type": "number",
+                    "type": "integer",
                     "default": 0
                 },
                 "type": {
@@ -643,6 +1031,34 @@
                 "pressed": {"type": "number", "default": 1},
                 "notPressed": {"type": "number", "default": 2}
             }
+        },
+        "HorizontalAlignment": {
+            "type": "integer", 
+            "default": 0
+        },
+        "VerticalAlignment": {
+            "type": "integer",
+            "default": 0
+        },
+        "Arc": {
+            "type": "integer",
+            "default": 0
+        },
+        "LineCap": {
+            "type": "integer",
+            "default": 0
+        },
+        "LineJoin": {
+            "type": "integer",
+            "default": 0
+        },
+        "LineStyle": {
+            "type": "integer",
+            "default": 0
+        },
+        "Underline": {
+            "type": "integer",
+            "default": 0
         }
     }
 }
