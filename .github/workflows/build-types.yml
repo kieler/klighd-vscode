@@ -3,7 +3,7 @@ name: Test Type Generation from Schemas
 on:
   pull_request:
     paths:
-      - schema/
+      - "schema/**"
 
 jobs:
   build-pydantic:
