@@ -20,11 +20,7 @@
                 "forceOpen": {
                     "type": "boolean"
                 }
-            }
-        }
-    },
-    "definitions": {
-        "location": {
+
             "type": "object",
             "required": ["uri", "range"],
             "properties": {
