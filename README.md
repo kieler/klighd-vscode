@@ -99,6 +99,19 @@ The self-contained CLI does not contain a language server to make it more flexib
 language servers. Run `klighd-{os} -h` for information on how to provide a language server for the
 CLI.
 
+### Create a Node.js-only `klighd-cli` package
+
+As an alternative to the self-contained binaries, the CLI can be packaged as a plain npm package
+that runs on a locally installed Node.js (v24 or newer).
+
+1. Fulfill the requirements above.
+1. Run `yarn` in the monorepo root to install all dependencies (if not already done).
+1. Run `yarn build`
+1. Run `yarn workspace @kieler/klighd-cli package:node`
+1. The package can be found in _applications/klighd-cli/pack_ as `kieler-klighd-cli-<version>.tgz`.
+
+Install it with `npm install -g ./kieler-klighd-cli-<version>.tgz` and run `klighd -h` for usage information.
+
 ### Developing using the VS Code extension
 
 We recommend VS Code to develop the VS Code extension to make use of the provided launch tasks. The

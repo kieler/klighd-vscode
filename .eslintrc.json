@@ -40,6 +40,13 @@
     },
     "overrides": [
         {
+            // The klighd-cli web app is bundled by webpack, so its dependencies are devDependencies.
+            "files": ["applications/klighd-cli/src/**"],
+            "rules": {
+                "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
+            }
+        },
+        {
             "files": ["**/scripts/**/*.js"],
             "rules": {
                 "@typescript-eslint/no-require-imports": "off",

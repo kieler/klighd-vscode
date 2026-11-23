@@ -11,13 +11,18 @@
         "standalone"
     ],
     "main": "./lib/server.js",
-    "bin": "./lib/klighd.js",
+    "bin": {
+        "klighd": "./lib/klighd.js"
+    },
     "files": [
         "lib",
         "dist"
     ],
+    "engines": {
+        "node": ">=24"
+    },
     "scripts": {
-        "clean": "rimraf lib dist bin",
+        "clean": "rimraf lib dist bin pack",
         "lint": "eslint .",
         "build": "run-p --print-label \"build:*\"",
         "build:app": "webpack --mode production --devtool hidden-source-map",
@@ -27,41 +32,43 @@
         "watch:server": "tsc -w -p ./tsconfig.server.json",
         "prepackage": "node ./scripts/inject-version.js",
         "package": "pkg -c pkg.json ./lib/klighd.js",
+        "prepackage:node": "node ./scripts/inject-version.js",
+        "package:node": "rimraf pack && mkdir pack && npm pack --pack-destination pack",
         "start": "node ./lib/main.js",
         "socket": "node ./lib/main.js --ls_port=5007"
     },
     "dependencies": {
         "@fastify/static": "^10.1.12",
         "@fastify/websocket": "^11.3.7",
-        "@kieler/klighd-core": "^0.8.1",
-        "buffer": "^6.0.3",
         "commander": "^15.1.0",
         "fastify": "^5.12.8",
         "get-port": "^7.2.0",
         "open": "^11.0.4",
-        "os-browserify": "^0.3.0",
         "pino-pretty": "^13.2.0",
-        "process": "^0.11.10",
-        "reflect-metadata": "^0.2.2",
-        "setimmediate": "^1.0.5",
-        "sprotty-protocol": "^1.4.0",
-        "stream-browserify": "^3.0.0",
         "vscode-jsonrpc": "~9.0.3",
-        "vscode-languageserver-protocol": "^3.18.5",
         "vscode-ws-jsonrpc": "^4.0.3",
         "ws": "^8.23.0"
     },
     "devDependencies": {
+        "@kieler/klighd-core": "^0.8.1",
         "@types/ws": "^8.18.2",
         "@yao-pkg/pkg": "^6.25.0",
+        "buffer": "^6.0.3",
         "clean-webpack-plugin": "^4.0.0",
         "css-loader": "^7.1.5",
         "file-loader": "6.2.0",
         "html-webpack-plugin": "^5.6.8",
         "mini-css-extract-plugin": "^2.10.2",
         "npm-run-all2": "^9.0.4",
+        "os-browserify": "^0.3.0",
+        "process": "^0.11.10",
+        "reflect-metadata": "^0.2.2",
         "rimraf": "^6.1.4",
+        "setimmediate": "^1.0.5",
+        "sprotty-protocol": "^1.4.0",
+        "stream-browserify": "^3.0.0",
         "ts-loader": "^9.6.2",
+        "vscode-languageserver-protocol": "^3.18.5",
         "webpack": "^5.113.0",
         "webpack-cli": "^7.3.1"
     }

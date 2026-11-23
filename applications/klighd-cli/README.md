@@ -22,5 +22,5 @@ See the [root README](../../README.md) for information about developing and pack
 
 ## Using the CLI
 
-The CLI (packaged to the bin folder) provided a help page for usage information. Please refer to the
+The CLI (packaged to the bin or the pack folder) provided a help page for usage information. Please refer to the
 generated help for further information.
