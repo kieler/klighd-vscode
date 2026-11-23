@@ -26,12 +26,7 @@ type MessageType<T extends string> = `persistence/${T}`
  * and extension to persist data that is created in the webview
  */
 export type PersistenceMessage<T = any> =
-    | ReportItemsMessage
-    | ReportChangeMessage
-    | GetItemsMessage
-    | SetItemMessage<T>
-    | RemoveItemMessage
-    | ClearMessage
+    ReportItemsMessage | ReportChangeMessage | GetItemsMessage | SetItemMessage<T> | RemoveItemMessage | ClearMessage
 
 /**
  * Report all items that are currently stored.

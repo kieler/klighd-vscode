@@ -177,8 +177,7 @@ export class KlighdInteractiveMouseListener extends MoveMouseListener {
                 if (event.shiftKey) {
                     result = (
                         [setRelativeConstraint(this.nodes, this.data.get('layered'), this.target)] as (
-                            | Action
-                            | Promise<Action>
+                            Action | Promise<Action>
                         )[]
                     ).concat(super.mouseUp(this.target, event))
                 } else {

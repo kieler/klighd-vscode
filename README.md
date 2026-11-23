@@ -33,7 +33,7 @@ Moreover, the default branches of both repositories should be compatible but mig
 
 ### Requirements
 
-Development of this project requires [Node.js _v24.x_](https://nodejs.org) and
+Development of this project requires [Node.js _v24_ or newer](https://nodejs.org) and
 [yarn _v1.x_](https://classic.yarnpkg.com/).
 
 Developing the `klighd-vscode` extension requires an extension that has a dependency on
