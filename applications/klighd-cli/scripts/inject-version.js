@@ -17,6 +17,7 @@ const fs = require('fs')
 const path = require('path')
 
 const { version } = require('../package.json')
+
 const versionFile = path.join(__dirname, '../lib/version.js')
 const content = fs.readFileSync(versionFile, 'utf8')
 fs.writeFileSync(versionFile, content.replace(/@VERSION@/g, version))
