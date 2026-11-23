@@ -25,6 +25,7 @@ import {
     ComputedBoundsAction,
     ElementAndAlignment,
     ElementAndBounds,
+    isBounds,
     Point,
     RequestBoundsAction,
     SGraph,
@@ -38,7 +39,6 @@ import {
     isEdge,
     isGridPlacement,
     isImage,
-    isPolygon,
     isPolyline,
     isRendering,
     isRenderingRef,
@@ -51,24 +51,28 @@ import {
     KContainerRendering,
     KPlacement,
     KPointPlacementData,
-    KPolygon,
     KRendering,
     KRenderingLibrary,
     KRenderingRef,
     NODE_TYPE,
+    PORT_TYPE,
     SKLabel,
     SKNode,
 } from './skgraph-models'
 import { boundsMax, emptyBounds } from './micro-layout/bounds-util'
 import {
     basicEstimateSize,
+    calculateInsets,
     estimateSize,
     evaluateAreaPlacement,
-    evaluateKPosition,
     evaluatePointPlacementRendering,
+    evaluatePolylinePlacement,
+    KInsets,
 } from './micro-layout/placement-util'
-import { KEdge, KGraphData, KNode, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
-import { getKRenderingLibrary, resolveKRendering } from './skgraph-utils'
+import { evaluateGridPlacement } from './micro-layout/gridplacement-util'
+import { asDecoratorPlacementData, evaluateDecoratorPlacement } from './micro-layout/decorator-placement-util'
+import { KEdge, SKGraphElement } from '@kieler/klighd-interactive/lib/constraint-classes'
+import { getKRenderingLibrary, resolveKRendering, resolveRenderingRefs } from './skgraph-utils'
 
 const CALCULATED_BOUNDS = 'klighd.lsp.calculated.bounds'
 const CALCULATED_BOUNDS_MAP = 'klighd.lsp.calculated.bounds.map'
@@ -77,6 +81,101 @@ const CALCULATED_DECORATION_MAP = 'klighd.lsp.calculated.decoration.map'
 const RENDERING_ID = 'klighd.lsp.rendering.id'
 const EXPANDED = 'klighd.lsp.expanded' // Unused.
 const EXPAND = 'de.cau.cs.kieler.klighd.expand' // Currently always undefined property.
+
+const MINIMAL_NODE_BOUNDS: Bounds = { x: 0, y: 0, width: 10, height: 10 }
+const MINIMAL_NODE_SIZE = 'de.cau.cs.kieler.klighd.minimalNodeSize'
+const INITIAL_NODE_SIZE = 'klighd.initialNodeSize'
+const NODE_SIZE_MINIMUM = 'org.eclipse.elk.nodeSize.minimum'
+const PADDING = 'org.eclipse.elk.padding'
+const CLIENT_INSETS = 'klighd.client.insets'
+
+function isVector(value: unknown): value is { x: number; y: number } {
+    return (
+        !!value &&
+        typeof value === 'object' &&
+        typeof (value as { x?: unknown }).x === 'number' &&
+        typeof (value as { y?: unknown }).y === 'number'
+    )
+}
+
+function isInsets(value: unknown): value is KInsets {
+    if (!value || typeof value !== 'object') {
+        return false
+    }
+    const insets = value as Partial<KInsets>
+    return (
+        typeof insets.left === 'number' &&
+        typeof insets.right === 'number' &&
+        typeof insets.top === 'number' &&
+        typeof insets.bottom === 'number'
+    )
+}
+
+function parsePadding(value: unknown, fallback = 0): KInsets {
+    const padding: KInsets = { left: fallback, right: fallback, top: fallback, bottom: fallback }
+    if (typeof value === 'string') {
+        if (value.trim().startsWith('{')) {
+            try {
+                return parsePadding(JSON.parse(value), fallback)
+            } catch {
+                return padding
+            }
+        }
+        const match = value.match(/\[(.*)\]/)
+        if (!match) {
+            return padding
+        }
+        for (const entry of match[1].split(',')) {
+            const [key, rawValue] = entry.split('=')
+            if (key && rawValue && key.trim() in padding) {
+                padding[key.trim() as keyof KInsets] = Number(rawValue)
+            }
+        }
+        return padding
+    }
+    if (value && typeof value === 'object') {
+        const object = value as Partial<KInsets>
+        padding.left = typeof object.left === 'number' ? object.left : 0
+        padding.right = typeof object.right === 'number' ? object.right : 0
+        padding.top = typeof object.top === 'number' ? object.top : 0
+        padding.bottom = typeof object.bottom === 'number' ? object.bottom : 0
+    }
+    return padding
+}
+
+function calculateNodeMinimumSize(node: SKNode): Bounds {
+    const properties = node.properties ?? {}
+    node.properties = properties
+
+    let minSize: Bounds = { ...MINIMAL_NODE_BOUNDS }
+    const explicitMinSize = properties[MINIMAL_NODE_SIZE]
+    const hasChildNodes = node.children.some((child) => child.type === NODE_TYPE)
+
+    if (isVector(explicitMinSize)) {
+        minSize = { x: 0, y: 0, width: explicitMinSize.x, height: explicitMinSize.y }
+    } else if (!hasChildNodes || properties[INITIAL_NODE_SIZE] === true) {
+        minSize = boundsMax(minSize, { x: 0, y: 0, width: node.size.width, height: node.size.height })
+    }
+
+    properties[MINIMAL_NODE_SIZE] = { x: minSize.width, y: minSize.height }
+    return minSize
+}
+
+function calculatePortSize(rendering: KRendering): Bounds | undefined {
+    const bounds = rendering.properties?.[CALCULATED_BOUNDS]
+    if (!isBounds(bounds)) {
+        return undefined
+    }
+
+    // The server may position port renderings partly outside the port. The port itself only
+    // covers the visible part, so clip the rendering bounds to the positive quadrant.
+    const width = Math.max(0, bounds.width + Math.min(0, bounds.x))
+    const height = Math.max(0, bounds.height + Math.min(0, bounds.y))
+    if (width <= 0 || height <= 0) {
+        return undefined
+    }
+    return { x: 0, y: 0, width, height }
+}
 
 /**
  * This layout configurator copies all layout options from the KGraph element's properties.
@@ -92,12 +191,25 @@ export class KielerLayoutConfigurator extends DefaultLayoutConfigurator {
         // map properties to layout options and stringify values
         const layoutOptions: LayoutOptions = {}
         Object.entries(properties).forEach(([key, value]) => {
+            if (key === CLIENT_INSETS) {
+                return
+            }
             if (typeof value === 'string') {
                 layoutOptions[key] = value
             } else {
                 layoutOptions[key] = JSON.stringify(value)
             }
         })
+
+        // KLighD adds the node's micro-layout insets to the padding of the node.
+        const insets = properties[CLIENT_INSETS]
+        if (isInsets(insets)) {
+            // ELK's default node padding is 12; explicit values (including zero) take precedence.
+            const padding = parsePadding(properties[PADDING], 12)
+            layoutOptions[PADDING] =
+                `[top=${padding.top + insets.top},left=${padding.left + insets.left},` +
+                `bottom=${padding.bottom + insets.bottom},right=${padding.right + insets.right}]`
+        }
 
         return layoutOptions
     }
@@ -113,9 +225,6 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
         if (cause?.kind !== RequestBoundsAction.KIND) {
             return super.update(model, cause)
         }
-        console.warn('SModelRootImpl')
-        console.log(model.children[0])
-
         // TODO:
         // Overwriting this goes quite deep into Sprotty, as it usually expects a full hidden DOM rendering from its HiddenModelViewer implementation.
         // To avoid full DOM rendering of Sprotty and just calculate micro layout KLighD-style, these steps have to be implemented here (not sure if these steps are complete)
@@ -194,7 +303,9 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
 
         // Set padding in SKGraph and root not of SKGraph.
         ;(model as unknown as SKNode).properties['elk.padding'] = '[top=0,left=0,bottom=0,right=0]'
+        ;(model as unknown as SKNode).properties[PADDING] = '[top=0,left=0,bottom=0,right=0]'
         root.properties['elk.padding'] = '[top=0,left=0,bottom=0,right=0]'
+        root.properties[PADDING] = '[top=0,left=0,bottom=0,right=0]'
 
         const remainingElements: SKGraphElement[] = [root]
 
@@ -206,33 +317,40 @@ export class KlighdHiddenModelViewer extends HiddenModelViewer {
                 }
             }
             const rendering = resolveKRendering(modelElement.data, library) // FIXME.
+            resolveRenderingRefs(rendering, library)
 
             // TODO: Determine why sometimes container bounds are too small (laptop vs. desktop?).
 
-            if (rendering) {
-                // TODO: Find out how to get the real minimal size.
-                let minSize: Bounds
-                switch (modelElement.type) {
-                    case NODE_TYPE:
-                        minSize = (modelElement as KNode).size as Bounds // Seems to be most accurate guess for now (may even be correct).
-                        break
-                    case EDGE_TYPE:
-                        minSize = Bounds.EMPTY // TODO: Implement edge size estimation.
-                        break
-                    default:
-                        minSize = root.size as Bounds // Fallback
+            if (modelElement.type === NODE_TYPE) {
+                const node = modelElement as SKNode
+                const minSize = calculateNodeMinimumSize(node)
+
+                if (rendering) {
+                    const size = boundsMax(minSize, estimateSize(rendering, minSize))
+                    const insets: KInsets = { left: 0, right: 0, top: 0, bottom: 0 }
+                    calculateInsets(rendering, insets, size)
+
+                    node.properties[CLIENT_INSETS] = insets
+                    node.properties[NODE_SIZE_MINIMUM] = { x: size.width, y: size.height }
+                    resizes.push({ elementId: node.id, newSize: size })
                 }
-
-                const size = estimateSize(rendering, minSize) // I'm not sure if this is correct.
-
-                // TODO: calculate insets
+            } else if (rendering && modelElement.type === PORT_TYPE) {
+                const size = calculatePortSize(rendering)
+                if (size) {
+                    resizes.push({ elementId: modelElement.id, newSize: size })
+                }
+            } else if (rendering && modelElement.type !== EDGE_TYPE) {
+                const elementSize = (modelElement as unknown as { size?: Bounds }).size
+                const minSize = elementSize
+                    ? { x: 0, y: 0, width: elementSize.width, height: elementSize.height }
+                    : emptyBounds()
+                const size = estimateSize(rendering, minSize)
 
                 resizes.push({
                     elementId: modelElement.id,
                     newSize: size,
                 })
             }
-            // TODO: else only calculate insets and push those resizes
         }
 
         this.actionDispatcher.dispatch(
@@ -254,9 +372,6 @@ export class MicroLayoutCalculator implements ILayoutPostprocessor {
 
 function prepareRenderingLayout(element: SKGraphElement, library: KRenderingLibrary) {
     // TODO: Micro layout calculation here or in Step 4 from above
-    // TODO: Test this method.
-    console.warn('METHOD IS BEING USED: ' + 'prepareRenderingLayout')
-
     if (!element.data) return
 
     for (let i = 0; i < element.data.length; i++) {
@@ -264,6 +379,7 @@ function prepareRenderingLayout(element: SKGraphElement, library: KRenderingLibr
         // FIXME: Data == null case needs to be covered.
         if (!data) continue
         const rendering = resolveKRendering([data], library)
+        resolveRenderingRefs(rendering, library)
         if (isRenderingRef(data)) {
             // all references to KRenderings need to place a map with their
             // sizes and their decoration in this case in the properties of the reference.
@@ -313,12 +429,13 @@ function handleKRendering(
     library: KRenderingLibrary
 ) {
     let bounds: Bounds
-    if ('size' in element) {
+    if (isEdge(element)) {
+        bounds = edgeBounds(element as KEdge)
+    } else if ('size' in element) {
         // The parent rendering inherits its bounds from the element containing the rendering.
         bounds = element.size as Bounds
     } else {
-        // In this case the element is a KEdge.
-        bounds = edgeBounds(element as KEdge)
+        bounds = emptyBounds()
     }
 
     // Calculate the bounds of the rendering.
@@ -333,7 +450,8 @@ function handleKRendering(
                 boundsMap,
                 decorationMap,
                 element,
-                library
+                library,
+                rendering
             )
 
     // Calculate the bounds for the clip shape.
@@ -345,23 +463,28 @@ function handleKRendering(
                 boundsMap,
                 decorationMap,
                 element,
-                library
+                library,
+                rendering
             )
 }
 
-// TODO: Implement this if needed.
 function edgeBounds(edge: KEdge): Bounds {
-    var minX = Number.POSITIVE_INFINITY
-    var minY = Number.POSITIVE_INFINITY
-    var maxX = Number.NEGATIVE_INFINITY
-    var maxY = Number.NEGATIVE_INFINITY
-    var pointList = []
+    const routingPoints = (edge as unknown as { routingPoints?: Point[] }).routingPoints
+    if (!routingPoints || routingPoints.length === 0) {
+        return emptyBounds()
+    }
 
-    if (edge.source) pointList.push(edge.source.position)
-
-    //pointList.push(edge.bendpoints)
-    // ...
-    return Bounds.EMPTY
+    let minX = Number.POSITIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+    for (const point of routingPoints) {
+        minX = Math.min(minX, point.x)
+        minY = Math.min(minY, point.y)
+        maxX = Math.max(maxX, point.x)
+        maxY = Math.max(maxY, point.y)
+    }
+    return { x: 0, y: 0, width: maxX - minX, height: maxY - minY }
 }
 
 function handleAreaAndPointAndDecoratorPlacementRendering(
@@ -370,7 +493,9 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
     boundsMap: Record<string, Bounds> | null,
     decorationMap: Record<string, Decoration> | null,
     parent: SKGraphElement,
-    library: KRenderingLibrary
+    library: KRenderingLibrary,
+    parentRendering?: KRendering,
+    forcedBounds?: Bounds
 ) {
     let placementData = rendering.placementData
     let bounds: Bounds
@@ -392,75 +517,52 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
         rendering.properties[CALCULATED_DECORATION_MAP] = usedDecorationMap
     }
 
-    switch (placementData?.type) {
-        case K_AREA_PLACEMENT_DATA: {
-            // Evaluate the area placement micro layout with the help of KLighD.
-            bounds = evaluateAreaPlacement(placementData as KAreaPlacementData, parentBounds)
-            break
-        }
-        case K_POINT_PLACEMENT_DATA: {
-            // Evaluate the point placement micro layout with the help of KLighD.
-            bounds = evaluatePointPlacementRendering(rendering, placementData as KPointPlacementData, parentBounds)
-            break
-        }
-        case K_DECORATOR_PLACEMENT_DATA: {
-            bounds = basicEstimateSize(rendering, parentBounds) // (Fallback)
-            // Decorator placements can only be evaluated if the path they should decorate is known.
-            // to call KLighD's DecoratorPlacementUtil#evaluateDecoratorPlacement the points of the path of the
-            // parent rendering have to be stored.
-            let path: Point[]
-            // Todo: Can't figure out parent rendering currenlty.
-            let parentRendering // = rendering.eContainer
-
-            // Get inset from parent region
-            let leftInset = 0
-            let topInset = 0
-            if (isEdge(parent)) {
-                // TODO: Implement this method in SKGraphUtils
-                // if (isDecendant(parent.target, parent.source))
-                // TODO: Get parent insets.
-                if (true) {
-                    leftInset // = parent.source.insets.left
-                    topInset // = parent.source.insets.top
-                } else {
-                    leftInset // = parent.source.parent.insets.left
-                    topInset // = parent.source.parent.insets.top
-                }
+    if (forcedBounds) {
+        bounds = forcedBounds
+    } else {
+        switch (placementData?.type) {
+            case K_AREA_PLACEMENT_DATA: {
+                // Evaluate the area placement micro layout with the help of KLighD.
+                bounds = evaluateAreaPlacement(placementData as KAreaPlacementData, parentBounds)
+                break
             }
-            // TODO: Remove forced non-nulls later.
-            if (isPolygon(parentRendering!)) {
-                let points = []
-                for (const point of (parentRendering as KPolygon).points) {
-                    const position = evaluateKPosition(point, parentBounds, true)
-                    const x = position.x + leftInset
-                    const y = position.y + topInset
-                    points.push({ x: x, y: y })
-                }
-                path = points
-            } else if (isPolyline(parentRendering!)) {
-                // TODO: Continue here!
+            case K_POINT_PLACEMENT_DATA: {
+                // Evaluate the point placement micro layout with the help of KLighD.
+                bounds = evaluatePointPlacementRendering(rendering, placementData as KPointPlacementData, parentBounds)
+                break
             }
-            break
-        }
-        default: {
-            // If no placementData is defined, assume the width and height of the parent object
-            // placed at the top left corner.
-            bounds = { x: 0, y: 0, width: parentBounds.width, height: parentBounds.height }
-            break
+            case K_DECORATOR_PLACEMENT_DATA: {
+                const decoratorPlacementData = asDecoratorPlacementData(placementData)
+                decoration = evaluateDecoratorPlacement(
+                    decoratorPlacementData,
+                    getDecoratorPath(parent, parentRendering, parentBounds)
+                )
+                bounds = decoratorPlacementData
+                    ? {
+                          x: 0,
+                          y: 0,
+                          width: decoratorPlacementData.width,
+                          height: decoratorPlacementData.height,
+                      }
+                    : basicEstimateSize(rendering, parentBounds)
+                break
+            }
+            default: {
+                // If no placementData is defined, assume the width and height of the parent object
+                // placed at the top left corner.
+                bounds = { x: 0, y: 0, width: parentBounds.width, height: parentBounds.height }
+                break
+            }
         }
     }
 
     // Decide if the bounds and decoration should be put in the boundsMap/decorationMap or in the rendering's
     // properties.
-    // TODO: Remove all forced non-nulls when 'KDecoratorPlacementData' case is implemented.
     if (!usedBoundsMap) {
-        console.log(rendering.type)
-        console.log(rendering.properties[CALCULATED_BOUNDS])
-        rendering.properties[CALCULATED_BOUNDS] = bounds!
-        console.log(rendering.properties[CALCULATED_BOUNDS])
+        rendering.properties[CALCULATED_BOUNDS] = bounds
         if (decoration) rendering.properties[CALCULATED_DECORATION] = decoration
     } else {
-        usedBoundsMap[rendering.properties[RENDERING_ID] as string] = bounds!
+        usedBoundsMap[rendering.properties[RENDERING_ID] as string] = bounds
         if (decoration) usedDecorationMap![rendering.properties[RENDERING_ID] as string] = decoration
     }
 
@@ -476,7 +578,9 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
             usedBoundsMap,
             usedDecorationMap,
             parent,
-            library
+            library,
+            rendering,
+            rendering
         )
     } else if (isRenderingRef(rendering) && isContainerRendering(rendering.rendering)) {
         const referencedRendering = rendering.rendering as KContainerRendering
@@ -487,9 +591,33 @@ function handleAreaAndPointAndDecoratorPlacementRendering(
             usedBoundsMap,
             usedDecorationMap,
             parent,
-            library
+            library,
+            rendering,
+            referencedRendering
         )
     }
+}
+
+function getDecoratorPath(
+    parent: SKGraphElement,
+    parentRendering: KRendering | undefined,
+    parentBounds: Bounds
+): Point[] {
+    if (isEdge(parent)) {
+        const routingPoints = (parent as unknown as { routingPoints?: Point[] }).routingPoints
+        if (routingPoints && routingPoints.length > 0) {
+            return routingPoints
+        }
+    }
+
+    let rendering = parentRendering
+    while (rendering && isRenderingRef(rendering)) {
+        rendering = (rendering as KRenderingRef).rendering
+    }
+    if (rendering && isPolyline(rendering) && Array.isArray(rendering.points) && rendering.points.length > 0) {
+        return evaluatePolylinePlacement(rendering, parentBounds)
+    }
+    return []
 }
 
 function handleChildren(
@@ -499,20 +627,35 @@ function handleChildren(
     boundsMap: Record<string, Bounds> | null,
     decorationMap: Record<string, Decoration> | null,
     parent: SKGraphElement,
-    library: KRenderingLibrary
+    library: KRenderingLibrary,
+    parentRendering: KRendering | undefined,
+    container: KContainerRendering | undefined
 ) {
-    if (placement && isGridPlacement(placement) && renderings)
-        handleGridPlacementRendering(renderings, placement, parentBounds, boundsMap, decorationMap, parent)
-    else if (renderings)
-        for (const childRendering of renderings)
+    if (placement && isGridPlacement(placement) && renderings) {
+        handleGridPlacementRendering(
+            renderings,
+            placement,
+            parentBounds,
+            boundsMap,
+            decorationMap,
+            parent,
+            library,
+            parentRendering,
+            container
+        )
+    } else if (renderings) {
+        for (const childRendering of renderings) {
             handleAreaAndPointAndDecoratorPlacementRendering(
                 childRendering,
                 parentBounds,
                 boundsMap,
                 decorationMap,
                 parent,
-                library
+                library,
+                parentRendering
             )
+        }
+    }
 }
 
 function handleGridPlacementRendering(
@@ -521,10 +664,28 @@ function handleGridPlacementRendering(
     parentBounds: Bounds,
     boundsMap: Record<string, Bounds> | null,
     decorationMap: Record<string, Decoration> | null,
-    parent: SKGraphElement
+    parent: SKGraphElement,
+    library: KRenderingLibrary,
+    parentRendering: KRendering | undefined,
+    container: KContainerRendering | undefined
 ) {
-    // TODO: Do the thing!
-    return
+    if (!isGridPlacement(placement)) {
+        return
+    }
+
+    const childBounds = evaluateGridPlacement(placement, renderings, parentBounds, container)
+    for (let i = 0; i < renderings.length; i++) {
+        handleAreaAndPointAndDecoratorPlacementRendering(
+            renderings[i],
+            parentBounds,
+            boundsMap,
+            decorationMap,
+            parent,
+            library,
+            parentRendering,
+            childBounds[i] ?? emptyBounds()
+        )
+    }
 }
 
 // JAVA EQUIVALENT:

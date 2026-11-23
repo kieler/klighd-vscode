@@ -27,6 +27,7 @@ import { Bounds } from 'sprotty-protocol'
 import { isProxyRendering } from './proxy-view/proxy-view-util'
 import {
     isContainerRendering,
+    isImage,
     isPolyline,
     isRendering,
     isSKGraphElement,
@@ -316,13 +317,47 @@ export function resolveKRendering(
                 // trim the ID to remove the leading parent graph element ID that is prefixed in rendering refs
                 id = id.substring(id.indexOf('$$lib$$$'))
                 for (const rendering of kRenderingLibrary.renderings)
-                    if (((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string) === id)
-                        return rendering as KRendering
+                    if (((rendering as KRendering).properties['klighd.lsp.rendering.id'] as string) === id) {
+                        const resolvedRendering = rendering as KRendering
+                        ;(data as KRenderingRef).rendering = resolvedRendering
+                        return resolvedRendering
+                    }
             } else console.log('No KRenderingLibrary for KRenderingRef in context')
         }
         if (data && isRendering(data)) return data
     }
     return undefined
+}
+
+export function resolveRenderingRefs(
+    rendering: KRendering | null | undefined,
+    kRenderingLibrary: KRenderingLibrary | undefined,
+    visited: Set<KRendering> = new Set()
+): void {
+    if (!rendering || visited.has(rendering)) {
+        return
+    }
+    visited.add(rendering)
+
+    if (rendering.type === K_RENDERING_REF) {
+        const resolvedRendering = resolveKRendering([rendering], kRenderingLibrary)
+        if (resolvedRendering) {
+            resolveRenderingRefs(resolvedRendering, kRenderingLibrary, visited)
+        }
+        return
+    }
+
+    if (isContainerRendering(rendering)) {
+        for (const child of rendering.children ?? []) {
+            resolveRenderingRefs(child, kRenderingLibrary, visited)
+        }
+    }
+    if (isPolyline(rendering) && rendering.junctionPointRendering) {
+        resolveRenderingRefs(rendering.junctionPointRendering, kRenderingLibrary, visited)
+    }
+    if (isImage(rendering) && rendering.clipShape) {
+        resolveRenderingRefs(rendering.clipShape, kRenderingLibrary, visited)
+    }
 }
 
 export function getKRenderingLibrary(root: SKGraphElement): KRenderingLibrary | undefined {
