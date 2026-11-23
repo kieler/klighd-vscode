@@ -976,8 +976,8 @@ export class ProxyView extends AbstractUIExtension {
 
         // Connected to proxy, use ratio to calculate where to connect to the proxy
         const proxyPointRelative = node.parentToLocal(proxyConnector)
-        const proxyRatioX = proxyPointRelative.x / node.bounds.width
-        const proxyRatioY = proxyPointRelative.y / node.bounds.height
+        const proxyRatioX = node.bounds.width > 0 ? proxyPointRelative.x / node.bounds.width : 0.5
+        const proxyRatioY = node.bounds.height > 0 ? proxyPointRelative.y / node.bounds.height : 0.5
         const proxyTranslatedRelative = {
             x: transform.x + transform.width * proxyRatioX,
             y: transform.y + transform.height * proxyRatioY,
@@ -1423,8 +1423,8 @@ export class ProxyView extends AbstractUIExtension {
     private getTransform(node: SKNode, desiredSize: number, proxyBounds: Bounds, canvas: Canvas): TransformAttributes {
         // Calculate the scale and the resulting proxy dimensions
         // The scale is calculated such that width & height are capped to a max value
-        const proxyWidthScale = desiredSize / proxyBounds.width
-        const proxyHeightScale = desiredSize / proxyBounds.height
+        const proxyWidthScale = proxyBounds.width > 0 ? desiredSize / proxyBounds.width : 1
+        const proxyHeightScale = proxyBounds.height > 0 ? desiredSize / proxyBounds.height : 1
         let scale = this.originalNodeScale ? canvas.zoom : Math.min(proxyWidthScale, proxyHeightScale)
         scale = this.capScaleToOne ? Math.min(1, scale) : scale
         const proxyWidth = proxyBounds.width * scale

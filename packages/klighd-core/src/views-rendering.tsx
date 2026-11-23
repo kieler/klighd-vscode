@@ -219,8 +219,8 @@ export function renderRectangularShape(
             if (angle < 360) {
                 // Calculation to get the start and endpoint of the arc from the angles given.
                 // Reduce the width and height by half the linewidth on both sides, so the ellipse really stays within the given bounds.
-                const width = boundsAndTransformation.bounds.width - lineWidth
-                const height = boundsAndTransformation.bounds.height - lineWidth
+                const width = Math.max(0, boundsAndTransformation.bounds.width - lineWidth)
+                const height = Math.max(0, boundsAndTransformation.bounds.height - lineWidth)
                 const rX = width / 2
                 const rY = height / 2
                 const midX = rX + lineWidth / 2
@@ -574,6 +574,10 @@ export function renderKText(
     // Default case. Calculate all svg objects and attributes needed to build this rendering from the styles and the rendering.
     const colorStyles = getSvgColorStyles(styles, context, parent, rendering)
 
+    if (boundsAndTransformation === undefined) {
+        return <g />
+    }
+
     // Calculate the background, if needed, as a rectangle to be placed behind the text.
     let background: VNode | undefined
     if (colorStyles.background.color !== 'none') {
@@ -636,10 +640,10 @@ export function renderKText(
             const calculatedTextLineHeights = rendering.properties['klighd.calculated.text.line.heights'] as number[]
 
             // the bounds data of texts in `boundsAndTransformation` are based on the horizontal/vertical baseline of the text, use the unaltered bounds instead.
-            const unalteredBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
+            const unalteredBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds | undefined
 
             let currentY =
-                (unalteredBounds.y ?? 0) +
+                (unalteredBounds?.y ?? 0) +
                 (calculatedTextLineHeights ? calculatedTextLineHeights[0] * ((1 - proportionalHeight) / 2) : 0)
             lines.forEach((_line, index) => {
                 const xPos = boundsAndTransformation?.bounds?.x ?? 0
@@ -901,8 +905,8 @@ export function renderSingleSVGRect(
 
     return (
         <rect
-            width={bounds.width - lineWidth}
-            height={bounds.height - lineWidth}
+            width={Math.max(0, bounds.width - lineWidth)}
+            height={Math.max(0, bounds.height - lineWidth)}
             {...(theX ? { x: theX } : {})}
             {...(theY ? { y: theY } : {})}
             {...(rx ? { rx } : {})}
@@ -1184,8 +1188,8 @@ export function renderSingleSVGEllipse(
             {...(x && y ? { transform: `translate(${x},${y})` } : {})}
             cx={bounds.width / 2}
             cy={bounds.height / 2}
-            rx={bounds.width / 2 - lineWidth / 2}
-            ry={bounds.height / 2 - lineWidth / 2}
+            rx={Math.max(0, bounds.width / 2 - lineWidth / 2)}
+            ry={Math.max(0, bounds.height / 2 - lineWidth / 2)}
             style={{
                 ...(kShadow ? {} : { 'stroke-linecap': lineStyles.lineCap }),
                 ...(kShadow ? {} : { 'stroke-linejoin': lineStyles.lineJoin }),
@@ -1303,22 +1307,30 @@ export function getRendering(
         context.kRenderingLibrary = kRenderingLibrary as KRenderingLibrary
     }
 
-    const kRendering = getKRendering(datas, context)
+    const previousBoundsMap = context.boundsMap
+    const previousDecorationMap = context.decorationMap
 
-    if (kRendering === undefined) {
-        return undefined
+    try {
+        const kRendering = getKRendering(datas, context)
+
+        if (kRendering === undefined) {
+            return undefined
+        }
+
+        // look for a title rendering; if none exists, label the first (dfs) rendering as the title rendering.
+        const useSmartZoom =
+            context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.targetKind !== 'hidden'
+        const useDefaultTitleRendering = context.renderOptionsRegistry.getValueOrDefault(UseDefaultTitleRendering)
+        // only call this on the root rendering of KNodes
+        if (useSmartZoom && useDefaultTitleRendering && parent instanceof SKNode && parent.data.includes(kRendering)) {
+            establishTitleRendering(kRendering)
+        }
+
+        return renderKRendering(kRendering, parent, propagatedStyles, context, childOfNodeTitle)
+    } finally {
+        context.boundsMap = previousBoundsMap
+        context.decorationMap = previousDecorationMap
     }
-
-    // look for a title rendering; if none exists, label the first (dfs) rendering as the title rendering.
-    const useSmartZoom =
-        context.renderOptionsRegistry.getValueOrDefault(UseSmartZoom) && context.targetKind !== 'hidden'
-    const useDefaultTitleRendering = context.renderOptionsRegistry.getValueOrDefault(UseDefaultTitleRendering)
-    // only call this on the root rendering of KNodes
-    if (useSmartZoom && useDefaultTitleRendering && parent instanceof SKNode && parent.data.includes(kRendering)) {
-        establishTitleRendering(kRendering)
-    }
-
-    return renderKRendering(kRendering, parent, propagatedStyles, context, childOfNodeTitle)
 }
 
 export function establishTitleRendering(rendering: KRendering): KRendering | undefined {
@@ -1488,13 +1500,21 @@ export function renderKRendering(
             // ...and to its right
             const spaceR = parentBounds.width - originalX - originalWidth
             // New x value after taking space off both sides at an equal ratio
-            const newX = originalX - (spaceL * (newWidth - originalWidth)) / (spaceL + spaceR)
+            const horizontalSpace = spaceL + spaceR
+            const newX =
+                horizontalSpace !== 0
+                    ? originalX - (spaceL * (newWidth - originalWidth)) / horizontalSpace
+                    : originalX
 
             // Same for y axis, just with switched dimensional variables.
             const newHeight = originalHeight * scalingFactor
             const spaceT = originalY
             const spaceB = parentBounds.height - originalY - originalHeight
-            const newY = originalY - (spaceT * (newHeight - originalHeight)) / (spaceT + spaceB)
+            const verticalSpace = spaceT + spaceB
+            const newY =
+                verticalSpace !== 0
+                    ? originalY - (spaceT * (newHeight - originalHeight)) / verticalSpace
+                    : originalY
 
             // Apply the new bounds and scaling as the element's transformation.
             const translateAndScale: Transformation[] = []

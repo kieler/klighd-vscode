@@ -502,25 +502,27 @@ export function findTextBoundsAndTransformationData(
 
         if ((rendering.properties['klighd.lsp.calculated.bounds'] as Bounds) !== undefined) {
             const foundBounds = rendering.properties['klighd.lsp.calculated.bounds'] as Bounds
-            bounds.x = calculateX(
-                foundBounds.x,
-                foundBounds.width,
-                styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT,
-                textWidth
-            )
-            bounds.y = calculateY(
-                foundBounds.y,
-                foundBounds.height,
-                styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
-                lines
-            )
-            bounds.width = textWidth
-            bounds.height = textHeight
+            if (foundBounds !== undefined) {
+                bounds.x = calculateX(
+                    foundBounds.x,
+                    foundBounds.width,
+                    styles.kHorizontalAlignment ?? DEFAULT_K_HORIZONTAL_ALIGNMENT,
+                    textWidth
+                )
+                bounds.y = calculateY(
+                    foundBounds.y,
+                    foundBounds.height,
+                    styles.kVerticalAlignment ?? DEFAULT_K_VERTICAL_ALIGNMENT,
+                    lines
+                )
+                bounds.width = textWidth
+                bounds.height = textHeight
+            }
         }
         // if no bounds have been found yet, they should be in the boundsMap
         if (bounds.x === undefined && context.boundsMap !== undefined) {
             const foundBounds = findById(context.boundsMap, rendering.properties['klighd.lsp.rendering.id'] as string)
-            if (bounds !== undefined) {
+            if (foundBounds !== undefined) {
                 bounds.x = calculateX(
                     foundBounds.x,
                     foundBounds.width,
