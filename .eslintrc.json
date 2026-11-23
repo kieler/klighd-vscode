@@ -38,6 +38,15 @@
             }
         ]
     },
+    "overrides": [
+        {
+            "files": ["**/scripts/**/*.js"],
+            "rules": {
+                "@typescript-eslint/no-require-imports": "off",
+                "no-console": "off"
+            }
+        }
+    ],
     "ignorePatterns": ["**/*.d.ts", "lib", "dist", "pack", "webpack.config.js", "generated"],
     "settings": {
         "import/resolver": {

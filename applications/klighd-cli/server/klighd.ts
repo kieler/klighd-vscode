@@ -3,7 +3,7 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2024 by
+ * Copyright 2021-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
@@ -67,7 +67,7 @@ const serve = new Command('serve')
             const finalPort = await findPort(port)
             const server = createServer({ logging: 'error', lsPort, lsPath })
 
-            const url = await server.listen(finalPort, program.opts().address)
+            const url = await server.listen({ port: finalPort, host: program.opts().address })
 
             // Minimal CLI output so it is still understandable but also parsable in scripts.
             console.log('Server listening at:', url)
@@ -102,7 +102,7 @@ const open = new Command('open')
             const finalPort = await findPort(port)
             const server = createServer({ logging: 'warn', lsPort, lsPath })
 
-            const addr = await server.listen(finalPort, program.opts().address)
+            const addr = await server.listen({ port: finalPort, host: program.opts().address })
             const url = `${addr}?source=${fileUrl}${preferences}`
 
             console.log('\n==============================\n')
