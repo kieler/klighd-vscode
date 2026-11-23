@@ -809,6 +809,9 @@ export function isContainerRendering(test: KGraphData): test is KContainerRender
  * @param test The potential KChildArea.
  */
 export function isChildArea(test: KGraphData): test is KChildArea {
+    if (!test) {
+        return false
+    }
     const { type } = test
     return type === K_CHILD_AREA
 }
@@ -818,6 +821,9 @@ export function isChildArea(test: KGraphData): test is KChildArea {
  * @param test The potential KRenderingLibrary.
  */
 export function isRenderingLibrary(test: KGraphData): test is KRenderingLibrary {
+    if (!test) {
+        return false
+    }
     const { type } = test
     return type === K_RENDERING_LIBRARY
 }
@@ -827,6 +833,9 @@ export function isRenderingLibrary(test: KGraphData): test is KRenderingLibrary 
  * @param test The potential KRenderingRef.
  */
 export function isRenderingRef(test: KGraphData): test is KRenderingRef {
+    if (!test) {
+        return false
+    }
     const { type } = test
     return type === K_RENDERING_REF
 }
@@ -864,6 +873,9 @@ export function isKText(test: KGraphData): test is KText {
  * @param test The potential KImage
  */
 export function isImage(test: KGraphData): test is KImage {
+    if (!test) {
+        return false
+    }
     const { type } = test
     return type === K_IMAGE
 }
@@ -890,7 +902,7 @@ export function isAreaPlacementData(test: KPlacementData): test is KAreaPlacemen
         return false
     }
     const { type } = test
-    return type === K_AREA_PLACEMENT_DATA
+    return type === K_AREA_PLACEMENT_DATA || type === K_GRID_PLACEMENT_DATA
 }
 /**
  * Returns true if the given parameter is a KGridPlacementData.

@@ -16,17 +16,23 @@
  */
 
 import {
+    isAreaPlacementData,
+    isDecoratorPlacementData,
     isGridPlacement,
     isGridPlacementData,
+    isPointPlacementData,
     isRenderingRef,
     K_BOTTOM_POSITION,
     K_LEFT_POSITION,
     K_RIGHT_POSITION,
     K_TOP_POSITION,
+    KAreaPlacementData,
+    KDecoratorPlacementData,
     KGridPlacement,
     KGridPlacementData,
     KPlacement,
     KPlacementData,
+    KPointPlacementData,
     KRendering,
     KRenderingRef,
     KXPosition,
@@ -59,45 +65,125 @@ const RIGHT_BOTTOM_POS = {
     },
 }
 
-export function toNonNullLeftPosition(position: KXPosition): KXPosition {
-    return position ? position : LEFT_TOP_POS.x
+/**
+ * Returns the given position or a default left position if null/undefined.
+ *
+ * @param position the position to check
+ * @return the position or default left position
+ */
+export function toNonNullLeftPosition(position?: KXPosition | null): KXPosition {
+    return position || LEFT_TOP_POS.x
 }
 
-export function toNonNullRightPosition(position: KXPosition): KXPosition {
-    return position ? position : RIGHT_BOTTOM_POS.x
+/**
+ * Returns the given position or a default right position if null/undefined.
+ *
+ * @param position the position to check
+ * @return the position or default right position
+ */
+export function toNonNullRightPosition(position?: KXPosition | null): KXPosition {
+    return position || RIGHT_BOTTOM_POS.x
 }
 
-export function toNonNullTopPosition(position: KXPosition): KXPosition {
-    return position ? position : LEFT_TOP_POS.y
+/**
+ * Returns the given position or a default top position if null/undefined.
+ *
+ * @param position the position to check
+ * @return the position or default top position
+ */
+export function toNonNullTopPosition(position?: KXPosition | null): KXPosition {
+    return position || LEFT_TOP_POS.y
 }
 
-export function toNonNullBottomPosition(position: KXPosition): KXPosition {
-    return position ? position : RIGHT_BOTTOM_POS.y
+/**
+ * Returns the given position or a default bottom position if null/undefined.
+ *
+ * @param position the position to check
+ * @return the position or default bottom position
+ */
+export function toNonNullBottomPosition(position?: KXPosition | null): KXPosition {
+    return position || RIGHT_BOTTOM_POS.y
 }
 
+/**
+ * Reveals the placement data of a rendering, following rendering references if necessary.
+ *
+ * @param rendering the rendering to examine
+ * @return the placement data or null if none found
+ */
 export function getPlacementData(rendering: KRendering): KPlacementData | null {
-    // TODO: Test this method
-    // TODO: Comment this method
-    console.warn('METHOD IS BEING USED: ' + 'getPlacementData')
-
-    let placementData = rendering.placementData
-    if (placementData) return placementData
-    else if (isRenderingRef(rendering)) {
+    const { placementData } = rendering
+    if (placementData) {
+        return placementData
+    }
+    if (isRenderingRef(rendering)) {
         const ref = rendering as KRenderingRef
-        if (!ref.rendering) return null
-        else return getPlacementData(ref.rendering)
-    } else return null
+        return ref.rendering ? getPlacementData(ref.rendering) : null
+    }
+    return null
 }
 
-export function asGridPlacementData(data: KPlacementData | null): KGridPlacementData | null {
-    // TODO: Test this method
-    // TODO: Comment this method
-    console.warn('METHOD IS BEING USED: ' + 'asGridPlacementData')
-    if (data && isGridPlacementData(data)) return data as KGridPlacementData
-    else return null
+/**
+ * Returns the given placement data as grid placement data if it is of the correct type.
+ *
+ * @param data the placement data to cast
+ * @return the grid placement data or null
+ */
+export function asGridPlacementData(data: KPlacementData | null | undefined): KGridPlacementData | null {
+    if (data && isGridPlacementData(data)) {
+        return data as KGridPlacementData
+    }
+    return null
 }
 
-export function asGridPlacement(placement: KPlacement): KGridPlacement | null {
-    if (placement && isGridPlacement(placement)) return placement as KGridPlacement
-    else return null
+/**
+ * Returns the given placement as grid placement if it is of the correct type.
+ *
+ * @param placement the placement to cast
+ * @return the grid placement or null
+ */
+export function asGridPlacement(placement: KPlacement | null | undefined): KGridPlacement | null {
+    if (placement && isGridPlacement(placement)) {
+        return placement as KGridPlacement
+    }
+    return null
+}
+
+/**
+ * Returns the given placement data as area placement data if it is of the correct type.
+ *
+ * @param data the placement data to cast
+ * @return the area placement data or null
+ */
+export function asAreaPlacementData(data: KPlacementData | null | undefined): KAreaPlacementData | null {
+    if (data && isAreaPlacementData(data)) {
+        return data as KAreaPlacementData
+    }
+    return null
+}
+
+/**
+ * Returns the given placement data as point placement data if it is of the correct type.
+ *
+ * @param data the placement data to cast
+ * @return the point placement data or null
+ */
+export function asPointPlacementData(data: KPlacementData | null | undefined): KPointPlacementData | null {
+    if (data && isPointPlacementData(data)) {
+        return data as KPointPlacementData
+    }
+    return null
+}
+
+/**
+ * Returns the given placement data as decorator placement data if it is of the correct type.
+ *
+ * @param data the placement data to cast
+ * @return the decorator placement data or null
+ */
+export function asDecoratorPlacementData(data: KPlacementData | null | undefined): KDecoratorPlacementData | null {
+    if (data && isDecoratorPlacementData(data)) {
+        return data as KDecoratorPlacementData
+    }
+    return null
 }
