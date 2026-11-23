@@ -23,7 +23,7 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
     "scripts": {
         "clean": "rimraf lib dist bin pack",
         "lint": "eslint .",
