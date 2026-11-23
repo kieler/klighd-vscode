@@ -30,6 +30,10 @@ jobs:
               env:
                   VSCE_PAT: ${{ secrets.VSCE_PAT }}
                   OVSX_PAT: ${{ secrets.OVSX_PAT }}
+            - name: Package klighd-cli for npm
+              run: yarn workspace @kieler/klighd-cli package:node
+            - name: Publish klighd-cli
+              run: npm publish ./applications/klighd-cli/pack/kieler-klighd-cli-*.tgz
             - name: Publish klighd-interactive
               run: npm publish
               working-directory: ./packages/klighd-interactive
