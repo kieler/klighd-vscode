@@ -21,13 +21,8 @@ import { Connection, NotificationType, ActionMessage, ColorThemeKind } from '@ki
 import { showPopup } from '../popup'
 /* global WebSocket, window */
 
-// TODO: deprecated, see below.
-type GeneralMessageParams = [string, 'info' | 'warn' | 'error']
-
 // Custom LSP methods defined by Sprotty and KLighD
 const acceptMessageType = new rpc.NotificationType<ActionMessage, void>('diagram/accept')
-// TODO: this message type is deprecated and will be removed in the next major KLighD release. It is replaced by the LSP "window/showMessage" message that should be only supported in the next major klighd-vscode release.
-const generalMessageType = new rpc.NotificationType<GeneralMessageParams, void>('general/sendMessage')
 
 /**
  * Websocket connection to a language server. Implements the {@link Connection} service
@@ -111,8 +106,6 @@ export class LSPConnection implements Connection {
 
                     // Handle message from the server that should be displayed to the user
                     this.connection.onNotification(lsp.ShowMessageNotification.method, this.showMessage.bind(this))
-                    // TODO: deprecated, see above.
-                    this.connection.onNotification(generalMessageType, this.displayGeneralMessage.bind(this))
 
                     resolve(this)
                 },
@@ -140,13 +133,6 @@ export class LSPConnection implements Connection {
             )
             this.close()
         })
-    }
-
-    // TODO: deprecated, see above.
-    private displayGeneralMessage(params: GeneralMessageParams) {
-        const [message, type] = params
-
-        showPopup(type, 'Server message', message)
     }
 
     private showMessage(params: lsp.ShowMessageParams) {
