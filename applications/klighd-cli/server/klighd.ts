@@ -1,12 +1,14 @@
+#!/usr/bin/env node
 /*
  * KIELER - Kiel Integrated Environment for Layout Eclipse RichClient
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021-2024 by
+ * Copyright 2021-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
+ * + and Scheidt & Bachmann System Technik GmbH, 24109 Melsdorf
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -20,10 +22,14 @@
 import { Command } from 'commander'
 import getPort from 'get-port'
 import openUrl from 'open'
+import { basename } from 'path'
 import { pathToFileURL } from 'url'
 import { parseIntOrUndefined } from './helpers'
 import { createServer } from './server'
 import { VERSION } from './version'
+
+// Name of the executable command: the binary name when packaged with pkg, the npm bin name 'klighd' otherwise.
+const commandName = (process as { pkg?: unknown }).pkg ? basename(process.execPath) : 'klighd'
 
 const setupInformation = `
 Alternatively, the path to a language server jar can be configured with the
@@ -32,13 +38,13 @@ variable. If both a path and a port for a language server is provided, the webse
 will use the port to connect to the listening language server.
 
 Example calls:
-  $ ${process.execPath.split('\\').pop()?.split('/').pop()} --ls_port 5007 ./ABRO.sctx
-  $ ${process.execPath.split('\\').pop()?.split('/').pop()} --ls_path ../language-server.jar ./example.elkt
-  $ ${process.execPath.split('\\').pop()?.split('/').pop()} serve -p 8000
-  $ ${process.execPath.split('\\').pop()?.split('/').pop()} serve -p 8000 -a 0.0.0.0
+  $ ${commandName} --ls_port 5007 ./ABRO.sctx
+  $ ${commandName} --ls_path ../language-server.jar ./example.elkt
+  $ ${commandName} serve -p 8000
+  $ ${commandName} serve -p 8000 -a 0.0.0.0
 `
 
-const program = new Command(process.title)
+const program = new Command(commandName)
 
 program
     .version(VERSION)
@@ -67,7 +73,7 @@ const serve = new Command('serve')
             const finalPort = await findPort(port)
             const server = createServer({ logging: 'error', lsPort, lsPath })
 
-            const url = await server.listen(finalPort, program.opts().address)
+            const url = await server.listen({ port: finalPort, host: program.opts().address })
 
             // Minimal CLI output so it is still understandable but also parsable in scripts.
             console.log('Server listening at:', url)
@@ -102,7 +108,7 @@ const open = new Command('open')
             const finalPort = await findPort(port)
             const server = createServer({ logging: 'warn', lsPort, lsPath })
 
-            const addr = await server.listen(finalPort, program.opts().address)
+            const addr = await server.listen({ port: finalPort, host: program.opts().address })
             const url = `${addr}?source=${fileUrl}${preferences}`
 
             console.log('\n==============================\n')

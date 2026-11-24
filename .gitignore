@@ -1,6 +1,7 @@
 build
 dist
 lerna-debug.log
+.nx
 lib
 node_modules
 pack

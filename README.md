@@ -33,7 +33,7 @@ Moreover, the default branches of both repositories should be compatible but mig
 
 ### Requirements
 
-Development of this project requires [Node.js _v24.x_](https://nodejs.org) and
+Development of this project requires [Node.js _v24_ or newer](https://nodejs.org) and
 [yarn _v1.x_](https://classic.yarnpkg.com/).
 
 Developing the `klighd-vscode` extension requires an extension that has a dependency on
@@ -98,6 +98,19 @@ The VS Code extension for this language server can be found
 The self-contained CLI does not contain a language server to make it more flexible for different
 language servers. Run `klighd-{os} -h` for information on how to provide a language server for the
 CLI.
+
+### Create a Node.js-only `klighd-cli` package
+
+As an alternative to the self-contained binaries, the CLI can be packaged as a plain npm package
+that runs on a locally installed Node.js (v24 or newer).
+
+1. Fulfill the requirements above.
+1. Run `yarn` in the monorepo root to install all dependencies (if not already done).
+1. Run `yarn build`
+1. Run `yarn workspace @kieler/klighd-cli package:node`
+1. The package can be found in _applications/klighd-cli/pack_ as `kieler-klighd-cli-<version>.tgz`.
+
+Install it with `npm install -g ./kieler-klighd-cli-<version>.tgz` and run `klighd -h` for usage information.
 
 ### Developing using the VS Code extension
 

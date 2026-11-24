@@ -3,10 +3,11 @@
  *
  * http://rtsys.informatik.uni-kiel.de/kieler
  *
- * Copyright 2021 by
+ * Copyright 2021-2026 by
  * + Kiel University
  *   + Department of Computer Science
  *     + Real-Time and Embedded Systems Group
+ * + and Scheidt & Bachmann System Technik GmbH, 24109 Melsdorf
  *
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
@@ -15,12 +16,13 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
-import { FastifyLoggerInstance } from 'fastify'
+import { FastifyBaseLogger } from 'fastify'
 import { Socket } from 'net'
-import { IWebSocket, Message } from 'vscode-ws-jsonrpc'
-import * as rpcServer from 'vscode-ws-jsonrpc/lib/server'
-// _fastify-websocket_ typing for their conn.socket object. _ws_ is a dependency of _fastify-websocket_.
-import * as WebSocket from 'ws'
+import { Message } from 'vscode-jsonrpc'
+import { IConnection, IWebSocket } from 'vscode-ws-jsonrpc'
+import * as rpcServer from 'vscode-ws-jsonrpc/server'
+// _@fastify/websocket_ typing for their socket object. _ws_ is a dependency of _@fastify/websocket_.
+import type { WebSocket } from 'ws'
 
 /**
  * Creates a connection to the language server. The connection is able to either
@@ -35,14 +37,14 @@ import * as WebSocket from 'ws'
  */
 export function connectToLanguageServer(
     client: WebSocket,
-    logger: FastifyLoggerInstance,
+    logger: FastifyBaseLogger,
     lsPort?: number,
     lsPath?: string
 ): () => void {
     const webSocket = transformWebSocketToIWebSocket(client)
     const clientConnection = rpcServer.createWebSocketConnection(webSocket)
 
-    let lsConn: rpcServer.IConnection
+    let lsConn: IConnection | undefined
     if (lsPort) {
         const socket = new Socket()
         // Socket connection to the LS
@@ -57,7 +59,9 @@ export function connectToLanguageServer(
         lsConn = rpcServer.createServerProcess('Language Server', 'java', args)
 
         logger.info('Forwarding to language server process.')
-    } else {
+    }
+
+    if (!lsConn) {
         logger.fatal('No options provided to start a language server.')
         logger.fatal('Canceling client request.')
         clientConnection.dispose()
@@ -65,29 +69,31 @@ export function connectToLanguageServer(
             // empty cleanup
         }
     }
+    const lsConnection = lsConn
 
     // Log methods names that are forward between the server and client
-    rpcServer.forward(clientConnection, lsConn, logMessage.bind(undefined, logger))
+    rpcServer.forward(clientConnection, lsConnection, logMessage.bind(undefined, logger))
 
     clientConnection.onClose(() => {
         logger.info('Client closed. Shutting down language server.')
         clientConnection.dispose()
-        lsConn.dispose()
+        lsConnection.dispose()
     })
 
     return () => {
         clientConnection.dispose()
-        lsConn.dispose()
+        lsConnection.dispose()
     }
 }
 
 /**
- * Transforms a _fastify-websocket_  {@link WebSocket} object to an {@link IWebSocket}.
+ * Transforms a _@fastify/websocket_  {@link WebSocket} object to an {@link IWebSocket}.
  *
- * Inspired by `toWebSocket` in _vscode-ws-jsonrpc_.
+ * Inspired by `toSocket` in _vscode-ws-jsonrpc_.
  */
 function transformWebSocketToIWebSocket(socket: WebSocket): IWebSocket {
     return {
+        $type: 'IWebSocket',
         send: (content) => socket.send(content),
         // eslint-disable-next-line no-return-assign
         onMessage: (cb) => (socket.onmessage = (ev) => cb(ev.data)),
@@ -105,7 +111,7 @@ function transformWebSocketToIWebSocket(socket: WebSocket): IWebSocket {
 }
 
 /** Creates a debug log for a forwarded message. */
-function logMessage(logger: FastifyLoggerInstance, msg: Message): Message {
+function logMessage(logger: FastifyBaseLogger, msg: Message): Message {
     // Sadly, we are unable to identify the direction of the message...
     const methodName: string = (msg as any)?.method ?? 'unknown'
 

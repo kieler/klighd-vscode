@@ -211,7 +211,7 @@ export class BookmarkPanel extends SidebarPanel {
                 } else {
                     this.loadBookmark(textarea.value)
                 }
-            } catch (err) {
+            } catch {
                 console.log('Unable paste text from clipboard')
             }
             document.body.removeChild(textarea)
@@ -238,7 +238,7 @@ export class BookmarkPanel extends SidebarPanel {
             try {
                 const successful = document.execCommand('copy')
                 if (!successful) console.log('Failed to copy text to clipboard')
-            } catch (err) {
+            } catch {
                 console.log('Unable to copy text to clipboard')
             }
             document.body.removeChild(textarea)

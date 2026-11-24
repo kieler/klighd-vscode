@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: EPL-2.0
  */
 
+import { MessageConnection, NotificationType as RpcNotificationType } from 'vscode-jsonrpc/browser'
 import * as rpc from 'vscode-ws-jsonrpc'
 import * as lsp from 'vscode-languageserver-protocol'
 import { Connection, NotificationType, ActionMessage, ColorThemeKind } from '@kieler/klighd-core'
@@ -25,9 +26,9 @@ import { showPopup } from '../popup'
 type GeneralMessageParams = [string, 'info' | 'warn' | 'error']
 
 // Custom LSP methods defined by Sprotty and KLighD
-const acceptMessageType = new rpc.NotificationType<ActionMessage, void>('diagram/accept')
+const acceptMessageType = new RpcNotificationType<ActionMessage>('diagram/accept')
 // TODO: this message type is deprecated and will be removed in the next major KLighD release. It is replaced by the LSP "window/showMessage" message that should be only supported in the next major klighd-vscode release.
-const generalMessageType = new rpc.NotificationType<GeneralMessageParams, void>('general/sendMessage')
+const generalMessageType = new RpcNotificationType<GeneralMessageParams>('general/sendMessage')
 
 /**
  * Websocket connection to a language server. Implements the {@link Connection} service
@@ -39,7 +40,7 @@ const generalMessageType = new rpc.NotificationType<GeneralMessageParams, void>(
 export class LSPConnection implements Connection {
     private socket?: WebSocket
 
-    private connection?: rpc.MessageConnection
+    private connection?: MessageConnection
 
     private messageHandlers: ((message: ActionMessage) => void)[] = []
 
@@ -121,7 +122,7 @@ export class LSPConnection implements Connection {
     }
 
     /** Display connections errors and close events to the user. */
-    private setupErrorHandlers(conn: rpc.MessageConnection) {
+    private setupErrorHandlers(conn: MessageConnection) {
         conn.onError((e) => {
             showPopup(
                 'error',

@@ -25,5 +25,7 @@ jobs:
                   node-version: 24.x
             - run: yarn
             - run: yarn build
+            - name: Package klighd-cli for npm
+              run: yarn workspace @kieler/klighd-cli package:node
             - run: yarn lint
             - run: yarn test
