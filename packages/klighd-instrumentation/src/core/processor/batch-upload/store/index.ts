@@ -58,6 +58,9 @@ export interface BatchUploadStore {
      * Retains a claimed batch after an unsuccessful upload, records its next retry time, and releases its lease.
      */
     scheduleRetry(batch: PendingBatch, nextAttemptAt: number): Promise<void>
+
+    /** Releases the store connection when it owns persistent storage. */
+    close?(): void
 }
 
 export { InMemoryBatchUploadStore } from './in-memory.store'

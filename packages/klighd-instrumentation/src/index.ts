@@ -10,7 +10,7 @@ import { Processor } from './core/processor'
 import { InitialiseOptions, resolveInstrumentationConfiguration } from './core/config'
 import { registerSession } from './core/registration'
 import { RealClock } from './core/time'
-import { FetchHttpClient } from './core/http'
+import { FetchHttpClient, HttpClient } from './core/http'
 import { HeartbeatProducer } from './core/producer'
 
 export {
@@ -40,12 +40,22 @@ export interface InstrumentationHandle {
  * Initialises the instrumentation for immediate event collection and processing.
  */
 export async function initialise(options: InitialiseOptions): Promise<InstrumentationHandle> {
-    // Merge the passed configuration with the default configuration values
+    const sprottyProducer = new SprottyProducer(new RealClock())
+    const recording = await startRecording(options, sprottyProducer)
+    return { module: createSprottyModule(sprottyProducer), dispose: () => recording.dispose() }
+}
+
+/** Starts a recording using Sprotty bindings that may already be installed. */
+export async function startRecording(
+    options: InitialiseOptions,
+    sprottyProducer: SprottyProducer,
+    transport?: { httpClient: HttpClient; databaseName: string; signal: AbortSignal }
+): Promise<Pick<InstrumentationHandle, 'dispose'>> {
     const config = resolveInstrumentationConfiguration(options)
 
     // Set up instance of a clock
     const clock = new RealClock()
-    const httpClient = new FetchHttpClient(config.requestTimeoutMs)
+    const httpClient = transport?.httpClient ?? new FetchHttpClient(config.requestTimeoutMs)
 
     // Register the current diagram session with the backend
     const { sessionId } = await registerSession(
@@ -55,6 +65,7 @@ export async function initialise(options: InitialiseOptions): Promise<Instrument
         config.externalParticipantId,
         config.externalSessionId
     )
+    transport?.signal.throwIfAborted()
 
     // Set up the batch upload processor and its persistent event storage.
     const batchUploadProcessor = await BatchUploadProcessor.create(
@@ -62,8 +73,13 @@ export async function initialise(options: InitialiseOptions): Promise<Instrument
         config.apiBaseUrl,
         config.batchUpload,
         clock,
-        httpClient
+        httpClient,
+        transport?.databaseName
     )
+    if (transport?.signal.aborted) {
+        await batchUploadProcessor.dispose()
+        transport.signal.throwIfAborted()
+    }
 
     // If configured, also add a Console processor to print events to the browser console
     const processors: Processor[] = [batchUploadProcessor]
@@ -76,23 +92,29 @@ export async function initialise(options: InitialiseOptions): Promise<Instrument
     const collector = new SequencingCollector(processors)
 
     // Instantiate the producers
+    let rrwebProducer: RrwebProducer
+    try {
+        rrwebProducer = new RrwebProducer(clock, collector, config.rrweb)
+    } catch (error) {
+        await batchUploadProcessor.dispose()
+        throw error
+    }
     const heartbeatProducer = new HeartbeatProducer(clock, collector, config.heartbeatIntervalMs)
-    const rrwebProducer = new RrwebProducer(clock, collector, config.rrweb)
-    const sprottyProducer = new SprottyProducer(clock, collector)
-    const producers = [heartbeatProducer, rrwebProducer, sprottyProducer]
+    sprottyProducer.setCollector(collector)
 
     // Capture the disposal state of this instrumentation instance
     let disposed = false
 
     return {
-        module: createSprottyModule(sprottyProducer),
         async dispose(): Promise<void> {
             if (disposed) {
                 return
             }
 
             disposed = true
-            producers.forEach((producer) => producer.dispose())
+            sprottyProducer.setCollector(undefined)
+            heartbeatProducer.dispose()
+            rrwebProducer.dispose()
             await batchUploadProcessor.dispose()
         },
     }

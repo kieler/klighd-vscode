@@ -36,7 +36,7 @@ export interface InstrumentationConfiguration {
     /**
      * Identifier of the stimulus that owns the recorded interaction session.
      */
-    stimulusId: string
+    stimulusId?: string
 
     /**
      * When used in conjunction with a survey tool this field can be used to link the "participant"
@@ -113,11 +113,10 @@ const DefaultInitialiseOptions: Omit<
 }
 
 /**
- * For initialisation, we require `apiBaseUrl` and `stimulusId`, but all other fields
- * of `InstrumentationConfiguration` are optional.
+ * Only the collection API URL is required for initialisation.
  */
-export type InitialiseOptions = Pick<InstrumentationConfiguration, 'apiBaseUrl' | 'stimulusId'> &
-    Partial<Omit<InstrumentationConfiguration, 'apiBaseUrl' | 'stimulusId' | 'batchUpload'>> & {
+export type InitialiseOptions = Pick<InstrumentationConfiguration, 'apiBaseUrl'> &
+    Partial<Omit<InstrumentationConfiguration, 'apiBaseUrl' | 'batchUpload'>> & {
         batchUpload?: Partial<BatchUploadConfiguration>
     }
 
@@ -128,7 +127,7 @@ export function resolveInstrumentationConfiguration(config: InitialiseOptions): 
         apiBaseUrl: removeTrailingSlashes(config.apiBaseUrl),
         consoleLogEvents: config.consoleLogEvents ?? DefaultInitialiseOptions.consoleLogEvents,
         requestTimeoutMs: config.requestTimeoutMs ?? DefaultInitialiseOptions.requestTimeoutMs,
-        stimulusId: config.stimulusId,
+        stimulusId: config.stimulusId?.trim() || undefined,
         externalParticipantId: config.externalParticipantId?.trim() ? config.externalParticipantId : null,
         externalSessionId: config.externalSessionId?.trim() ? config.externalSessionId : null,
         heartbeatIntervalMs: config.heartbeatIntervalMs ?? DefaultInitialiseOptions.heartbeatIntervalMs,

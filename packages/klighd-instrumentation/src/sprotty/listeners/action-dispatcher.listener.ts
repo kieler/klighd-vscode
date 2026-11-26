@@ -16,7 +16,7 @@ export class SprottyActionDispatcher extends ActionDispatcher {
 
         // Whenever an action to initialise the canvas bounds has occurred, we want to "snapshot"
         // the current viewport size.
-        if (action.kind === InitializeCanvasBoundsAction.KIND) {
+        if (this.producer.isRecording && action.kind === InitializeCanvasBoundsAction.KIND) {
             await this.request(GetViewportAction.create())
         }
     }

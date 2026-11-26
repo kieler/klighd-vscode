@@ -12,6 +12,7 @@ const webpack = require("webpack");
  * @type {import('webpack').Configuration}
  */
 const extensionConfig = {
+    name: "extension",
     target: "node",
     mode: "none", // Leave source code as close as possible. Only set to production during distribution.
 
@@ -71,6 +72,7 @@ const extensionConfig = {
  * @type {import('webpack').Configuration}
  */
 const webviewConfig = {
+    name: "webview",
     target: "web",
     mode: "none", // Leave source code as close as possible. Only set to production during distribution.
 
@@ -117,4 +119,19 @@ const webviewConfig = {
     })],
 };
 
-module.exports = [extensionConfig, webviewConfig];
+module.exports = (env = {}) => {
+    const staging = env.instrumentedOutput;
+    extensionConfig.plugins.push(new webpack.DefinePlugin({ KLIGHD_INSTRUMENTED: Boolean(staging) }));
+    if (typeof staging === "string") {
+        extensionConfig.output.path = path.join(staging, "dist");
+        webviewConfig.output.path = path.join(staging, "pack");
+        // The VSIX compresses both bundles. Skip the memory-intensive minifier for this build.
+        extensionConfig.optimization = { minimize: false };
+        webviewConfig.optimization = { minimize: false };
+        webviewConfig.plugins.push(new webpack.NormalModuleReplacementPlugin(
+            /^\.\/instrumentation$/,
+            path.resolve(__dirname, "../../packages/klighd-instrumentation/lib/vscode-webview.js")
+        ));
+    }
+    return [extensionConfig, webviewConfig];
+};

@@ -74,7 +74,8 @@ export function activate(context: vscode.ExtensionContext): void {
                                 singleton: true,
                             },
                             storageService,
-                            actionHandlers
+                            actionHandlers,
+                            context.globalState
                         )
                         messenger = webviewPanelManager.messenger
                         registerCommands(webviewPanelManager, context)

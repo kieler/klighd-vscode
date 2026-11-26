@@ -3,12 +3,12 @@ import { HttpClient } from '../http'
 export async function registerSession(
     httpClient: HttpClient,
     apiBaseUrl: string,
-    stimulusId: string,
+    stimulusId: string | undefined,
     externalParticipantId: string | null,
     externalSessionId: string | null
 ): Promise<{ sessionId: string }> {
     const response = await httpClient.postJson(`${apiBaseUrl}/api/register`, {
-        stimulusId,
+        ...(stimulusId ? { stimulusId } : {}),
         externalParticipantId,
         externalSessionId,
     })

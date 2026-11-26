@@ -13,7 +13,6 @@ import {
 import { InitializeCanvasBoundsAction, SModelElementImpl } from 'sprotty'
 
 import { Collector } from '../core/collector'
-import { Producer } from '../core/producer'
 import { SprottyEvent, SprottyEventData, SprottyEventTarget, SprottyMouseEvent } from './sprotty.event'
 import { Clock } from '../core/time'
 
@@ -22,20 +21,22 @@ import { Clock } from '../core/time'
 /**
  * Collects Sprotty interactions without changing how the diagram handles them.
  */
-export class SprottyProducer implements Producer {
-    private disposed = false
-
+export class SprottyProducer {
     constructor(
         private readonly clock: Clock,
-        private readonly collector: Collector
+        private collector?: Collector
     ) {}
 
-    dispose(): void {
-        this.disposed = true
+    setCollector(collector: Collector | undefined): void {
+        this.collector = collector
+    }
+
+    get isRecording(): boolean {
+        return this.collector !== undefined
     }
 
     mouse(eventType: string, target: SModelElementImpl, event: MouseEvent | WheelEvent): void {
-        if (this.disposed) {
+        if (!this.isRecording) {
             return
         }
 
@@ -61,7 +62,7 @@ export class SprottyProducer implements Producer {
     }
 
     key(eventType: 'keyDown' | 'keyUp', target: SModelElementImpl, event: KeyboardEvent): void {
-        if (this.disposed) {
+        if (!this.isRecording) {
             return
         }
 
@@ -80,7 +81,7 @@ export class SprottyProducer implements Producer {
     }
 
     action(action: Action): void {
-        if (this.disposed) {
+        if (!this.isRecording) {
             return
         }
 
@@ -108,7 +109,7 @@ export class SprottyProducer implements Producer {
     }
 
     private collect(event: SprottyEventData): void {
-        this.collector.collect<SprottyEvent>({
+        this.collector?.collect<SprottyEvent>({
             schemaVersion: 1,
             type: 'sprotty',
             occurredAt: this.clock.now(),

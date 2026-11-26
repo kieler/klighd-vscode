@@ -37,7 +37,6 @@ export async function startPendingBatchUploadLoop(
     // events under it, and uploads retain each batch's stored session ID.
     const config = resolveInstrumentationConfiguration({
         apiBaseUrl: options.apiBaseUrl,
-        stimulusId: '__pending_batch_upload_loop__',
         requestTimeoutMs: options.requestTimeoutMs,
         batchUpload: options.batchUpload,
     })

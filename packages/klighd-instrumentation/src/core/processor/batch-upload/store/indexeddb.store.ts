@@ -68,14 +68,19 @@ export class IndexedDbBatchUploadStore implements BatchUploadStore {
     static async open(
         clock: Clock,
         sessionId: string,
-        abandonedBatchAfterMs: number
+        abandonedBatchAfterMs: number,
+        databaseName = DATABASE_NAME
     ): Promise<IndexedDbBatchUploadStore> {
         if (!globalThis.indexedDB) {
             throw new Error('IndexedDB is not available.')
         }
 
-        const database = await openDatabase()
+        const database = await openDatabase(databaseName)
         return new IndexedDbBatchUploadStore(clock, database, sessionId, abandonedBatchAfterMs)
+    }
+
+    close(): void {
+        this.database.close()
     }
 
     async addEvent(event: SequencedInteractionEvent): Promise<{ activeEventCount: number }> {
@@ -250,9 +255,9 @@ export class IndexedDbBatchUploadStore implements BatchUploadStore {
 /**
  * Open a connection to an IndexedDB database and initialise the object store for the batches.
  */
-function openDatabase(): Promise<IDBDatabase> {
+function openDatabase(databaseName: string): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-        const request = globalThis.indexedDB.open(DATABASE_NAME, DATABASE_VERSION)
+        const request = globalThis.indexedDB.open(databaseName, DATABASE_VERSION)
         request.onupgradeneeded = () => {
             const database = request.result
             // Create the object store for the active events

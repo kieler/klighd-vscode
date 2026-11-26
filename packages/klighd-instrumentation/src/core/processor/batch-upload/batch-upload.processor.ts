@@ -68,14 +68,15 @@ export class BatchUploadProcessor implements Processor {
         apiBaseUrl: string,
         config: BatchUploadConfiguration,
         clock: Clock,
-        httpClient: HttpClient
+        httpClient: HttpClient,
+        databaseName?: string
     ): Promise<BatchUploadProcessor> {
         // We start with an in-memory batch upload storage, which "always" works
         let store: BatchUploadStore = new InMemoryBatchUploadStore(clock, sessionId)
 
         try {
             // If we can, we want to create a store that uses IndexedDB for robustness
-            store = await IndexedDbBatchUploadStore.open(clock, sessionId, config.flushIntervalMs * 2)
+            store = await IndexedDbBatchUploadStore.open(clock, sessionId, config.flushIntervalMs * 2, databaseName)
         } catch {
             // If that does not work, we simply keep using the in-memory implementation.
             // Todo: Use "Logger" service (yet to build) which logs problem to console.error() and potentially
@@ -117,11 +118,12 @@ export class BatchUploadProcessor implements Processor {
         this.disposed = true
         clearInterval(this.flushTimer)
 
-        await this.queueOperation(async () => {
-            await this.sealActiveBatch()
-        })
-
-        await this.processPendingBatches()
+        try {
+            await this.queueOperation(() => this.sealActiveBatch())
+            await this.processPendingBatches()
+        } finally {
+            this.store.close?.()
+        }
     }
 
     /**
