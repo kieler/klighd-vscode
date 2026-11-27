@@ -25,7 +25,7 @@
         "package:instrumented": "lerna run build --scope @kieler/klighd-core --scope @kieler/klighd-instrumentation --include-dependencies && yarn --cwd applications/klighd-vscode run package:instrumented",
         "prettier": "prettier --write applications/**/src/ applications/klighd-vscode/src-webview/ packages/**/src/ packages/**/styles/ packages/**/test/",
         "distribute": "lerna run build && lerna run distribute --parallel",
-        "test": "mocha --require ts-node/register --require ignore-styles --require reflect-metadata --recursive \"packages/**/test/**/*.{ts,tsx}\""
+        "test": "lerna run test --parallel"
     },
     "devDependencies": {
         "@types/chai": "^5.2.3",

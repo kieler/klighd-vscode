@@ -45,11 +45,15 @@ describe('InMemoryBatchUploadStore', () => {
         await addAndSeal(store, createEvent(1))
         clock.sleep(10)
 
-        expect(await store.claimNextBatches({ ownerId: 'first', leaseDurationMs: 10, maxBatchCount: 1 })).to.have.lengthOf(1)
+        expect(
+            await store.claimNextBatches({ ownerId: 'first', leaseDurationMs: 10, maxBatchCount: 1 })
+        ).to.have.lengthOf(1)
         clock.sleep(9)
         expect(await store.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 })).to.be.empty
         clock.sleep(1)
-        expect(await store.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 })).to.have.lengthOf(1)
+        expect(
+            await store.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 })
+        ).to.have.lengthOf(1)
     })
 
     it('does not let an expired claim acknowledge a batch leased by another worker', async () => {
@@ -68,7 +72,9 @@ describe('InMemoryBatchUploadStore', () => {
         await store.acknowledgeBatch(firstClaim)
         await store.scheduleRetry(secondClaim, clock.now())
 
-        expect(await store.claimNextBatches({ ownerId: 'third', leaseDurationMs: 10, maxBatchCount: 1 })).to.have.lengthOf(1)
+        expect(
+            await store.claimNextBatches({ ownerId: 'third', leaseDurationMs: 10, maxBatchCount: 1 })
+        ).to.have.lengthOf(1)
     })
 
     it('retries only a claimed batch and releases its lease', async () => {
@@ -84,7 +90,11 @@ describe('InMemoryBatchUploadStore', () => {
         expect(await store.claimNextBatches({ ownerId: 'worker', leaseDurationMs: 10, maxBatchCount: 1 })).to.be.empty
 
         clock.sleep(1)
-        const [retriedBatch] = await store.claimNextBatches({ ownerId: 'worker', leaseDurationMs: 10, maxBatchCount: 1 })
+        const [retriedBatch] = await store.claimNextBatches({
+            ownerId: 'worker',
+            leaseDurationMs: 10,
+            maxBatchCount: 1,
+        })
         expect(retriedBatch).to.include({ attempts: 1, nextAttemptAt: 100 })
     })
 
@@ -102,7 +112,9 @@ describe('InMemoryBatchUploadStore', () => {
         clock.sleep(9)
         expect(await store.claimNextBatches({ ownerId: 'other', leaseDurationMs: 10, maxBatchCount: 1 })).to.be.empty
         clock.sleep(1)
-        expect(await store.claimNextBatches({ ownerId: 'other', leaseDurationMs: 10, maxBatchCount: 1 })).to.have.lengthOf(1)
+        expect(
+            await store.claimNextBatches({ ownerId: 'other', leaseDurationMs: 10, maxBatchCount: 1 })
+        ).to.have.lengthOf(1)
     })
 
     it('removes an acknowledged batch without affecting later batches', async () => {
@@ -130,7 +142,10 @@ describe('InMemoryBatchUploadStore', () => {
         await store.sealBatch()
 
         const batches = await store.claimNextBatches({ ownerId: 'worker', leaseDurationMs: 10, maxBatchCount: 2 })
-        expect(batches.map((batch) => batch.events.map((event) => event.eventId))).to.deep.equal([['event-1'], ['event-2']])
+        expect(batches.map((batch) => batch.events.map((event) => event.eventId))).to.deep.equal([
+            ['event-1'],
+            ['event-2'],
+        ])
     })
 })
 

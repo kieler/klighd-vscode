@@ -41,7 +41,11 @@ describe('IndexedDbBatchUploadStore', () => {
         clock.sleep(200)
         await currentStore.sealBatch()
 
-        const [batch] = await currentStore.claimNextBatches({ ownerId: 'worker', leaseDurationMs: 10, maxBatchCount: 1 })
+        const [batch] = await currentStore.claimNextBatches({
+            ownerId: 'worker',
+            leaseDurationMs: 10,
+            maxBatchCount: 1,
+        })
         expect(batch).to.include({ sessionId: 'old-session', createdAt: 210 })
         expect(batch?.events.map((event) => event.eventId)).to.deep.equal(['event-1'])
     })
@@ -55,7 +59,11 @@ describe('IndexedDbBatchUploadStore', () => {
 
         const reopenedStore = await IndexedDbBatchUploadStore.open(clock, 'session-b', abandonedBatchAfterMs)
         clock.sleep(10)
-        const [batch] = await reopenedStore.claimNextBatches({ ownerId: 'worker', leaseDurationMs: 10, maxBatchCount: 1 })
+        const [batch] = await reopenedStore.claimNextBatches({
+            ownerId: 'worker',
+            leaseDurationMs: 10,
+            maxBatchCount: 1,
+        })
         expect(batch?.events.map((event) => event.eventId)).to.deep.equal(['event-1'])
     })
 
@@ -71,12 +79,16 @@ describe('IndexedDbBatchUploadStore', () => {
 
         const secondStore = await IndexedDbBatchUploadStore.open(clock, 'session-b', abandonedBatchAfterMs)
         clock.sleep(9)
-        expect(await secondStore.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 })).to.be.empty
+        expect(await secondStore.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 })).to.be
+            .empty
         await secondStore.scheduleRetry(batch, 100)
         clock.sleep(70)
-        expect(await secondStore.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 })).to.be.empty
+        expect(await secondStore.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 })).to.be
+            .empty
         clock.sleep(1)
-        expect((await secondStore.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 }))[0]).to.include({
+        expect(
+            (await secondStore.claimNextBatches({ ownerId: 'second', leaseDurationMs: 10, maxBatchCount: 1 }))[0]
+        ).to.include({
             attempts: 1,
             nextAttemptAt: 100,
         })
@@ -98,7 +110,9 @@ describe('IndexedDbBatchUploadStore', () => {
         clock.sleep(9)
         expect(await store.claimNextBatches({ ownerId: 'other', leaseDurationMs: 10, maxBatchCount: 1 })).to.be.empty
         clock.sleep(1)
-        expect(await store.claimNextBatches({ ownerId: 'other', leaseDurationMs: 10, maxBatchCount: 1 })).to.have.lengthOf(1)
+        expect(
+            await store.claimNextBatches({ ownerId: 'other', leaseDurationMs: 10, maxBatchCount: 1 })
+        ).to.have.lengthOf(1)
     })
 })
 

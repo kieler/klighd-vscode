@@ -5,10 +5,7 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import { IDBFactory } from 'fake-indexeddb'
 
-import {
-    BatchUploadProcessor,
-    IndexedDbBatchUploadStore,
-} from '../../../../src/core/processor/batch-upload'
+import { BatchUploadProcessor, IndexedDbBatchUploadStore } from '../../../../src/core/processor/batch-upload'
 import { SequencedInteractionEvent } from '../../../../src/core/collector'
 import { BatchUploadConfiguration } from '../../../../src/core/config'
 import { HttpClient } from '../../../../src/core/http'
@@ -186,7 +183,9 @@ describe('BatchUploadProcessor', () => {
         await processor.dispose()
         processor.process(createEvent(1))
 
-        await new Promise((resolve) => setTimeout(resolve, 20))
+        await new Promise((resolve) => {
+            setTimeout(resolve, 20)
+        })
         expect(uploadedPayloads).to.be.empty
     })
 })
@@ -220,8 +219,10 @@ function createEvent(sequence: number): SequencedInteractionEvent {
 
 async function waitUntil(assertion: () => unknown | Promise<unknown>, timeoutMs = 1_000): Promise<void> {
     const startedAt = performance.now()
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         try {
+            // eslint-disable-next-line no-await-in-loop
             await assertion()
             return
         } catch (error) {
@@ -230,6 +231,8 @@ async function waitUntil(assertion: () => unknown | Promise<unknown>, timeoutMs 
             }
         }
         // eslint-disable-next-line no-await-in-loop
-        await new Promise<void>((resolve) => setTimeout(resolve, 5))
+        await new Promise<void>((resolve) => {
+            setTimeout(resolve, 5)
+        })
     }
 }

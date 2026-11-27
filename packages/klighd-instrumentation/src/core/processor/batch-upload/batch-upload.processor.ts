@@ -191,19 +191,14 @@ export class BatchUploadProcessor implements Processor {
                 events: batch.events,
             })
 
-            const responseData: unknown = await response.json()
-
             if (!response.ok) {
-                // If there exists no session (HTTP 410 Gone) for the batch, we cannot recover from that.
-                // Thus, we just act like as if the upload was "successful".
                 if (response.status === 410) {
-                    // Todo: should we acknowledge this differently?
                     await this.store.acknowledgeBatch(batch)
                 }
-
-                // Todo: add logging and pass oninformation from `responseData`
                 throw new Error('Batch upload could not be uploaded.')
             }
+
+            const responseData: unknown = await response.json()
 
             if (!this.acknowledgementMatches(responseData, batch)) {
                 // Todo: add logging and pass oninformation from `responseData`

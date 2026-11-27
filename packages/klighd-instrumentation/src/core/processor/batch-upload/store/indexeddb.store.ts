@@ -126,20 +126,18 @@ export class IndexedDbBatchUploadStore implements BatchUploadStore {
                 return false
             })
             // We "seal" the batch by transforming it to a `PendingBatch`
-            .map(
-                ([sessionId, rows]): PendingBatch => ({
-                    batchId: crypto.randomUUID(),
-                    sessionId,
-                    createdAt: now,
-                    events: rows
-                        .sort((first, second) => first.event.sequence - second.event.sequence)
-                        .map((row) => row.event),
-                    attempts: 0,
-                    nextAttemptAt: now,
-                    leaseId: null,
-                    leaseExpiresAt: null,
-                })
-            )
+            .map(([sessionId, rows]): PendingBatch => ({
+                batchId: crypto.randomUUID(),
+                sessionId,
+                createdAt: now,
+                events: rows
+                    .sort((first, second) => first.event.sequence - second.event.sequence)
+                    .map((row) => row.event),
+                attempts: 0,
+                nextAttemptAt: now,
+                leaseId: null,
+                leaseExpiresAt: null,
+            }))
             // We then update the database stores
             .forEach((pendingBatch) => {
                 pendingBatchesStore.put(pendingBatch)
