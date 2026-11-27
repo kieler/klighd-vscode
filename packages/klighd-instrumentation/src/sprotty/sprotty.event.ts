@@ -45,6 +45,6 @@ export interface SprottyKeyEvent {
 export interface SprottyActionEvent {
     type: 'action'
     actionKind: string
-    /** Complete JSON-safe action payload, with server-known model values omitted. */
+    /** Complete JSON-safe action payload, including full model snapshots in model-setting and model-updating actions. */
     action: Action
 }
