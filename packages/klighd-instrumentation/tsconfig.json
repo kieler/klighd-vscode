@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "experimentalDecorators": true,
+
+        "lib": ["ES2022", "DOM"],
+        "rootDir": "src",
+        "outDir": "lib",
+
+        "declaration": true,
+        "declarationMap": true,
+        "noEmit": false,
+        "noEmitOnError": true,
+
+        "target": "ES2022",
+        "strict": true,
+        "noImplicitOverride": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "useUnknownInCatchVariables": true,
+
+        "moduleDetection": "force",
+        "isolatedModules": true,
+
+        "sourceMap": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "types": ["node"]
+    },
+    "include": ["src/**/*.ts"]
+}
