@@ -197,7 +197,6 @@ export class BatchUploadProcessor implements Processor {
             }
 
             const responseData: unknown = await response.json()
-            }
 
             if (!this.acknowledgementMatches(responseData, batch)) {
                 // Todo: add logging and pass oninformation from `responseData`
