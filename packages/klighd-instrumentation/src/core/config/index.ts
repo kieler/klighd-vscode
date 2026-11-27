@@ -153,6 +153,7 @@ export function resolveInstrumentationConfiguration(config: InitialiseOptions): 
     assertIsPositiveInteger(resolvedConfig.batchUpload.flushIntervalMs, 'flushIntervalMs')
     assertIsPositiveInteger(resolvedConfig.batchUpload.maxEventsPerBatch, 'maxEventsPerBatch')
     assertIsPositiveInteger(resolvedConfig.batchUpload.leaseDurationMs, 'leaseDurationMs')
+    assertIsPositiveInteger(resolvedConfig.batchUpload.minimumRetryDelayMs, 'minimumRetryDelayMs')
     assertIsPositiveInteger(resolvedConfig.batchUpload.maximumRetryDelayMs, 'maximumRetryDelayMs')
     if (resolvedConfig.batchUpload.maximumRetryDelayMs < resolvedConfig.batchUpload.minimumRetryDelayMs) {
         throw new Error('Field "maximumRetryDelayMs" must be greater than or equal to "minimumRetryDelayMs".')
