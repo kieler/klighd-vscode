@@ -71,7 +71,9 @@ export function attachCaptureHost(panel: vscode.WebviewPanel, globalState: vscod
                 )
             }
             if (!Number.isInteger(requestTimeoutMs) || requestTimeoutMs < 1 || requestTimeoutMs > 2_147_478_647) {
-                throw new Error('Set a valid Request Timeout in KLighD Instrumentation settings, then reopen the diagram.')
+                throw new Error(
+                    'Set a valid Request Timeout in KLighD Instrumentation settings, then reopen the diagram.'
+                )
             }
             if (message.kind === 'settings') {
                 result = settings

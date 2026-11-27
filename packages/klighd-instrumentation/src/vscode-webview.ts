@@ -1,3 +1,5 @@
+/* global window */
+/* global document */
 import type { Container } from 'inversify'
 import { startRecording } from './index'
 import type { InitialiseOptions } from './core/config'
@@ -47,7 +49,15 @@ export function attachCapture(container: Container, api: { postMessage(message: 
     container.load(createSprottyModule(producer))
     const request = createHostRequest(api)
 
-    const controls = createCaptureControls(document, () => void start(), () => void stop())
+    const controls = createCaptureControls(
+        document,
+        () => {
+            start()
+        },
+        () => {
+            stop()
+        }
+    )
 
     let starting: AbortController | undefined
     let recording: Awaited<ReturnType<typeof startRecording>> | undefined
@@ -111,6 +121,14 @@ export function attachCapture(container: Container, api: { postMessage(message: 
         }
     }
 
-    window.addEventListener('pagehide', () => void stop(), { once: true })
-    return () => void stop()
+    window.addEventListener(
+        'pagehide',
+        () => {
+            stop()
+        },
+        { once: true }
+    )
+    return () => {
+        stop()
+    }
 }

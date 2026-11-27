@@ -92,7 +92,7 @@ export class KLighDSprottyStarter extends SprottyStarter {
         const container = createKlighdDiagramContainer(diagramIdentifier.clientId)
         const stopCapture = attachCapture(container, this.vscodeApi)
         if (stopCapture) {
-            let uri = diagramIdentifier.uri
+            let { uri } = diagramIdentifier
             this.onCaptureDiagramChange = (nextUri) => {
                 if (nextUri !== uri) {
                     uri = nextUri
