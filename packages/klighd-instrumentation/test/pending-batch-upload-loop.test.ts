@@ -18,31 +18,34 @@ describe('startPendingBatchUploadLoop', () => {
         await addAndSeal('last-session', event)
 
         const requests: Array<{ url: string; payload: BatchPayload }> = []
-        await withFetchStub(async (url, init) => {
-            const payload = JSON.parse(String(init?.body)) as BatchPayload
-            requests.push({ url, payload })
-            return acknowledgementResponse(payload)
-        }, async () => {
-            const loop = await startPendingBatchUploadLoop({
-                apiBaseUrl: collectorUrl,
-                batchUpload: { flushIntervalMs: 60_000 },
-            })
-            let disposed = false
+        await withFetchStub(
+            async (url, init) => {
+                const payload = JSON.parse(String(init?.body)) as BatchPayload
+                requests.push({ url, payload })
+                return acknowledgementResponse(payload)
+            },
+            async () => {
+                const loop = await startPendingBatchUploadLoop({
+                    apiBaseUrl: collectorUrl,
+                    batchUpload: { flushIntervalMs: 60_000 },
+                })
+                let disposed = false
 
-            try {
-                await waitUntil(() => expect(requests).to.have.lengthOf(1))
-                expect(requests[0]?.url).to.equal(`${collectorUrl}/api/batch`)
-                expect(requests[0]?.payload).to.include({ sessionId: 'last-session' })
-                expect(requests[0]?.payload.events).to.deep.equal([event])
-                await loop.dispose()
-                disposed = true
-                await expectNoPendingBatches()
-            } finally {
-                if (!disposed) {
+                try {
+                    await waitUntil(() => expect(requests).to.have.lengthOf(1))
+                    expect(requests[0]?.url).to.equal(`${collectorUrl}/api/batch`)
+                    expect(requests[0]?.payload).to.include({ sessionId: 'last-session' })
+                    expect(requests[0]?.payload.events).to.deep.equal([event])
                     await loop.dispose()
+                    disposed = true
+                    await expectNoPendingBatches()
+                } finally {
+                    if (!disposed) {
+                        await loop.dispose()
+                    }
                 }
             }
-        })
+        )
     })
 
     it('seals and uploads an abandoned active batch from a prior session', async () => {
@@ -51,30 +54,33 @@ describe('startPendingBatchUploadLoop', () => {
         await addActiveEvent('last-session', event)
 
         const requests: BatchPayload[] = []
-        await withFetchStub(async (_url, init) => {
-            const payload = JSON.parse(String(init?.body)) as BatchPayload
-            requests.push(payload)
-            return acknowledgementResponse(payload)
-        }, async () => {
-            const loop = await startPendingBatchUploadLoop({
-                apiBaseUrl: collectorUrl,
-                batchUpload: { flushIntervalMs: 10 },
-            })
-            let disposed = false
+        await withFetchStub(
+            async (_url, init) => {
+                const payload = JSON.parse(String(init?.body)) as BatchPayload
+                requests.push(payload)
+                return acknowledgementResponse(payload)
+            },
+            async () => {
+                const loop = await startPendingBatchUploadLoop({
+                    apiBaseUrl: collectorUrl,
+                    batchUpload: { flushIntervalMs: 10 },
+                })
+                let disposed = false
 
-            try {
-                await waitUntil(() => expect(requests).to.have.lengthOf(1))
-                expect(requests[0]).to.include({ sessionId: 'last-session' })
-                expect(requests[0]?.events).to.deep.equal([event])
-                await loop.dispose()
-                disposed = true
-                await expectNoPendingBatches()
-            } finally {
-                if (!disposed) {
+                try {
+                    await waitUntil(() => expect(requests).to.have.lengthOf(1))
+                    expect(requests[0]).to.include({ sessionId: 'last-session' })
+                    expect(requests[0]?.events).to.deep.equal([event])
                     await loop.dispose()
+                    disposed = true
+                    await expectNoPendingBatches()
+                } finally {
+                    if (!disposed) {
+                        await loop.dispose()
+                    }
                 }
             }
-        })
+        )
     })
 })
 

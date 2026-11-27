@@ -5,10 +5,7 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import { IDBFactory } from 'fake-indexeddb'
 
-import {
-    BatchUploadProcessor,
-    IndexedDbBatchUploadStore,
-} from '../../../../src/core/processor/batch-upload'
+import { BatchUploadProcessor, IndexedDbBatchUploadStore } from '../../../../src/core/processor/batch-upload'
 import { SequencedInteractionEvent } from '../../../../src/core/collector'
 import { BatchUploadConfiguration } from '../../../../src/core/config'
 import { HttpClient } from '../../../../src/core/http'
