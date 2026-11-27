@@ -50,8 +50,7 @@ export class BatchUploadProcessor implements Processor {
             this.flushAndProcess().catch(() => undefined)
         }, this.config.flushIntervalMs)
 
-        // If we're not in a browser contect (e.g. CLI / tests) make sure this
-        // timer is not keeping the event loop running unnecessarily (a.k.a. mark it as "unimportant").
+        // If we're not in a browser context (e.g. CLI / tests) make sure this
         if (typeof this.flushTimer === 'object' && 'unref' in this.flushTimer) {
             this.flushTimer.unref()
         }
@@ -61,7 +60,7 @@ export class BatchUploadProcessor implements Processor {
     }
 
     /**
-     * Static factory method to create an instace of a batch upload processor.
+     * Static factory method to create an instance of a batch upload processor.
      */
     static async create(
         sessionId: string,

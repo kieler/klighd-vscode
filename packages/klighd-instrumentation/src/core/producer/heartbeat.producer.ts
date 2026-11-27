@@ -22,8 +22,7 @@ export class HeartbeatProducer implements Producer {
         }, this.heartbeatIntervalMs)
         this.tick()
 
-        // If we're not in a browser contect (e.g. CLI / tests) make sure this
-        // timer is not keeping the event loop running unnecessarily (a.k.a. mark it as "unimportant").
+        // If we're not in a browser context (e.g. CLI / tests) make sure this
         if (typeof this.intervalHandler === 'object' && 'unref' in this.intervalHandler) {
             this.intervalHandler.unref()
         }

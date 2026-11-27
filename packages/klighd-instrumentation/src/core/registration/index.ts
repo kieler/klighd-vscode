@@ -14,7 +14,7 @@ export async function registerSession(
     })
 
     if (!response.ok) {
-        // Todo: add logging and pass oninformation from `responseData`
+        // Todo: add logging and pass on information from `responseData`
         throw new Error('Could not register with server.')
     }
 
