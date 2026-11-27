@@ -51,6 +51,20 @@
             }
         },
         {
+            // allow unused expressions in tests to enable chai expression style assertions
+            "files": ["**/test/**/*.[jt]s", "**/test/**/*.[jt]sx"],
+            "env": {
+                "node": true
+            },
+            "globals": {
+                "globalThis": "readonly"
+            },
+            "rules": {
+                "no-unused-expressions": "off",
+                "@typescript-eslint/no-unused-expressions": "off"
+            }
+        },
+        {
             "files": ["**/scripts/**/*.js"],
             "rules": {
                 "@typescript-eslint/no-require-imports": "off",
