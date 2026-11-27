@@ -156,6 +156,7 @@
         "build": "webpack --mode production --devtool false",
         "watch": "webpack --watch --mode development",
         "package": "vsce package --yarn --baseImagesUrl https://github.com/kieler/klighd-vscode/raw/HEAD/applications/klighd-vscode -o klighd-vscode.vsix",
+        "package:instrumented": "node scripts/package-instrumented.js",
         "predistribute": "yarn run package",
         "distribute": "yarn run distribute:vsce && yarn run distribute:ovsx",
         "distribute:vsce": "vsce publish --yarn --packagePath klighd-vscode.vsix",

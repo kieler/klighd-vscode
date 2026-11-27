@@ -25,6 +25,7 @@ import { bindServices, createKlighdDiagramContainer } from '@kieler/klighd-core'
 import { Container } from 'inversify'
 import { KeyTool } from 'sprotty'
 import { ActionMessage, isActionMessage } from 'sprotty-protocol'
+import { DiagramIdentifierNotification } from 'sprotty-vscode-protocol'
 import {
     SprottyDiagramIdentifier,
     SprottyStarter,
@@ -34,6 +35,7 @@ import {
 import { DisabledKeyTool } from 'sprotty-vscode-webview/lib/disabled-keytool'
 import { VsCodeApi, VsCodeMessenger } from 'sprotty-vscode-webview/lib/services'
 import { KlighdDiagramWidget } from './klighd-widget'
+import { attachCapture } from './instrumentation'
 import { MessageConnection } from './message-connection'
 import { MessagePersistenceStorage } from './persistence-storage'
 /* global sessionStorage, window */
@@ -48,6 +50,8 @@ export class KLighDSprottyStarter extends SprottyStarter {
     // Therefore, we capture all ActionMessages from the extension until the container is ready to receive them.
     private queuedActionMessages: ActionMessage[] = []
 
+    private onCaptureDiagramChange?: (uri: string) => void
+
     constructor() {
         super()
         window.addEventListener('message', this.queueActionMessage)
@@ -58,6 +62,16 @@ export class KLighDSprottyStarter extends SprottyStarter {
         if ('data' in message && isActionMessage(message.data)) {
             this.queuedActionMessages.push(message.data)
         }
+    }
+
+    override start(): void {
+        // Observe the notification before Sprotty requests a model for the next document.
+        window.addEventListener('message', ({ data }) => {
+            if (data?.method === DiagramIdentifierNotification.method && typeof data.params?.uri === 'string') {
+                this.onCaptureDiagramChange?.(data.params.uri)
+            }
+        })
+        super.start()
     }
 
     /**
@@ -76,6 +90,16 @@ export class KLighDSprottyStarter extends SprottyStarter {
         const connection = new MessageConnection(this.messenger)
         const persistenceStorage = new MessagePersistenceStorage(this.messenger)
         const container = createKlighdDiagramContainer(diagramIdentifier.clientId)
+        const stopCapture = attachCapture(container, this.vscodeApi)
+        if (stopCapture) {
+            let { uri } = diagramIdentifier
+            this.onCaptureDiagramChange = (nextUri) => {
+                if (nextUri !== uri) {
+                    uri = nextUri
+                    stopCapture()
+                }
+            }
+        }
         bindServices(container, { connection, sessionStorage, persistenceStorage })
 
         // Send stored actions to the container, which is no able to receive them

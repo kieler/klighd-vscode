@@ -24,6 +24,8 @@ import { contextKeys } from './constants'
 import { StorageService } from './storage/storage-service'
 import { KlighDWebviewEndpoint } from './webview-endpoint'
 
+declare const KLIGHD_INSTRUMENTED: boolean
+
 /**
  * Callback provided for other extension to register an {@link ActionHandler}.
  * To simplify the implementation for other extensions, which do not have access to
@@ -46,7 +48,8 @@ export class KLighDWebviewPanelManager extends LspWebviewPanelManager {
     constructor(
         options: LspWebviewPanelManagerOptions,
         storageService: StorageService,
-        actionHandlers: { kind: string; actionHandler: ActionHandlerCallback }[]
+        actionHandlers: { kind: string; actionHandler: ActionHandlerCallback }[],
+        private readonly globalState: vscode.Memento
     ) {
         super(options)
         this.storageService = storageService
@@ -86,6 +89,11 @@ export class KLighDWebviewPanelManager extends LspWebviewPanelManager {
     protected override createEndpoint(identifier: SprottyDiagramIdentifier): LspWebviewEndpoint {
         // const endpoint = super.createEndpoint(identifier);
         const webviewContainer = this.createWebview(identifier)
+        if (typeof KLIGHD_INSTRUMENTED !== 'undefined' && KLIGHD_INSTRUMENTED) {
+            // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+            const { attachCaptureHost } = require('./instrumentation') as typeof import('./instrumentation')
+            attachCaptureHost(webviewContainer, this.globalState)
+        }
         const participant = this.messenger.registerWebviewPanel(webviewContainer)
         const endpoint = new KlighDWebviewEndpoint({
             languageClient: this.languageClient,
