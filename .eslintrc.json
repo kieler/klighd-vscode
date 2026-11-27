@@ -6,14 +6,17 @@
         "sourceType": "module"
     },
     "plugins": ["@typescript-eslint", "prettier", "import"],
-    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "airbnb-base", "prettier" ],
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "airbnb-base", "prettier"],
     "rules": {
         "prettier/prettier": 2, // Means error
         "import/extensions": [0, "never"],
         "no-plusplus": 0,
         "import/no-unresolved": [2, { "ignore": ["vscode"] }],
         "import/prefer-default-export": 0,
-        "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/test/**/*.[jt]s", "**/test/**/*.[jt]sx"]}],
+        "import/no-extraneous-dependencies": [
+            "error",
+            { "devDependencies": ["**/test/**/*.[jt]s", "**/test/**/*.[jt]sx"] }
+        ],
         "no-useless-constructor": 0,
         "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
         "max-classes-per-file": 0,
@@ -36,7 +39,8 @@
                 "varsIgnorePattern": "^_",
                 "caughtErrorsIgnorePattern": "^_"
             }
-        ]
+        ],
+        "no-empty-function": "off"
     },
     "overrides": [
         {
@@ -44,6 +48,20 @@
             "files": ["applications/klighd-cli/src/**"],
             "rules": {
                 "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
+            }
+        },
+        {
+            // allow unused expressions in tests to enable chai expression style assertions
+            "files": ["**/test/**/*.[jt]s", "**/test/**/*.[jt]sx"],
+            "env": {
+                "node": true
+            },
+            "globals": {
+                "globalThis": "readonly"
+            },
+            "rules": {
+                "no-unused-expressions": "off",
+                "@typescript-eslint/no-unused-expressions": "off"
             }
         },
         {
@@ -58,7 +76,7 @@
     "settings": {
         "import/resolver": {
             "node": {
-              "extensions": [".js", ".jsx", ".ts", ".tsx"]
+                "extensions": [".js", ".jsx", ".ts", ".tsx"]
             }
         }
     }
